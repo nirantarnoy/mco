@@ -2,13 +2,13 @@
     <!-- Brand Logo -->
     <a href="index.php?r=site/index" class="brand-link" style="text-align: center;">
 <!--        <img src="--><?php //echo Yii::$app->request->baseUrl; ?><!--/uploads/logo/ab_logo.jpg" alt="mmc" class="brand-image">-->
-        <img src="<?php echo Yii::$app->request->baseUrl; ?>/uploads/logo/mhee_logo.jpeg" alt="mhee" width="30%">
+        <img src="<?php echo Yii::$app->request->baseUrl; ?>/uploads/logo/mhee_logo.jpeg" alt="mco" width="30%">
         <!--        <span style="margin-left: 20px; " class="brand-text font-weight-light">MHEEWATCH</span>-->
     </a>
 
     <!-- Sidebar -->
     <div class="sidebar">
-        <?php if (!isset($_SESSION['driver_login'])): ?>
+<!--        --><?php //if (!isset($_SESSION['driver_login'])): ?>
         <!-- Sidebar Menu -->
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
@@ -263,7 +263,7 @@
         </nav>
         <!-- /.sidebar-menu -->
 
-        <?php endif; ?>
+<!--        --><?php //endif; ?>
 
     </div>
     <!-- /.sidebar -->
