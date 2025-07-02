@@ -46,7 +46,7 @@ class ProductSearch extends Product
 
         // add conditions that should always apply here
 
-        $query->joinWith(['journaltransLine.journalTrans']);
+        $query->joinWith(['journaltransLine.journalTrans.watchMaker']);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -70,9 +70,9 @@ class ProductSearch extends Product
             'status' => $this->status,
         ]);
 
-//        if($this->party_id){
-//            $query->andFilterWhere(['watchmaker.id' => $this->party_id]);
-//        }
+        if($this->party_id){
+            $query->andFilterWhere(['watchmaker.id' => $this->party_id]);
+        }
 
         if($this->warehouse_id){
             $query->andFilterWhere(['journal_trans.warehouse_id' => $this->warehouse_id]);

@@ -2,8 +2,8 @@
     <!-- Brand Logo -->
     <a href="index.php?r=site/index" class="brand-link" style="text-align: center;">
 <!--        <img src="--><?php //echo Yii::$app->request->baseUrl; ?><!--/uploads/logo/ab_logo.jpg" alt="mmc" class="brand-image">-->
-        <img src="<?php echo Yii::$app->request->baseUrl; ?>/uploads/logo/mhee_logo.jpeg" alt="mco" width="30%">
-        <!--        <span style="margin-left: 20px; " class="brand-text font-weight-light">MHEEWATCH</span>-->
+        <img src="<?php echo Yii::$app->request->baseUrl; ?>/uploads/logo/mco_logo.png" alt="mco" width="30%">
+<!--                <span style="margin-left: 20px; " class="brand-text font-weight-light">MCO GROUP</span>-->
     </a>
 
     <!-- Sidebar -->

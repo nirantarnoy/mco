@@ -6,7 +6,7 @@ use yii\bootstrap4\LinkPager;
 use yii\helpers\Url;
 use yii\web\JqueryAsset;
 
-$this->title = 'MMC';
+$this->title = 'MCO GROUP';
 
 $cart_item_count = 0;
 ////if (isset($_POST['add_to_cart'])) {
