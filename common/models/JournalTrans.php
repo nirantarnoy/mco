@@ -2,6 +2,7 @@
 
 namespace common\models;
 
+use backend\models\Watchmaker;
 use Yii;
 use yii\behaviors\TimestampBehavior;
 use yii\behaviors\BlameableBehavior;
@@ -42,6 +43,9 @@ class JournalTrans extends \yii\db\ActiveRecord
     const TYPE_SEND = 7;       // เบิกส่งช่าง
     const TYPE_RETURN_SEND = 8; // คืนส่งช่าง
     const TYPE_DROP = 9;       // ขาย Dropship
+
+    const TYPE_ISSUE = 10;       // เบิกสินค้า
+    const TYPE_RETURN_ISSUE = 11; // คืนสินค้า
 
 
 
@@ -86,8 +90,8 @@ class JournalTrans extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['trans_type_id', 'warehouse_id'], 'required'],
-            [['trans_date'], 'safe'],
+            [['trans_type_id'], 'required'],
+            // [['trans_date'], 'safe'],
             [['trans_type_id', 'stock_type_id', 'customer_id', 'status', 'created_at', 'created_by', 'updated_at', 'updated_by', 'party_id', 'party_type_id', 'warehouse_id'], 'integer'],
             [['qty'], 'number'],
             [['journal_no', 'customer_name', 'remark'], 'string', 'max' => 255],
@@ -138,7 +142,7 @@ class JournalTrans extends \yii\db\ActiveRecord
     public function beforeSave($insert)
     {
         if ($insert) {
-            $this->journal_no = $this->generateJournalNo();
+            $this->journal_no = $this->generateJournalNoNew();
         }
 
         return parent::beforeSave($insert);
@@ -194,6 +198,71 @@ class JournalTrans extends \yii\db\ActiveRecord
         }
 
         return $prefix . date('Ym') . str_pad($number, 4, '0', STR_PAD_LEFT);
+    }
+
+    private function generateJournalNoNew()
+    {
+        $prefix = '';
+        switch ($this->trans_type_id) {
+            case self::TYPE_OPENING:
+                $prefix = 'OPN';
+                break;
+            case self::TYPE_ADJUST:
+                $prefix = 'ADJ';
+                break;
+            case self::TYPE_SALE:
+                $prefix = 'SAL';
+                break;
+            case self::TYPE_RETURN_SALE:
+                $prefix = 'RSA';
+                break;
+            case self::TYPE_LOAN:
+                $prefix = 'LOA';
+                break;
+            case self::TYPE_RETURN_LOAN:
+                $prefix = 'RLO';
+                break;
+            case self::TYPE_SEND:
+                $prefix = 'SEN';
+                break;
+            case self::TYPE_RETURN_SEND:
+                $prefix = 'RSE';
+                break;
+            case self::TYPE_DROP:
+                $prefix = 'DRO';
+                break;
+            case self::TYPE_ISSUE:
+                $prefix = 'ISS';
+                break;
+            case self::TYPE_RETURN_ISSUE:
+                $prefix = 'RIS';
+                break;
+
+        }
+
+        $lastRecord = self::find()
+            ->select(['journal_no'])
+            ->where(['trans_type_id' => $this->trans_type_id])
+            ->andWhere(['like', 'journal_no', $prefix . date('Ym')])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
+
+
+        if ($lastRecord != null) {
+            $prefix = $prefix . date('Ym');
+            $cnum = substr((string)$lastRecord->journal_no, 9, strlen($lastRecord->journal_no));
+            $len = strlen($cnum);
+            $clen = strlen($cnum + 1);
+            $loop = $len - $clen;
+            for ($i = 1; $i <= $loop; $i++) {
+                $prefix .= "0";
+            }
+            $prefix .= $cnum + 1;
+            return $prefix;
+        } else {
+            $prefix = $prefix.date('Ym');
+            return $prefix . '0001';
+        }
     }
 
     /**
@@ -261,6 +330,6 @@ class JournalTrans extends \yii\db\ActiveRecord
 
     public function getWatchMaker()
     {
-     //   return $this->hasOne(Watchmaker::class, ['id' => 'party_id']);
+        return $this->hasOne(Watchmaker::class, ['id' => 'party_id']);
     }
 }

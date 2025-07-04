@@ -137,14 +137,35 @@ class Product extends \common\models\Product
         return $name;
     }
 
-//    public static function findName($id){
-//        $model = \common\models\RoutePlan::find()->where(['id'=>$id])->one();
-//        return $model!= null?$model->name:'';
-//    }
-//    public function findUnitid($code){
-//        $model = Unit::find()->where(['name'=>$code])->one();
-//        return count($model)>0?$model->id:0;
-//    }
+    /**
+     * Get products for dropdown
+     */
+    public static function getProductList()
+    {
+        return self::find()
+            ->where(['status' => 1])
+            ->select(['name', 'id'])
+            ->indexBy('id')
+            ->column();
+    }
+
+    /**
+     * Get product info for AJAX
+     */
+    public static function getProductInfo($id)
+    {
+        $product = self::findOne($id);
+        if ($product) {
+            return [
+                'id' => $product->id,
+                'code' => $product->name,
+                'name' => $product->name,
+                'sale_price' => $product->salet_price,
+                'unit_id' => $product->unit_id,
+            ];
+        }
+        return null;
+    }
 
 
 

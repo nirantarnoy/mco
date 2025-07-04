@@ -171,6 +171,46 @@
                         </ul>
                     </li>
                 <?php endif;?>
+                <?php if(\Yii::$app->user->can('purch/index')):?>
+                    <li class="nav-item has-treeview has-sub">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-shopping-cart"></i>
+                            <p>
+                                รายการสั่งซื้อ
+                                <i class="fas fa-angle-left right"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <?php if (\Yii::$app->user->can('purchreq/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=purchreq/index" class="nav-link purchreq">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>ใบขอซื้อ</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                            <?php if (\Yii::$app->user->can('purch/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=purch/index" class="nav-link purch">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>ใบสั่งซื้อ</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+<!--                            --><?php //if (\Yii::$app->user->can('stocktrans/index')): ?>
+<!--                                <li class="nav-item">-->
+<!--                                    <a href="index.php?r=stocktrans" class="nav-link stocktrans">-->
+<!--                                        <i class="far fa-circlez nav-icon"></i>-->
+<!--                                        <p>-->
+<!--                                            ประวัติทำรายการ-->
+<!--                                          -->
+<!--                                        </p>-->
+<!--                                    </a>-->
+<!--                                </li>-->
+<!--                            --><?php //endif;?>
+                        </ul>
+                    </li>
+                <?php endif;?>
                 <?php if(\Yii::$app->user->can('salereport/crosstab')):?>
                     <li class="nav-item has-treeview has-sub">
                         <a href="#" class="nav-link">
