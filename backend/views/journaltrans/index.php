@@ -23,8 +23,10 @@ $this->params['breadcrumbs'][] = $this->title;
    <div class="row">
        <div class="col-lg-10">
            <p>
-               <?= Html::a('<i class="fa fa-plus"></i> บันทึกเบิก', ['create', 'type' => 10], ['class' => 'btn btn-success']) ?>
+               <?= Html::a('<i class="fa fa-plus"></i> บันทึกขาย', ['create', 'type' => 3], ['class' => 'btn btn-success']) ?>
                <?= Html::a('<i class="fa fa-archive"></i> บันทึกยืมสินค้า', ['create', 'type' => 5], ['class' => 'btn btn-info']) ?>
+<!--               --><?php //= Html::a('<i class="fa fa-wrench"></i> บันทึกส่งช่าง', ['create', 'type' => 7], ['class' => 'btn btn-primary']) ?>
+<!--               --><?php //= Html::a('<i class="fa fa-shopping-cart"></i> บันทึกขาย Drop Ship', ['create', 'type' => 9], ['class' => 'btn btn-secondary']) ?>
            </p>
 
        </div>
@@ -60,6 +62,8 @@ $this->params['breadcrumbs'][] = $this->title;
         'id' => 'product-grid',
         'pjax' => true,
         'pjaxSettings' => ['neverTimeout' => true],
+        'responsive' => false,
+        'responsiveWrap' => false,
         //'tableOptions' => ['class' => 'table table-hover'],
         'emptyText' => '<div style="color: red;text-align: center;"> <b>ไม่พบรายการไดๆ</b> <span> เพิ่มรายการโดยการคลิกที่ปุ่ม </span><span class="text-success">"สร้างใหม่"</span></div>',
         'columns' => [
@@ -94,6 +98,30 @@ $this->params['breadcrumbs'][] = $this->title;
                // 'headerOptions' => ['style' => 'width:120px'],
             ],
             'customer_name',
+            [
+                'attribute' => 'party_id',
+                'headerOptions' => ['style' => 'text-align:center'],
+                'contentOptions' => ['style' => 'text-align:center'],
+                'value'=>function($model) {
+                    return \backend\models\Watchmaker::findName($model->party_id);
+                }
+            ],
+            [
+                'attribute' => 'product_id',
+                'format' => 'raw',
+                'label' => 'สินค้า',
+                'headerOptions' => ['style' => 'text-align:center'],
+                'contentOptions' => ['style' => 'text-align:center'],
+                'value'=>function($model) {
+                    $products = [];
+                    foreach ($model->journalTransLines as $line) {
+                        if ($line->product) {
+                            $products[] = $line->product->name;
+                        }
+                    }
+                    return implode('<br>', $products);
+                }
+            ],
             [
                 'attribute' => 'qty',
                 'format' => ['decimal', 0],

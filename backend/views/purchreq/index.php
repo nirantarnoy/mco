@@ -17,7 +17,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="purch-req-index">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1><?= Html::encode($this->title) ?></h1>
         <div class="d-flex align-items-center">
             <span class="me-2">แสดง</span>
             <?= Html::dropDownList('per-page', $dataProvider->pagination->pageSize, [

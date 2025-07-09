@@ -1,12 +1,10 @@
 <?php
 namespace backend\models;
-use common\models\JournalTransLine;
-
 use Yii;
 use yii\db\ActiveRecord;
 date_default_timezone_set('Asia/Bangkok');
 
-class JournalTrans extends \common\models\JournalTrans
+class Vendor extends \common\models\Vendor
 {
     public function behaviors()
     {
@@ -39,20 +37,6 @@ class JournalTrans extends \common\models\JournalTrans
                 ],
                 'value' => Yii::$app->user->id,
             ],
-//            'timestampcompany' => [
-//                'class' => \yii\behaviors\AttributeBehavior::className(),
-//                'attributes' => [
-//                    ActiveRecord::EVENT_BEFORE_INSERT => 'company_id',
-//                ],
-//                'value' => isset($_SESSION['user_company_id']) ? $_SESSION['user_company_id'] : 1,
-//            ],
-//            'timestampbranch' => [
-//                'class' => \yii\behaviors\AttributeBehavior::className(),
-//                'attributes' => [
-//                    ActiveRecord::EVENT_BEFORE_INSERT => 'branch_id',
-//                ],
-//                'value' => isset($_SESSION['user_branch_id']) ? $_SESSION['user_branch_id'] : 1,
-//            ],
             'timestampupdate' => [
                 'class' => \yii\behaviors\AttributeBehavior::className(),
                 'attributes' => [
@@ -63,16 +47,9 @@ class JournalTrans extends \common\models\JournalTrans
         ];
     }
 
-
-
-    public static function getLineQty($id){
-        $qty = JournalTransLine::find()->where(['journal_trans_id'=>$id])->sum('qty');
-        return $qty;
-    }
-
-    public static function findJournalNoFromStockTransId($id) {
-        $journal_no = JournalTrans::find()->where(['id'=>$id])->one();
-        return $journal_no ? $journal_no->journal_no : '';
+    public static function findName($id){
+        $model = Vendor::find()->where(['id'=>$id])->one();
+        return $model!= null?$model->name:'';
     }
 
 

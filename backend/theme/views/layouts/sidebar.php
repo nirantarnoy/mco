@@ -183,6 +183,14 @@
                         <ul class="nav nav-treeview">
                             <?php if (\Yii::$app->user->can('purchreq/index')): ?>
                                 <li class="nav-item">
+                                    <a href="index.php?r=vendor/index" class="nav-link vendor">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>ผู้ขาย</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                            <?php if (\Yii::$app->user->can('purchreq/index')): ?>
+                                <li class="nav-item">
                                     <a href="index.php?r=purchreq/index" class="nav-link purchreq">
                                         <i class="far fa-circlez nav-icon"></i>
                                         <p>ใบขอซื้อ</p>
@@ -234,7 +242,7 @@
                 <?php endif;?>
                 <?php // if (isset($_SESSION['user_group_id'])): ?>
                 <?php //if ($_SESSION['user_group_id'] == 1): ?>
-                <?php  if (\backend\models\User::findName(\Yii::$app->user->id) == 'mheeadmin'): ?>
+                <?php  if (\backend\models\User::findName(\Yii::$app->user->id) == 'mcoadmin'): ?>
                     <li class="nav-item has-treeview has-sub">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-user"></i>
