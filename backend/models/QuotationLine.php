@@ -5,25 +5,23 @@ use Yii;
 use yii\db\ActiveRecord;
 
 /**
- * This is the model class for table "purch_req_line".
+ * This is the model class for table "quotation_line".
  *
  * @property int $id
- * @property int|null $purch_req_id
+ * @property int|null $quotation_id
  * @property int|null $product_id
  * @property string|null $product_name
- * @property string|null $product_description
- * @property int|null $product_type
  * @property float|null $qty
  * @property float|null $line_price
  * @property float|null $line_total
+ * @property float|null $discount_amount
  * @property int|null $status
  * @property string|null $note
- * @property string|null $unit
  *
- * @property PurchReq $purchReq
+ * @property Quotation $quotation
  * @property Product $product
  */
-class PurchReqLine extends ActiveRecord
+class QuotationLine extends ActiveRecord
 {
     const STATUS_ACTIVE = 1;
     const STATUS_CANCELLED = 0;
@@ -33,7 +31,7 @@ class PurchReqLine extends ActiveRecord
      */
     public static function tableName()
     {
-        return 'purch_req_line';
+        return 'quotation_line';
     }
 
     /**
@@ -42,11 +40,11 @@ class PurchReqLine extends ActiveRecord
     public function rules()
     {
         return [
-            [['purch_req_id', 'product_id', 'product_type', 'status'], 'integer'],
-            [['qty', 'line_price', 'line_total'], 'number'],
-            [['product_name', 'note', 'unit_id'], 'string', 'max' => 255],
+            [['quotation_id', 'product_id', 'status'], 'integer'],
+            [['qty', 'line_price', 'line_total', 'discount_amount'], 'number'],
+            [['product_name', 'note'], 'string', 'max' => 255],
             [['qty', 'line_price'], 'required'],
-            [['purch_req_id'], 'exist', 'skipOnError' => true, 'targetClass' => PurchReq::class, 'targetAttribute' => ['purch_req_id' => 'id']],
+            [['quotation_id'], 'exist', 'skipOnError' => true, 'targetClass' => Quotation::class, 'targetAttribute' => ['quotation_id' => 'id']],
             [['product_id'], 'exist', 'skipOnError' => true, 'targetClass' => Product::class, 'targetAttribute' => ['product_id' => 'id']],
         ];
     }
@@ -58,27 +56,26 @@ class PurchReqLine extends ActiveRecord
     {
         return [
             'id' => 'ID',
-            'purch_req_id' => 'รหัสใบขอซื้อ',
+            'quotation_id' => 'รหัสใบเสนอราคา',
             'product_id' => 'รหัสสินค้า',
-            'product_name' => 'ชื่อสินค้า',
-            'product_type' => 'ประเภทสินค้า',
+            'product_name' => 'ชื่อสินค้า/รายละเอียด',
             'qty' => 'จำนวน',
-            'line_price' => 'ราคา/หน่วย',
+            'line_price' => 'ราคาต่อหน่วย',
             'line_total' => 'ราคารวม',
+            'discount_amount' => 'ส่วนลด',
             'status' => 'สถานะ',
             'note' => 'หมายเหตุ',
-            'unit_id' => 'หน่วยนับ',
         ];
     }
 
     /**
-     * Gets query for [[PurchReq]].
+     * Gets query for [[Quotation]].
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getPurchReq()
+    public function getQuotation()
     {
-        return $this->hasOne(PurchReq::class, ['id' => 'purch_req_id']);
+        return $this->hasOne(Quotation::class, ['id' => 'quotation_id']);
     }
 
     /**
@@ -97,8 +94,9 @@ class PurchReqLine extends ActiveRecord
     public function beforeSave($insert)
     {
         if (parent::beforeSave($insert)) {
-            // Calculate line total
-            $this->line_total = $this->qty * $this->line_price;
+            // Calculate line total (price * qty - discount)
+            $subtotal = $this->qty * $this->line_price;
+            $this->line_total = $subtotal - ($this->discount_amount ?: 0);
             return true;
         }
         return false;

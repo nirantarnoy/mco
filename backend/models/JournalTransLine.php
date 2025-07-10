@@ -3,50 +3,29 @@ namespace backend\models;
 
 use Yii;
 use yii\db\ActiveRecord;
-use yii\behaviors\TimestampBehavior;
 
 /**
- * This is the model class for table "stock_trans".
+ * This is the model class for table "journal_trans_line".
  *
  * @property int $id
  * @property int|null $journal_trans_id
- * @property string|null $trans_date
  * @property int|null $product_id
- * @property int|null $trans_type_id
- * @property float|null $qty
- * @property int|null $created_at
- * @property int|null $created_by
- * @property int|null $status
- * @property string|null $remark
- * @property int|null $stock_type_id
  * @property int|null $warehouse_id
- * @property float|null $line_price
+ * @property float|null $qty
+ * @property string|null $remark
  *
  * @property JournalTrans $journalTrans
  * @property Product $product
  * @property Warehouse $warehouse
  */
-class StockTrans extends ActiveRecord
+class JournalTransLine extends ActiveRecord
 {
-    const STATUS_ACTIVE = 1;
-    const STATUS_CANCELLED = 0;
-
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return 'stock_trans';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function behaviors()
-    {
-        return [
-            TimestampBehavior::class,
-        ];
+        return 'journal_trans_line';
     }
 
     /**
@@ -55,9 +34,10 @@ class StockTrans extends ActiveRecord
     public function rules()
     {
         return [
-            [['journal_trans_id', 'product_id', 'trans_type_id', 'created_at', 'created_by', 'status', 'stock_type_id', 'warehouse_id'], 'integer'],
-            [['trans_date'], 'safe'],
-            [['qty', 'line_price'], 'number'],
+            [['journal_trans_id', 'product_id', 'warehouse_id'], 'integer'],
+            [['qty'], 'number'],
+            [['qty'], 'required'],
+            [['qty'], 'compare', 'compareValue' => 0, 'operator' => '>'],
             [['remark'], 'string', 'max' => 255],
             [['journal_trans_id'], 'exist', 'skipOnError' => true, 'targetClass' => JournalTrans::class, 'targetAttribute' => ['journal_trans_id' => 'id']],
             [['product_id'], 'exist', 'skipOnError' => true, 'targetClass' => Product::class, 'targetAttribute' => ['product_id' => 'id']],
@@ -73,17 +53,10 @@ class StockTrans extends ActiveRecord
         return [
             'id' => 'ID',
             'journal_trans_id' => 'รหัส Journal Transaction',
-            'trans_date' => 'วันที่ทำรายการ',
             'product_id' => 'รหัสสินค้า',
-            'trans_type_id' => 'ประเภทการทำรายการ',
-            'qty' => 'จำนวน',
-            'created_at' => 'วันที่สร้าง',
-            'created_by' => 'สร้างโดย',
-            'status' => 'สถานะ',
-            'remark' => 'หมายเหตุ',
-            'stock_type_id' => 'ประเภทสต๊อก',
             'warehouse_id' => 'รหัสคลังสินค้า',
-            'line_price' => 'ราคาต่อหน่วย',
+            'qty' => 'จำนวน',
+            'remark' => 'หมายเหตุ',
         ];
     }
 

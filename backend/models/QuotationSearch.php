@@ -5,9 +5,9 @@ use yii\base\Model;
 use yii\data\ActiveDataProvider;
 
 /**
- * PurchReqSearch represents the model behind the search form of `backend\models\PurchReq`.
+ * QuotationSearch represents the model behind the search form of `backend\models\Quotation`.
  */
-class PurchReqSearch extends PurchReq
+class QuotationSearch extends Quotation
 {
     /**
      * {@inheritdoc}
@@ -15,9 +15,9 @@ class PurchReqSearch extends PurchReq
     public function rules()
     {
         return [
-            [['id', 'vendor_id', 'status', 'approve_status', 'purch_id', 'created_by', 'updated_by'], 'integer'],
-            [['purch_req_no', 'purch_req_date', 'vendor_name', 'note', 'total_text'], 'safe'],
-            [['total_amount', 'discount_amount', 'vat_amount', 'net_amount'], 'number'],
+            [['id', 'customer_id', 'status', 'approve_status', 'approve_by', 'created_by', 'updated_by'], 'integer'],
+            [['quotation_no', 'quotation_date', 'customer_name', 'total_amount_text', 'note'], 'safe'],
+            [['total_amount'], 'number'],
         ];
     }
 
@@ -39,7 +39,7 @@ class PurchReqSearch extends PurchReq
      */
     public function search($params)
     {
-        $query = PurchReq::find();
+        $query = Quotation::find();
 
         // add conditions that should always apply here
 
@@ -66,33 +66,22 @@ class PurchReqSearch extends PurchReq
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'purch_req_date' => $this->purch_req_date,
-            'vendor_id' => $this->vendor_id,
+            'quotation_date' => $this->quotation_date,
+            'customer_id' => $this->customer_id,
             'status' => $this->status,
             'approve_status' => $this->approve_status,
+            'approve_by' => $this->approve_by,
             'total_amount' => $this->total_amount,
-            'discount_amount' => $this->discount_amount,
-            'vat_amount' => $this->vat_amount,
-            'net_amount' => $this->net_amount,
             'created_at' => $this->created_at,
             'created_by' => $this->created_by,
             'updated_at' => $this->updated_at,
             'updated_by' => $this->updated_by,
         ]);
 
-        // Handle purch_id filter for converted status
-        if (isset($params['PurchReqSearch']['purch_id'])) {
-            if ($params['PurchReqSearch']['purch_id'] == '1') {
-                $query->andWhere(['!=', 'purch_id', null]);
-            } elseif ($params['PurchReqSearch']['purch_id'] == '0') {
-                $query->andWhere(['purch_id' => null]);
-            }
-        }
-
-        $query->andFilterWhere(['like', 'purch_req_no', $this->purch_req_no])
-            ->andFilterWhere(['like', 'vendor_name', $this->vendor_name])
-            ->andFilterWhere(['like', 'note', $this->note])
-            ->andFilterWhere(['like', 'total_text', $this->total_text]);
+        $query->andFilterWhere(['like', 'quotation_no', $this->quotation_no])
+            ->andFilterWhere(['like', 'customer_name', $this->customer_name])
+            ->andFilterWhere(['like', 'total_amount_text', $this->total_amount_text])
+            ->andFilterWhere(['like', 'note', $this->note]);
 
         return $dataProvider;
     }

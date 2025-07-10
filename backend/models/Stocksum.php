@@ -1,92 +1,126 @@
 <?php
-
 namespace backend\models;
 
 use Yii;
 use yii\db\ActiveRecord;
+use yii\behaviors\TimestampBehavior;
 
-date_default_timezone_set('Asia/Bangkok');
-
-class Stocksum extends \common\models\StockSum
+/**
+ * This is the model class for table "stock_sum".
+ *
+ * @property int $id
+ * @property int|null $product_id
+ * @property int|null $warehouse_id
+ * @property float|null $qty
+ * @property int|null $updated_at
+ * @property float|null $reserv_qty
+ *
+ * @property Product $product
+ * @property Warehouse $warehouse
+ */
+class StockSum extends ActiveRecord
 {
-//    public function behaviors()
-//    {
-//        return [
-//            'timestampcdate' => [
-//                'class' => \yii\behaviors\AttributeBehavior::className(),
-//                'attributes' => [
-//                    ActiveRecord::EVENT_BEFORE_INSERT => 'created_at',
-//                ],
-//                'value' => time(),
-//            ],
-//            'timestampudate' => [
-//                'class' => \yii\behaviors\AttributeBehavior::className(),
-//                'attributes' => [
-//                    ActiveRecord::EVENT_BEFORE_INSERT => 'updated_at',
-//                ],
-//                'value' => time(),
-//            ],
-//            'timestampcby' => [
-//                'class' => \yii\behaviors\AttributeBehavior::className(),
-//                'attributes' => [
-//                    ActiveRecord::EVENT_BEFORE_INSERT => 'created_by',
-//                ],
-//                'value' => Yii::$app->user->id,
-//            ],
-//            'timestamuby' => [
-//                'class' => \yii\behaviors\AttributeBehavior::className(),
-//                'attributes' => [
-//                    ActiveRecord::EVENT_BEFORE_UPDATE => 'updated_by',
-//                ],
-//                'value' => Yii::$app->user->id,
-//            ],
-////            'timestampcompany' => [
-////                'class' => \yii\behaviors\AttributeBehavior::className(),
-////                'attributes' => [
-////                    ActiveRecord::EVENT_BEFORE_INSERT => 'company_id',
-////                ],
-////                'value' => isset($_SESSION['user_company_id']) ? $_SESSION['user_company_id'] : 1,
-////            ],
-////            'timestampbranch' => [
-////                'class' => \yii\behaviors\AttributeBehavior::className(),
-////                'attributes' => [
-////                    ActiveRecord::EVENT_BEFORE_INSERT => 'branch_id',
-////                ],
-////                'value' => isset($_SESSION['user_branch_id']) ? $_SESSION['user_branch_id'] : 1,
-////            ],
-//            'timestampupdate' => [
-//                'class' => \yii\behaviors\AttributeBehavior::className(),
-//                'attributes' => [
-//                    ActiveRecord::EVENT_BEFORE_UPDATE => 'updated_at',
-//                ],
-//                'value' => time(),
-//            ],
-//        ];
-//    }
-
-    public function findName($id){
-        $model = Warehouse::find()->where(['id'=>$id])->one();
-        return $model != null ?$model->name:'';
-    }
-    public function findDesc($id){
-        $model = Warehouse::find()->where(['id'=>$id])->one();
-        return $model != null ?$model->description:'';
+    /**
+     * {@inheritdoc}
+     */
+    public static function tableName()
+    {
+        return 'stock_sum';
     }
 
-    static function findExpDate($id){
-        $model = Stocksum::find()->where(['id'=>$id])->one();
-        return $model != null ?date('d/m/Y',strtotime($model->expired_date)):'';
+    /**
+     * {@inheritdoc}
+     */
+    public function behaviors()
+    {
+        return [
+            TimestampBehavior::class,
+        ];
     }
 
-//    public static function findName($id){
-//        $model = \common\models\RoutePlan::find()->where(['id'=>$id])->one();
-//        return $model!= null?$model->name:'';
-//    }
-//    public function findUnitid($code){
-//        $model = Unit::find()->where(['name'=>$code])->one();
-//        return count($model)>0?$model->id:0;
-//    }
+    /**
+     * {@inheritdoc}
+     */
+    public function rules()
+    {
+        return [
+            [['product_id', 'warehouse_id', 'updated_at'], 'integer'],
+            [['qty', 'reserv_qty'], 'number'],
+            [['product_id', 'warehouse_id'], 'required'],
+            [['product_id'], 'exist', 'skipOnError' => true, 'targetClass' => Product::class, 'targetAttribute' => ['product_id' => 'id']],
+            [['warehouse_id'], 'exist', 'skipOnError' => true, 'targetClass' => Warehouse::class, 'targetAttribute' => ['warehouse_id' => 'id']],
+            [['product_id', 'warehouse_id'], 'unique', 'targetAttribute' => ['product_id', 'warehouse_id']],
+        ];
+    }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function attributeLabels()
+    {
+        return [
+            'id' => 'ID',
+            'product_id' => 'รหัสสินค้า',
+            'warehouse_id' => 'รหัสคลังสินค้า',
+            'qty' => 'จำนวนคงเหลือ',
+            'updated_at' => 'วันที่อัพเดท',
+            'reserv_qty' => 'จำนวนจอง',
+        ];
+    }
 
+    /**
+     * Gets query for [[Product]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProduct()
+    {
+        return $this->hasOne(Product::class, ['id' => 'product_id']);
+    }
 
+    /**
+     * Gets query for [[Warehouse]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getWarehouse()
+    {
+        return $this->hasOne(Warehouse::class, ['id' => 'warehouse_id']);
+    }
+
+    /**
+     * Update stock quantity
+     */
+    public static function updateStock($productId, $warehouseId, $qty, $stockType)
+    {
+        $stockSum = self::find()
+            ->where(['product_id' => $productId, 'warehouse_id' => $warehouseId])
+            ->one();
+
+        if (!$stockSum) {
+            // Create new stock record
+            $stockSum = new self();
+            $stockSum->product_id = $productId;
+            $stockSum->warehouse_id = $warehouseId;
+            $stockSum->qty = 0;
+            $stockSum->reserv_qty = 0;
+        }
+
+        // Update quantity based on stock type
+        if ($stockType == JournalTrans::STOCK_TYPE_IN) {
+            $stockSum->qty += $qty;
+        } else {
+            $stockSum->qty -= $qty;
+        }
+
+        return $stockSum->save();
+    }
+
+    /**
+     * Get available quantity (qty - reserv_qty)
+     */
+    public function getAvailableQty()
+    {
+        return $this->qty - $this->reserv_qty;
+    }
 }

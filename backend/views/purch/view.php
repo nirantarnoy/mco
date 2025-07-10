@@ -16,10 +16,59 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="purch-view">
 
+    <!-- Flash Messages -->
+    <?php if (\Yii::$app->session->hasFlash('success')): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <?= \Yii::$app->session->getFlash('success') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if (\Yii::$app->session->hasFlash('error')): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <?= \Yii::$app->session->getFlash('error') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if (\Yii::$app->session->hasFlash('warning')): ?>
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <?= \Yii::$app->session->getFlash('warning') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
+    <?php if (\Yii::$app->session->hasFlash('info')): ?>
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            <?= \Yii::$app->session->getFlash('info') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <?= Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-            <?php if ($model->approve_status == Purch::APPROVE_STATUS_PENDING): ?>
+            <?php if ($model->approve_status == Purch::APPROVE_STATUS_APPROVED): ?>
+                <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
+                    'class' => 'btn btn-info',
+                    'target' => '_blank'
+                ]) ?>
+                <?= Html::a('<i class="fas fa-file-pdf"></i> PDF', ['pdf', 'id' => $model->id], [
+                    'class' => 'btn btn-warning',
+                    'target' => '_blank'
+                ]) ?>
+
+                    <?= Html::a('<i class="fas fa-download"></i> รับสินค้าเข้าคลัง', ['receive', 'id' => $model->id], [
+                        'class' => 'btn btn-success'
+                    ]) ?>
+                    <?= Html::a('<i class="fas fa-history"></i> ประวัติการรับสินค้า', ['receive-history', 'id' => $model->id], [
+                        'class' => 'btn btn-info'
+                    ]) ?>
+
                 <?= Html::a('อนุมัติ', ['approve', 'id' => $model->id], [
                     'class' => 'btn btn-success',
                     'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบสั่งซื้อนี้?',

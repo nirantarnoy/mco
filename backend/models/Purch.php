@@ -20,12 +20,14 @@ use yii\behaviors\TimestampBehavior;
  * @property float|null $discount_amount
  * @property float|null $vat_amount
  * @property float|null $net_amount
+ * @property string|null $ref_text
  * @property int|null $created_at
  * @property int|null $created_by
  * @property int|null $updated_at
  * @property int|null $updated_by
  *
  * @property PurchLine[] $purchLines
+ * @property PurchReq[] $purchReqs
  */
 class Purch extends ActiveRecord
 {
@@ -68,9 +70,8 @@ class Purch extends ActiveRecord
         return [
             [['purch_date'], 'safe'],
             [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
-            [['total_amount'], 'safe'],
-            [['discount_amount', 'vat_amount', 'net_amount'], 'safe'],
-            [['purch_no', 'vendor_name', 'note',], 'string', 'max' => 255],
+            [['total_amount', 'discount_amount', 'vat_amount', 'net_amount'], 'number'],
+            [['purch_no', 'vendor_name', 'note', 'ref_text'], 'string', 'max' => 255],
             [['purch_no'], 'unique'],
         ];
     }
@@ -109,6 +110,16 @@ class Purch extends ActiveRecord
     public function getPurchLines()
     {
         return $this->hasMany(PurchLine::class, ['purch_id' => 'id']);
+    }
+
+    /**
+     * Gets query for [[PurchReqs]] - Purchase requests that reference this PO
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getPurchReqs()
+    {
+        return $this->hasMany(PurchReq::class, ['purch_id' => 'id']);
     }
 
     /**
@@ -195,5 +206,13 @@ class Purch extends ActiveRecord
         }
 
         return $prefix . sprintf('%04d', $newNumber);
+    }
+
+    /**
+     * Get related purchase requests
+     */
+    public function getRelatedPurchReqs()
+    {
+        return $this->getPurchReqs()->all();
     }
 }

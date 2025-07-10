@@ -219,6 +219,35 @@
                         </ul>
                     </li>
                 <?php endif;?>
+                <?php if(\Yii::$app->user->can('quotation/index')):?>
+                    <li class="nav-item has-treeview has-sub">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-list-alt"></i>
+                            <p>
+                                รายการเสนอราคา
+                                <i class="fas fa-angle-left right"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <?php if (\Yii::$app->user->can('customer/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=customer/index" class="nav-link customer">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>ลูกค้า</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                            <?php if (\Yii::$app->user->can('quotation/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=quotation/index" class="nav-link quotation">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>ใบเสนอราคา</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                        </ul>
+                    </li>
+                <?php endif;?>
                 <?php if(\Yii::$app->user->can('salereport/crosstab')):?>
                     <li class="nav-item has-treeview has-sub">
                         <a href="#" class="nav-link">

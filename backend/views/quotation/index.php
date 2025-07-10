@@ -5,16 +5,16 @@ use yii\helpers\Url;
 use kartik\grid\GridView;
 use kartik\grid\ActionColumn;
 use yii\widgets\Pjax;
-use backend\models\PurchReq;
+use backend\models\Quotation;
 
 /* @var $this yii\web\View */
-/* @var $searchModel backend\models\PurchReqSearch */
+/* @var $searchModel backend\models\QuotationSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'ใบขอซื้อ';
+$this->title = 'ใบเสนอราคา';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="purch-req-index">
+<div class="quotation-index">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="d-flex align-items-center">
@@ -71,21 +71,21 @@ $this->params['breadcrumbs'][] = $this->title;
                 'contentOptions' => ['style' => 'text-align: center;'],
             ],
             [
-                'attribute' => 'purch_req_no',
-                'label' => 'เลขที่ใบขอซื้อ',
+                'attribute' => 'quotation_no',
+                'label' => 'เลขที่ใบเสนอราคา',
                 'headerOptions' => ['style' => 'width: 150px;'],
                 'value' => function ($model) {
-                    return $model->purch_req_no ?: 'ยังไม่ได้กำหนด';
+                    return $model->quotation_no ?: 'ยังไม่ได้กำหนด';
                 },
             ],
             [
-                'attribute' => 'purch_req_date',
+                'attribute' => 'quotation_date',
                 'label' => 'วันที่',
                 'headerOptions' => ['style' => 'width: 120px;'],
                 'format' => ['date', 'php:d/m/Y'],
                 'filter' => kartik\date\DatePicker::widget([
                     'model' => $searchModel,
-                    'attribute' => 'purch_req_date',
+                    'attribute' => 'quotation_date',
                     'options' => ['placeholder' => 'เลือกวันที่'],
                     'pluginOptions' => [
                         'autoclose' => true,
@@ -94,52 +94,34 @@ $this->params['breadcrumbs'][] = $this->title;
                 ]),
             ],
             [
-                'attribute' => 'vendor_name',
-                'label' => 'ผู้ขาย',
+                'attribute' => 'customer_name',
+                'label' => 'ลูกค้า',
                 'headerOptions' => ['style' => 'width: 200px;'],
                 'value' => function ($model) {
-                    return $model->vendor_name ?: 'ไม่ระบุ';
+                    return $model->customer_name ?: 'ไม่ระบุ';
                 },
             ],
             [
-                'attribute' => 'net_amount',
-                'label' => 'ยอดรวมสุทธิ',
+                'attribute' => 'total_amount',
+                'label' => 'ยอดรวม',
                 'headerOptions' => ['style' => 'width: 120px; text-align: right;'],
                 'contentOptions' => ['style' => 'text-align: right;'],
                 'format' => ['currency', 'THB'],
             ],
             [
-                'attribute' => 'purch_id',
-                'label' => 'สถานะ PO',
-                'headerOptions' => ['style' => 'width: 100px; text-align: center;'],
-                'contentOptions' => ['style' => 'text-align: center;'],
-                'filter' => [
-                    '1' => 'แปลงแล้ว',
-                    '0' => 'ยังไม่แปลง',
-                ],
-                'value' => function ($model) {
-                    if ($model->purch_id) {
-                        return '<span class="badge bg-success">แปลงแล้ว</span>';
-                    } else {
-                        return '<span class="badge bg-secondary">ยังไม่แปลง</span>';
-                    }
-                },
-                'format' => 'raw',
-            ],
-            [
                 'attribute' => 'approve_status',
-                'label' => 'สถานะ',
+                'label' => 'สถานะอนุมัติ',
                 'headerOptions' => ['style' => 'width: 120px; text-align: center;'],
                 'contentOptions' => ['style' => 'text-align: center;'],
                 'filter' => [
-                    PurchReq::APPROVE_STATUS_PENDING => 'รอพิจารณา',
-                    PurchReq::APPROVE_STATUS_APPROVED => 'อนุมัติ',
-                    PurchReq::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
+                    Quotation::APPROVE_STATUS_PENDING => 'รอพิจารณา',
+                    Quotation::APPROVE_STATUS_APPROVED => 'อนุมัติ',
+                    Quotation::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
                 ],
                 'value' => function ($model) {
-                    if ($model->approve_status == PurchReq::APPROVE_STATUS_APPROVED) {
+                    if ($model->approve_status == Quotation::APPROVE_STATUS_APPROVED) {
                         return '<span class="badge bg-success">อนุมัติ</span>';
-                    } elseif ($model->approve_status == PurchReq::APPROVE_STATUS_REJECTED) {
+                    } elseif ($model->approve_status == Quotation::APPROVE_STATUS_REJECTED) {
                         return '<span class="badge bg-danger">ไม่อนุมัติ</span>';
                     } else {
                         return '<span class="badge bg-warning">รอพิจารณา</span>';
@@ -150,9 +132,9 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'class' => ActionColumn::class,
                 'header' => 'ตัวเลือก',
-                'headerOptions' => ['style' => 'width: 120px; text-align: center;'],
+                'headerOptions' => ['style' => 'width: 150px; text-align: center;'],
                 'contentOptions' => ['style' => 'text-align: center;'],
-                'template' => '{view} {convert} {print} {update} {delete}',
+                'template' => '{view} {print} {update} {delete}',
                 'buttons' => [
                     'view' => function ($url, $model, $key) {
                         return Html::a('<i class="fas fa-eye"></i>', $url, [
@@ -160,26 +142,6 @@ $this->params['breadcrumbs'][] = $this->title;
                             'class' => 'btn btn-sm btn-outline-info me-1',
                             'data-pjax' => '0'
                         ]);
-                    },
-                    'convert' => function ($url, $model, $key) {
-                        if ($model->approve_status == PurchReq::APPROVE_STATUS_APPROVED && !$model->purch_id) {
-                            return Html::a('<i class="fas fa-exchange-alt"></i>', ['convert-to-purchase-order', 'id' => $model->id], [
-                                'title' => 'แปลงเป็นใบสั่งซื้อ',
-                                'class' => 'btn btn-sm btn-outline-success me-1',
-                                'data-confirm' => 'คุณต้องการแปลงใบขอซื้อนี้เป็นใบสั่งซื้อหรือไม่?',
-                                'data-method' => 'post',
-                                'data-pjax' => '0'
-                            ]);
-                        } elseif ($model->purch_id) {
-                            return Html::a('<i class="fas fa-external-link-alt"></i>', ['/purch/view', 'id' => $model->purch_id], [
-                                'title' => 'ดูใบสั่งซื้อ',
-                                'class' => 'btn btn-sm btn-outline-success me-1',
-                                'target' => '_blank',
-                                'data-pjax' => '0'
-                            ]);
-                        } else {
-                            return '';
-                        }
                     },
                     'print' => function ($url, $model, $key) {
                         return Html::a('<i class="fas fa-print"></i>', ['print', 'id' => $model->id], [

@@ -3,20 +3,21 @@
 use yii\helpers\Html;
 use yii\widgets\DetailView;
 use kartik\grid\GridView;
-use backend\models\PurchReq;
+use backend\models\Quotation;
 use yii\data\ActiveDataProvider;
 
 /* @var $this yii\web\View */
-/* @var $model backend\models\PurchReq */
+/* @var $model backend\models\Quotation */
 
-$this->title = 'ใบขอซื้อ: ' . $model->purch_req_no;
-$this->params['breadcrumbs'][] = ['label' => 'ใบขอซื้อ', 'url' => ['index']];
+$this->title = 'ใบเสนอราคา: ' . $model->quotation_no;
+$this->params['breadcrumbs'][] = ['label' => 'ใบเสนอราคา', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
-<div class="purch-req-view">
+<div class="quotation-view">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
+
         <div>
             <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
                 'class' => 'btn btn-info',
@@ -27,35 +28,22 @@ $this->params['breadcrumbs'][] = $this->title;
                 'target' => '_blank'
             ]) ?>
 
-            <?php if ($model->approve_status == PurchReq::APPROVE_STATUS_APPROVED && !$model->purch_id): ?>
-                <?= Html::a('<i class="fas fa-exchange-alt"></i> แปลงเป็นใบสั่งซื้อ', ['convert-to-purchase-order', 'id' => $model->id], [
-                    'class' => 'btn btn-success',
-                    'data-confirm' => 'คุณต้องการแปลงใบขอซื้อนี้เป็นใบสั่งซื้อหรือไม่?',
-                    'data-method' => 'post',
-                ]) ?>
-            <?php elseif ($model->purch_id): ?>
-                <?= Html::a('<i class="fas fa-external-link-alt"></i> ดูใบสั่งซื้อ', ['/purch/view', 'id' => $model->purch_id], [
-                    'class' => 'btn btn-success',
-                    'target' => '_blank'
-                ]) ?>
-            <?php endif; ?>
-
             <?= Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-            <?php if ($model->approve_status == PurchReq::APPROVE_STATUS_PENDING): ?>
+            <?php if ($model->approve_status == Quotation::APPROVE_STATUS_PENDING): ?>
                 <?= Html::a('อนุมัติ', ['approve', 'id' => $model->id], [
                     'class' => 'btn btn-success',
-                    'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบขอซื้อนี้?',
+                    'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบเสนอราคานี้?',
                     'data-method' => 'post',
                 ]) ?>
                 <?= Html::a('ไม่อนุมัติ', ['reject', 'id' => $model->id], [
                     'class' => 'btn btn-warning',
-                    'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะไม่อนุมัติใบขอซื้อนี้?',
+                    'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะไม่อนุมัติใบเสนอราคานี้?',
                     'data-method' => 'post',
                 ]) ?>
             <?php endif; ?>
             <?= Html::a('ลบ', ['delete', 'id' => $model->id], [
                 'class' => 'btn btn-danger',
-                'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะลบใบขอซื้อนี้?',
+                'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะลบใบเสนอราคานี้?',
                 'data-method' => 'post',
             ]) ?>
             <?= Html::a('กลับ', ['index'], ['class' => 'btn btn-secondary']) ?>
@@ -66,19 +54,19 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">ข้อมูลใบขอซื้อ</h5>
+                    <h5 class="card-title mb-0">ข้อมูลใบเสนอราคา</h5>
                 </div>
                 <div class="card-body">
                     <?= DetailView::widget([
                         'model' => $model,
                         'attributes' => [
-                            'purch_req_no:text:เลขที่ใบขอซื้อ',
+                            'quotation_no:text:เลขที่ใบเสนอราคา',
                             [
-                                'attribute' => 'purch_req_date',
+                                'attribute' => 'quotation_date',
                                 'label' => 'วันที่',
                                 'format' => ['date', 'php:d/m/Y'],
                             ],
-                            'vendor_name:text:ชื่อผู้ขาย',
+                            'customer_name:text:ชื่อลูกค้า',
                             [
                                 'attribute' => 'status',
                                 'label' => 'สถานะเอกสาร',
@@ -95,39 +83,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'label' => 'ยอดรวม',
                                 'format' => ['currency', 'THB'],
                             ],
-                            [
-                                'attribute' => 'discount_amount',
-                                'label' => 'ส่วนลด',
-                                'format' => ['currency', 'THB'],
-                            ],
-                            [
-                                'attribute' => 'vat_amount',
-                                'label' => 'VAT',
-                                'format' => ['currency', 'THB'],
-                            ],
-                            [
-                                'attribute' => 'net_amount',
-                                'label' => 'ยอดรวมสุทธิ',
-                                'format' => ['currency', 'THB'],
-                            ],
                             'note:ntext:หมายเหตุ',
-                            'purch_id:text:รหัสใบสั่งซื้อ',
-                            [
-                                'attribute' => 'purch_id',
-                                'label' => 'สถานะใบสั่งซื้อ',
-                                'format' => 'raw',
-                                'value' => function($model) {
-                                    if ($model->purch_id) {
-                                        return '<span class="badge bg-success">แปลงแล้ว</span> ' .
-                                            Html::a('ดูใบสั่งซื้อ', ['/purch/view', 'id' => $model->purch_id], [
-                                                'class' => 'btn btn-xs btn-outline-primary',
-                                                'target' => '_blank'
-                                            ]);
-                                    } else {
-                                        return '<span class="badge bg-secondary">ยังไม่แปลง</span>';
-                                    }
-                                },
-                            ],
                         ],
                     ]) ?>
                 </div>
@@ -154,18 +110,23 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'format' => ['datetime', 'php:d/m/Y H:i'],
                             ],
                             'updated_by:text:แก้ไขโดย',
+                            [
+                                'attribute' => 'approve_by',
+                                'label' => 'อนุมัติโดย',
+                                'value' => $model->getApproveByName(),
+                            ],
                         ],
                     ]) ?>
                 </div>
             </div>
 
-            <?php if (!empty($model->total_text)): ?>
+            <?php if (!empty($model->total_amount_text)): ?>
                 <div class="card mt-3">
                     <div class="card-header">
                         <h5 class="card-title mb-0">จำนวนเงิน (ตัวอักษร)</h5>
                     </div>
                     <div class="card-body">
-                        <p class="mb-0"><?= Html::encode($model->total_text) ?></p>
+                        <p class="mb-0"><?= Html::encode($model->total_amount_text) ?></p>
                     </div>
                 </div>
             <?php endif; ?>
@@ -178,14 +139,14 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="card-body">
             <?php
-            $purchReqLineDataProvider = new ActiveDataProvider([
-                'query' => $model->getPurchReqLines(),
+            $quotationLineDataProvider = new ActiveDataProvider([
+                'query' => $model->getQuotationLines(),
                 'pagination' => false,
             ]);
             ?>
 
             <?= GridView::widget([
-                'dataProvider' => $purchReqLineDataProvider,
+                'dataProvider' => $quotationLineDataProvider,
                 'layout' => '{items}',
                 'bordered' => true,
                 'striped' => true,
@@ -203,13 +164,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     ],
                     [
                         'attribute' => 'product_name',
-                        'label' => 'ชื่อสินค้า',
-                        'headerOptions' => ['style' => 'width: 200px;'],
-                    ],
-                    [
-                        'attribute' => 'product_description',
-                        'label' => 'รายละเอียด',
-                        'headerOptions' => ['style' => 'width: 200px;'],
+                        'label' => 'รายการ/สินค้า',
+                        'headerOptions' => ['style' => 'width: 300px;'],
                     ],
                     [
                         'attribute' => 'qty',
@@ -228,14 +184,17 @@ $this->params['breadcrumbs'][] = $this->title;
                         'format' => ['currency', 'THB'],
                     ],
                     [
-                        'attribute' => 'unit',
-                        'label' => 'หน่วยนับ',
-                        'headerOptions' => ['style' => 'width: 80px; text-align: center;'],
-                        'contentOptions' => ['style' => 'text-align: center;'],
+                        'attribute' => 'discount_amount',
+                        'label' => 'ส่วนลด',
+                        'headerOptions' => ['style' => 'width: 100px; text-align: right;'],
+                        'contentOptions' => ['style' => 'text-align: right;'],
+                        'format' => ['currency', 'THB'],
+                        'pageSummary' => true,
+                        'pageSummaryFunc' => GridView::F_SUM,
                     ],
                     [
                         'attribute' => 'line_total',
-                        'label' => 'ราคารวม',
+                        'label' => 'รวมเงิน',
                         'headerOptions' => ['style' => 'width: 120px; text-align: right;'],
                         'contentOptions' => ['style' => 'text-align: right;'],
                         'format' => ['currency', 'THB'],
@@ -269,22 +228,16 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </div>
                             </div>
                             <div class="row mb-2">
-                                <div class="col-8">ส่วนลด:</div>
-                                <div class="col-4 text-end">
-                                    <span class="fw-bold"><?= Yii::$app->formatter->asCurrency($model->discount_amount, 'THB') ?></span>
-                                </div>
-                            </div>
-                            <div class="row mb-2">
                                 <div class="col-8">VAT (7%):</div>
                                 <div class="col-4 text-end">
-                                    <span class="fw-bold"><?= Yii::$app->formatter->asCurrency($model->vat_amount, 'THB') ?></span>
+                                    <span class="fw-bold"><?= Yii::$app->formatter->asCurrency($model->total_amount * 0.07, 'THB') ?></span>
                                 </div>
                             </div>
                             <hr>
                             <div class="row">
-                                <div class="col-8"><strong>ยอดรวมสุทธิ:</strong></div>
+                                <div class="col-8"><strong>ยอดรวมทั้งสิ้น:</strong></div>
                                 <div class="col-4 text-end">
-                                    <span class="fw-bold text-primary h5"><?= Yii::$app->formatter->asCurrency($model->net_amount, 'THB') ?></span>
+                                    <span class="fw-bold text-primary h5"><?= Yii::$app->formatter->asCurrency($model->total_amount * 1.07, 'THB') ?></span>
                                 </div>
                             </div>
                         </div>

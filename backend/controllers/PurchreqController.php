@@ -289,4 +289,135 @@ class PurchreqController extends Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
+    public function actionPrint($id)
+    {
+        $model = $this->findModel($id);
+
+        // Set response format for PDF
+        $this->layout = false;
+
+        return $this->render('print', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
+     * Generate PDF for purchase request
+     * @param int $id
+     * @return mixed
+     * @throws NotFoundHttpException
+     */
+    public function actionPdf($id)
+    {
+        $model = $this->findModel($id);
+
+        // Get HTML content
+        $content = $this->renderPartial('print', [
+            'model' => $model,
+        ]);
+
+        // Configure mPDF
+        $pdf = new \Mpdf\Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'margin_left' => 15,
+            'margin_right' => 15,
+            'margin_top' => 16,
+            'margin_bottom' => 16,
+            'margin_header' => 9,
+            'margin_footer' => 9,
+            'default_font' => 'garuda'
+        ]);
+
+        $pdf->WriteHTML($content);
+
+        // Output PDF
+        $filename = 'PurchaseRequest_' . $model->purch_req_no . '.pdf';
+        $pdf->Output($filename, 'I'); // 'I' for inline, 'D' for download
+
+        exit;
+    }
+    /**
+     * Convert purchase request to purchase order
+     * @param int $id
+     * @return Response
+     * @throws NotFoundHttpException
+     */
+    public function actionConvertToPurchaseOrder($id)
+    {
+        $purchReqModel = $this->findModel($id);
+
+        // Check if already converted
+        if ($purchReqModel->purch_id) {
+            Yii::$app->session->setFlash('warning', 'ใบขอซื้อนี้ได้ถูกแปลงเป็นใบสั่งซื้อแล้ว (PO ID: ' . $purchReqModel->purch_id . ')');
+            return $this->redirect(['view', 'id' => $purchReqModel->id]);
+        }
+
+        // Check if approved
+        if ($purchReqModel->approve_status != PurchReq::APPROVE_STATUS_APPROVED) {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถแปลงเป็นใบสั่งซื้อได้ กรุณาอนุมัติใบขอซื้อก่อน');
+            return $this->redirect(['view', 'id' => $purchReqModel->id]);
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            // Create new Purchase Order
+            $purchModel = new \backend\models\Purch();
+            $purchModel->purch_date = $purchReqModel->purch_req_date;
+            $purchModel->vendor_id = $purchReqModel->vendor_id;
+            $purchModel->vendor_name = $purchReqModel->vendor_name;
+            $purchModel->status = \backend\models\Purch::STATUS_ACTIVE;
+            $purchModel->approve_status = \backend\models\Purch::APPROVE_STATUS_APPROVED;
+            $purchModel->total_amount = $purchReqModel->total_amount;
+            $purchModel->discount_amount = $purchReqModel->discount_amount;
+            $purchModel->vat_amount = $purchReqModel->vat_amount;
+            $purchModel->net_amount = $purchReqModel->net_amount;
+           // $purchModel->note = 'แปลงจากใบขอซื้อ: ' . $purchReqModel->purch_req_no . ($purchReqModel->note ? ' - ' . $purchReqModel->note : '');
+            //$purchModel->ref_text = 'PR: ' . $purchReqModel->purch_req_no;
+
+            if (!$purchModel->save(false)) {
+                throw new \Exception('ไม่สามารถสร้างใบสั่งซื้อได้: ' . implode(', ', $purchModel->getFirstErrors()));
+            }
+
+            // Copy purchase request lines to purchase order lines
+            foreach ($purchReqModel->purchReqLines as $reqLine) {
+                $purchLine = new \backend\models\PurchLine();
+                $purchLine->purch_id = $purchModel->id;
+                $purchLine->product_id = $reqLine->product_id;
+                $purchLine->product_name = $reqLine->product_name;
+                $purchLine->product_type = $reqLine->product_type;
+                $purchLine->qty = $reqLine->qty;
+                $purchLine->line_price = $reqLine->line_price;
+                $purchLine->line_total = $reqLine->line_total;
+                $purchLine->unit_id = $reqLine->unit_id;
+                $purchLine->status = \backend\models\PurchLine::STATUS_ACTIVE;
+                $purchLine->note = $reqLine->note . ($reqLine->product_name ? ' - ' . $reqLine->product_name : '');
+
+                if (!$purchLine->save(false)) {
+                    throw new \Exception('ไม่สามารถสร้างรายการสินค้าได้: ' . implode(', ', $purchLine->getFirstErrors()));
+                }
+            }
+
+            // Update purchase request with reference ID
+            $purchReqModel->purch_id = $purchModel->id;
+            if (!$purchReqModel->save()) {
+                throw new \Exception('ไม่สามารถอัพเดทใบขอซื้อได้: ' . implode(', ', $purchReqModel->getFirstErrors()));
+            }
+
+            $transaction->commit();
+
+            Yii::$app->session->setFlash('success',
+                'แปลงใบขอซื้อเป็นใบสั่งซื้อเรียบร้อยแล้ว<br>' .
+                'เลขที่ใบสั่งซื้อ: <strong>' . $purchModel->purch_no . '</strong>'
+            );
+
+            // Redirect to purchase order view
+            return $this->redirect(['/purch/view', 'id' => $purchModel->id]);
+
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            return $this->redirect(['view', 'id' => $purchReqModel->id]);
+        }
+    }
 }

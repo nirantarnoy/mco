@@ -98,6 +98,9 @@ if (!$model->isNewRecord) {
                 </div>
             <?php endif; ?>
             <div class="col-lg-3">
+                <?= $form->field($model, 'minimum_stock')->textInput() ?>
+            </div>
+            <div class="col-lg-3">
                 <?= $form->field($model, 'stock_qty')->textInput(['readonly' => 'readonly']) ?>
             </div>
         </div>

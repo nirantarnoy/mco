@@ -289,4 +289,276 @@ class PurchController extends Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
+
+    public function actionReceive($id)
+    {
+        $purchModel = $this->findModel($id);
+
+        // Check if PO is approved
+        if ($purchModel->approve_status != Purch::APPROVE_STATUS_APPROVED) {
+            \Yii::$app->session->setFlash('error', 'ไม่สามารถรับสินค้าได้ กรุณาอนุมัติใบสั่งซื้อก่อน');
+            return $this->redirect(['view', 'id' => $purchModel->id]);
+        }
+
+        // Get PO lines with remaining quantities
+        $poLines = $this->getPOLinesWithRemaining($purchModel->id);
+
+        if (empty($poLines)) {
+            \Yii::$app->session->setFlash('warning', 'สินค้าทั้งหมดได้รับเข้าครบแล้ว');
+            return $this->redirect(['view', 'id' => $purchModel->id]);
+        }
+
+        if (\Yii::$app->request->isPost) {
+            $receiveData = \Yii::$app->request->post('receive', []);
+            $warehouseId = \Yii::$app->request->post('warehouse_id');
+            $remark = \Yii::$app->request->post('remark', '');
+
+            if (empty($warehouseId)) {
+                \Yii::$app->session->setFlash('error', 'กรุณาเลือกคลังสินค้า');
+            } else {
+                $result = $this->processReceive($purchModel, $receiveData, $warehouseId, $remark);
+                if ($result['success']) {
+                    \Yii::$app->session->setFlash('success', $result['message']);
+                    return $this->redirect(['view', 'id' => $purchModel->id]);
+                } else {
+                    \Yii::$app->session->setFlash('error', $result['message']);
+                    return $this->redirect(['view', 'id' => $purchModel->id]);
+                }
+            }
+        }
+
+        return $this->render('receive', [
+            'purchModel' => $purchModel,
+            'poLines' => $poLines,
+            'warehouses' => \backend\models\Warehouse::getWarehouseList(),
+        ]);
+    }
+
+    /**
+     * Cancel PO receive
+     * @param int $id Journal Trans ID
+     * @return Response
+     */
+    public function actionCancelReceive($id)
+    {
+        $journalTrans = \backend\models\JournalTrans::findOne($id);
+
+        if (!$journalTrans) {
+            Yii::$app->session->setFlash('error', 'ไม่พบรายการรับสินค้า');
+            return $this->redirect(['index']);
+        }
+
+        if ($journalTrans->status == \backend\models\JournalTrans::STATUS_CANCELLED) {
+            Yii::$app->session->setFlash('warning', 'รายการนี้ถูกยกเลิกแล้ว');
+            return $this->redirect(['view', 'id' => $journalTrans->trans_ref_id]);
+        }
+
+        $result = $this->processCancelReceive($journalTrans);
+
+        if ($result['success']) {
+            Yii::$app->session->setFlash('success', $result['message']);
+        } else {
+            Yii::$app->session->setFlash('error', $result['message']);
+        }
+
+        return $this->redirect(['view', 'id' => $journalTrans->trans_ref_id]);
+    }
+
+    /**
+     * Get PO lines with remaining quantities
+     */
+    private function getPOLinesWithRemaining($purchId)
+    {
+        $sql = "
+            SELECT 
+                pl.*,
+                COALESCE(received.total_received, 0) as total_received,
+                (pl.qty - COALESCE(received.total_received, 0)) as remaining_qty
+            FROM purch_line pl
+            LEFT JOIN (
+                SELECT 
+                    product_id,
+                    SUM(jtl.qty) as total_received
+                FROM journal_trans_line jtl
+                INNER JOIN journal_trans jt ON jtl.journal_trans_id = jt.id
+                WHERE jt.trans_ref_id = :purchId 
+                AND jt.trans_type_id = :transType 
+                AND jt.status = :status
+                GROUP BY product_id
+            ) received ON pl.product_id = received.product_id
+            WHERE pl.purch_id = :purchId 
+            AND pl.status = :lineStatus
+            AND (pl.qty - COALESCE(received.total_received, 0)) > 0
+        ";
+
+        return \Yii::$app->db->createCommand($sql, [
+            ':purchId' => $purchId,
+            ':transType' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE,
+            ':status' => \backend\models\JournalTrans::STATUS_ACTIVE,
+            ':lineStatus' => \backend\models\PurchLine::STATUS_ACTIVE,
+        ])->queryAll();
+    }
+    private function processReceive($purchModel, $receiveData, $warehouseId, $remark)
+    {
+        $transaction = \Yii::$app->db->beginTransaction();
+        try {
+            // Validate receive data
+            $validItems = [];
+            $totalQty = 0;
+
+            foreach ($receiveData as $productId => $qty) {
+                $qty = floatval($qty);
+                if ($qty > 0) {
+                    $validItems[$productId] = $qty;
+                    $totalQty += $qty;
+                }
+            }
+
+            if (empty($validItems)) {
+                return ['success' => false, 'message' => 'กรุณาระบุจำนวนสินค้าที่ต้องการรับเข้า'];
+            }
+
+            // Create Journal Transaction
+            $journalTrans = new \backend\models\JournalTrans();
+            $journalTrans->trans_date = date('Y-m-d H:i:s');
+            $journalTrans->trans_type_id = \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE;
+            $journalTrans->stock_type_id = \backend\models\JournalTrans::STOCK_TYPE_IN;
+            $journalTrans->trans_ref_id = $purchModel->id;
+            $journalTrans->warehouse_id = $warehouseId;
+            $journalTrans->customer_name = $purchModel->vendor_name;
+            $journalTrans->qty = $totalQty;
+            $journalTrans->remark = $remark;
+            $journalTrans->status = \backend\models\JournalTrans::STATUS_ACTIVE;
+
+            if (!$journalTrans->save()) {
+                throw new \Exception('ไม่สามารถสร้าง Journal Transaction ได้: ' . implode(', ', $journalTrans->getFirstErrors()));
+            }
+
+            // Process each item
+            foreach ($validItems as $productId => $qty) {
+                // Get product and PO line info
+                $poLine = \backend\models\PurchLine::find()
+                    ->where(['purch_id' => $purchModel->id, 'product_id' => $productId])
+                    ->one();
+
+                if (!$poLine) {
+                    throw new \Exception("ไม่พบสินค้า ID: $productId ในใบสั่งซื้อ");
+                }
+
+                // Create Journal Transaction Line
+                $journalTransLine = new \backend\models\JournalTransLine();
+                $journalTransLine->journal_trans_id = $journalTrans->id;
+                $journalTransLine->product_id = $productId;
+                $journalTransLine->warehouse_id = $warehouseId;
+                $journalTransLine->qty = $qty;
+                $journalTransLine->remark = "รับสินค้าจาก PO: " . $purchModel->purch_no;
+
+                if (!$journalTransLine->save()) {
+                    throw new \Exception('ไม่สามารถสร้าง Journal Transaction Line ได้: ' . implode(', ', $journalTransLine->getFirstErrors()));
+                }
+
+                // Create Stock Transaction
+                $stockTrans = new \backend\models\StockTrans();
+                $stockTrans->journal_trans_id = $journalTrans->id;
+                $stockTrans->trans_date = $journalTrans->trans_date;
+                $stockTrans->product_id = $productId;
+                $stockTrans->warehouse_id = $warehouseId;
+                $stockTrans->trans_type_id = \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE;
+                $stockTrans->stock_type_id = \backend\models\JournalTrans::STOCK_TYPE_IN;
+                $stockTrans->qty = $qty;
+                $stockTrans->line_price = $poLine->line_price;
+                $stockTrans->status = \backend\models\StockTrans::STATUS_ACTIVE;
+                $stockTrans->remark = "รับสินค้าจาก PO: " . $purchModel->purch_no;
+
+                if (!$stockTrans->save()) {
+                    throw new \Exception('ไม่สามารถสร้าง Stock Transaction ได้: ' . implode(', ', $stockTrans->getFirstErrors()));
+                }
+
+                // Update Stock Summary
+                if (!\backend\models\StockSum::updateStock($productId, $warehouseId, $qty, \backend\models\JournalTrans::STOCK_TYPE_IN)) {
+                    throw new \Exception("ไม่สามารถอัพเดทสต๊อกสินค้า ID: $productId ได้");
+                }
+            }
+
+            $transaction->commit();
+            return [
+                'success' => true,
+                'message' => 'รับสินค้าเข้าคลังเรียบร้อยแล้ว เลขที่เอกสาร: ' . $journalTrans->journal_no
+            ];
+
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            return ['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Process cancel receive
+     */
+    private function processCancelReceive($journalTrans)
+    {
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            // Cancel Journal Transaction
+            $journalTrans->status = \backend\models\JournalTrans::STATUS_CANCELLED;
+            if (!$journalTrans->save()) {
+                throw new \Exception('ไม่สามารถยกเลิก Journal Transaction ได้');
+            }
+
+            // Cancel all related Stock Transactions
+            \backend\models\StockTrans::updateAll(
+                ['status' => \backend\models\StockTrans::STATUS_CANCELLED],
+                ['journal_trans_id' => $journalTrans->id]
+            );
+
+            // Reverse stock quantities
+            $journalTransLines = $journalTrans->journalTransLines;
+            foreach ($journalTransLines as $line) {
+                // Reverse stock by reducing the quantity (opposite of receive)
+                if (!\backend\models\StockSum::updateStock(
+                    $line->product_id,
+                    $line->warehouse_id,
+                    $line->qty,
+                    \backend\models\JournalTrans::STOCK_TYPE_OUT
+                )) {
+                    throw new \Exception("ไม่สามารถปรับปรุงสต๊อกสินค้า ID: {$line->product_id} ได้");
+                }
+            }
+
+            $transaction->commit();
+            return [
+                'success' => true,
+                'message' => 'ยกเลิกการรับสินค้าเรียบร้อยแล้ว เลขที่เอกสาร: ' . $journalTrans->journal_no
+            ];
+
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            return ['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()];
+        }
+    }
+
+    /**
+     * Get receive history for PO
+     * @param int $id
+     * @return Response
+     */
+    public function actionReceiveHistory($id)
+    {
+        $purchModel = $this->findModel($id);
+
+        $receiveHistory = \backend\models\JournalTrans::find()
+            ->where([
+                'trans_ref_id' => $id,
+                'trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE
+            ])
+            ->with(['journalTransLines', 'journalTransLines.product', 'journalTransLines.warehouse'])
+            ->orderBy(['created_at' => SORT_DESC])
+            ->all();
+
+        return $this->render('receive-history', [
+            'purchModel' => $purchModel,
+            'receiveHistory' => $receiveHistory,
+        ]);
+    }
+
 }
