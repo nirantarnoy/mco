@@ -19,6 +19,13 @@ use yii\bootstrap4\LinkPager;
 $this->title = 'สินค้า';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+    <div class="row" style="display: nonex;">
+        <form action="<?= \yii\helpers\Url::to(['product/importproduct'], true) ?>" method="post"
+              enctype="multipart/form-data">
+            <input type="file" name="file_product" class="form-control">
+            <button class="btn btn-success">Import</button>
+        </form>
+    </div>
     <div id="loading"
          style="display:none; position: fixed; top: 0; left: 0; z-index: 9999; width: 100%; height: 100%; background-color: rgba(255,255,255,0.7); text-align: center; padding-top: 20%;">
         <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><br>กำลังโหลดข้อมูล...
@@ -95,6 +102,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         );
                     }
                 ],
+                'code',
                 'name',
                 'description',
                 // 'product_type_id',

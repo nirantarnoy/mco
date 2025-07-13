@@ -375,9 +375,9 @@ class QuotationController extends Controller
                 $result[] = [
                     'id' => $product->id,
                     'name' => $product->name,
-                    'code' => $product->name ?? '',
+                    'code' => $product->code ?? '',
                     'price' => $product->sale_price ?? 0,
-                    'display' => $product->name . ($product->name ? ' (' . $product->name . ')' : '')
+                    'display' => $product->code . ($product->name ? ' (' . $product->name . ')' : '')
                 ];
             }
 
@@ -393,9 +393,9 @@ class QuotationController extends Controller
                     'id' => $product->id,
                     'product_name' => $product->name,
                     'name' => $product->name,
-                    'code' => $product->name ?? '',
+                    'code' => $product->code ?? '',
                     'price' => $product->sale_price ?? 0,
-                    'display' => $product->name . ($product->name ? ' (' . $product->name . ')' : '')
+                    'display' => $product->code . ($product->name ? ' (' . $product->name . ')' : '')
                 ];
             }
         }

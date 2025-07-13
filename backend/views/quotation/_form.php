@@ -58,10 +58,7 @@ $css = '
 .form-group {
     margin-bottom: 1rem;
 }
-.table-responsive {
-    border: 1px solid #dee2e6;
-    border-radius: 0.375rem;
-}
+
 ';
 
 // CSS สำหรับ autocomplete
@@ -162,6 +159,15 @@ $autocompleteCSS = <<<CSS
     padding-top: 25px !important;
     display: flex;
     align-items: flex-start;
+}
+.table-responsive {
+    overflow: visible !important; /* แทน auto */
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+}
+
+.table-responsive .table {
+    overflow: visible !important;
 }
 CSS;
 

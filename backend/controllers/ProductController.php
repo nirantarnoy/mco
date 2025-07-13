@@ -412,39 +412,50 @@ class ProductController extends Controller
                         continue;
                     }
 
-                    $model_dup = \backend\models\Product::find()->where(['name' => trim($rowData[0])])->one();
+                    $model_dup = \backend\models\Product::find()->where(['code' => trim($rowData[5])])->one();
                     if ($model_dup != null) {
                         $new_stock_qty = 0;
-                        if($rowData[5] != null || $rowData[5] != ''){
-                            $new_stock_qty = $rowData[5];
+
+                        $new_unit = $this->checkUnit(trim($rowData[3]));
+                        $new_warehouse = $this->checkWarehouse(trim($rowData[4]));
+                        if($rowData[2] != null || $rowData[2] != ''){
+                            $new_stock_qty = $rowData[2];
                         }
-                        $model_dup->description = $rowData[1];
-                        $model_dup->remark = $rowData[6];
+
+                        $model_dup->name = $rowData[1];
+                        $model_dup->description = '';// $rowData[1];
+                        $model_dup->unit_id = $new_unit;
                         $model_dup->stock_qty = $new_stock_qty;
+                        $model_dup->cost_price = $rowData[6];
+                        $model_dup->sale_price = $rowData[6];
+                     //   $model_dup->updated_at = date('Y-m-d H:i:s');
                         if($model_dup->save(false)){
-                            $this->calStock($model_dup->id,1,$rowData[7],$rowData[5]);
+                            $this->calStock($model_dup->id,1,$new_warehouse,$rowData[2]);
                             $res+=1;
                         }
                         continue;
                     }else{
+
+                        $new_unit = $this->checkUnit(trim($rowData[3]));
+                        $new_warehouse = $this->checkWarehouse(trim($rowData[4]));
                     //    echo "must new";
                         $modelx = new \backend\models\Product();
-                        // $modelx->code = $rowData[0];
-                        $modelx->name = trim($rowData[0]);
-                        $modelx->description = trim($rowData[1]);
-                        $modelx->product_group_id = $rowData[2]; // watch or phone or etc
-                        $modelx->brand_id = $rowData[4];
+                        $modelx->code = trim($rowData[5]);
+                        $modelx->name = trim($rowData[1]);
+                        $modelx->description = ''; trim($rowData[1]);
+                        $modelx->product_group_id = 0; // watch or phone or etc
+                        $modelx->brand_id = 0;
                         $modelx->product_type_id = 1; // normal or custom
                         $modelx->type_id = 1; // 1 = new 2 = second used
-                        $modelx->unit_id = 1;
+                        $modelx->unit_id = $new_unit;
                         $modelx->status = 1;
-                        $modelx->cost_price = 0;
-                        $modelx->sale_price = 0;
-                        $modelx->stock_qty = 0;//$rowData[5];
-                        $modelx->remark = $rowData[6];
+                        $modelx->cost_price = $rowData[6];
+                        $modelx->sale_price = $rowData[6];
+                        $modelx->stock_qty = $rowData[2];
+                        $modelx->remark = '';
                         //
                         if ($modelx->save(false)) {
-                            $this->calStock($modelx->id,1,$rowData[7],$rowData[5]);
+                            $this->calStock($modelx->id,1,$new_warehouse,$rowData[2]);
                             $res += 1;
                         }
                     }
@@ -470,30 +481,62 @@ class ProductController extends Controller
         }
     }
 
-    public function calStock($product_id,$stock_type_id,$warehouse_name,$qty){
-
-        $warehouse_id = 0;
-        if($warehouse_name!='' || $warehouse_name!=null){
-            $warehouse = \common\models\Warehouse::find()->where(['name'=>trim($warehouse_name)])->one();
-            if($warehouse){
-                $warehouse_id = $warehouse->id;
-            }else{
-                    $warehouse = new \common\models\Warehouse();
-                    $warehouse->name = trim($warehouse_name);
-                    $warehouse->description = trim($warehouse_name);
-                    $warehouse->status = 1;
-                    if($warehouse->save(false)){
-                        $warehouse_id = $warehouse->id;
-                    }
+    public function checkUnit($name){
+        $model = \common\models\Unit::find()->where(['name'=>$name])->one();
+        if($model){
+            return $model->id;
+        }else{
+            $model = new \common\models\Unit();
+            $model->name = $name;
+            $model->description = $name;
+            $model->status = 1;
+            if($model->save(false)){
+                return $model->id;
             }
         }
+    }
+
+    public function checkWarehouse($name){
+        $model = \common\models\Warehouse::find()->where(['name'=>$name])->one();
+        if($model){
+            return $model->id;
+        }else{
+            $model = new \common\models\Warehouse();
+            $model->name = $name;
+            $model->description = $name;
+            $model->status = 1;
+            if($model->save(false)){
+                return $model->id;
+            }
+        }
+    }
+
+    public function calStock($product_id,$stock_type_id,$warehouse_id,$qty){
+
+//        $warehouse_id = 0;
+//        if($warehouse_name!='' || $warehouse_name!=null){
+//            $warehouse = \common\models\Warehouse::find()->where(['name'=>trim($warehouse_name)])->one();
+//            if($warehouse){
+//                $warehouse_id = $warehouse->id;
+//            }else{
+//                    $warehouse = new \common\models\Warehouse();
+//                    $warehouse->name = trim($warehouse_name);
+//                    $warehouse->description = trim($warehouse_name);
+//                    $warehouse->status = 1;
+//                    if($warehouse->save(false)){
+//                        $warehouse_id = $warehouse->id;
+//                    }
+//            }
+//        }
 
         if($product_id && $stock_type_id && $qty){
             if($stock_type_id == 1){ // stock in
                 $model = \common\models\StockSum::find()->where(['product_id'=>$product_id,'warehouse_id'=>$warehouse_id])->one();
                 if($model){
                     $model->qty = $qty; // initial stock
-                    $model->save(false);
+                    if($model->save(false)){
+                        $this->calupdateproductStock($product_id);
+                    }
                 }else{
                     $model = new \common\models\StockSum();
                     $model->product_id = $product_id;
@@ -501,13 +544,20 @@ class ProductController extends Controller
                     $model->qty = $qty;
                     $model->updated_at = date('Y-m-d H:i:s');
                     if($model->save(false)){
-                        $model_product = \backend\models\Product::findOne($product_id);
-                        if($model_product){
-                            $model_product->stock_qty = $qty; // update stock product
-                            $model_product->save(false);
-                        }
+                        $this->calupdateproductStock($product_id);
                     }
                 }
+            }
+        }
+    }
+
+    public function calupdateproductStock($product_id){
+        if($product_id){
+            $model = \common\models\Product::find()->where(['id'=>$product_id])->one();
+            if($model){
+                $stock = \common\models\StockSum::find()->where(['product_id'=>$product_id])->sum('qty');
+                $model->stock_qty = $stock;
+                $model->save(false);
             }
         }
     }

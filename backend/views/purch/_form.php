@@ -94,8 +94,13 @@ $autocompleteCSS = <<<CSS
 }
 
 .table-responsive {
+    overflow: visible !important; /* แทน auto */
     border: 1px solid #dee2e6;
     border-radius: 0.375rem;
+}
+
+.table-responsive .table {
+    overflow: visible !important;
 }
 
 .bg-light {

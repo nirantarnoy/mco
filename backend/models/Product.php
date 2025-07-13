@@ -82,7 +82,7 @@ class Product extends \common\models\Product
             ->where(['product_id' => $id])->all();
         foreach ($model as $value) {
             if($value->qty <= 0)continue;
-            $name .= '<div class="badge badge-pill badge-info" style="padding: 10px;">'.\backend\models\Warehouse::findName($value->warehouse_id) . '</div><br />';
+            $name .= '<div class="badge badge-pill badge-info" style="padding: 10px;margin: 3px">'.\backend\models\Warehouse::findName($value->warehouse_id) . '</div><br />';
         }
         return $name;
     }
