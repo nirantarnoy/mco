@@ -355,7 +355,7 @@ $this->title = 'พิมพ์ใบเสนอราคา: ' . $model->quota
     // window.onload = function() { window.print(); }
 </script>
 </body>
-</html>="header-left">
+</html>
 <div class="company-logo">
     <strong style="color: #c41e3a; font-size: 16px;">MCO</strong>
     <span style="color: #ffa500; font-size: 12px;">▲</span>

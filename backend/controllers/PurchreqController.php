@@ -226,11 +226,11 @@ class PurchreqController extends Controller
     /**
      * Get product info for AJAX
      */
-    public function actionGetProductInfo($id)
-    {
-        Yii::$app->response->format = Response::FORMAT_JSON;
-        return Product::getProductInfo($id);
-    }
+//    public function actionGetProductInfo($id)
+//    {
+//        Yii::$app->response->format = Response::FORMAT_JSON;
+//        return Product::getProductInfo($id);
+//    }
 
     /**
      * Approve purchase request
@@ -419,5 +419,50 @@ class PurchreqController extends Controller
             Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
             return $this->redirect(['view', 'id' => $purchReqModel->id]);
         }
+    }
+
+    public function actionGetProductInfo()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $request = \Yii::$app->request;
+
+        // ถ้าขอข้อมูลสินค้าทั้งหมดสำหรับ autocomplete
+        if ($request->get('action') === 'get-all-products') {
+            $products = \backend\models\Product::find()
+                ->where(['status' => 1])
+                ->all();
+
+            $result = [];
+            foreach ($products as $product) {
+                $result[] = [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'code' => $product->name ?? '',
+                    'price' => $product->sale_price ?? 0,
+                    'display' => $product->name . ($product->name ? ' (' . $product->name . ')' : '')
+                ];
+            }
+
+            return $result;
+        }
+
+        // ถ้าขอข้อมูลสินค้าเฉพาะ ID (สำหรับการเลือกสินค้า)
+        $id = $request->get('id');
+        if ($id) {
+            $product = \backend\models\Product::findOne($id);
+            if ($product) {
+                return [
+                    'id' => $product->id,
+                    'product_name' => $product->name,
+                    'name' => $product->name,
+                    'code' => $product->name ?? '',
+                    'price' => $product->sale_price ?? 0,
+                    'display' => $product->name . ($product->name ? ' (' . $product->name . ')' : '')
+                ];
+            }
+        }
+
+        return ['error' => 'Product not found'];
     }
 }
