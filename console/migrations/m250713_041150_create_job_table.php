@@ -3,22 +3,22 @@
 use yii\db\Migration;
 
 /**
- * Handles the creation of table `{{%vendor}}`.
+ * Handles the creation of table `{{%job}}`.
  */
-class m250704_141804_create_vendor_table extends Migration
+class m250713_041150_create_job_table extends Migration
 {
     /**
      * {@inheritdoc}
      */
     public function safeUp()
     {
-        $this->createTable('{{%vendor}}', [
+        $this->createTable('{{%job}}', [
             'id' => $this->primaryKey(),
-            'code' => $this->string(),
-            'name' => $this->string(),
-            'description' => $this->string(),
-            'vendor_group_id' => $this->integer(),
+            'job_no' => $this->string(),
+            'quotation_id' => $this->integer(),
+            'job_date' => $this->datetime(),
             'status' => $this->integer(),
+            'job_amount' => $this->float(),
             'created_at' => $this->integer(),
             'created_by' => $this->integer(),
             'updated_at' => $this->integer(),
@@ -31,6 +31,6 @@ class m250704_141804_create_vendor_table extends Migration
      */
     public function safeDown()
     {
-        $this->dropTable('{{%vendor}}');
+        $this->dropTable('{{%job}}');
     }
 }
