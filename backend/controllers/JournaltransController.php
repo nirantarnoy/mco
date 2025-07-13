@@ -2,25 +2,23 @@
 
 namespace backend\controllers;
 
-use Exception;
 use Yii;
 use backend\models\JournalTrans;
-use backend\models\journalTransSearch;
-use common\models\JournalTransLine;
-use yii\db\Expression;
+use backend\models\JournalTransLine;
+use backend\models\Product;
+use backend\models\StockSum;
+use yii\data\ActiveDataProvider;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
-use yii\helpers\ArrayHelper;
+use yii\helpers\Json;
 use yii\web\Response;
-use yii\widgets\ActiveForm;
 
 /**
- * JournaltransController implements the CRUD actions for JournalTrans model.
+ * JournalTransController implements the CRUD actions for JournalTrans model.
  */
 class JournaltransController extends Controller
 {
-    public $enableCsrfValidation = false;
     /**
      * {@inheritdoc}
      */
@@ -28,10 +26,10 @@ class JournaltransController extends Controller
     {
         return [
             'verbs' => [
-                'class' => VerbFilter::className(),
+                'class' => VerbFilter::class,
                 'actions' => [
-                    'delete' => ['POST','GET'],
-                    'delete-line' => ['POST','GET'],
+                    'delete' => ['POST'],
+                    'approve' => ['POST'],
                 ],
             ],
         ];
@@ -43,16 +41,15 @@ class JournaltransController extends Controller
      */
     public function actionIndex()
     {
-        $pageSize = \Yii::$app->request->post("perpage");
-        $searchModel = new \backend\models\JournalTransSearch();
-        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-        $dataProvider->setSort(['defaultOrder' => ['id' => SORT_ASC]]);
-        $dataProvider->pagination->pageSize = $pageSize;
+        $dataProvider = new ActiveDataProvider([
+            'query' => JournalTrans::find()->orderBy(['created_at' => SORT_DESC]),
+            'pagination' => [
+                'pageSize' => 20,
+            ],
+        ]);
 
         return $this->render('index', [
-            'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
-            'perpage' => $pageSize,
         ]);
     }
 
@@ -64,12 +61,8 @@ class JournaltransController extends Controller
      */
     public function actionView($id)
     {
-        $model = $this->findModel($id);
-        $lines = $model->journalTransLines;
-
         return $this->render('view', [
-            'model' => $model,
-            'lines' => $lines,
+            'model' => $this->findModel($id),
         ]);
     }
 
@@ -78,98 +71,30 @@ class JournaltransController extends Controller
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
-    public function actionCreate($type = null)
+    public function actionCreate()
     {
         $model = new JournalTrans();
-        $modelLines = [new JournalTransLine()];
+        $lines = [new JournalTransLine()];
 
-        if ($model->load(\Yii::$app->request->post())) {
-            $modelLines = $this->createMultiple(JournalTransLine::class);
-            JournalTransLine::loadMultiple($modelLines, \Yii::$app->request->post());
+        if ($model->load(Yii::$app->request->post())) {
+            $linesData = Yii::$app->request->post('JournalTransLine', []);
+            $lines = [];
 
-
-            // Ajax validation
-            if (\Yii::$app->request->isAjax) {
-                \Yii::$app->response->format = Response::FORMAT_JSON;
-                return ArrayHelper::merge(
-                    ActiveForm::validateMultiple($modelLines),
-                    ActiveForm::validate($model)
-                );
+            foreach ($linesData as $lineData) {
+                $line = new JournalTransLine();
+                $line->load($lineData, '');
+                $lines[] = $line;
             }
 
-
-
-            //custom model data
-            $model->stock_type_id = 2; // 1 เข้า 2 ออก
-            if($model->trans_type_id == 7 || $model->trans_type_id == 5){ // ยืม และ ส่งช่าง
-                $model->status =1;
-            }else{
-                $model->status =3;
-            }
-
-            $model->trans_date = date('Y-m-d H:i:s');
-
-            // Validate all models
-            $valid = $model->validate();
-           // $valid = JournalTransLine::validateMultiple($modelLines) && $valid;
-
-            if ($valid) {
-                //$transaction = \Yii::$app->db->beginTransaction();
-               // try {
-                    if ($flag = $model->save(false)) {
-                       // echo "ok";return;
-                        foreach ($modelLines as $modelLine) {
-                            $modelLine->journal_trans_id = $model->id;
-                            if (!($flag = $modelLine->save(false))) {
-                                break;
-                            }
-                        }
-                    }
-
-                    if($flag) {
-
-                        $total_qty = 0;
-                        foreach ($modelLines as $modelLine) {
-                            $total_qty += $modelLine->qty;
-                            $model_stock_trans = new \common\models\StockTrans();
-                            $model_stock_trans->trans_date = date('Y-m-d H:i:s');
-                            $model_stock_trans->journal_trans_id = $model->id;
-                            $model_stock_trans->trans_type_id = $model->trans_type_id;
-                            $model_stock_trans->product_id = $modelLine->product_id;
-                            $model_stock_trans->qty = $modelLine->qty;
-                            $model_stock_trans->warehouse_id = $modelLine->warehouse_id;
-                            $model_stock_trans->stock_type_id = $model->stock_type_id;
-                            $model_stock_trans->remark = $modelLine->remark;
-                            $model_stock_trans->created_by = $model->created_by;
-                            if($model_stock_trans->save(false)){
-                                $this->calStock($modelLine->product_id,$model->stock_type_id,$modelLine->warehouse_id,$modelLine->qty,$model->trans_type_id);
-                            }
-                        }
-                       \backend\models\JournalTrans::updateAll(['qty' => $total_qty], ['id' => $model->id]);
-
-                       // $transaction->commit();
-
-                        \Yii::$app->session->setFlash('success', 'บันทึกข้อมูลสำเร็จ');
-                        return $this->redirect(['view', 'id' => $model->id]);
-                    }
-
-//                    if ($flag) {
-//                        print_r($model);return;
-//
-//                    }
-//                } catch (Exception $e) {
-//                   // $transaction->rollBack();
-//                    Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
-//                }
-            }else{
-
+            if ($this->saveTransaction($model, $lines)) {
+                Yii::$app->session->setFlash('success', 'Transaction created successfully.');
+                return $this->redirect(['view', 'id' => $model->id]);
             }
         }
 
         return $this->render('create', [
             'model' => $model,
-            'modelLines' => (empty($modelLines)) ? [new JournalTransLine()] : $modelLines,
-            'create_type' => $type,
+            'lines' => $lines,
         ]);
     }
 
@@ -183,61 +108,41 @@ class JournaltransController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        $modelLines = $model->journalTransLines;
+
+        // Only allow edit if status is draft
+        if ($model->status !== JournalTrans::STATUS_DRAFT) {
+            Yii::$app->session->setFlash('error', 'Cannot edit approved or processed transactions.');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $lines = $model->journalTransLines;
+        if (empty($lines)) {
+            $lines = [new JournalTransLine()];
+        }
 
         if ($model->load(Yii::$app->request->post())) {
+            $linesData = Yii::$app->request->post('JournalTransLine', []);
+            $lines = [];
 
-            $oldIDs = ArrayHelper::map($modelLines, 'id', 'id');
-            $modelLines = $this->createMultiple(JournalTransLine::class, $modelLines);
-            JournalTransLine::loadMultiple($modelLines, \Yii::$app->request->post());
-            $deletedIDs = array_diff($oldIDs, array_filter(ArrayHelper::map($modelLines, 'id', 'id')));
-
-            // Ajax validation
-            if (Yii::$app->request->isAjax) {
-                Yii::$app->response->format = Response::FORMAT_JSON;
-                return ArrayHelper::merge(
-                    ActiveForm::validateMultiple($modelLines),
-                    ActiveForm::validate($model)
-                );
+            foreach ($linesData as $lineData) {
+                if (!empty($lineData['id'])) {
+                    $line = JournalTransLine::findOne($lineData['id']);
+                } else {
+                    $line = new JournalTransLine();
+                }
+                $line->load($lineData, '');
+                $lines[] = $line;
             }
 
-            // Validate all models
-            $valid = $model->validate();
-            //$valid = JournalTransLine::validateMultiple($modelLines) && $valid;
-
-            if ($valid) {
-                $transaction = \Yii::$app->db->beginTransaction();
-                try {
-                    if ($flag = $model->save(false)) {
-                        if (!empty($deletedIDs)) {
-                            JournalTransLine::deleteAll(['id' => $deletedIDs]);
-                        }
-                        $total_qty = 0;
-                        foreach ($modelLines as $modelLine) {
-                            $total_qty += $modelLine->qty;
-                            $modelLine->journal_trans_id = $model->id;
-                            if (!($flag = $modelLine->save(false))) {
-                                break;
-                            }
-                        }
-                        \backend\models\JournalTrans::updateAll(['qty' => $total_qty], ['id' => $model->id]);
-                    }
-
-                    if ($flag) {
-                        $transaction->commit();
-                        Yii::$app->session->setFlash('success', 'บันทึกข้อมูลสำเร็จ');
-                        return $this->redirect(['view', 'id' => $model->id]);
-                    }
-                } catch (Exception $e) {
-                    $transaction->rollBack();
-                    Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
-                }
+            if ($this->saveTransaction($model, $lines)) {
+                Yii::$app->session->setFlash('success', 'Transaction updated successfully.');
+                return $this->redirect(['view', 'id' => $model->id]);
             }
         }
 
         return $this->render('update', [
             'model' => $model,
-            'modelLines' => (empty($modelLines)) ? [new JournalTransLine()] : $modelLines
+            'lines' => $lines,
         ]);
     }
 
@@ -252,22 +157,160 @@ class JournaltransController extends Controller
     {
         $model = $this->findModel($id);
 
+        // Only allow delete if status is draft
+        if ($model->status !== JournalTrans::STATUS_DRAFT) {
+            Yii::$app->session->setFlash('error', 'Cannot delete approved or processed transactions.');
+            return $this->redirect(['index']);
+        }
+
         $transaction = Yii::$app->db->beginTransaction();
         try {
-            // Delete all related lines first
+            // Delete lines first
             JournalTransLine::deleteAll(['journal_trans_id' => $id]);
-
-            // Delete master
+            // Delete main record
             $model->delete();
 
             $transaction->commit();
-            Yii::$app->session->setFlash('success', 'ลบข้อมูลสำเร็จ');
-        } catch (Exception $e) {
+            Yii::$app->session->setFlash('success', 'Transaction deleted successfully.');
+        } catch (\Exception $e) {
             $transaction->rollBack();
-            Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            Yii::$app->session->setFlash('error', 'Error deleting transaction: ' . $e->getMessage());
         }
 
         return $this->redirect(['index']);
+    }
+
+    /**
+     * Approve transaction
+     * @param integer $id
+     * @return mixed
+     */
+    public function actionApprove($id)
+    {
+        $model = $this->findModel($id);
+
+        if ($model->status !== JournalTrans::STATUS_DRAFT) {
+            Yii::$app->session->setFlash('error', 'Transaction cannot be approved.');
+            return $this->redirect(['view', 'id' => $id]);
+        }
+
+        try {
+            // Validate stock availability for outbound transactions
+            if ($model->stock_type_id == JournalTrans::STOCK_TYPE_OUT) {
+                foreach ($model->journalTransLines as $line) {
+                    $availableStock = $line->product->getAvailableStockInWarehouse($model->warehouse_id);
+                    if ($availableStock < $line->qty) {
+                        throw new \Exception("Insufficient stock for product: {$line->product->name}. Available: {$availableStock}, Required: {$line->qty}");
+                    }
+                }
+            }
+
+            $model->approve();
+            Yii::$app->session->setFlash('success', 'Transaction approved successfully.');
+        } catch (\Exception $e) {
+            Yii::$app->session->setFlash('error', 'Error approving transaction: ' . $e->getMessage());
+        }
+
+        return $this->redirect(['view', 'id' => $id]);
+    }
+
+    /**
+     * Get product info for AJAX
+     * @param integer $id
+     * @return array
+     */
+    public function actionGetProduct($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $product = Product::findOne($id);
+        if ($product) {
+            return [
+                'success' => true,
+                'data' => [
+                    'id' => $product->id,
+                    'code' => $product->code,
+                    'name' => $product->name,
+                    'sale_price' => $product->sale_price,
+                    'stock_qty' => $product->stock_qty,
+                ]
+            ];
+        }
+
+        return ['success' => false, 'message' => 'Product not found'];
+    }
+
+    /**
+     * Get stock in warehouse for AJAX
+     * @param integer $productId
+     * @param integer $warehouseId
+     * @return array
+     */
+    public function actionGetStock($productId, $warehouseId)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $stockSum = StockSum::find()
+            ->where(['product_id' => $productId, 'warehouse_id' => $warehouseId])
+            ->one();
+
+        $stock = $stockSum ? $stockSum->qty : 0;
+        $available = $stockSum ? $stockSum->getAvailableQty() : 0;
+
+        return [
+            'success' => true,
+            'stock' => $stock,
+            'available' => $available,
+        ];
+    }
+
+    /**
+     * Save transaction with lines
+     * @param JournalTrans $model
+     * @param array $lines
+     * @return boolean
+     */
+    protected function saveTransaction($model, $lines)
+    {
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            // Validate lines
+            $valid = $model->validate();
+            foreach ($lines as $line) {
+                if (!$line->validate()) {
+                    $valid = false;
+                }
+            }
+
+            if (!$valid) {
+                return false;
+            }
+
+            // Save main record
+            if (!$model->save(false)) {
+                throw new \Exception('Failed to save transaction');
+            }
+
+            // Delete existing lines if updating
+            if (!$model->isNewRecord) {
+                JournalTransLine::deleteAll(['journal_trans_id' => $model->id]);
+            }
+
+            // Save lines
+            foreach ($lines as $line) {
+                $line->journal_trans_id = $model->id;
+                if (!$line->save(false)) {
+                    throw new \Exception('Failed to save transaction line');
+                }
+            }
+
+            $transaction->commit();
+            return true;
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            $model->addError('', $e->getMessage());
+            return false;
+        }
     }
 
     /**
@@ -279,202 +322,10 @@ class JournaltransController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = JournalTrans::findOne($id)) !== null) {
+        if (($model = JournalTrans::find()->with(['journalTransLines.product', 'stockTrans.product'])->where(['id' => $id])->one()) !== null) {
             return $model;
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
-    }
-
-    public function calStock($product_id,$stock_type_id,$warehouse_id,$qty,$activity_type){
-        if($product_id && $stock_type_id && $qty){
-           if($stock_type_id == 2){ // stock out
-               $model = \common\models\StockSum::find()->where(['product_id'=>$product_id,'warehouse_id'=>$warehouse_id])->andWhere(['>=','qty',$qty])->one();
-               if($model){
-                   $model->qty -= $qty;
-                   if($activity_type == 5) { // ยืม
-                       $model->reserv_qty += $qty;
-                   }
-                   if($model->save(false)){
-                       $this->updateProductStock($product_id);
-                   }
-               }
-           }
-           if($stock_type_id == 1){ // stock in
-               $model = \common\models\StockSum::find()->where(['product_id'=>$product_id,'warehouse_id'=>$warehouse_id])->one();
-               if($model){
-                   $model->qty += $qty;
-                   if($activity_type == 6) { // คืน
-                       $model->reserv_qty -= $qty;
-                   }
-                   if($model->save(false)){
-                       $this->updateProductStock($product_id);
-                   }
-               }else{
-                   $model = new \common\models\StockSum();
-                   $model->product_id = $product_id;
-                   $model->warehouse_id = $warehouse_id;
-                   $model->qty = $qty;
-                   $model->reserv_qty = 0;
-                   $model->updated_at = date('Y-m-d H:i:s');
-                   if($model->save(false)){
-                       $this->updateProductStock($product_id);
-                   }
-               }
-           }
-        }
-    }
-
-    function updateProductStock($product_id){
-        if($product_id){
-        //    $model_stock = \backend\models\Stocksum::find()->where(['product_id'=>$product_id])->andFilterWhere(['is not','warehouse_id',new Expression('null')])->all();
-            $model_stock = \backend\models\Stocksum::find()->where(['product_id'=>$product_id])->all();
-            if($model_stock){
-                $all_stock = 0;
-                foreach($model_stock as $model){
-                    if($model->warehouse_id == null || $model->warehouse_id == '')continue;
-                    $res_qty = $model->reserv_qty != null ? $model->reserv_qty : 0;
-                    $all_stock += ($model->qty + $res_qty); // รวมจํานวน + จํานวนจอง
-                }
-
-                \backend\models\Product::updateAll(['stock_qty'=>$all_stock],['id'=>$product_id]);
-            }
-        }
-    }
-
-    /**
-     * Function to create multiple models
-     */
-    protected function createMultiple($modelClass, $multipleModels = [])
-    {
-        $model = new $modelClass;
-        $formName = $model->formName();
-        $post = Yii::$app->request->post($formName);
-        $models = [];
-
-        if (!empty($multipleModels)) {
-            $keys = array_keys(ArrayHelper::map($multipleModels, 'id', 'id'));
-            $multipleModels = array_combine($keys, $multipleModels);
-        }
-
-        if ($post && is_array($post)) {
-            foreach ($post as $i => $item) {
-                if (isset($item['id']) && !empty($item['id']) && isset($multipleModels[$item['id']])) {
-                    $models[] = $multipleModels[$item['id']];
-                } else {
-                    $models[] = new $modelClass;
-                }
-            }
-        }
-
-        unset($model, $formName, $post);
-
-        return $models;
-    }
-
-    public function actionAddreturnproduct(){
-         $product_id = \Yii::$app->request->post('product_id');
-         $journal_trans_id = \Yii::$app->request->post('journal_trans_id');
-         $qty = \Yii::$app->request->post('return_qty');
-         $remark = \Yii::$app->request->post('return_remark');
-         $return_to_type = \Yii::$app->request->post('return_to_type');
-         $trans_type_id = \Yii::$app->request->post('trans_type_id');
-         $return_to_warehouse = \Yii::$app->request->post('return_to_warehouse');
-
-         if($journal_trans_id && $qty !=null && $trans_type_id != null){
-             $model = new \backend\models\JournalTrans();
-             $model->trans_date = date('Y-m-d H:i:s');
-             $model->journal_no = '';
-             $model->remark = '';
-             $model->trans_type_id = $trans_type_id; // 8 = คืนสินค้าช่าง 5 = คืนยืม
-             $model->status = 3;
-             $model->stock_type_id = 1; // 1 เข้า 2 ออก
-             $model->trans_ref_id = $journal_trans_id;
-             if($model->save(false)){
-                 if($product_id != null){
-                     for($i=0;$i<count($product_id);$i++){
-                         $model_line = new \common\models\JournalTransLine();
-                         $model_line->journal_trans_id = $model->id;
-                         $model_line->product_id = $product_id[$i];
-                         $model_line->qty = $qty[$i];
-                         $model_line->remark = $remark[$i];
-                         $model_line->warehouse_id = $return_to_warehouse != null ? $return_to_warehouse[$i] : 1; // default
-                         $model_line->return_to_type = $return_to_type != null ? $return_to_type[$i] : null;
-                         if($model_line->save(false)){
-                             $model_stock_trans = new \common\models\StockTrans();
-                             $model_stock_trans->trans_date = date('Y-m-d H:i:s');
-                             $model_stock_trans->trans_type_id = $trans_type_id;
-                             $model_stock_trans->product_id = $product_id[$i];
-                             $model_stock_trans->journal_trans_id = $model->id;
-                             $model_stock_trans->qty = $qty[$i];
-                             $model_stock_trans->remark = $remark[$i];
-                             $model_stock_trans->stock_type_id =1;
-                             $model_stock_trans->warehouse_id = $return_to_warehouse != null ? $return_to_warehouse[$i] : 1;
-                             if($model_stock_trans->save(false)){
-                                 $this->calStock($product_id[$i],1,$return_to_warehouse[$i],$qty[$i],$trans_type_id); // stock in
-                             }
-                             if($return_to_type!= null){ // update product type
-                             \backend\models\Product::updateAll(['product_type_id'=>$return_to_type[$i]],['id'=>$product_id[$i]]);
-                             }
-                         }
-                     }
-                 }
-                 $this->calForcomplete($journal_trans_id,$model->id);
-             }
-
-         }
-         return $this->redirect(['journaltrans/view', 'id' => $journal_trans_id]);
-    }
-    function calForcomplete($journal_trans_origin_id,$journal_return_id){
-        if($journal_trans_origin_id && $journal_return_id){
-            $return_sum = \common\models\JournalTransLine::find()->where(['journal_trans_id'=>$journal_return_id])->sum('qty');
-            $trans_sum = \common\models\JournalTransLine::find()->where(['journal_trans_id'=>$journal_trans_origin_id])->sum('qty');
-            if($return_sum == $trans_sum){
-                $model = \backend\models\JournalTrans::findOne($journal_trans_origin_id);
-                $model->status = 3; // trans complete
-                $model->save(false);
-            }
-        }
-    }
-
-//    function actionGetwarehouseproduct(){
-//        $html = '';
-//        $id = \Yii::$app->request->post('id');
-//        if($id){
-//            $model_stock_sum = \common\models\StockSum::find()->where(['warehouse_id'=>$id])->all();
-//            if($model_stock_sum){
-//                foreach($model_stock_sum as $model){
-//                    $html .= '<option value="'.$model->product_id.'">'.\backend\models\Product::findName($model->product_id).'</option>';
-//                }
-//            }
-//        }
-//        echo $html;
-//    }
-    function actionGetwarehouseproduct(){
-        $html = '';
-        $id = \Yii::$app->request->post('id');
-        if($id){
-            $model_stock_sum = \common\models\StockSum::find()->where(['product_id'=>$id])->all();
-            if($model_stock_sum){
-                $html .= '<option value="-1">--เลือกคลัง--</option>';
-                foreach($model_stock_sum as $model){
-                    $html .= '<option value="'.$model->warehouse_id.'">'.\backend\models\Warehouse::findName($model->warehouse_id).'</option>';
-                }
-            }
-        }
-        echo $html;
-    }
-    function actionGetproductonhand(){
-        $onhand = [];
-        $product_id = \Yii::$app->request->post('product_id');
-        $warehouse_id = \Yii::$app->request->post('warehouse_id');
-        if($product_id && $warehouse_id){
-            $model_stock_sum = \common\models\StockSum::find()->where(['product_id'=>$product_id,'warehouse_id'=>$warehouse_id])->one();
-            if($model_stock_sum){
-                $product_sale_price = \backend\models\Product::findSalePrice($product_id);
-                array_push($onhand,['stock_qty'=>$model_stock_sum->qty,'sale_price'=>$product_sale_price]); // stock ตัดได้แค่ยอดที่มีคงเหลือ ไม่รวมยอดจอง
-            }
-        }
-        return json_encode($onhand);
     }
 }

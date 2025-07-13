@@ -4,359 +4,517 @@ use yii\helpers\Html;
 use yii\widgets\DetailView;
 use yii\grid\GridView;
 use yii\data\ArrayDataProvider;
+use common\models\JournalTrans;
 
 /* @var $this yii\web\View */
-/* @var $model app\models\JournalTrans */
-/* @var $lines app\models\JournalTransLine[] */
+/* @var $model common\models\JournalTrans */
 
-$this->title = $model->journal_no;
-$this->params['breadcrumbs'][] = ['label' => 'รายการ Stock Transaction', 'url' => ['index']];
+$this->title = 'Transaction: ' . $model->journal_no;
+$this->params['breadcrumbs'][] = ['label' => 'Transactions', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
-
-\yii\web\YiiAsset::register($this);
-
-$product_type = \backend\helpers\ProductType::asArrayObject();
-$warehouse_data = \backend\models\Warehouse::find()->where(['status'=>1])->all();
 ?>
-    <div class="journal-trans-view">
+<div class="journal-trans-view">
 
-        <p>
-            <?= Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-            <?= $model->status != 3? Html::a('ลบ', ['delete', 'id' => $model->id], [
-                'class' => 'btn btn-danger',
-                'data' => [
-                    'confirm' => 'คุณแน่ใจหรือไม่ที่จะลบรายการนี้?',
-                    'method' => 'post',
-                ],
-            ]):'' ?>
-            <?= Html::a('สร้างรายการใหม่', ['create'], ['class' => 'btn btn-success']) ?>
-        </p>
-
-        <div class="row">
-            <div class="col-md-6">
-                <?= DetailView::widget([
-                    'model' => $model,
-                    'attributes' => [
-                        'journal_no',
-                        [
-                            'attribute' => 'trans_date',
-                            'format' => ['datetime', 'php:d/m/Y'],
+    <div class="row">
+        <div class="col-md-8">
+            <h1><?= Html::encode($this->title) ?></h1>
+        </div>
+        <div class="col-md-4 text-right">
+            <div class="btn-group">
+                <?php if ($model->status === JournalTrans::STATUS_DRAFT): ?>
+                    <?= Html::a('<i class="fa fa-edit"></i> Edit', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+                    <?= Html::a('<i class="fa fa-check"></i> Approve', ['approve', 'id' => $model->id], [
+                        'class' => 'btn btn-success',
+                        'data' => [
+                            'confirm' => 'Are you sure you want to approve this transaction?',
+                            'method' => 'post',
                         ],
-                        [
-                            'attribute' => 'trans_type_id',
-                            'value' => $model->getTransactionTypeName(),
+                    ]) ?>
+                    <?= Html::a('<i class="fa fa-trash"></i> Delete', ['delete', 'id' => $model->id], [
+                        'class' => 'btn btn-danger',
+                        'data' => [
+                            'confirm' => 'Are you sure you want to delete this transaction?',
+                            'method' => 'post',
                         ],
-                        [
-                            'attribute' => 'stock_type_id',
-                            'format' => 'raw',
-                            'value' => function ($model) {
-                                $type_name = \backend\helpers\StockType::getTypeById($model->stock_type_id);
-                                $stock_type = '';
-                                if ($model->stock_type_id == 1) {
-                                    $stock_type = '<div class="badge badge-pill badge-success">' . $type_name . '</div>';
-                                } else if ($model->stock_type_id == 2) {
-                                    $stock_type = '<div class="badge badge-pill badge-danger">' . $type_name . '</div>';
-                                }
-                                return $stock_type;
-                            },
-                        ],
-                        [
-                            'attribute' => 'warehouse_id',
-                            'value' => function ($model) {
-                                return \backend\models\Warehouse::findName($model->warehouse_id);
-                            },
-                        ],
-                    ],
+                    ]) ?>
+                <?php endif; ?>
+                <?= Html::a('<i class="fa fa-print"></i> Print', ['print', 'id' => $model->id], [
+                    'class' => 'btn btn-info',
+                    'target' => '_blank'
                 ]) ?>
+                <?= Html::a('<i class="fa fa-list"></i> Back to List', ['index'], ['class' => 'btn btn-default']) ?>
             </div>
-            <div class="col-md-6">
-                <?= DetailView::widget([
-                    'model' => $model,
-                    'attributes' => [
-                        //'customer_id',
-                        'customer_name',
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Transaction Information</h3>
+                </div>
+                <div class="panel-body">
+                    <?= DetailView::widget([
+                        'model' => $model,
+                        'attributes' => [
+                            'journal_no',
+                            [
+                                'attribute' => 'trans_date',
+                                'format' => 'date',
+                            ],
+                            [
+                                'attribute' => 'trans_type_id',
+                                'value' => function ($model) {
+                                    $types = JournalTrans::getTransTypeOptions();
+                                    return $types[$model->trans_type_id] ?? 'Unknown';
+                                },
+                            ],
+                            [
+                                'attribute' => 'stock_type_id',
+                                'format' => 'raw',
+                                'value' => function ($model) {
+                                    $icon = $model->stock_type_id == JournalTrans::STOCK_TYPE_IN ?
+                                        '<i class="fa fa-arrow-up text-success"></i>' :
+                                        '<i class="fa fa-arrow-down text-danger"></i>';
+                                    $types = JournalTrans::getStockTypeOptions();
+                                    return $icon . ' ' . ($types[$model->stock_type_id] ?? 'Unknown');
+                                },
+                            ],
+                            'customer_name',
+                            'remark:ntext',
+                        ],
+                    ]) ?>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Status & Tracking</h3>
+                </div>
+                <div class="panel-body">
+                    <?= DetailView::widget([
+                        'model' => $model,
+                        'attributes' => [
+                            [
+                                'attribute' => 'status',
+                                'format' => 'raw',
+                                'value' => function ($model) {
+                                    $class = '';
+                                    switch ($model->status) {
+                                        case JournalTrans::STATUS_DRAFT:
+                                            $class = 'label-default';
+                                            break;
+                                        case JournalTrans::STATUS_PENDING:
+                                            $class = 'label-warning';
+                                            break;
+                                        case JournalTrans::STATUS_APPROVED:
+                                            $class = 'label-success';
+                                            break;
+                                        case JournalTrans::STATUS_CANCELLED:
+                                            $class = 'label-danger';
+                                            break;
+                                    }
+                                    return '<span class="label ' . $class . '">' . ucfirst($model->status) . '</span>';
+                                },
+                            ],
+                            [
+                                'attribute' => 'created_at',
+                                'format' => 'datetime',
+                            ],
+                            'created_by',
+                            [
+                                'attribute' => 'updated_at',
+                                'format' => 'datetime',
+                            ],
+                            'updated_by',
+                        ],
+                    ]) ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Lines -->
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">Transaction Lines</h3>
+        </div>
+        <div class="panel-body">
+            <?php
+            $dataProvider = new ArrayDataProvider([
+                'allModels' => $model->journalTransLines,
+                'pagination' => false,
+            ]);
+            ?>
+
+            <?= GridView::widget([
+                'dataProvider' => $dataProvider,
+                'showHeader' => true,
+                'columns' => [
+                    ['class' => 'yii\grid\SerialColumn'],
+
+                    [
+                        'label' => 'Product',
+                        'format' => 'raw',
+                        'value' => function ($line) {
+                            if ($line->product) {
+                                return '<strong>' . Html::encode($line->product->code) . '</strong><br>' .
+                                    Html::encode($line->product->name);
+                            }
+                            return '<span class="text-danger">Product not found</span>';
+                        },
+                    ],
+
+                    [
+                        'attribute' => 'qty',
+                        'format' => 'decimal',
+                        'contentOptions' => ['class' => 'text-right'],
+                        'headerOptions' => ['style' => 'width: 100px;'],
+                    ],
+
+                    [
+                        'attribute' => 'sale_price',
+                        'format' => ['currency', 'THB'],
+                        'contentOptions' => ['class' => 'text-right'],
+                        'headerOptions' => ['style' => 'width: 120px;'],
+                    ],
+
+                    [
+                        'attribute' => 'line_price',
+                        'format' => ['currency', 'THB'],
+                        'contentOptions' => ['class' => 'text-right'],
+                        'headerOptions' => ['style' => 'width: 130px;'],
+                    ],
+
+                    [
+                        'label' => 'Return Info',
+                        'format' => 'raw',
+                        'value' => function ($line) {
+                            if ($line->journalTrans->trans_type_id == JournalTrans::TRANS_TYPE_RETURN_BORROW) {
+                                $html = '';
+                                if ($line->return_to_type) {
+                                    $types = \common\models\JournalTransLine::getReturnTypeOptions();
+                                    $class = '';
+                                    switch ($line->return_to_type) {
+                                        case 'complete':
+                                            $class = 'label-success';
+                                            break;
+                                        case 'damaged':
+                                            $class = 'label-danger';
+                                            break;
+                                        case 'incomplete':
+                                            $class = 'label-warning';
+                                            break;
+                                    }
+                                    $html .= '<span class="label ' . $class . '">' .
+                                        ($types[$line->return_to_type] ?? $line->return_to_type) .
+                                        '</span>';
+                                }
+                                if ($line->return_note) {
+                                    $html .= '<br><small>' . Html::encode($line->return_note) . '</small>';
+                                }
+                                return $html;
+                            }
+                            return '-';
+                        },
+                        'visible' => $model->trans_type_id == JournalTrans::TRANS_TYPE_RETURN_BORROW,
+                    ],
+
+                    [
+                        'attribute' => 'remark',
+                        'format' => 'ntext',
+                        'value' => function ($line) {
+                            return $line->remark ?: '-';
+                        },
+                    ],
+                ],
+                'summary' => false,
+                'tableOptions' => ['class' => 'table table-striped table-bordered'],
+            ]); ?>
+
+            <!-- Totals -->
+            <div class="row" style="margin-top: 15px;">
+                <div class="col-md-8"></div>
+                <div class="col-md-4">
+                    <table class="table table-condensed">
+                        <tr>
+                            <td><strong>Total Quantity:</strong></td>
+                            <td class="text-right">
+                                <strong><?= number_format(array_sum(array_column($model->journalTransLines, 'qty')), 2) ?></strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Amount:</strong></td>
+                            <td class="text-right">
+                                <strong><?= Yii::$app->formatter->asCurrency(array_sum(array_column($model->journalTransLines, 'line_price')), 'THB') ?></strong>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Movements (if approved) -->
+    <?php if ($model->status === JournalTrans::STATUS_APPROVED && !empty($model->stockTrans)): ?>
+        <div class="panel panel-success">
+            <div class="panel-heading">
+                <h3 class="panel-title">Stock Movements</h3>
+            </div>
+            <div class="panel-body">
+                <?php
+                $stockDataProvider = new ArrayDataProvider([
+                    'allModels' => $model->stockTrans,
+                    'pagination' => false,
+                ]);
+                ?>
+
+                <?= GridView::widget([
+                    'dataProvider' => $stockDataProvider,
+                    'columns' => [
+                        ['class' => 'yii\grid\SerialColumn'],
+
+                        [
+                            'label' => 'Product',
+                            'value' => function ($stock) {
+                                return $stock->product->code . ' - ' . $stock->product->name;
+                            },
+                        ],
+
                         [
                             'attribute' => 'qty',
-                            'format' => ['decimal', 2],
+                            'format' => 'decimal',
+                            'contentOptions' => ['class' => 'text-right'],
                         ],
-                        'remark',
+
+                        [
+                            'label' => 'Movement Type',
+                            'format' => 'raw',
+                            'value' => function ($stock) {
+                                $icon = $stock->stock_type_id == JournalTrans::STOCK_TYPE_IN ?
+                                    '<i class="fa fa-arrow-up text-success"></i> IN' :
+                                    '<i class="fa fa-arrow-down text-danger"></i> OUT';
+                                return $icon;
+                            },
+                        ],
+
+                        [
+                            'attribute' => 'line_price',
+                            'format' => ['currency', 'THB'],
+                            'contentOptions' => ['class' => 'text-right'],
+                        ],
+
+                        [
+                            'attribute' => 'created_at',
+                            'format' => 'datetime',
+                        ],
+
                         [
                             'attribute' => 'status',
-                            'headerOptions' => ['style' => 'text-align:center'],
-                            'contentOptions' => ['style' => 'text-align:left'],
                             'format' => 'raw',
-                            'value' => function($model) {
-                                $status_name = \backend\helpers\TransStatusType::getTypeById($model->status);
-                                $htmel_status = getBadgeStatus($model->status,$status_name);
-                                return $htmel_status;
+                            'value' => function ($stock) {
+                                return '<span class="label label-success">Completed</span>';
                             },
-                            // 'format' => 'raw',
-                            // 'filter' => JournalTrans::getStatusList(),
-                            //'headerOptions' => ['style' => 'width:100px'],
                         ],
                     ],
-                ]) ?>
+                    'summary' => false,
+                    'tableOptions' => ['class' => 'table table-striped table-bordered'],
+                ]); ?>
             </div>
         </div>
+    <?php endif; ?>
 
-        <h3>รายการสินค้า</h3>
-
-        <?php
-        $dataProvider = new ArrayDataProvider([
-            'allModels' => $lines,
-            'pagination' => false,
-        ]);
-        ?>
-
-        <?= GridView::widget([
-            'dataProvider' => $dataProvider,
-            'columns' => [
-                ['class' => 'yii\grid\SerialColumn'],
-                [
-                    'attribute' => 'product_id',
-                    'value' => function ($model) {
-                        return \backend\models\Product::findName($model->product_id);
-                    },
-                ],
-                [
-                    'attribute' => 'warehouse_id',
-                    'value' => function ($model) {
-                        return \backend\models\Warehouse::findName($model->warehouse_id);
-                    },
-                ],
-                [
-                    'attribute' => 'qty',
-                    'format' => ['decimal', 2],
-                    'headerOptions' => ['style' => 'text-align:right'],
-                    'contentOptions' => ['style' => 'text-align:right'],
-                ],
-                'remark',
-//                [
-//                    'attribute' => 'status',
-//                    'value' => function ($model) {
-//                        return $model->getStatusName();
-//                    },
-//                ],
-            ],
-        ]); ?>
-
-        <div class="row" style="margin-top: 20px;">
-            <div class="col-md-12">
-                <div class="panel panel-default">
-                    <div class="panel-body">
-                        <p><strong>สร้างโดย:</strong> <?= \backend\models\User::findName($model->created_by) ?>
-                            เมื่อ <?=date('d-m-Y H:i:s',$model->created_at) ?></p>
-                        <?php if ($model->updated_at): ?>
-                            <p><strong>แก้ไขโดย:</strong> <?= $model->updated_by ?>
-                                เมื่อ <?= date('d-m-Y H:i:s',$model->updated_at) ?></p>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
+    <!-- Current Stock Status -->
+    <div class="panel panel-warning">
+        <div class="panel-heading">
+            <h3 class="panel-title">Current Stock Status</h3>
         </div>
-
-        <br/>
-        <?php if ($model->trans_type_id == 7 && $model->status != 3): ?>
-            <div class="row">
-                <div class="col-lg-12">
-                    <h4>รับสินค้าคืนช่าง</h4>
-                </div>
-            </div>
-            <form action="<?= \yii\helpers\Url::to(['journaltrans/addreturnproduct'], true) ?>" method="post">
-                <input type="hidden" name="journal_trans_id" value="<?= $model->id ?>">
-                <input type="hidden" name="trans_type_id" value="8">
-                <div class="row" style="margin-top: 10px">
-                    <div class="col-lg-3">
-                        <label for="">สินค้า</label>
-                    </div>
-                    <div class="col-lg-2">
-                        <label for="">จำนวนเบิก</label>
-                    </div>
-                    <div class="col-lg-2">
-                        <label for="">จำนวนคืน</label>
-                    </div>
-                    <div class="col-lg-2">
-                        <label for="">กลับเข้าคลัง</label>
-                    </div>
-                    <div class="col-lg-2">
-                        <label for="">คืนเป็นสินค้า</label>
-                    </div>
-                    <div class="col-lg-2">
-                        <label for="">หมายเหตุ</label>
-                    </div>
-                </div>
-                <?php foreach ($lines as $value): ?>
-                    <?php
-                    $check_return_qty = getReturnProduct($model->id, $value->product_id, $value->qty,$model->trans_type_id);
-                    // echo $check_return_qty;
-                    if ($check_return_qty == 0) continue;
-                    ?>
-                    <div class="row" style="margin-top: 10px">
-                        <div class="col-lg-3">
-                            <input type="hidden" name="product_id[]" value="<?= $value->product_id ?>">
-                            <input type="text" class="form-control" readonly
-                                   value="<?= \backend\models\Product::findName($value->product_id) ?>">
-                        </div>
-                        <div class="col-lg-2">
-                            <input type="text" class="form-control" readonly value="<?= $value->qty ?>">
-                        </div>
-                        <div class="col-lg-2">
-                            <input type="number" name="return_qty[]" class="form-control"
-                                   value="<?= $check_return_qty ?>">
-                        </div>
-                        <div class="col-lg-2">
-                            <select name="return_to_warehouse[]" class="form-control">
-                                <?php foreach($warehouse_data as $value_warehouse): ?>
-                                    <option value="<?= $value_warehouse->id ?>"><?= $value_warehouse->name?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-lg-2">
-                            <select name="return_to_type[]" class="form-control">
-                                <?php for ($i = 0; $i <= count($product_type) - 1; $i++): ?>
-                                    <option value="<?= $product_type[$i]['id'] ?>"><?= $product_type[$i]['name'] ?></option>
-                                <?php endfor; ?>
-                            </select>
-                        </div>
-                        <div class="col-lg-2">
-                            <input type="text" name="return_remark[]" class="form-control">
-                        </div>
-                    </div>
-
-                <?php endforeach; ?>
-                <br/>
-                <div class="row">
-                    <div class="col-lg-3">
-                        <button class="btn btn-success">บันทึกรายการ</button>
-                    </div>
-                </div>
-            </form>
-        <?php endif; ?>
-
-        <?php if ($model->trans_type_id == 5 && $model->status != 3): ?> <!-- คืนยืม -->
-            <div class="row">
-                <div class="col-lg-12">
-                    <h4>รับคืนยืมสินค้า</h4>
-                </div>
-            </div>
-            <form action="<?= \yii\helpers\Url::to(['journaltrans/addreturnproduct'], true) ?>" method="post">
-                <input type="hidden" name="journal_trans_id" value="<?= $model->id ?>">
-                <input type="hidden" name="trans_type_id" value="6">
-                <div class="row" style="margin-top: 10px">
-                    <div class="col-lg-3">
-                        <label for="">สินค้า</label>
-                    </div>
-                    <div class="col-lg-2">
-                        <label for="">จำนวนเบิก</label>
-                    </div>
-                    <div class="col-lg-2">
-                        <label for="">จำนวนคืน</label>
-                    </div>
-                    <div class="col-lg-2">
-                        <label for="">กลับเข้าคลัง</label>
-                    </div>
-                    <div class="col-lg-3">
-                        <label for="">หมายเหตุ</label>
-                    </div>
-                </div>
-                <?php foreach ($lines as $value): ?>
-                    <?php
-                    $check_return_qty = getReturnProduct($model->id, $value->product_id, $value->qty,$model->trans_type_id);
-                    // echo $check_return_qty;
-                    if ($check_return_qty == 0) continue;
-                    ?>
-                    <div class="row" style="margin-top: 10px">
-                        <div class="col-lg-3">
-                            <input type="hidden" name="product_id[]" value="<?= $value->product_id ?>">
-                            <input type="text" class="form-control" readonly
-                                   value="<?= \backend\models\Product::findName($value->product_id) ?>">
-                        </div>
-                        <div class="col-lg-2">
-                            <input type="text" class="form-control" readonly value="<?= $value->qty ?>">
-                        </div>
-                        <div class="col-lg-2">
-                            <input type="number" name="return_qty[]" class="form-control"
-                                   value="<?= $check_return_qty ?>">
-                        </div>
-                        <div class="col-lg-2">
-                            <select name="return_to_warehouse[]" class="form-control">
-                                <?php foreach($warehouse_data as $value_warehouse): ?>
-                                    <option value="<?= $value_warehouse->id ?>"><?= $value_warehouse->name?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-lg-3">
-                            <input type="text" name="return_remark[]" class="form-control">
-                        </div>
-                    </div>
-
-                <?php endforeach; ?>
-                <br/>
-                <div class="row">
-                    <div class="col-lg-3">
-                        <button class="btn btn-success">บันทึกรายการ</button>
-                    </div>
-                </div>
-            </form>
-        <?php endif; ?>
-        <br/>
-
-    </div>
-<?php
-function getReturnProduct($journal_trans_id, $product_id, $original_qty,$trans_type_id)
-{
-    $qty = 0;
-    if ($product_id && $original_qty) {
-        $model_ref = \backend\models\Journaltrans::find()->where(['trans_ref_id' => $journal_trans_id])->one();
-        if($model_ref){
-            $model = \backend\models\Stocktrans::find()->where(['journal_trans_id' => $model_ref->id, 'product_id' => $product_id, 'trans_type_id' => $trans_type_id])->one();
-            if ($model) {
-                $qty = $original_qty - $model->qty;
-            } else {
-                $qty = $original_qty;
+        <div class="panel-body">
+            <?php
+            $stockStatusData = [];
+            foreach ($model->journalTransLines as $line) {
+                // Check if product exists to avoid null errors
+                if ($line->product !== null) {
+                    $stockStatusData[] = [
+                        'product' => $line->product,
+                        'current_stock' => $line->product->getStockInWarehouse($model->warehouse_id),
+                        'available_stock' => $line->product->getAvailableStockInWarehouse($model->warehouse_id),
+                        'total_stock' => $line->product->stock_qty,
+                        'minimum_stock' => $line->product->minimum_stock,
+                    ];
+                }
             }
-        }else{
-            $qty = $original_qty;
-        }
 
+            $stockStatusProvider = new ArrayDataProvider([
+                'allModels' => $stockStatusData,
+                'pagination' => false,
+            ]);
+            ?>
 
+            <?= GridView::widget([
+                'dataProvider' => $stockStatusProvider,
+                'columns' => [
+                    ['class' => 'yii\grid\SerialColumn'],
+
+                    [
+                        'label' => 'Product',
+                        'format' => 'raw',
+                        'value' => function ($data) {
+                            return '<strong>' . Html::encode($data['product']->code) . '</strong><br>' .
+                                Html::encode($data['product']->name);
+                        },
+                    ],
+
+                    [
+                        'label' => 'Current Stock (This Warehouse)',
+                        'format' => 'decimal',
+                        'value' => function ($data) {
+                            return $data['current_stock'];
+                        },
+                        'contentOptions' => ['class' => 'text-right'],
+                    ],
+
+                    [
+                        'label' => 'Available Stock',
+                        'format' => 'decimal',
+                        'value' => function ($data) {
+                            return $data['available_stock'];
+                        },
+                        'contentOptions' => ['class' => 'text-right'],
+                    ],
+
+                    [
+                        'label' => 'Total Stock (All Warehouses)',
+                        'format' => 'decimal',
+                        'value' => function ($data) {
+                            return $data['total_stock'];
+                        },
+                        'contentOptions' => ['class' => 'text-right'],
+                    ],
+
+                    [
+                        'label' => 'Minimum Stock',
+                        'format' => 'decimal',
+                        'value' => function ($data) {
+                            return $data['minimum_stock'];
+                        },
+                        'contentOptions' => ['class' => 'text-right'],
+                    ],
+
+                    [
+                        'label' => 'Status',
+                        'format' => 'raw',
+                        'value' => function ($data) {
+                            if ($data['total_stock'] <= $data['minimum_stock']) {
+                                return '<span class="label label-danger"><i class="fa fa-warning"></i> Low Stock</span>';
+                            } elseif ($data['total_stock'] <= $data['minimum_stock'] * 1.5) {
+                                return '<span class="label label-warning"><i class="fa fa-exclamation"></i> Warning</span>';
+                            } else {
+                                return '<span class="label label-success"><i class="fa fa-check"></i> OK</span>';
+                            }
+                        },
+                    ],
+                ],
+                'summary' => false,
+                'tableOptions' => ['class' => 'table table-striped table-bordered'],
+            ]); ?>
+        </div>
+    </div>
+
+    <!-- Action Timeline -->
+    <div class="panel panel-info">
+        <div class="panel-heading">
+            <h3 class="panel-title">Action Timeline</h3>
+        </div>
+        <div class="panel-body">
+            <div class="timeline">
+                <div class="timeline-item">
+                    <i class="fa fa-plus bg-blue"></i>
+                    <div class="timeline-content">
+                        <h4>Transaction Created</h4>
+                        <p>
+                            Created by: <strong><?= Html::encode($model->created_by) ?></strong><br>
+                            Date: <?= Yii::$app->formatter->asDatetime($model->created_at) ?>
+                        </p>
+                    </div>
+                </div>
+
+                <?php if ($model->updated_at != $model->created_at): ?>
+                    <div class="timeline-item">
+                        <i class="fa fa-edit bg-yellow"></i>
+                        <div class="timeline-content">
+                            <h4>Transaction Updated</h4>
+                            <p>
+                                Updated by: <strong><?= Html::encode($model->updated_by) ?></strong><br>
+                                Date: <?= Yii::$app->formatter->asDatetime($model->updated_at) ?>
+                            </p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($model->status === JournalTrans::STATUS_APPROVED): ?>
+                    <div class="timeline-item">
+                        <i class="fa fa-check bg-green"></i>
+                        <div class="timeline-content">
+                            <h4>Transaction Approved</h4>
+                            <p>
+                                Stock movements have been processed and inventory updated.
+                            </p>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        margin: 20px 0;
     }
-    return $qty;
-}
 
-function getBadgeType($status,$status_name) {
-    if ($status == 1) {
-        return '<span class="badge badge-pill badge-success" style="padding: 10px;">' . $status_name . '</span>';
-    } else if($status == 2) {
-        return '<span class="badge badge-pill badge-warning" style="padding: 10px;">' . $status_name . '</span>';
-    } else if($status == 3) {
-        return '<span class="badge badge-pill badge-success" style="padding: 10px;">' . $status_name . '</span>';
-    } else if($status == 4) {
-        return '<span class="badge badge-pill badge-info" style="padding: 10px;">' . $status_name . '</span>';
-    } else if ($status == 5) {
-        return '<span class="badge badge-pill badge-info" style="padding: 10px;">' . $status_name . '</span>';
-    } else if ($status == 6) {
-        return '<span class="badge badge-pill badge-info" style="padding: 10px;">' . $status_name . '</span>';
-    } else if ($status == 7) {
-        return '<span class="badge badge-pill badge-primary" style="padding: 10px;">' . $status_name . '</span>';
-    } else if($status == 8) {
-        return '<span class="badge badge-pill badge-primary" style="padding: 10px;">' . $status_name . '</span>';
-    } else if($status == 9) {
-        return '<span class="badge badge-pill badge-secondary" style="padding: 10px;">' . $status_name . '</span>';
-    }else {
-        return '<span class="badge badge-pill badge-secondary" style="padding: 10px;">' . $status_name . '</span>';
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+        padding-left: 60px;
     }
-}
 
-function getBadgeStatus($status,$status_name) {
-    if ($status == 1) {
-        return '<span class="badge badge-pill badge-info" style="padding: 10px;">' . $status_name . '</span>';
-    } else if($status == 2) {
-        return '<span class="badge badge-pill badge-warning" style="padding: 10px;">' . $status_name . '</span>';
-    } else if($status == 3) {
-        return '<span class="badge badge-pill badge-success" style="padding: 10px;">' . $status_name . '</span>';
-    } else if($status == 4) {
-        return '<span class="badge badge-pill badge-secondary" style="padding: 10px;">' . $status_name . '</span>';
+    .timeline-item i {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 40px;
+        color: white;
+        font-size: 16px;
     }
-}
-?>
+
+    .timeline-content {
+        background: #f4f4f4;
+        border-radius: 4px;
+        padding: 15px;
+        border-left: 3px solid #ddd;
+    }
+
+    .timeline-content h4 {
+        margin: 0 0 10px 0;
+        font-size: 16px;
+    }
+
+    .timeline-content p {
+        margin: 0;
+        color: #666;
+    }
+
+    .bg-blue { background-color: #3c8dbc; }
+    .bg-yellow { background-color: #f39c12; }
+    .bg-green { background-color: #00a65a; }
+    .bg-red { background-color: #dd4b39; }
+</style>

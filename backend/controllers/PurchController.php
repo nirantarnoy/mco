@@ -393,7 +393,7 @@ class PurchController extends Controller
 
         return \Yii::$app->db->createCommand($sql, [
             ':purchId' => $purchId,
-            ':transType' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE,
+            ':transType' => \backend\models\JournalTrans::TYPE_PO_RECEIVE,
             ':status' => \backend\models\JournalTrans::STATUS_ACTIVE,
             ':lineStatus' => \backend\models\PurchLine::STATUS_ACTIVE,
         ])->queryAll();
@@ -421,7 +421,7 @@ class PurchController extends Controller
             // Create Journal Transaction
             $journalTrans = new \backend\models\JournalTrans();
             $journalTrans->trans_date = date('Y-m-d H:i:s');
-            $journalTrans->trans_type_id = \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE;
+            $journalTrans->trans_type_id = \backend\models\JournalTrans::TYPE_PO_RECEIVE;
             $journalTrans->stock_type_id = \backend\models\JournalTrans::STOCK_TYPE_IN;
             $journalTrans->trans_ref_id = $purchModel->id;
             $journalTrans->warehouse_id = $warehouseId;
@@ -463,7 +463,7 @@ class PurchController extends Controller
                 $stockTrans->trans_date = $journalTrans->trans_date;
                 $stockTrans->product_id = $productId;
                 $stockTrans->warehouse_id = $warehouseId;
-                $stockTrans->trans_type_id = \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE;
+                $stockTrans->trans_type_id = \backend\models\JournalTrans::TYPE_PO_RECEIVE;
                 $stockTrans->stock_type_id = \backend\models\JournalTrans::STOCK_TYPE_IN;
                 $stockTrans->qty = $qty;
                 $stockTrans->line_price = $poLine->line_price;
@@ -549,7 +549,7 @@ class PurchController extends Controller
         $receiveHistory = \backend\models\JournalTrans::find()
             ->where([
                 'trans_ref_id' => $id,
-                'trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE
+                'trans_type_id' => \backend\models\JournalTrans::TYPE_PO_RECEIVE
             ])
             ->with(['journalTransLines', 'journalTransLines.product', 'journalTransLines.warehouse'])
             ->orderBy(['created_at' => SORT_DESC])

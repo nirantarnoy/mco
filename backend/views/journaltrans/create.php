@@ -1,21 +1,32 @@
 <?php
 
 use yii\helpers\Html;
+use backend\models\JournalTrans;
 
 /* @var $this yii\web\View */
-/* @var $model app\models\JournalTrans */
-/* @var $modelLines app\models\JournalTransLine[] */
+/* @var $model common\models\JournalTrans */
+/* @var $modelsLine common\models\JournalTransLine[] */
 
-$this->title = 'สร้างรายการ Stock Transaction';
+$title = 'สร้างรายการ';
+if ($model->trans_type_id) {
+    $list = JournalTrans::getTransTypeOptions();
+    if (isset($list[$model->trans_type_id])) {
+        $title = 'สร้างรายการ' . $list[$model->trans_type_id];
+    }
+}
+
+$this->title = $title;
 $this->params['breadcrumbs'][] = ['label' => 'รายการ Stock Transaction', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="journal-trans-create">
 
+    <h1><?= Html::encode($this->title) ?></h1>
+
     <?= $this->render('_form', [
         'model' => $model,
-        'modelLines' => $modelLines,
-        'create_type'=>$create_type,
+        'modelsLine' => null,
+        'lines' => $lines,
     ]) ?>
 
 </div>

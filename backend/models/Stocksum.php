@@ -1,22 +1,22 @@
 <?php
+
 namespace backend\models;
 
 use Yii;
 use yii\db\ActiveRecord;
-use yii\behaviors\TimestampBehavior;
 
 /**
  * This is the model class for table "stock_sum".
  *
  * @property int $id
- * @property int|null $product_id
- * @property int|null $warehouse_id
- * @property float|null $qty
- * @property int|null $updated_at
- * @property float|null $reserv_qty
+ * @property int $product_id
+ * @property int $warehouse_id
+ * @property float $qty
+ * @property string $updated_at
+ * @property float $reserve_qty
+ * @property string $created_at
  *
  * @property Product $product
- * @property Warehouse $warehouse
  */
 class StockSum extends ActiveRecord
 {
@@ -31,24 +31,14 @@ class StockSum extends ActiveRecord
     /**
      * {@inheritdoc}
      */
-    public function behaviors()
-    {
-        return [
-            TimestampBehavior::class,
-        ];
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function rules()
     {
         return [
-            [['product_id', 'warehouse_id', 'updated_at'], 'integer'],
-            [['qty', 'reserv_qty'], 'number'],
             [['product_id', 'warehouse_id'], 'required'],
+            [['product_id', 'warehouse_id'], 'integer'],
+            [['qty', 'reserve_qty'], 'number'],
+            [['updated_at', 'created_at'], 'safe'],
             [['product_id'], 'exist', 'skipOnError' => true, 'targetClass' => Product::class, 'targetAttribute' => ['product_id' => 'id']],
-            [['warehouse_id'], 'exist', 'skipOnError' => true, 'targetClass' => Warehouse::class, 'targetAttribute' => ['warehouse_id' => 'id']],
             [['product_id', 'warehouse_id'], 'unique', 'targetAttribute' => ['product_id', 'warehouse_id']],
         ];
     }
@@ -60,17 +50,16 @@ class StockSum extends ActiveRecord
     {
         return [
             'id' => 'ID',
-            'product_id' => 'รหัสสินค้า',
-            'warehouse_id' => 'รหัสคลังสินค้า',
-            'qty' => 'จำนวนคงเหลือ',
-            'updated_at' => 'วันที่อัพเดท',
-            'reserv_qty' => 'จำนวนจอง',
+            'product_id' => 'Product ID',
+            'warehouse_id' => 'Warehouse ID',
+            'qty' => 'Qty',
+            'updated_at' => 'Updated At',
+            'reserve_qty' => 'Reserve Qty',
+            'created_at' => 'Created At',
         ];
     }
 
     /**
-     * Gets query for [[Product]].
-     *
      * @return \yii\db\ActiveQuery
      */
     public function getProduct()
@@ -79,48 +68,10 @@ class StockSum extends ActiveRecord
     }
 
     /**
-     * Gets query for [[Warehouse]].
-     *
-     * @return \yii\db\ActiveQuery
-     */
-    public function getWarehouse()
-    {
-        return $this->hasOne(Warehouse::class, ['id' => 'warehouse_id']);
-    }
-
-    /**
-     * Update stock quantity
-     */
-    public static function updateStock($productId, $warehouseId, $qty, $stockType)
-    {
-        $stockSum = self::find()
-            ->where(['product_id' => $productId, 'warehouse_id' => $warehouseId])
-            ->one();
-
-        if (!$stockSum) {
-            // Create new stock record
-            $stockSum = new self();
-            $stockSum->product_id = $productId;
-            $stockSum->warehouse_id = $warehouseId;
-            $stockSum->qty = 0;
-            $stockSum->reserv_qty = 0;
-        }
-
-        // Update quantity based on stock type
-        if ($stockType == JournalTrans::STOCK_TYPE_IN) {
-            $stockSum->qty += $qty;
-        } else {
-            $stockSum->qty -= $qty;
-        }
-
-        return $stockSum->save();
-    }
-
-    /**
-     * Get available quantity (qty - reserv_qty)
+     * Get available quantity (total qty - reserved qty)
      */
     public function getAvailableQty()
     {
-        return $this->qty - $this->reserv_qty;
+        return $this->qty - $this->reserve_qty;
     }
 }
