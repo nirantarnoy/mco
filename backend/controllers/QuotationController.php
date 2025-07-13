@@ -1,6 +1,7 @@
 <?php
 namespace backend\controllers;
 
+use backend\models\Job;
 use Yii;
 use backend\models\Quotation;
 use backend\models\QuotationSearch;
@@ -301,6 +302,15 @@ class QuotationController extends Controller
         $model->status = Quotation::STATUS_ACTIVE;
 
         if ($model->save()) {
+            // create new job
+
+            $model_job = new Job();
+            $model_job->quotation_id = $model->id;
+            $model_job->job_no = Job::generateJobNo();
+            $model_job->job_date = date('Y-m-d');
+            $model_job->status = Job::JOB_STATUS_OPEN;
+            $model_job->save(false);
+
             Yii::$app->session->setFlash('success', 'อนุมัติใบเสนอราคาเรียบร้อยแล้ว');
         } else {
             Yii::$app->session->setFlash('error', 'ไม่สามารถอนุมัติใบเสนอราคาได้');

@@ -70,17 +70,11 @@ if (!$model->isNewRecord) {
             <div class="col-lg-6">
                 <?= $form->field($model, 'description')->textarea(['maxlength' => true]) ?>
             </div>
+
             <div class="col-lg-3">
-                <?= $form->field($model, 'type_id')->widget(\kartik\select2\Select2::className(), [
-                    'data' => \yii\helpers\ArrayHelper::map(\backend\helpers\CatType::asArrayObject(), 'id', 'name'),
-                    'options' => [
-                        'placeholder' => '-- เลือกสภาพสินค้า --',
-                    ],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                    ]
-                ]) ?>
+                <?= $form->field($model, 'minimum_stock')->textInput() ?>
             </div>
+
             <div class="col-lg-3">
                 <?php echo $form->field($model, 'status')->widget(\toxor88\switchery\Switchery::className(), ['options' => ['label' => '', 'class' => 'form-control']])->label() ?>
             </div>
@@ -97,9 +91,7 @@ if (!$model->isNewRecord) {
                     <?= $form->field($model, 'sale_price')->textInput() ?>
                 </div>
             <?php endif; ?>
-            <div class="col-lg-3">
-                <?= $form->field($model, 'minimum_stock')->textInput() ?>
-            </div>
+
             <div class="col-lg-3">
                 <?= $form->field($model, 'stock_qty')->textInput(['readonly' => 'readonly']) ?>
             </div>
@@ -172,7 +164,7 @@ if (!$model->isNewRecord) {
 
         </div>
         <br/>
-        <br />
+        <br/>
         <div class="row">
             <div class="col-lg-12">
                 <h4>จัดการสต๊อกสินค้า</h4>
@@ -189,53 +181,57 @@ if (!$model->isNewRecord) {
                     </tr>
                     </thead>
                     <tbody>
-                    <?php if($model_line != null):?>
-                        <?php foreach($model_line as $value):?>
-                            <tr data-var="<?=$value->id;?>">
+                    <?php if ($model_line != null): ?>
+                        <?php foreach ($model_line as $value): ?>
+                            <tr data-var="<?= $value->id; ?>">
                                 <td>
-                                    <input type="hidden" class="form-control line-rec-id" name="line_rec_id[]" value="<?=$value->id?>">
+                                    <input type="hidden" class="form-control line-rec-id" name="line_rec_id[]"
+                                           value="<?= $value->id ?>">
                                     <select name="warehouse_id[]" id="" class="form-control line-warehouse-id">
                                         <option value="-1">--เลือก-</option>
-                                        <?php foreach($data_warehouse as $xvalue):?>
+                                        <?php foreach ($data_warehouse as $xvalue): ?>
                                             <?php
                                             $selected = '';
-                                            if($value->warehouse_id == $xvalue->id){
+                                            if ($value->warehouse_id == $xvalue->id) {
                                                 $selected = 'selected';
                                             }
                                             ?>
-                                            <option value="<?=$xvalue->id?>" <?=$selected?>><?=$xvalue->name?></option>
-                                        <?php endforeach;?>
+                                            <option value="<?= $xvalue->id ?>" <?= $selected ?>><?= $xvalue->name ?></option>
+                                        <?php endforeach; ?>
                                     </select>
                                 </td>
                                 <td>
-                                    <input type="text" class="form-control line-qty" name="line_qty[]" value="<?=$value->qty?>">
+                                    <input type="text" class="form-control line-qty" name="line_qty[]"
+                                           value="<?= $value->qty ?>">
                                 </td>
                                 <td>
-                                    <div class="btn btn-danger" onclick="removeline($(this))"><i class="fa fa-trash"></i></div>
+                                    <div class="btn btn-danger" onclick="removeline($(this))"><i
+                                                class="fa fa-trash"></i></div>
                                 </td>
 
                             </tr>
-                        <?php endforeach;?>
-                    <?php else:?>
+                        <?php endforeach; ?>
+                    <?php else: ?>
                         <tr data-var="">
                             <td>
                                 <!--                            <input type="text" class="form-control line-warehouse-id" name="warehouse_id[]" value="">-->
                                 <input type="hidden" class="form-control line-rec-id" name="line_rec_id[]" value="0">
                                 <select name="warehouse_id[]" id="" class="form-control line-warehouse-id">
                                     <option value="-1">--เลือก-</option>
-                                    <?php foreach($data_warehouse as $xvalue):?>
-                                        <option value="<?=$xvalue->id?>"><?=$xvalue->name?></option>
-                                    <?php endforeach;?>
+                                    <?php foreach ($data_warehouse as $xvalue): ?>
+                                        <option value="<?= $xvalue->id ?>"><?= $xvalue->name ?></option>
+                                    <?php endforeach; ?>
                                 </select>
                             </td>
                             <td>
                                 <input type="text" class="form-control line-qty" name="line_qty[]" value="">
                             </td>
                             <td>
-                                <div class="btn btn-danger" onclick="removeline($(this))"><i class="fa fa-trash"></i></div>
+                                <div class="btn btn-danger" onclick="removeline($(this))"><i class="fa fa-trash"></i>
+                                </div>
                             </td>
                         </tr>
-                    <?php endif;?>
+                    <?php endif; ?>
 
                     </tbody>
                     <tfoot>
@@ -248,7 +244,7 @@ if (!$model->isNewRecord) {
                 </table>
             </div>
         </div>
-        <br />
+        <br/>
         <div class="form-group">
             <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
         </div>

@@ -102,6 +102,15 @@ $this->params['breadcrumbs'][] = $this->title;
                 },
             ],
             [
+                    'attribute' => 'job_id',
+                    'label' => 'ใบงาน',
+                'headerOptions' => ['style' => 'text-align: center;width: 100px;'],
+                'contentOptions' => ['style' => 'text-align: center;'],
+                'value' => function ($model) {
+                    return $model->job_id ? $model->job->job_no : 'ไม่ระบุ';
+                }
+             ],
+            [
                 'attribute' => 'net_amount',
                 'label' => 'ยอดรวมสุทธิ',
                 'headerOptions' => ['style' => 'width: 120px; text-align: right;'],

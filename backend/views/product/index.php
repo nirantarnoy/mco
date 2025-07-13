@@ -113,9 +113,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 [
                     'attribute' => 'warehouse_id',
                     'label' => 'คลัง',
+                    'format' => 'raw',
                     'value' => function ($data) {
-                        $namex = \backend\models\Product::getWarehouseName($data->id,$data->stock_qty);
-                        return $namex;
+                        return \backend\models\Product::findWarehouseOnhand($data->id);
                     }
                 ],
                 [

@@ -12,41 +12,27 @@ $this->title = 'Stock Transactions';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="journal-trans-index">
-
-    <h1><?= Html::encode($this->title) ?></h1>
-
     <p>
-        <?= Html::a('Create New Transaction', ['create'], ['class' => 'btn btn-success']) ?>
-        <?= Html::a('Stock Summary Report', ['stock-summary'], ['class' => 'btn btn-info']) ?>
-        <?= Html::a('Transaction Report', ['transaction-report'], ['class' => 'btn btn-warning']) ?>
+        <!--        --><?php //= Html::a('<i class="fa fa-plus"></i> PO Receive', ['create', 'type' => JournalTrans::TRANS_TYPE_PO_RECEIVE], ['class' => 'btn btn-success']) ?>
+        <?= Html::a('<i class="fa fa-minus"></i> Issue Stock', ['create', 'type' => JournalTrans::TRANS_TYPE_ISSUE_STOCK], ['class' => 'btn btn-danger']) ?>
+        <?= Html::a('<i class="fa fa-undo"></i> Return Issue', ['create', 'type' => JournalTrans::TRANS_TYPE_RETURN_ISSUE], ['class' => 'btn btn-info']) ?>
+        <?= Html::a('<i class="fa fa-share"></i> Issue Borrow', ['create', 'type' => JournalTrans::TRANS_TYPE_ISSUE_BORROW], ['class' => 'btn btn-warning']) ?>
+        <?= Html::a('<i class="fa fa-reply"></i> Return Borrow', ['create', 'type' => JournalTrans::TRANS_TYPE_RETURN_BORROW], ['class' => 'btn btn-primary']) ?>
     </p>
 
     <div class="row">
-        <div class="col-md-3">
-            <div class="panel panel-primary">
-                <div class="panel-heading">Quick Actions</div>
-                <div class="panel-body">
-                    <div class="list-group">
-                        <?= Html::a('<i class="fa fa-plus"></i> PO Receive', ['create', 'type' => JournalTrans::TRANS_TYPE_PO_RECEIVE], ['class' => 'list-group-item']) ?>
-                        <?= Html::a('<i class="fa fa-minus"></i> Issue Stock', ['create', 'type' => JournalTrans::TRANS_TYPE_ISSUE_STOCK], ['class' => 'list-group-item']) ?>
-                        <?= Html::a('<i class="fa fa-undo"></i> Return Issue', ['create', 'type' => JournalTrans::TRANS_TYPE_RETURN_ISSUE], ['class' => 'list-group-item']) ?>
-                        <?= Html::a('<i class="fa fa-share"></i> Issue Borrow', ['create', 'type' => JournalTrans::TRANS_TYPE_ISSUE_BORROW], ['class' => 'list-group-item']) ?>
-                        <?= Html::a('<i class="fa fa-reply"></i> Return Borrow', ['create', 'type' => JournalTrans::TRANS_TYPE_RETURN_BORROW], ['class' => 'list-group-item']) ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-9">
+        <div class="col-md-12">
             <?php Pjax::begin(); ?>
 
             <?= GridView::widget([
                 'dataProvider' => $dataProvider,
                 'columns' => [
-                    ['class' => 'yii\grid\SerialColumn'],
+                    ['class' => 'yii\grid\SerialColumn', 'headerOptions' => ['style' => 'width: 30px;']],
 
                     [
                         'attribute' => 'journal_no',
+                        'headerOptions' => ['style' => 'width: 100px;text-align: center;'],
+                        'contentOptions' => ['style' => 'text-align: center;'],
                         'format' => 'raw',
                         'value' => function ($model) {
                             return Html::a($model->journal_no, ['view', 'id' => $model->id], ['class' => 'btn btn-link btn-sm']);
@@ -55,8 +41,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
                     [
                         'attribute' => 'trans_date',
-                        'format' => 'date',
-                        'headerOptions' => ['style' => 'width: 120px;'],
+                        // 'format' => 'date',
+                        'headerOptions' => ['style' => 'width: 120px;text-align: center;'],
+                        'contentOptions' => ['style' => 'text-align: center;'],
+                        'value' => function ($model) {
+                            return date('d-m-Y', strtotime($model->trans_date));
+                        }
                     ],
 
                     [
@@ -65,7 +55,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             $types = JournalTrans::getTransTypeOptions();
                             return $types[$model->trans_type_id] ?? 'Unknown';
                         },
-                        'headerOptions' => ['style' => 'width: 150px;'],
+                        'headerOptions' => ['style' => 'width: 150px;text-align: center;'],
+                        'contentOptions' => ['style' => 'text-align: center;'],
                     ],
 
                     [
@@ -78,7 +69,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             $types = JournalTrans::getStockTypeOptions();
                             return $icon . ' ' . ($types[$model->stock_type_id] ?? 'Unknown');
                         },
-                        'headerOptions' => ['style' => 'width: 100px;'],
+                        'headerOptions' => ['style' => 'width: 100px;text-align: center;'],
+                        'contentOptions' => ['style' => 'text-align: center;'],
                     ],
 
                     [
@@ -89,7 +81,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     [
                         'attribute' => 'qty',
                         'format' => 'decimal',
-                        'headerOptions' => ['style' => 'width: 80px;'],
+                        'headerOptions' => ['style' => 'width: 80px;text-align: right;'],
                         'contentOptions' => ['class' => 'text-right'],
                     ],
 
@@ -97,31 +89,17 @@ $this->params['breadcrumbs'][] = $this->title;
                         'attribute' => 'status',
                         'format' => 'raw',
                         'value' => function ($model) {
-                            $class = '';
-                            switch ($model->status) {
-                                case JournalTrans::STATUS_DRAFT:
-                                    $class = 'label-default';
-                                    break;
-                                case JournalTrans::STATUS_PENDING:
-                                    $class = 'label-warning';
-                                    break;
-                                case JournalTrans::STATUS_APPROVED:
-                                    $class = 'label-success';
-                                    break;
-                                case JournalTrans::STATUS_CANCELLED:
-                                    $class = 'label-danger';
-                                    break;
-                            }
-                            return '<span class="label ' . $class . '">' . ucfirst($model->status) . '</span>';
+                            return '<div class="badge badge-pill badge-success" style="padding: 10px;">' . 'Complete' . '</div>';
                         },
-                        'headerOptions' => ['style' => 'width: 100px;'],
+                        'headerOptions' => ['style' => 'width: 100px;text-align: center;'],
+                        'contentOptions' => ['style' => 'text-align: center;'],
                     ],
 
-                    [
-                        'attribute' => 'created_at',
-                        'format' => 'datetime',
-                        'headerOptions' => ['style' => 'width: 150px;'],
-                    ],
+//                    [
+//                        'attribute' => 'created_at',
+//                        'format' => 'datetime',
+//                        'headerOptions' => ['style' => 'width: 150px;'],
+//                    ],
 
                     [
                         'class' => 'yii\grid\ActionColumn',
@@ -187,7 +165,7 @@ $this->params['breadcrumbs'][] = $this->title;
         min-height: 90px;
         background: #fff;
         width: 100%;
-        box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
         border-radius: 2px;
         margin-bottom: 15px;
     }
@@ -204,7 +182,7 @@ $this->params['breadcrumbs'][] = $this->title;
         text-align: center;
         font-size: 45px;
         line-height: 90px;
-        background: rgba(0,0,0,0.2);
+        background: rgba(0, 0, 0, 0.2);
     }
 
     .info-box-content {
@@ -225,8 +203,23 @@ $this->params['breadcrumbs'][] = $this->title;
         font-size: 18px;
     }
 
-    .bg-aqua { background-color: #00c0ef !important; color: #fff; }
-    .bg-red { background-color: #dd4b39 !important; color: #fff; }
-    .bg-yellow { background-color: #f39c12 !important; color: #fff; }
-    .bg-green { background-color: #00a65a !important; color: #fff; }
+    .bg-aqua {
+        background-color: #00c0ef !important;
+        color: #fff;
+    }
+
+    .bg-red {
+        background-color: #dd4b39 !important;
+        color: #fff;
+    }
+
+    .bg-yellow {
+        background-color: #f39c12 !important;
+        color: #fff;
+    }
+
+    .bg-green {
+        background-color: #00a65a !important;
+        color: #fff;
+    }
 </style>

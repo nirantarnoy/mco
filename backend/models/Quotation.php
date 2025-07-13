@@ -97,6 +97,10 @@ class Quotation extends ActiveRecord
         ];
     }
 
+    public function getQuotation(){
+        return $this->hasOne(Quotation::className(), ['id' => 'quotation_id']);
+    }
+
     /**
      * Gets query for [[QuotationLines]].
      *

@@ -69,6 +69,11 @@ class Warehouse extends ActiveRecord
         ];
     }
 
+    public static function findName($id) {
+        $model = Warehouse::find()->where(['id'=>$id])->one();
+        return $model!= null?$model->name:'';
+    }
+
     /**
      * Gets query for [[StockSums]].
      *

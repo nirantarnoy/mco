@@ -69,7 +69,7 @@ class PurchReq extends ActiveRecord
     {
         return [
             [['purch_req_date'], 'safe'],
-            [['vendor_id', 'status', 'approve_status', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
+            [['vendor_id', 'status', 'approve_status', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by','job_id'], 'integer'],
             [['total_amount', 'discount_amount', 'vat_amount', 'net_amount'], 'number'],
             [['purch_req_no', 'vendor_name', 'note', 'total_text'], 'string', 'max' => 255],
             [['purch_req_no'], 'unique'],
@@ -89,6 +89,7 @@ class PurchReq extends ActiveRecord
             'vendor_name' => 'ชื่อผู้ขาย',
             'status' => 'สถานะ',
             'note' => 'หมายเหตุ',
+            'job_id' => 'ใบงาน',
             'approve_status' => 'สถานะอนุมัติ',
             'total_amount' => 'ยอดรวม',
             'discount_amount' => 'ส่วนลด',

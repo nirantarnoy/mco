@@ -220,7 +220,7 @@ $(document).ready(function() {
                                 }
                                 ?>
                                 <?= $form->field($quotationLine, "[$index]product_id")->widget(Select2::class, [
-                                    'data' => Product::getProductList(),
+                                    'data' => \yii\helpers\ArrayHelper::map(Product::find()->all(), 'id', 'name'),
                                     'options' => [
                                         'placeholder' => 'เลือกสินค้า...',
                                         'class' => 'product-select',

@@ -66,6 +66,27 @@ class Product extends \common\models\Product
         ];
     }
 
+    public static function findName($id)
+    {
+        $model = Product::find()
+            ->where(['id' => $id])
+            ->one();
+
+        return $model != null ? $model->name : '';
+    }
+
+    public static function findWarehouseOnhand($id)
+    {
+        $name = '';
+        $model = \backend\models\StockSum::find()
+            ->where(['product_id' => $id])->all();
+        foreach ($model as $value) {
+            if($value->qty <= 0)continue;
+            $name .= '<div class="badge badge-pill badge-info" style="padding: 10px;">'.\backend\models\Warehouse::findName($value->warehouse_id) . '</div><br />';
+        }
+        return $name;
+    }
+
     /**
      * @return \yii\db\ActiveQuery
      */
@@ -74,10 +95,15 @@ class Product extends \common\models\Product
         return $this->hasMany(\backend\models\StockSum::class, ['product_id' => 'id']);
     }
 
+    public function getWarehouse()
+    {
+        return $this->hasOne(\backend\models\Warehouse::class, ['id' => 'warehouse_id']);
+    }
+
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getJournalTransLines()
+    public function getJournaltransLine()
     {
         return $this->hasMany(JournalTransLine::class, ['product_id' => 'id']);
     }

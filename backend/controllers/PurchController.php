@@ -393,8 +393,8 @@ class PurchController extends Controller
 
         return \Yii::$app->db->createCommand($sql, [
             ':purchId' => $purchId,
-            ':transType' => \backend\models\JournalTrans::TYPE_PO_RECEIVE,
-            ':status' => \backend\models\JournalTrans::STATUS_ACTIVE,
+            ':transType' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE,
+            ':status' => 1,
             ':lineStatus' => \backend\models\PurchLine::STATUS_ACTIVE,
         ])->queryAll();
     }

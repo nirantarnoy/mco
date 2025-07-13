@@ -130,7 +130,11 @@ $(document).ready(function() {
                         'maxlength' => true,
                         'placeholder' => 'ระบบจะสร้างอัตโนมัติหากไม่ระบุ'
                     ]) ?>
-
+                    <?= $form->field($model,'job_id')->widget(Select2::class, [
+                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(), 'id', 'job_no'),
+                            'language' => 'th',
+                            'options' => ['placeholder' => 'เลือกงาน'],
+                    ])->label('ใบงาน') ?>
                     <?= $form->field($model, 'purch_req_date')->widget(DatePicker::class, [
                         'options' => ['placeholder' => 'เลือกวันที่'],
                         'pluginOptions' => [
@@ -232,7 +236,7 @@ $(document).ready(function() {
                                 }
                                 ?>
                                 <?= $form->field($purchReqLine, "[$index]product_id")->widget(Select2::class, [
-                                    'data' => Product::getProductList(),
+                                    'data' => ArrayHelper::map(\backend\models\Product::find()->all(), 'id', 'name'),
                                     'options' => [
                                         'placeholder' => 'เลือกสินค้า...',
                                         'class' => 'product-select',

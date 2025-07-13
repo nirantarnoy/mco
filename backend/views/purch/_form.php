@@ -196,7 +196,8 @@ $(document).ready(function() {
                                 }
                                 ?>
                                 <?= $form->field($purchLine, "[$index]product_id")->widget(Select2::class, [
-                                    'data' => Product::getProductList(),
+                                    'data' => \yii\helpers\ArrayHelper::map(\backend\models\Product::find()->where(['status' => 1])->all(), 'id', 'name'),
+                                    'language' => 'th',
                                     'options' => [
                                         'placeholder' => 'เลือกสินค้า...',
                                         'class' => 'product-select',

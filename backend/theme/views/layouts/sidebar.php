@@ -245,6 +245,14 @@
                                     </a>
                                 </li>
                             <?php endif; ?>
+                            <?php if (\Yii::$app->user->can('job/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=job/index" class="nav-link job">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>ใบงาน</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
                         </ul>
                     </li>
                 <?php endif;?>
