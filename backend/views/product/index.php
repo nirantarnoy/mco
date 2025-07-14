@@ -130,7 +130,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     'headerOptions' => ['style' => 'text-align: center'],
                     'contentOptions' => ['style' => 'text-align: center'],
                     'value' => function ($data) {
-                        return number_format($data->sale_price, 0);
+                        return $data->sale_price != null ? number_format($data->sale_price, 0): '0';
                     }
                 ],
 //                [
