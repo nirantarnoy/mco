@@ -203,7 +203,7 @@ class JournalTrans extends ActiveRecord
             'updated_by' => 'Updated By',
             'party_id' => 'Party ID',
             'party_type_id' => 'Party Type ID',
-            'warehouse_id' => 'Warehouse ID',
+            'warehouse_id' => 'คลังจัดเก็บ',
             'trans_ref_id' => 'Trans Ref ID',
         ];
     }

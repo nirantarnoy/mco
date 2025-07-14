@@ -105,6 +105,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'class' => 'yii\grid\ActionColumn',
                         'template' => '{view} {update} {approve} {delete}',
                         'headerOptions' => ['style' => 'width: 120px;'],
+                        'contentOptions' => ['style' => 'text-align: center;'],
                         'buttons' => [
                             'view' => function ($url, $model, $key) {
                                 return Html::a('<i class="fa fa-eye"></i>', ['view', 'id' => $model->id], [

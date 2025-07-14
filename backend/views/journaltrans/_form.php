@@ -29,6 +29,7 @@ $this->registerJsFile('@web/js/journal-trans.js', ['depends' => [\yii\web\Jquery
 
     <div class="row">
         <div class="col-md-6">
+            <?php $model->trans_date = $model->isNewRecord ? date('Y-m-d') : date('Y-m-d', strtotime($model->trans_date)); ?>
             <?= $form->field($model, 'trans_date')->widget(DatePicker::class, [
                 'options' => ['placeholder' => 'Select transaction date'],
                 'pluginOptions' => [
