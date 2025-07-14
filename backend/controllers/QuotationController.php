@@ -2,6 +2,7 @@
 namespace backend\controllers;
 
 use backend\models\Job;
+use Mpdf\Mpdf;
 use Yii;
 use backend\models\Quotation;
 use backend\models\QuotationSearch;
@@ -230,54 +231,54 @@ class QuotationController extends Controller
      * @return string
      * @throws NotFoundHttpException
      */
-    public function actionPrint($id)
-    {
-        $model = $this->findModel($id);
-
-        // Set response format for print
-        $this->layout = false;
-
-        return $this->render('print', [
-            'model' => $model,
-        ]);
-    }
-
-    /**
-     * Generate PDF for quotation
-     * @param int $id
-     * @return mixed
-     * @throws NotFoundHttpException
-     */
-    public function actionPdf($id)
-    {
-        $model = $this->findModel($id);
-
-        // Get HTML content
-        $content = $this->renderPartial('print', [
-            'model' => $model,
-        ]);
-
-        // Configure mPDF
-        $pdf = new \Mpdf\Mpdf([
-            'mode' => 'utf-8',
-            'format' => 'A4',
-            'margin_left' => 15,
-            'margin_right' => 15,
-            'margin_top' => 16,
-            'margin_bottom' => 16,
-            'margin_header' => 9,
-            'margin_footer' => 9,
-            'default_font' => 'garuda'
-        ]);
-
-        $pdf->WriteHTML($content);
-
-        // Output PDF
-        $filename = 'Quotation_' . $model->quotation_no . '.pdf';
-        $pdf->Output($filename, 'I'); // 'I' for inline, 'D' for download
-
-        exit;
-    }
+//    public function actionPrint($id)
+//    {
+//        $model = $this->findModel($id);
+//
+//        // Set response format for print
+//        $this->layout = false;
+//
+//        return $this->render('print', [
+//            'model' => $model,
+//        ]);
+//    }
+//
+//    /**
+//     * Generate PDF for quotation
+//     * @param int $id
+//     * @return mixed
+//     * @throws NotFoundHttpException
+//     */
+//    public function actionPdf($id)
+//    {
+//        $model = $this->findModel($id);
+//
+//        // Get HTML content
+//        $content = $this->renderPartial('print', [
+//            'model' => $model,
+//        ]);
+//
+//        // Configure mPDF
+//        $pdf = new \Mpdf\Mpdf([
+//            'mode' => 'utf-8',
+//            'format' => 'A4',
+//            'margin_left' => 15,
+//            'margin_right' => 15,
+//            'margin_top' => 16,
+//            'margin_bottom' => 16,
+//            'margin_header' => 9,
+//            'margin_footer' => 9,
+//            'default_font' => 'garuda'
+//        ]);
+//
+//        $pdf->WriteHTML($content);
+//
+//        // Output PDF
+//        $filename = 'Quotation_' . $model->quotation_no . '.pdf';
+//        $pdf->Output($filename, 'I'); // 'I' for inline, 'D' for download
+//
+//        exit;
+//    }
 
     /**
      * Get product info for AJAX
@@ -401,5 +402,83 @@ class QuotationController extends Controller
         }
 
         return ['error' => 'Product not found'];
+    }
+
+    /**
+     * Print quotation
+     * @param integer $id
+     * @param string $format (html or pdf)
+     * @return mixed
+     */
+    public function actionPrint($id, $format = 'html')
+    {
+        $quotation = Quotation::findOne($id);
+
+        if (!$quotation) {
+            throw new \yii\web\NotFoundHttpException('The requested page does not exist.');
+        }
+
+        // ดึงข้อมูล quotation lines พร้อม product
+        $quotationLines = QuotationLine::find()
+            ->where(['quotation_id' => $id])
+            ->with('product')
+            ->all();
+
+        if ($format == 'pdf') {
+            return $this->generatePdf($quotation, $quotationLines);
+        }
+
+        // แสดงแบบ HTML
+        $this->layout = '@backend/views/layouts/main_print';
+       // $this->layout = false;
+
+        return $this->render('print', [
+            'quotation' => $quotation,
+            'quotationLines' => $quotationLines,
+            'showButtons' => true,
+        ]);
+    }
+
+    /**
+     * Generate PDF
+     */
+    protected function generatePdf($quotation, $quotationLines)
+    {
+        // Render HTML content
+        $content = $this->renderPartial('print-pdf', [
+            'quotation' => $quotation,
+            'quotationLines' => $quotationLines,
+            'showButtons' => false,
+        ]);
+
+        // Setup mPDF
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'margin_left' => 10,
+            'margin_right' => 10,
+            'margin_top' => 10,
+            'margin_bottom' => 10,
+            'margin_header' => 5,
+            'margin_footer' => 5,
+            'fontDir' => [Yii::getAlias('@webroot') . '/fonts/'],
+            'fontdata' => [
+                'thsarabun' => [
+                    'R' => 'THSarabunNew.ttf',
+                    'B' => 'THSarabunNew-Bold.ttf',
+                ],
+            ],
+            'default_font' => 'thsarabun',
+            'default_font_size' => 14,
+        ]);
+
+        // Write HTML to PDF
+        $mpdf->WriteHTML($content);
+
+        // Output PDF
+        $filename = 'Quotation_' . $quotation->quotation_no . '.pdf';
+        $mpdf->Output($filename, 'I'); // I = inline, D = download
+
+        exit;
     }
 }
