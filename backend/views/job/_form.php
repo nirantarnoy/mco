@@ -8,6 +8,8 @@ use yii\widgets\ActiveForm;
 /** @var yii\web\View $this */
 /** @var backend\models\Job $model */
 /** @var yii\widgets\ActiveForm $form */
+
+$model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id])->all();
 ?>
 
 <div class="job-form">
@@ -48,7 +50,7 @@ use yii\widgets\ActiveForm;
             <?= \backend\models\Job::getJobStatusBadge($model->status) ?>
         </div>
         <div class="col-lg-4">
-            <?= $form->field($model, 'job_amount')->textInput() ?>
+            <?= $form->field($model, 'job_amount')->textInput(['readonly' => 'readonly']) ?>
         </div>
     </div>
 
@@ -56,6 +58,51 @@ use yii\widgets\ActiveForm;
 
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+    </div>
+
+    <br />
+    <div class="row">
+        <div class="col-lg-12">
+            <label for="">รายการสั่งซื้อสำหรับใบงานนี้</label>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th style="width: 5%;text-align: center">#</th>
+                    <th style="width: 20%">เลขที่ใบสั่งซื้อ</th>
+                    <th style="width: 15%">วันที่</th>
+                    <th style="width: 10%">สถานะ</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if ($model_purch_job!=null): ?>
+                    <?php foreach ($model_purch_job as $key => $purch): ?>
+                        <?php
+                          $puch_x = new \backend\models\Purch();
+                        ?>
+                        <tr>
+                            <td style="text-align: center"><?= $key+1?></td>
+                            <td><a href="<?= \yii\helpers\Url::to(['purch/view', 'id' => $purch->id]) ?>"><?= $purch->purch_no ?></a></td>
+                            <td><?= $purch->purch_date ? date('d-m-Y', strtotime($purch->purch_date)) : '' ?></td>
+                            <td><?=  $puch_x->getApproveStatusBadge($purch->status) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td style="text-align: center"></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                <?php endif; ?>
+
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <?php ActiveForm::end(); ?>
