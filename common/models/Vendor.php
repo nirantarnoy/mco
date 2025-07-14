@@ -41,6 +41,7 @@ class Vendor extends \yii\db\ActiveRecord
             [['code', 'name', 'description', 'vendor_group_id', 'status', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'default', 'value' => null],
             [['vendor_group_id', 'status', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
             [['code', 'name', 'description'], 'string', 'max' => 255],
+            [['taxid'],'string','max'=>13],
         ];
     }
 
@@ -56,6 +57,7 @@ class Vendor extends \yii\db\ActiveRecord
             'description' => 'รายละเอียด',
             'vendor_group_id' => 'กลุ่มผู้ขาย',
             'status' => 'สถานะ',
+            'taxid' => 'เลขประจําตัวผู้เสียภาษี',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
             'updated_at' => 'Updated At',

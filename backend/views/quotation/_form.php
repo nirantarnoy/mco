@@ -429,9 +429,12 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                             ]
                         ]) ?>
 
-                        <?= $form->field($model, 'customer_name')->textInput([
-                            'maxlength' => true,
-                            'placeholder' => 'ชื่อลูกค้า'
+                        <?= $form->field($model, 'customer_id')->widget(Select2::className(),[
+                                'data' => ArrayHelper::map(\backend\models\Customer::find()->all(), 'id', 'name'),
+                            'options' => ['placeholder' => 'เลือกลูกค้า'],
+                            'pluginOptions' => [
+                                    'allowClear' => true
+                                ]
                         ]) ?>
 
                         <?= $form->field($model, 'status')->dropDownList([

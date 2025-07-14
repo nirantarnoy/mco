@@ -430,9 +430,12 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                         ]
                     ]) ?>
 
-                    <?= $form->field($model, 'vendor_name')->textInput([
-                        'maxlength' => true,
-                        'placeholder' => 'ชื่อผู้ขาย'
+                    <?= $form->field($model, 'vendor_id')->widget(Select2::className(),[
+                        'data' => ArrayHelper::map(\backend\models\Vendor::find()->all(), 'id', 'name'),
+                        'options' => ['placeholder' => 'เลือกผู้จําหน่าย'],
+                        'pluginOptions' => [
+                            'allowClear' => true
+                        ]
                     ]) ?>
 
                     <?= $form->field($model, 'status')->dropDownList([

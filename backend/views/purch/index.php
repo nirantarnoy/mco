@@ -81,11 +81,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 },
             ],
             [
-                'attribute' => 'vendor_name',
-                'label' => 'รายละเอียด',
+                'attribute' => 'vendor_id',
+                'label' => 'ผู้ขาย',
                 'headerOptions' => ['style' => 'width: 200px;'],
                 'value' => function ($model) {
-                    return $model->vendor_name ?: 'ไม่ระบุ';
+                    return $model->vendor_id ? \backend\models\Vendor::findName($model->vendor_id) : 'ไม่ระบุ';
                 },
             ],
             [

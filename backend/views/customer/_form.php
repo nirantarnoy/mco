@@ -40,6 +40,13 @@ $x_zipcode = $address_chk == null ? '' : $address_chk->zip_code;
     <div class="row">
         <div class="col-lg-1"></div>
         <div class="col-lg-10">
+            <?= $form->field($model, 'taxid')->textInput(['maxlength' => true]) ?>
+        </div>
+        <div class="col-lg-1"></div>
+    </div>
+    <div class="row">
+        <div class="col-lg-1"></div>
+        <div class="col-lg-10">
             <?= $form->field($model, 'customer_group_id')->textInput(['maxlength' => true]) ?>
         </div>
         <div class="col-lg-1"></div>
