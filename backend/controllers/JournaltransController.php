@@ -391,13 +391,13 @@ class JournaltransController extends Controller
                 'w.name as warehouse_name',
                 'COALESCE(s.qty, 0) as qty',
                 'p.unit_id',
-                'u.name as unit_name',
+                'u.name as unit',
             ])
             ->from('warehouse w')
             ->leftJoin('stock_sum s', 'w.id = s.warehouse_id AND s.product_id = :product_id', [':product_id' => $productId])
             ->leftJoin('product p', 'p.id = :product_id', [':product_id' => $productId])
             ->leftJoin('unit u', 'u.id = p.unit_id')
-            ->where(['w.status' => 'active'])
+            ->where(['w.status' => 1])
             ->all();
 
         return $stocks;
