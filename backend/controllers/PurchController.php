@@ -1,6 +1,7 @@
 <?php
 namespace backend\controllers;
 
+use Mpdf\Mpdf;
 use Yii;
 use backend\models\Purch;
 use backend\models\PurchSearch;
@@ -606,4 +607,74 @@ class PurchController extends Controller
         return ['error' => 'Product not found'];
     }
 
+    public function actionPrint($id, $format = 'html')
+    {
+        $purchase = Purch::findOne($id);
+
+        if (!$purchase) {
+            throw new \yii\web\NotFoundHttpException('The requested page does not exist.');
+        }
+
+        // ดึงข้อมูล purchase lines พร้อม product
+        $purchaseLines = PurchLine::find()
+            ->where(['purch_id' => $id])
+            ->with('product')
+            ->all();
+
+        if ($format == 'pdf') {
+            return $this->generatePdf($purchase, $purchaseLines);
+        }
+
+        // แสดงแบบ HTML
+        $this->layout = '@backend/views/layouts/main_print';
+
+        return $this->render('print', [
+            'purchase' => $purchase,
+            'purchaseLines' => $purchaseLines,
+            'showButtons' => true,
+        ]);
+    }
+
+    /**
+     * Generate PDF
+     */
+    protected function generatePdf($purchase, $purchaseLines)
+    {
+        // Render HTML content
+        $content = $this->renderPartial('print-pdf', [
+            'purchase' => $purchase,
+            'purchaseLines' => $purchaseLines,
+            'showButtons' => false,
+        ]);
+
+        // Setup mPDF
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'margin_left' => 10,
+            'margin_right' => 10,
+            'margin_top' => 10,
+            'margin_bottom' => 10,
+            'margin_header' => 5,
+            'margin_footer' => 5,
+            'fontDir' => [Yii::getAlias('@backend') . '/web/fonts/'],
+            'fontdata' => [
+                'thsarabun' => [
+                    'R' => 'THSarabunNew.ttf',
+                    'B' => 'THSarabunNewBold.ttf',
+                ],
+            ],
+            'default_font' => 'thsarabun',
+            'default_font_size' => 14,
+        ]);
+
+        // Write HTML to PDF
+        $mpdf->WriteHTML($content);
+
+        // Output PDF
+        $filename = 'PO_' . $purchase->purch_no . '.pdf';
+        $mpdf->Output($filename, 'I'); // I = inline, D = download
+
+        exit;
+    }
 }

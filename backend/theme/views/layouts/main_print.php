@@ -36,10 +36,10 @@ $cururl = Yii::$app->controller->id;
     <?php $this->head() ?>
     <style>
         @font-face {
-            font-family: 'Kanit-Regular';
-            /*font-family: 'TH-Sarabun-New';*/
-            /*src: url('fonts/THSarabunNew.ttf') format('truetype');*/
-            src: url('fonts/Kanit-Regular.ttf') format('truetype');
+            /*font-family: 'Kanit-Regular';*/
+            font-family: 'TH-Sarabun-New';
+            src: url('../../backend/web/fonts/THSarabunNew.ttf') format('truetype');
+            /*src: url('../../backend/web/fonts/Kanit-Regular.ttf') format('truetype');*/
             /*src: url('../../backend/web/fonts/Kanit-Regular.ttf') format('truetype');*/
             /* src: url('../fonts/thsarabunnew-webfont.eot?#iefix') format('embedded-opentype'),
                   url('../fonts/thsarabunnew-webfont.woff') format('woff'),
@@ -49,8 +49,9 @@ $cururl = Yii::$app->controller->id;
         }
 
         body {
-            font-family: "Kanit-Regular";
-            font-size: 16px;
+            /*font-family: "Kanit-Regular";*/
+            font-family: "TH-Sarabun-New";
+            font-size: 20px;
         }
 
 
