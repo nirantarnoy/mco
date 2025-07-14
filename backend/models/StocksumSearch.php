@@ -4,7 +4,7 @@ namespace backend\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use backend\models\Stocksum;
+use backend\models\StockSum;
 
 /**
  * StocksumSearch represents the model behind the search form of `backend\models\Stocksum`.
