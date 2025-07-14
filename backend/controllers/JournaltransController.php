@@ -328,4 +328,78 @@ class JournaltransController extends Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
+
+    public function actionGetProductInfo()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $request = \Yii::$app->request;
+
+        // ถ้าขอข้อมูลสินค้าทั้งหมดสำหรับ autocomplete
+        if ($request->get('action') === 'get-all-products') {
+            $products = \backend\models\Product::find()
+                ->where(['status' => 1])
+                ->all();
+
+            $result = [];
+            foreach ($products as $product) {
+                $result[] = [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'code' => $product->code ?? '',
+                    'price' => $product->sale_price ?? 0,
+                    'display' => $product->code . ($product->name ? ' (' . $product->name . ')' : '')
+                ];
+            }
+
+            return $result;
+        }
+
+        // ถ้าขอข้อมูลสินค้าเฉพาะ ID (สำหรับการเลือกสินค้า)
+        $id = $request->get('id');
+        if ($id) {
+            $product = \backend\models\Product::findOne($id);
+            if ($product) {
+                return [
+                    'id' => $product->id,
+                    'product_name' => $product->name,
+                    'name' => $product->name,
+                    'code' => $product->code ?? '',
+                    'price' => $product->sale_price ?? 0,
+                    'display' => $product->code . ($product->name ? ' (' . $product->name . ')' : '')
+                ];
+            }
+        }
+
+        return ['error' => 'Product not found'];
+    }
+
+    public function actionGetProductStock()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $productId = \Yii::$app->request->get('product_id');
+
+        if (!$productId) {
+            return ['error' => 'Product ID required'];
+        }
+
+        // Query เพื่อดึงข้อมูลสต็อกจากทุกคลัง
+        $stocks = (new \yii\db\Query())
+            ->select([
+                'w.id as warehouse_id',
+                'w.name as warehouse_name',
+                'COALESCE(s.qty, 0) as qty',
+                'p.unit_id',
+                'u.name as unit_name',
+            ])
+            ->from('warehouse w')
+            ->leftJoin('stock_sum s', 'w.id = s.warehouse_id AND s.product_id = :product_id', [':product_id' => $productId])
+            ->leftJoin('product p', 'p.id = :product_id', [':product_id' => $productId])
+            ->leftJoin('unit u', 'u.id = p.unit_id')
+            ->where(['w.status' => 'active'])
+            ->all();
+
+        return $stocks;
+    }
 }

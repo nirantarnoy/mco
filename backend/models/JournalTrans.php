@@ -51,6 +51,8 @@ class JournalTrans extends ActiveRecord
     const STATUS_APPROVED = 'approved';
     const STATUS_CANCELLED = 'cancelled';
 
+    public $journalTransLines = [];
+
     /**
      * {@inheritdoc}
      */

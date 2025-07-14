@@ -562,7 +562,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                     'data-index' => $index,
                                 ])->label(false) ?>
                             </td>
-                            <td class="text-center align-middle">
+                            <td class="text-center align-middle" style="text-align: center">
                                 <button type="button" class="btn btn-danger btn-sm remove-item">
                                     <i class="fas fa-trash"></i>
                                 </button>

@@ -29,6 +29,7 @@ use yii\db\ActiveRecord;
  */
 class JournalTransLine extends ActiveRecord
 {
+    public $product_name;
     // Return types for borrow returns
     const RETURN_TYPE_COMPLETE = 'complete';
     const RETURN_TYPE_DAMAGED = 'damaged';
@@ -64,6 +65,8 @@ class JournalTransLine extends ActiveRecord
             [['product_id'], 'exist', 'skipOnError' => true, 'targetClass' => Product::class, 'targetAttribute' => ['product_id' => 'id']],
             [['qty'], 'validateReturnQuantity'],
             [['good_qty', 'damaged_qty', 'missing_qty'], 'validateConditionQuantities'],
+            [['unit_id'],'integer'],
+            [['line_total'], 'number'],
         ];
     }
 
