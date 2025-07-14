@@ -1,5 +1,7 @@
 <?php
 
+use kartik\date\DatePicker;
+use kartik\select2\Select2;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
@@ -16,16 +18,34 @@ use yii\widgets\ActiveForm;
             <?= $form->field($model, 'job_no')->textInput(['maxlength' => true]) ?>
         </div>
         <div class="col-lg-4">
-            <?= $form->field($model, 'quotation_id')->textInput() ?>
+            <?= $form->field($model, 'quotation_id')->widget(Select2::className(),
+                [
+                    'data' => \yii\helpers\ArrayHelper::map(\backend\models\Quotation::find()->all(), 'id', 'quotation_no'),
+                    'language' => 'th',
+                    'options' => ['placeholder' => 'เลือกใบเสนอราคา'],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                    ]
+                ])->label('เลขที่ใบเสนอราคา') ?>
         </div>
         <div class="col-lg-4">
-            <?= $form->field($model, 'job_date')->textInput() ?>
+            <?php $model->job_date = $model->job_date ? date('d-m-Y', strtotime($model->job_date)) : ''; ?>
+            <?= $form->field($model, 'job_date')->widget(DatePicker::className(),
+                ['options' =>
+                    [
+                        'placeholder' => 'เลือกวันที่',
+                    ],
+                    'pluginOptions' => [
+                        'autoclose' => true,
+                        'format' => 'dd-mm-yyyy',
+                    ]
+                ])->label('วันที่') ?>
         </div>
     </div>
     <div class="row">
         <div class="col-lg-4">
             <label for="">สถานะ</label>
-            <?= \backend\models\Job::getJobStatusBadge($model->status)?>
+            <?= \backend\models\Job::getJobStatusBadge($model->status) ?>
         </div>
         <div class="col-lg-4">
             <?= $form->field($model, 'job_amount')->textInput() ?>

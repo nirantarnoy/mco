@@ -94,12 +94,17 @@ $this->params['breadcrumbs'][] = $this->title;
                     'contentOptions' => ['style' => 'text-align: center'],
                     'format' => 'raw',
                     'value' => function ($data) {
-                        $url = Yii::$app->request->hostInfo . Yii::$app->request->baseUrl . '/uploads/product_photo/' . $data->photo;
+                        $url = \Yii::$app->request->hostInfo . Yii::$app->request->baseUrl . '/uploads/product_photo/' . $data->photo;
                         return Html::a(
                             Html::img($url, ['style' => 'max-width:50px']),
                             $url,
-                            ['target' => '_blank']
+                            [
+                                'target' => '_blank',
+                                'encode' => false,
+                                'data-pjax' => 0,
+                            ],
                         );
+                      //  return '<a href="' . \Yii::$app->request->hostInfo . Yii::$app->request->baseUrl . '/uploads/product_photo/' . $data->photo . '" target="_blank">' .$data->photo . '</a>';
                     }
                 ],
                 'code',
