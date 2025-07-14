@@ -41,7 +41,7 @@ class StocksumSearch extends StockSum
      */
     public function search($params)
     {
-        $query = Stocksum::find();
+        $query = StockSum::find();
 
         // add conditions that should always apply here
 
