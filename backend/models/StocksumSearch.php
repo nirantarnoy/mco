@@ -9,7 +9,7 @@ use backend\models\Stocksum;
 /**
  * StocksumSearch represents the model behind the search form of `backend\models\Stocksum`.
  */
-class StocksumSearch extends Stocksum
+class StocksumSearch extends StockSum
 {
     /**
      * {@inheritdoc}
