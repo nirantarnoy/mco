@@ -156,6 +156,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 //'company_id',
                 [
                     'attribute' => 'minimum_stock',
+                    'label' => 'Min.Stock',
                     'headerOptions' => ['style' => 'text-align: center'],
                     'contentOptions' => ['style' => 'text-align: center'],
                     'value' => function ($data) {
