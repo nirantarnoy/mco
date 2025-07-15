@@ -153,82 +153,8 @@ class EmployeeController extends Controller
                 $model->photo = $photo_name;
             }
 
-            $card_type = \Yii::$app->request->post('card_type');
-            $card_no = \Yii::$app->request->post('card_no');
-            $start_date = \Yii::$app->request->post('start_date');
-            $expire_date = \Yii::$app->request->post('expire_date');
 
-            $removelist = \Yii::$app->request->post('remove_list');
-//            print_r($removelist);return ;
-
-            $model->emp_start = date('Y-m-d',strtotime($model->emp_start));
-            $model->card_issue_date = date('Y-m-d',strtotime($model->card_issue_date));
-            $model->card_exp_date = date('Y-m-d',strtotime($model->card_exp_date));
-            $model->passport_issue_date = date('Y-m-d',strtotime($model->passport_issue_date));
-            $model->passport_exp_date = date('Y-m-d',strtotime($model->passport_exp_date));
-
-            if($model->save()){
-
-                if (count($card_no)){
-                    for ($i = 0; $i <= count($card_no) - 1; $i++) {
-                        if ($card_no[$i] != ''){
-//                            echo 'ttt'; return;
-                            $driving_chk = \common\models\DriverLicense::find()->where(['emp_id'=>$model->id,'license_type_id'=>$card_type[$i]])->one();
-                            if ($driving_chk){
-//                                echo 'ttt'; return;
-                                $new_start_date = date('Y-m-d');
-                                $x_date = explode('-', $start_date[$i]);
-                                if (count($x_date) > 1) {
-                                    $new_start_date = $x_date[2] . '/' . $x_date[1] . '/' . $x_date[0];
-                                }
-//                                print_r($new_start_date);return ;
-                                $new_expire_date = date('Y-m-d');
-                                $x_date2 = explode('-', $expire_date[$i]);
-                                if (count($x_date2) > 1) {
-                                    $new_expire_date = $x_date2[2] . '/' . $x_date2[1] . '/' . $x_date2[0];
-                                }
-//                                print_r($new_start_date);return ;
-
-                                $driving_chk->license_type_id = $card_type[$i];
-                                $driving_chk->license_no = $card_no[$i];
-                                $driving_chk->issue_date = date('Y-m-d', strtotime($new_start_date));
-                                $driving_chk->expired_date = date('Y-m-d', strtotime($new_expire_date));
-                                $driving_chk->status = $model->status;
-                                if ($driving_chk->save(false)){
-
-                                }
-                            }else {
-
-                                $x_date = explode('-', $start_date[$i]);
-                                $new_start_date = date('Y-m-d');
-                                if (count($x_date) > 1) {
-                                    $new_start_date = $x_date[2] . '/' . $x_date[0] . '/' . $x_date[1];
-                                }
-//                                print_r($new_start_date);return ;
-                                $new_expire_date = date('Y-m-d');
-                                $x_date2 = explode('-', $expire_date[$i]);
-                                if (count($x_date2) > 1) {
-                                    $new_expire_date = $x_date2[2] . '/' . $x_date2[1] . '/' . $x_date2[0];
-                                }
-
-                                $new_driver_license = new \common\models\DriverLicense();
-                                $new_driver_license->emp_id = $model->id;
-                                $new_driver_license->license_type_id = $card_type[$i];
-                                $new_driver_license->license_no = $card_no[$i];
-                                $new_driver_license->issue_date = date('Y-m-d', strtotime($new_start_date));
-                                $new_driver_license->expired_date = date('Y-m-d', strtotime($new_expire_date));
-                                $new_driver_license->status = $model->status;
-                                if ($new_driver_license->save(false)){
-
-                                }
-                            }
-                        }
-                    }
-                }
-
-
-
-
+            if($model->save(false)){
                 $session = Yii::$app->session;
                 $session->setFlash('msg', 'บันทึกข้อมูลเรียบร้อย');
                 return $this->redirect(['index']);
