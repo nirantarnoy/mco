@@ -549,7 +549,7 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
         'id' => 'journal-trans-form',
         'options' => ['class' => 'form-horizontal'],
         'fieldConfig' => [
-            'template' => "{label}\n<div class=\"col-sm-9\">{input}\n{error}</div>",
+            'template' => "{label}\n<div class=\"col-sm-12\">{input}\n{error}</div>",
             'labelOptions' => ['class' => 'col-sm-3 control-label'],
         ],
     ]); ?>
