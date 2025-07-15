@@ -100,6 +100,10 @@ class Product extends \common\models\Product
         return $this->hasOne(\backend\models\Warehouse::class, ['id' => 'warehouse_id']);
     }
 
+    public function getUnit(){
+        return $this->hasOne(Unit::class, ['id' => 'unit_id']);
+    }
+
     /**
      * @return \yii\db\ActiveQuery
      */

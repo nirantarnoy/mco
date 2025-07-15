@@ -55,7 +55,7 @@ class JournalTransLine extends ActiveRecord
     {
         return [
             [['product_id', 'warehouse_id', 'qty'], 'required'],
-            [['journal_trans_id', 'product_id', 'warehouse_id'], 'integer'],
+            [['journal_trans_id', 'product_id', 'warehouse_id','is_damage'], 'integer'],
             [['qty', 'line_price', 'sale_price', 'good_qty', 'damaged_qty', 'missing_qty'], 'number'],
             [['remark', 'condition_note'], 'string'],
             [['status', 'return_to_type', 'item_condition','return_note'], 'string', 'max' => 255],
@@ -86,6 +86,7 @@ class JournalTransLine extends ActiveRecord
             'line_price' => 'Line Price',
             'return_to_type' => 'Return Type',
             'sale_price' => 'Sale Price',
+            'is_damage' => 'Is Damage',
             'item_condition' => 'Item Condition',
             'condition_note' => 'Condition Note',
             'return_note' => 'Return Note',
@@ -159,6 +160,10 @@ class JournalTransLine extends ActiveRecord
     public function getProduct()
     {
         return $this->hasOne(Product::class, ['id' => 'product_id']);
+    }
+
+    public function getWarehouse(){
+        return $this->hasOne(Warehouse::class, ['id' => 'warehouse_id']);
     }
 
     /**

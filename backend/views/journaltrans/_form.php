@@ -1,6 +1,7 @@
 <?php
 
 use wbraganca\dynamicform\DynamicFormWidget;
+use yii\bootstrap4\Modal;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 use yii\helpers\ArrayHelper;
@@ -9,10 +10,11 @@ use backend\models\Product;
 use kartik\date\DatePicker;
 use kartik\select2\Select2;
 use yii\helpers\Url;
+//use yii\bootstrap\Modal;
 
 /* @var $this yii\web\View */
-/* @var $model common\models\JournalTrans */
-/* @var $lines common\models\JournalTransLine[] */
+/* @var $model common\models\JournalTransX */
+/* @var $lines common\models\JournalTransLineX[] */
 /* @var $form yii\widgets\ActiveForm */
 
 $this->registerJsFile('@web/js/journal-trans.js', ['depends' => [\yii\web\JqueryAsset::class]]);
@@ -158,6 +160,60 @@ $autocompleteCSS = <<<CSS
     color: #721c24;
     border: 1px solid #f5c6cb;
 }
+
+.return-fields {
+    display: none;
+}
+
+.return-fields.show {
+    display: block;
+}
+
+.readonly-field {
+    background-color: #f8f9fa !important;
+    cursor: not-allowed;
+}
+
+.condition-btn {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.condition-btn:hover {
+    background-color: #138496;
+}
+
+.modal-body .form-group {
+    margin-bottom: 15px;
+}
+
+.condition-summary {
+    font-size: 11px;
+    color: #666;
+    margin-top: 5px;
+}
+
+.original-transaction-info {
+    background-color: #e7f3ff;
+    border: 1px solid #b3d7ff;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+.info-label {
+    font-weight: bold;
+    color: #0056b3;
+}
+
+.return-transaction-line {
+    background-color: #f8f9fa;
+}
 CSS;
 
 $this->registerCss($autocompleteCSS);
@@ -168,9 +224,312 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
 // URL สำหรับ AJAX
 $ajax_url = Url::to(['get-product-info']);
 $stock_url = Url::to(['get-product-stock']);
+$get_transaction_url = Url::to(['get-transaction-lines']);
 
-// JavaScript สำหรับ autocomplete และ stock management
-$autocompleteJs = <<<JS
+// JavaScript สำหรับ return transaction features
+$returnTransactionJs = <<<JS
+var originalTransactionData = {};
+var returnTransactionLines = [];
+
+// ฟังก์ชันสำหรับโหลดข้อมูล transaction ต้นฉบับ
+function loadOriginalTransaction(transactionId) {
+    if (!transactionId) {
+        clearReturnTransactionData();
+        return;
+    }
+    
+    $.ajax({
+        url: '$get_transaction_url',
+        type: 'GET',
+        data: { transaction_id: transactionId },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                originalTransactionData = response.data;
+                displayOriginalTransactionInfo(response.data);
+                populateReturnTransactionLines(response.data.lines);
+            } else {
+                alert('ไม่สามารถโหลดข้อมูลรายการได้: ' + response.message);
+            }
+        },
+        error: function() {
+            alert('เกิดข้อผิดพลาดในการโหลดข้อมูลรายการ');
+        }
+    });
+}
+
+// แสดงข้อมูล transaction ต้นฉบับ
+function displayOriginalTransactionInfo(data) {
+    var infoHtml = '<div class="original-transaction-info">' +
+        '<h6><i class="fa fa-info-circle"></i> ข้อมูลรายการต้นฉบับ</h6>' +
+        '<div class="row">' +
+        '<div class="col-md-6">' +
+        '<span class="info-label">เลขที่:</span> ' + data.journal_no + '<br>' +
+        '<span class="info-label">วันที่:</span> ' + data.trans_date + '<br>' +
+        '<span class="info-label">ลูกค้า:</span> ' + (data.customer_name || '-') +
+        '</div>' +
+        '<div class="col-md-6">' +
+        '<span class="info-label">ประเภท:</span> ' + data.trans_type_name + '<br>' +
+        '<span class="info-label">สถานะ:</span> ' + data.status + '<br>' +
+        '<span class="info-label">จำนวนรายการ:</span> ' + data.lines.length + ' รายการ' +
+        '</div>' +
+        '</div>' +
+        '</div>';
+    
+    $('.card-body').prepend(infoHtml);
+}
+
+// เติมข้อมูลรายการสินค้าสำหรับการคืน
+function populateReturnTransactionLines(lines) {
+    // ล้างรายการเดิม
+    $('.container-items').empty();
+    
+    lines.forEach(function(line, index) {
+        addReturnTransactionLine(line, index);
+    });
+}
+
+// เพิ่มรายการสินค้าสำหรับการคืน
+function addReturnTransactionLine(lineData, index) {
+    var availableQty = getAvailableReturnQty(lineData.product_id);
+    
+    var rowHtml = '<tr class="item return-transaction-line">' +
+        '<td class="text-center align-middle">' +
+        '<span class="item-number">' + (index + 1) + '</span>' +
+        '<input type="hidden" name="JournalTransLineX[' + index + '][id]" value="">' +
+        '<input type="hidden" name="JournalTransLineX[' + index + '][product_id]" value="' + lineData.product_id + '">' +
+        '</td>' +
+        '<td>' +
+        '<input type="text" class="form-control readonly-field" name="JournalTransLineX[' + index + '][product_name]" ' +
+        'value="' + lineData.product_name + '" readonly>' +
+        '<small class="text-muted">รหัส: ' + lineData.product_code + '</small>' +
+        '</td>' +
+        '<td>' +
+        '<input type="text" class="form-control readonly-field" name="JournalTransLineX[' + index + '][warehouse_name]" ' +
+        'value="' + lineData.warehouse_name + '" readonly>' +
+        '<input type="hidden" name="JournalTransLineX[' + index + '][warehouse_id]" value="' + lineData.warehouse_id + '">' +
+        '</td>' +
+        '<td>' +
+        '<input type="text" class="form-control text-center readonly-field" ' +
+        'value="' + lineData.qty + '" readonly>' +
+        '<small class="text-muted">ยืมไป</small>' +
+        '</td>' +
+        '<td>' +
+        '<input type="text" class="form-control text-center readonly-field" ' +
+        'value="' + availableQty + '" readonly>' +
+        '<small class="text-muted">คงเหลือ</small>' +
+        '</td>' +
+        '<td>' +
+        '<input type="number" class="form-control qty-input" name="JournalTransLineX[' + index + '][qty]" ' +
+        'step="0.01" min="0" max="' + availableQty + '" placeholder="0" data-index="' + index + '" data-original-qty="' + lineData.qty + '" data-available-qty="' + availableQty + '">' +
+        '</td>' +
+        '<td>' +
+        '<input type="text" class="form-control readonly-field" name="JournalTransLineX[' + index + '][unit_name]" ' +
+        'value="' + lineData.unit_name + '" readonly>' +
+        '<input type="hidden" name="JournalTransLineX[' + index + '][unit_id]" value="' + lineData.unit_id + '">' +
+        '</td>' +
+        '<td class="text-center">' +
+        '<button type="button" class="btn btn-info btn-sm condition-btn" onclick="openConditionModal(' + index + ')" ' +
+        'style="display: none;" data-index="' + index + '">' +
+        '<i class="fa fa-edit"></i> สภาพ' +
+        '</button>' +
+        '<div class="condition-summary" data-index="' + index + '"></div>' +
+        '</td>' +
+        '</tr>';
+    
+    $('.container-items').append(rowHtml);
+}
+
+// คำนวณจำนวนที่สามารถคืนได้
+function getAvailableReturnQty(productId) {
+    // ค้นหาจำนวนที่ยืมไปจาก original transaction
+    var originalQty = 0;
+    if (originalTransactionData.lines) {
+        originalTransactionData.lines.forEach(function(line) {
+            if (line.product_id == productId) {
+                originalQty += parseFloat(line.qty);
+            }
+        });
+    }
+    
+    // TODO: ดึงข้อมูลจำนวนที่คืนไปแล้วจาก database
+    var returnedQty = 0;
+    
+    return originalQty - returnedQty;
+}
+
+// ล้างข้อมูล return transaction
+function clearReturnTransactionData() {
+    originalTransactionData = {};
+    $('.original-transaction-info').remove();
+    $('.container-items').html('<tr class="item"><td colspan="8" class="text-center">กรุณาเลือกรายการที่ต้องการคืนก่อน</td></tr>');
+}
+
+// เปิด modal สำหรับบันทึกสภาพสินค้า
+function openConditionModal(index) {
+    currentConditionIndex = index;
+    var currentData = getConditionData(index);
+    
+    // เติมข้อมูลใน modal
+    $('#condition-good-qty').val(currentData.good_qty || '');
+    $('#condition-damaged-qty').val(currentData.damaged_qty || '');
+    $('#condition-missing-qty').val(currentData.missing_qty || '');
+    $('#condition-note').val(currentData.condition_note || '');
+    $('#return-note').val(currentData.return_note || '');
+    
+    updateConditionTotal();
+    $('#conditionModal').modal('show');
+}
+
+var currentConditionIndex = -1;
+
+// ฟังก์ชันสำหรับบันทึกข้อมูลสภาพสินค้า
+function saveConditionData() {
+    var index = currentConditionIndex;
+    var qtyInput = $('.qty-input[data-index="' + index + '"]');
+    var totalQty = parseFloat(qtyInput.val()) || 0;
+    
+    var goodQty = parseFloat($('#condition-good-qty').val()) || 0;
+    var damagedQty = parseFloat($('#condition-damaged-qty').val()) || 0;
+    var missingQty = parseFloat($('#condition-missing-qty').val()) || 0;
+    var conditionNote = $('#condition-note').val();
+    var returnNote = $('#return-note').val();
+    
+    var conditionTotal = goodQty + damagedQty + missingQty;
+    
+    if (conditionTotal !== totalQty) {
+        alert('ผลรวมจำนวนสภาพสินค้า (' + conditionTotal + ') ต้องเท่ากับจำนวนที่คืน (' + totalQty + ')');
+        return;
+    }
+    
+    // บันทึกข้อมูลใน hidden fields
+    setConditionHiddenFields(index, goodQty, damagedQty, missingQty, conditionNote, returnNote);
+    
+    // อัพเดตการแสดงผล
+    updateConditionSummary(index, goodQty, damagedQty, missingQty);
+    
+    $('#conditionModal').modal('hide');
+}
+
+// ตั้งค่า hidden fields สำหรับข้อมูลสภาพสินค้า
+function setConditionHiddenFields(index, goodQty, damagedQty, missingQty, conditionNote, returnNote) {
+    var container = $('.item').eq(index);
+    
+    // ลบ hidden fields เดิม
+    container.find('input[name*="[good_qty]"], input[name*="[damaged_qty]"], input[name*="[missing_qty]"], input[name*="[condition_note]"], input[name*="[return_note]"]').remove();
+    
+    // เพิ่ม hidden fields ใหม่
+    container.append('<input type="hidden" name="JournalTransLineX[' + index + '][good_qty]" value="' + goodQty + '">');
+    container.append('<input type="hidden" name="JournalTransLineX[' + index + '][damaged_qty]" value="' + damagedQty + '">');
+    container.append('<input type="hidden" name="JournalTransLineX[' + index + '][missing_qty]" value="' + missingQty + '">');
+    container.append('<input type="hidden" name="JournalTransLineX[' + index + '][condition_note]" value="' + conditionNote + '">');
+    container.append('<input type="hidden" name="JournalTransLineX[' + index + '][return_note]" value="' + returnNote + '">');
+}
+
+// อัพเดตการแสดงผลสรุปสภาพสินค้า
+function updateConditionSummary(index, goodQty, damagedQty, missingQty) {
+    var summary = [];
+    if (goodQty > 0) summary.push('ดี: ' + goodQty);
+    if (damagedQty > 0) summary.push('เสีย: ' + damagedQty);
+    if (missingQty > 0) summary.push('หาย: ' + missingQty);
+    
+    $('.condition-summary[data-index="' + index + '"]').text(summary.join(', '));
+}
+
+// ดึงข้อมูลสภาพสินค้าปัจจุบัน
+function getConditionData(index) {
+    var container = $('.item').eq(index);
+    return {
+        good_qty: container.find('input[name*="[good_qty]"]').val(),
+        damaged_qty: container.find('input[name*="[damaged_qty]"]').val(),
+        missing_qty: container.find('input[name*="[missing_qty]"]').val(),
+        condition_note: container.find('input[name*="[condition_note]"]').val(),
+        return_note: container.find('input[name*="[return_note]"]').val()
+    };
+}
+
+// อัพเดตผลรวมในการกรอกสภาพสินค้า
+function updateConditionTotal() {
+    var goodQty = parseFloat($('#condition-good-qty').val()) || 0;
+    var damagedQty = parseFloat($('#condition-damaged-qty').val()) || 0;
+    var missingQty = parseFloat($('#condition-missing-qty').val()) || 0;
+    var total = goodQty + damagedQty + missingQty;
+    
+    $('#condition-total').text(total);
+    
+    var qtyInput = $('.qty-input[data-index="' + currentConditionIndex + '"]');
+    var expectedTotal = parseFloat(qtyInput.val()) || 0;
+    
+    if (total === expectedTotal) {
+        $('#condition-total').removeClass('text-danger').addClass('text-success');
+    } else {
+        $('#condition-total').removeClass('text-success').addClass('text-danger');
+    }
+}
+
+$(document).ready(function() {
+    // Event สำหรับการเปลี่ยน transaction type
+    $('#trans-type-select').change(function() {
+        var transType = parseInt($(this).val());
+        var returnForSelect = $('#return-for-trans-select');
+        
+        if (transType === 4 || transType === 5) {
+            returnForSelect.prop('disabled', false);
+            $('.return-fields').addClass('show');
+        } else {
+            returnForSelect.prop('disabled', true).val('');
+            $('.return-fields').removeClass('show');
+            clearReturnTransactionData();
+        }
+    });
+    
+    // Event สำหรับการเลือก return transaction
+    $('#return-for-trans-select').change(function() {
+        var selectedTransId = $(this).val();
+        loadOriginalTransaction(selectedTransId);
+    });
+    
+    // Event สำหรับการกรอกจำนวนคืน
+    $(document).on('input', '.qty-input', function() {
+        var index = $(this).data('index');
+        var availableQty = parseFloat($(this).data('available-qty')) || 0;
+        var inputQty = parseFloat($(this).val()) || 0;
+        
+        // ตรวจสอบจำนวนที่กรอก
+        if (inputQty > availableQty) {
+            $(this).val(availableQty);
+            alert('จำนวนที่คืนไม่สามารถเกินจำนวนที่สามารถคืนได้ (' + availableQty + ')');
+            inputQty = availableQty;
+        }
+        
+        // แสดง/ซ่อนปุ่มสภาพสินค้า
+        var conditionBtn = $('.condition-btn[data-index="' + index + '"]');
+        if (inputQty > 0 && ($('#trans-type-select').val() == '4')) { // Return Borrow
+            conditionBtn.show();
+        } else {
+            conditionBtn.hide();
+            // ล้างข้อมูลสภาพสินค้า
+            setConditionHiddenFields(index, 0, 0, 0, '', '');
+            updateConditionSummary(index, 0, 0, 0);
+        }
+    });
+    
+    // Event สำหรับการคำนวณผลรวมสภาพสินค้า
+    $('#condition-good-qty, #condition-damaged-qty, #condition-missing-qty').on('input', updateConditionTotal);
+    
+    // Initial setup
+    var currentTransType = $('#trans-type-select').val();
+    if (currentTransType == '4' || currentTransType == '5') {
+        $('#return-for-trans-select').prop('disabled', false);
+        $('.return-fields').addClass('show');
+    }
+});
+JS;
+
+$this->registerJs($returnTransactionJs, \yii\web\View::POS_READY);
+
+// JavaScript เดิมสำหรับ autocomplete และ calculation
+$originalJs = <<<JS
 // ตัวแปรเก็บข้อมูลสินค้า
 var productsData = [];
 var productStockData = {};
@@ -196,318 +555,37 @@ function loadProductsData() {
     });
 }
 
-// ฟังก์ชันโหลดข้อมูลสต็อกสินค้า
-function loadProductStock(productId, index) {
-    $.ajax({
-        url: '$stock_url',
-        type: 'GET',
-        data: { 
-            action: 'get-product-stock',
-            product_id: productId 
-        },
-        dataType: 'json',
-        success: function(data) {
-            productStockData[productId] = data;
-            updateWarehouseOptions(index, productId);
-        },
-        error: function() {
-            console.log('Error loading product stock data');
-            productStockData[productId] = [];
-        }
-    });
-}
+// Transaction type to stock type mapping
+const transTypeStockTypeMap = {
+    '1': '1', // PO Receive -> Stock In
+    '2': '2', // Cancel PO Receive -> Stock Out
+    '3': '2', // Issue Stock -> Stock Out
+    '4': '1', // Return Issue -> Stock In
+    '5': '2', // Issue Borrow -> Stock Out
+    '6': '1'  // Return Borrow -> Stock In
+};
 
-// ฟังก์ชันอัพเดตตัวเลือกคลังสินค้า
-function updateWarehouseOptions(index, productId) {
-    var warehouseSelect = $('.warehouse-select[data-index="' + index + '"]');
-    var stockData = productStockData[productId] || [];
-    
-    // Clear current options
-    warehouseSelect.empty();
-    warehouseSelect.append('<option value="">-- เลือกคลัง --</option>');
-    
-    // Add warehouses that have this product in stock
-    stockData.forEach(function(stock) {
-        if (stock.qty > 0) {
-            var optionText = stock.warehouse_name + ' (คงเหลือ: ' + stock.qty + ' ' + stock.unit + ')';
-            warehouseSelect.append('<option value="' + stock.warehouse_id + '" data-stock="' + stock.qty + '">' + optionText + '</option>');
-        }
-    });
-    
-    // Clear stock display
-    $('.line-product-onhand[data-index="' + index + '"]').val('');
-}
-
-// ฟังก์ชันค้นหาสินค้า
-function searchProducts(query) {
-    if (!query || query.length < 1) return [];
-    
-    query = query.toLowerCase();
-    return productsData.filter(function(product) {
-        return product.name.toLowerCase().includes(query) || 
-               product.code.toLowerCase().includes(query) ||
-               product.display.toLowerCase().includes(query);
-    }).slice(0, 10);
-}
-
-// ฟังก์ชันแสดงผลลัพธ์
-function showAutocompleteResults(input, results) {
-    var index = input.attr('data-index');
-    var dropdown = $('.autocomplete-dropdown[data-index="' + index + '"]');
-    
-    dropdown.empty();
-    
-    if (results.length === 0) {
-        dropdown.hide();
-        return;
+function updateStockType(transTypeId) {
+    const stockTypeSelect = document.getElementById('stock-type-select');
+    if (transTypeStockTypeMap[transTypeId]) {
+        stockTypeSelect.value = transTypeStockTypeMap[transTypeId];
     }
-    
-    results.forEach(function(product) {
-        var item = $('<div class="autocomplete-item">')
-            .html('<div>' + product.name + '</div><div class="product-code">' + product.code + '</div>')
-            .data('product', product);
-        dropdown.append(item);
-    });
-    
-    dropdown.show();
-}
-
-// ฟังก์ชันซ่อน dropdown
-function hideAutocomplete(index) {
-    setTimeout(function() {
-        $('.autocomplete-dropdown[data-index="' + index + '"]').hide();
-    }, 200);
-}
-
-// ฟังก์ชันเลือกสินค้า
-function selectProduct(input, product) {
-    var index = input.attr('data-index');
-    
-    // อัพเดตค่า
-    input.val(product.display);
-    $('.product-id-hidden[data-index="' + index + '"]').val(product.id);
-    
-    // อัพเดตราคา
-    $('.price-input[data-index="' + index + '"]').val(product.price);
-    
-    // โหลดข้อมูลสต็อกและอัพเดตคลังสินค้า
-    loadProductStock(product.id, index);
-    
-    // ล้างค่าคลังสินค้าและจำนวน
-    $('.warehouse-select[data-index="' + index + '"]').val('');
-    $('.line-product-onhand[data-index="' + index + '"]').val('');
-    $('.qty-input[data-index="' + index + '"]').val('');
-    
-    // ซ่อน dropdown
-    $('.autocomplete-dropdown[data-index="' + index + '"]').hide();
-    
-    // คำนวณยอดรวม
-    calculateLineTotal(index);
-}
-
-// ฟังก์ชันตรวจสอบจำนวนสินค้า
-function validateQuantity(index) {
-    var qtyInput = $('.qty-input[data-index="' + index + '"]');
-    var stockOnHand = parseFloat($('.line-product-onhand[data-index="' + index + '"]').val()) || 0;
-    var requestedQty = parseFloat(qtyInput.val()) || 0;
-    var alertDiv = $('.alert-message[data-index="' + index + '"]');
-    
-    // Remove existing alert classes
-    qtyInput.removeClass('stock-warning stock-error');
-    alertDiv.hide();
-    
-    if (requestedQty > stockOnHand && stockOnHand > 0) {
-        qtyInput.addClass('stock-error');
-        qtyInput.val(stockOnHand);
-        
-        alertDiv.removeClass('alert-warning').addClass('alert-danger');
-        alertDiv.html('จำนวนไม่เพียงพอ! ปรับเป็น ' + stockOnHand + ' แทน');
-        alertDiv.show();
-        
-        // Hide alert after 3 seconds
-        setTimeout(function() {
-            alertDiv.fadeOut();
-        }, 3000);
-        
-        return stockOnHand;
-    } else if (requestedQty > stockOnHand * 0.8 && stockOnHand > 0) {
-        qtyInput.addClass('stock-warning');
-        alertDiv.removeClass('alert-danger').addClass('alert-warning');
-        alertDiv.html('เตือน: ใกล้หมดสต็อก!');
-        alertDiv.show();
-        
-        setTimeout(function() {
-            alertDiv.fadeOut();
-        }, 3000);
-    }
-    
-    return requestedQty;
 }
 
 $(document).ready(function() {
-    // โหลดข้อมูลสินค้าตอนเริ่มต้น
     loadProductsData();
     
-    // Event สำหรับ autocomplete
-    $(document).on('input', '.product-autocomplete', function() {
-        var input = $(this);
-        var query = input.val();
-        
-        if (!isProductsLoaded) {
-            loadProductsData();
-            return;
-        }
-        
-        var results = searchProducts(query);
-        showAutocompleteResults(input, results);
-    });
-    
-    $(document).on('focus', '.product-autocomplete', function() {
-        var input = $(this);
-        var query = input.val();
-        
-        if (!isProductsLoaded) {
-            loadProductsData();
-            return;
-        }
-        
-        if (query) {
-            var results = searchProducts(query);
-            showAutocompleteResults(input, results);
-        }
-    });
-    
-    $(document).on('blur', '.product-autocomplete', function() {
-        var index = $(this).attr('data-index');
-        hideAutocomplete(index);
-    });
-    
-    $(document).on('click', '.autocomplete-item', function() {
-        var product = $(this).data('product');
-        var dropdown = $(this).closest('.autocomplete-dropdown');
-        var index = dropdown.attr('data-index');
-        var input = $('.product-autocomplete[data-index="' + index + '"]');
-        selectProduct(input, product);
-    });
-    
-    // Event การเลือกคลังสินค้า
-    $(document).on('change', '.warehouse-select', function() {
-        var index = $(this).attr('data-index');
-        var selectedOption = $(this).find('option:selected');
-        var stockQty = selectedOption.data('stock') || 0;
-        
-        $('.line-product-onhand[data-index="' + index + '"]').val(stockQty);
-        
-        // Clear quantity when warehouse changes
-        $('.qty-input[data-index="' + index + '"]').val('');
-        calculateLineTotal(index);
-    });
-    
-    // Event การกรอกจำนวน
-    $(document).on('input change', '.qty-input', function() {
-        var index = $(this).attr('data-index');
-        var validatedQty = validateQuantity(index);
-        $(this).val(validatedQty);
-        calculateLineTotal(index);
-    });
-    
-    // Event navigation ด้วย keyboard
-    $(document).on('keydown', '.product-autocomplete', function(e) {
-        var index = $(this).attr('data-index');
-        var dropdown = $('.autocomplete-dropdown[data-index="' + index + '"]');
-        var items = dropdown.find('.autocomplete-item');
-        var highlighted = items.filter('.highlighted');
-        
-        if (e.keyCode === 40) { // Arrow Down
-            e.preventDefault();
-            if (highlighted.length === 0) {
-                items.first().addClass('highlighted');
-            } else {
-                highlighted.removeClass('highlighted');
-                var next = highlighted.next('.autocomplete-item');
-                if (next.length) {
-                    next.addClass('highlighted');
-                } else {
-                    items.first().addClass('highlighted');
-                }
-            }
-        } else if (e.keyCode === 38) { // Arrow Up
-            e.preventDefault();
-            if (highlighted.length === 0) {
-                items.last().addClass('highlighted');
-            } else {
-                highlighted.removeClass('highlighted');
-                var prev = highlighted.prev('.autocomplete-item');
-                if (prev.length) {
-                    prev.addClass('highlighted');
-                } else {
-                    items.last().addClass('highlighted');
-                }
-            }
-        } else if (e.keyCode === 13) { // Enter
-            e.preventDefault();
-            if (highlighted.length) {
-                var product = highlighted.data('product');
-                selectProduct($(this), product);
-            }
-        } else if (e.keyCode === 27) { // Escape
-            dropdown.hide();
-        }
-    });
-});
-JS;
-
-$this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
-
-// JavaScript สำหรับการคำนวณ
-$calculationJs = <<<JS
-function calculateLineTotal(index) {
-    var qty = parseFloat($('.qty-input[data-index="' + index + '"]').val()) || 0;
-    var price = parseFloat($('.price-input[data-index="' + index + '"]').val()) || 0;
-    var total = qty * price;
-    $('.line-total[data-index="' + index + '"]').val(total.toFixed(2));
-    calculateGrandTotal();
-}
-
-function calculateGrandTotal() {
-    var subtotal = 0;
-    $('.line-total').each(function() {
-        subtotal += parseFloat($(this).val()) || 0;
-    });
-    
-    var discount = parseFloat($('#purchreq-discount_amount').val()) || 0;
-    var afterDiscount = subtotal - discount;
-    var vat = afterDiscount * 0.07; // 7% VAT
-    var netAmount = afterDiscount + vat;
-    
-    $('#purchreq-total_amount').val(subtotal.toFixed(2));
-    $('#purchreq-vat_amount').val(vat.toFixed(2));
-    $('#purchreq-net_amount').val(netAmount.toFixed(2));
-    
-    // Update summary display
-    $('#summary-subtotal').text(subtotal.toFixed(2));
-    $('#summary-discount').text(discount.toFixed(2));
-    $('#summary-vat').text(vat.toFixed(2));
-    $('#summary-net').text(netAmount.toFixed(2));
-}
-
-$(document).on('change keyup input', '.price-input', function() {
-    var index = $(this).attr('data-index');
-    if (index !== undefined) {
-        calculateLineTotal(index);
+    // Initialize on page load
+    var transType = $('#trans-type-select').val();
+    if (transType) {
+        updateStockType(transType);
     }
 });
 
-$(document).on('change keyup', '#purchreq-discount_amount', function() {
-    calculateGrandTotal();
-});
 
-$(document).ready(function() {
-    calculateGrandTotal();
-});
 JS;
 
-$this->registerJs($calculationJs, \yii\web\View::POS_READY);
+$this->registerJs($originalJs, \yii\web\View::POS_READY);
 ?>
 
 <?php if (\Yii::$app->session->hasFlash('success')): ?>
@@ -526,297 +604,309 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
     </div>
 <?php endif; ?>
 
-<?php if (\Yii::$app->session->hasFlash('warning')): ?>
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-triangle me-2"></i>
-        <?= \Yii::$app->session->getFlash('warning') ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-<?php endif; ?>
+    <div class="journal-trans-form">
 
-<?php if (\Yii::$app->session->hasFlash('info')): ?>
-    <div class="alert alert-info alert-dismissible fade show" role="alert">
-        <i class="fas fa-info-circle me-2"></i>
-        <?= \Yii::$app->session->getFlash('info') ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-<?php endif; ?>
+        <?php $form = ActiveForm::begin([
+            'id' => 'journal-trans-form',
+            'options' => ['class' => 'form-horizontal'],
+            'fieldConfig' => [
+                'template' => "{label}\n<div class=\"col-sm-9\">{input}\n{error}</div>",
+                'labelOptions' => ['class' => 'col-sm-3 control-label'],
+            ],
+        ]); ?>
 
+        <div class="row">
+            <div class="col-md-6">
+                <?php $model->trans_date = $model->isNewRecord ? date('Y-m-d') : date('Y-m-d', strtotime($model->trans_date)); ?>
+                <?= $form->field($model, 'trans_date')->widget(DatePicker::class, [
+                    'options' => ['placeholder' => 'Select transaction date'],
+                    'pluginOptions' => [
+                        'autoclose' => true,
+                        'format' => 'yyyy-mm-dd',
+                        'todayHighlight' => true,
+                    ]
+                ]) ?>
 
-<div class="journal-trans-form">
+                <?php $crate_type = $_GET['type']??null; ?>
+                <?= $form->field($model, 'trans_type_id')->dropDownList(
+                    JournalTrans::getTransTypeOptions(),
+                    [
+                        'prompt' => 'Select Transaction Type',
+                        'id' => 'trans-type-select',
+                        'value' => $model->isNewRecord ? $crate_type : $model->trans_type_id,
+                        'onchange' => 'updateStockType(this.value)'
+                    ]
+                ) ?>
 
-    <?php $form = ActiveForm::begin([
-        'id' => 'journal-trans-form',
-        'options' => ['class' => 'form-horizontal'],
-        'fieldConfig' => [
-            'template' => "{label}\n<div class=\"col-sm-9\">{input}\n{error}</div>",
-            'labelOptions' => ['class' => 'col-sm-3 control-label'],
-        ],
-    ]); ?>
+                <?= $form->field($model, 'stock_type_id')->dropDownList(
+                    JournalTrans::getStockTypeOptions(),
+                    ['prompt' => 'Select Stock Type', 'id' => 'stock-type-select','readonly' => true]
+                ) ?>
 
-    <div class="row">
-        <div class="col-md-6">
-            <?php $model->trans_date = $model->isNewRecord ? date('Y-m-d') : date('Y-m-d', strtotime($model->trans_date)); ?>
-            <?= $form->field($model, 'trans_date')->widget(DatePicker::class, [
-                'options' => ['placeholder' => 'Select transaction date'],
-                'pluginOptions' => [
-                    'autoclose' => true,
-                    'format' => 'yyyy-mm-dd',
-                    'todayHighlight' => true,
-                ]
-            ]) ?>
+            </div>
 
-            <?php $crate_type = $_GET['type']??null; ?>
-            <?= $form->field($model, 'trans_type_id')->dropDownList(
-                JournalTrans::getTransTypeOptions(),
-                [
-                    'prompt' => 'Select Transaction Type',
-                    'id' => 'trans-type-select',
-                    'value' => $model->isNewRecord ? $crate_type : $model->trans_type_id,
-                    'onchange' => 'updateStockType(this.value)'
-                ]
-            ) ?>
+            <div class="col-md-6">
+                <?= $form->field($model, 'customer_name')->textInput(['maxlength' => true]) ?>
 
-            <?php if($model->isNewRecord && $crate_type):?>
-                <?php
-                  $this->registerJs("
-                     $(document).ready(function() {
-                        $('#trans-type-select').val('$crate_type').trigger('change');
-                         // ตรวจสอบ type และเปิดใช้งาน return-for-trans-select ถ้าเป็น 4 หรือ 5
-                            var crateType = parseInt('$crate_type');
-                            if (crateType === 4 || crateType === 5) {
-                                $('#return-for-trans-select').prop('disabled', false);
-                            }
-                     });
-                  ");
-                ?>
-            <?php endif; ?>
-
-            <?= $form->field($model, 'stock_type_id')->dropDownList(
-                JournalTrans::getStockTypeOptions(),
-                ['prompt' => 'Select Stock Type', 'id' => 'stock-type-select','readonly' => true]
-            ) ?>
-
-        </div>
-
-        <div class="col-md-6">
-            <?= $form->field($model, 'customer_name')->textInput(['maxlength' => true]) ?>
-
-            <?= $form->field($model, 'return_for_trans_id')->widget(Select2::className(),[
-                    'data'=>ArrayHelper::map(JournalTrans::find()->where(['trans_type_id' => 3])->asArray()->all(), 'id', 'journal_no'),
-                    'options' => ['id' => 'return-for-trans-select','placeholder' => 'Select Return for Transaction','disabled' => true],
-            ]) ?>
-
-            <?= $form->field($model, 'remark')->textarea(['rows' => 3]) ?>
-
-            <?php if (!$model->isNewRecord): ?>
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Journal No</label>
-                    <div class="col-sm-9">
-                        <p class="form-control-static"><?= Html::encode($model->journal_no) ?></p>
-                    </div>
+                <div class="return-fields">
+                    <?= $form->field($model, 'return_for_trans_id')->widget(Select2::className(),[
+                        'data'=>ArrayHelper::map(
+                            JournalTrans::find()
+                                ->where(['trans_type_id' => [3, 5]]) // Issue Stock, Issue Borrow
+                                ->andWhere(['status' => 0])
+                                ->asArray()->all(),
+                            'id', 'journal_no'
+                        ),
+                        'options' => [
+                            'id' => 'return-for-trans-select',
+                            'placeholder' => 'Select Return for Transaction',
+                            'disabled' => true
+                        ],
+                    ]) ?>
                 </div>
 
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Status</label>
-                    <div class="col-sm-9">
-                        <p class="form-control-static">
+                <?= $form->field($model, 'remark')->textarea(['rows' => 3]) ?>
+
+                <?php if (!$model->isNewRecord): ?>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Journal No</label>
+                        <div class="col-sm-9">
+                            <p class="form-control-static"><?= Html::encode($model->journal_no) ?></p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Status</label>
+                        <div class="col-sm-9">
+                            <p class="form-control-static">
                             <span class="label label-<?= $model->status === 'approved' ? 'success' : 'default' ?>">
                                 <?= Html::encode(ucfirst($model->status)) ?>
                             </span>
-                        </p>
+                            </p>
+                        </div>
                     </div>
-                </div>
-            <?php endif; ?>
+                <?php endif; ?>
+            </div>
         </div>
+
+        <hr>
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">รายละเอียดสินค้า</h5>
+            </div>
+            <div class="card-body">
+                <?php DynamicFormWidget::begin([
+                    'widgetContainer' => 'dynamicform_wrapper',
+                    'widgetBody' => '.container-items',
+                    'widgetItem' => '.item',
+                    'limit' => 10,
+                    'min' => 1,
+                    'insertButton' => '.add-item',
+                    'deleteButton' => '.remove-item',
+                    'model' => $model->journalTransLines[0] ?? new \backend\models\JournalTransLine(),
+                    'formId' => 'journal-trans-form',
+                    'formFields' => [
+                        'product_id',
+                        'warehouse_id',
+                        'qty',
+                        'line_price',
+                        'unit_id',
+                        'good_qty',
+                        'damaged_qty',
+                        'missing_qty',
+                        'condition_note',
+                        'return_note',
+                    ],
+                ]); ?>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                        <tr>
+                            <th style="width: 50px;">ลำดับ</th>
+                            <th style="width: 200px;">สินค้า</th>
+                            <th style="width: 150px;">คลังจัดเก็บ</th>
+                            <th style="width: 100px;">ยอดเบิกไป</th>
+                            <th style="width: 100px;">คงเหลือคืนได้</th>
+                            <th style="width: 120px;">จำนวนคืน</th>
+                            <th style="width: 80px;">หน่วยนับ</th>
+                            <th style="width: 100px;">สภาพสินค้า</th>
+                            <th style="width: 100px;">หมายเหตุ</th>
+                        </tr>
+                        </thead>
+                        <tbody class="container-items">
+                        <?php if (empty($model->journalTransLines)): ?>
+                            <tr class="item">
+                                <td colspan="9" class="text-center">กรุณาเลือกรายการที่ต้องการคืนก่อน</td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($model->journalTransLines as $index => $journaltransline): ?>
+                                <tr class="item">
+                                    <td class="text-center align-middle">
+                                        <span class="item-number"><?= $index + 1 ?></span>
+                                    </td>
+                                    <td>
+                                        <?php if (!$journaltransline->isNewRecord): ?>
+                                            <?= Html::activeHiddenInput($journaltransline, "[{$index}]id") ?>
+                                        <?php endif; ?>
+
+                                        <div class="product-field-container">
+                                            <?= Html::activeHiddenInput($journaltransline, "[{$index}]product_id", [
+                                                'class' => 'product-id-hidden',
+                                                'data-index' => $index,
+                                            ]) ?>
+
+                                            <?= $form->field($journaltransline, "[{$index}]product_name")->textInput([
+                                                'class' => 'form-control product-autocomplete',
+                                                'placeholder' => 'พิมพ์ชื่อสินค้าหรือรหัสสินค้า...',
+                                                'data-index' => $index,
+                                                'autocomplete' => 'off'
+                                            ])->label(false) ?>
+
+                                            <div class="autocomplete-dropdown" data-index="<?= $index ?>"></div>
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <?= $form->field($journaltransline, "[{$index}]warehouse_id")->dropDownList(
+                                            [],
+                                            [
+                                                'prompt' => '-- เลือกคลัง --',
+                                                'class' => 'form-control warehouse-select',
+                                                'data-index' => $index
+                                            ]
+                                        )->label(false) ?>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control line-product-onhand" name="stock_qty"
+                                               readonly value="" data-index="<?= $index ?>">
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control text-center readonly-field"
+                                               readonly value="" data-index="<?= $index ?>">
+                                    </td>
+                                    <td>
+                                        <div class="stock-alert" style="position: relative;">
+                                            <?= $form->field($journaltransline, "[{$index}]qty")->textInput([
+                                                'type' => 'number',
+                                                'step' => '0.01',
+                                                'min' => '0',
+                                                'placeholder' => '0',
+                                                'class' => 'form-control qty-input',
+                                                'data-index' => $index,
+                                            ])->label(false) ?>
+                                            <div class="alert-message" data-index="<?= $index ?>"></div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <?= $form->field($journaltransline, "[{$index}]unit_id")->textInput([
+                                            'readonly' => true,
+                                            'class' => 'form-control line-unit-id',
+                                            'style' => 'background-color: #f8f9fa;',
+                                            'data-index' => $index,
+                                        ])->label(false) ?>
+                                    </td>
+                                    <td class="text-center">
+                                      <?= $form->field($journaltransline, "[{$index}]is_damage")->dropDownList()->label() ?>
+                                    </td>
+                                    <td class="align-middle">
+                                      <?= $form->field($journaltransline, "[{$index}]return_note")->textInput([
+                                          'class' => 'form-control note-input',])->label(false) ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <?php DynamicFormWidget::end(); ?>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="form-group">
+            <div class="col-sm-offset-3 col-sm-9">
+                <?= Html::submitButton($model->isNewRecord ? 'Create' : 'Update', [
+                    'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
+                ]) ?>
+                <?= Html::a('Cancel', ['index'], ['class' => 'btn btn-default']) ?>
+            </div>
+        </div>
+
+        <?php ActiveForm::end(); ?>
+
     </div>
 
-    <hr>
-    <div class="card mt-4">
-        <div class="card-header">
-            <h5 class="card-title mb-0">รายละเอียดสินค้า</h5>
-        </div>
-        <div class="card-body">
-            <?php DynamicFormWidget::begin([
-                'widgetContainer' => 'dynamicform_wrapper',
-                'widgetBody' => '.container-items',
-                'widgetItem' => '.item',
-                'limit' => 10,
-                'min' => 1,
-                'insertButton' => '.add-item',
-                'deleteButton' => '.remove-item',
-                'model' => $model->purchLines[0] ?? new \backend\models\PurchLine(),
-                'formId' => 'purch-form',
-                'formFields' => [
-                    'product_id',
-                    'warehouse_id',
-                    'stock_onhand',
-                    'qty',
-                    'line_price',
-                    'unit',
-                    'line_total',
-                ],
-            ]); ?>
+<?php
+// Modal สำหรับบันทึกสภาพสินค้า
+Modal::begin([
+    'id' => 'conditionModal',
+//    'header' => '<h4><i class="fa fa-edit"></i> บันทึกสภาพสินค้า</h4>',
+    'size' => Modal::SIZE_LARGE,
+    'footer' =>
+        Html::button('ยกเลิก', ['class' => 'btn btn-default', 'data-dismiss' => 'modal']) . ' ' .
+        Html::button('บันทึก', ['class' => 'btn btn-primary', 'onclick' => 'saveConditionData()'])
+]);
+?>
 
-            <div class="table-responsive">
-                <table class="table table-bordered">
-                    <thead class="table-light">
-                    <tr>
-                        <th style="width: 50px;">ลำดับ</th>
-                        <th style="width: 200px;">สินค้า</th>
-                        <th style="width: 100px;">คลังจัดเก็บ</th>
-                        <th style="width: 120px;">ยอดคงเหลือ</th>
-                        <th style="width: 120px;">ยอดเบิก</th>
-                        <th style="width: 120px;">ราคาต่อหน่วย</th>
-                        <th style="width: 120px;">หน่วยนับ</th>
-                        <th style="width: 50px;">
-                            <button type="button" class="btn btn-success btn-sm add-item">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </th>
-                    </tr>
-                    </thead>
-                    <tbody class="container-items">
-                    <?php if (empty($model->journalTransLines)): ?>
-                        <?php $model->journalTransLines = [new \backend\models\JournalTransLine()]; ?>
-                    <?php endif; ?>
-                    <?php foreach ($model->journalTransLines as $index => $journaltransline): ?>
-                        <tr class="item">
-                            <td class="text-center align-middle">
-                                <span class="item-number"><?= $index + 1 ?></span>
-                            </td>
-                            <td>
-                                <?php if (!$journaltransline->isNewRecord): ?>
-                                    <?= Html::activeHiddenInput($journaltransline, "[{$index}]id") ?>
-                                <?php endif; ?>
+    <div class="row">
+        <div class="col-md-8">
+            <h5>จำนวนตามสภาพสินค้า</h5>
 
-                                <div class="product-field-container">
-                                    <?= Html::activeHiddenInput($journaltransline, "[{$index}]product_id", [
-                                        'class' => 'product-id-hidden',
-                                        'data-index' => $index,
-                                    ]) ?>
-
-                                    <?= $form->field($journaltransline, "[{$index}]product_name")->textInput([
-                                        'class' => 'form-control product-autocomplete',
-                                        'placeholder' => 'พิมพ์ชื่อสินค้าหรือรหัสสินค้า...',
-                                        'data-index' => $index,
-                                        'autocomplete' => 'off'
-                                    ])->label(false) ?>
-
-                                    <div class="autocomplete-dropdown" data-index="<?= $index ?>"></div>
-                                </div>
-                            </td>
-
-                            <td>
-                                <?= $form->field($journaltransline, "[{$index}]warehouse_id")->dropDownList(
-                                    [], // Empty initially, will be populated by JavaScript
-                                    [
-                                        'prompt' => '-- เลือกคลัง --',
-                                        'class' => 'form-control warehouse-select',
-                                        'data-index' => $index
-                                    ]
-                                )->label(false) ?>
-                            </td>
-                            <td>
-                                <input type="text" class="form-control line-product-onhand" name="stock_qty"
-                                       readonly value="" data-index="<?= $index ?>">
-                            </td>
-                            <td>
-                                <div class="stock-alert" style="position: relative;">
-                                    <?= $form->field($journaltransline, "[{$index}]qty")->textInput([
-                                        'type' => 'number',
-                                        'step' => '0.01',
-                                        'min' => '0',
-                                        'placeholder' => '0',
-                                        'class' => 'form-control qty-input',
-                                        'data-index' => $index,
-                                    ])->label(false) ?>
-                                    <div class="alert-message" data-index="<?= $index ?>"></div>
-                                </div>
-                            </td>
-                            <td>
-                                <?= $form->field($journaltransline, "[{$index}]line_price")->textInput([
-                                    'type' => 'number',
-                                    'step' => '0.01',
-                                    'min' => '0',
-                                    'placeholder' => '0.00',
-                                    'class' => 'form-control price-input',
-                                    'data-index' => $index,
-                                ])->label(false) ?>
-                            </td>
-                            <td>
-                                <?= $form->field($journaltransline, "[{$index}]unit_id")->textInput([
-                                    'readonly' => true,
-                                    'class' => 'form-control line-unit-id',
-                                    'style' => 'background-color: #f8f9fa;',
-                                    'data-index' => $index,
-                                ])->label(false) ?>
-                            </td>
-                            <td class="text-center align-middle" style="text-align: center">
-                                <button type="button" class="btn btn-danger btn-sm remove-item">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
+            <div class="form-group">
+                <label for="condition-good-qty">สภาพดี:</label>
+                <input type="number" class="form-control" id="condition-good-qty"
+                       step="0.01" min="0" placeholder="0.00">
             </div>
 
-            <?php DynamicFormWidget::end(); ?>
+            <div class="form-group">
+                <label for="condition-damaged-qty">เสียหาย:</label>
+                <input type="number" class="form-control" id="condition-damaged-qty"
+                       step="0.01" min="0" placeholder="0.00">
+            </div>
+
+            <div class="form-group">
+                <label for="condition-missing-qty">สูญหาย:</label>
+                <input type="number" class="form-control" id="condition-missing-qty"
+                       step="0.01" min="0" placeholder="0.00">
+            </div>
+
+            <div class="form-group">
+                <label for="condition-note">หมายเหตุสภาพสินค้า:</label>
+                <textarea class="form-control" id="condition-note" rows="3"
+                          placeholder="ระบุรายละเอียดเพิ่มเติมเกี่ยวกับสภาพสินค้า..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="return-note">หมายเหตุการคืน:</label>
+                <textarea class="form-control" id="return-note" rows="2"
+                          placeholder="หมายเหตุเพิ่มเติมเกี่ยวกับการคืนสินค้า..."></textarea>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h5 class="panel-title">สรุป</h5>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label>รวมทั้งหมด:</label>
+                        <div class="well well-sm">
+                            <span id="condition-total" class="lead">0</span> หน่วย
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fa fa-info-circle"></i>
+                        <strong>หมายเหตุ:</strong><br>
+                        ผลรวมจำนวนสภาพสินค้าต้องเท่ากับจำนวนที่คืนทั้งหมด
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <hr>
-
-    <div class="form-group">
-        <div class="col-sm-offset-3 col-sm-9">
-            <?= Html::submitButton($model->isNewRecord ? 'Create' : 'Update', [
-                'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
-            ]) ?>
-            <?= Html::a('Cancel', ['index'], ['class' => 'btn btn-default']) ?>
-        </div>
-    </div>
-
-    <?php ActiveForm::end(); ?>
-
-</div>
-
-<script>
-    // Transaction type to stock type mapping
-    const transTypeStockTypeMap = {
-        '1': '1', // PO Receive -> Stock In
-        '2': '2', // Cancel PO Receive -> Stock Out
-        '3': '2', // Issue Stock -> Stock Out
-        '4': '1', // Return Issue -> Stock In
-        '5': '2', // Issue Borrow -> Stock Out
-        '6': '1'  // Return Borrow -> Stock In
-    };
-
-    function updateStockType(transTypeId) {
-        const stockTypeSelect = document.getElementById('stock-type-select');
-        if (transTypeStockTypeMap[transTypeId]) {
-            stockTypeSelect.value = transTypeStockTypeMap[transTypeId];
-        }
-
-        // Show/hide return borrow fields
-        const isReturnBorrow = transTypeId == '6';
-        $('.return-borrow-fields').toggle(isReturnBorrow);
-
-        if (isReturnBorrow) {
-            $('.return-borrow-fields').show();
-        } else {
-            $('.return-borrow-fields').hide();
-            $('.return-type-select').val('');
-            $('.return-note-field').hide();
-        }
-    }
-
-    // Initialize on page load
-    // $(document).ready(function() {
-    //     const transType = $('#trans-type-select').val();
-    //     if (transType) {
-    //         updateStockType(transType);
-    //     }
-    // });
-</script>
+<?php Modal::end(); ?>

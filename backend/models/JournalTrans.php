@@ -46,12 +46,12 @@ class JournalTrans extends ActiveRecord
     const STOCK_TYPE_OUT = 2;
 
     // Status
-    const STATUS_DRAFT = 'draft';
-    const STATUS_PENDING = 'pending';
-    const STATUS_APPROVED = 'approved';
-    const STATUS_CANCELLED = 'cancelled';
+    const STATUS_DRAFT = 0;
+    const STATUS_PENDING = 1;
+    const STATUS_APPROVED = 2;
+    const STATUS_CANCELLED = 3;
 
-    public $journalTransLines = [];
+    public $journalTransLinesline = [];
 
     /**
      * {@inheritdoc}
@@ -289,8 +289,10 @@ class JournalTrans extends ActiveRecord
      */
     public function getJournalTransLines()
     {
-        return $this->hasMany(JournalTransLine::class, ['journal_trans_id' => 'id'])->with('product');
+        return $this->hasMany(JournalTransLine::class, ['journal_trans_id' => 'id']);
     }
+
+
 
     /**
      * @return \yii\db\ActiveQuery

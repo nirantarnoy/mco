@@ -24,10 +24,10 @@ use yii\db\ActiveRecord;
  * @property float $damaged_qty
  * @property float $missing_qty
  *
- * @property JournalTrans $journalTrans
+ * @property JournalTransX $journalTrans
  * @property Product $product
  */
-class JournalTransLine extends ActiveRecord
+class JournalTransLineX extends ActiveRecord
 {
     // Return types for borrow returns
     const RETURN_TYPE_COMPLETE = 'complete';
@@ -60,7 +60,7 @@ class JournalTransLine extends ActiveRecord
             [['status', 'return_to_type', 'item_condition','return_note'], 'string', 'max' => 255],
             [['return_to_type'], 'in', 'range' => [self::RETURN_TYPE_COMPLETE, self::RETURN_TYPE_DAMAGED, self::RETURN_TYPE_INCOMPLETE]],
             [['item_condition'], 'in', 'range' => [self::CONDITION_GOOD, self::CONDITION_DAMAGED, self::CONDITION_MISSING]],
-            [['journal_trans_id'], 'exist', 'skipOnError' => true, 'targetClass' => JournalTrans::class, 'targetAttribute' => ['journal_trans_id' => 'id']],
+            [['journal_trans_id'], 'exist', 'skipOnError' => true, 'targetClass' => JournalTransX::class, 'targetAttribute' => ['journal_trans_id' => 'id']],
             [['product_id'], 'exist', 'skipOnError' => true, 'targetClass' => Product::class, 'targetAttribute' => ['product_id' => 'id']],
             [['qty'], 'validateReturnQuantity'],
             [['good_qty', 'damaged_qty', 'missing_qty'], 'validateConditionQuantities'],
@@ -122,7 +122,7 @@ class JournalTransLine extends ActiveRecord
      */
     public function validateReturnQuantity($attribute, $params)
     {
-        if ($this->journalTrans && in_array($this->journalTrans->trans_type_id, [JournalTrans::TRANS_TYPE_RETURN_ISSUE, JournalTrans::TRANS_TYPE_RETURN_BORROW])) {
+        if ($this->journalTrans && in_array($this->journalTrans->trans_type_id, [JournalTransX::TRANS_TYPE_RETURN_ISSUE, JournalTransX::TRANS_TYPE_RETURN_BORROW])) {
             $availableQty = $this->journalTrans->getAvailableReturnQty($this->product_id);
             if ($this->$attribute > $availableQty) {
                 $this->addError($attribute, "Return quantity ({$this->$attribute}) cannot exceed available quantity ({$availableQty}).");
@@ -148,7 +148,7 @@ class JournalTransLine extends ActiveRecord
      */
     public function getJournalTrans()
     {
-        return $this->hasOne(JournalTrans::class, ['id' => 'journal_trans_id']);
+        return $this->hasOne(JournalTransX::class, ['id' => 'journal_trans_id']);
     }
 
     /**
@@ -200,7 +200,7 @@ class JournalTransLine extends ActiveRecord
      */
     public function isReturnBorrow()
     {
-        return $this->journalTrans && $this->journalTrans->trans_type_id == JournalTrans::TRANS_TYPE_RETURN_BORROW;
+        return $this->journalTrans && $this->journalTrans->trans_type_id == JournalTransX::TRANS_TYPE_RETURN_BORROW;
     }
 
     /**
@@ -209,8 +209,8 @@ class JournalTransLine extends ActiveRecord
     public function isReturnTransaction()
     {
         return $this->journalTrans && in_array($this->journalTrans->trans_type_id, [
-                JournalTrans::TRANS_TYPE_RETURN_ISSUE,
-                JournalTrans::TRANS_TYPE_RETURN_BORROW
+                JournalTransX::TRANS_TYPE_RETURN_ISSUE,
+                JournalTransX::TRANS_TYPE_RETURN_BORROW
             ]);
     }
 

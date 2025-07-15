@@ -13,8 +13,8 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="journal-trans-index">
     <p>
-        <!--        --><?php //= Html::a('<i class="fa fa-plus"></i> PO Receive', ['create', 'type' => JournalTrans::TRANS_TYPE_PO_RECEIVE], ['class' => 'btn btn-success']) ?>
-        <?= Html::a('<i class="fa fa-minus"></i> Issue Stock', ['create', 'type' => JournalTrans::TRANS_TYPE_ISSUE_STOCK], ['class' => 'btn btn-danger']) ?>
+        <!--        --><?php //= Html::a('<i class="fa fa-plus"></i> PO Receive', ['create', 'type' => JournalTransX::TRANS_TYPE_PO_RECEIVE], ['class' => 'btn btn-success']) ?>
+        <?= Html::a('<i class="fa fa-minus"></i> Issue Stock', ['createorigin', 'type' => JournalTrans::TRANS_TYPE_ISSUE_STOCK], ['class' => 'btn btn-danger']) ?>
         <?= Html::a('<i class="fa fa-undo"></i> Return Issue', ['create', 'type' => JournalTrans::TRANS_TYPE_RETURN_ISSUE], ['class' => 'btn btn-info']) ?>
         <?= Html::a('<i class="fa fa-share"></i> Issue Borrow', ['create', 'type' => JournalTrans::TRANS_TYPE_ISSUE_BORROW], ['class' => 'btn btn-warning']) ?>
         <?= Html::a('<i class="fa fa-reply"></i> Return Borrow', ['create', 'type' => JournalTrans::TRANS_TYPE_RETURN_BORROW], ['class' => 'btn btn-primary']) ?>

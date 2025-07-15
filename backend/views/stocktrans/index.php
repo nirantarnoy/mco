@@ -46,7 +46,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'attribute' => 'journal_no',
                 'label' => 'เลขที่เอกสาร',
                 'value' => function ($data) {
-                   // return \backend\models\JournalTrans::($data->journal_trans_id);
+                   // return \backend\models\JournalTransX::($data->journal_trans_id);
                     return '';
                 }
             ],

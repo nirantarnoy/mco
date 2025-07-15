@@ -20,7 +20,7 @@ $this->params['breadcrumbs'][] = ['label' => 'รายการ Stock Transacti
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="journal-trans-create">
-    <?= $this->render('_form', [
+    <?= $this->render('_form_origin', [
         'model' => $model,
         'modelsLine' => null,
         'lines' => $lines,

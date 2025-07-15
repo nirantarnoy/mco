@@ -28,10 +28,10 @@ use yii\behaviors\TimestampBehavior;
  * @property int $warehouse_id
  * @property string $trans_ref_id
  *
- * @property JournalTransLine[] $journalTransLines
+ * @property JournalTransLineX[] $journalTransLines
  * @property StockTrans[] $stockTrans
  */
-class JournalTrans extends ActiveRecord
+class JournalTransX extends ActiveRecord
 {
     // Transaction Types
     const TRANS_TYPE_PO_RECEIVE = 1;
@@ -46,10 +46,10 @@ class JournalTrans extends ActiveRecord
     const STOCK_TYPE_OUT = 2;
 
     // Status
-    const STATUS_DRAFT = 'draft';
-    const STATUS_PENDING = 'pending';
-    const STATUS_APPROVED = 'approved';
-    const STATUS_CANCELLED = 'cancelled';
+    const STATUS_DRAFT = 0;
+    const STATUS_PENDING = 1;
+    const STATUS_APPROVED = 2;
+    const STATUS_CANCELLED = 3;
 
 
     /**
@@ -197,7 +197,7 @@ class JournalTrans extends ActiveRecord
      */
     public function getJournalTransLines()
     {
-        return $this->hasMany(JournalTransLine::class, ['journal_trans_id' => 'id']);
+        return $this->hasMany(JournalTransLineX::class, ['journal_trans_id' => 'id']);
     }
 
     /**
@@ -329,4 +329,6 @@ class JournalTrans extends ActiveRecord
             $product->save(false);
         }
     }
+
+
 }

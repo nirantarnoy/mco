@@ -4,7 +4,7 @@ use yii\helpers\Html;
 use yii\widgets\DetailView;
 use yii\grid\GridView;
 use yii\data\ArrayDataProvider;
-use common\models\JournalTrans;
+use backend\models\JournalTrans;
 
 /* @var $this yii\web\View */
 /* @var $model common\models\JournalTrans */
@@ -196,7 +196,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             if ($line->journalTrans->trans_type_id == JournalTrans::TRANS_TYPE_RETURN_BORROW) {
                                 $html = '';
                                 if ($line->return_to_type) {
-                                    $types = \common\models\JournalTransLine::getReturnTypeOptions();
+                                    $types = \common\models\JournalTransLineX::getReturnTypeOptions();
                                     $class = '';
                                     switch ($line->return_to_type) {
                                         case 'complete':
@@ -330,7 +330,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <!-- Current Stock Status -->
     <div class="panel panel-warning">
         <div class="panel-heading">
-            <h3 class="panel-title">สถานะสต๊อกปัจจุบัน</h3>
+            <h3 class="panel-title">สถานะสต็อกปัจจุบัน</h3>
         </div>
         <div class="panel-body">
             <?php

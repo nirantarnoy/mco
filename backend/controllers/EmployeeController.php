@@ -249,14 +249,8 @@ class EmployeeController extends Controller
      */
     public function actionDelete($id)
     {
-        $model_license = \common\models\DriverLicense::find()->where(['emp_id'=>$id])->all();
-        if ($model_license){
-            if (\common\models\DriverLicense::deleteAll(['emp_id' => $id])){
-                $this->findModel($id)->delete();
-            }
-        }else{
+
             $this->findModel($id)->delete();
-        }
 
         $session = Yii::$app->session;
         $session->setFlash('msg', 'ดำเนินการเรียบร้อย');

@@ -5,7 +5,7 @@ use yii\base\Model;
 use yii\data\ActiveDataProvider;
 
 /**
- * TransactionSearch represents the model behind the search form of JournalTrans.
+ * TransactionSearch represents the model behind the search form of JournalTransX.
  */
 class TransactionSearch extends JournalTrans
 {
