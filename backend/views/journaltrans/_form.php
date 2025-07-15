@@ -510,6 +510,39 @@ JS;
 $this->registerJs($calculationJs, \yii\web\View::POS_READY);
 ?>
 
+<?php if (\Yii::$app->session->hasFlash('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <?= \Yii::$app->session->getFlash('success') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
+
+<?php if (\Yii::$app->session->hasFlash('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <?= \Yii::$app->session->getFlash('error') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
+
+<?php if (\Yii::$app->session->hasFlash('warning')): ?>
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <?= \Yii::$app->session->getFlash('warning') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
+
+<?php if (\Yii::$app->session->hasFlash('info')): ?>
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <?= \Yii::$app->session->getFlash('info') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
+
+
 <div class="journal-trans-form">
 
     <?php $form = ActiveForm::begin([
@@ -533,28 +566,46 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
                 ]
             ]) ?>
 
+            <?php $crate_type = $_GET['type']??null; ?>
             <?= $form->field($model, 'trans_type_id')->dropDownList(
                 JournalTrans::getTransTypeOptions(),
                 [
                     'prompt' => 'Select Transaction Type',
                     'id' => 'trans-type-select',
+                    'value' => $model->isNewRecord ? $crate_type : $model->trans_type_id,
                     'onchange' => 'updateStockType(this.value)'
                 ]
             ) ?>
 
+            <?php if($model->isNewRecord && $crate_type):?>
+                <?php
+                  $this->registerJs("
+                     $(document).ready(function() {
+                        $('#trans-type-select').val('$crate_type').trigger('change');
+                         // ตรวจสอบ type และเปิดใช้งาน return-for-trans-select ถ้าเป็น 4 หรือ 5
+                            var crateType = parseInt('$crate_type');
+                            if (crateType === 4 || crateType === 5) {
+                                $('#return-for-trans-select').prop('disabled', false);
+                            }
+                     });
+                  ");
+                ?>
+            <?php endif; ?>
+
             <?= $form->field($model, 'stock_type_id')->dropDownList(
                 JournalTrans::getStockTypeOptions(),
-                ['prompt' => 'Select Stock Type', 'id' => 'stock-type-select']
+                ['prompt' => 'Select Stock Type', 'id' => 'stock-type-select','readonly' => true]
             ) ?>
 
-            <?= $form->field($model, 'warehouse_id')->dropDownList(
-                ArrayHelper::map(\common\models\Warehouse::find()->all(), 'id', 'name'),
-                ['prompt' => 'Select Warehouse', 'id' => 'warehouse-select']
-            ) ?>
         </div>
 
         <div class="col-md-6">
             <?= $form->field($model, 'customer_name')->textInput(['maxlength' => true]) ?>
+
+            <?= $form->field($model, 'return_for_trans_id')->widget(Select2::className(),[
+                    'data'=>ArrayHelper::map(JournalTrans::find()->where(['trans_type_id' => 3])->asArray()->all(), 'id', 'journal_no'),
+                    'options' => ['id' => 'return-for-trans-select','placeholder' => 'Select Return for Transaction','disabled' => true],
+            ]) ?>
 
             <?= $form->field($model, 'remark')->textarea(['rows' => 3]) ?>
 

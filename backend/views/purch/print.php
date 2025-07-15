@@ -209,57 +209,71 @@ $total = $netAmount + $vat;
     <div class="po-container">
         <!-- Header -->
         <div class="header">
-            <div class="logo-section">
-                <div class="logo">
-                    <img src="../../backend/web/uploads/logo/mco_logo.png" width="20%" alt="">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="logo-section">
+                        <div class="logo">
+                            <img src="../../backend/web/uploads/logo/mco_logo.png" width="35%" alt="">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div style="text-align: right;">
+                        <div class="po-title">PURCHASE ORDER</div>
+                        <div class="thai-title">ใบสั่งซื้อ</div>
+                    </div>
                 </div>
             </div>
-            <div style="text-align: right;">
-                <div class="po-title">PURCHASE ORDER</div>
-                <div class="thai-title">ใบสั่งซื้อ</div>
+
+
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <!-- Company Info -->
+                <div class="company-info">
+                    <div class="company-name">M.C.O. COMPANY LIMITED</div>
+                    <div>บริษัท เอ็ม.ซี.โอ. จำกัด</div>
+                    <div>5/15 ถนนเกาะกลอย ตำบลจอมพลเจ้าพระยา อำเภอเมือง จังหวัดระยอง 21000</div>
+                    <div>โทรศัพท์/โทรสาร : 021564300025</div>
+                    <div>Tel : (038) 475259-6 , 0364364555</div>
+                    <div>e-mail : info@thai-mco.com</div>
+                    <div><strong>SUPPLIER :</strong></div>
+                </div>
+
+            </div>
+            <div class="col-lg-6">
+                <!-- PO Details -->
+                <div class="info-section">
+                    <div class="two-column">
+                        <div class="column">
+                            <div class="info-row">
+                                <span class="info-label">PO.NO. :</span>
+                                <span class="info-value"><?= Html::encode($purchase->purch_no) ?></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">PR.NO. :</span>
+                                <span class="info-value"></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">DATE :</span>
+                                <span class="info-value"><?= Yii::$app->formatter->asDate($purchase->purch_date, 'php:d/m/Y') ?></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">PAGE :</span>
+                                <span class="info-value">1</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">EXPRICE JOB NO. :</span>
+                                <span class="info-value"><?= Html::encode($purchase->job_id ?? '') ?></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
-        <!-- Company Info -->
-        <div class="company-info">
-            <div class="company-name">M.C.O. COMPANY LIMITED</div>
-            <div>บริษัท เอ็ม.ซี.โอ. จำกัด</div>
-            <div>5/15 ถนนเกาะกลอย ตำบลจอมพลเจ้าพระยา อำเภอเมือง จังหวัดระยอง 21000</div>
-            <div>โทรศัพท์/โทรสาร : 021564300025</div>
-            <div>Tel : (038) 475259-6 , 0364364555</div>
-            <div>e-mail : info@thai-mco.com</div>
-            <div><strong>SUPPLIER :</strong></div>
-        </div>
-
-        <!-- PO Details -->
-        <div class="info-section">
-            <div class="two-column">
-                <div class="column">
-                    <div class="info-row">
-                        <span class="info-label">PO.NO. :</span>
-                        <span class="info-value"><?= Html::encode($purchase->purch_no) ?></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">PR.NO. :</span>
-                        <span class="info-value"></span>
-                    </div>
-                </div>
-                <div class="column">
-                    <div class="info-row">
-                        <span class="info-label">DATE :</span>
-                        <span class="info-value"><?= Yii::$app->formatter->asDate($purchase->purch_date, 'php:d/m/Y') ?></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">PAGE :</span>
-                        <span class="info-value">1</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">EXPRICE JOB NO. :</span>
-                        <span class="info-value"><?= Html::encode($purchase->job_id ?? '') ?></span>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <div class="info-section">
             <div class="two-column">

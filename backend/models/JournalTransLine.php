@@ -54,7 +54,7 @@ class JournalTransLine extends ActiveRecord
     public function rules()
     {
         return [
-            [['journal_trans_id', 'product_id', 'warehouse_id', 'qty'], 'required'],
+            [['product_id', 'warehouse_id', 'qty'], 'required'],
             [['journal_trans_id', 'product_id', 'warehouse_id'], 'integer'],
             [['qty', 'line_price', 'sale_price', 'good_qty', 'damaged_qty', 'missing_qty'], 'number'],
             [['remark', 'condition_note'], 'string'],

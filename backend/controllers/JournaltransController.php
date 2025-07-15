@@ -77,19 +77,56 @@ class JournaltransController extends Controller
         $lines = [new JournalTransLine()];
 
         if ($model->load(Yii::$app->request->post())) {
-            $linesData = Yii::$app->request->post('JournalTransLine', []);
-            $lines = [];
+            $journalTransLines = [];
+            $valid = $model->validate();
 
-            foreach ($linesData as $lineData) {
-                $line = new JournalTransLine();
-                $line->load($lineData, '');
-                $lines[] = $line;
+            if (isset($_POST['JournalTransLine'])) {
+                foreach ($_POST['JournalTransLine'] as $index => $journalTransLineData) {
+                    $journalTransLine = new JournalTransLine();
+                    $journalTransLine->load($journalTransLineData, '');
+                    $journalTransLines[] = $journalTransLine;
+                    $valid = $journalTransLine->validate() && $valid;
+
+//                    if (!$journalTransLine->validate()) {
+//                        $valid = false;
+//                        foreach ($journalTransLine->errors as $attribute => $errors) {
+//                            foreach ($errors as $error) {
+//                                $errorMessages[] = "แถวที่ " . ($index + 1) . " - {$attribute}: {$error}";
+//                            }
+//                        }
+//                    }
+                }
+//                if (!$valid) {
+//                    print_r($errorMessages);return;
+//                }
             }
 
-            if ($this->saveTransaction($model, $lines)) {
-                Yii::$app->session->setFlash('success', 'Transaction created successfully.');
-                return $this->redirect(['view', 'id' => $model->id]);
+            if($valid) {
+                $transaction = Yii::$app->db->beginTransaction();
+                try {
+                    if ($model->save()) {
+                        foreach ($journalTransLines as $journalTransLine) {
+                            $journalTransLine->journal_trans_id = $model->id;
+                            if(!$journalTransLine->save()) {
+                                throw new \Exception('Failed to save journal trans line');
+                            }
+                        }
+                        $transaction->commit();
+                        Yii::$app->session->setFlash('success', 'บันทึกข้อมูลเรียบร้อยแล้ว');
+                        return $this->redirect(['view', 'id' => $model->id]);
+                    }
+                } catch (\Exception $e) {
+                    $transaction->rollBack();
+                    Yii::$app->session->setFlash('error', 'ไม่สามารถบันทึกข้อมูลได้: ' . $e->getMessage());
+                }
+            }else{
+                Yii::$app->session->setFlash('error', 'ไม่สามารถบันทึกข้อมูลได้: ' . json_encode($model->errors));
             }
+
+//            if ($this->saveTransaction($model, $lines)) {
+//                Yii::$app->session->setFlash('success', 'Transaction created successfully.');
+//                return $this->redirect(['view', 'id' => $model->id]);
+//            }
         }
 
         return $this->render('create', [
@@ -105,6 +142,47 @@ class JournaltransController extends Controller
      * @return mixed
      * @throws NotFoundHttpException if the model cannot be found
      */
+//    public function actionUpdate($id)
+//    {
+//        $model = $this->findModel($id);
+//
+//        // Only allow edit if status is draft
+//        if ($model->status !== JournalTrans::STATUS_DRAFT) {
+//            Yii::$app->session->setFlash('error', 'Cannot edit approved or processed transactions.');
+//            return $this->redirect(['view', 'id' => $model->id]);
+//        }
+//
+//        $lines = $model->journalTransLines;
+//        if (empty($lines)) {
+//            $lines = [new JournalTransLine()];
+//        }
+//
+//        if ($model->load(Yii::$app->request->post())) {
+//            $linesData = Yii::$app->request->post('JournalTransLine', []);
+//            $lines = [];
+//
+//            foreach ($linesData as $lineData) {
+//                if (!empty($lineData['id'])) {
+//                    $line = JournalTransLine::findOne($lineData['id']);
+//                } else {
+//                    $line = new JournalTransLine();
+//                }
+//                $line->load($lineData, '');
+//                $lines[] = $line;
+//            }
+//
+//            if ($this->saveTransaction($model, $lines)) {
+//                Yii::$app->session->setFlash('success', 'Transaction updated successfully.');
+//                return $this->redirect(['view', 'id' => $model->id]);
+//            }
+//        }
+//
+//        return $this->render('update', [
+//            'model' => $model,
+//            'lines' => $lines,
+//        ]);
+//    }
+
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
@@ -115,34 +193,79 @@ class JournaltransController extends Controller
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
-        $lines = $model->journalTransLines;
-        if (empty($lines)) {
-            $lines = [new JournalTransLine()];
+        // Load existing journal trans lines
+        $model->journalTransLines = $model->getJournalTransLines()->all();
+        if (empty($model->journalTransLines)) {
+            $model->journalTransLines = [new JournalTransLine()];
         }
 
         if ($model->load(Yii::$app->request->post())) {
-            $linesData = Yii::$app->request->post('JournalTransLine', []);
-            $lines = [];
+            $journalTransLines = [];
+            $valid = $model->validate();
 
-            foreach ($linesData as $lineData) {
-                if (!empty($lineData['id'])) {
-                    $line = JournalTransLine::findOne($lineData['id']);
-                } else {
-                    $line = new JournalTransLine();
+            if (isset($_POST['JournalTransLine'])) {
+                foreach ($_POST['JournalTransLine'] as $index => $journalTransLineData) {
+                    if (isset($journalTransLineData['id']) && !empty($journalTransLineData['id'])) {
+                        // Update existing line
+                        $journalTransLine = JournalTransLine::findOne($journalTransLineData['id']);
+                        if (!$journalTransLine) {
+                            $journalTransLine = new JournalTransLine();
+                        }
+                    } else {
+                        // Create new line
+                        $journalTransLine = new JournalTransLine();
+                    }
+                    $journalTransLine->load($journalTransLineData, '');
+                    $journalTransLines[] = $journalTransLine;
+                    $valid = $journalTransLine->validate() && $valid;
                 }
-                $line->load($lineData, '');
-                $lines[] = $line;
             }
 
-            if ($this->saveTransaction($model, $lines)) {
-                Yii::$app->session->setFlash('success', 'Transaction updated successfully.');
-                return $this->redirect(['view', 'id' => $model->id]);
+            if ($valid) {
+                $transaction = Yii::$app->db->beginTransaction();
+                try {
+                    if ($model->save()) {
+                        // Delete existing lines that are not in the new list
+                        $existingLineIds = [];
+                        foreach ($journalTransLines as $journalTransLine) {
+                            if (!$journalTransLine->isNewRecord) {
+                                $existingLineIds[] = $journalTransLine->id;
+                            }
+                        }
+
+                        // Delete lines that are not in the updated list
+                        if (!empty($existingLineIds)) {
+                            JournalTransLine::deleteAll([
+                                'and',
+                                ['journal_trans_id' => $model->id],
+                                ['not in', 'id', $existingLineIds]
+                            ]);
+                        } else {
+                            // If no existing lines, delete all lines for this transaction
+                            JournalTransLine::deleteAll(['journal_trans_id' => $model->id]);
+                        }
+
+                        // Save journal trans lines
+                        foreach ($journalTransLines as $journalTransLine) {
+                            $journalTransLine->journal_trans_id = $model->id;
+                            if (!$journalTransLine->save()) {
+                                throw new \Exception('Failed to save journal trans line');
+                            }
+                        }
+
+                        $transaction->commit();
+                        Yii::$app->session->setFlash('success', 'Transaction updated successfully.');
+                        return $this->redirect(['view', 'id' => $model->id]);
+                    }
+                } catch (\Exception $e) {
+                    $transaction->rollBack();
+                    Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+                }
             }
         }
 
         return $this->render('update', [
             'model' => $model,
-            'lines' => $lines,
         ]);
     }
 

@@ -46,13 +46,11 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
     </div>
+    <br />
 
     <div class="row">
         <div class="col-md-6">
             <div class="panel panel-primary">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Transaction Information</h3>
-                </div>
                 <div class="panel-body">
                     <?= DetailView::widget([
                         'model' => $model,
@@ -60,7 +58,9 @@ $this->params['breadcrumbs'][] = $this->title;
                             'journal_no',
                             [
                                 'attribute' => 'trans_date',
-                                'format' => 'date',
+                                'value' => function ($model) {
+                                    return date('d-m-Y', strtotime($model->trans_date));
+                                }
                             ],
                             [
                                 'attribute' => 'trans_type_id',
@@ -90,9 +90,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
         <div class="col-md-6">
             <div class="panel panel-info">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Status & Tracking</h3>
-                </div>
                 <div class="panel-body">
                     <?= DetailView::widget([
                         'model' => $model,
@@ -121,12 +118,16 @@ $this->params['breadcrumbs'][] = $this->title;
                             ],
                             [
                                 'attribute' => 'created_at',
-                                'format' => 'datetime',
+                                'value' => function ($model) {
+                                    return date('d-m-Y H:i:s', strtotime($model->created_at));
+                                },
                             ],
                             'created_by',
                             [
                                 'attribute' => 'updated_at',
-                                'format' => 'datetime',
+                                'value' => function ($model) {
+                                    return date('d-m-Y H:i:s', strtotime($model->updated_at));
+                                },
                             ],
                             'updated_by',
                         ],
@@ -139,7 +140,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <!-- Transaction Lines -->
     <div class="panel panel-default">
         <div class="panel-heading">
-            <h3 class="panel-title">Transaction Lines</h3>
+            <h3 class="panel-title">รายการสินค้า</h3>
         </div>
         <div class="panel-body">
             <?php
@@ -153,7 +154,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'dataProvider' => $dataProvider,
                 'showHeader' => true,
                 'columns' => [
-                    ['class' => 'yii\grid\SerialColumn'],
+                    ['class' => 'yii\grid\SerialColumn','headerOptions' => ['style' => 'width: 50px;','text-align' => 'center;']],
 
                     [
                         'label' => 'Product',
@@ -174,12 +175,12 @@ $this->params['breadcrumbs'][] = $this->title;
                         'headerOptions' => ['style' => 'width: 100px;'],
                     ],
 
-                    [
-                        'attribute' => 'sale_price',
-                        'format' => ['currency', 'THB'],
-                        'contentOptions' => ['class' => 'text-right'],
-                        'headerOptions' => ['style' => 'width: 120px;'],
-                    ],
+//                    [
+//                        'attribute' => 'sale_price',
+//                        'format' => ['currency', 'THB'],
+//                        'contentOptions' => ['class' => 'text-right'],
+//                        'headerOptions' => ['style' => 'width: 120px;'],
+//                    ],
 
                     [
                         'attribute' => 'line_price',
@@ -329,7 +330,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <!-- Current Stock Status -->
     <div class="panel panel-warning">
         <div class="panel-heading">
-            <h3 class="panel-title">Current Stock Status</h3>
+            <h3 class="panel-title">สถานะสต๊อกปัจจุบัน</h3>
         </div>
         <div class="panel-body">
             <?php

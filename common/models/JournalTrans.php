@@ -81,9 +81,9 @@ class JournalTrans extends ActiveRecord
     public function rules()
     {
         return [
-            [['trans_date', 'trans_type_id', 'stock_type_id', 'warehouse_id'], 'required'],
+            [['trans_date', 'trans_type_id', 'stock_type_id'], 'required'],
             [['trans_date', 'created_at', 'updated_at'], 'safe'],
-            [['trans_type_id', 'stock_type_id', 'customer_id', 'party_id', 'party_type_id', 'warehouse_id'], 'integer'],
+            [['trans_type_id', 'stock_type_id', 'customer_id', 'party_id', 'party_type_id', 'warehouse_id','return_for_trans_id'], 'integer'],
             [['qty'], 'number'],
             [['remark'], 'string'],
             [['journal_no', 'customer_name', 'status', 'created_by', 'updated_by', 'trans_ref_id'], 'string', 'max' => 255],
@@ -107,6 +107,7 @@ class JournalTrans extends ActiveRecord
             'qty' => 'Quantity',
             'remark' => 'Remark',
             'status' => 'Status',
+            'return_for_trans_id' => 'เลขรายการอ้างอิง',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
             'updated_at' => 'Updated At',
