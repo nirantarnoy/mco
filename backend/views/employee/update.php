@@ -6,10 +6,10 @@ use yii\helpers\Html;
 /* @var $model backend\models\Employee */
 
 $this->title = Yii::t('app', 'แก้ไขพนักงาน: {name}', [
-    'name' => $model->code,
+    'name' => $model->emp_code,
 ]);
 $this->params['breadcrumbs'][] = ['label' => Yii::t('app', 'พนักงาน'), 'url' => ['index']];
-$this->params['breadcrumbs'][] = ['label' => $model->code, 'url' => ['view', 'id' => $model->id]];
+$this->params['breadcrumbs'][] = ['label' => $model->emp_code, 'url' => ['view', 'id' => $model->id]];
 $this->params['breadcrumbs'][] = Yii::t('app', 'แก้ไข');
 ?>
 <div class="employee-update">
