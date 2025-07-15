@@ -19,6 +19,8 @@ use yii\helpers\Url;
 
 $this->registerJsFile('@web/js/journal-trans.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
+$damage_list = [['id'=>1,'name'=>'สภาพปกติ'],['id'=>2,'name'=>'สภาพไม่ปกติ']];
+
 // CSS สำหรับ autocomplete และ alerts
 $autocompleteCSS = <<<CSS
 .autocomplete-dropdown {
@@ -214,6 +216,17 @@ $autocompleteCSS = <<<CSS
 .return-transaction-line {
     background-color: #f8f9fa;
 }
+
+   /*table td .form-control {*/
+   /*     width: 100%;*/
+   /*     box-sizing: border-box;*/
+   /*     padding: 0.25rem 0.5rem;*/
+   /* }*/
+   
+   /* .table td {*/
+   /*     padding: 0.25rem 0.5rem;*/
+   /*     vertical-align: middle;*/
+   /* }*/
 CSS;
 
 $this->registerCss($autocompleteCSS);
@@ -279,6 +292,22 @@ function displayOriginalTransactionInfo(data) {
     $('.card-body').prepend(infoHtml);
 }
 
+// เปิด modal สำหรับบันทึกสภาพสินค้า
+function openConditionModal(index) {
+    currentConditionIndex = index;
+    var currentData = getConditionData(index);
+    
+    // เติมข้อมูลใน modal
+    $('#condition-good-qty').val(currentData.good_qty || '');
+    $('#condition-damaged-qty').val(currentData.damaged_qty || '');
+    $('#condition-missing-qty').val(currentData.missing_qty || '');
+    $('#condition-note').val(currentData.condition_note || '');
+    $('#return-note').val(currentData.return_note || '');
+    
+    updateConditionTotal();
+    $('#conditionModal').modal('show');
+}
+
 // เติมข้อมูลรายการสินค้าสำหรับการคืน
 function populateReturnTransactionLines(lines) {
     // ล้างรายการเดิม
@@ -296,18 +325,18 @@ function addReturnTransactionLine(lineData, index) {
     var rowHtml = '<tr class="item return-transaction-line">' +
         '<td class="text-center align-middle">' +
         '<span class="item-number">' + (index + 1) + '</span>' +
-        '<input type="hidden" name="JournalTransLineX[' + index + '][id]" value="">' +
-        '<input type="hidden" name="JournalTransLineX[' + index + '][product_id]" value="' + lineData.product_id + '">' +
+        '<input type="hidden" name="JournalTransLine[' + index + '][id]" value="">' +
+        '<input type="hidden" name="JournalTransLine[' + index + '][product_id]" value="' + lineData.product_id + '">' +
         '</td>' +
         '<td>' +
-        '<input type="text" class="form-control readonly-field" name="JournalTransLineX[' + index + '][product_name]" ' +
+        '<input type="text" class="form-control readonly-field" name="JournalTransLine[' + index + '][product_name]" ' +
         'value="' + lineData.product_name + '" readonly>' +
         '<small class="text-muted">รหัส: ' + lineData.product_code + '</small>' +
         '</td>' +
         '<td>' +
-        '<input type="text" class="form-control readonly-field" name="JournalTransLineX[' + index + '][warehouse_name]" ' +
+        '<input type="text" class="form-control readonly-field" name="JournalTransLine[' + index + '][warehouse_name]" ' +
         'value="' + lineData.warehouse_name + '" readonly>' +
-        '<input type="hidden" name="JournalTransLineX[' + index + '][warehouse_id]" value="' + lineData.warehouse_id + '">' +
+        '<input type="hidden" name="JournalTransLine[' + index + '][warehouse_id]" value="' + lineData.warehouse_id + '">' +
         '</td>' +
         '<td>' +
         '<input type="text" class="form-control text-center readonly-field" ' +
@@ -320,20 +349,24 @@ function addReturnTransactionLine(lineData, index) {
         '<small class="text-muted">คงเหลือ</small>' +
         '</td>' +
         '<td>' +
-        '<input type="number" class="form-control qty-input" name="JournalTransLineX[' + index + '][qty]" ' +
+        '<input type="number" class="form-control qty-input" name="JournalTransLine[' + index + '][qty]" ' +
         'step="0.01" min="0" max="' + availableQty + '" placeholder="0" data-index="' + index + '" data-original-qty="' + lineData.qty + '" data-available-qty="' + availableQty + '">' +
         '</td>' +
         '<td>' +
-        '<input type="text" class="form-control readonly-field" name="JournalTransLineX[' + index + '][unit_name]" ' +
+        '<input type="text" class="form-control readonly-field" name="JournalTransLine[' + index + '][unit_name]" ' +
         'value="' + lineData.unit_name + '" readonly>' +
-        '<input type="hidden" name="JournalTransLineX[' + index + '][unit_id]" value="' + lineData.unit_id + '">' +
+        '<input type="hidden" name="JournalTransLine[' + index + '][unit_id]" value="' + lineData.unit_id + '">' +
+        '<td>' +
+        '<select class="form-control condition-select" name="JournalTransLine[' + index + '][is_damage]" ' +
+        'data-index="' + index + '" style="display: nonex;">' +
+        '<option value="">เลือกสภาพ</option>' +
+        '<option value="1">สภาพปกติ</option>' +
+        '<option value="0">สภาพไม่ปกติ</option>' +
+        '</select>' +
+        '<span class="condition-placeholder text-muted" data-index="' + index + '">-</span>' +
         '</td>' +
-        '<td class="text-center">' +
-        '<button type="button" class="btn btn-info btn-sm condition-btn" onclick="openConditionModal(' + index + ')" ' +
-        'style="display: none;" data-index="' + index + '">' +
-        '<i class="fa fa-edit"></i> สภาพ' +
-        '</button>' +
-        '<div class="condition-summary" data-index="' + index + '"></div>' +
+        '<td>' +
+        '<input type="text" class="form-control" name="JournalTransLine[' + index + '][return_note]" placeholder="หมายเหตุ">' +
         '</td>' +
         '</tr>';
     
@@ -365,21 +398,7 @@ function clearReturnTransactionData() {
     $('.container-items').html('<tr class="item"><td colspan="8" class="text-center">กรุณาเลือกรายการที่ต้องการคืนก่อน</td></tr>');
 }
 
-// เปิด modal สำหรับบันทึกสภาพสินค้า
-function openConditionModal(index) {
-    currentConditionIndex = index;
-    var currentData = getConditionData(index);
-    
-    // เติมข้อมูลใน modal
-    $('#condition-good-qty').val(currentData.good_qty || '');
-    $('#condition-damaged-qty').val(currentData.damaged_qty || '');
-    $('#condition-missing-qty').val(currentData.missing_qty || '');
-    $('#condition-note').val(currentData.condition_note || '');
-    $('#return-note').val(currentData.return_note || '');
-    
-    updateConditionTotal();
-    $('#conditionModal').modal('show');
-}
+
 
 var currentConditionIndex = -1;
 
@@ -419,11 +438,11 @@ function setConditionHiddenFields(index, goodQty, damagedQty, missingQty, condit
     container.find('input[name*="[good_qty]"], input[name*="[damaged_qty]"], input[name*="[missing_qty]"], input[name*="[condition_note]"], input[name*="[return_note]"]').remove();
     
     // เพิ่ม hidden fields ใหม่
-    container.append('<input type="hidden" name="JournalTransLineX[' + index + '][good_qty]" value="' + goodQty + '">');
-    container.append('<input type="hidden" name="JournalTransLineX[' + index + '][damaged_qty]" value="' + damagedQty + '">');
-    container.append('<input type="hidden" name="JournalTransLineX[' + index + '][missing_qty]" value="' + missingQty + '">');
-    container.append('<input type="hidden" name="JournalTransLineX[' + index + '][condition_note]" value="' + conditionNote + '">');
-    container.append('<input type="hidden" name="JournalTransLineX[' + index + '][return_note]" value="' + returnNote + '">');
+    container.append('<input type="hidden" name="JournalTransLine[' + index + '][good_qty]" value="' + goodQty + '">');
+    container.append('<input type="hidden" name="JournalTransLine[' + index + '][damaged_qty]" value="' + damagedQty + '">');
+    container.append('<input type="hidden" name="JournalTransLine[' + index + '][missing_qty]" value="' + missingQty + '">');
+    container.append('<input type="hidden" name="JournalTransLine[' + index + '][condition_note]" value="' + conditionNote + '">');
+    container.append('<input type="hidden" name="JournalTransLine[' + index + '][return_note]" value="' + returnNote + '">');
 }
 
 // อัพเดตการแสดงผลสรุปสภาพสินค้า
@@ -505,7 +524,7 @@ $(document).ready(function() {
         // แสดง/ซ่อนปุ่มสภาพสินค้า
         var conditionBtn = $('.condition-btn[data-index="' + index + '"]');
         if (inputQty > 0 && ($('#trans-type-select').val() == '4')) { // Return Borrow
-            conditionBtn.show();
+          //  conditionBtn.show();
         } else {
             conditionBtn.hide();
             // ล้างข้อมูลสภาพสินค้า
@@ -610,7 +629,7 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
             'id' => 'journal-trans-form',
             'options' => ['class' => 'form-horizontal'],
             'fieldConfig' => [
-                'template' => "{label}\n<div class=\"col-sm-9\">{input}\n{error}</div>",
+                'template' => "{label}\n<div class=\"col-sm-12\">{input}\n{error}</div>",
                 'labelOptions' => ['class' => 'col-sm-3 control-label'],
             ],
         ]); ?>
@@ -750,7 +769,7 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                                             <?= Html::activeHiddenInput($journaltransline, "[{$index}]id") ?>
                                         <?php endif; ?>
 
-                                        <div class="product-field-container">
+                                        <div class="product-field-container" style="width: 100%">
                                             <?= Html::activeHiddenInput($journaltransline, "[{$index}]product_id", [
                                                 'class' => 'product-id-hidden',
                                                 'data-index' => $index,
@@ -760,7 +779,8 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                                                 'class' => 'form-control product-autocomplete',
                                                 'placeholder' => 'พิมพ์ชื่อสินค้าหรือรหัสสินค้า...',
                                                 'data-index' => $index,
-                                                'autocomplete' => 'off'
+                                                'autocomplete' => 'off',
+                                                'style' => 'width: 100%'
                                             ])->label(false) ?>
 
                                             <div class="autocomplete-dropdown" data-index="<?= $index ?>"></div>
@@ -773,7 +793,8 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                                             [
                                                 'prompt' => '-- เลือกคลัง --',
                                                 'class' => 'form-control warehouse-select',
-                                                'data-index' => $index
+                                                'data-index' => $index,
+                                                'style' => 'width: 100%',
                                             ]
                                         )->label(false) ?>
                                     </td>
@@ -807,7 +828,7 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                                         ])->label(false) ?>
                                     </td>
                                     <td class="text-center">
-                                      <?= $form->field($journaltransline, "[{$index}]is_damage")->dropDownList()->label() ?>
+                                      <?= $form->field($journaltransline, "[{$index}]is_damage")->dropDownList(ArrayHelper::map($damage_list, 'id', 'name'), ['class' => 'form-control', 'data-index' => $index])->label(false) ?>
                                     </td>
                                     <td class="align-middle">
                                       <?= $form->field($journaltransline, "[{$index}]return_note")->textInput([
@@ -826,6 +847,8 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
 
         <hr>
 
+        <?php if ($model->isNewRecord): ?>
+            <div class="form-group">
         <div class="form-group">
             <div class="col-sm-offset-3 col-sm-9">
                 <?= Html::submitButton($model->isNewRecord ? 'Create' : 'Update', [
@@ -834,6 +857,7 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                 <?= Html::a('Cancel', ['index'], ['class' => 'btn btn-default']) ?>
             </div>
         </div>
+        <?php endif; ?>
 
         <?php ActiveForm::end(); ?>
 

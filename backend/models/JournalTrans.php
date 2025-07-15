@@ -53,6 +53,8 @@ class JournalTrans extends ActiveRecord
 
     public $journalTransLinesline = [];
 
+    public $journalTransLines;
+
     /**
      * {@inheritdoc}
      */

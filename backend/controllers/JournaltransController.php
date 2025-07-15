@@ -633,8 +633,8 @@ class JournaltransController extends Controller
             $journalTransLines = [];
             $valid = $model->validate();
 
-            if (isset($_POST['JournalTransLineX'])) {
-                foreach ($_POST['JournalTransLineX'] as $index => $journalTransLineData) {
+            if (isset($_POST['JournalTransLine'])) {
+                foreach ($_POST['JournalTransLine'] as $index => $journalTransLineData) {
                     if (isset($journalTransLineData['id']) && !empty($journalTransLineData['id'])) {
                         // Update existing line
                         $journalTransLine = JournalTransLine::findOne($journalTransLineData['id']);
@@ -784,6 +784,7 @@ class JournaltransController extends Controller
             $valid = $model->validate();
 
             if (isset($_POST['JournalTransLine'])) {
+               // print_r($_POST['JournalTransLine']);return;
                 foreach ($_POST['JournalTransLine'] as $index => $journalTransLineData) {
                     $journalTransLine = new JournalTransLine();
                     $journalTransLine->load($journalTransLineData, '');
@@ -813,7 +814,8 @@ class JournaltransController extends Controller
                     if ($model->save()) {
                         foreach ($journalTransLines as $journalTransLine) {
                             $journalTransLine->journal_trans_id = $model->id;
-                            if(!$journalTransLine->save()) {
+                            $journalTransLine->status = 0;
+                            if(!$journalTransLine->save(false)) {
                                 throw new \Exception('Failed to save journal trans line');
                             }
                         }
