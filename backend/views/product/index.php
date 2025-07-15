@@ -6,6 +6,7 @@ use yii\helpers\Url;
 use yii\grid\ActionColumn;
 
 use kartik\grid\GridView;
+
 //use yii\grid\GridView;
 use yii\widgets\Pjax;
 
@@ -54,7 +55,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'class' => 'btn btn-danger',
                 'id' => 'bulk-delete-btn',
                 'data-url' => Url::to(['bulk-delete']),
-            ]);?>
+            ]); ?>
 
         </div>
 
@@ -70,7 +71,7 @@ $this->params['breadcrumbs'][] = $this->title;
             //     'striped' => false,
             //    'hover' => true,
             'id' => 'product-grid',
-             'pjax' => true,
+            'pjax' => true,
 
             // 'pjaxSettings' => ['neverTimeout' => true],
             //'tableOptions' => ['class' => 'table table-hover'],
@@ -98,12 +99,12 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'data-pjax' => 0,
                             ],
                         );
-                      //  return '<a href="' . \Yii::$app->request->hostInfo . Yii::$app->request->baseUrl . '/uploads/product_photo/' . $data->photo . '" target="_blank">' .$data->photo . '</a>';
+                        //  return '<a href="' . \Yii::$app->request->hostInfo . Yii::$app->request->baseUrl . '/uploads/product_photo/' . $data->photo . '" target="_blank">' .$data->photo . '</a>';
                     }
                 ],
                 'code',
                 'name',
-                'description',
+                //  'description',
                 // 'product_type_id',
 //                [
 //                    'attribute' => 'product_group_id',
@@ -130,7 +131,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     'headerOptions' => ['style' => 'text-align: center'],
                     'contentOptions' => ['style' => 'text-align: center'],
                     'value' => function ($data) {
-                        return $data->sale_price != null ? number_format($data->sale_price, 0): '0';
+                        return $data->sale_price != null ? number_format($data->sale_price, 0) : '0';
                     }
                 ],
 //                [
@@ -154,11 +155,39 @@ $this->params['breadcrumbs'][] = $this->title;
                 //'std_price',
                 //'company_id',
                 [
-                    'attribute' => 'stock_qty',
+                    'attribute' => 'minimum_stock',
                     'headerOptions' => ['style' => 'text-align: center'],
                     'contentOptions' => ['style' => 'text-align: center'],
                     'value' => function ($data) {
-                        return number_format($data->stock_qty, 0);
+                        return number_format($data->minimum_stock, 0);
+                    }
+                ],
+                [
+                    'attribute' => 'stock_qty',
+                    'headerOptions' => ['style' => 'text-align: center'],
+                    'contentOptions' => ['style' => 'text-align: center'],
+                    'format' => 'raw',
+                    'value' => function ($data) {
+                        if ($data->stock_qty < $data->minimum_stock) {
+                            return '<div style="color: red">' . $data->stock_qty . '</div>';
+                        } else {
+                            return number_format($data->stock_qty, 0);
+                        }
+
+                    }
+                ],
+                [
+                   'attribute' => 'information',
+                    'label' => 'แจ้งเตือน',
+                    'format' => 'raw',
+                    'headerOptions' => ['style' => 'text-align: center'],
+                    'contentOptions' => ['style' => 'text-align: center'],
+                    'value' => function ($data) {
+                        if($data->stock_qty < $data->minimum_stock){
+                            return '<div class="badge badge-pill badge-danger" style="padding: 10px;">Low Stock</div>';
+                        }else{
+                            return '';
+                        }
                     }
                 ],
                 [
@@ -242,13 +271,13 @@ $this->params['breadcrumbs'][] = $this->title;
 
     </div>
 
-<br />
+    <br/>
     <div class="row" style="display: nonex;">
         <form action="<?= \yii\helpers\Url::to(['product/importproduct'], true) ?>" method="post"
               enctype="multipart/form-data">
 
             <input type="file" name="file_product" class="form-control">
-            <br />
+            <br/>
             <button class="btn btn-success">Import</button>
         </form>
     </div>
@@ -310,6 +339,7 @@ $('#bulk-delete-btn').on('click', function() {
     }
 });
 
-JS);
+JS
+);
 
 ?>
