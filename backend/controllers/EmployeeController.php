@@ -237,7 +237,6 @@ class EmployeeController extends Controller
 
         return $this->render('update', [
             'model' => $model,
-            'model_line' => $model_line,
         ]);
     }
 
