@@ -143,7 +143,7 @@ class EmployeeController extends Controller
     {
         $model = $this->findModel($id);
 
-        $model_line = \common\models\DriverLicense::find()->where(['emp_id'=>$model->id])->all();
+       // $model_line = \common\models\DriverLicense::find()->where(['emp_id'=>$model->id])->all();
 
         if ($model->load(Yii::$app->request->post())) {
             $photo = UploadedFile::getInstance($model, 'photo');
@@ -226,10 +226,7 @@ class EmployeeController extends Controller
                     }
                 }
 
-                $delete_rec = explode(",", $removelist);
-                if (count($delete_rec)) {
-                    \common\models\DriverLicense::deleteAll(['id' => $delete_rec]);
-                }
+
 
 
                 $session = Yii::$app->session;
