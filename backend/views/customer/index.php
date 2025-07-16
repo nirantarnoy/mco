@@ -60,7 +60,16 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             'name',
             'description',
-            'customer_group_id',
+            'home_number',
+            'street',
+            'aisle',
+            'district_name',
+            'city_name',
+            'province_name',
+            'contact_name',
+            'phone',
+            'branch_name',
+            'email',
             'status',
             //'created_at',
             //'created_by',
@@ -121,4 +130,14 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?php Pjax::end(); ?>
 
+</div>
+<br/>
+<div class="row" style="display: nonex;">
+    <form action="<?= \yii\helpers\Url::to(['customer/importcustomer'], true) ?>" method="post"
+          enctype="multipart/form-data">
+
+        <input type="file" name="file_product" class="form-control">
+        <br/>
+        <button class="btn btn-success">Import</button>
+    </form>
 </div>
