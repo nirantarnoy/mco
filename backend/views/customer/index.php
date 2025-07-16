@@ -59,6 +59,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'headerOptions' => ['style' => 'text-align: center'],
                 'contentOptions' => ['style' => 'text-align: center'],
             ],
+            'code',
             'name',
             'description',
             'home_number',
