@@ -39,27 +39,91 @@ $x_zipcode = $address_chk == null ? '' : $address_chk->zip_code;
     </div>
     <div class="row">
         <div class="col-lg-1"></div>
-        <div class="col-lg-10">
+        <div class="col-lg-5">
             <?= $form->field($model, 'taxid')->textInput(['maxlength' => true]) ?>
         </div>
-        <div class="col-lg-1"></div>
-    </div>
-    <div class="row">
-        <div class="col-lg-1"></div>
-        <div class="col-lg-10">
-            <?= $form->field($model, 'customer_group_id')->textInput(['maxlength' => true]) ?>
-        </div>
-        <div class="col-lg-1"></div>
-    </div>
-    <div class="row">
-        <div class="col-lg-1"></div>
-        <div class="col-lg-10">
+        <div class="col-lg-5">
+            <div style="height: 35px"></div>
             <?= $form->field($model, 'status')->widget(\toxor88\switchery\Switchery::className())->label(false) ?>
         </div>
         <div class="col-lg-1"></div>
     </div>
 
     <div class="row">
+        <div class="col-lg-1"></div>
+        <div class="col-lg-10">
+            <div class="row">
+                <div class="col-lg-3">
+                    <div style="height: 35px"></div>
+                    <?= $form->field($model, 'is_head')->widget(\toxor88\switchery\Switchery::className())->label(false) ?>
+                </div>
+                <div class="col-lg-3">
+                    <?= $form->field($model, 'branch_name')->textInput(['maxlength' => true]) ?>
+                </div>
+                <div class="col-lg-3">
+                    <?= $form->field($model, 'contact_name')->textInput(['maxlength' => true]) ?>
+                </div>
+                <div class="col-lg-3">
+                    <?= $form->field($model, 'phone')->textInput(['maxlength' => true]) ?>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-1"></div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-lg-1"></div>
+        <div class="col-lg-10">
+            <div class="row">
+                <div class="col-lg-3">
+                    <?= $form->field($model, 'email')->textInput(['maxlength' => true]) ?>
+                </div>
+            </div>
+            <div class="col-lg-1"></div>
+        </div>
+        <div class="row">
+            <div class="col-lg-1"></div>
+            <div class="col-lg-10">
+                <div class="row">
+                    <div class="col-lg-2">
+                        <?= $form->field($model, 'home_number')->textInput(['maxlength' => true]) ?>
+                    </div>
+                    <div class="col-lg-6">
+                        <?= $form->field($model, 'street')->textInput(['maxlength' => true]) ?>
+                    </div>
+                    <div class="col-lg-4">
+                        <?= $form->field($model, 'aisle')->textInput(['maxlength' => true]) ?>
+                    </div>
+                </div>
+                <div class="col-lg-1"></div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-1"></div>
+            <div class="col-lg-10">
+                <div class="row">
+                    <div class="col-lg-3"> <?= $form->field($model, 'district_name')->textInput(['maxlength' => true]) ?></div>
+                    <div class="col-lg-3"><?= $form->field($model, 'city_name')->textInput(['maxlength' => true]) ?></div>
+                    <div class="col-lg-3"><?= $form->field($model, 'province_name')->textInput(['maxlength' => true]) ?></div>
+                    <div class="col-lg-3"><?= $form->field($model, 'province_name')->textInput(['maxlength' => true]) ?></div>
+                </div>
+                <div class="col-lg-1"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-1"></div>
+            <div class="col-lg-10">
+                <div class="row">
+                    <div class="col-lg-3"> <?= $form->field($model, 'zipcode')->textInput(['maxlength' => true]) ?></div>
+                </div>
+                <div class="col-lg-1"></div>
+            </div>
+        </div>
+
+
+        <div class="row" style="display: none;">
         <div class="col-lg-6">
             <br/>
             <div class="row">

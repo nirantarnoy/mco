@@ -222,11 +222,11 @@ class CustomerController extends Controller
                     $qty = 0;
                     $price = 0;
                     $cost = 0;
-                    if ($rowData[2] == '' || $i == 0) {
+                    if ($rowData[1] == '' || $i == 0) {
                         continue;
                     }
 
-                    $model_dup = \backend\models\Customer::find()->where(['name' => trim($rowData[5])])->one();
+                    $model_dup = \backend\models\Customer::find()->where(['code' => trim($rowData[0])])->one();
                     if ($model_dup != null) {
                         $new_stock_qty = 0;
 
@@ -236,8 +236,22 @@ class CustomerController extends Controller
 //                            $new_stock_qty = $rowData[2];
 //                        }
 
-                        $model_dup->name = $rowData[1];
+                        $model_dup->name = trim($rowData[1]);
                         $model_dup->description = '';// $rowData[1];
+                        $model_dup->customer_group_id = 0;
+                        $model_dup->home_number = trim($rowData[2]);
+                        $model_dup->street = trim($rowData[3]);
+                        $model_dup->aisle = trim($rowData[4]);
+                        $model_dup->district_name = trim($rowData[5]);
+                        $model_dup->city_name = trim($rowData[6]);
+                        $model_dup->province_name = trim($rowData[7]);
+                        $model_dup->zipcode = trim($rowData[8]);
+                        $model_dup->taxid = trim($rowData[9]);
+                        $model_dup->is_head = 1;// trim($rowData[10]);
+                        $model_dup->branch_name = trim($rowData[11]);
+                        $model_dup->contact_name = trim($rowData[12]);
+                        $model_dup->phone = trim($rowData[13]);
+                        $model_dup->email = trim($rowData[14]);
                         $model_dup->status = 1;
                         //   $model_dup->updated_at = date('Y-m-d H:i:s');
                         if($model_dup->save(false)){
@@ -251,9 +265,23 @@ class CustomerController extends Controller
 //                        $new_warehouse = $this->checkWarehouse(trim($rowData[4]));
                         //    echo "must new";
                         $modelx = new \backend\models\Customer();
-                        $modelx->code = trim($rowData[5]);
+                        $modelx->code = trim($rowData[0]);
                         $modelx->name = trim($rowData[1]);
-                        $modelx->description = ''; trim($rowData[1]);
+                        $modelx->description = '';// $rowData[1];
+                        $modelx->customer_group_id = 0;
+                        $modelx->home_number = trim($rowData[2]);
+                        $modelx->street = trim($rowData[3]);
+                        $modelx->aisle = trim($rowData[4]);
+                        $modelx->district_name = trim($rowData[5]);
+                        $modelx->city_name = trim($rowData[6]);
+                        $modelx->province_name = trim($rowData[7]);
+                        $modelx->zipcode = trim($rowData[8]);
+                        $modelx->taxid = trim($rowData[9]);
+                        $modelx->is_head = 1;// trim($rowData[10]);
+                        $modelx->branch_name = trim($rowData[11]);
+                        $modelx->contact_name = trim($rowData[12]);
+                        $modelx->phone = trim($rowData[13]);
+                        $modelx->email = trim($rowData[14]);
                         $modelx->status = 1;
                         //
                         if ($modelx->save(false)) {

@@ -5,8 +5,9 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\ActionColumn;
 use yii\grid\GridView;
-use yii\widgets\LinkPager;
+//use yii\widgets\LinkPager;
 use yii\widgets\Pjax;
+use yii\bootstrap4\LinkPager;
 /** @var yii\web\View $this */
 /** @var backend\models\VendorSearch $searchModel */
 /** @var yii\data\ActiveDataProvider $dataProvider */

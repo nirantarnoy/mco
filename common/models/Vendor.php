@@ -36,9 +36,9 @@ class Vendor extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name',], 'required'],
-            [['name'], 'unique'],
-            [['code', 'name', 'description', 'vendor_group_id', 'status', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'default', 'value' => null],
+            [['code',], 'required'],
+            [['code'], 'unique'],
+            [['code', 'name', 'description', 'status', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'default', 'value' => null],
             [['vendor_group_id', 'status', 'created_at', 'created_by', 'updated_at', 'updated_by','is_head'], 'integer'],
             [['code', 'name', 'description','home_number', 'street', 'aisle', 'district_name', 'city_name', 'province_name', 'zipcode','contact_name','phone','branch_name', 'email'], 'string', 'max' => 255],
             [['taxid'],'string','max'=>13],
