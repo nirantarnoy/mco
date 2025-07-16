@@ -116,7 +116,6 @@ $x_zipcode = $address_chk == null ? '' : $address_chk->zip_code;
                     <div class="col-lg-3"> <?= $form->field($model, 'district_name')->textInput(['maxlength' => true]) ?></div>
                     <div class="col-lg-3"><?= $form->field($model, 'city_name')->textInput(['maxlength' => true]) ?></div>
                     <div class="col-lg-3"><?= $form->field($model, 'province_name')->textInput(['maxlength' => true]) ?></div>
-                    <div class="col-lg-3"><?= $form->field($model, 'province_name')->textInput(['maxlength' => true]) ?></div>
                 </div>
                 <div class="col-lg-1"></div>
             </div>
