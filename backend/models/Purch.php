@@ -71,7 +71,7 @@ class Purch extends ActiveRecord
             [['purch_date'], 'safe'],
             [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
             [['total_amount', 'discount_amount', 'vat_amount', 'net_amount'], 'number'],
-            [['purch_no', 'vendor_name', 'note', 'ref_text'], 'string', 'max' => 255],
+            [['purch_no', 'vendor_name', 'note'], 'string', 'max' => 255],
             [['purch_no'], 'unique'],
         ];
     }
@@ -94,7 +94,7 @@ class Purch extends ActiveRecord
             'discount_amount' => 'ส่วนลด',
             'vat_amount' => 'VAT',
             'net_amount' => 'ยอดรวมสุทธิ',
-            'ref_text' => 'อ้างอิง',
+           // 'ref_text' => 'อ้างอิง',
             'created_at' => 'วันที่สร้าง',
             'created_by' => 'สร้างโดย',
             'updated_at' => 'วันที่แก้ไข',
