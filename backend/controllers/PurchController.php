@@ -311,8 +311,12 @@ class PurchController extends Controller
 
         if (\Yii::$app->request->isPost) {
             $receiveData = \Yii::$app->request->post('receive', []);
-            $warehouseId = \Yii::$app->request->post('warehouse_id');
+            $warehouseId = \Yii::$app->request->post('line_warehouse_id');
             $remark = \Yii::$app->request->post('remark', '');
+
+//            echo '<pre>';
+//            print_r($receiveData);
+//            echo '</pre>';return;
 
             if (empty($warehouseId)) {
                 \Yii::$app->session->setFlash('error', 'กรุณาเลือกคลังสินค้า');
@@ -422,21 +426,25 @@ class PurchController extends Controller
             // Create Journal Transaction
             $journalTrans = new \backend\models\JournalTrans();
             $journalTrans->trans_date = date('Y-m-d H:i:s');
-            $journalTrans->trans_type_id = \backend\models\JournalTrans::TYPE_PO_RECEIVE;
+            $journalTrans->trans_type_id = \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE;
             $journalTrans->stock_type_id = \backend\models\JournalTrans::STOCK_TYPE_IN;
             $journalTrans->trans_ref_id = $purchModel->id;
-            $journalTrans->warehouse_id = $warehouseId;
+            $journalTrans->warehouse_id = 0;//$line_warehouse_id;
             $journalTrans->customer_name = $purchModel->vendor_name;
             $journalTrans->qty = $totalQty;
             $journalTrans->remark = $remark;
-            $journalTrans->status = \backend\models\JournalTrans::STATUS_ACTIVE;
+            $journalTrans->status = 1;
 
             if (!$journalTrans->save()) {
                 throw new \Exception('ไม่สามารถสร้าง Journal Transaction ได้: ' . implode(', ', $journalTrans->getFirstErrors()));
             }
 
+            $loop_index = 0;
             // Process each item
             foreach ($validItems as $productId => $qty) {
+                $line_warehouse_id = $warehouseId[$loop_index];
+                $loop_index++;
+
                 // Get product and PO line info
                 $poLine = \backend\models\PurchLine::find()
                     ->where(['purch_id' => $purchModel->id, 'product_id' => $productId])
@@ -450,7 +458,7 @@ class PurchController extends Controller
                 $journalTransLine = new \backend\models\JournalTransLine();
                 $journalTransLine->journal_trans_id = $journalTrans->id;
                 $journalTransLine->product_id = $productId;
-                $journalTransLine->warehouse_id = $warehouseId;
+                $journalTransLine->warehouse_id = $line_warehouse_id;
                 $journalTransLine->qty = $qty;
                 $journalTransLine->remark = "รับสินค้าจาก PO: " . $purchModel->purch_no;
 
@@ -463,12 +471,12 @@ class PurchController extends Controller
                 $stockTrans->journal_trans_id = $journalTrans->id;
                 $stockTrans->trans_date = $journalTrans->trans_date;
                 $stockTrans->product_id = $productId;
-                $stockTrans->warehouse_id = $warehouseId;
-                $stockTrans->trans_type_id = \backend\models\JournalTrans::TYPE_PO_RECEIVE;
+                $stockTrans->warehouse_id = $line_warehouse_id;
+                $stockTrans->trans_type_id = \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE;
                 $stockTrans->stock_type_id = \backend\models\JournalTrans::STOCK_TYPE_IN;
                 $stockTrans->qty = $qty;
                 $stockTrans->line_price = $poLine->line_price;
-                $stockTrans->status = \backend\models\StockTrans::STATUS_ACTIVE;
+                $stockTrans->status = 1;
                 $stockTrans->remark = "รับสินค้าจาก PO: " . $purchModel->purch_no;
 
                 if (!$stockTrans->save()) {
@@ -476,7 +484,7 @@ class PurchController extends Controller
                 }
 
                 // Update Stock Summary
-                if (!\backend\models\StockSum::updateStock($productId, $warehouseId, $qty, \backend\models\JournalTrans::STOCK_TYPE_IN)) {
+                if (!\backend\models\StockSum::updateStockIn($productId, $line_warehouse_id, $qty, 1)) {
                     throw new \Exception("ไม่สามารถอัพเดทสต๊อกสินค้า ID: $productId ได้");
                 }
             }
@@ -508,7 +516,7 @@ class PurchController extends Controller
 
             // Cancel all related Stock Transactions
             \backend\models\StockTrans::updateAll(
-                ['status' => \backend\models\StockTrans::STATUS_CANCELLED],
+                ['status' => \backend\models\StockTrans::TRANS_STATUS_CANCELLED],
                 ['journal_trans_id' => $journalTrans->id]
             );
 
@@ -550,7 +558,7 @@ class PurchController extends Controller
         $receiveHistory = \backend\models\JournalTrans::find()
             ->where([
                 'trans_ref_id' => $id,
-                'trans_type_id' => \backend\models\JournalTrans::TYPE_PO_RECEIVE
+                'trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE
             ])
             ->with(['journalTransLines', 'journalTransLines.product', 'journalTransLines.warehouse'])
             ->orderBy(['created_at' => SORT_DESC])

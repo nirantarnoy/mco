@@ -43,11 +43,11 @@ class StockTrans extends ActiveRecord
     {
         return [
             [['journal_trans_id', 'trans_date', 'product_id', 'trans_type_id', 'qty'], 'required'],
-            [['journal_trans_id', 'product_id', 'trans_type_id', 'stock_type_id', 'warehouse_id'], 'integer'],
+            [['journal_trans_id', 'product_id', 'trans_type_id', 'stock_type_id', 'warehouse_id','status'], 'integer'],
             [['trans_date', 'created_at', 'updated_at'], 'safe'],
             [['qty', 'line_price'], 'number'],
             [['remark'], 'string'],
-            [['status', 'created_by'], 'string', 'max' => 255],
+            [['created_by'], 'string', 'max' => 255],
             [['journal_trans_id'], 'exist', 'skipOnError' => true, 'targetClass' => JournalTrans::class, 'targetAttribute' => ['journal_trans_id' => 'id']],
             [['product_id'], 'exist', 'skipOnError' => true, 'targetClass' => Product::class, 'targetAttribute' => ['product_id' => 'id']],
         ];

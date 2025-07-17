@@ -379,24 +379,29 @@ class PurchreqController extends Controller
                 throw new \Exception('ไม่สามารถสร้างใบสั่งซื้อได้: ' . implode(', ', $purchModel->getFirstErrors()));
             }
 
+           // print_r($purchReqModel);return;
             // Copy purchase request lines to purchase order lines
-            foreach ($purchReqModel->purchReqLines as $reqLine) {
-                $purchLine = new \backend\models\PurchLine();
-                $purchLine->purch_id = $purchModel->id;
-                $purchLine->product_id = $reqLine->product_id;
-                $purchLine->product_name = $reqLine->product_name;
-                $purchLine->product_type = $reqLine->product_type;
-                $purchLine->qty = $reqLine->qty;
-                $purchLine->line_price = $reqLine->line_price;
-                $purchLine->line_total = $reqLine->line_total;
-                $purchLine->unit_id = $reqLine->unit_id;
-                $purchLine->status = \backend\models\PurchLine::STATUS_ACTIVE;
-                $purchLine->note = $reqLine->note . ($reqLine->product_name ? ' - ' . $reqLine->product_name : '');
+            $purch_req_lines = \backend\models\PurchReqLine::find()->where(['purch_req_id' => $purchReqModel->id])->all();
+            if($purch_req_lines){
+                foreach ($purch_req_lines as $reqLine) {
+                    $purchLine = new \backend\models\PurchLine();
+                    $purchLine->purch_id = $purchModel->id;
+                    $purchLine->product_id = $reqLine->product_id;
+                    $purchLine->product_name = $reqLine->product_name;
+                    $purchLine->product_type = $reqLine->product_type;
+                    $purchLine->qty = $reqLine->qty;
+                    $purchLine->line_price = $reqLine->line_price;
+                    $purchLine->line_total = $reqLine->line_total;
+                    $purchLine->unit_id = $reqLine->unit_id;
+                    $purchLine->status = \backend\models\PurchLine::STATUS_ACTIVE;
+                    $purchLine->note = $reqLine->note . ($reqLine->product_name ? ' - ' . $reqLine->product_name : '');
 
-                if (!$purchLine->save(false)) {
-                    throw new \Exception('ไม่สามารถสร้างรายการสินค้าได้: ' . implode(', ', $purchLine->getFirstErrors()));
+                    if (!$purchLine->save(false)) {
+                        throw new \Exception('ไม่สามารถสร้างรายการสินค้าได้: ' . implode(', ', $purchLine->getFirstErrors()));
+                    }
                 }
             }
+
 
             // Update purchase request with reference ID
             $purchReqModel->purch_id = $purchModel->id;

@@ -14,6 +14,8 @@ $this->params['breadcrumbs'][] = ['label' => 'ใบสั่งซื้อ', '
 $this->params['breadcrumbs'][] = ['label' => $purchModel->purch_no, 'url' => ['view', 'id' => $purchModel->id]];
 $this->params['breadcrumbs'][] = 'รับสินค้าเข้าคลัง';
 
+$warehouse_data = \backend\models\Warehouse::find()->where(['status' => 1])->all();
+
 // Register JS for calculations
 $this->registerJs("
 function calculateTotal() {
@@ -139,6 +141,7 @@ $(document).ready(function() {
                         <th style="width: 100px;">คงเหลือ</th>
                         <th style="width: 120px;">รับเข้าครั้งนี้</th>
                         <th style="width: 80px;">หน่วย</th>
+                        <th style="width: 120px;">เข้าคลัง</th>
                         <th style="width: 80px;">ทั้งหมด</th>
                     </tr>
                     </thead>
@@ -175,6 +178,14 @@ $(document).ready(function() {
                             </td>
                             <td class="text-center">
                                 <?= Html::encode($line['unit'] ?? 'ชิ้น') ?>
+                            </td>
+                            <td>
+                                <select name="line_warehouse_id[]" class="form-control line-warehouse-select" id="">
+                                    <option value="">เลือกคลังสินค้า...</option>
+                                    <?php foreach ($warehouse_data as $value): ?>
+                                        <option value="<?= $value->id ?>"><?= $value->name ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                             </td>
                             <td class="text-center">
                                 <button type="button" class="btn btn-sm btn-outline-primary receive-all"

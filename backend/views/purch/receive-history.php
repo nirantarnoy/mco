@@ -100,11 +100,12 @@ $this->params['breadcrumbs'][] = 'ประวัติการรับสิ�
                             </thead>
                             <tbody>
                             <?php $lineNum = 1; ?>
-                            <?php foreach ($receive->journalTransLines as $line): ?>
+                            <?php $journal_trans_line = \backend\models\JournalTransLine::find()->where(['journal_trans_id' => $receive->id])->all(); ?>
+                            <?php foreach ($journal_trans_line as $line): ?>
                                 <tr class="<?= $receive->status == \backend\models\JournalTrans::STATUS_CANCELLED ? 'text-muted' : '' ?>">
                                     <td><?= $lineNum++ ?></td>
                                     <td>
-                                        <?= Html::encode($line->product->product_name ?? 'N/A') ?>
+                                        <?= Html::encode(\backend\models\Product::findName($line->product_id) ?? 'N/A') ?>
                                     </td>
                                     <td>
                                         <?= Html::encode($line->warehouse->name ?? 'N/A') ?>

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6bfae0e3cb1dba004be3a3099fdc59c4",
+    "content-hash": "66990d46a96f9305bdc0ce6c869f4c83",
     "packages": [
         {
             "name": "almasaeed2010/adminlte",
@@ -121,16 +121,16 @@
         },
         {
             "name": "bower-asset/jquery",
-            "version": "3.7.1",
+            "version": "3.6.4",
             "source": {
                 "type": "git",
-                "url": "https://github.com/jquery/jquery-dist.git",
-                "reference": "fde1f76e2799dd877c176abde0ec836553246991"
+                "url": "git@github.com:jquery/jquery-dist.git",
+                "reference": "91ef2d8836342875f2519b5815197ea0f23613cf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/jquery/jquery-dist/zipball/fde1f76e2799dd877c176abde0ec836553246991",
-                "reference": "fde1f76e2799dd877c176abde0ec836553246991"
+                "url": "https://api.github.com/repos/jquery/jquery-dist/zipball/91ef2d8836342875f2519b5815197ea0f23613cf",
+                "reference": "91ef2d8836342875f2519b5815197ea0f23613cf"
             },
             "type": "bower-asset",
             "license": [
@@ -2565,12 +2565,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/mailer.git",
-                "reference": "b7a5818ac950ba96bb7f326cb5aafa9970cd5516"
+                "reference": "bb7a8f2d49670ac6a2f33adf35aca0c607d02b35"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/mailer/zipball/b7a5818ac950ba96bb7f326cb5aafa9970cd5516",
-                "reference": "b7a5818ac950ba96bb7f326cb5aafa9970cd5516",
+                "url": "https://api.github.com/repos/symfony/mailer/zipball/bb7a8f2d49670ac6a2f33adf35aca0c607d02b35",
+                "reference": "bb7a8f2d49670ac6a2f33adf35aca0c607d02b35",
                 "shasum": ""
             },
             "require": {
@@ -2637,7 +2637,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-07-10T08:14:14+00:00"
+            "time": "2025-07-14T16:38:25+00:00"
         },
         {
             "name": "symfony/mime",
@@ -2645,12 +2645,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/mime.git",
-                "reference": "492a32b8be73e296ab7b16d485480ab947d95cd8"
+                "reference": "664d5e844a2de5e11c8255d0aef6bc15a9660ac7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/mime/zipball/492a32b8be73e296ab7b16d485480ab947d95cd8",
-                "reference": "492a32b8be73e296ab7b16d485480ab947d95cd8",
+                "url": "https://api.github.com/repos/symfony/mime/zipball/664d5e844a2de5e11c8255d0aef6bc15a9660ac7",
+                "reference": "664d5e844a2de5e11c8255d0aef6bc15a9660ac7",
                 "shasum": ""
             },
             "require": {
@@ -2722,7 +2722,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-07-10T08:14:14+00:00"
+            "time": "2025-07-15T12:02:45+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -3331,12 +3331,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/yiisoft/yii2-framework.git",
-                "reference": "0d4aaa0232ef91d0c600fdece1e4bbe312904fe7"
+                "reference": "7741b3d6d981064a59cc66d0947618683e0d0dcc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/0d4aaa0232ef91d0c600fdece1e4bbe312904fe7",
-                "reference": "0d4aaa0232ef91d0c600fdece1e4bbe312904fe7",
+                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/7741b3d6d981064a59cc66d0947618683e0d0dcc",
+                "reference": "7741b3d6d981064a59cc66d0947618683e0d0dcc",
                 "shasum": ""
             },
             "require": {
@@ -3445,7 +3445,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-07-09T15:46:20+00:00"
+            "time": "2025-07-15T07:54:19+00:00"
         },
         {
             "name": "yiisoft/yii2-bootstrap4",
@@ -3884,12 +3884,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Behat/Gherkin.git",
-                "reference": "b4870b14c0949b72983687b65c1c8ca8590b0856"
+                "reference": "9396bd8c55ef44fff7f0f241b645834e73ceeb8d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Behat/Gherkin/zipball/b4870b14c0949b72983687b65c1c8ca8590b0856",
-                "reference": "b4870b14c0949b72983687b65c1c8ca8590b0856",
+                "url": "https://api.github.com/repos/Behat/Gherkin/zipball/9396bd8c55ef44fff7f0f241b645834e73ceeb8d",
+                "reference": "9396bd8c55ef44fff7f0f241b645834e73ceeb8d",
                 "shasum": ""
             },
             "require": {
@@ -3946,7 +3946,7 @@
                 "issues": "https://github.com/Behat/Gherkin/issues",
                 "source": "https://github.com/Behat/Gherkin/tree/master"
             },
-            "time": "2025-06-09T18:58:00+00:00"
+            "time": "2025-07-16T14:45:34+00:00"
         },
         {
             "name": "codeception/codeception",
@@ -7106,7 +7106,9 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=7.4.0"
+        "php": ">=7.4.0",
+        "ext-json": "*",
+        "ext-intl": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "2.6.0"

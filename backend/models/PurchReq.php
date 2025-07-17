@@ -1,6 +1,7 @@
 <?php
 namespace backend\models;
 
+use NumberFormatter;
 use Yii;
 use yii\db\ActiveRecord;
 use yii\behaviors\TimestampBehavior;
@@ -109,10 +110,7 @@ class PurchReq extends ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getPurchReqLines()
-    {
-        return $this->hasMany(PurchReqLine::class, ['purch_req_id' => 'id']);
-    }
+
 
     /**
      * Get status label
@@ -212,7 +210,15 @@ class PurchReq extends ActiveRecord
     private function convertAmountToThaiText($amount)
     {
         // This is a simplified version - you can implement full Thai number conversion
-        $formatter = new \NumberFormatter('th', \NumberFormatter::SPELLOUT);
+        $formatter = new NumberFormatter('th', NumberFormatter::SPELLOUT);
         return $formatter->format($amount) . ' บาทถ้วน';
+    }
+
+    public function getPurchReqLines()
+    {
+        return $this->hasMany(PurchReqLine::class, ['purch_req_id' => 'id']);
+    }
+    public function getJob(){
+        return $this->hasOne(Job::class, ['id' => 'job_id']);
     }
 }

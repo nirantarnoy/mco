@@ -36,7 +36,8 @@
         "miloschuman/yii2-highcharts-widget": "^8.0",
         "wbraganca/yii2-dynamicform": "dev-master",
         "mpdf/mpdf": "^8.1",
-      "ext-json": "*"
+      "ext-json": "*",
+      "ext-intl": "*"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",
