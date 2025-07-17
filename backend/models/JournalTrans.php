@@ -89,10 +89,10 @@ class JournalTrans extends ActiveRecord
         return [
             [['trans_date', 'trans_type_id', 'stock_type_id'], 'required'],
             [['trans_date', 'created_at', 'updated_at'], 'safe'],
-            [['trans_type_id', 'stock_type_id', 'customer_id', 'party_id', 'party_type_id', 'warehouse_id','return_for_trans_id','trans_ref_id','status'], 'integer'],
+            [['trans_type_id', 'stock_type_id', 'customer_id', 'party_id', 'party_type_id', 'warehouse_id','return_for_trans_id','trans_ref_id','status','created_by', 'updated_by'], 'integer'],
             [['qty'], 'number'],
             [['remark'], 'string'],
-            [['journal_no', 'customer_name', 'created_by', 'updated_by'], 'string', 'max' => 255],
+            [['journal_no', 'customer_name', ], 'string', 'max' => 255],
             [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_CANCELLED]],
             [['trans_ref_id'], 'validateRefTransaction'],
         ];

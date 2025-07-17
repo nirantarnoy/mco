@@ -511,7 +511,7 @@ class PurchController extends Controller
             // Cancel Journal Transaction
             $journalTrans->status = \backend\models\JournalTrans::STATUS_CANCELLED;
             if (!$journalTrans->save()) {
-                throw new \Exception('ไม่สามารถยกเลิก Journal Transaction ได้');
+                throw new \Exception('ไม่สามารถยกเลิก Journal Transaction ได้'. implode(', ', $journalTrans->getFirstErrors()));
             }
 
             // Cancel all related Stock Transactions
@@ -521,7 +521,9 @@ class PurchController extends Controller
             );
 
             // Reverse stock quantities
-            $journalTransLines = $journalTrans->journalTransLines;
+           // $journalTransLines = $journalTrans->journalTransLines;
+            $journalTransLines = \backend\models\JournalTransLine::find()
+                ->where(['journal_trans_id' => $journalTrans->id])->all();
             foreach ($journalTransLines as $line) {
                 // Reverse stock by reducing the quantity (opposite of receive)
                 if (!\backend\models\StockSum::updateStockOut(
