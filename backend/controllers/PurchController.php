@@ -516,7 +516,7 @@ class PurchController extends Controller
 
             // Cancel all related Stock Transactions
             \backend\models\StockTrans::updateAll(
-                ['status' => \backend\models\StockTrans::TRANS_STATUS_CANCELLED],
+                ['status' => \backend\models\StockTrans::STATUS_CANCELLED],
                 ['journal_trans_id' => $journalTrans->id]
             );
 
@@ -524,7 +524,7 @@ class PurchController extends Controller
             $journalTransLines = $journalTrans->journalTransLines;
             foreach ($journalTransLines as $line) {
                 // Reverse stock by reducing the quantity (opposite of receive)
-                if (!\backend\models\StockSum::updateStock(
+                if (!\backend\models\StockSum::updateStockOut(
                     $line->product_id,
                     $line->warehouse_id,
                     $line->qty,

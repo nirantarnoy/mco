@@ -99,6 +99,20 @@ class StockSum extends ActiveRecord
         return $stockSum;
     }
 
+    public static function updateStockOut($productId, $warehouseId, $qty, $stockType)
+    {
+        $stockSum = self::find()->where(['product_id' => $productId, 'warehouse_id' => $warehouseId])->one();
+        if ($stockSum){
+            $stockSum->qty -= $qty;
+            $stockSum->updated_at = date('Y-m-d H:i:s');
+            if($stockSum->save(false)){
+                self::updateProductStock($productId);
+            }
+        }
+        // Calculate quantity change based on stock type
+        return $stockSum;
+    }
+
     protected static function updateProductStock($productId): bool
     {
         $totalStock = self::find()

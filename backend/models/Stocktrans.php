@@ -28,6 +28,9 @@ use yii\db\ActiveRecord;
  */
 class StockTrans extends ActiveRecord
 {
+
+    const STATUS_CANCELLED = 500;
+
     /**
      * {@inheritdoc}
      */
@@ -43,7 +46,7 @@ class StockTrans extends ActiveRecord
     {
         return [
             [['journal_trans_id', 'trans_date', 'product_id', 'trans_type_id', 'qty'], 'required'],
-            [['journal_trans_id', 'product_id', 'trans_type_id', 'stock_type_id', 'warehouse_id','status'], 'integer'],
+            [['journal_trans_id', 'product_id', 'trans_type_id', 'stock_type_id', 'warehouse_id', 'status'], 'integer'],
             [['trans_date', 'created_at', 'updated_at'], 'safe'],
             [['qty', 'line_price'], 'number'],
             [['remark'], 'string'],
