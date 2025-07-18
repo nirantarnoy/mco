@@ -122,6 +122,9 @@ class PurchreqController extends Controller
                             $vatAmount = ($afterDiscountAmount * $vatPercent) / 100;
                         }
 
+                        // คำนวณยอดสุทธิ
+                        $netAmount = $afterDiscountAmount + $vatAmount;
+
                         // อัพเดทยอดรวมใน purch_req ถ้าจำเป็น
                         $model->total_amount = $totalAmount;
                         $model->discount_amount = $discountAmount;
@@ -129,10 +132,6 @@ class PurchreqController extends Controller
                         $model->net_amount = $netAmount;
                         $model->save(false); // skip validation เพราะ validate แล้ว
 
-
-
-                        // คำนวณยอดสุทธิ
-                        $netAmount = $afterDiscountAmount + $vatAmount;
 
                         $transaction->commit();
                         Yii::$app->session->setFlash('success', 'สร้างใบขอซื้อเรียบร้อยแล้ว');
@@ -408,6 +407,8 @@ class PurchreqController extends Controller
             $purchModel->discount_amount = $purchReqModel->discount_amount;
             $purchModel->vat_amount = $purchReqModel->vat_amount;
             $purchModel->net_amount = $purchReqModel->net_amount;
+            $purchModel->discount_percent = $purchReqModel->discount_percent;
+            $purchModel->vat_percent = $purchReqModel->vat_percent;
            // $purchModel->note = 'แปลงจากใบขอซื้อ: ' . $purchReqModel->purch_req_no . ($purchReqModel->note ? ' - ' . $purchReqModel->note : '');
             //$purchModel->ref_text = 'PR: ' . $purchReqModel->purch_req_no;
 
