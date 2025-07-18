@@ -70,7 +70,7 @@ class PurchReq extends ActiveRecord
     {
         return [
             [['purch_req_date'], 'safe'],
-            [['vendor_id', 'status', 'approve_status', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by','job_id'], 'integer'],
+            [['vendor_id', 'status', 'approve_status', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by','job_id','discount_percent','vat_percent'], 'integer'],
             [['total_amount', 'discount_amount', 'vat_amount', 'net_amount'], 'number'],
             [['purch_req_no', 'vendor_name', 'note', 'total_text'], 'string', 'max' => 255],
             [['purch_req_no'], 'unique'],
