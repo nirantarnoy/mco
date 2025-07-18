@@ -243,13 +243,13 @@ $this->params['breadcrumbs'][] = $this->title;
                         <tr>
                             <td><strong>Total Quantity:</strong></td>
                             <td class="text-right">
-                                <strong><?= number_format(array_sum(array_column($model->journalTransLines, 'qty')), 2) ?></strong>
+                                <strong><?php echo number_format(array_sum(array_column($model->journalTransLines, 'qty')), 2) ?></strong>
                             </td>
                         </tr>
                         <tr>
                             <td><strong>Total Amount:</strong></td>
                             <td class="text-right">
-                                <strong><?= Yii::$app->formatter->asCurrency(array_sum(array_column($model->journalTransLines, 'line_price')), 'THB') ?></strong>
+                                <strong><?php echo Yii::$app->formatter->asCurrency(array_sum(array_column($model->journalTransLines, 'line_price')), 'THB') ?></strong>
                             </td>
                         </tr>
                     </table>

@@ -91,13 +91,49 @@ class PurchreqController extends Controller
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
                     if ($model->save()) {
+                        // คำนวณยอดรวม
+                        $totalAmount = 0;
+                        $discountAmount = 0;
+                        $vatAmount = 0;
+                        $netAmount = 0;
                         // Save purch req lines
                         foreach ($purchReqLines as $purchReqLine) {
                             $purchReqLine->purch_req_id = $model->id;
                             if (!$purchReqLine->save()) {
                                 throw new \Exception('Failed to save purch req line');
                             }
+                            // คำนวณยอดรวมจากแต่ละรายการ
+                            $lineTotal = $purchReqLine->qty * $purchReqLine->line_price;
+                            $totalAmount += $lineTotal;
                         }
+                        // คำนวณส่วนลด (สมมติว่ามีฟิลด์ discount_percent ใน model)
+                        if (isset($model->discount_percent) && $model->discount_percent > 0) {
+                            $discountAmount = ($totalAmount * $model->discount_percent) / 100;
+                        } else if (isset($model->discount_amount) && $model->discount_amount > 0) {
+                            $discountAmount = $model->discount_amount;
+                        }
+
+                        // คำนวณยอดหลังหักส่วนลด
+                        $afterDiscountAmount = $totalAmount - $discountAmount;
+
+                        // คำนวณ VAT (สมมติว่ามีฟิลด์ vat_percent ใน model หรือใช้ VAT 7%)
+                        $vatPercent = isset($model->vat_percent) ? $model->vat_percent : 7;
+                        if ($vatPercent > 0) {
+                            $vatAmount = ($afterDiscountAmount * $vatPercent) / 100;
+                        }
+
+                        // อัพเดทยอดรวมใน purch_req ถ้าจำเป็น
+                        $model->total_amount = $totalAmount;
+                        $model->discount_amount = $discountAmount;
+                        $model->vat_amount = $vatAmount;
+                        $model->net_amount = $netAmount;
+                        $model->save(false); // skip validation เพราะ validate แล้ว
+
+
+
+                        // คำนวณยอดสุทธิ
+                        $netAmount = $afterDiscountAmount + $vatAmount;
+
                         $transaction->commit();
                         Yii::$app->session->setFlash('success', 'สร้างใบขอซื้อเรียบร้อยแล้ว');
                         return $this->redirect(['view', 'id' => $model->id]);

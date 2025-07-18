@@ -818,6 +818,7 @@ class JournaltransController extends Controller
                             if(!$journalTransLine->save(false)) {
                                 throw new \Exception('Failed to save journal trans line');
                             }
+
                         }
                         $transaction->commit();
                         Yii::$app->session->setFlash('success', 'บันทึกข้อมูลเรียบร้อยแล้ว');
