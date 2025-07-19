@@ -33,6 +33,9 @@ if (!$model->isNewRecord) {
         <input type="hidden" class="remove-customer-list" name="remove_customer_list" value="">
         <div class="row">
             <div class="col-lg-3">
+                <?= $form->field($model, 'code')->textInput(['maxlength' => true]) ?>
+            </div>
+            <div class="col-lg-3">
                 <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
             </div>
             <div class="col-lg-3">
@@ -46,17 +49,7 @@ if (!$model->isNewRecord) {
                     ]
                 ]) ?>
             </div>
-            <div class="col-lg-3">
-                <?= $form->field($model, 'product_type_id')->widget(\kartik\select2\Select2::className(), [
-                    'data' => \yii\helpers\ArrayHelper::map(\backend\helpers\ProductType::asArrayObject(), 'id', 'name'),
-                    'options' => [
-                        'placeholder' => '-- เลือกประเภทสินค้า --',
-                    ],
-                    'pluginOptions' => [
-                        'allowClear' => true,
-                    ]
-                ]) ?>
-            </div>
+
             <div class="col-lg-3">
                 <?= $form->field($model, 'brand_id')->widget(\kartik\select2\Select2::className(), [
                     'data' => ArrayHelper::map(\backend\models\Productbrand::find()->all(), 'id', 'name'),
