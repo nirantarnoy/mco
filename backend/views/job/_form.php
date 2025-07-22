@@ -31,7 +31,7 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
                 ])->label('เลขที่ใบเสนอราคา') ?>
         </div>
         <div class="col-lg-4">
-            <?php $model->job_date = $model->job_date ? date('d-m-Y', strtotime($model->job_date)) : ''; ?>
+            <?php $model->job_date = $model->job_date ? date('m/d/Y', strtotime($model->job_date)) : ''; ?>
             <?= $form->field($model, 'job_date')->widget(DatePicker::className(),
                 ['options' =>
                     [
@@ -39,10 +39,37 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
                     ],
                     'pluginOptions' => [
                         'autoclose' => true,
-                        'format' => 'dd-mm-yyyy',
+                        'format' => 'mm/dd/yyyy',
                     ]
                 ])->label('วันที่') ?>
         </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-4">
+            <?php $model->start_date = $model->start_date ? date('m/d/Y', strtotime($model->start_date)) : ''; ?>
+            <?= $form->field($model, 'start_date')->widget(DatePicker::className(),
+                ['options' =>
+                    [
+                        'placeholder' => 'เลือกวันที่',
+                    ],
+                    'pluginOptions' => [
+                        'autoclose' => true,
+                        'format' => 'mm/dd/yyyy',
+                    ]
+                ])->label() ?>
+        </div>
+        <div class="col-lg-4">
+            <?php $model->end_date = $model->end_date ? date('m/d/Y', strtotime($model->end_date)) : ''; ?>
+            <?= $form->field($model, 'end_date')->widget(DatePicker::className(),
+                ['options' =>
+                    [
+                        'placeholder' => 'เลือกวันที่',
+                    ],
+                    'pluginOptions' => [
+                        'autoclose' => true,
+                        'format' => 'mm/dd/yyyy',
+                    ]
+                ])->label() ?></div>
     </div>
     <div class="row">
         <div class="col-lg-4">
@@ -87,7 +114,7 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
                         <tr>
                             <td style="text-align: center"><?= $key+1?></td>
                             <td><a href="<?= \yii\helpers\Url::to(['purch/view', 'id' => $purch->id]) ?>"><?= $purch->purch_no ?></a></td>
-                            <td><?= $purch->purch_date ? date('d-m-Y', strtotime($purch->purch_date)) : '' ?></td>
+                            <td><?= $purch->purch_date ? date('m/d/Y', strtotime($purch->purch_date)) : '' ?></td>
                             <td><?=  $puch_x->getApproveStatusBadge($purch->status) ?></td>
                         </tr>
                     <?php endforeach; ?>

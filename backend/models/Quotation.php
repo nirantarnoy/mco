@@ -282,4 +282,8 @@ class Quotation extends ActiveRecord
 
         return $return_str;
     }
+
+    public function getJob(){
+       return $this->hasOne(Job::class, ['id' => 'job_id']);
+    }
 }

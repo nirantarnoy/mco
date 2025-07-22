@@ -18,6 +18,13 @@ if ($quotationLines) {
 // คำนวณ VAT 7%
 $vat = $subtotal * 0.07;
 $grandTotal = $subtotal + $vat - $discount;
+
+$customer_info = \backend\models\Customer::findCustomerInfo($quotation->customer_id);
+//print_r($customer_info);return;
+$customer_name = $customer_info !== null ? $customer_info['name'] : '';
+$customer_address = $customer_info !== null ? $customer_info['home_number'].' '.$customer_info['street'].' '.$customer_info['aisle'].', '.$customer_info['district_name'].', '.$customer_info['city_name'].', '.$customer_info['province_name'].', '.$customer_info['zipcode'] : '';
+$phone = $customer_info !== null ? $customer_info['phone'] : '';
+$email = $customer_info !== null ? $customer_info['email'] : '';
 ?>
 
 <style>
@@ -186,28 +193,25 @@ $grandTotal = $subtotal + $vat - $discount;
         <div class="col-lg-6">
             <!-- Company Info -->
             <div class="info-section">
-                <div class="info-row">
+                <div>
                     <span class="info-label">Company Name :</span>
+                </div>
+                <div class="info-row">
                     <span>M.C.O. COMPANY LIMITED</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label"></span>
                     <span>5/15 Koh-Kloy Road,</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label"></span>
                     <span>Tambon Chompoeng,</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label"></span>
                     <span>Amphur Muang ,</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label"></span>
                     <span>Rayong 21000 Thailand.</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label"></span>
                     <span>info@thai-mco.com</span>
                 </div>
             </div>
@@ -218,7 +222,7 @@ $grandTotal = $subtotal + $vat - $discount;
                 <div>
                     <div class="info-row">
                         <span class="info-label">Date</span>
-                        <span>: <?= Yii::$app->formatter->asDate($quotation->quotation_date, 'php:d/m/Y') ?></span>
+                        <span>: <?= Yii::$app->formatter->asDate($quotation->quotation_date, 'php:m/d/Y') ?></span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">OUR REF.</span>
@@ -230,11 +234,11 @@ $grandTotal = $subtotal + $vat - $discount;
                     </div>
                     <div class="info-row">
                         <span class="info-label">FAX</span>
-                        <span>: 66-38-619569</span>
+                        <span>: 66-38-619559</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">TEL</span>
-                        <span>: 038-875259 875229</span>
+                        <span>: 038-875258 875259</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">YOUR REF</span>
@@ -246,14 +250,32 @@ $grandTotal = $subtotal + $vat - $discount;
     </div>
 
     <div class="row">
-        <div class="col-lg-6">
+        <div class="col-lg-12">
+            <table style="width: 100%;border: none;">
+                <tr>
+                    <td style="width: 50%;border: none;text-align: left;">
+                        <div class="address-header">Customer :</div>
+                    </td>
+                    <td style="width: 50%;border: none;text-align: left;"></td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="border: none;text-align: left;">
+                        <?= Html::encode($customer_name).'<br />'.Html::encode($customer_address).'<br />' ?>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-8">
             <!-- Customer Info -->
             <div class="address-section">
                 <div class="address-box">
-                    <div class="address-header">Customer :</div>
+
                     <div>
                         <div class="info-row">
-                            <span class="info-label">Tel :</span>
+                            <span class="info-label">Tel : <?= Html::encode($phone) ?></span>
                             <span></span>
                         </div>
                         <div class="info-row">
@@ -278,7 +300,7 @@ $grandTotal = $subtotal + $vat - $discount;
 
             </div>
         </div>
-        <div class="col-lg-6">
+        <div class="col-lg-4">
             <div style="text-align: right;bottom: 0px;">
                 <div>Certificate ISO 9001:2015</div>
                 <div>Certificate No. TH08/2024</div>

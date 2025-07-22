@@ -59,7 +59,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             [
                                 'attribute' => 'trans_date',
                                 'value' => function ($model) {
-                                    return date('d-m-Y', strtotime($model->trans_date));
+                                    return date('m-d-Y', strtotime($model->trans_date));
                                 }
                             ],
                             [
@@ -119,14 +119,14 @@ $this->params['breadcrumbs'][] = $this->title;
                             [
                                 'attribute' => 'created_at',
                                 'value' => function ($model) {
-                                    return date('d-m-Y H:i:s', strtotime($model->created_at));
+                                    return date('m-d-Y H:i:s', strtotime($model->created_at));
                                 },
                             ],
                             'created_by',
                             [
                                 'attribute' => 'updated_at',
                                 'value' => function ($model) {
-                                    return date('d-m-Y H:i:s', strtotime($model->updated_at));
+                                    return date('m-d-Y H:i:s', strtotime($model->updated_at));
                                 },
                             ],
                             'updated_by',
@@ -309,7 +309,10 @@ $this->params['breadcrumbs'][] = $this->title;
 
                         [
                             'attribute' => 'created_at',
-                            'format' => 'datetime',
+//                            'format' => 'datetime',
+                            'value' => function ($stock) {
+                                return date('m-d-Y', strtotime($stock->created_at));
+                            }
                         ],
 
                         [
@@ -437,7 +440,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <h4>Transaction Created</h4>
                         <p>
                             Created by: <strong><?= Html::encode($model->created_by) ?></strong><br>
-                            Date: <?= Yii::$app->formatter->asDatetime($model->created_at) ?>
+                            Date: <?= date('m-d-Y H:i:s', strtotime($model->created_at)) ?>
                         </p>
                     </div>
                 </div>
@@ -449,7 +452,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <h4>Transaction Updated</h4>
                             <p>
                                 Updated by: <strong><?= Html::encode($model->updated_by) ?></strong><br>
-                                Date: <?= Yii::$app->formatter->asDatetime($model->updated_at) ?>
+                                Date: <?=  date('m-d-Y H:i:s', strtotime($model->updated_at)) ?>
                             </p>
                         </div>
                     </div>
@@ -519,3 +522,10 @@ $this->params['breadcrumbs'][] = $this->title;
     .bg-green { background-color: #00a65a; }
     .bg-red { background-color: #dd4b39; }
 </style>
+<?php
+$this->registerJs("
+    setTimeout(function() {
+        $('.alert').fadeOut('slow');
+    }, 5000);
+");
+?>

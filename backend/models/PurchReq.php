@@ -59,7 +59,35 @@ class PurchReq extends ActiveRecord
     public function behaviors()
     {
         return [
-            TimestampBehavior::class,
+            'timestampcdate'=>[
+                'class'=> \yii\behaviors\AttributeBehavior::className(),
+                'attributes'=>[
+                    ActiveRecord::EVENT_BEFORE_INSERT=>'created_at',
+                ],
+                'value'=> time(),
+            ],
+            'timestampudate'=>[
+                'class'=> \yii\behaviors\AttributeBehavior::className(),
+                'attributes'=>[
+                    ActiveRecord::EVENT_BEFORE_INSERT=>'updated_at',
+                ],
+                'value'=> time(),
+            ],
+            'timestampcby'=>[
+                'class'=> \yii\behaviors\AttributeBehavior::className(),
+                'attributes'=>[
+                    ActiveRecord::EVENT_BEFORE_INSERT=>'created_by',
+                ],
+                'value'=> Yii::$app->user->id,
+            ],
+            'timestamuby'=>[
+                'class'=> \yii\behaviors\AttributeBehavior::className(),
+                'attributes'=>[
+                    ActiveRecord::EVENT_BEFORE_UPDATE=>'updated_by',
+                ],
+                'value'=> Yii::$app->user->id,
+            ],
+
         ];
     }
 
@@ -69,8 +97,9 @@ class PurchReq extends ActiveRecord
     public function rules()
     {
         return [
+            [['vendor_id','job_id'], 'required'],
             [['purch_req_date'], 'safe'],
-            [['vendor_id', 'status', 'approve_status', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by','job_id','discount_percent','vat_percent'], 'integer'],
+            [['vendor_id', 'status', 'approve_status', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by','job_id','discount_percent','vat_percent','approve_by'], 'integer'],
             [['total_amount', 'discount_amount', 'vat_amount', 'net_amount'], 'number'],
             [['purch_req_no', 'vendor_name', 'note', 'total_text'], 'string', 'max' => 255],
             [['purch_req_no'], 'unique'],
@@ -96,6 +125,7 @@ class PurchReq extends ActiveRecord
             'discount_amount' => 'ส่วนลด',
             'vat_amount' => 'VAT',
             'net_amount' => 'ยอดรวมสุทธิ',
+            'approve_by' => 'ผู้อนุมัติ',
             'total_text' => 'ยอดรวม (ตัวอักษร)',
             'purch_id' => 'รหัสใบสั่งซื้อ',
             'created_at' => 'วันที่สร้าง',

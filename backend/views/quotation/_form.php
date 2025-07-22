@@ -429,12 +429,12 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                             ]
                         ]) ?>
 
-                        <?= $form->field($model, 'customer_id')->widget(Select2::className(),[
-                                'data' => ArrayHelper::map(\backend\models\Customer::find()->all(), 'id', 'name'),
+                        <?= $form->field($model, 'customer_id')->widget(Select2::className(), [
+                            'data' => ArrayHelper::map(\backend\models\Customer::find()->all(), 'id', 'name'),
                             'options' => ['placeholder' => 'เลือกลูกค้า'],
                             'pluginOptions' => [
-                                    'allowClear' => true
-                                ]
+                                'allowClear' => true
+                            ]
                         ]) ?>
 
                         <?= $form->field($model, 'status')->dropDownList([
@@ -587,7 +587,6 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                 </div>
 
 
-
                 <?php DynamicFormWidget::end(); ?>
             </div>
         </div>
@@ -615,14 +614,16 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
             </div>
         </div>
 
-        <div class="form-group mt-3">
-            <div class="d-flex justify-content-between">
-                <?= Html::submitButton($model->isNewRecord ? 'สร้างใบเสนอราคา' : 'บันทึกการแก้ไข', [
-                    'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
-                ]) ?>
-                <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
+        <?php if ($model->isNewRecord || $model->status == Quotation::STATUS_DRAFT): ?>
+            <div class="form-group mt-3">
+                <div class="d-flex justify-content-between">
+                    <?= Html::submitButton($model->isNewRecord ? 'สร้างใบเสนอราคา' : 'บันทึกการแก้ไข', [
+                        'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
+                    ]) ?>
+                    <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
+                </div>
             </div>
-        </div>
+        <?php endif; ?>
 
         <?php ActiveForm::end(); ?>
 

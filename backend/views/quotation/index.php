@@ -129,6 +129,13 @@ $this->params['breadcrumbs'][] = $this->title;
                 },
                 'format' => 'raw',
             ],
+//            [
+//                    'attribute' => 'job_no',
+//                    'label' => 'เลขที่ใบงาน',
+//                    'value' => function ($model) {
+//                        return $model->job->job_no ?: '';
+//                    }
+//                ],
             [
                 'class' => ActionColumn::class,
                 'header' => 'ตัวเลือก',
@@ -159,13 +166,13 @@ $this->params['breadcrumbs'][] = $this->title;
                         ]);
                     },
                     'delete' => function ($url, $model, $key) {
-                        return Html::a('<i class="fas fa-trash"></i>', $url, [
+                        return $model->approve_status == Quotation::APPROVE_STATUS_PENDING ? Html::a('<i class="fas fa-trash"></i>', $url, [
                             'title' => 'ลบ',
                             'class' => 'btn btn-sm btn-outline-danger',
                             'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะลบรายการนี้?',
                             'data-method' => 'post',
                             'data-pjax' => '0'
-                        ]);
+                        ]):null;
                     },
                 ],
                 'urlCreator' => function ($action, $model, $key, $index) {

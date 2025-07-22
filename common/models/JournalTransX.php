@@ -83,11 +83,11 @@ class JournalTransX extends ActiveRecord
         return [
             [['trans_date', 'trans_type_id', 'stock_type_id'], 'required'],
             [['trans_date', 'created_at', 'updated_at'], 'safe'],
-            [['trans_type_id', 'stock_type_id', 'customer_id', 'party_id', 'party_type_id', 'warehouse_id','return_for_trans_id'], 'integer'],
+            [['trans_type_id', 'stock_type_id', 'customer_id', 'party_id', 'party_type_id', 'warehouse_id','return_for_trans_id','status'], 'integer'],
             [['qty'], 'number'],
             [['remark'], 'string'],
-            [['journal_no', 'customer_name', 'status', 'created_by', 'updated_by', 'trans_ref_id'], 'string', 'max' => 255],
-            [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_CANCELLED]],
+            [['journal_no', 'customer_name', 'created_by', 'updated_by', 'trans_ref_id'], 'string', 'max' => 255],
+          //  [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_CANCELLED]],
         ];
     }
 

@@ -75,7 +75,35 @@ class JobController extends Controller
         $model = new Job();
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
+            if ($model->load($this->request->post())) {
+
+                $jdate = date('Y-m-d H:i:s');
+                $xp = explode("/", $model->job_date);
+                if($xp != null){
+                    if(count($xp) > 1){
+                        $jdate = $xp[0] . '/'. $xp[1].'/'.$xp[2];
+                    }
+                }
+                $sdate = date('Y-m-d H:i:s');
+                $xp2 = explode("/", $model->start_date);
+                if($xp2 != null){
+                    if(count($xp2) > 1){
+                        $sdate = $xp2[0] . '/'. $xp2[1].'/'.$xp2[2];
+                    }
+                }
+                $ndate = date('Y-m-d H:i:s');
+                $xp3 = explode("/", $model->end_date);
+                if($xp3 != null){
+                    if(count($xp3) > 1){
+                        $ndate = $xp3[0] . '/'. $xp3[1].'/'.$xp3[2];
+                    }
+                }
+
+
+                $model->job_date = date('Y-m-d',strtotime($jdate));
+                $model->start_date = date('Y-m-d',strtotime($sdate));
+                $model->end_date = date('Y-m-d',strtotime($ndate));
+                $model->save();
                 return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
@@ -98,8 +126,38 @@ class JobController extends Controller
     {
         $model = $this->findModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $jdate = date('Y-m-d H:i:s');
+            $xp = explode("/", $model->job_date);
+            if($xp != null){
+                if(count($xp) > 1){
+                    $jdate = $xp[2] . '/'. $xp[0].'/'.$xp[1];
+                }
+            }
+            $sdate = date('Y-m-d H:i:s');
+            $xp2 = explode("/", $model->start_date);
+            if($xp2 != null){
+                if(count($xp2) > 1){
+                    $sdate = $xp2[2] . '/'. $xp2[0].'/'.$xp2[1];
+                }
+            }
+            $ndate = date('Y-m-d H:i:s');
+            $xp3 = explode("/", $model->end_date);
+            if($xp3 != null){
+                if(count($xp3) > 1){
+                    $ndate = $xp3[2] . '/'. $xp3[0].'/'.$xp3[1];
+                }
+            }
+
+            //echo $ndate;return;
+            $model->job_date = date('Y-m-d',strtotime($jdate));
+            $model->start_date = date('Y-m-d',strtotime($sdate));
+            $model->end_date = date('Y-m-d',strtotime($ndate));
+
+            if($model->save()){
+                return $this->redirect(['view', 'id' => $model->id]);
+            }
+
         }
 
         return $this->render('update', [

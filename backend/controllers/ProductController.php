@@ -806,4 +806,24 @@ class ProductController extends Controller
 
         return ['success' => false, 'message' => 'No IDs received'];
     }
+
+    // In your controller
+    public function actionPrintRepair($id = null)
+    {
+      //  $this->layout = 'print'; // Use minimal print layout
+        return $this->render('_printrepair');
+    }
+
+    public function actionPrintTag()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $ids = \Yii::$app->request->post('ids');
+        if (!empty($ids)) {
+             $sql = "SELECT p.id, p.code, p.name,p.description,b.name as brand_name,sum(s.qty) as stock_qty FROM product as p INNER JOIN product_brand as b ON p.brand_id = b.id LEFT JOIN stock_sum as s ON p.id = s.product_id WHERE p.id IN (".$ids.") ORDER BY p.code";
+             $products = \Yii::$app->db->createCommand($sql)->queryAll();
+             $this->render('_print-tag', ['selectedProducts' => $products]);
+        }
+
+    }
 }

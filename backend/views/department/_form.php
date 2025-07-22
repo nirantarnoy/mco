@@ -17,9 +17,9 @@ use yii\widgets\ActiveForm;
 
         </div>
         <div class="col-lg-10">
-            <?= $form->field($model, 'code')->textInput(['maxlength' => true]) ?>
 
             <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
+            <?= $form->field($model, 'description')->textInput(['maxlength' => true]) ?>
             <label for=""><?= $model->getAttributeLabel('status') ?></label>
             <?php echo $form->field($model, 'status')->widget(\toxor88\switchery\Switchery::className(), ['options' => ['label' => '', 'class' => 'form-control']])->label(false) ?>
 

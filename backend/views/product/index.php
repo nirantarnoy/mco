@@ -56,7 +56,12 @@ $this->params['breadcrumbs'][] = $this->title;
                 'id' => 'bulk-delete-btn',
                 'data-url' => Url::to(['bulk-delete']),
             ]); ?>
-
+            <?= Html::submitButton('Add To Print Tag', [
+                'class' => 'btn btn-primary',
+                'id' => 'print-tag-btn',
+                'style' => 'display: none;',
+                'data-url' => Url::to(['print-tag']),
+            ]) ?>
         </div>
 
 
@@ -282,6 +287,10 @@ $this->params['breadcrumbs'][] = $this->title;
             <button class="btn btn-success">Import</button>
         </form>
     </div>
+
+    <form id="form-print-tag" action="<?=Url::to(['product/print-tag'], true)?>" method="post">
+        <input type="hidden" name="ids" id="print-product-tag-id" value="">
+    </form>
 <?php
 $this->registerJs(<<<JS
 
@@ -290,9 +299,13 @@ function toggleDeleteButton() {
     if (selected.length > 0) {
         $('#div-delete-btn').show();
         $("#bulk-delete-btn").text("ลบ " + selected.length + " รายการ");
+        
+       //   $('#print-tag-btn').show();
     } else {
         $('#div-delete-btn').hide();
         $("#bulk-delete-btn").text("ลบ");
+        
+       //  $('#print-tag-btn').hide();
     }
 }
 
@@ -339,6 +352,24 @@ $('#bulk-delete-btn').on('click', function() {
         });
     }
 });
+
+$('#print-tag-btn').on('click', function() {
+    var keys = $('#product-grid').yiiGridView('getSelectedRows');
+    if (keys.length === 0) {
+        alert('กรุณาเลือกรายการที่ต้องการปริ้น');
+        return;
+    }
+    
+    $("#print-product-tag-id").val(keys);
+    $("#form-print-tag").attr("url", $(this).data('url'));
+    $("#form-print-tag").submit();
+    // //if (confirm('คุณแน่ใจว่าต้องการลบรายการที่เลือก?')) {
+    //     $.post($(this).data('url'), {ids: keys}, function(response) {
+    //         $.pjax.reload({container: '#p0'}); // แก้ให้ตรง container ID ของคุณ
+    //     });
+    // //}
+});
+
 
 JS
 );

@@ -34,6 +34,7 @@ class Purch extends ActiveRecord
     const STATUS_DRAFT = 0;
     const STATUS_ACTIVE = 1;
     const STATUS_CANCELLED = 2;
+    const STATUS_COMPLETED = 3;
 
     const APPROVE_STATUS_PENDING = 0;
     const APPROVE_STATUS_APPROVED = 1;
@@ -58,7 +59,35 @@ class Purch extends ActiveRecord
     public function behaviors()
     {
         return [
-            TimestampBehavior::class,
+            'timestampcdate'=>[
+                'class'=> \yii\behaviors\AttributeBehavior::className(),
+                'attributes'=>[
+                    ActiveRecord::EVENT_BEFORE_INSERT=>'created_at',
+                ],
+                'value'=> time(),
+            ],
+            'timestampudate'=>[
+                'class'=> \yii\behaviors\AttributeBehavior::className(),
+                'attributes'=>[
+                    ActiveRecord::EVENT_BEFORE_INSERT=>'updated_at',
+                ],
+                'value'=> time(),
+            ],
+            'timestampcby'=>[
+                'class'=> \yii\behaviors\AttributeBehavior::className(),
+                'attributes'=>[
+                    ActiveRecord::EVENT_BEFORE_INSERT=>'created_by',
+                ],
+                'value'=> Yii::$app->user->id,
+            ],
+            'timestamuby'=>[
+                'class'=> \yii\behaviors\AttributeBehavior::className(),
+                'attributes'=>[
+                    ActiveRecord::EVENT_BEFORE_UPDATE=>'updated_by',
+                ],
+                'value'=> Yii::$app->user->id,
+            ],
+
         ];
     }
 
@@ -68,6 +97,7 @@ class Purch extends ActiveRecord
     public function rules()
     {
         return [
+            [['purch_req_id','customer_id'], 'required'],
             [['purch_date'], 'safe'],
             [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by','discount_percent','vat_percent'], 'integer'],
             [['total_amount', 'discount_amount', 'vat_amount', 'net_amount'], 'number'],
@@ -214,5 +244,91 @@ class Purch extends ActiveRecord
     public function getRelatedPurchReqs()
     {
         return $this->getPurchReqs()->all();
+    }
+    public static function checkPoremain($purchId)
+    {
+        $sql = "
+            SELECT 
+                pl.*,
+                COALESCE(received.total_received, 0) as total_received,
+                (pl.qty - COALESCE(received.total_received, 0)) as remaining_qty
+            FROM purch_line pl
+            LEFT JOIN (
+                SELECT 
+                    product_id,
+                    SUM(jtl.qty) as total_received
+                FROM journal_trans_line jtl
+                INNER JOIN journal_trans jt ON jtl.journal_trans_id = jt.id
+                WHERE jt.trans_ref_id = :purchId 
+                AND jt.trans_type_id = :transType 
+                AND jt.po_rec_status = :status
+                GROUP BY product_id
+            ) received ON pl.product_id = received.product_id
+            WHERE pl.purch_id = :purchId 
+            AND pl.status = :lineStatus
+            AND (pl.qty - COALESCE(received.total_received, 0)) > 0
+        ";
+
+        return \Yii::$app->db->createCommand($sql, [
+            ':purchId' => $purchId,
+            ':transType' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE,
+            ':status' => 1,
+            ':lineStatus' => \backend\models\PurchLine::STATUS_ACTIVE,
+        ])->queryAll();
+    }
+
+    public static function findVendorName($vendor_id){
+        $name = '';
+        $model = \backend\models\Vendor::findOne($vendor_id);
+        if($model){
+            $name = $model->name;
+        }
+        return $name;
+    }
+    public static function findVendorTaxID($vendor_id){
+        $name = '';
+        $model = \backend\models\Vendor::findOne($vendor_id);
+        if($model){
+            $name = $model->taxid;
+        }
+        return $name;
+    }
+    public static function findVendorAddress($vendor_id){
+//        $address = '';
+//        $model_address = \backend\models\AddressInfo::find()->where(['party_id'=>$vendor_id,'party_type_id'=>2])->one();
+//        if($model_address){
+//            $address = $model_address->address.' '.$model_address->street;
+//            $model_district = \common\models\District::find()->where(['DISTRICT_ID'=>$model_address->district_id])->one();
+//            if($model_district){
+//                $address = $address.' '.$model_district->DISTRICT_NAME;
+//            }
+//            $model_city = \common\models\Amphur::find()->where(['AMPHUR_ID'=>$model_address->city_id])->one();
+//            if($model_city){
+//                $address = $address.' '.$model_city->CITY_NAME;
+//            }
+//            $model_province = \common\models\Province::find()->where(['PROVINCE_ID'=>$model_address->province_id])->one();
+//            if($model_province){
+//                $address = $address.' '.$model_province->PROVINCE_NAME;
+//            }
+//            $address = $address.' '.$model_address->zipcode;
+//
+//        }
+//        return $address;
+
+        $address = '';
+        $model = \backend\models\Vendor::findOne($vendor_id);
+        if($model){
+            $address = $model->home_number.' '.$model->street.' '.$model->district_name.' '.$model->city_name.' '.$model->province_name.' '.$model->zipcode;
+        }
+        return $address;
+    }
+
+    public static function findNo($id){
+        $no = '';
+        $model = \backend\models\Purch::findOne($id);
+        if($model){
+            $no = $model->purch_no;
+        }
+        return $no;
     }
 }

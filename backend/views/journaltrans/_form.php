@@ -492,7 +492,7 @@ $(document).ready(function() {
         var transType = parseInt($(this).val());
         var returnForSelect = $('#return-for-trans-select');
         
-        if (transType === 4 || transType === 5) {
+        if (transType === 4 || transType === 6) {
             returnForSelect.prop('disabled', false);
             $('.return-fields').addClass('show');
         } else {
@@ -523,7 +523,7 @@ $(document).ready(function() {
         
         // แสดง/ซ่อนปุ่มสภาพสินค้า
         var conditionBtn = $('.condition-btn[data-index="' + index + '"]');
-        if (inputQty > 0 && ($('#trans-type-select').val() == '4')) { // Return Borrow
+        if (inputQty > 0 && ($('#trans-type-select').val() == '4') || ($('#trans-type-select').val() == '6')) { // Return Borrow
           //  conditionBtn.show();
         } else {
             conditionBtn.hide();
@@ -538,7 +538,7 @@ $(document).ready(function() {
     
     // Initial setup
     var currentTransType = $('#trans-type-select').val();
-    if (currentTransType == '4' || currentTransType == '5') {
+    if (currentTransType == '4' || currentTransType == '6') {
         $('#return-for-trans-select').prop('disabled', false);
         $('.return-fields').addClass('show');
     }
@@ -934,3 +934,11 @@ Modal::begin([
     </div>
 
 <?php Modal::end(); ?>
+
+        <?php
+        $this->registerJs("
+    setTimeout(function() {
+        $('.alert').fadeOut('slow');
+    }, 5000);
+");
+        ?>

@@ -89,4 +89,116 @@ class Job extends \common\models\Job
         ];
         return $badges[$status] ?? '<span class="badge badge-secondary">ไม่ระบุ</span>';
     }
+
+    /**
+     * ความสัมพันธ์กับ JournalTrans
+     */
+    public function getJournalTrans()
+    {
+        return $this->hasMany(JournalTrans::class, ['job_id' => 'id']);
+    }
+
+    /**
+     * ความสัมพันธ์กับ JournalTransLine ผ่าน JournalTrans
+     */
+    public function getJournalTransLines()
+    {
+        return $this->hasMany(JournalTransLine::class, ['journal_trans_id' => 'id'])
+            ->via('journalTrans');
+    }
+
+    /**
+     * คำนวณยอดรวมการเบิกของทั้งหมดของใบงาน
+     */
+    public function getTotalWithdrawAmount()
+    {
+        $total = 0;
+
+        foreach ($this->journalTrans as $trans) {
+            foreach ($trans->journalTransLines as $line) {
+                // คำนวณจากราคาขาย (sale_price) คูณกับจำนวน (qty)
+                $lineTotal = $line->sale_price * $line->qty;
+                $total += $lineTotal;
+            }
+        }
+
+        return $total;
+    }
+
+    /**
+     * คำนวณกำไร/ขาดทุน
+     */
+    public function getProfitLoss()
+    {
+        return $this->job_amount - $this->getTotalWithdrawAmount();
+    }
+
+    /**
+     * คำนวณเปอร์เซ็นต์กำไร/ขาดทุน
+     */
+    public function getProfitLossPercentage()
+    {
+        if ($this->job_amount <= 0) {
+            return 0;
+        }
+
+        return ($this->getProfitLoss() / $this->job_amount) * 100;
+    }
+
+    /**
+     * สถานะของงาน
+     */
+    public static function getStatusOptions()
+    {
+        return [
+            '0' => 'รอดำเนินการ',
+            '1' => 'กำลังดำเนินการ',
+            '2' => 'เสร็จสิ้น',
+            '3' => 'ยกเลิก',
+        ];
+    }
+
+    /**
+     * ข้อความสถานะ
+     */
+    public function getStatusText()
+    {
+        $options = self::getStatusOptions();
+        return isset($options[$this->status]) ? $options[$this->status] : $this->status;
+    }
+
+    /**
+     * สีแสดงสถานะ
+     */
+    public function getStatusColor()
+    {
+        switch ($this->status) {
+            case 'pending':
+                return 'warning';
+            case 'in_progress':
+                return 'info';
+            case 'completed':
+                return 'success';
+            case 'cancelled':
+                return 'danger';
+            default:
+                return 'secondary';
+        }
+    }
+
+    /**
+     * สีแสดงกำไร/ขาดทุน
+     */
+    public function getProfitLossColor()
+    {
+        $profitLoss = $this->getProfitLoss();
+
+        if ($profitLoss > 0) {
+            return 'success'; // กำไร - สีเขียว
+        } elseif ($profitLoss < 0) {
+            return 'danger';  // ขาดทุน - สีแดง
+        } else {
+            return 'secondary'; // เท่ากัน - สีเทา
+        }
+    }
 }

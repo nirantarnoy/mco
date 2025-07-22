@@ -39,7 +39,7 @@ class Job extends \yii\db\ActiveRecord
             [['job_no'],'required'],
             [['job_no', 'quotation_id', 'job_date', 'status', 'job_amount', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'default', 'value' => null],
             [['quotation_id', 'status', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
-            [['job_date'], 'safe'],
+            [['job_date','start_date','end_date'], 'safe'],
             [['job_amount'], 'number'],
             [['job_no'], 'string', 'max' => 255],
         ];
@@ -57,6 +57,8 @@ class Job extends \yii\db\ActiveRecord
             'job_date' => 'วันที่',
             'status' => 'สถานะ',
             'job_amount' => 'มูลค่างาน',
+            'start_date' => 'วันที่เริ่มงาน',
+            'end_date' => 'วันที่สิ้นสุดงาน',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
             'updated_at' => 'Updated At',

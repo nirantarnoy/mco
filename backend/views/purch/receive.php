@@ -77,11 +77,11 @@ $(document).ready(function() {
                 </div>
                 <div class="col-md-3">
                     <strong>วันที่:</strong><br>
-                    <?= date('d/m/Y', strtotime($purchModel->purch_date)) ?>
+                    <?= date('m/d/Y', strtotime($purchModel->purch_date)) ?>
                 </div>
                 <div class="col-md-3">
                     <strong>ผู้ขาย:</strong><br>
-                    <?= Html::encode($purchModel->vendor_name) ?>
+                    <?= Html::encode(\backend\models\Vendor::findName($purchModel->vendor_id)) ?>
                 </div>
                 <div class="col-md-3">
                     <strong>ยอดรวม:</strong><br>
@@ -104,21 +104,21 @@ $(document).ready(function() {
         <div class="card-body">
             <!-- Warehouse Selection -->
             <div class="row mb-4">
-                <div class="col-md-6">
-                    <label class="form-label"><strong>เลือกคลังสินค้า *</strong></label>
-                    <?= Select2::widget([
-                        'name' => 'warehouse_id',
-                        'data' => $warehouses,
-                        'options' => [
-                            'placeholder' => 'เลือกคลังสินค้า...',
-                            'required' => true,
-                        ],
-                        'pluginOptions' => [
-                            'allowClear' => false,
-                            'width' => '100%',
-                        ],
-                    ]) ?>
-                </div>
+<!--                <div class="col-md-6">-->
+<!--                    <label class="form-label"><strong>เลือกคลังสินค้า *</strong></label>-->
+<!--                    --><?php //= Select2::widget([
+//                        'name' => 'warehouse_id',
+//                        'data' => $warehouses,
+//                        'options' => [
+//                            'placeholder' => 'เลือกคลังสินค้า...',
+//                            'required' => true,
+//                        ],
+//                        'pluginOptions' => [
+//                            'allowClear' => false,
+//                            'width' => '100%',
+//                        ],
+//                    ]) ?>
+<!--                </div>-->
                 <div class="col-md-6">
                     <label class="form-label"><strong>หมายเหตุ</strong></label>
                     <?= Html::textArea('remark', '', [
@@ -174,13 +174,14 @@ $(document).ready(function() {
                                     'max' => $line['remaining_qty'],
                                     'placeholder' => '0',
                                     'id' => 'receive-' . $line['product_id'],
+                                    'required' => true,
                                 ]) ?>
                             </td>
                             <td class="text-center">
                                 <?= Html::encode($line['unit'] ?? 'ชิ้น') ?>
                             </td>
                             <td>
-                                <select name="line_warehouse_id[]" class="form-control line-warehouse-select" id="">
+                                <select name="line_warehouse_id[]" class="form-control line-warehouse-select" id="" required>
                                     <option value="">เลือกคลังสินค้า...</option>
                                     <?php foreach ($warehouse_data as $value): ?>
                                         <option value="<?= $value->id ?>"><?= $value->name ?></option>

@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = 'ประวัติการรับสิ�
                 </div>
                 <div class="col-md-3">
                     <strong>วันที่:</strong><br>
-                    <?= date('d/m/Y', strtotime($purchModel->purch_date)) ?>
+                    <?= date('m/d/Y', strtotime($purchModel->purch_date)) ?>
                 </div>
                 <div class="col-md-3">
                     <strong>ผู้ขาย:</strong><br>
@@ -65,7 +65,7 @@ $this->params['breadcrumbs'][] = 'ประวัติการรับสิ�
                             เลขที่เอกสาร: <strong><?= Html::encode($receive->journal_no) ?></strong>
                         </h6>
                         <small class="text-muted">
-                            วันที่รับสินค้า: <?= date('d/m/Y H:i', strtotime($receive->trans_date)) ?>
+                            วันที่รับสินค้า: <?= date('m/d/Y H:i', strtotime($receive->trans_date)) ?>
                         </small>
                     </div>
                     <div>

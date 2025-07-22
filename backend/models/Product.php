@@ -72,7 +72,7 @@ class Product extends \common\models\Product
             ->where(['id' => $id])
             ->one();
 
-        return $model != null ? $model->name : '';
+        return $model != null ? $model->code.' - '.$model->name : '';
     }
 
     public static function findWarehouseOnhand($id)
@@ -142,6 +142,44 @@ class Product extends \common\models\Product
     public function isLowStock()
     {
         return $this->stock_qty <= $this->minimum_stock;
+    }
+    public static function findProductName($id){
+        $model = Product::find()->where(['id' => $id])->one();
+        if($model){
+            return $model->code.' - '.$model->name;
+        }else{
+            return '';
+        }
+    }
+
+    public static function findDescription($id){
+        $name = '';
+        $model = \backend\models\Product::find()->where(['id' => $id])->one();
+        if($model){
+            $name = $model->name;
+        }
+        return $name;
+    }
+
+    public static function findCode($id){
+        $name = '';
+        $model = \backend\models\Product::find()->where(['id' => $id])->one();
+        if($model){
+            $name = $model->code;
+        }
+        return $name;
+    }
+
+    public static function findBrand($id){
+        $name = '';
+        $model = \backend\models\Product::find()->where(['id' => $id])->one();
+        if($model){
+            $model_brand = \backend\models\Productbrand::find()->where(['id' => $model->brand_id])->one();
+            if($model_brand){
+                $name = $model_brand->name;
+            }
+        }
+        return $name;
     }
 
 }

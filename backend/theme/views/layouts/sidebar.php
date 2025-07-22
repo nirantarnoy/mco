@@ -253,6 +253,55 @@
                                     </a>
                                 </li>
                             <?php endif; ?>
+
+                        </ul>
+                    </li>
+                <?php endif;?>
+                <?php if(\Yii::$app->user->can('purch/index')):?>
+                    <li class="nav-item has-treeview has-sub">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-archive"></i>
+                            <p>
+                                Aricat Thai
+                                <i class="fas fa-angle-left right"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <?php //if (\Yii::$app->user->can('purchreq/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=agency/index" class="nav-link agency">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>หน่วยงาน</p>
+                                    </a>
+                                </li>
+                            <?php //endif; ?>
+                            <?php //if (\Yii::$app->user->can('purchreq/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=employer/index" class="nav-link employer">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>นายจ้าง</p>
+                                    </a>
+                                </li>
+                            <?php //endif; ?>
+                            <?php //if (\Yii::$app->user->can('purch/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=worker/index" class="nav-link worker">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>ลูกจ้าง</p>
+                                    </a>
+                                </li>
+                            <?php //endif; ?>
+                            <!--                            --><?php //if (\Yii::$app->user->can('stocktrans/index')): ?>
+                            <!--                                <li class="nav-item">-->
+                            <!--                                    <a href="index.php?r=stocktrans" class="nav-link stocktrans">-->
+                            <!--                                        <i class="far fa-circlez nav-icon"></i>-->
+                            <!--                                        <p>-->
+                            <!--                                            ประวัติทำรายการ-->
+                            <!--                                          -->
+                            <!--                                        </p>-->
+                            <!--                                    </a>-->
+                            <!--                                </li>-->
+                            <!--                            --><?php //endif;?>
                         </ul>
                     </li>
                 <?php endif;?>
@@ -266,11 +315,11 @@
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
-                            <?php if (\Yii::$app->user->can('salereport/crosstab')): ?>
+                            <?php if (\Yii::$app->user->can('job/index')): ?>
                                 <li class="nav-item">
-                                    <a href="index.php?r=salereport/crosstab" class="nav-link salereport">
+                                    <a href="index.php?r=job-report/index" class="nav-link job-report">
                                         <i class="far fa-circlez nav-icon"></i>
-                                        <p>รายงานยอดขาย</p>
+                                        <p>สถานะใบงานรวม</p>
                                     </a>
                                 </li>
                             <?php endif; ?>

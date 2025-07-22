@@ -858,4 +858,25 @@ class JournaltransController extends Controller
             'lines' => $lines,
         ]);
     }
+    public function actionPrint($id){
+        if($id){
+            $model = JournalTrans::findOne($id);
+            $model_line = JournalTransLine::find()->where(['journal_trans_id'=>$id])->all();
+            return $this->render('_printissue',[
+                'model' => $model,
+                'model_line' => $model_line
+            ]);
+        }
+    }
+    // In your controller
+    public function actionPrintIssue($id = null)
+    {
+        //$this->layout = 'print'; // Use minimal print layout
+        return $this->render('_printissue');
+    }
+    public function actionPrintPickupOut($id = null)
+    {
+      //  $this->layout = 'print'; // Use minimal print layout
+        return $this->render('_printpickupout');
+    }
 }

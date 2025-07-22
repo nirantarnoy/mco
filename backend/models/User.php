@@ -196,4 +196,17 @@ class User extends \common\models\User
         }
         return $res;
     }
+
+    public static function findEmployeeNameByUserId($id){
+        $emp_name = '';
+        $model = User::find()->where(['id' => $id])->one();
+        if($model){
+            $emp_id = $model->emp_ref_id;
+            $emp = Employee::find()->where(['id' => $emp_id])->one();
+            if($emp){
+                $emp_name = $emp->fname.' '.$emp->lname;
+            }
+        }
+        return $emp_name;
+    }
 }

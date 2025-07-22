@@ -1,6 +1,7 @@
 <?php
 namespace backend\controllers;
 
+use backend\models\JournalTrans;
 use Mpdf\Mpdf;
 use Yii;
 use backend\models\Purch;
@@ -17,6 +18,7 @@ use yii\db\Transaction;
  */
 class PurchController extends Controller
 {
+    public $enableCsrfValidation = false;
     /**
      * {@inheritdoc}
      */
@@ -388,7 +390,7 @@ class PurchController extends Controller
                 INNER JOIN journal_trans jt ON jtl.journal_trans_id = jt.id
                 WHERE jt.trans_ref_id = :purchId 
                 AND jt.trans_type_id = :transType 
-                AND jt.status = :status
+                AND jt.po_rec_status = :status
                 GROUP BY product_id
             ) received ON pl.product_id = received.product_id
             WHERE pl.purch_id = :purchId 
@@ -411,6 +413,8 @@ class PurchController extends Controller
             $validItems = [];
             $totalQty = 0;
 
+
+
             foreach ($receiveData as $productId => $qty) {
                 $qty = floatval($qty);
                 if ($qty > 0) {
@@ -431,9 +435,11 @@ class PurchController extends Controller
             $journalTrans->trans_ref_id = $purchModel->id;
             $journalTrans->warehouse_id = 0;//$line_warehouse_id;
             $journalTrans->customer_name = $purchModel->vendor_name;
+            $journalTrans->status = 0;
+            $journalTrans->po_rec_status = 1;
             $journalTrans->qty = $totalQty;
             $journalTrans->remark = $remark;
-            $journalTrans->status = 1;
+
 
             if (!$journalTrans->save()) {
                 throw new \Exception('ไม่สามารถสร้าง Journal Transaction ได้: ' . implode(', ', $journalTrans->getFirstErrors()));
@@ -444,6 +450,7 @@ class PurchController extends Controller
             foreach ($validItems as $productId => $qty) {
                 $line_warehouse_id = $warehouseId[$loop_index];
                 $loop_index++;
+
 
                 // Get product and PO line info
                 $poLine = \backend\models\PurchLine::find()
@@ -645,6 +652,15 @@ class PurchController extends Controller
         ]);
     }
 
+    public function actionPrintReceiveBill($id)
+    {
+       $model = \backend\models\JournalTrans::findOne($id);
+        if (!$model) {
+            throw new \yii\web\NotFoundHttpException('The requested page does not exist.');
+
+        }
+    }
+
     /**
      * Generate PDF
      */
@@ -686,5 +702,155 @@ class PurchController extends Controller
         $mpdf->Output($filename, 'I'); // I = inline, D = download
 
         exit;
+    }
+    public function actionPrintreceipt($id = null)
+    {
+        //$this->layout = 'print'; // Use a minimal print layout
+        $model = \backend\models\Purch::findOne($id);
+        $model_line = \backend\models\PurchLine::find()->where(['purch_id' => $model->id])->all();
+        $this->layout = 'main_print';
+        return $this->render('_printreceipt',[
+            'model' => $model,
+            'model_line' => $model_line,
+        ]);
+    }
+    // In your controller
+    public function actionPrintTags()
+    {
+        $id = \Yii::$app->request->post('purch_id');
+        if($id){
+            $model = \backend\models\PurchLine::find()->where(['purch_id' => $id])->all();
+            $selectedProducts = [];
+
+            foreach ($model as $product) {
+               // if (in_array($product['id'], $selectedIds)) {
+                    $selectedProducts[] = $product;
+               // }
+            }
+
+            return $this->render('_print-tag', [
+                'selectedProducts' => $selectedProducts,
+            ]);
+        }
+    }
+
+    public function actionGenerateTags()
+    {
+//        $productData = Yii::$app->request->post('products');
+//        $printData = [];
+//
+//        if ($productData) {
+//            foreach ($productData as $data) {
+//                $product = json_decode($data['product'], true);
+//                $copies = (int)$data['copies'];
+//
+//                for ($i = 0; $i < $copies; $i++) {
+//                    $printData[] = $product;
+//                }
+//            }
+//        }
+
+        $printData = [];
+
+        $id = \Yii::$app->request->post('purch_id');
+        $line_ref_po = \Yii::$app->request->post('line_ref_po');
+        $line_description = \Yii::$app->request->post('line_description');
+        $line_model = \Yii::$app->request->post('line_model');
+        $line_brand = \Yii::$app->request->post('line_brand');
+        $line_quantity = \Yii::$app->request->post('line_quantity');
+        $line_copies = \Yii::$app->request->post('line_copies');
+        $productData = [];
+        for ($i = 0; $i < count($line_ref_po); $i++) {
+            for ($j = 0; $j < $line_copies[$i]; $j++) {
+                $productData[] = [
+                    'ref_po' => $line_ref_po[$i],
+                    'description' => $line_description[$i],
+                    'model' => $line_model[$i],
+                    'brand' => $line_brand[$i],
+                    'quantity' => $line_quantity[$i],
+                    'copies' => $line_copies[$i],
+                ];
+
+                $printData = $productData;
+            }
+//            $productData[] = [
+//                'ref_po' => $line_ref_po[$i],
+//                'description' => $line_description[$i],
+//                'model' => $line_model[$i],
+//                'brand' => $line_brand[$i],
+//                'quantity' => $line_quantity[$i],
+//                'copies' => $line_copies[$i],
+//            ];
+//            $printData = $productData;
+        }
+
+      // print_r($printData);return;
+
+        $format = Yii::$app->request->get('format', 'html');
+
+        if ($format === 'pdf') {
+            $content = $this->renderPartial('_print-preview', ['printData' => $printData]);
+
+            $pdf = new \kartik\mpdf\Pdf([
+                'mode' => \kartik\mpdf\Pdf::MODE_UTF8,
+                'format' => \kartik\mpdf\Pdf::FORMAT_A4,
+                'orientation' => \kartik\mpdf\Pdf::ORIENT_PORTRAIT,
+                'destination' => \kartik\mpdf\Pdf::DEST_BROWSER,
+                'content' => $content,
+                'cssFile' => '@frontend/web/css/print-tag.css',
+                'options' => ['title' => 'Product Tags'],
+                'methods' => [
+                    'SetHeader' => ['Product Tags'],
+                    'SetFooter' => ['{PAGENO}'],
+                ]
+            ]);
+
+            return $pdf->render();
+        } elseif ($format === 'excel') {
+            return $this->exportExcel($printData);
+        } else {
+            return $this->renderPartial('_print-preview', ['printData' => $printData]);
+        }
+    }
+    public function actionPrintDeliveryNote($id = null)
+    {
+        $this->layout = 'main_print'; // Use minimal print layout
+        return $this->render('_printdeliverynote');
+    }
+
+
+    private function exportExcel($printData)
+    {
+        $objPHPExcel = new \PHPExcel();
+        $sheet = $objPHPExcel->getActiveSheet();
+
+        $row = 1;
+        $col = 0;
+
+        foreach ($printData as $index => $product) {
+            if ($col >= 3) {
+                $col = 0;
+                $row += 5;
+            }
+
+            $startCol = $col * 3;
+
+            $sheet->setCellValueByColumnAndRow($startCol, $row, 'Ref.Po: ' . $product['ref_po']);
+            $sheet->setCellValueByColumnAndRow($startCol, $row + 1, 'Descrip: ' . $product['description']);
+            $sheet->setCellValueByColumnAndRow($startCol, $row + 2, 'Model: ' . $product['model']);
+            $sheet->setCellValueByColumnAndRow($startCol, $row + 3, 'Brand: ' . $product['brand']);
+            $sheet->setCellValueByColumnAndRow($startCol, $row + 4, 'Q\'ty: ' . $product['quantity']);
+
+            $col++;
+        }
+
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment;filename="product_tags.xls"');
+        header('Cache-Control: max-age=0');
+
+        $objWriter = \PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel5');
+        $objWriter->save('php://output');
+
+        Yii::$app->end();
     }
 }

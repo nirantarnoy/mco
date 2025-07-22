@@ -5,28 +5,27 @@ namespace common\models;
 use Yii;
 
 /**
- * This is the model class for table "employee".
+ * This is the model class for table "department".
  *
  * @property int $id
- * @property string|null $emp_code
- * @property string|null $fname
- * @property string|null $lname
- * @property int|null $position_id
+ * @property string|null $name
  * @property string|null $description
  * @property int|null $status
  * @property int|null $created_at
- * @property int|null $created_by
+ * @property int|null $create_by
  * @property int|null $updated_at
  * @property int|null $updated_by
  */
-class Employee extends \yii\db\ActiveRecord
+class Department extends \yii\db\ActiveRecord
 {
+
+
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return 'employee';
+        return 'department';
     }
 
     /**
@@ -35,8 +34,10 @@ class Employee extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['position_id', 'status', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
-            [['emp_code', 'fname', 'lname', 'description'], 'string', 'max' => 255],
+            [['name'],'required'],
+            [['name', 'description', 'status', 'created_at', 'create_by', 'updated_at', 'updated_by'], 'default', 'value' => null],
+            [['status', 'created_at', 'create_by', 'updated_at', 'updated_by',], 'integer'],
+            [['name', 'description'], 'string', 'max' => 255],
         ];
     }
 
@@ -47,16 +48,15 @@ class Employee extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'emp_code' => 'Emp Code',
-            'fname' => 'ชื่อ',
-            'lname' => 'นามสกุล',
-            'position_id' => 'ตำแหน่งงาน',
+            'name' => 'ชื่อ',
             'description' => 'รายละเอียด',
             'status' => 'สถานะ',
+          
             'created_at' => 'Created At',
-            'created_by' => 'Created By',
+            'create_by' => 'Create By',
             'updated_at' => 'Updated At',
             'updated_by' => 'Updated By',
         ];
     }
+
 }

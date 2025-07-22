@@ -38,6 +38,19 @@ $drivingcard_data = \backend\helpers\DrivingcardType::asArrayObject();
             </div>
             <div class="row">
                 <div class="col-lg-4">
+                    <?= $form->field($model, 'department_id')->widget(\kartik\select2\Select2::className(), [
+                        'data' => ArrayHelper::map(\backend\models\Department::find()->all(), 'id', 'name'),
+                        'options' => [
+                            'placeholder' => '-- เลือกแผนก --',
+                        ],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                        ],
+                    ]) ?>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-4">
                     <?= $form->field($model, 'position_id')->widget(\kartik\select2\Select2::className(), [
                         'data' => ArrayHelper::map(\backend\models\Position::find()->all(), 'id', 'name'),
                         'options' => [

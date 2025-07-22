@@ -18,7 +18,7 @@ class DepartmentSearch extends Department
     public function rules()
     {
         return [
-            [['id', 'status', 'company_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
+            [['id', 'status', 'created_at', 'create_by', 'updated_at', 'updated_by'], 'integer'],
             [['code', 'name'], 'safe'],
             [['globalSearch'],'string'],
         ];
@@ -62,15 +62,14 @@ class DepartmentSearch extends Department
         $query->andFilterWhere([
             'id' => $this->id,
             'status' => $this->status,
-            'company_id' => $this->company_id,
             'created_at' => $this->created_at,
-            'created_by' => $this->created_by,
+            'create_by' => $this->create_by,
             'updated_at' => $this->updated_at,
             'updated_by' => $this->updated_by,
         ]);
 
         if($this->globalSearch != ''){
-            $query->orFilterWhere(['like', 'code', $this->globalSearch])
+            $query->orFilterWhere(['like', 'description', $this->globalSearch])
                 ->orFilterWhere(['like', 'name', $this->globalSearch]);
         }
 

@@ -310,6 +310,7 @@ class QuotationController extends Controller
             $model_job->job_no = Job::generateJobNo();
             $model_job->job_date = date('Y-m-d');
             $model_job->status = Job::JOB_STATUS_OPEN;
+            $model_job->job_amount = $model->total_amount;
             $model_job->save(false);
 
             Yii::$app->session->setFlash('success', 'อนุมัติใบเสนอราคาเรียบร้อยแล้ว');
@@ -481,4 +482,6 @@ class QuotationController extends Controller
 
         exit;
     }
+
+
 }

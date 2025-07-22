@@ -40,7 +40,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
-       // 'filterModel' => $searchModel,
+       'filterModel' => $searchModel,
         'layout' => '{items}{pager}',
         'pjax' => true,
         'bordered' => true,
@@ -81,6 +81,21 @@ $this->params['breadcrumbs'][] = $this->title;
                 },
             ],
             [
+                'attribute' => 'purch_date',
+                'label' => 'วันที่',
+                'headerOptions' => ['style' => 'width: 120px;'],
+                'format' => ['date', 'php:m/d/Y'],
+                'filter' => kartik\date\DatePicker::widget([
+                    'model' => $searchModel,
+                    'attribute' => 'purch_date',
+                    'options' => ['placeholder' => 'เลือกวันที่'],
+                    'pluginOptions' => [
+                        'autoclose' => true,
+                        'format' => 'yyyy-mm-dd',
+                    ]
+                ]),
+            ],
+            [
                 'attribute' => 'vendor_id',
                 'label' => 'ผู้ขาย',
                 'headerOptions' => ['style' => 'width: 200px;'],
@@ -99,10 +114,13 @@ $this->params['breadcrumbs'][] = $this->title;
                     Purch::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
                 ],
                 'value' => function ($model) {
-                    if ($model->approve_status == Purch::APPROVE_STATUS_APPROVED) {
-                        return '<span class="badge bg-success">ใช้งาน</span>';
-                    } else {
+                    $po_remain = \backend\models\Purch::checkPoremain($model->id);
+                    if ($model->approve_status == Purch::APPROVE_STATUS_APPROVED && !empty($po_remain)) {
+                        return '<span class="badge bg-info">อนุมัติ</span>';
+                    } elseif($model->approve_status == Purch::APPROVE_STATUS_PENDING && !empty($po_remain)) {
                         return '<span class="badge bg-warning">รอพิจารณา</span>';
+                    } elseif(empty($po_remain)) {
+                        return '<span class="badge bg-success">สำเร็จ</span>';
                     }
                 },
                 'format' => 'raw',

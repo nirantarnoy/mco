@@ -36,7 +36,7 @@ class Employee extends \yii\db\ActiveRecord
     {
         return [
             [['fname', 'lname'], 'required'],
-            [['position_id', 'status', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
+            [['position_id', 'status', 'created_at', 'created_by', 'updated_at', 'updated_by','department_id'], 'integer'],
             [['emp_code', 'fname', 'lname', 'description'], 'string', 'max' => 255],
         ];
     }
@@ -53,6 +53,7 @@ class Employee extends \yii\db\ActiveRecord
             'lname' => 'นามสกุล',
             'position_id' => 'ตำแหน่งงาน',
             'description' => 'รายละเอียด',
+            'department_id' => 'แผนก',
             'status' => 'สถานะ',
             'created_at' => 'Created At',
             'created_by' => 'Created By',

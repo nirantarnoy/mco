@@ -6,6 +6,7 @@ use backend\models\PurchReq;
 use backend\models\PurchReqSearch;
 use backend\models\PurchReqLine;
 use backend\models\Product;
+use yii\db\Exception;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -277,15 +278,32 @@ class PurchreqController extends Controller
     {
         $model = $this->findModel($id);
         $model->approve_status = PurchReq::APPROVE_STATUS_APPROVED;
+        $model->approve_by = Yii::$app->user->id;
         $model->status = PurchReq::STATUS_ACTIVE;
+        $transaction = Yii::$app->db->beginTransaction();
+        try{
+            if ($model->save()) {
+                Yii::$app->session->setFlash('success', 'อนุมัติใบขอซื้อเรียบร้อยแล้ว'. implode(', ', array_map(function($e) {
+                        return implode(', ', $e);
+                    }, $model->getErrors())));
+                $transaction->commit();
+                return $this->redirect(['view', 'id' => $model->id]);
 
-        if ($model->save()) {
-            Yii::$app->session->setFlash('success', 'อนุมัติใบขอซื้อเรียบร้อยแล้ว');
-        } else {
-            Yii::$app->session->setFlash('error', 'ไม่สามารถอนุมัติใบขอซื้อได้');
+            } else {
+                Yii::$app->session->setFlash('error', 'ไม่สามารถอนุมัติใบขอซื้อได้: ' . implode(', ', array_map(function($e) {
+                        return implode(', ', $e);
+                    }, $model->getErrors())));
+                $transaction->rollBack();
+                return $this->redirect(['view', 'id' => $model->id]);
+            }
+
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            return $this->redirect(['view', 'id' => $model->id]);
         }
 
-        return $this->redirect(['view', 'id' => $model->id]);
+
     }
 
     /**
@@ -506,5 +524,17 @@ class PurchreqController extends Controller
         }
 
         return ['error' => 'Product not found'];
+    }
+    public function actionPrintPr($id = null)
+    {
+       // echo "ok";
+        //$this->layout = 'print'; // Use a minimal print layout
+        $model = \backend\models\PurchReq::find()->where(['id' => $id])->one();
+        $model_line = \backend\models\PurchReqLine::find()->where(['purch_req_id' => $model->id])->all();
+       // $this->layout = 'main_print';
+        return $this->render('_print',[
+            'model' => $model,
+            'model_line' => $model_line,
+        ]);
     }
 }

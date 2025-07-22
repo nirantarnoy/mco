@@ -21,6 +21,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="col-lg-10">
             <p>
                 <?= Html::a(Yii::t('app', '<i class="fa fa-plus"></i> สร้างใหม่'), ['create'], ['class' => 'btn btn-success']) ?>
+                <?= Html::a(Yii::t('app', '<i class="fa fa-chart-line"></i> รายงานตรวจสอบใบงาน'), ['job-report/index'], ['class' => 'btn btn-info']) ?>
             </p>
         </div>
         <div class="col-lg-2" style="text-align: right">
@@ -65,7 +66,37 @@ $this->params['breadcrumbs'][] = $this->title;
                     return $data->quotation->quotation_no;
                 }
             ],
-            'job_date',
+            [
+                'attribute' => 'job_date',
+                'value' => function ($data) {
+                    return date('m/d/Y', strtotime($data->job_date));
+                }
+            ],
+            [
+                'attribute' => 'start_date',
+                'value' => function ($data) {
+                     if($data->start_date != null){
+                         if(date('Y',strtotime($data->start_date)) != 1970){
+                             return date('m/d/Y', strtotime($data->start_date));
+                         }else{
+                             return '';
+                         }
+                     }
+
+                }
+            ],
+            [
+                'attribute' => 'end_date',
+                'value' => function ($data) {
+                    if($data->start_date != null){
+                        if(date('Y',strtotime($data->end_date)) != 1970){
+                            return date('m/d/Y', strtotime($data->end_date));
+                        }else{
+                            return '';
+                        }
+                    }
+                }
+            ],
             [
                 'attribute' => 'status',
                 'format' => 'raw',
@@ -90,6 +121,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         $options = [
                             'title' => Yii::t('yii', 'View'),
                             'aria-label' => Yii::t('yii', 'View'),
+                            'class' => 'btn btn-sm btn-outline-success me-1',
                             'data-pjax' => '0',
                         ];
                         return Html::a(
@@ -99,6 +131,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         $options = array_merge([
                             'title' => Yii::t('yii', 'Update'),
                             'aria-label' => Yii::t('yii', 'Update'),
+                            'class' => 'btn btn-sm btn-outline-info me-1',
                             'data-pjax' => '0',
                             'id' => 'modaledit',
                         ]);
@@ -108,6 +141,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             //'data-toggle' => 'modal',
                             // 'data-target' => '#modal',
                             'data-id' => $index,
+                            'class' => 'btn btn-sm btn-outline-info me-1',
                             'data-pjax' => '0',
                             // 'style'=>['float'=>'rigth'],
                         ]);
@@ -119,6 +153,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             //'data-confirm' => Yii::t('yii', 'Are you sure you want to delete this item?'),
                             //'data-method' => 'post',
                             //'data-pjax' => '0',
+                            'class' => 'btn btn-sm btn-outline-danger me-1',
                             'data-url' => $url,
                             'data-var' => $data->id,
                             'onclick' => 'recDelete($(this));'

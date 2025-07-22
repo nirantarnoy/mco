@@ -26,7 +26,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
-         //   'id',
+            //   'id',
             'job_no',
             [
                 'attribute' => 'quotation_id',
@@ -34,7 +34,37 @@ $this->params['breadcrumbs'][] = $this->title;
                     return $data->quotation->quotation_no;
                 }
             ],
-            'job_date',
+            [
+                'attribute' => 'job_date',
+                'value' => function ($data) {
+                    return date('m/d/Y', strtotime($data->job_date));
+                }
+            ],
+            [
+                'attribute' => 'start_date',
+                'value' => function ($data) {
+                    if ($data->start_date != null) {
+                        if (date('Y', strtotime($data->start_date)) != 1970) {
+                            return date('m/d/Y', strtotime($data->start_date));
+                        } else {
+                            return '';
+                        }
+                    }
+
+                }
+            ],
+            [
+                'attribute' => 'end_date',
+                'value' => function ($data) {
+                    if ($data->start_date != null) {
+                        if (date('Y', strtotime($data->end_date)) != 1970) {
+                            return date('m/d/Y', strtotime($data->end_date));
+                        } else {
+                            return '';
+                        }
+                    }
+                }
+            ],
             [
                 'attribute' => 'status',
                 'format' => 'raw',
@@ -42,11 +72,36 @@ $this->params['breadcrumbs'][] = $this->title;
                     return \backend\models\Job::getJobStatusBadge($data->status);
                 }
             ],
-            'job_amount',
-            'created_at',
-            'created_by',
-            'updated_at',
-            'updated_by',
+            [
+                'attribute' => 'job_amount',
+                'value' => function ($data) {
+                    return number_format($data->job_amount, 2);
+                }
+            ],
+            [
+                'attribute' => 'created_at',
+                'label' => 'วันที่สร้าง',
+                'format' => ['datetime', 'php:m/d/Y H:i'],
+            ],
+            [
+                'attribute' => 'created_by',
+                'label' => 'สร้างโดย',
+                'value' => function ($model) {
+                    return \backend\models\User::findEmployeeNameByUserId($model->created_by);
+                }
+            ],
+            [
+                'attribute' => 'updated_at',
+                'label' => 'วันที่แก้ไข',
+                'format' => ['datetime', 'php:m/d/Y H:i'],
+            ],
+            [
+                'attribute' => 'updated_by',
+                'label' => 'แก้ไขโดย',
+                'value' => function ($model) {
+                    return \backend\models\User::findEmployeeNameByUserId($model->updated_by);
+                }
+            ],
         ],
     ]) ?>
 

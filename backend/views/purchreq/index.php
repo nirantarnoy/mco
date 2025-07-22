@@ -82,7 +82,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'attribute' => 'purch_req_date',
                 'label' => 'วันที่',
                 'headerOptions' => ['style' => 'width: 120px;'],
-                'format' => ['date', 'php:d/m/Y'],
+                'format' => ['date', 'php:m/d/Y'],
                 'filter' => kartik\date\DatePicker::widget([
                     'model' => $searchModel,
                     'attribute' => 'purch_req_date',
@@ -191,7 +191,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         }
                     },
                     'print' => function ($url, $model, $key) {
-                        return Html::a('<i class="fas fa-print"></i>', ['print', 'id' => $model->id], [
+                        return Html::a('<i class="fas fa-print"></i>', ['print-pr', 'id' => $model->id], [
                             'title' => 'พิมพ์',
                             'class' => 'btn btn-sm btn-outline-secondary me-1',
                             'target' => '_blank',
@@ -206,13 +206,13 @@ $this->params['breadcrumbs'][] = $this->title;
                         ]);
                     },
                     'delete' => function ($url, $model, $key) {
-                        return Html::a('<i class="fas fa-trash"></i>', $url, [
+                        return $model->purch_id ==null || $model->approve_status == PurchReq::APPROVE_STATUS_PENDING ? Html::a('<i class="fas fa-trash"></i>', $url, [
                             'title' => 'ลบ',
                             'class' => 'btn btn-sm btn-outline-danger',
                             'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะลบรายการนี้?',
                             'data-method' => 'post',
                             'data-pjax' => '0'
-                        ]);
+                        ]):null;
                     },
                 ],
                 'urlCreator' => function ($action, $model, $key, $index) {

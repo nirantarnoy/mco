@@ -198,6 +198,34 @@ class Employee extends \common\models\Employee
 
         return $price;
     }
+    public function getDepartment(){
+        return $this->hasOne(Department::className(), ['id' => 'department_id']);
+    }
+
+    public function getPosition(){
+        return $this->hasOne(Position::className(), ['id' => 'position_id']);
+    }
+    public static function findEmpInfo($user_id)
+    {
+        $data = [];
+        $model_emp_id = \backend\models\User::find()->where(['id' => $user_id])->one();
+        if ($model_emp_id) {
+            $model = Employee::find()->where(['id' => $model_emp_id->emp_ref_id])->one();
+            if ($model) {
+                $data['fname'] = $model->fname;
+                $data['lname'] = $model->lname;
+                $data['code'] = $model->emp_code;
+                $data['department_name'] = $model->department->name;
+                $data['position_name'] = $model->position->name;
+            }
+        }
+        return $data;
+    }
+
+    public function getUser(){
+        return $this->hasOne(User::className(), ['employee_ref_id' => 'id']);
+    }
+
 //    public function findUnitid($code){
 //        $model = Unit::find()->where(['name'=>$code])->one();
 //        return count($model)>0?$model->id:0;

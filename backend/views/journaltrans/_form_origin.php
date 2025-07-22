@@ -566,7 +566,7 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
                 ]
             ]) ?>
 
-            <?php $crate_type = $_GET['type']??null; ?>
+            <?php $crate_type = $_GET['type'] ?? null; ?>
             <?= $form->field($model, 'trans_type_id')->dropDownList(
                 JournalTrans::getTransTypeOptions(),
                 [
@@ -576,14 +576,16 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
                     'onchange' => 'updateStockType(this.value)'
                 ]
             ) ?>
-
-            <?php if($model->isNewRecord && $crate_type):?>
+            <?php //echo $crate_type; ?>
+            <?php if ($model->isNewRecord && $crate_type): ?>
                 <?php
                 $this->registerJs("
                      $(document).ready(function() {
                         $('#trans-type-select').val('$crate_type').trigger('change');
                          // ตรวจสอบ type และเปิดใช้งาน return-for-trans-select ถ้าเป็น 4 หรือ 5
+                        
                             var crateType = parseInt('$crate_type');
+                             alert(crateType);
                             if (crateType === 4 || crateType === 5) {
                                 $('#return-for-trans-select').prop('disabled', false);
                             }
@@ -594,17 +596,22 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
 
             <?= $form->field($model, 'stock_type_id')->dropDownList(
                 JournalTrans::getStockTypeOptions(),
-                ['prompt' => 'Select Stock Type', 'id' => 'stock-type-select','readonly' => true]
+                ['prompt' => 'Select Stock Type', 'id' => 'stock-type-select', 'readonly' => true]
             ) ?>
 
+            <?= $form->field($model, 'job_id')->widget(Select2::class, [
+                'data' => ArrayHelper::map(\backend\models\Job::find()->where(['status' => 1])->asArray()->all(), 'id', 'job_no'),
+                'options' => ['placeholder' => 'เลือกงาน'],
+                'pluginOptions' => ['allowClear' => true],
+            ])->label() ?>
         </div>
 
         <div class="col-md-6">
             <?= $form->field($model, 'customer_name')->textInput(['maxlength' => true]) ?>
 
-            <?= $form->field($model, 'return_for_trans_id')->widget(Select2::className(),[
-                'data'=>ArrayHelper::map(JournalTrans::find()->where(['trans_type_id' => 3])->asArray()->all(), 'id', 'journal_no'),
-                'options' => ['id' => 'return-for-trans-select','placeholder' => 'Select Return for Transaction','disabled' => true],
+            <?= $form->field($model, 'return_for_trans_id')->widget(Select2::className(), [
+                'data' => ArrayHelper::map(JournalTrans::find()->where(['trans_type_id' => 3])->asArray()->all(), 'id', 'journal_no'),
+                'options' => ['id' => 'return-for-trans-select', 'placeholder' => 'Select Return for Transaction', 'disabled' => true],
             ]) ?>
 
             <?= $form->field($model, 'remark')->textarea(['rows' => 3]) ?>

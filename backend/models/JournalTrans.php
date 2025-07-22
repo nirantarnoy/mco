@@ -18,7 +18,7 @@ use yii\behaviors\TimestampBehavior;
  * @property string $customer_name
  * @property float $qty
  * @property string $remark
- * @property string $status
+ * @property int $status
  * @property string $created_at
  * @property string $created_by
  * @property string $updated_at
@@ -51,7 +51,7 @@ class JournalTrans extends ActiveRecord
     const STATUS_APPROVED = 2;
     const STATUS_CANCELLED = 3;
 
-    const STATUS_ACTIVE = 1;
+    const STATUS_ACTIVE = 100;
     const STATUS_INACTIVE = 0;
 
     public $journalTransLinesline = [];
@@ -89,11 +89,12 @@ class JournalTrans extends ActiveRecord
         return [
             [['trans_date', 'trans_type_id', 'stock_type_id'], 'required'],
             [['trans_date', 'created_at', 'updated_at'], 'safe'],
-            [['trans_type_id', 'stock_type_id', 'customer_id', 'party_id', 'party_type_id', 'warehouse_id','return_for_trans_id','trans_ref_id','status','created_by', 'updated_by'], 'integer'],
+            [['trans_type_id', 'stock_type_id','job_id', 'customer_id', 'party_id', 'party_type_id', 'warehouse_id','return_for_trans_id','trans_ref_id','status','created_by', 'updated_by','po_rec_status'], 'integer'],
             [['qty',], 'number'],
             [['remark'], 'string'],
             [['journal_no', 'customer_name', ], 'string', 'max' => 255],
-            [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_CANCELLED]],
+         //   [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_CANCELLED, self::STATUS_ACTIVE, self::STATUS_INACTIVE]],
+          //  [['status'], 'in', 'range' => [self::STATUS_ACTIVE]],
             [['trans_ref_id'], 'validateRefTransaction'],
         ];
     }
@@ -204,6 +205,7 @@ class JournalTrans extends ActiveRecord
             'qty' => 'จํานวน',
             'remark' => 'หมายเหตุ',
             'status' => 'สถานะ',
+            'job_id' => 'เลขที่ใบงาน',
             'return_for_trans_id' => 'เลขรายการอ้างอิง',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
@@ -292,9 +294,24 @@ class JournalTrans extends ActiveRecord
     /**
      * @return \yii\db\ActiveQuery
      */
+    /**
+     * ความสัมพันธ์กับ JournalTransLine
+     */
     public function getJournalTransLines()
     {
         return $this->hasMany(JournalTransLine::class, ['journal_trans_id' => 'id']);
+    }
+
+    /**
+     * คำนวณยอดรวมของ JournalTrans
+     */
+    public function getTotalAmount()
+    {
+        $total = 0;
+        foreach ($this->journalTransLines as $line) {
+            $total += $line->sale_price * $line->qty;
+        }
+        return $total;
     }
 
 
@@ -427,5 +444,13 @@ class JournalTrans extends ActiveRecord
             $product->updated_at = date('Y-m-d H:i:s');
             $product->save(false);
         }
+    }
+
+    /**
+     * ความสัมพันธ์กับ Job
+     */
+    public function getJob()
+    {
+        return $this->hasOne(Job::class, ['id' => 'job_id']);
     }
 }
