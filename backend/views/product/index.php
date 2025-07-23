@@ -29,9 +29,14 @@ $this->params['breadcrumbs'][] = $this->title;
         <?php Pjax::begin(); ?>
         <div class="row">
             <div class="col-lg-10">
-                <p>
+                <div class="btn-group">
                     <?= Html::a(Yii::t('app', '<i class="fa fa-plus"></i> สร้างใหม่'), ['create'], ['class' => 'btn btn-success']) ?>
-                </p>
+                    <form action="<?=Url::to(['product/export-products'],true)?>" method="post" style="margin-left: 10px">
+                        <button class="btn btn-info"><i class="fa fa-download"></i> Download product pattern</button>
+                    </form>
+
+                </div>
+
             </div>
             <div class="col-lg-2" style="text-align: right">
                 <form id="form-perpage" class="form-inline" action="<?= Url::to(['product/index'], true) ?>"
@@ -48,6 +53,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </form>
             </div>
         </div>
+        <br />
 
         <?php echo $this->render('_search', ['model' => $searchModel, 'viewstatus' => $viewstatus]); ?>
         <div id="div-delete-btn" style="padding: 10px;display: none">

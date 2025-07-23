@@ -5,6 +5,11 @@ namespace backend\controllers;
 use backend\models\Product;
 use backend\models\ProductSearch;
 use backend\models\WarehouseSearch;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -12,6 +17,7 @@ use yii\web\Response;
 use yii\web\UploadedFile;
 use yii\web\ForbiddenHttpException;
 use yii\filters\AccessControl;
+use Yii;
 
 /**
  * ProductController implements the CRUD actions for Product model.
@@ -825,5 +831,126 @@ class ProductController extends Controller
              $this->render('_print-tag', ['selectedProducts' => $products]);
         }
 
+    }
+
+    public function actionExportProducts()
+    {
+        // Get data from your model
+        // $users = Product::find()->joinWith('stocksum')->all();
+
+        $users = null;
+        $sql = "SELECT w.name as warehouse_name,st.qty,p.code,p.name,p.description,p.product_group_id,p.unit_id,p.brand_id,p.remark,p.cost_price,u.name as unit_name
+                FROM product as p 
+                    left join stock_sum as st on p.id = st.product_id 
+                    left join unit as u on p.unit_id = u.id
+                    left join warehouse as w on st.warehouse_id = w.id ORDER BY p.code ASC";
+        $users = \Yii::$app->db->createCommand($sql)->queryAll();
+
+        // Create new Spreadsheet object
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Set document properties
+        $spreadsheet->getProperties()
+            ->setCreator('MCO GROUP')
+            ->setLastModifiedBy('MCO GROUP')
+            ->setTitle('Product Export')
+            ->setSubject('Product Data')
+            ->setDescription('Exported product data from the application');
+
+        // Set column headers
+        $headers = [
+            'A1' => 'ลำดับ',
+            'B1' => 'รายละเอียด',
+            'C1' => 'คงเหลือ',
+            'D1' => 'หน่วยนับ',
+            'E1' => 'ที่จัดเก็บ',
+            'F1' => 'รหัสสินค้า',
+            'G1' => 'ราคา',
+        ];
+
+        // Apply headers
+        foreach ($headers as $cell => $value) {
+            $sheet->setCellValue($cell, $value);
+        }
+
+        // Style the header row
+        $headerStyle = [
+            'font' => [
+                'bold' => true,
+                'size' => 12,
+                'color' => ['rgb' => 'FFFFFF']
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => '4472C4']
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => Border::BORDER_THIN,
+                    'color' => ['rgb' => '000000']
+                ]
+            ]
+        ];
+
+        $sheet->getStyle('A1:F1')->applyFromArray($headerStyle);
+
+        // Set column widths
+        $sheet->getColumnDimension('A')->setWidth(10);
+        $sheet->getColumnDimension('B')->setWidth(20);
+        $sheet->getColumnDimension('C')->setWidth(30);
+        $sheet->getColumnDimension('D')->setWidth(15);
+        $sheet->getColumnDimension('E')->setWidth(20);
+        $sheet->getColumnDimension('F')->setWidth(20);
+        $sheet->getColumnDimension('G')->setWidth(20);
+
+        // Fill data rows
+        $row = 2;
+//        foreach ($users as $user) {
+//            $sheet->setCellValue('A' . $row, $user->name);
+//            $sheet->setCellValue('B' . $row, $user->description);
+//            $sheet->setCellValue('C' . $row, $user->product_group_id);
+//            $sheet->setCellValue('D' . $row, $user->unit_id);
+//            $sheet->setCellValue('E' . $row, $user->brand_id);
+//            $sheet->setCellValue('F' . $row, $user->stock_qty);
+//            $sheet->setCellValue('G' . $row, $user->remark);
+//            $sheet->setCellValue('H' . $row, $user->stocksum->warehouse_id);
+//            $row++;
+//        }
+        for ($i = 0; $i < count($users); $i++) {
+            $sheet->setCellValue('A' . $row, ($i + 1));
+            $sheet->setCellValue('B' . $row, $users[$i]['description']);
+            $sheet->setCellValue('C' . $row, $users[$i]['qty']==null?0:$users[$i]['qty']);
+            $sheet->setCellValue('D' . $row, $users[$i]['unit_name']);
+            $sheet->setCellValue('E' . $row, $users[$i]['warehouse_name']);
+            $sheet->setCellValue('F' . $row, $users[$i]['code']);
+            $sheet->setCellValue('G' . $row, $users[$i]['cost_price']);
+            $row++;
+        }
+
+        // Apply borders to data
+        $dataRange = 'A1:H' . ($row - 1);
+        $sheet->getStyle($dataRange)->getBorders()->getAllBorders()
+            ->setBorderStyle(Border::BORDER_THIN)
+            ->getColor()->setRGB('CCCCCC');
+
+        // Set response headers for download
+        \Yii::$app->response->format = Response::FORMAT_RAW;
+        \Yii::$app->response->headers->add('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        \Yii::$app->response->headers->add('Content-Disposition', 'attachment;filename="products_export_' . date('Y-m-d_H-i-s') . '.xlsx"');
+        \Yii::$app->response->headers->add('Cache-Control', 'max-age=0');
+
+        // Write file to output
+        $writer = new Xlsx($spreadsheet);
+
+        ob_start();
+        $writer->save('php://output');
+        $content = ob_get_clean();
+
+        return $content;
     }
 }
