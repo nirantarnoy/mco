@@ -86,7 +86,7 @@ class AgencyController extends Controller
                             $upfiles = "agency_" . time()."_".$loop . "." . $file->getExtension();
                             if ($file->saveAs('uploads/aricat/' . $upfiles)) {
                                 $model_doc = new \common\models\AgencyDoc();
-                                $model_doc->worker_id = $model->id;
+                                $model_doc->agency_id = $model->id;
                                 $model_doc->doc = $upfiles;
                                 $model_doc->save(false);
                             }

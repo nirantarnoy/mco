@@ -77,17 +77,22 @@ class EmployerController extends Controller
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
-                $uploaded = UploadedFile::getInstance($model,'doc');
-
-                if (!empty($uploaded)) {
-                    $upfiles = "employer_" . time() . "." . $uploaded->getExtension();
-                    if ($uploaded->saveAs('uploads/aricat/' . $upfiles)) {
-                        // \backend\models\Agency::updateAll(['doc' => $upfiles], ['id' => $model->id]);
-                        $model->doc = $upfiles;
-                    }
-
-                }
+                $uploaded = UploadedFile::getInstances($model,'doc');
+                $model->doc = null;
                 if($model->save(false)){
+                    if (!empty($uploaded)) {
+                        $loop = 0;
+                        foreach ($uploaded as $file) {
+                            $upfiles = "employer_" . time()."_".$loop . "." . $file->getExtension();
+                            if ($file->saveAs('uploads/aricat/' . $upfiles)) {
+                                $model_doc = new \common\models\EmployerDoc();
+                                $model_doc->employer_id = $model->id;
+                                $model_doc->doc = $upfiles;
+                                $model_doc->save(false);
+                            }
+                            $loop++;
+                        }
+                    }
                     return $this->redirect(['view', 'id' => $model->id]);
                 }
             }
