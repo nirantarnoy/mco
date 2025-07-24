@@ -13,6 +13,7 @@ $this->params['breadcrumbs'][] = 'แก้ไข';
 <div class="worker-update">
     <?= $this->render('_form', [
         'model' => $model,
+        'model_doc' => $model_doc,
     ]) ?>
 
 </div>

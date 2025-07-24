@@ -111,29 +111,47 @@ class EmployerController extends Controller
     {
         $model = $this->findModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post())) {
-            $uploaded = UploadedFile::getInstance($model,'doc');
-            $old_doc = \Yii::$app->request->post('old_doc');
+        $model_doc = \common\models\EmployerDoc::find()->where(['employer_id' => $id])->all();
 
-            if (!empty($uploaded)) {
-                $upfiles = "employer_" . time() . "." . $uploaded->getExtension();
-                if ($uploaded->saveAs('uploads/aricat/' . $upfiles)) {
-                    // \backend\models\Agency::updateAll(['doc' => $upfiles], ['id' => $model->id]);
-                    $model->doc = $upfiles;
-                }
-                if($old_doc != null){
-                    if(file_exists('uploads/aricat/'.$old_doc)){
-                        unlink('uploads/aricat/'.$old_doc);
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $uploaded = UploadedFile::getInstances($model,'doc');
+            $old_doc = \Yii::$app->request->post('old_doc');
+            $doc_delete_list = \Yii::$app->request->post('doc_delete_list');
+
+
+            $model->doc = null;
+            if($model->save(false)){
+                if (!empty($uploaded)) {
+                    $loop = 0;
+                    foreach ($uploaded as $file) {
+                        $upfiles = "employer_" . time()."_".$loop . "." . $file->getExtension();
+                        if ($file->saveAs('uploads/aricat/' . $upfiles)) {
+                            $model_doc = new \common\models\EmployerDoc();
+                            $model_doc->employer_id = $model->id;
+                            $model_doc->doc = $upfiles;
+                            $model_doc->save(false);
+                        }
+                        $loop++;
                     }
                 }
-            }
-            if($model->save(false)){
+                if(!empty($doc_delete_list)){
+                    $xp = explode(",", $doc_delete_list);
+                    for($i = 0; $i < count($xp); $i++){
+                        if(file_exists('uploads/aricat/'.$xp[$i])){
+                            if(unlink('uploads/aricat/'.$xp[$i])){
+                                \common\models\EmployerDoc::deleteAll(['doc' => trim($xp[$i])]);
+                            }
+                        }
+                    }
+                }
                 return $this->redirect(['view', 'id' => $model->id]);
             }
+
         }
 
         return $this->render('update', [
             'model' => $model,
+            'model_doc' => $model_doc
         ]);
     }
 
