@@ -77,7 +77,7 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
             <?= \backend\models\Job::getJobStatusBadge($model->status) ?>
         </div>
         <div class="col-lg-4">
-            <?= $form->field($model, 'job_amount')->textInput(['readonly' => 'readonly']) ?>
+            <?= $form->field($model, 'job_amount')->textInput() ?>
         </div>
     </div>
 
@@ -106,7 +106,7 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
                 </tr>
                 </thead>
                 <tbody>
-                <?php if ($model_purch_job!=null): ?>
+                <?php if ($model_purch_job!=null && !$model->isNewRecord): ?>
                     <?php foreach ($model_purch_job as $key => $purch): ?>
                         <?php
                           $puch_x = new \backend\models\Purch();

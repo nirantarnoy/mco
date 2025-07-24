@@ -100,6 +100,7 @@ class JobController extends Controller
                 }
 
 
+                $model->quotation_id = 0;
                 $model->job_date = date('Y-m-d',strtotime($jdate));
                 $model->start_date = date('Y-m-d',strtotime($sdate));
                 $model->end_date = date('Y-m-d',strtotime($ndate));
