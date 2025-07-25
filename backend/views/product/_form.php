@@ -84,7 +84,18 @@ if (!$model->isNewRecord) {
                     <?= $form->field($model, 'sale_price')->textInput() ?>
                 </div>
             <?php endif; ?>
-
+            <div class="col-lg-3">
+                <?= $form->field($model, 'unit_id')->widget(\kartik\select2\Select2::className(),
+                    [
+                        'data' => ArrayHelper::map(\backend\models\Unit::find()->all(), 'id', 'name'),
+                        'options' => [
+                            'placeholder' => '-- เลือกหน่วยสินค้า --',
+                        ],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                        ]
+                    ]) ?>
+            </div>
             <div class="col-lg-3">
                 <?= $form->field($model, 'stock_qty')->textInput(['readonly' => 'readonly']) ?>
             </div>

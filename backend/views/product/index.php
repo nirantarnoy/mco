@@ -31,7 +31,8 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="col-lg-10">
                 <div class="btn-group">
                     <?= Html::a(Yii::t('app', '<i class="fa fa-plus"></i> สร้างใหม่'), ['create'], ['class' => 'btn btn-success']) ?>
-                    <form action="<?=Url::to(['product/export-products'],true)?>" method="post" style="margin-left: 10px">
+                    <form action="<?= Url::to(['product/export-products'], true) ?>" method="post"
+                          style="margin-left: 10px">
                         <button class="btn btn-info"><i class="fa fa-download"></i> Download product pattern</button>
                     </form>
 
@@ -53,7 +54,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </form>
             </div>
         </div>
-        <br />
+        <br/>
 
         <?php echo $this->render('_search', ['model' => $searchModel, 'viewstatus' => $viewstatus]); ?>
         <div id="div-delete-btn" style="padding: 10px;display: none">
@@ -145,6 +146,12 @@ $this->params['breadcrumbs'][] = $this->title;
                         return $data->sale_price != null ? number_format($data->sale_price, 0) : '0';
                     }
                 ],
+                [
+                    'attribute' => 'unit_id',
+                    'value' => function ($data) {
+                        return \backend\models\Unit::findName($data->unit_id);
+                    }
+                ],
 //                [
 //                    'attribute' => 'product_type_id',
 //                    'headerOptions' => ['style' => 'text-align: center'],
@@ -189,15 +196,15 @@ $this->params['breadcrumbs'][] = $this->title;
                     }
                 ],
                 [
-                   'attribute' => 'information',
+                    'attribute' => 'information',
                     'label' => 'แจ้งเตือน',
                     'format' => 'raw',
                     'headerOptions' => ['style' => 'text-align: center'],
                     'contentOptions' => ['style' => 'text-align: center'],
                     'value' => function ($data) {
-                        if($data->stock_qty < $data->minimum_stock){
+                        if ($data->stock_qty < $data->minimum_stock) {
                             return '<div class="badge badge-pill badge-danger" style="padding: 10px;">Low Stock</div>';
-                        }else{
+                        } else {
                             return '';
                         }
                     }
@@ -294,7 +301,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </form>
     </div>
 
-    <form id="form-print-tag" action="<?=Url::to(['product/print-tag'], true)?>" method="post">
+    <form id="form-print-tag" action="<?= Url::to(['product/print-tag'], true) ?>" method="post">
         <input type="hidden" name="ids" id="print-product-tag-id" value="">
     </form>
 <?php
