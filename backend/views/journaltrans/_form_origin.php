@@ -585,7 +585,7 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
                          // ตรวจสอบ type และเปิดใช้งาน return-for-trans-select ถ้าเป็น 4 หรือ 5
                         
                             var crateType = parseInt('$crate_type');
-                             alert(crateType);
+                            // alert(crateType);
                             if (crateType === 4 || crateType === 5) {
                                 $('#return-for-trans-select').prop('disabled', false);
                             }
