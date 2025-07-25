@@ -600,7 +600,7 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
             ) ?>
 
             <?= $form->field($model, 'job_id')->widget(Select2::class, [
-                'data' => ArrayHelper::map(\backend\models\Job::find()->where(['status' => 1])->asArray()->all(), 'id', 'job_no'),
+                'data' => ArrayHelper::map(\backend\models\Job::find()->asArray()->all(), 'id', 'job_no'),
                 'options' => ['placeholder' => 'เลือกงาน'],
                 'pluginOptions' => ['allowClear' => true],
             ])->label() ?>
