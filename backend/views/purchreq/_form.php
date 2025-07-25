@@ -197,7 +197,7 @@ function selectProduct(input, product) {
     $('.autocomplete-dropdown[data-index="' + index + '"]').hide();
     
     // คำนวณยอดรวม
-    calculateLineTotal(index);
+   // calculateLineTotal(index);
 }
 
 $(document).ready(function() {

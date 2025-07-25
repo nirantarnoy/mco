@@ -471,7 +471,9 @@ class JournaltransController extends Controller
                     'name' => $product->name,
                     'code' => $product->code ?? '',
                     'price' => $product->sale_price ?? 0,
-                    'display' => $product->code . ($product->name ? ' (' . $product->name . ')' : '')
+                    'display' => $product->code . ($product->name ? ' (' . $product->name . ')' : ''),
+                    'unit_id' => $product->unit_id,
+                    'unit_name' => \backend\models\Unit::findName($product->unit_id),
                 ];
             }
 
@@ -811,6 +813,8 @@ class JournaltransController extends Controller
             if($valid) {
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
+                    $model->created_at = date('Y-m-d H:i:s');
+                    $model->created_by = Yii::$app->user->id;
                     if ($model->save()) {
                         foreach ($journalTransLines as $journalTransLine) {
                             $journalTransLine->journal_trans_id = $model->id;

@@ -29,7 +29,7 @@ use yii\db\ActiveRecord;
  */
 class JournalTransLine extends ActiveRecord
 {
-    public $product_name;
+    public $product_name,$unit_name;
     // Return types for borrow returns
     const RETURN_TYPE_COMPLETE = 'complete';
     const RETURN_TYPE_DAMAGED = 'damaged';
@@ -54,7 +54,8 @@ class JournalTransLine extends ActiveRecord
     public function rules()
     {
         return [
-            [['product_id', 'warehouse_id', 'qty'], 'required'],
+            [['warehouse_id', 'qty'], 'required'],
+          //  [['product_id', 'warehouse_id', 'qty'], 'required'],
             [['journal_trans_id', 'product_id', 'warehouse_id','is_damage'], 'integer'],
             [['qty', 'line_price', 'sale_price', 'good_qty', 'damaged_qty', 'missing_qty'], 'number'],
             [['remark', 'condition_note'], 'string'],

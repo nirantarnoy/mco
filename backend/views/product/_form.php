@@ -33,7 +33,7 @@ if (!$model->isNewRecord) {
         <input type="hidden" class="remove-customer-list" name="remove_customer_list" value="">
         <div class="row">
             <div class="col-lg-3">
-                <?= $form->field($model, 'code')->textInput(['maxlength' => true]) ?>
+                <?= $form->field($model, 'code')->textInput(['maxlength' => true,'class' => 'form-control product-code']) ?>
             </div>
             <div class="col-lg-3">
                 <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
@@ -42,7 +42,8 @@ if (!$model->isNewRecord) {
                 <?= $form->field($model, 'product_group_id')->widget(\kartik\select2\Select2::className(), [
                     'data' => \yii\helpers\ArrayHelper::map(\backend\models\Productgroup::find()->all(), 'id', 'name'),
                     'options' => [
-
+                        'placeholder' => '-- เลือกกลุ่มสินค้า --',
+                        'onchange' => '$.ajax({url:"' . \yii\helpers\Url::to(['product/getlastproduct'], true) . '",dataType:"html",type:"POST",data:{group_id:$(this).val()},success:function(result){$(".product-code").val(result)}});'
                     ],
                     'pluginOptions' => [
                         'allowClear' => true,
@@ -264,6 +265,7 @@ if (!$model->isNewRecord) {
         </form>
     </div>
 <?php
+$url_to_get_last_product = \yii\helpers\Url::to(['product/getlastproduct'], true);
 $js = <<<JS
 var removelist = [];
 var removecustomerpricelist = [];
@@ -340,6 +342,7 @@ function addcustomerpriceline(e){
     tr.after(clone);
      
 }
+
 JS;
 $this->registerJs($js, static::POS_END);
 ?>

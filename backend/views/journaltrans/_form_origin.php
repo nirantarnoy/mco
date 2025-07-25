@@ -217,11 +217,12 @@ function loadProductStock(productId, index) {
     });
 }
 
+
 // ฟังก์ชันอัพเดตตัวเลือกคลังสินค้า
 function updateWarehouseOptions(index, productId) {
     var warehouseSelect = $('.warehouse-select[data-index="' + index + '"]');
     var stockData = productStockData[productId] || [];
-    
+    console.log('stockData:', stockData);
     // Clear current options
     warehouseSelect.empty();
     warehouseSelect.append('<option value="">-- เลือกคลัง --</option>');
@@ -230,6 +231,7 @@ function updateWarehouseOptions(index, productId) {
     stockData.forEach(function(stock) {
         if (stock.qty > 0) {
             var optionText = stock.warehouse_name + ' (คงเหลือ: ' + stock.qty + ' ' + stock.unit + ')';
+            console.log('optionText:', optionText);
             warehouseSelect.append('<option value="' + stock.warehouse_id + '" data-stock="' + stock.qty + '">' + optionText + '</option>');
         }
     });
@@ -290,7 +292,12 @@ function selectProduct(input, product) {
     // อัพเดตราคา
     $('.price-input[data-index="' + index + '"]').val(product.price);
     
+    $('.line-unit-id[data-index="' + index + '"]').val(product.unit_id);
+     
+    $('.line-unit-name[data-index="' + index + '"]').val(product.unit_name);
+    
     // โหลดข้อมูลสต็อกและอัพเดตคลังสินค้า
+    // alert(product.id);
     loadProductStock(product.id, index);
     
     // ล้างค่าคลังสินค้าและจำนวน
@@ -317,6 +324,7 @@ function validateQuantity(index) {
     alertDiv.hide();
     
     if (requestedQty > stockOnHand && stockOnHand > 0) {
+        alert('issue=' + qtyInput.val() +' stock=' + stockOnHand);
         qtyInput.addClass('stock-error');
         qtyInput.val(stockOnHand);
         
@@ -408,7 +416,7 @@ $(document).ready(function() {
         var index = $(this).attr('data-index');
         var validatedQty = validateQuantity(index);
         $(this).val(validatedQty);
-        calculateLineTotal(index);
+        //calculateLineTotal(index);
     });
     
     // Event navigation ด้วย keyboard
@@ -459,6 +467,108 @@ JS;
 
 $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
 
+// 3. แก้ไข JavaScript - ลบ click handler ที่ซ้ำซ้อน
+$dynamicFormJs = <<<JS
+$(document).ready(function() {
+    console.log('Dynamic form JS loaded');
+    
+    // ลบ click handler เดิมออก และใช้แค่ event ของ DynamicFormWidget
+    
+    // จัดการเมื่อเพิ่มรายการใหม่
+    $('.dynamicform_wrapper').on('afterInsert', function(e, item) {
+        console.log('After insert triggered');
+        setTimeout(function() {
+            updateAllDataIndexes();
+            updateItemNumbers();
+            
+            var \$item = $(item);
+            \$item.find('.product-autocomplete').val('');
+            \$item.find('.product-id-hidden').val('');
+            \$item.find('input[type="number"]').val('');
+            
+            calculateGrandTotal();
+        }, 100);
+    });
+    
+    $('.dynamicform_wrapper').on('afterDelete', function(e) {
+        console.log('After delete triggered');
+        setTimeout(function() {
+            updateAllDataIndexes();
+            updateItemNumbers();
+            calculateGrandTotal();
+        }, 100);
+    });
+    
+    // เพิ่ม beforeInsert event เพื่อ debug
+    $('.dynamicform_wrapper').on('beforeInsert', function(e, item) {
+        console.log('Before insert triggered');
+    });
+    
+    function updateAllDataIndexes() {
+        $('.dynamicform_wrapper .item').each(function(index) {
+            var \$item = $(this);
+            
+            \$item.find('.product-autocomplete').attr('data-index', index);
+            \$item.find('.product-id-hidden').attr('data-index', index);
+            \$item.find('.autocomplete-dropdown').attr('data-index', index);
+            \$item.find('.warehouse-select').attr('data-index', index);
+            \$item.find('.line-product-onhand').attr('data-index', index);
+            \$item.find('.qty-input').attr('data-index', index);
+            \$item.find('.price-input').attr('data-index', index);
+            \$item.find('.line-unit-id').attr('data-index', index);
+            \$item.find('.line-unit-name').attr('data-index', index);
+            \$item.find('.line-total').attr('data-index', index);
+        });
+    }
+    
+    function updateItemNumbers() {
+        $('.dynamicform_wrapper .item').each(function(index) {
+            $(this).find('.item-number').text(index + 1);
+        });
+    }
+    
+    // Debug: เช็ค DynamicFormWidget initialization
+    setTimeout(function() {
+        console.log('Add button count:', $('.add-item').length);
+        console.log('DynamicForm wrapper:', $('.dynamicform_wrapper').length);
+        
+        // Test manual click
+        $('.add-item').off('click').on('click', function(e) {
+            console.log('Manual add button clicked');
+            e.preventDefault();
+            // DynamicFormWidget จะจัดการเอง
+        });
+    }, 1000);
+    
+    updateAllDataIndexes();
+    updateItemNumbers();
+});
+JS;
+$this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
+// 4. เพิ่ม debug script เพิ่มเติม
+$debugJs = <<<JS
+$(document).ready(function() {
+    // ตรวจสอบ jQuery และ DynamicFormWidget
+    console.log('jQuery version:', $.fn.jquery);
+    console.log('DynamicFormWidget available:', typeof $.fn.dynamicform !== 'undefined');
+    
+    // เช็ค elements หลังจาก DOM ready
+    setTimeout(function() {
+        console.log('Form ID:', $('#journal-trans-form').length);
+        console.log('Dynamic wrapper:', $('.dynamicform_wrapper').length);
+        console.log('Add buttons:', $('.add-item').length);
+        console.log('Container items:', $('.container-items').length);
+        console.log('Items:', $('.item').length);
+        
+        // เช็ค data attributes
+        $('.add-item').each(function(i) {
+            console.log('Add button ' + i + ' classes:', this.className);
+        });
+    }, 2000);
+});
+JS;
+
+$this->registerJs($debugJs, \yii\web\View::POS_READY);
 // JavaScript สำหรับการคำนวณ
 $calculationJs = <<<JS
 function calculateLineTotal(index) {
@@ -505,6 +615,8 @@ $(document).on('change keyup', '#purchreq-discount_amount', function() {
 $(document).ready(function() {
     calculateGrandTotal();
 });
+
+
 JS;
 
 $this->registerJs($calculationJs, \yii\web\View::POS_READY);
@@ -652,8 +764,8 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
                 'min' => 1,
                 'insertButton' => '.add-item',
                 'deleteButton' => '.remove-item',
-                'model' => $model->purchLines[0] ?? new \backend\models\PurchLine(),
-                'formId' => 'purch-form',
+                'model' => $model->journalTransLines[0] ?? new \backend\models\JournalTransLine(),
+                'formId' => 'journal-trans-form',
                 'formFields' => [
                     'product_id',
                     'warehouse_id',
@@ -690,6 +802,9 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
                     <?php foreach ($model->journalTransLinesline as $index => $journaltransline): ?>
                         <tr class="item">
                             <td class="text-center align-middle">
+                                <?= $form->field($journaltransline, "[{$index}]unit_id")->hiddenInput([
+                                        'class' => 'line-unit-id',
+                                ])->label(false) ?>
                                 <span class="item-number"><?= $index + 1 ?></span>
                             </td>
                             <td>
@@ -752,9 +867,9 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
                                 ])->label(false) ?>
                             </td>
                             <td>
-                                <?= $form->field($journaltransline, "[{$index}]unit_id")->textInput([
+                                <?= $form->field($journaltransline, "[{$index}]unit_name")->textInput([
                                     'readonly' => true,
-                                    'class' => 'form-control line-unit-id',
+                                    'class' => 'form-control line-unit-name',
                                     'style' => 'background-color: #f8f9fa;',
                                     'data-index' => $index,
                                 ])->label(false) ?>

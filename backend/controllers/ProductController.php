@@ -124,57 +124,59 @@ class ProductController extends Controller
                 $line_qty = \Yii::$app->request->post('line_qty');
                 $line_exp_date = \Yii::$app->request->post('line_exp_date');
 
+               //  $model->code = $model->name;
+                if($model->validate()){
+                    if ($model->save()) {
+                        $uploaded = UploadedFile::getInstanceByName('product_photo');
+                        $uploaded2 = UploadedFile::getInstanceByName('product_photo_2');
 
-                 $model->code = $model->name;
-                if ($model->save(false)) {
-                    $uploaded = UploadedFile::getInstanceByName('product_photo');
-                    $uploaded2 = UploadedFile::getInstanceByName('product_photo_2');
-
-                    if (!empty($uploaded)) {
-                        $upfiles = "photo_" . time() . "." . $uploaded->getExtension();
-                        if ($uploaded->saveAs('uploads/product_photo/' . $upfiles)) {
-                            \backend\models\Product::updateAll(['photo' => $upfiles], ['id' => $model->id]);
-                        }
-
-                    }
-                    if (!empty($uploaded2)) {
-                        $upfiles2 = "photo_" . time() . "." . $uploaded2->getExtension();
-                        if ($uploaded2->saveAs('uploads/product_photo/' . $upfiles2)) {
-                            \backend\models\Product::updateAll(['photo_2' => $upfiles2], ['id' => $model->id]);
-                        }
-
-                    }
-
-                    if($line_warehouse != null){
-                        for($i=0;$i<count($line_warehouse);$i++){
-                            if($line_qty[$i] == 0){
-                                continue;
+                        if (!empty($uploaded)) {
+                            $upfiles = "photo_" . time() . "." . $uploaded->getExtension();
+                            if ($uploaded->saveAs('uploads/product_photo/' . $upfiles)) {
+                                \backend\models\Product::updateAll(['photo' => $upfiles], ['id' => $model->id]);
                             }
 
-                            $model_trans = new \backend\models\Stocktrans();
-                            $model_trans->product_id = $model->id;
-                            $model_trans->trans_date = date('Y-m-d H:i:s');
-                            $model_trans->trans_type_id = 1; // 1 ปรับสต๊อก 2 รับเข้า 3 จ่ายออก
-                            $model_trans->qty = $line_qty[$i];
-                            $model_trans->status = 1;
-                            if($model_trans->save(false)){
-                                $model_sum = \backend\models\Stocksum::find()->where(['product_id'=>$model->id,'warehouse_id'=>$line_warehouse[$i]])->one();
-                                if($model_sum){
-                                    $model_sum->qty = $line_qty[$i];
-                                    $model_sum->save(false);
-                                }else{
-                                    $model_sum = new \backend\models\Stocksum();
-                                    $model_sum->product_id = $model->id;
-                                    $model_sum->warehouse_id = $line_warehouse[$i];
-                                    $model_sum->qty = $line_qty[$i];
-                                    $model_sum->save(false);
+                        }
+                        if (!empty($uploaded2)) {
+                            $upfiles2 = "photo_" . time() . "." . $uploaded2->getExtension();
+                            if ($uploaded2->saveAs('uploads/product_photo/' . $upfiles2)) {
+                                \backend\models\Product::updateAll(['photo_2' => $upfiles2], ['id' => $model->id]);
+                            }
+
+                        }
+
+                        if($line_warehouse != null){
+                            for($i=0;$i<count($line_warehouse);$i++){
+                                if($line_qty[$i] == 0){
+                                    continue;
+                                }
+
+                                $model_trans = new \backend\models\Stocktrans();
+                                $model_trans->product_id = $model->id;
+                                $model_trans->trans_date = date('Y-m-d H:i:s');
+                                $model_trans->trans_type_id = 1; // 1 ปรับสต๊อก 2 รับเข้า 3 จ่ายออก
+                                $model_trans->qty = $line_qty[$i];
+                                $model_trans->status = 1;
+                                if($model_trans->save(false)){
+                                    $model_sum = \backend\models\Stocksum::find()->where(['product_id'=>$model->id,'warehouse_id'=>$line_warehouse[$i]])->one();
+                                    if($model_sum){
+                                        $model_sum->qty = $line_qty[$i];
+                                        $model_sum->save(false);
+                                    }else{
+                                        $model_sum = new \backend\models\Stocksum();
+                                        $model_sum->product_id = $model->id;
+                                        $model_sum->warehouse_id = $line_warehouse[$i];
+                                        $model_sum->qty = $line_qty[$i];
+                                        $model_sum->save(false);
+                                    }
                                 }
                             }
                         }
                     }
+
+                    return $this->redirect(['view', 'id' => $model->id]);
                 }
 
-                return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
             $model->loadDefaultValues();
@@ -952,5 +954,20 @@ class ProductController extends Controller
         $content = ob_get_clean();
 
         return $content;
+    }
+
+    public function actionGetlastproduct(){
+        $product = null;
+        $group_id = \Yii::$app->request->post('group_id');
+        if($group_id != null){
+            $product = Product::find()->where(['product_group_id'=>$group_id])->orderBy(['id'=>SORT_DESC])->limit(1)->one();
+            if($product != null){
+                echo $product->code;
+            }else{
+                echo '';
+            }
+        }else{
+            echo '';
+        }
     }
 }
