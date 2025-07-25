@@ -305,7 +305,7 @@
                         </ul>
                     </li>
                 <?php endif;?>
-                <?php if(\Yii::$app->user->can('salereport/crosstab')):?>
+                <?php //if(\Yii::$app->user->can('salereport/crosstab')):?>
                     <li class="nav-item has-treeview has-sub">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-chart-line"></i>
@@ -325,7 +325,7 @@
                             <?php endif; ?>
                         </ul>
                     </li>
-                <?php endif;?>
+                <?php //endif;?>
                 <?php // if (isset($_SESSION['user_group_id'])): ?>
                 <?php //if ($_SESSION['user_group_id'] == 1): ?>
                 <?php  if (\backend\models\User::findName(\Yii::$app->user->id) == 'mcoadmin'): ?>
