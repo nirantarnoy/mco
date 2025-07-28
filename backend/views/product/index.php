@@ -118,12 +118,12 @@ $this->params['breadcrumbs'][] = $this->title;
                 'name',
                 //  'description',
                 // 'product_type_id',
-//                [
-//                    'attribute' => 'product_group_id',
-//                    'value' => function ($data) {
-//                        return \backend\models\Productgroup::findName($data->product_group_id);
-//                    }
-//                ],
+                [
+                    'attribute' => 'product_group_id',
+                    'value' => function ($data) {
+                        return \backend\models\Productgroup::findName($data->product_group_id);
+                    }
+                ],
                 [
                     'attribute' => 'brand_id',
                     'value' => function ($data) {
