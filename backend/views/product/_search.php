@@ -27,9 +27,9 @@ $stockEmptyOptions = ArrayHelper::map($stock_empty_data, 'id', 'name');
             <?= $form->field($model, 'globalSearch')->textInput(['placeholder' => 'ค้นหา', 'class' => 'form-control', 'aria-describedby' => 'basic-addon1'])->label(false) ?>
 
         </div>
-<!--        <div class="col-lg-2">-->
-<!--            --><?php //= $form->field($model, 'product_group_id')->widget(\kartik\select2\Select2::className(),['data'=>\yii\helpers\ArrayHelper::map(\backend\models\Productgroup::find()->where(['status'=>1])->all(),'id','name'),'options'=>['placeholder'=>'-- เลือกกลุ่มสินค้า --','onchange'=>'$(this).submit()'],'pluginOptions'=>['allowClear'=>true,]])->label(false) ?>
-<!--        </div>-->
+        <div class="col-lg-2">
+            <?= $form->field($model, 'product_group_id')->widget(\kartik\select2\Select2::className(),['data'=>\yii\helpers\ArrayHelper::map(\backend\models\Productgroup::find()->where(['status'=>1])->all(),'id','name'),'options'=>['placeholder'=>'-- เลือกกลุ่มสินค้า --','onchange'=>'$(this).submit()'],'pluginOptions'=>['allowClear'=>true,]])->label(false) ?>
+        </div>
         <div class="col-lg-2">
             <?= $form->field($model, 'brand_id')->widget(\kartik\select2\Select2::className(),['data'=>\yii\helpers\ArrayHelper::map(\backend\models\Productbrand::find()->where(['status'=>1])->all(),'id','name'),'options'=>['placeholder'=>'-- เลือกยี่ห้อ --','onchange'=>'$(this).submit()'],'pluginOptions'=>['allowClear'=>true,]])->label(false) ?>
         </div>
