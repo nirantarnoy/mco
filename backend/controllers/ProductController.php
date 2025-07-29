@@ -977,8 +977,6 @@ class ProductController extends Controller
         $product_code = 'NOT FOUND';
         $prefix = substr($code, 0, 4);
 
-        $product_code = $prefix;
-
         if($code == null) {
             // Find last number for this type and date
             $lastRecord = Product::find()
@@ -989,11 +987,12 @@ class ProductController extends Controller
             if ($lastRecord) {
                 $lastNumber = intval(substr($lastRecord->code, -5));
                 $newNumber = $lastNumber + 1;
+                $product_code = $lastNumber;
             } else {
                 $newNumber = 1;
             }
 
-            $product_code = $prefix . sprintf('%05d', $newNumber);
+           // $product_code = $prefix . sprintf('%05d', $newNumber);
         }
 
         return $product_code;
