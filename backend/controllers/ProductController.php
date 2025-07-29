@@ -976,8 +976,7 @@ class ProductController extends Controller
     {
         $product_code = 'NOT FOUND';
         $prefix = substr($code, 0, 4);
-
-        if($code == null) {
+        if($code != null) {
             // Find last number for this type and date
             $lastRecord = Product::find()
                 ->where(['like', 'code', $prefix])
