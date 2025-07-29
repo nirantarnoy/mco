@@ -983,7 +983,7 @@ class ProductController extends Controller
                 ->where(['like', 'code', $prefix])
                 ->orderBy(['id' => SORT_DESC])
                 ->one();
-
+            $product_code = $lastRecord->createCommand()->getRawSql();
             if ($lastRecord) {
                 $lastNumber = intval(substr($lastRecord->code, -5));
                 $newNumber = $lastNumber + 1;
