@@ -962,12 +962,39 @@ class ProductController extends Controller
         if($group_id != null && $group_id > 0){
             $product = Product::find()->where(['product_group_id'=>$group_id])->orderBy(['id'=>SORT_DESC])->limit(1)->one();
             if($product != null){
-                echo $product->code;
+               echo $this->getlastproductcode($product->code);
+               // echo $product->code;
             }else{
                 echo '';
             }
         }else{
             echo '';
         }
+    }
+
+    public function getlastproductcode($code)
+    {
+        $product_code = '';
+        $prefix = substr($code, 0, 4);
+
+
+        if($code == null) {
+            // Find last number for this type and date
+            $lastRecord = Product::find()
+                ->where(['like', 'code', $prefix])
+                ->orderBy(['id' => SORT_DESC])
+                ->one();
+
+            if ($lastRecord) {
+                $lastNumber = intval(substr($lastRecord->code, -5));
+                $newNumber = $lastNumber + 1;
+            } else {
+                $newNumber = 1;
+            }
+
+            $product_code = $prefix . sprintf('%05d', $newNumber);
+        }
+
+        return $product_code;
     }
 }

@@ -12,7 +12,7 @@ $stockEmptyOptions = ArrayHelper::map($stock_empty_data, 'id', 'name');
 ?>
 
 <div class="product-search">
-
+fa
     <?php $form = ActiveForm::begin([
         'action' => ['index'],
         'method' => 'get',
