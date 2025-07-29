@@ -974,7 +974,7 @@ class ProductController extends Controller
 
     public function getlastproductcode($code)
     {
-        $product_code = '';
+        $product_code = 'x';
         $prefix = substr($code, 0, 4);
 
 
