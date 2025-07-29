@@ -974,9 +974,10 @@ class ProductController extends Controller
 
     public function getlastproductcode($code)
     {
-        $product_code = 'x';
+        $product_code = 'NOT FOUND';
         $prefix = substr($code, 0, 4);
 
+        $product_code = $prefix;
 
         if($code == null) {
             // Find last number for this type and date
