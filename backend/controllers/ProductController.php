@@ -158,12 +158,12 @@ class ProductController extends Controller
                                 $model_trans->qty = $line_qty[$i];
                                 $model_trans->status = 1;
                                 if($model_trans->save(false)){
-                                    $model_sum = \backend\models\Stocksum::find()->where(['product_id'=>$model->id,'warehouse_id'=>$line_warehouse[$i]])->one();
+                                    $model_sum = \backend\models\StockSum::find()->where(['product_id'=>$model->id,'warehouse_id'=>$line_warehouse[$i]])->one();
                                     if($model_sum){
                                         $model_sum->qty = $line_qty[$i];
                                         $model_sum->save(false);
                                     }else{
-                                        $model_sum = new \backend\models\Stocksum();
+                                        $model_sum = new \backend\models\StockSum();
                                         $model_sum->product_id = $model->id;
                                         $model_sum->warehouse_id = $line_warehouse[$i];
                                         $model_sum->qty = $line_qty[$i];
@@ -227,7 +227,7 @@ class ProductController extends Controller
                 if($removelist!=null){
                     $xdel = explode(',', $removelist);
                     for($i=0;$i<count($xdel);$i++){
-                        \backend\models\Stocksum::deleteAll(['id'=>$xdel[$i]]);
+                        \backend\models\StockSum::deleteAll(['id'=>$xdel[$i]]);
                     }
                 }
 
@@ -349,7 +349,7 @@ class ProductController extends Controller
         $html = '';
         $has_data = 0;
         //$model = \backend\models\Workqueue::find()->where(['is_invoice' => 0])->all();
-        // $model = \backend\models\Stocksum::find()->where(['warehouse_id' => 7])->all();
+        // $model = \backend\models\StockSum::find()->where(['warehouse_id' => 7])->all();
         $model = \backend\models\Product::find()->where(['status'=>1])->all();
         if ($model) {
             $has_data = 1;
@@ -838,7 +838,7 @@ class ProductController extends Controller
     public function actionExportProducts()
     {
         // Get data from your model
-        // $users = Product::find()->joinWith('stocksum')->all();
+        // $users = Product::find()->joinWith('StockSum')->all();
 
         $users = null;
         $sql = "SELECT w.name as warehouse_name,st.qty,p.code,p.name,p.description,p.product_group_id,p.unit_id,p.brand_id,p.remark,p.cost_price,u.name as unit_name
@@ -920,7 +920,7 @@ class ProductController extends Controller
 //            $sheet->setCellValue('E' . $row, $user->brand_id);
 //            $sheet->setCellValue('F' . $row, $user->stock_qty);
 //            $sheet->setCellValue('G' . $row, $user->remark);
-//            $sheet->setCellValue('H' . $row, $user->stocksum->warehouse_id);
+//            $sheet->setCellValue('H' . $row, $user->StockSum->warehouse_id);
 //            $row++;
 //        }
         for ($i = 0; $i < count($users); $i++) {
