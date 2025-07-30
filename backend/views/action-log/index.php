@@ -143,13 +143,13 @@ $this->params['breadcrumbs'][] = $this->title;
                 'template' => '{view} {delete}',
                 'buttons' => [
                     'view' => function ($url, $model, $key) {
-                        return Html::a('<span class="glyphicon glyphicon-eye-open"></span>', $url, [
+                        return Html::a('<span class="fa fa-eye"></span>', $url, [
                             'title' => 'View',
                             'class' => 'btn btn-xs btn-primary'
                         ]);
                     },
                     'delete' => function ($url, $model, $key) {
-                        return Html::a('<span class="glyphicon glyphicon-trash"></span>', $url, [
+                        return Html::a('<span class="fa fa-trash"></span>', $url, [
                             'title' => 'Delete',
                             'class' => 'btn btn-xs btn-danger',
                             'data' => [

@@ -97,7 +97,7 @@ class Purch extends ActiveRecord
     public function rules()
     {
         return [
-            [['purch_req_id','customer_id'], 'required'],
+            [['customer_id'], 'required'],
             [['purch_date'], 'safe'],
             [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by','discount_percent','vat_percent'], 'integer'],
             [['total_amount', 'discount_amount', 'vat_amount', 'net_amount'], 'number'],
