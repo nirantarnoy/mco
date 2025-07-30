@@ -1,7 +1,10 @@
 <?php
+
 namespace backend\models;
+
 use Yii;
 use yii\db\ActiveRecord;
+
 date_default_timezone_set('Asia/Bangkok');
 
 class Vendor extends \common\models\Vendor
@@ -9,19 +12,19 @@ class Vendor extends \common\models\Vendor
     public function behaviors()
     {
         return [
-            'timestampcdate'=>[
-                'class'=> \yii\behaviors\AttributeBehavior::className(),
-                'attributes'=>[
-                    ActiveRecord::EVENT_BEFORE_INSERT=>'created_at',
+            'timestampcdate' => [
+                'class' => \yii\behaviors\AttributeBehavior::className(),
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_INSERT => 'created_at',
                 ],
-                'value'=> time(),
+                'value' => time(),
             ],
-            'timestampudate'=>[
-                'class'=> \yii\behaviors\AttributeBehavior::className(),
-                'attributes'=>[
-                    ActiveRecord::EVENT_BEFORE_INSERT=>'updated_at',
+            'timestampudate' => [
+                'class' => \yii\behaviors\AttributeBehavior::className(),
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_INSERT => 'updated_at',
                 ],
-                'value'=> time(),
+                'value' => time(),
             ],
             'timestampcby' => [
                 'class' => \yii\behaviors\AttributeBehavior::className(),
@@ -47,10 +50,36 @@ class Vendor extends \common\models\Vendor
         ];
     }
 
-    public static function findName($id){
-        $model = Vendor::find()->where(['id'=>$id])->one();
-        return $model!= null?$model->name:'';
+    public static function findName($id)
+    {
+        $model = Vendor::find()->where(['id' => $id])->one();
+        return $model != null ? $model->name : '';
     }
 
+    public static function getlastno()
+    {
+        $vendor_code = 'NOT FOUND';
+
+        $prefix = 'VA';
+
+        // Find last number for this type and date
+        $lastRecord = Vendor::find()
+            ->where(['like', 'code', $prefix])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
+
+        if ($lastRecord) {
+            $lastNumber = intval(substr($lastRecord->code, -3));
+            $newNumber = $lastNumber + 1;
+            $vendor_code = $lastNumber;
+        } else {
+            $newNumber = 1;
+        }
+
+        $vendor_code = $prefix . sprintf('%03d', $newNumber);
+
+
+        return $vendor_code;
+    }
 
 }

@@ -2,6 +2,7 @@
 
 namespace backend\models;
 
+use common\models\JournalTransAricat;
 use Yii;
 use yii\db\ActiveRecord;
 use yii\behaviors\TimestampBehavior;
@@ -41,6 +42,8 @@ class JournalTrans extends ActiveRecord
     const TRANS_TYPE_ISSUE_BORROW = 5;
     const TRANS_TYPE_RETURN_BORROW = 6;
 
+    const TRANS_TYPE_ARICAT_NEW = 7;
+
     // Stock Types
     const STOCK_TYPE_IN = 1;
     const STOCK_TYPE_OUT = 2;
@@ -55,6 +58,8 @@ class JournalTrans extends ActiveRecord
     const STATUS_INACTIVE = 0;
 
     public $journalTransLinesline = [];
+
+    public $journalTransLinesaricat = [];
 
   //  public $journalTransLines;
 
@@ -96,6 +101,7 @@ class JournalTrans extends ActiveRecord
          //   [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_CANCELLED, self::STATUS_ACTIVE, self::STATUS_INACTIVE]],
           //  [['status'], 'in', 'range' => [self::STATUS_ACTIVE]],
             [['trans_ref_id'], 'validateRefTransaction'],
+            [['agency_id','employer_id'], 'integer'],
         ];
     }
 
@@ -215,6 +221,8 @@ class JournalTrans extends ActiveRecord
             'party_type_id' => 'Party Type ID',
             'warehouse_id' => 'คลังจัดเก็บ',
             'trans_ref_id' => 'Trans Ref ID',
+            'agency_id' => 'หน่วยงาน',
+            'employer_id' => 'นายจ้าง',
         ];
     }
 
@@ -300,6 +308,10 @@ class JournalTrans extends ActiveRecord
     public function getJournalTransLines()
     {
         return $this->hasMany(JournalTransLine::class, ['journal_trans_id' => 'id']);
+    }
+
+    public function getJournalTransAricat(){
+        return $this->hasMany(JournalTransAricat::class, ['journal_trans_id' => 'id']);
     }
 
     /**

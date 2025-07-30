@@ -87,6 +87,7 @@ class VendorController extends Controller
                 $zipcode = \Yii::$app->request->post('zipcode');
 
                 $party_type_id = 1;
+              //  $model->code = $model::getLastno();
                 if($model->save(false)){
                     if($address != null || $address != '') {
 

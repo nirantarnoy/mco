@@ -72,5 +72,31 @@ class Customer extends \common\models\Customer
         return $data;
     }
 
+    public static function getlastno()
+    {
+        $customer_code = 'NOT FOUND';
+
+        $prefix = 'CA';
+
+        // Find last number for this type and date
+        $lastRecord = Customer::find()
+            ->where(['like', 'code', $prefix])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
+
+        if ($lastRecord) {
+            $lastNumber = intval(substr($lastRecord->code, -3));
+            $newNumber = $lastNumber + 1;
+            $customer_code = $lastNumber;
+        } else {
+            $newNumber = 1;
+        }
+
+        $customer_code = $prefix . sprintf('%03d', $newNumber);
+
+
+        return $customer_code;
+    }
+
 
 }

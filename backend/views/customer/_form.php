@@ -17,6 +17,11 @@ $address_chk = \backend\models\AddressInfo::find()->where(['party_id' => $model-
 $x_address = $address_chk == null ? '' : $address_chk->address;
 $x_street = $address_chk == null ? '' : $address_chk->street;
 $x_zipcode = $address_chk == null ? '' : $address_chk->zip_code;
+
+$new_code = '';
+if($model->isNewRecord) {
+    $new_code = $model::getLastno();
+}
 ?>
 
 <div class="customer-form">
@@ -26,7 +31,7 @@ $x_zipcode = $address_chk == null ? '' : $address_chk->zip_code;
     <div class="row">
         <div class="col-lg-1"></div>
         <div class="col-lg-10">
-            <?= $form->field($model, 'name')->textInput(['maxlength' => true]) ?>
+            <?= $form->field($model, 'name')->textInput(['maxlength' => true,'value' => $new_code,'readonly'=>'readonly']) ?>
         </div>
         <div class="col-lg-1"></div>
     </div>
