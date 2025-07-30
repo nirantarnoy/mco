@@ -94,6 +94,7 @@ class VendorController extends Controller
 
                 $party_type_id = 1;
               //  $model->code = $model::getLastno();
+                $model->vendor_group_id = 0;
                 if($model->save(false)){
                     if($address != null || $address != '') {
 

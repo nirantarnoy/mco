@@ -65,7 +65,8 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                     ]) ?>
 
                     <?= Html::a('<i class="fas fa-list-alt"></i> พิมพ์ใบรับสินค้า', ['printreceipt', 'id' => $model->id], [
-                        'class' => 'btn btn-success'
+                        'class' => 'btn btn-success',
+                        'target' => '_blank'
                     ]) ?>
                     <?= Html::a('<i class="fas fa-download"></i> รับสินค้าเข้าคลัง', ['receive', 'id' => $model->id], [
                         'class' => 'btn btn-success'

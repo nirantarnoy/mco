@@ -357,12 +357,20 @@
                             <?php //endif;?>
 
                             <?php //if (\Yii::$app->user->can('authitem/index')): ?>
-                                <li class="nav-item">
-                                    <a href="index.php?r=authitem" class="nav-link authitem">
-                                        <i class="far fa-circlez nav-icon"></i>
-                                        <p>สิทธิ์การใช้งาน</p>
-                                    </a>
-                                </li>
+                            <li class="nav-item">
+                                <a href="index.php?r=authitem" class="nav-link authitem">
+                                    <i class="far fa-circlez nav-icon"></i>
+                                    <p>สิทธิ์การใช้งาน</p>
+                                </a>
+                            </li>
+                            <?php //endif;?>
+                            <?php //if (\Yii::$app->user->can('authitem/index')): ?>
+                            <li class="nav-item">
+                                <a href="index.php?r=actionlog" class="nav-link actionlog">
+                                    <i class="far fa-circlez nav-icon"></i>
+                                    <p>Action Log</p>
+                                </a>
+                            </li>
                             <?php //endif;?>
 
                         </ul>

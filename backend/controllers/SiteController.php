@@ -2,6 +2,7 @@
 
 namespace backend\controllers;
 
+use app\behaviors\ActionLogBehavior;
 use common\models\LoginForm;
 use Yii;
 use yii\filters\VerbFilter;
@@ -40,6 +41,10 @@ class SiteController extends Controller
                 'actions' => [
                     'logout' => ['post', 'get'],
                 ],
+            ],
+            'actionLog' => [
+                'class' => ActionLogBehavior::class,
+                'actions' => ['login', 'logout'], // Log เฉพาะ actions เหล่านี้
             ],
         ];
     }

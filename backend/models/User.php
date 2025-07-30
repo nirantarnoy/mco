@@ -2,6 +2,7 @@
 
 namespace backend\models;
 
+use app\behaviors\ActionLogBehavior;
 use common\models\LoginLog;
 use Yii;
 use yii\db\ActiveRecord;
@@ -11,6 +12,13 @@ date_default_timezone_set('Asia/Bangkok');
 
 class User extends \common\models\User
 {
+    public function behaviors()
+    {
+        return [
+            // Log การเปลี่ยนแปลงข้อมูล User อัตโนมัติ
+            ActionLogBehavior::class,
+        ];
+    }
     public function rules()
     {
         return

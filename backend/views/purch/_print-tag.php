@@ -78,19 +78,19 @@ $this->params['breadcrumbs'][] = $this->title;
             'onclick' => "this.form.action = '" . \yii\helpers\Url::to(['generate-tags']) . "'; window.print();"
         ]) ?>
 
-        <?= Html::submitButton('Export PDF', [
-            'class' => 'btn btn-danger',
-            'name' => 'action',
-            'value' => 'pdf',
-            'onclick' => "this.form.action = '" . \yii\helpers\Url::to(['generate-tags', 'format' => 'pdf']) . "';"
-        ]) ?>
-
-        <?= Html::submitButton('Export Excel', [
-            'class' => 'btn btn-info',
-            'name' => 'action',
-            'value' => 'excel',
-            'onclick' => "this.form.action = '" . \yii\helpers\Url::to(['generate-tags', 'format' => 'excel']) . "';"
-        ]) ?>
+<!--        --><?php //= Html::submitButton('Export PDF', [
+//            'class' => 'btn btn-danger',
+//            'name' => 'action',
+//            'value' => 'pdf',
+//            'onclick' => "this.form.action = '" . \yii\helpers\Url::to(['generate-tags', 'format' => 'pdf']) . "';"
+//        ]) ?>
+<!---->
+<!--        --><?php //= Html::submitButton('Export Excel', [
+//            'class' => 'btn btn-info',
+//            'name' => 'action',
+//            'value' => 'excel',
+//            'onclick' => "this.form.action = '" . \yii\helpers\Url::to(['generate-tags', 'format' => 'excel']) . "';"
+//        ]) ?>
 
         <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-default']) ?>
     </div>

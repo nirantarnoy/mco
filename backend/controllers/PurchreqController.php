@@ -1,6 +1,7 @@
 <?php
 namespace backend\controllers;
 
+use app\behaviors\ActionLogBehavior;
 use Yii;
 use backend\models\PurchReq;
 use backend\models\PurchReqSearch;
@@ -30,6 +31,10 @@ class PurchreqController extends Controller
                 'actions' => [
                     'delete' => ['POST'],
                 ],
+            ],
+            'actionLog' => [
+                'class' => ActionLogBehavior::class,
+                'actions' => ['create', 'update', 'delete', 'approve','convert-to-purchase-order'], // Log เฉพาะ actions เหล่านี้
             ],
         ];
     }
