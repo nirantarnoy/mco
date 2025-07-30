@@ -23,6 +23,8 @@ $x_zipcode = $address_chk == null ? '' : $address_chk->zip_code;
 $new_code = '';
 if($model->isNewRecord) {
     $new_code = $model::getLastno();
+}else{
+    $new_code = $model->code;
 }
 ?>
 
