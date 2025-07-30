@@ -85,12 +85,15 @@ class ProductSearch extends Product
         }
 
         if($this->globalSearch != ''){
-            $keywords = preg_split('/\s+/', trim($this->globalSearch)); // แยกคำด้วยช่องว่าง
+            $keywords = preg_split('/\+/', trim($this->globalSearch)); // แยกคำด้วยเครื่องหมาย +
 
             foreach ($keywords as $word) {
-                $query->orFilterWhere(['like', 'product.code', $word])
-                    ->orFilterWhere(['like', 'product.name', $word])
-                    ->orFilterWhere(['like', 'product.description', $word]);
+                $query->andFilterWhere([
+                    'or',
+                    ['like', 'product.code', $word],
+                    ['like', 'product.name', $word],
+                    ['like', 'product.description', $word],
+                ]);
             }
 //            $query->orFilterWhere(['like', 'product.code', $this->globalSearch])
 //                ->orFilterWhere(['like', 'product.name', $this->globalSearch])
