@@ -27,11 +27,17 @@ if($model->isNewRecord) {
 <div class="customer-form">
 
     <?php $form = ActiveForm::begin(); ?>
-
     <div class="row">
         <div class="col-lg-1"></div>
         <div class="col-lg-10">
-            <?= $form->field($model, 'name')->textInput(['maxlength' => true,'value' => $new_code,'readonly'=>'readonly']) ?>
+            <?= $form->field($model, 'code')->textInput(['maxlength' => true,'value' => $new_code,'readonly'=>'readonly']) ?>
+        </div>
+        <div class="col-lg-1"></div>
+    </div>
+    <div class="row">
+        <div class="col-lg-1"></div>
+        <div class="col-lg-10">
+            <?= $form->field($model, 'name')->textInput(['maxlength' => true,]) ?>
         </div>
         <div class="col-lg-1"></div>
     </div>

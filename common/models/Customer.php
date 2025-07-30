@@ -39,7 +39,7 @@ class Customer extends \yii\db\ActiveRecord
             [['name',], 'unique'],
             [['name', 'description', 'customer_group_id', 'status', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'default', 'value' => null],
             [['customer_group_id', 'status', 'created_at', 'created_by', 'updated_at', 'updated_by','is_head'], 'integer'],
-            [['name', 'description','home_number', 'street', 'aisle', 'district_name', 'city_name', 'province_name', 'zipcode','contact_name','phone','branch_name', 'email'], 'string', 'max' => 255],
+            [['name', 'description','home_number', 'street', 'aisle', 'district_name', 'city_name', 'province_name', 'zipcode','contact_name','phone','branch_name', 'email','code'], 'string', 'max' => 255],
             [['taxid'],'string','max'=>13],
         ];
     }
