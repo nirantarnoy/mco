@@ -30,7 +30,7 @@ use kartik\select2\Select2;
 
         <div class="col-md-4">
             <?= $form->field($model, 'action')->widget(Select2::classname(), [
-                'data' => array_merge([''], \app\models\ActionLogSearch::getPopularActions()),
+                'data' => array_merge([''], \backend\models\ActionLogSearchModel::getPopularActions()),
                 'options' => ['placeholder' => 'Select action...'],
                 'pluginOptions' => [
                     'allowClear' => true,
@@ -41,7 +41,7 @@ use kartik\select2\Select2;
 
         <div class="col-md-4">
             <?= $form->field($model, 'status')->widget(Select2::classname(), [
-                'data' => array_merge([''], \app\models\ActionLog::getStatusOptions()),
+                'data' => array_merge([''], \backend\models\ActionLogModel::getStatusOptions()),
                 'options' => ['placeholder' => 'Select status...'],
                 'pluginOptions' => [
                     'allowClear' => true

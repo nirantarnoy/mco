@@ -1,5 +1,6 @@
 <?php
 
+use backend\models\ActionLogModel;
 use yii\helpers\Html;
 use yii\widgets\DetailView;
 
@@ -13,12 +14,6 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <div class="action-log-view">
-
-    <div class="row">
-        <div class="col-md-12">
-            <h1><?= Html::encode($this->title) ?></h1>
-        </div>
-    </div>
 
     <!-- Action Buttons -->
     <div class="row" style="margin-bottom: 20px;">
@@ -36,7 +31,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <!-- Main Information -->
     <div class="row">
-        <div class="col-md-8">
+        <div class="col-lg-8">
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h4>Log Details</h4>
@@ -45,7 +40,6 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?= DetailView::widget([
                         'model' => $model,
                         'attributes' => [
-                            'id',
                             [
                                 'attribute' => 'user_id',
                                 'value' => $model->user_id ? $model->user_id : 'Guest',
@@ -81,7 +75,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
 
         <!-- Side Information -->
-        <div class="col-md-4">
+        <div class="col-lg-4">
             <!-- Status Card -->
             <div class="panel <?= $model->status === 'success' ? 'panel-success' : ($model->status === 'failed' ? 'panel-danger' : 'panel-warning') ?>">
                 <div class="panel-heading">
@@ -186,7 +180,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
                 <div class="panel-body">
                     <?php
-                    $relatedLogs = \app\models\ActionLog::find()
+                    $relatedLogs = \backend\models\ActionLogModel::find()
                         ->where(['user_id' => $model->user_id])
                         ->andWhere(['!=', 'id', $model->id])
                         ->andWhere(['>=', 'created_at', date('Y-m-d H:i:s', strtotime('-24 hours', strtotime($model->created_at)))])

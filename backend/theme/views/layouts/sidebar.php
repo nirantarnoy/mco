@@ -366,7 +366,7 @@
                             <?php //endif;?>
                             <?php //if (\Yii::$app->user->can('authitem/index')): ?>
                             <li class="nav-item">
-                                <a href="index.php?r=actionlog" class="nav-link actionlog">
+                                <a href="index.php?r=action-log" class="nav-link action-log">
                                     <i class="far fa-circlez nav-icon"></i>
                                     <p>Action Log</p>
                                 </a>

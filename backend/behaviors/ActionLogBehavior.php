@@ -1,6 +1,7 @@
 <?php
 namespace app\behaviors;
 
+use backend\models\ActionLogModel;
 use Yii;
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
@@ -87,7 +88,7 @@ class ActionLogBehavior extends Behavior
             'attributes' => $model->getAttributes(),
         ], $this->additionalData);
 
-        ActionLog::log('MODEL_CREATE', $data, ActionLog::STATUS_SUCCESS, 'New ' . $this->getModelName($model) . ' created');
+        ActionLogModel::log('MODEL_CREATE', $data, ActionLogModel::STATUS_SUCCESS, 'New ' . $this->getModelName($model) . ' created');
     }
 
     /**
@@ -113,7 +114,7 @@ class ActionLogBehavior extends Behavior
             'changed_attributes' => $changedAttributes,
         ], $this->additionalData);
 
-        ActionLog::log('MODEL_UPDATE', $data, ActionLog::STATUS_SUCCESS, $this->getModelName($model) . ' updated');
+        ActionLogModel::log('MODEL_UPDATE', $data, ActionLogModel::STATUS_SUCCESS, $this->getModelName($model) . ' updated');
     }
 
     /**
@@ -128,7 +129,7 @@ class ActionLogBehavior extends Behavior
             'deleted_attributes' => $model->getOldAttributes(),
         ], $this->additionalData);
 
-        ActionLog::log('MODEL_DELETE', $data, ActionLog::STATUS_SUCCESS, $this->getModelName($model) . ' deleted');
+        ActionLogModel::log('MODEL_DELETE', $data, ActionLogModel::STATUS_SUCCESS, $this->getModelName($model) . ' deleted');
     }
 
     /**
@@ -160,7 +161,7 @@ class ActionLogBehavior extends Behavior
             $data['params']['password_repeat'] = '[HIDDEN]';
         }
 
-        ActionLog::log('CONTROLLER_ACTION', $data, ActionLog::STATUS_SUCCESS, "Executed {$controller->id}/{$action->id}");
+        ActionLogModel::log('CONTROLLER_ACTION', $data, ActionLogModel::STATUS_SUCCESS, "Executed {$controller->id}/{$action->id}");
     }
 
     /**
@@ -190,9 +191,9 @@ class ActionLogBehavior extends Behavior
     /**
      * Static method to manually log actions
      */
-    public static function logAction($action, $data = [], $status = ActionLog::STATUS_SUCCESS, $message = null)
+    public static function logAction($action, $data = [], $status = ActionLogModel::STATUS_SUCCESS, $message = null)
     {
-        return ActionLog::log($action, $data, $status, $message);
+        return ActionLogModel::log($action, $data, $status, $message);
     }
 
     /**
@@ -200,11 +201,11 @@ class ActionLogBehavior extends Behavior
      */
     public static function logLogin($user, $remember = false)
     {
-        return ActionLog::log('USER_LOGIN', [
+        return ActionLogModel::log('USER_LOGIN', [
             'user_id' => $user->getId(),
             'username' => $user->getUsername(),
             'remember_me' => $remember,
-        ], ActionLog::STATUS_SUCCESS, 'User logged in successfully');
+        ], ActionLogModel::STATUS_SUCCESS, 'User logged in successfully');
     }
 
     /**
@@ -212,10 +213,10 @@ class ActionLogBehavior extends Behavior
      */
     public static function logLogout($user)
     {
-        return ActionLog::log('USER_LOGOUT', [
+        return ActionLogModel::log('USER_LOGOUT', [
             'user_id' => $user->getId(),
             'username' => $user->getUsername(),
-        ], ActionLog::STATUS_SUCCESS, 'User logged out');
+        ], ActionLogModel::STATUS_SUCCESS, 'User logged out');
     }
 
     /**
@@ -223,10 +224,10 @@ class ActionLogBehavior extends Behavior
      */
     public static function logFailedLogin($username, $reason = null)
     {
-        return ActionLog::log('USER_LOGIN_FAILED', [
+        return ActionLogModel::log('USER_LOGIN_FAILED', [
             'attempted_username' => $username,
             'reason' => $reason,
-        ], ActionLog::STATUS_FAILED, 'Failed login attempt');
+        ], ActionLogModel::STATUS_FAILED, 'Failed login attempt');
     }
 
     /**
@@ -234,10 +235,10 @@ class ActionLogBehavior extends Behavior
      */
     public static function logPermissionDenied($action, $resource = null)
     {
-        return ActionLog::log('PERMISSION_DENIED', [
+        return ActionLogModel::log('PERMISSION_DENIED', [
             'denied_action' => $action,
             'resource' => $resource,
-        ], ActionLog::STATUS_WARNING, 'Access denied');
+        ], ActionLogModel::STATUS_WARNING, 'Access denied');
     }
 
     /**
@@ -245,11 +246,11 @@ class ActionLogBehavior extends Behavior
      */
     public static function logFileUpload($filename, $size, $type)
     {
-        return ActionLog::log('FILE_UPLOAD', [
+        return ActionLogModel::log('FILE_UPLOAD', [
             'filename' => $filename,
             'size' => $size,
             'type' => $type,
-        ], ActionLog::STATUS_SUCCESS, 'File uploaded: ' . $filename);
+        ], ActionLogModel::STATUS_SUCCESS, 'File uploaded: ' . $filename);
     }
 
     /**
@@ -257,18 +258,18 @@ class ActionLogBehavior extends Behavior
      */
     public static function logFileDownload($filename, $path = null)
     {
-        return ActionLog::log('FILE_DOWNLOAD', [
+        return ActionLogModel::log('FILE_DOWNLOAD', [
             'filename' => $filename,
             'path' => $path,
-        ], ActionLog::STATUS_SUCCESS, 'File downloaded: ' . $filename);
+        ], ActionLogModel::STATUS_SUCCESS, 'File downloaded: ' . $filename);
     }
 
     /**
      * Log security event
      */
-    public static function logSecurityEvent($event, $details = [], $severity = ActionLog::STATUS_WARNING)
+    public static function logSecurityEvent($event, $details = [], $severity = ActionLogModel::STATUS_WARNING)
     {
-        return ActionLog::log('SECURITY_EVENT', array_merge([
+        return ActionLogModel::log('SECURITY_EVENT', array_merge([
             'event_type' => $event,
         ], $details), $severity, 'Security event: ' . $event);
     }

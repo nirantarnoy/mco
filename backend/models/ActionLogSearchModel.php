@@ -4,18 +4,12 @@ namespace backend\models;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 
-/**
- * ActionLogSearch represents the model behind the search form of `app\models\ActionLog`.
- */
-class ActionLogSearch extends ActionLog
+class ActionLogSearchModel extends ActionLogModel
 {
     public $date_from;
     public $date_to;
-    public $user_search; // สำหรับค้นหา username หรือ user_id
+    public $user_search;
 
-    /**
-     * {@inheritdoc}
-     */
     public function rules()
     {
         return [
@@ -25,27 +19,15 @@ class ActionLogSearch extends ActionLog
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function scenarios()
     {
-        // bypass scenarios() implementation in the parent class
         return Model::scenarios();
     }
 
-    /**
-     * Creates data provider instance with search query applied
-     *
-     * @param array $params
-     *
-     * @return ActiveDataProvider
-     */
     public function search($params)
     {
-        $query = ActionLog::find();
+        $query = ActionLogModel::find();
 
-        // add conditions that should always apply here
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
             'sort' => [
@@ -59,8 +41,6 @@ class ActionLogSearch extends ActionLog
         $this->load($params);
 
         if (!$this->validate()) {
-            // uncomment the following line if you do not want to return any records when validation fails
-            // $query->where('0=1');
             return $dataProvider;
         }
 
@@ -82,7 +62,7 @@ class ActionLogSearch extends ActionLog
             ->andFilterWhere(['like', 'method', $this->method])
             ->andFilterWhere(['like', 'message', $this->message]);
 
-        // User search (username หรือ user_id)
+        // User search
         if (!empty($this->user_search)) {
             if (is_numeric($this->user_search)) {
                 $query->andFilterWhere(['user_id' => $this->user_search]);
@@ -103,12 +83,9 @@ class ActionLogSearch extends ActionLog
         return $dataProvider;
     }
 
-    /**
-     * Get popular actions for dropdown
-     */
     public static function getPopularActions($limit = 20)
     {
-        return ActionLog::find()
+        return ActionLogModel::find()
             ->select(['action', 'COUNT(*) as count'])
             ->groupBy('action')
             ->orderBy('count DESC')
@@ -117,19 +94,16 @@ class ActionLogSearch extends ActionLog
             ->all();
     }
 
-    /**
-     * Get statistics for dashboard
-     */
     public static function getStatistics($days = 30)
     {
         $date = date('Y-m-d H:i:s', strtotime("-{$days} days"));
 
         return [
-            'total_logs' => ActionLog::find()->where(['>=', 'created_at', $date])->count(),
-            'success_logs' => ActionLog::find()->where(['>=', 'created_at', $date])->andWhere(['status' => ActionLog::STATUS_SUCCESS])->count(),
-            'failed_logs' => ActionLog::find()->where(['>=', 'created_at', $date])->andWhere(['status' => ActionLog::STATUS_FAILED])->count(),
-            'warning_logs' => ActionLog::find()->where(['>=', 'created_at', $date])->andWhere(['status' => ActionLog::STATUS_WARNING])->count(),
-            'unique_users' => ActionLog::find()->select('user_id')->distinct()->where(['>=', 'created_at', $date])->andWhere(['is not', 'user_id', null])->count(),
+            'total_logs' => ActionLogModel::find()->where(['>=', 'created_at', $date])->count(),
+            'success_logs' => ActionLogModel::find()->where(['>=', 'created_at', $date])->andWhere(['status' => ActionLogModel::STATUS_SUCCESS])->count(),
+            'failed_logs' => ActionLogModel::find()->where(['>=', 'created_at', $date])->andWhere(['status' => ActionLogModel::STATUS_FAILED])->count(),
+            'warning_logs' => ActionLogModel::find()->where(['>=', 'created_at', $date])->andWhere(['status' => ActionLogModel::STATUS_WARNING])->count(),
+            'unique_users' => ActionLogModel::find()->select('user_id')->distinct()->where(['>=', 'created_at', $date])->andWhere(['is not', 'user_id', null])->count(),
         ];
     }
 }

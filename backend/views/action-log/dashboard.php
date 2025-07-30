@@ -20,7 +20,6 @@ $this->registerJsFile('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/cha
 
     <div class="row">
         <div class="col-md-12">
-            <h1><?= Html::encode($this->title) ?></h1>
             <?= Html::a('Back to Logs', ['index'], ['class' => 'btn btn-default']) ?>
         </div>
     </div>

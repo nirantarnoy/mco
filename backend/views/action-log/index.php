@@ -1,5 +1,6 @@
 <?php
 
+use yii\bootstrap4\LinkPager;
 use yii\helpers\Html;
 use yii\grid\GridView;
 use yii\widgets\Pjax;
@@ -17,42 +18,35 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <div class="action-log-index">
-
-    <div class="row">
-        <div class="col-md-12">
-            <h1><?= Html::encode($this->title) ?></h1>
-        </div>
-    </div>
-
     <!-- Statistics Cards -->
     <div class="row" style="margin-bottom: 20px;">
         <div class="col-md-3">
-            <div class="panel panel-primary">
-                <div class="panel-body text-center">
+            <div class="card card-primary">
+                <div class="card-body text-center">
                     <h3><?= number_format($statistics['total_logs']) ?></h3>
                     <p>Total Logs (30 days)</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="panel panel-success">
-                <div class="panel-body text-center">
+            <div class="card card-success">
+                <div class="card-body text-center">
                     <h3><?= number_format($statistics['success_logs']) ?></h3>
                     <p>Success Logs</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="panel panel-danger">
-                <div class="panel-body text-center">
+            <div class="card card-danger">
+                <div class="card-body text-center">
                     <h3><?= number_format($statistics['failed_logs']) ?></h3>
                     <p>Failed Logs</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="panel panel-info">
-                <div class="panel-body text-center">
+            <div class="card card-info">
+                <div class="card-body text-center">
                     <h3><?= number_format($statistics['unique_users']) ?></h3>
                     <p>Unique Users</p>
                 </div>
@@ -106,7 +100,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             ],
 
-            'id',
+          //  'id',
 
             [
                 'attribute' => 'user_search',
@@ -117,7 +111,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'filter' => Select2::widget([
                     'model' => $searchModel,
                     'attribute' => 'status',
-                    'data' => array_merge([''], \app\models\ActionLog::getStatusOptions()),
+                    'data' => array_merge([''], \backend\models\ActionLogModel::getStatusOptions()),
                     'options' => ['placeholder' => 'Select Status...'],
                     'pluginOptions' => [
                         'allowClear' => true
@@ -127,17 +121,21 @@ $this->params['breadcrumbs'][] = $this->title;
 
             'ip_address',
 
-            [
-                'attribute' => 'model_class',
-                'filter' => Html::activeTextInput($searchModel, 'model_class', ['class' => 'form-control'])
-            ],
-
-            'model_id',
-
+//            [
+//                'attribute' => 'model_class',
+//                'filter' => Html::activeTextInput($searchModel, 'model_class', ['class' => 'form-control'])
+//            ],
+//
+//            'model_id',
+            'controller',
+            'action',
             [
                 'attribute' => 'created_at',
-                'format' => 'datetime',
+              //  'format' => 'datetime',
                 'filter' => false, // ใช้ date range filter แทน
+                'value' => function ($model) {
+                      return date('m-m-Y H:i:s', strtotime($model->created_at));
+                }
             ],
 
             [
@@ -164,7 +162,7 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
         ],
         'pager' => [
-            'class' => 'yii\widgets\LinkPager',
+            'class' => LinkPager::className(),
             'maxButtonCount' => 10,
         ],
         'summary' => 'Showing {begin}-{end} of {totalCount} logs',

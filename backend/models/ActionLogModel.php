@@ -27,7 +27,7 @@ use yii\db\Expression;
  * @property string $created_at
  * @property string $updated_at
  */
-class ActionLog extends ActiveRecord
+class ActionLogModel extends ActiveRecord
 {
     const STATUS_SUCCESS = 'success';
     const STATUS_FAILED = 'failed';

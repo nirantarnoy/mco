@@ -1,9 +1,9 @@
 <?php
-namespace app\controllers;
+namespace backend\controllers;
 
+use backend\models\ActionLogModel;
+use backend\models\ActionLogSearchModel;
 use Yii;
-use backend\models\ActionLog;
-use backend\models\ActionLogSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -48,12 +48,12 @@ class ActionLogController extends Controller
      */
     public function actionIndex()
     {
-        $searchModel = new ActionLogSearch();
+        $searchModel = new ActionLogSearchModel();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
         // สถิติ
-        $statistics = ActionLogSearch::getStatistics();
-        $popularActions = ActionLogSearch::getPopularActions();
+        $statistics = ActionLogSearchModel::getStatistics();
+        $popularActions = ActionLogSearchModel::getPopularActions();
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -74,7 +74,7 @@ class ActionLogController extends Controller
         $model = $this->findModel($id);
 
         // บันทึก log การดู
-        ActionLog::log('VIEW_LOG', ['viewed_log_id' => $id]);
+        ActionLogModel::log('VIEW_LOG', ['viewed_log_id' => $id]);
 
         return $this->render('view', [
             'model' => $model,
@@ -94,7 +94,7 @@ class ActionLogController extends Controller
         $model->delete();
 
         // บันทึก log การลบ
-        ActionLog::log('DELETE_LOG', ['deleted_log_id' => $id]);
+        ActionLogModel::log('DELETE_LOG', ['deleted_log_id' => $id]);
 
         Yii::$app->session->setFlash('success', 'Log deleted successfully.');
         return $this->redirect(['index']);
@@ -108,10 +108,10 @@ class ActionLogController extends Controller
         $selection = Yii::$app->request->post('selection');
 
         if ($selection) {
-            $count = ActionLog::deleteAll(['id' => $selection]);
+            $count = ActionLogModel::deleteAll(['id' => $selection]);
 
             // บันทึก log การลบหลายรายการ
-            ActionLog::log('BULK_DELETE_LOGS', [
+            ActionLogModel::log('BULK_DELETE_LOGS', [
                 'deleted_count' => $count,
                 'deleted_ids' => $selection
             ]);
@@ -129,10 +129,10 @@ class ActionLogController extends Controller
      */
     public function actionCleanOld($days = 90)
     {
-        $count = ActionLog::cleanOldLogs($days);
+        $count = ActionLogModel::cleanOldLogs($days);
 
         // บันทึก log การทำความสะอาด
-        ActionLog::log('CLEAN_OLD_LOGS', [
+        ActionLogModel::log('CLEAN_OLD_LOGS', [
             'days' => $days,
             'deleted_count' => $count
         ]);
@@ -146,7 +146,7 @@ class ActionLogController extends Controller
      */
     public function actionExport()
     {
-        $searchModel = new ActionLogSearch();
+        $searchModel = new ActionLogSearchModel();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
         $dataProvider->pagination = false; // ดึงข้อมูลทั้งหมด
 
@@ -187,7 +187,7 @@ class ActionLogController extends Controller
         fclose($output);
 
         // บันทึก log การ export
-        ActionLog::log('EXPORT_LOGS', ['filename' => $filename]);
+        ActionLogModel::log('EXPORT_LOGS', ['filename' => $filename]);
 
         exit;
     }
@@ -203,14 +203,14 @@ class ActionLogController extends Controller
             $date = date('Y-m-d', strtotime("-{$i} days"));
             $dailyStats[] = [
                 'date' => $date,
-                'total' => ActionLog::find()->where(['like', 'created_at', $date])->count(),
-                'success' => ActionLog::find()->where(['like', 'created_at', $date])->andWhere(['status' => ActionLog::STATUS_SUCCESS])->count(),
-                'failed' => ActionLog::find()->where(['like', 'created_at', $date])->andWhere(['status' => ActionLog::STATUS_FAILED])->count(),
+                'total' => ActionLogModel::find()->where(['like', 'created_at', $date])->count(),
+                'success' => ActionLogModel::find()->where(['like', 'created_at', $date])->andWhere(['status' => ActionLogModel::STATUS_SUCCESS])->count(),
+                'failed' => ActionLogModel::find()->where(['like', 'created_at', $date])->andWhere(['status' => ActionLogModel::STATUS_FAILED])->count(),
             ];
         }
 
         // Top Actions
-        $topActions = ActionLog::find()
+        $topActions = ActionLogModel::find()
             ->select(['action', 'COUNT(*) as count'])
             ->where(['>=', 'created_at', date('Y-m-d H:i:s', strtotime('-30 days'))])
             ->groupBy('action')
@@ -220,7 +220,7 @@ class ActionLogController extends Controller
             ->all();
 
         // Top Users
-        $topUsers = ActionLog::find()
+        $topUsers = ActionLogModel::find()
             ->select(['username', 'COUNT(*) as count'])
             ->where(['>=', 'created_at', date('Y-m-d H:i:s', strtotime('-30 days'))])
             ->andWhere(['is not', 'username', null])
@@ -234,7 +234,7 @@ class ActionLogController extends Controller
             'dailyStats' => $dailyStats,
             'topActions' => $topActions,
             'topUsers' => $topUsers,
-            'statistics' => ActionLogSearch::getStatistics(),
+            'statistics' => ActionLogSearchModel::getStatistics(),
         ]);
     }
 
@@ -247,7 +247,7 @@ class ActionLogController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = ActionLog::findOne($id)) !== null) {
+        if (($model = ActionLogModel::findOne($id)) !== null) {
             return $model;
         }
 
