@@ -2,6 +2,7 @@
 
 namespace backend\controllers;
 
+use app\behaviors\ActionLogBehavior;
 use Yii;
 use backend\models\JournalTrans;
 use backend\models\JournalTransLine;
@@ -33,6 +34,10 @@ class JournaltransController extends Controller
                     'delete' => ['POST'],
                     'approve' => ['POST'],
                 ],
+            ],
+            'actionLog' => [
+                'class' => ActionLogBehavior::class,
+                'actions' => ['create', 'update', 'delete','view','print', 'approve','createorigin'], // Log เฉพาะ actions เหล่านี้
             ],
         ];
     }

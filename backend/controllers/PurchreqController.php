@@ -34,7 +34,7 @@ class PurchreqController extends Controller
             ],
             'actionLog' => [
                 'class' => ActionLogBehavior::class,
-                'actions' => ['create', 'update', 'delete', 'approve','convert-to-purchase-order'], // Log เฉพาะ actions เหล่านี้
+                'actions' => ['create', 'update', 'delete','view','print', 'approve','convert-to-purchase-order'], // Log เฉพาะ actions เหล่านี้
             ],
         ];
     }

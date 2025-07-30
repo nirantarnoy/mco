@@ -27,42 +27,71 @@
                 </li>
                 <?php endif;?>
 
-                <?php if(\Yii::$app->user->can('department/index') || \Yii::$app->user->can('position/index') || \Yii::$app->user->can('employee/index')):?>
+                <?php if(\Yii::$app->user->can('paymentterm/index') || \Yii::$app->user->can('paymentmethod/index') || \Yii::$app->user->can('employee/index')):?>
                 <li class="nav-item has-treeview has-sub">
                     <a href="#" class="nav-link">
-                        <i class="nav-icon fas fa-users-cog"></i>
+                        <i class="nav-icon fas fa-cogs"></i>
                         <p>
-                            พนักงาน
+                            ตั้งค่าทั่วไป
                             <i class="fas fa-angle-left right"></i>
                         </p>
                     </a>
                     <ul class="nav nav-treeview">
-                        <?php if (\Yii::$app->user->can('department/index')): ?>
+                        <?php if (\Yii::$app->user->can('paymentterm/index')): ?>
                         <li class="nav-item">
-                            <a href="index.php?r=department/index" class="nav-link department">
+                            <a href="index.php?r=paymentterm/index" class="nav-link paymentterm">
                                 <i class="far fa-circlez nav-icon"></i>
-                                <p>แผนก</p>
+                                <p>เงื่อนไขการชําระ</p>
                             </a>
                         </li>
                         <?php endif; ?>
-                        <?php if (\Yii::$app->user->can('position/index')): ?>
+                        <?php if (\Yii::$app->user->can('paymentmethod/index')): ?>
                         <li class="nav-item">
-                            <a href="index.php?r=position/index" class="nav-link position">
+                            <a href="index.php?r=paymentmethod/index" class="nav-link paymentmethod">
                                 <i class="far fa-circlez nav-icon"></i>
-                                <p>ตำแหน่ง</p>
+                                <p>วิธีการชําระเงิน</p>
                             </a>
                         </li>
-                        <?php endif; ?>
-                        <?php if (\Yii::$app->user->can('employee/index')): ?>
-                            <li class="nav-item">
-                                <a href="index.php?r=employee/index" class="nav-link employee">
-                                    <i class="far fa-circlez nav-icon"></i>
-                                    <p>พนักงาน</p>
-                                </a>
-                            </li>
                         <?php endif; ?>
                     </ul>
                 </li>
+                <?php endif;?>
+                <?php if(\Yii::$app->user->can('department/index') || \Yii::$app->user->can('position/index') || \Yii::$app->user->can('employee/index')):?>
+                    <li class="nav-item has-treeview has-sub">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-users-cog"></i>
+                            <p>
+                                พนักงาน
+                                <i class="fas fa-angle-left right"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <?php if (\Yii::$app->user->can('department/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=department/index" class="nav-link department">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>แผนก</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                            <?php if (\Yii::$app->user->can('position/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=position/index" class="nav-link position">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>ตำแหน่ง</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                            <?php if (\Yii::$app->user->can('employee/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=employee/index" class="nav-link employee">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>พนักงาน</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                        </ul>
+                    </li>
                 <?php endif;?>
 
                 <?php if(\Yii::$app->user->can('productgroup/index')||\Yii::$app->user->can('product/index')||\Yii::$app->user->can('warehouse/index')||\Yii::$app->user->can('product/index')||\Yii::$app->user->can('stocksum/index')||\Yii::$app->user->can('stocktrans/index')):?>
@@ -116,14 +145,6 @@
                                 <p>คลังสินค้า</p>
                             </a>
                         </li>
-                        <?php endif; ?>
-                        <?php if (\Yii::$app->user->can('watchmaker/index')): ?>
-                            <li class="nav-item">
-                                <a href="index.php?r=watchmaker" class="nav-link watchmaker">
-                                    <i class="far fa-circlez nav-icon"></i>
-                                    <p>ช่างนาฬิกา</p>
-                                </a>
-                            </li>
                         <?php endif; ?>
                         <?php if (\Yii::$app->user->can('stocksum/index')): ?>
                         <li class="nav-item">

@@ -1,6 +1,7 @@
 <?php
 namespace backend\controllers;
 
+use app\behaviors\ActionLogBehavior;
 use backend\models\JournalTrans;
 use Mpdf\Mpdf;
 use Yii;
@@ -31,6 +32,10 @@ class PurchController extends Controller
                 'actions' => [
                     'delete' => ['POST'],
                 ],
+            ],
+            'actionLog' => [
+                'class' => ActionLogBehavior::class,
+                'actions' => ['create', 'update', 'delete', 'approve','reject','receive','cancel-receive','view','print'], // Log เฉพาะ actions เหล่านี้
             ],
         ];
     }
@@ -892,5 +897,8 @@ class PurchController extends Controller
             }
         }
         return $this->redirect(['update', 'id' => $id]);
+    }
+    public function actionPrintInvoice($id){
+        return $this->render('_print-invoice');
     }
 }
