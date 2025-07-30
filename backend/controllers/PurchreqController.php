@@ -11,12 +11,14 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
+use yii\web\UploadedFile;
 
 /**
  * PurchReqController implements the CRUD actions for PurchReq model.
  */
 class PurchreqController extends Controller
 {
+    public $enableCsrfValidation = false;
     /**
      * {@inheritdoc}
      */
@@ -536,5 +538,45 @@ class PurchreqController extends Controller
             'model' => $model,
             'model_line' => $model_line,
         ]);
+    }
+
+    public function actionAddDocFile(){
+        $id = \Yii::$app->request->post('id');
+        if($id){
+            $uploaded = UploadedFile::getInstancesByName('file_doc');
+                if (!empty($uploaded)) {
+                    $loop = 0;
+                    foreach ($uploaded as $file) {
+                        $upfiles = "worker_" . time()."_".$loop . "." . $file->getExtension();
+                        if ($file->saveAs('uploads/purch_req_doc/' . $upfiles)) {
+                            $model_doc = new \common\models\PurchReqDoc();
+                            $model_doc->purch_req_id = $id;
+                            $model_doc->doc_name = $upfiles;
+                            $model_doc->created_by = \Yii::$app->user->id;
+                            $model_doc->created_at = time();
+                            $model_doc->save(false);
+                        }
+                        $loop++;
+                    }
+                }
+
+        }
+        return $this->redirect(['update', 'id' => $id]);
+    }
+
+    public function actionDeleteDocFile(){
+        $id = \Yii::$app->request->post('id');
+        $doc_delete_list = trim(\Yii::$app->request->post('doc_delete_list'));
+        if($id){
+            $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $id,'doc_name' => $doc_delete_list])->one();
+            if($model_doc){
+                if($model_doc->delete()){
+                    if(file_exists('uploads/purch_req_doc/'.$model_doc->doc_name)){
+                        unlink('uploads/purch_req_doc/'.$model_doc->doc_name);
+                    }
+                }
+            }
+        }
+        return $this->redirect(['update', 'id' => $id]);
     }
 }

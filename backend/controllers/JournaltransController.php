@@ -13,12 +13,14 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\helpers\Json;
 use yii\web\Response;
+use yii\web\UploadedFile;
 
 /**
  * JournalTransController implements the CRUD actions for JournalTransX model.
  */
 class JournaltransController extends Controller
 {
+    public $enableCsrfValidation = false;
     /**
      * {@inheritdoc}
      */
@@ -626,9 +628,9 @@ class JournaltransController extends Controller
         }
 
         // Load existing journal trans lines
-        $model->journalTransLines = $model->getJournalTransLines()->all();
+        $model->journalTransLinesline = $model->getJournalTransLines()->all();
         if (empty($model->journalTransLines)) {
-            $model->journalTransLines = [new JournalTransLine()];
+            $model->journalTransLinesline = [new JournalTransLine()];
         }
 
         if ($model->load(Yii::$app->request->post())) {
@@ -882,5 +884,44 @@ class JournaltransController extends Controller
     {
       //  $this->layout = 'print'; // Use minimal print layout
         return $this->render('_printpickupout');
+    }
+
+    public function actionAddDocFile(){
+        $id = \Yii::$app->request->post('id');
+        if($id){
+            $uploaded = UploadedFile::getInstancesByName('file_doc');
+            if (!empty($uploaded)) {
+                $loop = 0;
+                foreach ($uploaded as $file) {
+                    $upfiles = "worker_" . time()."_".$loop . "." . $file->getExtension();
+                    if ($file->saveAs('uploads/journal_trans_doc/' . $upfiles)) {
+                        $model_doc = new \common\models\JournalTransDoc();
+                        $model_doc->journal_trans_id = $id;
+                        $model_doc->doc_name = $upfiles;
+                        $model_doc->created_by = \Yii::$app->user->id;
+                        $model_doc->created_at = time();
+                        $model_doc->save(false);
+                    }
+                    $loop++;
+                }
+            }
+
+        }
+        return $this->redirect(['update', 'id' => $id]);
+    }
+    public function actionDeleteDocFile(){
+        $id = \Yii::$app->request->post('id');
+        $doc_delete_list = trim(\Yii::$app->request->post('doc_delete_list'));
+        if($id){
+            $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' => $id,'doc_name' => $doc_delete_list])->one();
+            if($model_doc){
+                if($model_doc->delete()){
+                    if(file_exists('uploads/journal_trans_doc/'.$model_doc->doc_name)){
+                        unlink('uploads/journal_trans_doc/'.$model_doc->doc_name);
+                    }
+                }
+            }
+        }
+        return $this->redirect(['update', 'id' => $id]);
     }
 }

@@ -13,6 +13,8 @@ $this->title = 'ใบสั่งซื้อ: ' . $model->purch_no;
 $this->params['breadcrumbs'][] = ['label' => 'ใบสั่งซื้อ', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
+
+$model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])->all();
 ?>
     <div class="purch-view">
 
@@ -266,7 +268,46 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
 
     </div>
+    <br/>
+    <div class="label">
+        <h4>เอกสารแนบ</h4>
+    </div>
+    <div class="row">
+        <div class="col-lg-8">
+            <table class="table table-bordered table-striped" style="width: 100%">
+                <thead>
+                <tr>
+                    <th style="width: 5%;text-align: center">#</th>
+                    <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
+                    <th style="width: 10%;text-align: center">ดูเอกสาร</th>
+                    <th style="width: 5%;text-align: center">-</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if ($model_doc != null): ?>
 
+                    <?php foreach ($model_doc as $key => $value): ?>
+                        <tr>
+                            <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
+                            <td><?= $value->doc_name ?></td>
+                            <td style="text-align: center">
+                                <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $value->doc_name ?>"
+                                   target="_blank">
+                                    ดูเอกสาร
+                                </a>
+                            </td>
+                            <td style="text-align: center">
+<!--                                <div class="btn btn-danger" data-var="--><?php //= trim($value->doc_name) ?><!--" onclick="delete_doc($(this))">ลบ</div>-->
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-lg-1"></div>
+    </div>
+    <br/>
     <br/>
     <div class="row">
         <?php if ($model->approve_status == 1): ?>

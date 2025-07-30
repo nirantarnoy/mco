@@ -14,6 +14,8 @@ use yii\helpers\Url;
 /* @var $model backend\models\PurchReq */
 /* @var $form yii\widgets\ActiveForm */
 
+$model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model->id])->all();
+
 // CSS สำหรับ autocomplete
 $autocompleteCSS = <<<CSS
 .autocomplete-dropdown {
@@ -404,7 +406,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 
     <?php $form = ActiveForm::begin([
         'id' => 'purch-req-form',
-        'options' => ['class' => 'form-horizontal'],
+        'options' => ['class' => 'form-horizontal', 'enctype' => 'multipart/form-data'],
     ]); ?>
 
     <div class="card">
@@ -418,7 +420,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                         'maxlength' => true,
                         'placeholder' => 'ระบบจะสร้างอัตโนมัติหากไม่ระบุ'
                     ]) ?>
-                    <?= $form->field($model,'job_id')->widget(Select2::class, [
+                    <?= $form->field($model, 'job_id')->widget(Select2::class, [
                         'data' => \yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(), 'id', 'job_no'),
                         'language' => 'th',
                         'options' => ['placeholder' => 'เลือกงาน'],
@@ -432,7 +434,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                         ]
                     ]) ?>
 
-                    <?= $form->field($model, 'vendor_id')->widget(Select2::className(),[
+                    <?= $form->field($model, 'vendor_id')->widget(Select2::className(), [
                         'data' => ArrayHelper::map(\backend\models\Vendor::find()->all(), 'id', 'name'),
                         'options' => ['placeholder' => 'เลือกผู้จําหน่าย'],
                         'pluginOptions' => [
@@ -629,6 +631,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
         </div>
     </div>
 
+
     <div class="form-group mt-3">
         <div class="d-flex justify-content-between">
             <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
@@ -639,5 +642,84 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
     </div>
 
     <?php ActiveForm::end(); ?>
+    <hr>
+    <br/>
+    <div class="label">
+        <h4>เอกสารแนบ</h4>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <table class="table table-bordered table-striped" style="width: 100%">
+                <thead>
+                <tr>
+                    <th style="width: 5%;text-align: center">#</th>
+                    <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
+                    <th style="width: 10%;text-align: center">ดูเอกสาร</th>
+                    <th style="width: 5%;text-align: center">-</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if ($model_doc != null): ?>
+
+                    <?php foreach ($model_doc as $key => $value): ?>
+                        <tr>
+                            <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
+                            <td><?= $value->doc_name ?></td>
+                            <td style="text-align: center">
+                                <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_req_doc/' . $value->doc_name ?>"
+                                   target="_blank">
+                                    ดูเอกสาร
+                                </a>
+                            </td>
+                            <td style="text-align: center">
+                                <div class="btn btn-danger" data-var="<?= trim($value->doc_name) ?>"
+                                     onclick="delete_doc($(this))">ลบ
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <br/>
+
+    <form action="<?= Url::to(['purchreq/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="id" value="<?= $model->id ?>">
+        <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+            <div class="row">
+                <div class="col-lg-12">
+                    <label for="">เอกสารแนบ</label>
+                    <input type="file" name="file_doc" multiple>
+                </div>
+            </div>
+            <br/>
+            <div class="row">
+                <div class="col-lg-12">
+                    <button class="btn btn-info">
+                        <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+    <form id="form-delete-doc-file" action="<?= Url::to(['purch/delete-doc-file'], true) ?>" method="post">
+        <input type="hidden" name="id" value="<?= $model->id ?>">
+        <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
+    </form>
 
 </div>
+
+<?php
+$script = <<< JS
+function delete_doc(e){
+    var file_name = e.attr('data-var');
+    if(file_name != null){
+        $(".delete-doc-list").val(file_name);
+        $("#form-delete-doc-file").submit();
+    }
+}
+JS;
+$this->registerJs($script, static::POS_END);
+?>

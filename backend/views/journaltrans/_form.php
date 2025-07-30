@@ -10,6 +10,7 @@ use backend\models\Product;
 use kartik\date\DatePicker;
 use kartik\select2\Select2;
 use yii\helpers\Url;
+
 //use yii\bootstrap\Modal;
 
 /* @var $this yii\web\View */
@@ -19,7 +20,9 @@ use yii\helpers\Url;
 
 $this->registerJsFile('@web/js/journal-trans.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
-$damage_list = [['id'=>1,'name'=>'สภาพปกติ'],['id'=>2,'name'=>'สภาพไม่ปกติ']];
+$damage_list = [['id' => 1, 'name' => 'สภาพปกติ'], ['id' => 2, 'name' => 'สภาพไม่ปกติ']];
+
+$model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' => $model->id])->all();
 
 // CSS สำหรับ autocomplete และ alerts
 $autocompleteCSS = <<<CSS
@@ -623,232 +626,232 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
     </div>
 <?php endif; ?>
 
-    <div class="journal-trans-form">
+<div class="journal-trans-form">
 
-        <?php $form = ActiveForm::begin([
-            'id' => 'journal-trans-form',
-            'options' => ['class' => 'form-horizontal'],
-            'fieldConfig' => [
-                'template' => "{label}\n<div class=\"col-sm-12\">{input}\n{error}</div>",
-                'labelOptions' => ['class' => 'col-sm-3 control-label'],
-            ],
-        ]); ?>
+    <?php $form = ActiveForm::begin([
+        'id' => 'journal-trans-form',
+        'options' => ['class' => 'form-horizontal'],
+        'fieldConfig' => [
+            'template' => "{label}\n<div class=\"col-sm-12\">{input}\n{error}</div>",
+            'labelOptions' => ['class' => 'col-sm-3 control-label'],
+        ],
+    ]); ?>
 
-        <div class="row">
-            <div class="col-md-6">
-                <?php $model->trans_date = $model->isNewRecord ? date('Y-m-d') : date('Y-m-d', strtotime($model->trans_date)); ?>
-                <?= $form->field($model, 'trans_date')->widget(DatePicker::class, [
-                    'options' => ['placeholder' => 'Select transaction date'],
-                    'pluginOptions' => [
-                        'autoclose' => true,
-                        'format' => 'yyyy-mm-dd',
-                        'todayHighlight' => true,
-                    ]
+    <div class="row">
+        <div class="col-md-6">
+            <?php $model->trans_date = $model->isNewRecord ? date('Y-m-d') : date('Y-m-d', strtotime($model->trans_date)); ?>
+            <?= $form->field($model, 'trans_date')->widget(DatePicker::class, [
+                'options' => ['placeholder' => 'Select transaction date'],
+                'pluginOptions' => [
+                    'autoclose' => true,
+                    'format' => 'yyyy-mm-dd',
+                    'todayHighlight' => true,
+                ]
+            ]) ?>
+
+            <?php $crate_type = $_GET['type'] ?? null; ?>
+            <?= $form->field($model, 'trans_type_id')->dropDownList(
+                JournalTrans::getTransTypeOptions(),
+                [
+                    'prompt' => 'Select Transaction Type',
+                    'id' => 'trans-type-select',
+                    'value' => $model->isNewRecord ? $crate_type : $model->trans_type_id,
+                    'onchange' => 'updateStockType(this.value)'
+                ]
+            ) ?>
+
+            <?= $form->field($model, 'stock_type_id')->dropDownList(
+                JournalTrans::getStockTypeOptions(),
+                ['prompt' => 'Select Stock Type', 'id' => 'stock-type-select', 'readonly' => true]
+            ) ?>
+
+        </div>
+
+        <div class="col-md-6">
+            <?= $form->field($model, 'customer_name')->textInput(['maxlength' => true]) ?>
+
+            <div class="return-fields">
+                <?= $form->field($model, 'return_for_trans_id')->widget(Select2::className(), [
+                    'data' => ArrayHelper::map(
+                        JournalTrans::find()
+                            ->where(['trans_type_id' => [3, 5]]) // Issue Stock, Issue Borrow
+                            ->andWhere(['status' => 0])
+                            ->asArray()->all(),
+                        'id', 'journal_no'
+                    ),
+                    'options' => [
+                        'id' => 'return-for-trans-select',
+                        'placeholder' => 'Select Return for Transaction',
+                        'disabled' => true
+                    ],
                 ]) ?>
-
-                <?php $crate_type = $_GET['type']??null; ?>
-                <?= $form->field($model, 'trans_type_id')->dropDownList(
-                    JournalTrans::getTransTypeOptions(),
-                    [
-                        'prompt' => 'Select Transaction Type',
-                        'id' => 'trans-type-select',
-                        'value' => $model->isNewRecord ? $crate_type : $model->trans_type_id,
-                        'onchange' => 'updateStockType(this.value)'
-                    ]
-                ) ?>
-
-                <?= $form->field($model, 'stock_type_id')->dropDownList(
-                    JournalTrans::getStockTypeOptions(),
-                    ['prompt' => 'Select Stock Type', 'id' => 'stock-type-select','readonly' => true]
-                ) ?>
-
             </div>
 
-            <div class="col-md-6">
-                <?= $form->field($model, 'customer_name')->textInput(['maxlength' => true]) ?>
+            <?= $form->field($model, 'remark')->textarea(['rows' => 3]) ?>
 
-                <div class="return-fields">
-                    <?= $form->field($model, 'return_for_trans_id')->widget(Select2::className(),[
-                        'data'=>ArrayHelper::map(
-                            JournalTrans::find()
-                                ->where(['trans_type_id' => [3, 5]]) // Issue Stock, Issue Borrow
-                                ->andWhere(['status' => 0])
-                                ->asArray()->all(),
-                            'id', 'journal_no'
-                        ),
-                        'options' => [
-                            'id' => 'return-for-trans-select',
-                            'placeholder' => 'Select Return for Transaction',
-                            'disabled' => true
-                        ],
-                    ]) ?>
+            <?php if (!$model->isNewRecord): ?>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Journal No</label>
+                    <div class="col-sm-9">
+                        <p class="form-control-static"><?= Html::encode($model->journal_no) ?></p>
+                    </div>
                 </div>
 
-                <?= $form->field($model, 'remark')->textarea(['rows' => 3]) ?>
-
-                <?php if (!$model->isNewRecord): ?>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">Journal No</label>
-                        <div class="col-sm-9">
-                            <p class="form-control-static"><?= Html::encode($model->journal_no) ?></p>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">Status</label>
-                        <div class="col-sm-9">
-                            <p class="form-control-static">
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">Status</label>
+                    <div class="col-sm-9">
+                        <p class="form-control-static">
                             <span class="label label-<?= $model->status === 'approved' ? 'success' : 'default' ?>">
                                 <?= Html::encode(ucfirst($model->status)) ?>
                             </span>
-                            </p>
-                        </div>
+                        </p>
                     </div>
-                <?php endif; ?>
-            </div>
+                </div>
+            <?php endif; ?>
         </div>
+    </div>
 
-        <hr>
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">รายละเอียดสินค้า</h5>
-            </div>
-            <div class="card-body">
-                <?php DynamicFormWidget::begin([
-                    'widgetContainer' => 'dynamicform_wrapper',
-                    'widgetBody' => '.container-items',
-                    'widgetItem' => '.item',
-                    'limit' => 10,
-                    'min' => 1,
-                    'insertButton' => '.add-item',
-                    'deleteButton' => '.remove-item',
-                    'model' => $model->journalTransLines[0] ?? new \backend\models\JournalTransLine(),
-                    'formId' => 'journal-trans-form',
-                    'formFields' => [
-                        'product_id',
-                        'warehouse_id',
-                        'qty',
-                        'line_price',
-                        'unit_id',
-                        'good_qty',
-                        'damaged_qty',
-                        'missing_qty',
-                        'condition_note',
-                        'return_note',
-                    ],
-                ]); ?>
+    <hr>
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">รายละเอียดสินค้า</h5>
+        </div>
+        <div class="card-body">
+            <?php DynamicFormWidget::begin([
+                'widgetContainer' => 'dynamicform_wrapper',
+                'widgetBody' => '.container-items',
+                'widgetItem' => '.item',
+                'limit' => 10,
+                'min' => 1,
+                'insertButton' => '.add-item',
+                'deleteButton' => '.remove-item',
+                'model' => $model->journalTransLines[0] ?? new \backend\models\JournalTransLine(),
+                'formId' => 'journal-trans-form',
+                'formFields' => [
+                    'product_id',
+                    'warehouse_id',
+                    'qty',
+                    'line_price',
+                    'unit_id',
+                    'good_qty',
+                    'damaged_qty',
+                    'missing_qty',
+                    'condition_note',
+                    'return_note',
+                ],
+            ]); ?>
 
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead class="table-light">
-                        <tr>
-                            <th style="width: 50px;">ลำดับ</th>
-                            <th style="width: 200px;">สินค้า</th>
-                            <th style="width: 150px;">คลังจัดเก็บ</th>
-                            <th style="width: 100px;">ยอดเบิกไป</th>
-                            <th style="width: 100px;">คงเหลือคืนได้</th>
-                            <th style="width: 120px;">จำนวนคืน</th>
-                            <th style="width: 80px;">หน่วยนับ</th>
-                            <th style="width: 100px;">สภาพสินค้า</th>
-                            <th style="width: 100px;">หมายเหตุ</th>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                    <tr>
+                        <th style="width: 50px;">ลำดับ</th>
+                        <th style="width: 200px;">สินค้า</th>
+                        <th style="width: 150px;">คลังจัดเก็บ</th>
+                        <th style="width: 100px;">ยอดเบิกไป</th>
+                        <th style="width: 100px;">คงเหลือคืนได้</th>
+                        <th style="width: 120px;">จำนวนคืน</th>
+                        <th style="width: 80px;">หน่วยนับ</th>
+                        <th style="width: 100px;">สภาพสินค้า</th>
+                        <th style="width: 100px;">หมายเหตุ</th>
+                    </tr>
+                    </thead>
+                    <tbody class="container-items">
+                    <?php if (empty($model->journalTransLines)): ?>
+                        <tr class="item">
+                            <td colspan="9" class="text-center">กรุณาเลือกรายการที่ต้องการคืนก่อน</td>
                         </tr>
-                        </thead>
-                        <tbody class="container-items">
-                        <?php if (empty($model->journalTransLines)): ?>
+                    <?php else: ?>
+                        <?php foreach ($model->journalTransLines as $index => $journaltransline): ?>
                             <tr class="item">
-                                <td colspan="9" class="text-center">กรุณาเลือกรายการที่ต้องการคืนก่อน</td>
-                            </tr>
-                        <?php else: ?>
-                            <?php foreach ($model->journalTransLines as $index => $journaltransline): ?>
-                                <tr class="item">
-                                    <td class="text-center align-middle">
-                                        <span class="item-number"><?= $index + 1 ?></span>
-                                    </td>
-                                    <td>
-                                        <?php if (!$journaltransline->isNewRecord): ?>
-                                            <?= Html::activeHiddenInput($journaltransline, "[{$index}]id") ?>
-                                        <?php endif; ?>
+                                <td class="text-center align-middle">
+                                    <span class="item-number"><?= $index + 1 ?></span>
+                                </td>
+                                <td>
+                                    <?php if (!$journaltransline->isNewRecord): ?>
+                                        <?= Html::activeHiddenInput($journaltransline, "[{$index}]id") ?>
+                                    <?php endif; ?>
 
-                                        <div class="product-field-container" style="width: 100%">
-                                            <?= Html::activeHiddenInput($journaltransline, "[{$index}]product_id", [
-                                                'class' => 'product-id-hidden',
-                                                'data-index' => $index,
-                                            ]) ?>
+                                    <div class="product-field-container" style="width: 100%">
+                                        <?= Html::activeHiddenInput($journaltransline, "[{$index}]product_id", [
+                                            'class' => 'product-id-hidden',
+                                            'data-index' => $index,
+                                        ]) ?>
 
-                                            <?= $form->field($journaltransline, "[{$index}]product_name")->textInput([
-                                                'class' => 'form-control product-autocomplete',
-                                                'placeholder' => 'พิมพ์ชื่อสินค้าหรือรหัสสินค้า...',
-                                                'data-index' => $index,
-                                                'autocomplete' => 'off',
-                                                'style' => 'width: 100%'
-                                            ])->label(false) ?>
+                                        <?= $form->field($journaltransline, "[{$index}]product_name")->textInput([
+                                            'class' => 'form-control product-autocomplete',
+                                            'placeholder' => 'พิมพ์ชื่อสินค้าหรือรหัสสินค้า...',
+                                            'data-index' => $index,
+                                            'autocomplete' => 'off',
+                                            'style' => 'width: 100%'
+                                        ])->label(false) ?>
 
-                                            <div class="autocomplete-dropdown" data-index="<?= $index ?>"></div>
-                                        </div>
-                                    </td>
+                                        <div class="autocomplete-dropdown" data-index="<?= $index ?>"></div>
+                                    </div>
+                                </td>
 
-                                    <td>
-                                        <?= $form->field($journaltransline, "[{$index}]warehouse_id")->dropDownList(
-                                            [],
-                                            [
-                                                'prompt' => '-- เลือกคลัง --',
-                                                'class' => 'form-control warehouse-select',
-                                                'data-index' => $index,
-                                                'style' => 'width: 100%',
-                                            ]
-                                        )->label(false) ?>
-                                    </td>
-                                    <td>
-                                        <input type="text" class="form-control line-product-onhand" name="stock_qty"
-                                               readonly value="" data-index="<?= $index ?>">
-                                    </td>
-                                    <td>
-                                        <input type="text" class="form-control text-center readonly-field"
-                                               readonly value="" data-index="<?= $index ?>">
-                                    </td>
-                                    <td>
-                                        <div class="stock-alert" style="position: relative;">
-                                            <?= $form->field($journaltransline, "[{$index}]qty")->textInput([
-                                                'type' => 'number',
-                                                'step' => '0.01',
-                                                'min' => '0',
-                                                'placeholder' => '0',
-                                                'class' => 'form-control qty-input',
-                                                'data-index' => $index,
-                                            ])->label(false) ?>
-                                            <div class="alert-message" data-index="<?= $index ?>"></div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <?= $form->field($journaltransline, "[{$index}]unit_id")->textInput([
-                                            'readonly' => true,
-                                            'class' => 'form-control line-unit-id',
-                                            'style' => 'background-color: #f8f9fa;',
+                                <td>
+                                    <?= $form->field($journaltransline, "[{$index}]warehouse_id")->dropDownList(
+                                        [],
+                                        [
+                                            'prompt' => '-- เลือกคลัง --',
+                                            'class' => 'form-control warehouse-select',
+                                            'data-index' => $index,
+                                            'style' => 'width: 100%',
+                                        ]
+                                    )->label(false) ?>
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control line-product-onhand" name="stock_qty"
+                                           readonly value="" data-index="<?= $index ?>">
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control text-center readonly-field"
+                                           readonly value="" data-index="<?= $index ?>">
+                                </td>
+                                <td>
+                                    <div class="stock-alert" style="position: relative;">
+                                        <?= $form->field($journaltransline, "[{$index}]qty")->textInput([
+                                            'type' => 'number',
+                                            'step' => '0.01',
+                                            'min' => '0',
+                                            'placeholder' => '0',
+                                            'class' => 'form-control qty-input',
                                             'data-index' => $index,
                                         ])->label(false) ?>
-                                    </td>
-                                    <td class="text-center">
-                                      <?= $form->field($journaltransline, "[{$index}]is_damage")->dropDownList(ArrayHelper::map($damage_list, 'id', 'name'), ['class' => 'form-control', 'data-index' => $index])->label(false) ?>
-                                    </td>
-                                    <td class="align-middle">
-                                      <?= $form->field($journaltransline, "[{$index}]return_note")->textInput([
-                                          'class' => 'form-control note-input',])->label(false) ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-
-                <?php DynamicFormWidget::end(); ?>
+                                        <div class="alert-message" data-index="<?= $index ?>"></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <?= $form->field($journaltransline, "[{$index}]unit_id")->textInput([
+                                        'readonly' => true,
+                                        'class' => 'form-control line-unit-id',
+                                        'style' => 'background-color: #f8f9fa;',
+                                        'data-index' => $index,
+                                    ])->label(false) ?>
+                                </td>
+                                <td class="text-center">
+                                    <?= $form->field($journaltransline, "[{$index}]is_damage")->dropDownList(ArrayHelper::map($damage_list, 'id', 'name'), ['class' => 'form-control', 'data-index' => $index])->label(false) ?>
+                                </td>
+                                <td class="align-middle">
+                                    <?= $form->field($journaltransline, "[{$index}]return_note")->textInput([
+                                        'class' => 'form-control note-input',])->label(false) ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
+
+            <?php DynamicFormWidget::end(); ?>
         </div>
+    </div>
 
-        <hr>
+    <hr>
 
-        <?php if ($model->isNewRecord): ?>
-            <div class="form-group">
+    <?php if ($model->isNewRecord): ?>
+    <div class="form-group">
         <div class="form-group">
             <div class="col-sm-offset-3 col-sm-9">
                 <?= Html::submitButton($model->isNewRecord ? 'Create' : 'Update', [
@@ -861,19 +864,86 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
 
         <?php ActiveForm::end(); ?>
 
+        <hr>
+        <br/>
+        <div class="label">
+            <h4>เอกสารแนบ</h4>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <table class="table table-bordered table-striped" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th style="width: 5%;text-align: center">#</th>
+                        <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
+                        <th style="width: 10%;text-align: center">ดูเอกสาร</th>
+                        <th style="width: 5%;text-align: center">-</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if ($model_doc != null): ?>
+
+                        <?php foreach ($model_doc as $key => $value): ?>
+                            <tr>
+                                <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
+                                <td><?= $value->doc_name ?></td>
+                                <td style="text-align: center">
+                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/journal_trans_doc/' . $value->doc_name ?>"
+                                       target="_blank">
+                                        ดูเอกสาร
+                                    </a>
+                                </td>
+                                <td style="text-align: center">
+                                    <div class="btn btn-danger" data-var="<?= trim($value->doc_name) ?>"
+                                         onclick="delete_doc($(this))">ลบ
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <br/>
+
+        <form action="<?= Url::to(['journaltrans/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="id" value="<?= $model->id ?>">
+            <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <label for="">เอกสารแนบ</label>
+                        <input type="file" name="file_doc" multiple>
+                    </div>
+                </div>
+                <br/>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <button class="btn btn-info">
+                            <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <form id="form-delete-doc-file" action="<?= Url::to(['journaltrans/delete-doc-file'], true) ?>" method="post">
+            <input type="hidden" name="id" value="<?= $model->id ?>">
+            <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
+        </form>
+
     </div>
 
-<?php
-// Modal สำหรับบันทึกสภาพสินค้า
-Modal::begin([
-    'id' => 'conditionModal',
+    <?php
+    // Modal สำหรับบันทึกสภาพสินค้า
+    Modal::begin([
+        'id' => 'conditionModal',
 //    'header' => '<h4><i class="fa fa-edit"></i> บันทึกสภาพสินค้า</h4>',
-    'size' => Modal::SIZE_LARGE,
-    'footer' =>
-        Html::button('ยกเลิก', ['class' => 'btn btn-default', 'data-dismiss' => 'modal']) . ' ' .
-        Html::button('บันทึก', ['class' => 'btn btn-primary', 'onclick' => 'saveConditionData()'])
-]);
-?>
+        'size' => Modal::SIZE_LARGE,
+        'footer' =>
+            Html::button('ยกเลิก', ['class' => 'btn btn-default', 'data-dismiss' => 'modal']) . ' ' .
+            Html::button('บันทึก', ['class' => 'btn btn-primary', 'onclick' => 'saveConditionData()'])
+    ]);
+    ?>
 
     <div class="row">
         <div class="col-md-8">
@@ -933,12 +1003,24 @@ Modal::begin([
         </div>
     </div>
 
-<?php Modal::end(); ?>
+    <?php Modal::end(); ?>
 
-        <?php
-        $this->registerJs("
-    setTimeout(function() {
-        $('.alert').fadeOut('slow');
-    }, 5000);
-");
-        ?>
+    <?php
+    $this->registerJs("
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+        ");
+    ?>
+    <?php
+    $script = <<< JS
+    function delete_doc(e){
+        var file_name = e.attr('data-var');
+        if(file_name != null){
+            $(".delete-doc-list").val(file_name);
+            $("#form-delete-doc-file").submit();
+        }
+    }
+    JS;
+    $this->registerJs($script, static::POS_END);
+    ?>
