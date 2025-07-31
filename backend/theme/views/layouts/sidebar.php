@@ -321,12 +321,20 @@
                                 </li>
                             <?php //endif; ?>
                             <?php //if (\Yii::$app->user->can('purch/index')): ?>
-                                <li class="nav-item">
-                                    <a href="index.php?r=worker/index" class="nav-link worker">
-                                        <i class="far fa-circlez nav-icon"></i>
-                                        <p>ลูกจ้าง</p>
-                                    </a>
-                                </li>
+                            <li class="nav-item">
+                                <a href="index.php?r=worker/index" class="nav-link worker">
+                                    <i class="far fa-circlez nav-icon"></i>
+                                    <p>ลูกจ้าง</p>
+                                </a>
+                            </li>
+                            <?php //endif; ?>
+                            <?php //if (\Yii::$app->user->can('purch/index')): ?>
+                            <li class="nav-item">
+                                <a href="index.php?r=journaltransaricat/index" class="nav-link journaltransaricat">
+                                    <i class="far fa-circlez nav-icon"></i>
+                                    <p>บันทึกรายการ Aricat</p>
+                                </a>
+                            </li>
                             <?php //endif; ?>
                             <!--                            --><?php //if (\Yii::$app->user->can('stocktrans/index')): ?>
                             <!--                                <li class="nav-item">-->
