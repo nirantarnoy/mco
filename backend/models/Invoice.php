@@ -44,6 +44,10 @@ use yii\db\Expression;
  */
 class Invoice extends ActiveRecord
 {
+//    const TYPE_QUOTATION = 1;
+//    const TYPE_BILL_PLACEMENT = 2;
+//    const TYPE_TAX_INVOICE = 3;
+//    const TYPE_RECEIPT = 4;
     const TYPE_QUOTATION = 'quotation';
     const TYPE_BILL_PLACEMENT = 'bill_placement';
     const TYPE_TAX_INVOICE = 'tax_invoice';
@@ -87,7 +91,7 @@ class Invoice extends ActiveRecord
     {
         return [
             [['invoice_type', 'invoice_date', 'customer_name'], 'required'],
-            [['invoice_type', 'status'], 'integer'],
+            [['status'], 'integer'],
             [['invoice_date', 'po_date', 'due_date', 'payment_due_date', 'check_due_date'], 'safe'],
             [['customer_address', 'notes'], 'string'],
             [['subtotal', 'discount_percent', 'discount_amount', 'vat_percent', 'vat_amount', 'total_amount'], 'number', 'min' => 0],

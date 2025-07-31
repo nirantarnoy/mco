@@ -18,10 +18,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="invoice-create">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>
-            <i class="fas fa-plus-circle text-success"></i>
-            <?= Html::encode($this->title) ?>
-        </h1>
         <div>
             <?= Html::a('<i class="fas fa-list"></i> รายการเอกสาร', ['index'], ['class' => 'btn btn-outline-primary']) ?>
             <?= Html::a('<i class="fas fa-arrow-left"></i> เลือกประเภทใหม่', ['select'], ['class' => 'btn btn-outline-secondary']) ?>

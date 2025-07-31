@@ -16,10 +16,6 @@ $this->params['breadcrumbs'][] = 'แก้ไข';
 <div class="invoice-update">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>
-            <i class="fas fa-edit text-primary"></i>
-            <?= Html::encode($this->title) ?>
-        </h1>
         <div>
             <?= Html::a('<i class="fas fa-eye"></i> ดูรายละเอียด', ['view', 'id' => $model->id], ['class' => 'btn btn-outline-info']) ?>
             <?= Html::a('<i class="fas fa-list"></i> รายการเอกสาร', ['index'], ['class' => 'btn btn-outline-primary']) ?>

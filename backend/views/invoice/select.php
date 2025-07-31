@@ -30,9 +30,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <div class="mb-3">
                                             <i class="fas fa-file-alt fa-3x text-primary"></i>
                                         </div>
-                                        <h5 class="card-title">ใบแจ้งหนี้</h5>
-                                        <p class="card-text">Quotation</p>
-                                        <p class="small text-muted">สำหรับแจ้งหนี้และเสนอราคา</p>
+                                        <h5 class="card-text">ใบแจ้งหนี้</h5>
+                                        <p class="card-text">Invoice</p>
+                                        <p class="small text-muted">สำหรับแจ้งหนี้</p>
                                         <?= Html::a('<i class="fas fa-plus"></i> สร้างใบแจ้งหนี้',
                                             ['create', 'type' => Invoice::TYPE_QUOTATION],
                                             ['class' => 'btn btn-primary btn-block']) ?>
@@ -47,7 +47,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <div class="mb-3">
                                             <i class="fas fa-file-invoice fa-3x text-info"></i>
                                         </div>
-                                        <h5 class="card-title">ใบวางบิล</h5>
+                                        <h5 class="card-text">ใบวางบิล</h5>
                                         <p class="card-text">Bill Placement</p>
                                         <p class="small text-muted">สำหรับวางบิลชำระเงิน</p>
                                         <?= Html::a('<i class="fas fa-plus"></i> สร้างใบวางบิล',
@@ -64,7 +64,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <div class="mb-3">
                                             <i class="fas fa-file-invoice-dollar fa-3x text-success"></i>
                                         </div>
-                                        <h5 class="card-title">ใบกำกับภาษี</h5>
+                                        <h5 class="card-text">ใบกำกับภาษี</h5>
                                         <p class="card-text">Tax Invoice</p>
                                         <p class="small text-muted">สำหรับออกใบกำกับภาษี</p>
                                         <?= Html::a('<i class="fas fa-plus"></i> สร้างใบกำกับภาษี',
@@ -81,7 +81,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <div class="mb-3">
                                             <i class="fas fa-receipt fa-3x text-warning"></i>
                                         </div>
-                                        <h5 class="card-title">ใบเสร็จรับเงิน</h5>
+                                        <h5 class="card-text">ใบเสร็จรับเงิน</h5>
                                         <p class="card-text">Receipt</p>
                                         <p class="small text-muted">สำหรับออกใบเสร็จรับเงิน</p>
                                         <?= Html::a('<i class="fas fa-plus"></i> สร้างใบเสร็จ',

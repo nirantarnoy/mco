@@ -172,7 +172,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <?= $form->field($model, 'invoice_type')->hiddenInput()->label(false) ?>
+                        <?= $form->field($model, 'invoice_type')->hiddenInput(['value' => $model->invoice_type])->label(false) ?>
 
                         <?= $form->field($model, 'invoice_number')->textInput([
                             'maxlength' => true,

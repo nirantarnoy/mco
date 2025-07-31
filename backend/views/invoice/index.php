@@ -30,7 +30,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'summary' => 'แสดง {begin} - {end} จากทั้งหมด {totalCount} รายการ',
                 'emptyText' => '<div class="text-center text-muted"><i class="fas fa-inbox fa-3x"></i><br>ไม่พบข้อมูล</div>',
                 'columns' => [
-                    ['class' => 'yii\grid\SerialColumn'],
+                    ['class' => 'yii\grid\SerialColumn','headerOptions' => ['width' => '10px']],
 
                     [
                         'attribute' => 'invoice_type',
@@ -57,7 +57,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'headerOptions' => ['width' => '120px'],
                         'contentOptions' => ['class' => 'text-center'],
                         'value' => function($model) {
-                            return Yii::$app->formatter->asDate($model->invoice_date, 'dd/MM/yyyy');
+                            return Yii::$app->formatter->asDate($model->invoice_date, 'MM/dd/yyyy');
                         }
                     ],
                     [

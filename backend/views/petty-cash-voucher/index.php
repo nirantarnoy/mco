@@ -16,11 +16,11 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card-header d-flex justify-content-between align-items-center">
 
             <div>
-                <?= Html::a('<i class="fas fa-chart-bar"></i> รายงาน', ['report'], [
-                    'class' => 'btn btn-info'
-                ]) ?>
                 <?= Html::a('<i class="fas fa-plus"></i> สร้างใหม่', ['create'], [
                     'class' => 'btn btn-success'
+                ]) ?>
+                <?= Html::a('<i class="fas fa-chart-bar"></i> รายงาน', ['report'], [
+                    'class' => 'btn btn-info'
                 ]) ?>
             </div>
         </div>

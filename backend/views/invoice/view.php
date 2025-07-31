@@ -18,8 +18,6 @@ $statusLabels = Invoice::getStatusOptions();
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>
-            <i class="fas fa-file-invoice-dollar text-info"></i>
-            <?= Html::encode($this->title) ?>
             <span class="badge badge-<?= $model->status == Invoice::STATUS_ACTIVE ? 'success' : 'danger' ?> ml-2">
                 <?= $statusLabels[$model->status] ?>
             </span>

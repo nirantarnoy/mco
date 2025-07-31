@@ -194,13 +194,23 @@ $(document).ready(function() {
     </div>
 
     <div class="card mt-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-list"></i> รายละเอียดการจ่าย
-            </h5>
-            <button type="button" class="btn btn-sm btn-primary btn-add-row">
-                <i class="fas fa-plus"></i> เพิ่มรายการ
-            </button>
+        <div class="card-header">
+            <table style="width: 100%">
+                <tr>
+                    <td>
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list"></i> รายละเอียดการจ่าย
+                        </h5>
+                    </td>
+                    <td style="text-align: right">
+                        <button type="button" class="btn btn-sm btn-primary btn-add-row">
+                            <i class="fas fa-plus"></i> เพิ่มรายการ
+                        </button>
+                    </td>
+                </tr>
+            </table>
+
+
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
