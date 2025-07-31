@@ -191,7 +191,7 @@
                             <?php endif;?>
                             <?php if (\Yii::$app->user->can('pettycashvoucher/index')): ?>
                                 <li class="nav-item">
-                                    <a href="index.php?r=petty-cash-voucher/index" class="nav-link pettycashvoucher">
+                                    <a href="index.php?r=petty-cash-voucher/index" class="nav-link petty-cash-voucher">
                                         <i class="far fa-circlez nav-icon"></i>
                                         <p>บันทึกเงินสดย่อย</p>
                                     </a>
