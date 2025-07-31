@@ -86,6 +86,41 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
     <div class="form-group">
         <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
     </div>
+    <br />
+    <div class="row">
+        <div class="col-lg-12">
+            <label for="">รายละเอียดสินค้า</label>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <table class="table table-bordered">
+                <thead>
+                <tr>
+                    <th style="width: 5%;text-align: center">#</th>
+                    <th style="width: 20%">รายการ</th>
+                    <th style="width: 15%">จํานวน</th>
+                    <th style="width: 10%">หน่วย</th>
+                    <th style="width: 10%">ราคาต่อหน่วย</th>
+                    <th style="width: 10%">ราคารวม</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if($model_line !=null):?>
+                    <?php foreach ($model_line as $key => $line): ?>
+                        <tr>
+                            <td><?= $key+1 ?></td>
+                            <td><?= \backend\models\Product::findName($line->product_id) ?></td>
+                            <td><?= $line->qty ?></td>
+                            <td><?= \backend\models\Product::findUnitName($line->product_id)?></td>
+                            <td><?= $line->line_price ?></td>
+                            <td><?= $line->line_total ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif;?>
+            </table>
+        </div>
+    </div>
 
     <br />
     <div class="row">

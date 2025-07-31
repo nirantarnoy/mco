@@ -268,7 +268,7 @@ $approverDate = '';
                 <span class="form-value"><?= Html::encode($department) ?></span>
             </div>
             <div class="form-group">
-                <span class="form-label">ถ้าย :</span>
+                <span class="form-label">ฝ่าย :</span>
                 <span class="form-value"></span>
             </div>
         </div>

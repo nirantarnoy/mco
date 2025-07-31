@@ -414,7 +414,7 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <?= $form->field($model, 'quotation_no')->textInput([
                             'maxlength' => true,
                             'placeholder' => 'ระบบจะสร้างอัตโนมัติหากไม่ระบุ'
@@ -443,7 +443,7 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                             Quotation::STATUS_CANCELLED => 'ยกเลิก',
                         ], ['prompt' => 'เลือกสถานะ']) ?>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <?= $form->field($model, 'approve_status')->dropDownList([
                             Quotation::APPROVE_STATUS_PENDING => 'รอพิจารณา',
                             Quotation::APPROVE_STATUS_APPROVED => 'อนุมัติ',
@@ -460,6 +460,22 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                         <?= $form->field($model, 'note')->textarea([
                             'rows' => 4,
                             'placeholder' => 'หมายเหตุ'
+                        ]) ?>
+                    </div>
+                    <div class="col-lg-4">
+                        <?= $form->field($model, 'payment_term_id')->widget(Select2::className(), [
+                            'data' => ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name'),
+                            'options' => ['placeholder' => 'เลือกเงื่อนไขชําระเงิน'],
+                            'pluginOptions' => [
+                                'allowClear' => true
+                            ]
+                        ]) ?>
+                        <?= $form->field($model, 'payment_method_id')->widget(Select2::className(), [
+                            'data' => ArrayHelper::map(\backend\models\Paymentmethod::find()->all(), 'id', 'name'),
+                            'options' => ['placeholder' => 'เลือกวิธีชําระเงิน'],
+                            'pluginOptions' => [
+                                'allowClear' => true
+                            ]
                         ]) ?>
                     </div>
                 </div>

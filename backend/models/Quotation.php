@@ -66,7 +66,7 @@ class Quotation extends ActiveRecord
     {
         return [
             [['quotation_date'], 'safe'],
-            [['customer_id', 'status', 'approve_status', 'approve_by', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
+            [['customer_id', 'status', 'approve_status', 'approve_by', 'created_at', 'created_by', 'updated_at', 'updated_by','payment_term_id','payment_method_id'], 'integer'],
             [['total_amount'], 'number'],
             [['quotation_no', 'customer_name', 'total_amount_text', 'note'], 'string', 'max' => 255],
             [['quotation_no'], 'unique'],
@@ -94,11 +94,16 @@ class Quotation extends ActiveRecord
             'created_by' => 'สร้างโดย',
             'updated_at' => 'วันที่แก้ไข',
             'updated_by' => 'แก้ไขโดย',
+            'payment_term_id' => 'เงื่นไขชำระเงิน',
+            'payment_method_id' => 'วิธีชำระเงิน',
         ];
     }
 
-    public function getQuotation(){
-        return $this->hasOne(Quotation::className(), ['id' => 'quotation_id']);
+//    public function getQuotation(){
+//        return $this->hasOne(Quotation::className(), ['id' => 'quotation_id']);
+//    }
+    public function getCustomer(){
+        return $this->hasOne(Customer::class, ['id' => 'customer_id']);
     }
 
     /**

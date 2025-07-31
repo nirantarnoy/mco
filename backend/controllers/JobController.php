@@ -5,6 +5,7 @@ namespace backend\controllers;
 use backend\models\Job;
 use backend\models\JobSearch;
 use backend\models\UnitSearch;
+use common\models\JobLine;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -126,6 +127,7 @@ class JobController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $model_line = JobLine::find()->where(['job_id' => $model->id])->all();
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             $jdate = date('Y-m-d H:i:s');
@@ -163,6 +165,7 @@ class JobController extends Controller
 
         return $this->render('update', [
             'model' => $model,
+            'model_line' => $model_line
         ]);
     }
 
@@ -194,5 +197,16 @@ class JobController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+    public function actionPrintInvoice($id){
+
+            $model = Job::find()->where(['id' => $id])->one();
+            $model_line =  JobLine::find()->where(['job_id' => $id])->all();
+            $this->layout = 'main_print';
+            return $this->render('_print-invoice',[
+                'model' => $model,
+                'model_line' =>$model_line,
+            ]);
+
     }
 }

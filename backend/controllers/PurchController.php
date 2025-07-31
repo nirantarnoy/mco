@@ -898,7 +898,5 @@ class PurchController extends Controller
         }
         return $this->redirect(['update', 'id' => $id]);
     }
-    public function actionPrintInvoice($id){
-        return $this->render('_print-invoice');
-    }
+
 }

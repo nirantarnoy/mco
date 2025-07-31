@@ -75,6 +75,18 @@ class Product extends \common\models\Product
         return $model != null ? $model->code.' - '.$model->name : '';
     }
 
+    public static function findUnitName($id)
+    {
+        $unit_name = '';
+        $model = Product::find()
+            ->where(['id' => $id])
+            ->one();
+        if($model->unit_id != null){
+            $unit_name = $model->unit->name;
+        }
+        return $unit_name;
+    }
+
     public static function findWarehouseOnhand($id)
     {
         $name = '';

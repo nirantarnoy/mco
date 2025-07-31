@@ -43,7 +43,7 @@ class Quotation extends \yii\db\ActiveRecord
         return [
             [['quotation_no', 'quotation_date', 'customer_id', 'customer_name', 'status', 'approve_status', 'approve_by', 'total_amount', 'total_amount_text', 'note', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'default', 'value' => null],
             [['quotation_date'], 'safe'],
-            [['customer_id', 'status', 'approve_status', 'approve_by', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
+            [['customer_id', 'status', 'approve_status', 'approve_by', 'created_at', 'created_by', 'updated_at', 'updated_by','payment_term_id','payment_method_id'], 'integer'],
             [['total_amount'], 'number'],
             [['quotation_no', 'customer_name', 'total_amount_text', 'note'], 'string', 'max' => 255],
         ];
@@ -70,6 +70,8 @@ class Quotation extends \yii\db\ActiveRecord
             'created_by' => 'Created By',
             'updated_at' => 'Updated At',
             'updated_by' => 'Updated By',
+            'payment_term_id' => 'Payment Term',
+            'payment_method_id' => 'Payment Method',
         ];
     }
 

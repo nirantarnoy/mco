@@ -2,6 +2,7 @@
 namespace backend\controllers;
 
 use backend\models\Job;
+use common\models\JobLine;
 use Mpdf\Mpdf;
 use Yii;
 use backend\models\Quotation;
@@ -311,7 +312,18 @@ class QuotationController extends Controller
             $model_job->job_date = date('Y-m-d');
             $model_job->status = Job::JOB_STATUS_OPEN;
             $model_job->job_amount = $model->total_amount;
-            $model_job->save(false);
+            if($model_job->save(false)){
+                $model_line = QuotationLine::find()->where(['quotation_id' => $model->id])->all();
+                foreach ($model_line as $line) {
+                    $model_job_line = new JobLine();
+                    $model_job_line->job_id = $model_job->id;
+                    $model_job_line->product_id = $line->product_id;
+                    $model_job_line->qty = $line->qty;
+                    $model_job_line->line_price = $line->line_price;
+                    $model_job_line->line_total = $line->line_total;
+                    $model_job_line->save(false);
+                }
+            }
 
             Yii::$app->session->setFlash('success', 'อนุมัติใบเสนอราคาเรียบร้อยแล้ว');
         } else {

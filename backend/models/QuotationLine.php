@@ -88,6 +88,7 @@ class QuotationLine extends ActiveRecord
         return $this->hasOne(Product::class, ['id' => 'product_id']);
     }
 
+
     /**
      * Before save
      */
@@ -101,4 +102,5 @@ class QuotationLine extends ActiveRecord
         }
         return false;
     }
+
 }
