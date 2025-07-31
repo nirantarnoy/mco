@@ -261,7 +261,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                         ]) ?>
 
                         <?= $form->field($model, 'payment_term_id')->widget(Select2::class, [
-                                'data' => \yii\helpers\ArrayHelper::map(\backend\models\PaymentTerm::find()->all(), 'id', 'name'),
+                                'data' => \yii\helpers\ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name'),
                                 'options' => [
                                     'placeholder' => 'เลือกเงื่อนไขชําระเงิน...',
                                     'id' => 'invoice-payment_term_id'
