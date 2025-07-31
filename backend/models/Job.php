@@ -50,6 +50,22 @@ class Job extends \common\models\Job
         ];
     }
 
+    public static function findCustomerData($quotation_id){
+        $data = [];
+        $customer = Quotation::find()->where(['id' => $quotation_id])->one();
+        if($customer){
+            $customer_data = \backend\models\Customer::find()->where(['id' => $customer->customer_id])->one();
+            if($customer_data){
+               array_push($data, [
+                    'customer_name' => $customer_data->name,
+                    'customer_address' => 'เลขที่ '. $customer_data->home_number.' ถนน '.$customer_data->street.' ซอย '.$customer_data->aisle.' ตำบล/แขวง '.$customer_data->district_name.' อําเภอ/เขต '.$customer_data->city_name.' จังหวัด '.$customer_data->province_name.' '.$customer_data->zipcode,
+                    'customer_tax_id' => $customer_data->taxid,
+                ]);
+            }
+        }
+        return $data;
+    }
+
     public function getQuotation(){
         return $this->hasOne(Quotation::className(), ['id' => 'quotation_id']);
     }

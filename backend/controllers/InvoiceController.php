@@ -347,4 +347,16 @@ class InvoiceController extends Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
+
+    public function actionGetJob(){
+        $id = \Yii::$app->request->post('id');
+       $customer_data = null;
+        if($id){
+            $model = Job::find()->where(['id' => $id])->one();
+            if($model){
+                $customer_data = \backend\models\Job::findCustomerData($model->quotation_id);
+            }
+        }
+        return json_encode($customer_data);
+    }
 }

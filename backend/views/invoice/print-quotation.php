@@ -339,7 +339,7 @@ window.onload = function() {
         <div class="customer-left">
             <div class="field-group">
                 <span class="field-label">รหัสลูกค้า / Code:</span>
-                <span class="field-value"><?= Html::encode($model->customer_code ?: 'C-000551') ?></span>
+                <span class="field-value"><?= Html::encode($model->quotation->customer->code ?: '') ?></span>
             </div>
             <div class="field-group">
                 <span class="field-label">ขายให้ / Sold To:</span>
@@ -365,15 +365,15 @@ window.onload = function() {
             </div>
             <div class="field-group">
                 <span class="field-label">ใบสั่งซื้อเลขที่ / P/O No.:</span>
-                <span class="field-value"><?= Html::encode($model->po_number ?: '3100018046') ?></span>
+                <span class="field-value"><?= Html::encode($model->po_number ?: '') ?></span>
             </div>
             <div class="field-group">
                 <span class="field-label">วันที่สั่งซื้อ / P/O Date:</span>
-                <span class="field-value"><?= $model->po_date ? Yii::$app->formatter->asDate($model->po_date, 'MM/dd/yyyy') : '04/02/2025' ?></span>
+                <span class="field-value"><?= $model->po_date ? Yii::$app->formatter->asDate($model->po_date, 'MM/dd/yyyy') : '' ?></span>
             </div>
             <div class="field-group">
                 <span class="field-label">เงื่อนไข / กำหนดชำระ / Credit, Due:</span>
-                <span class="field-value"><?= Html::encode($model->credit_terms ?: '30 Days') ?></span>
+                <span class="field-value"><?= Html::encode($model->paymentTerm->name ?: '') ?></span>
             </div>
         </div>
     </div>

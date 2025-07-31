@@ -91,7 +91,7 @@ class Invoice extends ActiveRecord
     {
         return [
             [['invoice_type', 'invoice_date', 'customer_name'], 'required'],
-            [['status'], 'integer'],
+            [['status','job_id','payment_term_id'], 'integer'],
             [['invoice_date', 'po_date', 'due_date', 'payment_due_date', 'check_due_date'], 'safe'],
             [['customer_address', 'notes'], 'string'],
             [['subtotal', 'discount_percent', 'discount_amount', 'vat_percent', 'vat_amount', 'total_amount'], 'number', 'min' => 0],
@@ -139,6 +139,8 @@ class Invoice extends ActiveRecord
             'updated_by' => 'ผู้แก้ไข',
             'created_at' => 'สร้างเมื่อ',
             'updated_at' => 'แก้ไขล่าสุด',
+            'job_id' => 'เลขงาน',
+            'payment_term_id' => 'เงื่อนไขการชำระ',
         ];
     }
 
@@ -158,9 +160,21 @@ class Invoice extends ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
+
+    public function getQuotation(){
+        return $this->hasOne(Quotation::class, ['id' => 'job_id']);
+    }
     public function getCustomer()
     {
         return $this->hasOne(Customer::class, ['customer_code' => 'customer_code']);
+    }
+
+    public function getJob(){
+        return $this->hasOne(Job::class, ['id' => 'job_id']);
+    }
+
+    public function getPaymentTerm(){
+        return $this->hasOne(PaymentTerm::class, ['id' => 'payment_term_id']);
     }
 
     /**

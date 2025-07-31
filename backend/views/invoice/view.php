@@ -68,8 +68,10 @@ $statusLabels = Invoice::getStatusOptions();
                         'attributes' => [
                             'invoice_number',
                             [
-                                'attribute' => 'customer_code',
-                                'value' => $model->customer_code ?: '-',
+                                'attribute' => 'job_id',
+                                'value' => function ($model) {
+                                    return $model->job_id ? $model->job->job_no : '-';
+                                }
                             ],
                             'customer_name',
                             [
@@ -87,15 +89,17 @@ $statusLabels = Invoice::getStatusOptions();
                             ],
                             [
                                 'attribute' => 'po_date',
-                                'value' => $model->po_date ? Yii::$app->formatter->asDate($model->po_date, 'dd/MM/yyyy') : '-',
+                                'value' => $model->po_date ? Yii::$app->formatter->asDate($model->po_date, 'MM/dd/yyyy') : '-',
                             ],
                             [
-                                'attribute' => 'credit_terms',
-                                'value' => $model->credit_terms ?: '-',
+                                'attribute' => 'payment_term_id',
+                                'value' => function ($model) {
+                                    return $model->payment_term_id ? $model->paymentTerm->name : '-';
+                                }
                             ],
                             [
                                 'attribute' => 'due_date',
-                                'value' => $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'dd/MM/yyyy') : '-',
+                                'value' => $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'MM/dd/yyyy') : '-',
                             ],
                         ],
                     ]) ?>
@@ -153,11 +157,11 @@ $statusLabels = Invoice::getStatusOptions();
                             'attributes' => [
                                 [
                                     'attribute' => 'payment_due_date',
-                                    'value' => $model->payment_due_date ? Yii::$app->formatter->asDate($model->payment_due_date, 'dd/MM/yyyy') : '-',
+                                    'value' => $model->payment_due_date ? Yii::$app->formatter->asDate($model->payment_due_date, 'MM/dd/yyyy') : '-',
                                 ],
                                 [
                                     'attribute' => 'check_due_date',
-                                    'value' => $model->check_due_date ? Yii::$app->formatter->asDate($model->check_due_date, 'dd/MM/yyyy') : '-',
+                                    'value' => $model->check_due_date ? Yii::$app->formatter->asDate($model->check_due_date, 'MM/dd/yyyy') : '-',
                                 ],
                             ],
                         ]) ?>

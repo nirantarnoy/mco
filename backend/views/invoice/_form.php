@@ -1,5 +1,6 @@
 <?php
 
+use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 use yii\helpers\Url;
@@ -146,6 +147,32 @@ $(document).on('change', '#invoice-customer_code', function() {
     loadCustomerData($(this).val());
 });
 
+$(document).on('change', '#invoice-job-id', function() {
+
+    var jobId = $(this).val();
+    if (jobId) {
+        $.ajax({
+            url: '" . Url::to(['get-job']) . "',
+            data: {id: jobId},
+            dataType: 'json',
+            type: 'POST',
+            success: function(data) {
+            console.log(data);
+                if (data!=null) {
+                    $('#invoice-customer-name').val(data[0].customer_name);
+                    $('#invoice-customer-address').val(data[0].customer_address);
+                    $('#invoice-customer-tax-id').val(data[0].customer_tax_id);
+                }
+            }
+        });
+    } else {
+        $('#invoice-job_name').val('');
+        $('#invoice-job_address').val('');
+        $('#invoice-job_tax_id').val('');
+    }
+    });
+
+
 // Initialize calculations on page load
 $(document).ready(function() {
     calculateTotal();
@@ -172,8 +199,6 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <?= $form->field($model, 'invoice_type')->hiddenInput(['value' => $model->invoice_type])->label(false) ?>
-
                         <?= $form->field($model, 'invoice_number')->textInput([
                             'maxlength' => true,
                             'readonly' => !$model->isNewRecord,
@@ -189,11 +214,12 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                             ]
                         ]) ?>
 
-                        <?= $form->field($model, 'customer_code')->widget(Select2::class, [
-                            'data' => $customers,
+                        <?= $form->field($model, 'job_id')->widget(Select2::class, [
+                            'data' => ArrayHelper::map(\backend\models\Job::find()->all(), 'id', 'job_no'),
+
                             'options' => [
-                                'placeholder' => 'เลือกลูกค้า...',
-                                'id' => 'invoice-customer_code'
+                                'placeholder' => '...เลือกงาน...',
+                                'id' => 'invoice-job-id',
                             ],
                             'pluginOptions' => [
                                 'allowClear' => true,
@@ -203,18 +229,21 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
 
                         <?= $form->field($model, 'customer_name')->textInput([
                             'maxlength' => true,
-                            'placeholder' => 'ชื่อลูกค้า'
+                            'placeholder' => 'ชื่อลูกค้า',
+                            'id' => 'invoice-customer-name',
                         ]) ?>
 
                         <?= $form->field($model, 'customer_address')->textarea([
                             'rows' => 3,
-                            'placeholder' => 'ที่อยู่ลูกค้า'
+                            'placeholder' => 'ที่อยู่ลูกค้า',
+                            'id' => 'invoice-customer-address',
                         ]) ?>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6" style="padding-top: 20px;">
                         <?= $form->field($model, 'customer_tax_id')->textInput([
                             'maxlength' => true,
-                            'placeholder' => 'เลขประจำตัวผู้เสียภาษี'
+                            'placeholder' => 'เลขประจำตัวผู้เสียภาษี',
+                            'id' => 'invoice-customer-tax-id',
                         ]) ?>
 
                         <?= $form->field($model, 'po_number')->textInput([
@@ -231,10 +260,17 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                             ]
                         ]) ?>
 
-                        <?= $form->field($model, 'credit_terms')->textInput([
-                            'maxlength' => true,
-                            'placeholder' => 'เช่น 30 DAYS, COD'
-                        ]) ?>
+                        <?= $form->field($model, 'payment_term_id')->widget(Select2::class, [
+                                'data' => \yii\helpers\ArrayHelper::map(\backend\models\PaymentTerm::find()->all(), 'id', 'name'),
+                                'options' => [
+                                    'placeholder' => 'เลือกเงื่อนไขชําระเงิน...',
+                                    'id' => 'invoice-payment_term_id'
+                                ],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                ],
+                            ]
+                        ) ?>
 
                         <?= $form->field($model, 'due_date')->widget(DatePicker::class, [
                             'options' => ['placeholder' => 'วันครบกำหนดชำระ'],
@@ -266,6 +302,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                 </div>
             </div>
         </div>
+        <?= $form->field($model, 'invoice_type')->hiddenInput(['value' => $model->invoice_type])->label(false) ?>
 
         <div class="card mt-3">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -330,7 +367,8 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                     ]) ?>
                                 </td>
                                 <td class="text-center">
-                                    <button type="button" class="btn btn-sm btn-danger btn-remove-item" title="ลบรายการ">
+                                    <button type="button" class="btn btn-sm btn-danger btn-remove-item"
+                                            title="ลบรายการ">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
