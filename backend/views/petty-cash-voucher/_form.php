@@ -35,24 +35,45 @@ function calculateGrandTotal() {
 
 // Add new row
 function addDetailRow() {
-    var lastRow = $('#details-table tbody tr:last');
-    var newRow = lastRow.clone();
-    
-    // Clear values
-    newRow.find('input, textarea').val('');
-    newRow.find('input[type=\"date\"]').val('');
-    
-    // Update name attributes
     var rowIndex = $('#details-table tbody tr').length;
-    newRow.find('input, textarea, select').each(function() {
-        var name = $(this).attr('name');
-        if (name) {
-            var newName = name.replace(/\[\d+\]/, '[' + rowIndex + ']');
-            $(this).attr('name', newName);
-        }
-    });
     
-    $('#details-table tbody').append(newRow);
+    var newRowHtml = `
+    <tr>
+        <td>
+            <input type=\"text\" name=\"PettyCashDetail[` + rowIndex + `][ac_code]\" class=\"form-control form-control-sm\" placeholder=\"รหัสบัญชี\" maxlength=\"50\">
+        </td>
+        <td>
+            <input type=\"date\" name=\"PettyCashDetail[` + rowIndex + `][detail_date]\" class=\"form-control form-control-sm\">
+        </td>
+        <td>
+            <textarea name=\"PettyCashDetail[` + rowIndex + `][detail]\" class=\"form-control form-control-sm\" rows=\"2\" placeholder=\"รายละเอียดการจ่าย\"></textarea>
+        </td>
+        <td>
+            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][amount]\" class=\"form-control form-control-sm amount-input text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
+        </td>
+        <td>
+            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][vat]\" class=\"form-control form-control-sm text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
+        </td>
+        <td>
+            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][vat_amount]\" class=\"form-control form-control-sm vat-amount-input text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
+        </td>
+        <td>
+            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][wht]\" class=\"form-control form-control-sm wht-input text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
+        </td>
+        <td>
+            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][other]\" class=\"form-control form-control-sm other-input text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
+        </td>
+        <td>
+            <input type=\"text\" name=\"PettyCashDetail[` + rowIndex + `][total]\" class=\"form-control form-control-sm total-input text-right\" readonly style=\"background-color: #f8f9fa;\" value=\"0.00\">
+        </td>
+        <td class=\"text-center\">
+            <button type=\"button\" class=\"btn btn-sm btn-danger btn-remove-row\" title=\"ลบรายการ\">
+                <i class=\"fas fa-trash\"></i>
+            </button>
+        </td>
+    </tr>`;
+    
+    $('#details-table tbody').append(newRowHtml);
 }
 
 // Remove row
@@ -60,7 +81,33 @@ function removeDetailRow(button) {
     var rowCount = $('#details-table tbody tr').length;
     if (rowCount > 1) {
         $(button).closest('tr').remove();
+        
+        // Re-index remaining rows
+        $('#details-table tbody tr').each(function(index) {
+            $(this).find('input, textarea, select').each(function() {
+                var name = $(this).attr('name');
+                if (name) {
+                    var newName = name.replace(/\[\d+\]/, '[' + index + ']');
+                    $(this).attr('name', newName);
+                }
+            });
+        });
+        
         calculateGrandTotal();
+    } else {
+        alert('ต้องมีรายการอย่างน้อย 1 รายการ');
+    }
+}
+
+// Calculate VAT amount automatically (7%)
+function calculateVAT(row) {
+    var amount = parseFloat(row.find('.amount-input').val()) || 0;
+    var vatRate = parseFloat(row.find('input[name$=\"[vat]\"]').val()) || 0;
+    
+    if (vatRate > 0) {
+        var vatAmount = (amount * vatRate) / 100;
+        row.find('.vat-amount-input').val(vatAmount.toFixed(2));
+        calculateRowTotal(row);
     }
 }
 
@@ -69,12 +116,21 @@ $(document).on('input', '.amount-input, .vat-amount-input, .wht-input, .other-in
     calculateRowTotal($(this).closest('tr'));
 });
 
+$(document).on('input', 'input[name$=\"[vat]\"]', function() {
+    calculateVAT($(this).closest('tr'));
+});
+
 $(document).on('click', '.btn-add-row', function() {
     addDetailRow();
 });
 
 $(document).on('click', '.btn-remove-row', function() {
     removeDetailRow(this);
+});
+
+// Initialize calculations on page load
+$(document).ready(function() {
+    calculateGrandTotal();
 });
 ");
 ?>
@@ -167,6 +223,24 @@ $(document).on('click', '.btn-remove-row', function() {
                     <?php foreach ($details as $index => $detail): ?>
                         <tr>
                             <td>
+                            <?= Html::textInput("PettyCashDetail[{$index}][ac_code]", $detail->ac_code, [
+                                'class' => 'form-control form-control-sm',
+                                'placeholder' => 'รหัสบัญชี'
+                            ]) ?>
+                            </td>
+                            <td>
+                                <?= Html::input('date', "PettyCashDetail[{$index}][detail_date]", $detail->detail_date, [
+                                    'class' => 'form-control form-control-sm'
+                                ]) ?>
+                            </td>
+                            <td>
+                                <?= Html::textarea("PettyCashDetail[{$index}][detail]", $detail->detail, [
+                                    'class' => 'form-control form-control-sm',
+                                    'rows' => 2,
+                                    'placeholder' => 'รายละเอียด'
+                                ]) ?>
+                            </td>
+                            <td>
                                 <?= Html::textInput("PettyCashDetail[{$index}][amount]", $detail->amount, [
                                     'class' => 'form-control form-control-sm amount-input text-right',
                                     'type' => 'number',
@@ -243,21 +317,4 @@ $(document).on('click', '.btn-remove-row', function() {
 
     <?php ActiveForm::end(); ?>
 
-</div><?= Html::textInput("PettyCashDetail[{$index}][ac_code]", $detail->ac_code, [
-    'class' => 'form-control form-control-sm',
-    'placeholder' => 'รหัสบัญชี'
-]) ?>
-</td>
-<td>
-    <?= Html::input('date', "PettyCashDetail[{$index}][detail_date]", $detail->detail_date, [
-        'class' => 'form-control form-control-sm'
-    ]) ?>
-</td>
-<td>
-    <?= Html::textarea("PettyCashDetail[{$index}][detail]", $detail->detail, [
-        'class' => 'form-control form-control-sm',
-        'rows' => 2,
-        'placeholder' => 'รายละเอียด'
-    ]) ?>
-</td>
-<td>
+</div>

@@ -13,7 +13,6 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="petty-cash-voucher-view">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1><i class="fas fa-file-invoice-dollar text-info"></i> <?= Html::encode($this->title) ?></h1>
         <div>
             <?= Html::a('<i class="fas fa-edit"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
             <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [

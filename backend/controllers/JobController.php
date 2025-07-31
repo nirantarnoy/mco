@@ -209,4 +209,28 @@ class JobController extends Controller
             ]);
 
     }
+
+    public function actionPrintBillPlacement($id){
+
+        $model = Job::find()->where(['id' => $id])->one();
+        $model_line =  JobLine::find()->where(['job_id' => $id])->all();
+        $this->layout = 'main_print';
+        return $this->render('_print-bill-placement',[
+            'model' => $model,
+            'model_line' =>$model_line,
+        ]);
+
+    }
+
+    public function actionPrintTaxInvoice($id){
+
+        $model = Job::find()->where(['id' => $id])->one();
+        $model_line =  JobLine::find()->where(['job_id' => $id])->all();
+        $this->layout = 'main_print';
+        return $this->render('_print-tax-invoice',[
+            'model' => $model,
+            'model_line' =>$model_line,
+        ]);
+
+    }
 }

@@ -189,6 +189,22 @@
                                     </a>
                                 </li>
                             <?php endif;?>
+                            <?php if (\Yii::$app->user->can('petty-cash-voucher/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=petty-cash-voucher/index" class="nav-link petty-cash-voucher">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>บันทึกเงินสดย่อย</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                            <?php if (\Yii::$app->user->can('invoice/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=invoice/index" class="nav-link invoice">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>ใบแจ้งหนี้และอื่นๆ</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
                         </ul>
                     </li>
                 <?php endif;?>

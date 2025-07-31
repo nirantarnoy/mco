@@ -2,6 +2,7 @@
 
 namespace backend\controllers;
 
+use backend\models\PettyCashReportSearch;
 use Yii;
 use backend\models\PettyCashVoucher;
 use backend\models\PettyCashDetail;
@@ -174,22 +175,78 @@ class PettyCashVoucherController extends Controller
     }
 
     /**
+     * Petty Cash Report
+     * @return mixed
+     */
+    public function actionReport()
+    {
+        $searchModel = new PettyCashReportSearch();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+
+        return $this->render('report', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+
+    /**
+     * Print Report
+     * @return mixed
+     */
+    public function actionPrintReport()
+    {
+        $searchModel = new PettyCashReportSearch();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+
+        // Remove pagination for print
+        $dataProvider->pagination = false;
+
+        return $this->render('print-report', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    /**
      * Save details
      */
     private function saveDetails($model, $detailsData)
     {
         $sortOrder = 1;
         foreach ($detailsData as $detailData) {
-            // Skip empty rows
-            if (empty($detailData['detail']) && empty($detailData['amount'])) {
+            // Skip empty rows - check if any significant data exists
+            $hasData = !empty($detailData['detail']) ||
+                !empty($detailData['amount']) ||
+                !empty($detailData['ac_code']);
+
+            if (!$hasData) {
                 continue;
             }
 
             $detail = new PettyCashDetail();
             $detail->voucher_id = $model->id;
             $detail->sort_order = $sortOrder++;
-            $detail->load($detailData, '');
-            $detail->save();
+
+            // Clean and validate data before loading
+            $cleanData = [
+                'ac_code' => isset($detailData['ac_code']) ? trim($detailData['ac_code']) : '',
+                'detail_date' => !empty($detailData['detail_date']) ? $detailData['detail_date'] : null,
+                'detail' => isset($detailData['detail']) ? trim($detailData['detail']) : '',
+                'amount' => !empty($detailData['amount']) ? (float)$detailData['amount'] : 0.00,
+                'vat' => !empty($detailData['vat']) ? (float)$detailData['vat'] : 0.00,
+                'vat_amount' => !empty($detailData['vat_amount']) ? (float)$detailData['vat_amount'] : 0.00,
+                'wht' => !empty($detailData['wht']) ? (float)$detailData['wht'] : 0.00,
+                'other' => !empty($detailData['other']) ? (float)$detailData['other'] : 0.00,
+            ];
+
+            // Load the cleaned data
+            $detail->attributes = $cleanData;
+
+            if (!$detail->save()) {
+                // Log validation errors for debugging
+                Yii::error('Failed to save detail: ' . json_encode($detail->errors), __METHOD__);
+            }
         }
 
         // Update total amount

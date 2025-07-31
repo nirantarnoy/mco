@@ -86,8 +86,22 @@ class PettyCashDetail extends ActiveRecord
     public function beforeSave($insert)
     {
         if (parent::beforeSave($insert)) {
+            // Convert to float and handle empty values
+            $amount = !empty($this->amount) ? (float)$this->amount : 0.00;
+            $vatAmount = !empty($this->vat_amount) ? (float)$this->vat_amount : 0.00;
+            $wht = !empty($this->wht) ? (float)$this->wht : 0.00;
+            $other = !empty($this->other) ? (float)$this->other : 0.00;
+
             // Calculate total = amount + vat_amount - wht + other
-            $this->total = $this->amount + $this->vat_amount - $this->wht + $this->other;
+            $this->total = $amount + $vatAmount - $wht + $other;
+
+            // Ensure all numeric fields are properly set
+            $this->amount = $amount;
+            $this->vat_amount = $vatAmount;
+            $this->wht = $wht;
+            $this->other = $other;
+            $this->vat = !empty($this->vat) ? (float)$this->vat : 0.00;
+
             return true;
         }
         return false;

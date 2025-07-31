@@ -14,10 +14,11 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h4 class="card-title mb-0">
-                <i class="fas fa-money-bill-wave"></i> <?= Html::encode($this->title) ?>
-            </h4>
+
             <div>
+                <?= Html::a('<i class="fas fa-chart-bar"></i> รายงาน', ['report'], [
+                    'class' => 'btn btn-info'
+                ]) ?>
                 <?= Html::a('<i class="fas fa-plus"></i> สร้างใหม่', ['create'], [
                     'class' => 'btn btn-success'
                 ]) ?>
