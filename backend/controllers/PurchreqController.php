@@ -511,24 +511,32 @@ class PurchreqController extends Controller
             if ($lastPr) {
                 $prParts = explode('-', $lastPr->purch_no);
                 $mainNumber = isset($prParts[1]) ? ((int)$prParts[1]) + 1 : 1;
-            }
 
-            // หา .xx สูงสุดจากรายการทั้งหมดของ job นี้
-            $purchList = \backend\models\Purch::find()
-                ->where(['job_id' => $id])
-                ->all();
-
-            $maxSub = 0;
-            foreach ($purchList as $item) {
-                if (preg_match('/\.(\d+)$/', $item->purch_no, $matches)) {
-                    $num = (int)$matches[1];
-                    if ($num > $maxSub) {
-                        $maxSub = $num;
+                if(isset($prParts[2])){
+                    $explodeSub = explode('.', $prParts[2]);
+                    if(isset($explodeSub[1])){
+                        $subNumber = (int)$explodeSub[1] + 1;
                     }
                 }
             }
 
-            $subNumber = $maxSub + 1;
+
+//            // หา .xx สูงสุดจากรายการทั้งหมดของ job นี้
+//            $purchList = \backend\models\Purch::find()
+//                ->where(['job_id' => $id])
+//                ->all();
+//
+//            $maxSub = 0;
+//            foreach ($purchList as $item) {
+//                if (preg_match('/\.(\d+)$/', $item->purch_no, $matches)) {
+//                    $num = (int)$matches[1];
+//                    if ($num > $maxSub) {
+//                        $maxSub = $num;
+//                    }
+//                }
+//            }
+//
+//            $subNumber = $maxSub + 1;
 
             $fullCode = 'PO-' . sprintf('%05d', $mainNumber) . '-' . $job_no . '.' . sprintf('%02d', $subNumber);
             return $fullCode;
