@@ -9,6 +9,7 @@ use common\models\JobLine;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use Yii;
 
 /**
  * JobController implements the CRUD actions for Job model.
@@ -233,4 +234,48 @@ class JobController extends Controller
         ]);
 
     }
+    public function actionGetJobNo(){
+        $id = Yii::$app->request->post('id');
+        $prefix = 'PR-';
+
+        if ($id) {
+            $job = \backend\models\Job::findOne($id);
+            if (!$job) {
+                echo 'Job not found';
+                return;
+            }
+
+            $job_no = $job->job_no;
+
+            // หา PR ล่าสุดในระบบเพื่อรันเลขลำดับหลัก (PR-00001)
+            $lastPr = \backend\models\PurchReq::find()
+                ->orderBy(['id' => SORT_DESC])
+                ->one();
+
+            $mainNumber = 1;
+            if ($lastPr) {
+                $prParts = explode('-', $lastPr->purch_req_no);
+                $mainNumber = isset($prParts[1]) ? ((int)$prParts[1]) + 1 : 1;
+            }
+
+            // หาจำนวน PR ที่มีใน job นี้ เพื่อรัน .01, .02, ...
+            $lastSubPr = \backend\models\PurchReq::find()
+                ->where(['job_id' => $id])
+                ->orderBy(['id' => SORT_DESC])
+                ->one();
+
+            if ($lastSubPr) {
+                $subParts = explode('.', $lastSubPr->purch_req_no);
+                $subNumber = isset($subParts[1]) ? ((int)$subParts[1]) + 1 : 1;
+            } else {
+                $subNumber = 1;
+            }
+
+            $fullCode = 'PR-' . sprintf('%05d', $mainNumber) . '-' . $job_no . '.' . sprintf('%02d', $subNumber);
+            echo $fullCode;
+        } else {
+            echo 'No job ID';
+        }
+    }
+
 }

@@ -431,7 +431,7 @@ window.onload = function() {
         <div class="summary-left">
             <div class="amount-text">(ตัวอักษร)</div>
             <div style="font-size: 14px; font-weight: bold;">
-                <?= $model->total_amount_text ?: 'สองหมื่นห้าร้อยสี่สิบสี่บาทถ้วน' ?>
+                <?= $model->total_amount_text ?: '' ?>
             </div>
 
             <div style="margin-top: 20px; font-size: 12px; text-align: center;">

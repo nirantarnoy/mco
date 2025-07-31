@@ -347,6 +347,7 @@ JS;
 
 $this->registerJs($calculationJs, \yii\web\View::POS_READY);
 
+$url_to_get_job_no = Url::to(['job/get-job-no'],true);
 // Dynamic Form JavaScript
 $dynamicFormJs = <<<JS
 $(document).ready(function() {
@@ -396,6 +397,22 @@ $(document).ready(function() {
     updateAllDataIndexes();
     updateItemNumbers();
     calculateGrandTotal();
+    
+    $("#job-id").on("change", function() {
+        var jobId = $(this).val();
+        $.ajax({
+            url: "$url_to_get_job_no",
+            type: "POST",
+            data: { id: jobId },
+            dataType: "html",
+            success: function(data) {
+                if (data != null) {
+                   console.log(data);
+                   $("#purchreq-job-no").val(data);
+                }
+            }
+        });
+    });
 });
 JS;
 
@@ -418,12 +435,13 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                 <div class="col-md-6">
                     <?= $form->field($model, 'purch_req_no')->textInput([
                         'maxlength' => true,
-                        'placeholder' => 'ระบบจะสร้างอัตโนมัติหากไม่ระบุ'
+                        'placeholder' => 'ระบบจะสร้างอัตโนมัติหากไม่ระบุ',
+                        'id' => 'purchreq-job-no',
                     ]) ?>
                     <?= $form->field($model, 'job_id')->widget(Select2::class, [
                         'data' => \yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(), 'id', 'job_no'),
                         'language' => 'th',
-                        'options' => ['placeholder' => 'เลือกงาน'],
+                        'options' => ['placeholder' => 'เลือกงาน','id' => 'job-id'],
                     ])->label('ใบงาน') ?>
                     <?= $form->field($model, 'purch_req_date')->widget(DatePicker::class, [
                         'options' => ['placeholder' => 'เลือกวันที่'],

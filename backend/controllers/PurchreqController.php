@@ -419,10 +419,14 @@ class PurchreqController extends Controller
             return $this->redirect(['view', 'id' => $purchReqModel->id]);
         }
 
+        $last_no = $this->getPurchNo($purchReqModel->job_id);
+
         $transaction = Yii::$app->db->beginTransaction();
         try {
+
             // Create new Purchase Order
             $purchModel = new \backend\models\Purch();
+            $purchModel->purch_no = $last_no;
             $purchModel->purch_date = $purchReqModel->purch_req_date;
             $purchModel->vendor_id = $purchReqModel->vendor_id;
             $purchModel->vendor_name = $purchReqModel->vendor_name;
@@ -487,6 +491,53 @@ class PurchreqController extends Controller
             return $this->redirect(['view', 'id' => $purchReqModel->id]);
         }
     }
+
+    public function getPurchNo($id)
+    {
+        if ($id) {
+            $job = \backend\models\Job::findOne($id);
+            if (!$job) {
+                return 'Job not found';
+            }
+
+            $job_no = $job->job_no;
+
+            // เลขหลัก PO
+            $lastPr = \backend\models\Purch::find()
+                ->orderBy(['id' => SORT_DESC])
+                ->one();
+
+            $mainNumber = 1;
+            if ($lastPr) {
+                $prParts = explode('-', $lastPr->purch_no);
+                $mainNumber = isset($prParts[1]) ? ((int)$prParts[1]) + 1 : 1;
+            }
+
+            // หา .xx สูงสุดจากรายการทั้งหมดของ job นี้
+            $purchList = \backend\models\Purch::find()
+                ->where(['job_id' => $id])
+                ->all();
+
+            $maxSub = 0;
+            foreach ($purchList as $item) {
+                if (preg_match('/\.(\d+)$/', $item->purch_no, $matches)) {
+                    $num = (int)$matches[1];
+                    if ($num > $maxSub) {
+                        $maxSub = $num;
+                    }
+                }
+            }
+
+            $subNumber = $maxSub + 1;
+
+            $fullCode = 'PO-' . sprintf('%05d', $mainNumber) . '-' . $job_no . '.' . sprintf('%02d', $subNumber);
+            return $fullCode;
+        } else {
+            return 'No job ID';
+        }
+    }
+
+
 
     public function actionGetProductInfo()
     {
