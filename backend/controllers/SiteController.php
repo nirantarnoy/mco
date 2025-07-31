@@ -305,6 +305,7 @@ class SiteController extends Controller
             for ($x = 0; $x <= count($value['actions']) - 1; $x++) {
                 $fullname = $route_name . '/' . $value['actions'][$x];
                 if ($fullname != '') {
+                    $fullname = str_replace('\\', '', $fullname);
                     $chk = \common\models\AuthItem::find()->where(['name' => $fullname])->one();
                     if ($chk) continue;
 

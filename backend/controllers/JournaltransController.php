@@ -452,7 +452,7 @@ class JournaltransController extends Controller
      */
     protected function findModel($id)
     {
-        if (($model = \backend\models\JournalTrans::find()->with(['journalTransLines.product', 'stockTrans.product'])->where(['id' => $id])->one()) !== null) {
+        if (($model = \backend\models\JournalTrans::find()->with(['journalTransLines.product'])->where(['id' => $id])->one()) !== null) {
             return $model;
         }
 
