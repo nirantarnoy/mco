@@ -66,8 +66,18 @@ $this->params['breadcrumbs'][] = $this->title;
                             'method',
                             'model_class',
                             'model_id',
-                            'created_at:datetime',
-                            'updated_at:datetime',
+                            [
+                                'attribute' => 'created_at',
+                                'value' => function ($model) {
+                                    return date('m/d/Y H:i:s', strtotime($model->created_at));
+                                }
+                            ],
+                            [
+                                'attribute' => 'updated_at',
+                                'value' => function ($model) {
+                                    return date('m/d/Y H:i:s', strtotime($model->updated_at));
+                                }
+                            ],
                         ],
                     ]) ?>
                 </div>
