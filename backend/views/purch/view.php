@@ -59,6 +59,18 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                         'class' => 'btn btn-info',
                         'target' => '_blank'
                     ]) ?>
+                <?php if (\Yii::$app->user->can('CanApprovePo')): ?>
+                    <?= Html::a('อนุมัติ', ['approve', 'id' => $model->id], [
+                        'class' => 'btn btn-success',
+                        'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบสั่งซื้อนี้?',
+                        'data-method' => 'post',
+                    ]) ?>
+                    <?= Html::a('ไม่อนุมัติ', ['reject', 'id' => $model->id], [
+                        'class' => 'btn btn-warning',
+                        'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะไม่อนุมัติใบสั่งซื้อนี้?',
+                        'data-method' => 'post',
+                    ]) ?>
+                <?php endif; ?>
                 <?php if ($model->approve_status == Purch::APPROVE_STATUS_APPROVED): ?>
                     <?= Html::a('<i class="fas fa-file-pdf"></i> PDF', ['pdf', 'id' => $model->id], [
                         'class' => 'btn btn-warning',
@@ -75,18 +87,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                     <?= Html::a('<i class="fas fa-history"></i> ประวัติการรับสินค้า', ['receive-history', 'id' => $model->id], [
                         'class' => 'btn btn-info'
                     ]) ?>
-                    <?php if (\Yii::$app->user->can('CanApprovePo')): ?>
-                        <?= Html::a('อนุมัติ', ['approve', 'id' => $model->id], [
-                            'class' => 'btn btn-success',
-                            'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบสั่งซื้อนี้?',
-                            'data-method' => 'post',
-                        ]) ?>
-                        <?= Html::a('ไม่อนุมัติ', ['reject', 'id' => $model->id], [
-                            'class' => 'btn btn-warning',
-                            'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะไม่อนุมัติใบสั่งซื้อนี้?',
-                            'data-method' => 'post',
-                        ]) ?>
-                    <?php endif; ?>
+
                 <?php endif; ?>
                 <?php if (\Yii::$app->user->can('purch/delete')): ?>
                     <?= Html::a('ลบ', ['delete', 'id' => $model->id], [
