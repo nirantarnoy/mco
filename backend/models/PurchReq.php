@@ -103,6 +103,7 @@ class PurchReq extends ActiveRecord
             [['total_amount', 'discount_amount', 'vat_amount', 'net_amount'], 'number'],
             [['purch_req_no', 'vendor_name', 'note', 'total_text'], 'string', 'max' => 255],
             [['purch_req_no'], 'unique'],
+            [['required_date'], 'safe'],
         ];
     }
 
@@ -132,6 +133,7 @@ class PurchReq extends ActiveRecord
             'created_by' => 'สร้างโดย',
             'updated_at' => 'วันที่แก้ไข',
             'updated_by' => 'แก้ไขโดย',
+            'required_date' => 'วันที่ต้องการ',
         ];
     }
 

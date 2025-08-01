@@ -94,11 +94,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 ]),
             ],
             [
-                'attribute' => 'customer_name',
+                'attribute' => 'customer_id',
                 'label' => 'ลูกค้า',
                 'headerOptions' => ['style' => 'width: 200px;'],
                 'value' => function ($model) {
-                    return $model->customer_name ?: 'ไม่ระบุ';
+                    return $model->customer ? $model->customer->name : '';
                 },
             ],
             [

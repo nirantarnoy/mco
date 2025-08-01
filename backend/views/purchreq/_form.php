@@ -447,7 +447,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                         'options' => ['placeholder' => 'เลือกวันที่'],
                         'pluginOptions' => [
                             'autoclose' => true,
-                            'format' => 'yyyy-mm-dd',
+                            'format' => 'mm-dd-yyyy',
                             'todayHighlight' => true,
                         ]
                     ]) ?>
@@ -476,6 +476,15 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                     <?= $form->field($model, 'purch_id')->textInput([
                         'type' => 'number',
                         'placeholder' => 'รหัสใบสั่งซื้อ (ถ้ามี)'
+                    ]) ?>
+
+                    <?= $form->field($model, 'required_date')->widget(DatePicker::class, [
+                        'options' => ['placeholder' => 'เลือกวันที่'],
+                        'pluginOptions' => [
+                            'autoclose' => true,
+                            'format' => 'mm-dd-yyyy',
+                            'todayHighlight' => true,
+                        ]
                     ]) ?>
 
                     <?= $form->field($model, 'note')->textarea([

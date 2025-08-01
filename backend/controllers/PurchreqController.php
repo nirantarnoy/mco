@@ -95,6 +95,9 @@ class PurchreqController extends Controller
                 }
             }
 
+            $ex = explode('-', $model->purch_req_date);
+
+
             if ($valid) {
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
