@@ -96,6 +96,17 @@ class PurchreqController extends Controller
             }
 
             $ex = explode('-', $model->purch_req_date);
+            if($ex!= null){
+                if(count($ex) > 1){
+                    $model->purch_req_date = date('Y-m-d',strtotime($ex[2] . '/'. $ex[0].'/'.$ex[1]));
+                }
+            }
+            $exx = explode('-', $model->required_date);
+            if($exx!= null){
+                if(count($exx) > 1){
+                    $model->required_date = date('Y-m-d',strtotime($exx[2] . '/'. $exx[0].'/'.$exx[1]));
+                }
+            }
 
 
             if ($valid) {
@@ -196,6 +207,19 @@ class PurchreqController extends Controller
                     $purchReqLine->load($purchReqLineData, '');
                     $purchReqLines[] = $purchReqLine;
                     $valid = $purchReqLine->validate() && $valid;
+                }
+            }
+
+            $ex = explode('-', $model->purch_req_date);
+            if($ex!= null){
+                if(count($ex) > 1){
+                    $model->purch_req_date = date('Y-m-d',strtotime($ex[2] . '/'. $ex[0].'/'.$ex[1]));
+                }
+            }
+            $exx = explode('-', $model->required_date);
+            if($exx!= null){
+                if(count($exx) > 1){
+                    $model->required_date = date('Y-m-d',strtotime($exx[2] . '/'. $exx[0].'/'.$exx[1]));
                 }
             }
 

@@ -347,7 +347,7 @@ JS;
 
 $this->registerJs($calculationJs, \yii\web\View::POS_READY);
 
-$url_to_get_job_no = Url::to(['job/get-job-no'],true);
+$url_to_get_job_no = Url::to(['job/get-job-no'], true);
 // Dynamic Form JavaScript
 $dynamicFormJs = <<<JS
 $(document).ready(function() {
@@ -419,236 +419,238 @@ JS;
 $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 ?>
 
-<div class="purch-req-form">
+    <div class="purch-req-form">
 
-    <?php $form = ActiveForm::begin([
-        'id' => 'purch-req-form',
-        'options' => ['class' => 'form-horizontal', 'enctype' => 'multipart/form-data'],
-    ]); ?>
+        <?php $form = ActiveForm::begin([
+            'id' => 'purch-req-form',
+            'options' => ['class' => 'form-horizontal', 'enctype' => 'multipart/form-data'],
+        ]); ?>
 
-    <div class="card">
-        <div class="card-header">
-            <h5 class="card-title mb-0">ข้อมูลใบขอซื้อ</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <?= $form->field($model, 'purch_req_no')->textInput([
-                        'maxlength' => true,
-                        'placeholder' => 'ระบบจะสร้างอัตโนมัติหากไม่ระบุ',
-                        'id' => 'purchreq-job-no',
-                    ]) ?>
-                    <?= $form->field($model, 'job_id')->widget(Select2::class, [
-                        'data' => \yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(), 'id', 'job_no'),
-                        'language' => 'th',
-                        'options' => ['placeholder' => 'เลือกงาน','id' => 'job-id'],
-                    ])->label('ใบงาน') ?>
-                    <?= $form->field($model, 'purch_req_date')->widget(DatePicker::class, [
-                        'options' => ['placeholder' => 'เลือกวันที่'],
-                        'pluginOptions' => [
-                            'autoclose' => true,
-                            'format' => 'mm-dd-yyyy',
-                            'todayHighlight' => true,
-                        ]
-                    ]) ?>
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">ข้อมูลใบขอซื้อ</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <?= $form->field($model, 'purch_req_no')->textInput([
+                            'maxlength' => true,
+                            'placeholder' => 'ระบบจะสร้างอัตโนมัติหากไม่ระบุ',
+                            'id' => 'purchreq-job-no',
+                        ]) ?>
+                        <?= $form->field($model, 'job_id')->widget(Select2::class, [
+                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(), 'id', 'job_no'),
+                            'language' => 'th',
+                            'options' => ['placeholder' => 'เลือกงาน', 'id' => 'job-id'],
+                        ])->label('ใบงาน') ?>
+                        <?php $model->purch_req_date = $model->purch_req_date ? date('m-d-Y', strtotime($model->purch_req_date)) : date('m-d-Y'); ?>
+                        <?= $form->field($model, 'purch_req_date')->widget(DatePicker::class, [
+                            'options' => ['placeholder' => 'เลือกวันที่'],
+                            'pluginOptions' => [
+                                'autoclose' => true,
+                                'format' => 'mm-dd-yyyy',
+                                'todayHighlight' => true,
+                            ]
+                        ]) ?>
 
-                    <?= $form->field($model, 'vendor_id')->widget(Select2::className(), [
-                        'data' => ArrayHelper::map(\backend\models\Vendor::find()->all(), 'id', 'name'),
-                        'options' => ['placeholder' => 'เลือกผู้จําหน่าย'],
-                        'pluginOptions' => [
-                            'allowClear' => true
-                        ]
-                    ]) ?>
+                        <?= $form->field($model, 'vendor_id')->widget(Select2::className(), [
+                            'data' => ArrayHelper::map(\backend\models\Vendor::find()->all(), 'id', 'name'),
+                            'options' => ['placeholder' => 'เลือกผู้จําหน่าย'],
+                            'pluginOptions' => [
+                                'allowClear' => true
+                            ]
+                        ]) ?>
 
-                    <?= $form->field($model, 'status')->dropDownList([
-                        PurchReq::STATUS_DRAFT => 'ร่าง',
-                        PurchReq::STATUS_ACTIVE => 'ใช้งาน',
-                        PurchReq::STATUS_CANCELLED => 'ยกเลิก',
-                    ], ['prompt' => 'เลือกสถานะ']) ?>
-                </div>
-                <div class="col-md-6">
-                    <?= $form->field($model, 'approve_status')->dropDownList([
-                        PurchReq::APPROVE_STATUS_PENDING => 'รอพิจารณา',
-                        PurchReq::APPROVE_STATUS_APPROVED => 'อนุมัติ',
-                        PurchReq::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
-                    ], ['prompt' => 'เลือกสถานะอนุมัติ']) ?>
+                        <?= $form->field($model, 'status')->dropDownList([
+                            PurchReq::STATUS_DRAFT => 'ร่าง',
+                            PurchReq::STATUS_ACTIVE => 'ใช้งาน',
+                            PurchReq::STATUS_CANCELLED => 'ยกเลิก',
+                        ], ['prompt' => 'เลือกสถานะ']) ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?= $form->field($model, 'approve_status')->dropDownList([
+                            PurchReq::APPROVE_STATUS_PENDING => 'รอพิจารณา',
+                            PurchReq::APPROVE_STATUS_APPROVED => 'อนุมัติ',
+                            PurchReq::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
+                        ], ['prompt' => 'เลือกสถานะอนุมัติ']) ?>
 
-                    <?= $form->field($model, 'purch_id')->textInput([
-                        'type' => 'number',
-                        'placeholder' => 'รหัสใบสั่งซื้อ (ถ้ามี)'
-                    ]) ?>
+                        <?= $form->field($model, 'purch_id')->textInput([
+                            'type' => 'number',
+                            'placeholder' => 'รหัสใบสั่งซื้อ (ถ้ามี)'
+                        ]) ?>
+                        <?php $model->required_date = $model->required_date ? date('m-d-Y', strtotime($model->required_date)) : date('m-d-Y'); ?>
+                        <?= $form->field($model, 'required_date')->widget(DatePicker::class, [
+                            'options' => ['placeholder' => 'เลือกวันที่'],
+                            'pluginOptions' => [
+                                'autoclose' => true,
+                                'format' => 'mm-dd-yyyy',
+                                'todayHighlight' => true,
+                            ]
+                        ]) ?>
 
-                    <?= $form->field($model, 'required_date')->widget(DatePicker::class, [
-                        'options' => ['placeholder' => 'เลือกวันที่'],
-                        'pluginOptions' => [
-                            'autoclose' => true,
-                            'format' => 'mm-dd-yyyy',
-                            'todayHighlight' => true,
-                        ]
-                    ]) ?>
-
-                    <?= $form->field($model, 'note')->textarea([
-                        'rows' => 4,
-                        'placeholder' => 'หมายเหตุ'
-                    ]) ?>
+                        <?= $form->field($model, 'note')->textarea([
+                            'rows' => 4,
+                            'placeholder' => 'หมายเหตุ'
+                        ]) ?>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="card mt-4">
-        <div class="card-header">
-            <h5 class="card-title mb-0">รายละเอียดสินค้า</h5>
-        </div>
-        <div class="card-body">
-            <?php DynamicFormWidget::begin([
-                'widgetContainer' => 'dynamicform_wrapper',
-                'widgetBody' => '.container-items',
-                'widgetItem' => '.item',
-                'limit' => 10,
-                'min' => 1,
-                'insertButton' => '.add-item',
-                'deleteButton' => '.remove-item',
-                'model' => $model->purchReqLines[0] ?? new \backend\models\PurchReqLine(),
-                'formId' => 'purch-req-form',
-                'formFields' => [
-                    'product_id',
-                    'product_name',
-                    'qty',
-                    'line_price',
-                    'line_total',
-                ],
-            ]); ?>
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">รายละเอียดสินค้า</h5>
+            </div>
+            <div class="card-body">
+                <?php DynamicFormWidget::begin([
+                    'widgetContainer' => 'dynamicform_wrapper',
+                    'widgetBody' => '.container-items',
+                    'widgetItem' => '.item',
+                    'limit' => 10,
+                    'min' => 1,
+                    'insertButton' => '.add-item',
+                    'deleteButton' => '.remove-item',
+                    'model' => $model->purchReqLines[0] ?? new \backend\models\PurchReqLine(),
+                    'formId' => 'purch-req-form',
+                    'formFields' => [
+                        'product_id',
+                        'product_name',
+                        'qty',
+                        'line_price',
+                        'line_total',
+                    ],
+                ]); ?>
 
-            <div class="table-responsive">
-                <table class="table table-bordered">
-                    <thead class="table-light">
-                    <tr>
-                        <th style="width: 50px;">ลำดับ</th>
-                        <th style="width: 200px;">ชื่อสินค้า</th>
-                        <th style="width: 100px;">จำนวน</th>
-                        <th style="width: 120px;">ราคาต่อหน่วย</th>
-                        <th style="width: 120px;">ราคารวม</th>
-                        <th style="width: 50px;">
-                            <button type="button" class="btn btn-success btn-sm add-item">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </th>
-                    </tr>
-                    </thead>
-                    <tbody class="container-items">
-                    <?php if (empty($model->purchReqLines)): ?>
-                        <?php $model->purchReqLines = [new \backend\models\PurchReqLine()]; ?>
-                    <?php endif; ?>
-                    <?php foreach ($model->purchReqLines as $index => $purchReqLine): ?>
-                        <tr class="item">
-                            <td class="text-center align-middle">
-                                <span class="item-number"><?= $index + 1 ?></span>
-                            </td>
-                            <td>
-                                <?php if (!$purchReqLine->isNewRecord): ?>
-                                    <?= Html::activeHiddenInput($purchReqLine, "[{$index}]id") ?>
-                                <?php endif; ?>
-
-                                <div class="product-field-container">
-                                    <?= Html::activeHiddenInput($purchReqLine, "[{$index}]product_id", [
-                                        'class' => 'product-id-hidden',
-                                        'data-index' => $index,
-                                    ]) ?>
-
-                                    <?= $form->field($purchReqLine, "[{$index}]product_name")->textInput([
-                                        'class' => 'form-control product-autocomplete',
-                                        'placeholder' => 'พิมพ์ชื่อสินค้าหรือรหัสสินค้า...',
-                                        'data-index' => $index,
-                                        'autocomplete' => 'off'
-                                    ])->label(false) ?>
-
-                                    <div class="autocomplete-dropdown" data-index="<?= $index ?>"></div>
-                                </div>
-                            </td>
-                            <td>
-                                <?= $form->field($purchReqLine, "[{$index}]qty")->textInput([
-                                    'type' => 'number',
-                                    'step' => '0.01',
-                                    'min' => '0',
-                                    'placeholder' => '0',
-                                    'class' => 'form-control qty-input',
-                                    'data-index' => $index,
-                                ])->label(false) ?>
-                            </td>
-                            <td>
-                                <?= $form->field($purchReqLine, "[{$index}]line_price")->textInput([
-                                    'type' => 'number',
-                                    'step' => '0.01',
-                                    'min' => '0',
-                                    'placeholder' => '0.00',
-                                    'class' => 'form-control price-input',
-                                    'data-index' => $index,
-                                ])->label(false) ?>
-                            </td>
-                            <td>
-                                <?= $form->field($purchReqLine, "[{$index}]line_total")->textInput([
-                                    'type' => 'number',
-                                    'step' => '0.01',
-                                    'readonly' => true,
-                                    'class' => 'form-control line-total',
-                                    'style' => 'background-color: #f8f9fa;',
-                                    'data-index' => $index,
-                                ])->label(false) ?>
-                            </td>
-                            <td class="text-center align-middle">
-                                <button type="button" class="btn btn-danger btn-sm remove-item">
-                                    <i class="fas fa-trash"></i>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                        <tr>
+                            <th style="width: 50px;">ลำดับ</th>
+                            <th style="width: 200px;">ชื่อสินค้า</th>
+                            <th style="width: 100px;">จำนวน</th>
+                            <th style="width: 120px;">ราคาต่อหน่วย</th>
+                            <th style="width: 120px;">ราคารวม</th>
+                            <th style="width: 50px;">
+                                <button type="button" class="btn btn-success btn-sm add-item">
+                                    <i class="fas fa-plus"></i>
                                 </button>
-                            </td>
+                            </th>
                         </tr>
-                    <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody class="container-items">
+                        <?php if (empty($model->purchReqLines)): ?>
+                            <?php $model->purchReqLines = [new \backend\models\PurchReqLine()]; ?>
+                        <?php endif; ?>
+                        <?php foreach ($model->purchReqLines as $index => $purchReqLine): ?>
+                            <tr class="item">
+                                <td class="text-center align-middle">
+                                    <span class="item-number"><?= $index + 1 ?></span>
+                                </td>
+                                <td>
+                                    <?php if (!$purchReqLine->isNewRecord): ?>
+                                        <?= Html::activeHiddenInput($purchReqLine, "[{$index}]id") ?>
+                                    <?php endif; ?>
 
-            <?php DynamicFormWidget::end(); ?>
-        </div>
-    </div>
+                                    <div class="product-field-container">
+                                        <?= Html::activeHiddenInput($purchReqLine, "[{$index}]product_id", [
+                                            'class' => 'product-id-hidden',
+                                            'data-index' => $index,
+                                        ]) ?>
 
-    <!-- Summary Section -->
-    <div class="card mt-4">
-        <div class="card-header">
-            <h5 class="card-title mb-0">สรุปยอดเงิน</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
+                                        <?= $form->field($purchReqLine, "[{$index}]product_name")->textInput([
+                                            'class' => 'form-control product-autocomplete',
+                                            'placeholder' => 'พิมพ์ชื่อสินค้าหรือรหัสสินค้า...',
+                                            'data-index' => $index,
+                                            'autocomplete' => 'off'
+                                        ])->label(false) ?>
 
+                                        <div class="autocomplete-dropdown" data-index="<?= $index ?>"></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <?= $form->field($purchReqLine, "[{$index}]qty")->textInput([
+                                        'type' => 'number',
+                                        'step' => '0.01',
+                                        'min' => '0',
+                                        'placeholder' => '0',
+                                        'class' => 'form-control qty-input',
+                                        'data-index' => $index,
+                                    ])->label(false) ?>
+                                </td>
+                                <td>
+                                    <?= $form->field($purchReqLine, "[{$index}]line_price")->textInput([
+                                        'type' => 'number',
+                                        'step' => '0.01',
+                                        'min' => '0',
+                                        'placeholder' => '0.00',
+                                        'class' => 'form-control price-input',
+                                        'data-index' => $index,
+                                    ])->label(false) ?>
+                                </td>
+                                <td>
+                                    <?= $form->field($purchReqLine, "[{$index}]line_total")->textInput([
+                                        'type' => 'number',
+                                        'step' => '0.01',
+                                        'readonly' => true,
+                                        'class' => 'form-control line-total',
+                                        'style' => 'background-color: #f8f9fa;',
+                                        'data-index' => $index,
+                                    ])->label(false) ?>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <button type="button" class="btn btn-danger btn-sm remove-item">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="col-md-6">
-                    <!-- Right side for summary display -->
-                    <div class="card bg-light">
-                        <div class="card-body">
-                            <h6 class="card-title">สรุปยอดเงิน</h6>
-                            <div class="row mb-2">
-                                <div class="col-8">ยอดรวม:</div>
-                                <div class="col-4 text-end">
-                                    <span id="summary-subtotal" class="fw-bold">0.00</span> บาท
+
+                <?php DynamicFormWidget::end(); ?>
+            </div>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">สรุปยอดเงิน</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+
+                    </div>
+                    <div class="col-md-6">
+                        <!-- Right side for summary display -->
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">สรุปยอดเงิน</h6>
+                                <div class="row mb-2">
+                                    <div class="col-8">ยอดรวม:</div>
+                                    <div class="col-4 text-end">
+                                        <span id="summary-subtotal" class="fw-bold">0.00</span> บาท
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-8">ส่วนลด:</div>
-                                <div class="col-4 text-end">
-                                    <span id="summary-discount" class="fw-bold">0.00</span> บาท
+                                <div class="row mb-2">
+                                    <div class="col-8">ส่วนลด:</div>
+                                    <div class="col-4 text-end">
+                                        <span id="summary-discount" class="fw-bold">0.00</span> บาท
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-8">VAT (7%):</div>
-                                <div class="col-4 text-end">
-                                    <span id="summary-vat" class="fw-bold">0.00</span> บาท
+                                <div class="row mb-2">
+                                    <div class="col-8">VAT (7%):</div>
+                                    <div class="col-4 text-end">
+                                        <span id="summary-vat" class="fw-bold">0.00</span> บาท
+                                    </div>
                                 </div>
-                            </div>
-                            <hr>
-                            <div class="row">
-                                <div class="col-8"><strong>ยอดรวมสุทธิ:</strong></div>
-                                <div class="col-4 text-end">
-                                    <span id="summary-net" class="fw-bold text-primary h5">0.00</span> บาท
+                                <hr>
+                                <div class="row">
+                                    <div class="col-8"><strong>ยอดรวมสุทธิ:</strong></div>
+                                    <div class="col-4 text-end">
+                                        <span id="summary-net" class="fw-bold text-primary h5">0.00</span> บาท
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -656,87 +658,86 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                 </div>
             </div>
         </div>
-    </div>
 
 
-    <div class="form-group mt-3">
-        <div class="d-flex justify-content-between">
-            <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
-                'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
-            ]) ?>
-            <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
-        </div>
-    </div>
-
-    <?php ActiveForm::end(); ?>
-    <hr>
-    <br/>
-    <div class="label">
-        <h4>เอกสารแนบ</h4>
-    </div>
-    <div class="row">
-        <div class="col-lg-12">
-            <table class="table table-bordered table-striped" style="width: 100%">
-                <thead>
-                <tr>
-                    <th style="width: 5%;text-align: center">#</th>
-                    <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
-                    <th style="width: 10%;text-align: center">ดูเอกสาร</th>
-                    <th style="width: 5%;text-align: center">-</th>
-                </tr>
-                </thead>
-                <tbody>
-                <?php if ($model_doc != null): ?>
-
-                    <?php foreach ($model_doc as $key => $value): ?>
-                        <tr>
-                            <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
-                            <td><?= $value->doc_name ?></td>
-                            <td style="text-align: center">
-                                <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_req_doc/' . $value->doc_name ?>"
-                                   target="_blank">
-                                    ดูเอกสาร
-                                </a>
-                            </td>
-                            <td style="text-align: center">
-                                <div class="btn btn-danger" data-var="<?= trim($value->doc_name) ?>"
-                                     onclick="delete_doc($(this))">ลบ
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <br/>
-
-    <form action="<?= Url::to(['purchreq/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
-        <input type="hidden" name="id" value="<?= $model->id ?>">
-        <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-            <div class="row">
-                <div class="col-lg-12">
-                    <label for="">เอกสารแนบ</label>
-                    <input type="file" name="file_doc" multiple>
-                </div>
-            </div>
-            <br/>
-            <div class="row">
-                <div class="col-lg-12">
-                    <button class="btn btn-info">
-                        <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ
-                    </button>
-                </div>
+        <div class="form-group mt-3">
+            <div class="d-flex justify-content-between">
+                <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
+                    'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
+                ]) ?>
+                <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
             </div>
         </div>
-    </form>
-    <form id="form-delete-doc-file" action="<?= Url::to(['purch/delete-doc-file'], true) ?>" method="post">
-        <input type="hidden" name="id" value="<?= $model->id ?>">
-        <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
-    </form>
 
-</div>
+        <?php ActiveForm::end(); ?>
+        <hr>
+        <br/>
+        <div class="label">
+            <h4>เอกสารแนบ</h4>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <table class="table table-bordered table-striped" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th style="width: 5%;text-align: center">#</th>
+                        <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
+                        <th style="width: 10%;text-align: center">ดูเอกสาร</th>
+                        <th style="width: 5%;text-align: center">-</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if ($model_doc != null): ?>
+
+                        <?php foreach ($model_doc as $key => $value): ?>
+                            <tr>
+                                <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
+                                <td><?= $value->doc_name ?></td>
+                                <td style="text-align: center">
+                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_req_doc/' . $value->doc_name ?>"
+                                       target="_blank">
+                                        ดูเอกสาร
+                                    </a>
+                                </td>
+                                <td style="text-align: center">
+                                    <div class="btn btn-danger" data-var="<?= trim($value->doc_name) ?>"
+                                         onclick="delete_doc($(this))">ลบ
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <br/>
+
+        <form action="<?= Url::to(['purchreq/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="id" value="<?= $model->id ?>">
+            <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <label for="">เอกสารแนบ</label>
+                        <input type="file" name="file_doc" multiple>
+                    </div>
+                </div>
+                <br/>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <button class="btn btn-info">
+                            <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        <form id="form-delete-doc-file" action="<?= Url::to(['purch/delete-doc-file'], true) ?>" method="post">
+            <input type="hidden" name="id" value="<?= $model->id ?>">
+            <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
+        </form>
+
+    </div>
 
 <?php
 $script = <<< JS

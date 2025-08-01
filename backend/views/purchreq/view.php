@@ -119,6 +119,11 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
                                     'label' => 'วันที่',
                                     'format' => ['date', 'php:m/d/Y'],
                                 ],
+                                [
+                                    'attribute' => 'required_date',
+                                    'label' => 'วันที่ต้องการใช้งาน',
+                                    'format' => ['date', 'php:m/d/Y'],
+                                ],
                                 'vendor_name:text:ชื่อผู้ขาย',
                                 [
                                     'attribute' => 'status',
