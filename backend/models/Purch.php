@@ -101,7 +101,7 @@ class Purch extends ActiveRecord
             [['purch_date'], 'safe'],
             [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by','discount_percent','vat_percent'], 'integer'],
             [['total_amount', 'discount_amount', 'vat_amount', 'net_amount'], 'number'],
-            [['purch_no', 'vendor_name', 'note'], 'string', 'max' => 255],
+            [['purch_no', 'vendor_name', 'note','delivery_note','payment_note'], 'string', 'max' => 255],
             [['purch_no'], 'unique'],
         ];
     }
@@ -129,6 +129,8 @@ class Purch extends ActiveRecord
             'created_by' => 'สร้างโดย',
             'updated_at' => 'วันที่แก้ไข',
             'updated_by' => 'แก้ไขโดย',
+            'delivery_note' => 'หมายเหตุการจัดส่ง',
+            'payment_note' => 'หมายเหตุการชําระเงิน',
         ];
     }
 
@@ -330,5 +332,9 @@ class Purch extends ActiveRecord
             $no = $model->purch_no;
         }
         return $no;
+    }
+
+    public function getVendor(){
+        return $this->hasOne(\backend\models\Vendor::className(), ['id' => 'vendor_id']);
     }
 }

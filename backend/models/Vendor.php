@@ -82,4 +82,24 @@ class Vendor extends \common\models\Vendor
         return $vendor_code;
     }
 
+    public static function findVendorInfo($id) {
+        $data = [];
+        $model = Vendor::find()->where(['id'=>$id])->one();
+        if($model){
+            $data['name'] = $model->name;
+            $data['home_number'] = $model->home_number;
+            $data['street'] = $model->street;
+            $data['aisle'] = $model->aisle;
+            $data['district_name'] = $model->district_name;
+            $data['city_name'] = $model->city_name;
+            $data['province_name'] = $model->province_name;
+            $data['zipcode'] = $model->zipcode;
+            $data['contact_name'] = $model->contact_name;
+            $data['phone'] = $model->phone;
+            $data['email'] = $model->email;
+
+        }
+        return $data;
+    }
+
 }

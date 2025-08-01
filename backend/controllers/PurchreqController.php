@@ -535,6 +535,7 @@ class PurchreqController extends Controller
                 ->one();
 
             $mainNumber = 1;
+            $subNumber = 1;
             if ($lastPr) {
                 $prParts = explode('-', $lastPr->purch_no);
                 $mainNumber = isset($prParts[1]) ? ((int)$prParts[1]) + 1 : 1;

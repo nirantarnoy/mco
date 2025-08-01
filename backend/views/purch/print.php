@@ -19,6 +19,11 @@ if ($purchaseLines) {
 $netAmount = $subtotal - $discount;
 $vat = $netAmount * 0.07;
 $total = $netAmount + $vat;
+
+$vendor_info = \backend\models\Vendor::findVendorInfo($purchase->vendor_id);
+$vendor_address = $vendor_info !== null ? $vendor_info['home_number'].' '.$vendor_info['street'].' '.$vendor_info['aisle'].', '.$vendor_info['district_name'].', '.$vendor_info['city_name'].', '.$vendor_info['province_name'].', '.$vendor_info['zipcode'] : '';
+$phone = $vendor_info !== null ? $vendor_info['phone'] : '';
+$email = $vendor_info !== null ? $vendor_info['email'] : '';
 ?>
 
     <style>
@@ -238,7 +243,7 @@ $total = $netAmount + $vat;
                     <div>โทรศัพท์/โทรสาร : 021564300025</div>
                     <div>Tel : (038) 475259-6 , 0364364555</div>
                     <div>e-mail : info@thai-mco.com</div>
-                    <div><strong>SUPPLIER :</strong></div>
+                    <div><strong>SUPPLIER : <?= Html::encode($purchase->vendor->name) ?></strong><br /><?= Html::encode($vendor_address) ?></div>
                 </div>
 
             </div>
@@ -280,7 +285,7 @@ $total = $netAmount + $vat;
                 <div class="column">
                     <div class="info-row">
                         <span class="info-label">TEL :</span>
-                        <span class="info-value"></span>
+                        <span class="info-value"><?= Html::encode($phone) ?></span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">FAX :</span>
@@ -388,7 +393,7 @@ $total = $netAmount + $vat;
         <div class="terms">
             <div><strong>Delivery :</strong></div>
             <div><strong>Payment :</strong></div>
-            <div><strong>Note 1.</strong> กรณีสินค้าหรือบริการนั้นต้องนำเข้าจากต่างประเทศให้เป็นหน้าที่ของผู้ขายต้องรับผิดชอบในการดำเนินการ 0.5% จากราคาทั้งหมด ถ้าผู้ขายไม่ทำการจัดส่งตามเวลา 10 ของราคาทั้งหมด</div>
+            <div><strong>Note 1.</strong> กรณีส่งสินค้าล่าช้ากว่ากำหนด ผู้ขาย/ผู้รับจ้าง ยอมให้ปรับเป็นรายวันในอัตรา 0.5% ของราคาทั้งหมด ทั้งนี้สูงสุดไม่เกินร้อยละ 10 ของราคาดังกล่าว</div>
         </div>
 
         <!-- Signatures -->
