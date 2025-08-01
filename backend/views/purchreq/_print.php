@@ -242,7 +242,7 @@ $approverDate = '';
             <h3>Company Name :</h3>
             <h3>M.C.O. COMPANY LIMITED</h3>
             <p>8/18 Koh-Kloy Road.</p>
-            <p>Tambon Chomgroen,</p>
+            <p>Tambon Cherngnern,</p>
             <p>Amphur Muang ,</p>
             <p>Rayong 21000 Thailand.</p>
             <p style="text-decoration: underline;">เลขประจำตัวผู้เสียภาษี 0215543000985</p>
