@@ -59,7 +59,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                         'class' => 'btn btn-info',
                         'target' => '_blank'
                     ]) ?>
-                <?php if (\Yii::$app->user->can('CanApprovePo')): ?>
+                <?php if (\Yii::$app->user->can('CanApprovePo') && $model->approve_status == Purch::APPROVE_STATUS_PENDING): ?>
                     <?= Html::a('อนุมัติ', ['approve', 'id' => $model->id], [
                         'class' => 'btn btn-success',
                         'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบสั่งซื้อนี้?',
