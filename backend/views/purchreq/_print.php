@@ -12,7 +12,7 @@ $prNumber = $model->purch_req_no;
 $date = date('d/m/Y',strtotime($model->purch_req_date));
 $requestor = $emp_info != null ? $emp_info['fname'] . ' ' . $emp_info['lname'] : '';
 $department = $emp_info != null ? $emp_info['department_name'] : '';
-$requestType = 'minimumstock'; // minimumstock, capex, additional_work, expenses, other
+$requestType = $model->reason_title_id; // minimumstock, capex, additional_work, expenses, other
 $deliveryLocation = 'warehouse'; // warehouse, service_support, other_location, other
 
 //$items = [
@@ -62,6 +62,9 @@ if($model_line !=null){
 $hasQuotation = true;
 $hasSpecification = false;
 $hasCertificate = false;
+
+$reasons = \common\models\PurchReqReasonTitle::find()->all();
+$departments = \common\models\Department::find()->all();
 
 // Approvers
 $requestorName = 'นายสมชาย ใจดี';
@@ -277,47 +280,26 @@ $approverDate = '';
             <div class="form-group">
                 <span class="form-label">เหตุผลในการสั่งซื้อ :</span>
                 <div style="margin-top: 5px;">
+                    <?php foreach ($reasons as $reason) :?>
+
                     <div class="checkbox-group">
-                        <input type="checkbox" <?= $requestType == 'minimumstock' ? 'checked' : '' ?>>
-                        <label>Minimumstock</label>
+                        <input type="checkbox" <?= $requestType == $reason->id ? 'checked' : '' ?> onclick="return false">
+                        <label><?= Html::encode($reason->name) ?></label>
                     </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" <?= $requestType == 'capex' ? 'checked' : '' ?>>
-                        <label>Capex</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" <?= $requestType == 'additional_work' ? 'checked' : '' ?>>
-                        <label>Additional work</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" <?= $requestType == 'expenses' ? 'checked' : '' ?>>
-                        <label>Expenses</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" <?= $requestType == 'other' ? 'checked' : '' ?>>
-                        <label>อื่นๆ (ระบุ)______________</label>
-                    </div>
+                    <?php endforeach; ?>
+                  <span><?=$model->reason?></span>
                 </div>
             </div>
             <div class="form-group">
-                <span class="form-label">คาใช้จ่ายในส่วนแผนก :</span>
+                <span class="form-label">ค่าใช้จ่ายในส่วนแผนก :</span>
                 <div style="margin-top: 5px;">
-                    <div class="checkbox-group">
-                        <input type="checkbox" <?= $deliveryLocation == 'warehouse' ? 'checked' : '' ?>>
-                        <label>ฝ่ายขาย</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" <?= $deliveryLocation == 'service_support' ? 'checked' : '' ?>>
-                        <label>ฝ่าย Service Support</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" <?= $deliveryLocation == 'other_location' ? 'checked' : '' ?>>
-                        <label>ส่วนกลาง</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" <?= $deliveryLocation == 'other' ? 'checked' : '' ?>>
-                        <label>ออฟฟิศ</label>
-                    </div>
+                    <?php foreach ($departments as $department) :?>
+
+                        <div class="checkbox-group">
+                            <input type="checkbox" <?= $model->req_for_dep_id == $department->id ? 'checked' : '' ?> onclick="return false">
+                            <label><?= Html::encode($department->name) ?></label>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </div>

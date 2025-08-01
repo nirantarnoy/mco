@@ -414,6 +414,7 @@ $(document).ready(function() {
         });
     });
 });
+
 JS;
 
 $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
@@ -432,17 +433,13 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <?= $form->field($model, 'purch_req_no')->textInput([
                             'maxlength' => true,
                             'placeholder' => 'ระบบจะสร้างอัตโนมัติหากไม่ระบุ',
                             'id' => 'purchreq-job-no',
                         ]) ?>
-                        <?= $form->field($model, 'job_id')->widget(Select2::class, [
-                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(), 'id', 'job_no'),
-                            'language' => 'th',
-                            'options' => ['placeholder' => 'เลือกงาน', 'id' => 'job-id'],
-                        ])->label('ใบงาน') ?>
+
                         <?php $model->purch_req_date = $model->purch_req_date ? date('m-d-Y', strtotime($model->purch_req_date)) : date('m-d-Y'); ?>
                         <?= $form->field($model, 'purch_req_date')->widget(DatePicker::class, [
                             'options' => ['placeholder' => 'เลือกวันที่'],
@@ -452,32 +449,27 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 'todayHighlight' => true,
                             ]
                         ]) ?>
+                        <?= $form->field($model, 'reason_title_id')->widget(Select2::class, [
+                            'data' => \yii\helpers\ArrayHelper::map(\common\models\PurchReqReasonTitle::find()->all(), 'id', 'name'),
+                            'language' => 'th',
+                            'options' => ['placeholder' => 'เลือกเหตุผลขอซ์้อ', 'id' => 'reason-title-id','onchange'=>'enableReason($(this))'],
+                        ])->label() ?>
 
-                        <?= $form->field($model, 'vendor_id')->widget(Select2::className(), [
-                            'data' => ArrayHelper::map(\backend\models\Vendor::find()->all(), 'id', 'name'),
-                            'options' => ['placeholder' => 'เลือกผู้จําหน่าย'],
-                            'pluginOptions' => [
-                                'allowClear' => true
-                            ]
+                        <?= $form->field($model, 'reason')->textarea([
+                            'rows' => 4,
+                            'placeholder' => 'ระบุเหตุผลขอซื้อ',
+                            'id' => 'reason-id',
+                            'readonly' => true
                         ]) ?>
 
-                        <?= $form->field($model, 'status')->dropDownList([
-                            PurchReq::STATUS_DRAFT => 'ร่าง',
-                            PurchReq::STATUS_ACTIVE => 'ใช้งาน',
-                            PurchReq::STATUS_CANCELLED => 'ยกเลิก',
-                        ], ['prompt' => 'เลือกสถานะ']) ?>
                     </div>
-                    <div class="col-md-6">
-                        <?= $form->field($model, 'approve_status')->dropDownList([
-                            PurchReq::APPROVE_STATUS_PENDING => 'รอพิจารณา',
-                            PurchReq::APPROVE_STATUS_APPROVED => 'อนุมัติ',
-                            PurchReq::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
-                        ], ['prompt' => 'เลือกสถานะอนุมัติ']) ?>
+                    <div class="col-md-4">
+                        <?= $form->field($model, 'job_id')->widget(Select2::class, [
+                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(), 'id', 'job_no'),
+                            'language' => 'th',
+                            'options' => ['placeholder' => 'เลือกงาน', 'id' => 'job-id'],
+                        ])->label('ใบงาน') ?>
 
-                        <?= $form->field($model, 'purch_id')->textInput([
-                            'type' => 'number',
-                            'placeholder' => 'รหัสใบสั่งซื้อ (ถ้ามี)'
-                        ]) ?>
                         <?php $model->required_date = $model->required_date ? date('m-d-Y', strtotime($model->required_date)) : date('m-d-Y'); ?>
                         <?= $form->field($model, 'required_date')->widget(DatePicker::class, [
                             'options' => ['placeholder' => 'เลือกวันที่'],
@@ -492,6 +484,31 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                             'rows' => 4,
                             'placeholder' => 'หมายเหตุ'
                         ]) ?>
+                    </div>
+                    <div class="col-md-4">
+                        <?= $form->field($model, 'approve_status')->dropDownList([
+                            PurchReq::APPROVE_STATUS_PENDING => 'รอพิจารณา',
+                            PurchReq::APPROVE_STATUS_APPROVED => 'อนุมัติ',
+                            PurchReq::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
+                        ], ['prompt' => 'เลือกสถานะอนุมัติ']) ?>
+                        <?= $form->field($model, 'vendor_id')->widget(Select2::className(), [
+                            'data' => ArrayHelper::map(\backend\models\Vendor::find()->all(), 'id', 'name'),
+                            'options' => ['placeholder' => 'เลือกผู้จําหน่าย'],
+                            'pluginOptions' => [
+                                'allowClear' => true
+                            ]
+                        ]) ?>
+                        <?= $form->field($model, 'status')->dropDownList([
+                            PurchReq::STATUS_DRAFT => 'ร่าง',
+                            PurchReq::STATUS_ACTIVE => 'ใช้งาน',
+                            PurchReq::STATUS_CANCELLED => 'ยกเลิก',
+                        ], ['prompt' => 'เลือกสถานะ']) ?>
+
+                        <?= $form->field($model, 'req_for_dep_id')->widget(Select2::class, [
+                            'data' => \yii\helpers\ArrayHelper::map(\common\models\Department::find()->all(), 'id', 'name'),
+                            'language' => 'th',
+                            'options' => ['placeholder' => 'เลือกแผนก', 'id' => 'department-id'],
+                        ])->label() ?>
                     </div>
                 </div>
             </div>
@@ -746,6 +763,14 @@ function delete_doc(e){
     if(file_name != null){
         $(".delete-doc-list").val(file_name);
         $("#form-delete-doc-file").submit();
+    }
+}
+function enableReason(e) {
+    var id = $(e).val();
+    if(id === 5 || id ==='5'){
+        $('#reason-id').prop('readonly', false);
+    }else{
+        $('#reason-id').prop('readonly', true);
     }
 }
 JS;

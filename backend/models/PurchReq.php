@@ -99,9 +99,9 @@ class PurchReq extends ActiveRecord
         return [
             [['vendor_id','job_id'], 'required'],
             [['purch_req_date'], 'safe'],
-            [['vendor_id', 'status', 'approve_status', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by','job_id','discount_percent','vat_percent','approve_by'], 'integer'],
+            [['vendor_id', 'status', 'approve_status', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by','job_id','discount_percent','vat_percent','approve_by','reason_title_id','req_for_dep_id'], 'integer'],
             [['total_amount', 'discount_amount', 'vat_amount', 'net_amount'], 'number'],
-            [['purch_req_no', 'vendor_name', 'note', 'total_text'], 'string', 'max' => 255],
+            [['purch_req_no', 'vendor_name', 'note', 'total_text','reason'], 'string', 'max' => 255],
             [['purch_req_no'], 'unique'],
             [['required_date'], 'safe'],
         ];
@@ -134,6 +134,9 @@ class PurchReq extends ActiveRecord
             'updated_at' => 'วันที่แก้ไข',
             'updated_by' => 'แก้ไขโดย',
             'required_date' => 'วันที่ต้องการ',
+            'reason' => 'ระบุเหตุผล',
+            'reason_title_id' => 'เหตุผลขอซื้อ',
+            'req_for_dep_id' => 'ค่าใช้จ่ายสําหรับแผนก',
         ];
     }
 
