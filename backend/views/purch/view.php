@@ -54,11 +54,12 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <?= Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-                <?php if ($model->approve_status == Purch::APPROVE_STATUS_APPROVED): ?>
+
                     <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
                         'class' => 'btn btn-info',
                         'target' => '_blank'
                     ]) ?>
+                <?php if ($model->approve_status == Purch::APPROVE_STATUS_APPROVED): ?>
                     <?= Html::a('<i class="fas fa-file-pdf"></i> PDF', ['pdf', 'id' => $model->id], [
                         'class' => 'btn btn-warning',
                         'target' => '_blank'
