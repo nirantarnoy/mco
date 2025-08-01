@@ -68,7 +68,7 @@ class Quotation extends ActiveRecord
             [['quotation_date'], 'safe'],
             [['customer_id', 'status', 'approve_status', 'approve_by', 'created_at', 'created_by', 'updated_at', 'updated_by','payment_term_id','payment_method_id'], 'integer'],
             [['total_amount'], 'number'],
-            [['quotation_no', 'customer_name', 'total_amount_text', 'note'], 'string', 'max' => 255],
+            [['quotation_no', 'customer_name', 'total_amount_text', 'note','delivery_day_text'], 'string', 'max' => 255],
             [['quotation_no'], 'unique'],
         ];
     }
@@ -96,6 +96,7 @@ class Quotation extends ActiveRecord
             'updated_by' => 'แก้ไขโดย',
             'payment_term_id' => 'เงื่นไขชำระเงิน',
             'payment_method_id' => 'วิธีชำระเงิน',
+            'delivery_day_text' => 'กำหนดส่งของ',
         ];
     }
 

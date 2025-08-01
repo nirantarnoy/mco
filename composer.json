@@ -37,7 +37,8 @@
         "mpdf/mpdf": "^8.1",
       "ext-json": "*",
       "ext-intl": "*",
-        "phpoffice/phpspreadsheet": "^1.24"
+        "phpoffice/phpspreadsheet": "^1.24",
+        "kartik-v/yii2-export": "dev-master"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",

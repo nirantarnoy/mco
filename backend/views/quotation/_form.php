@@ -463,13 +463,14 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                         ]) ?>
                     </div>
                     <div class="col-lg-4">
-                        <?= $form->field($model, 'payment_term_id')->widget(Select2::className(), [
-                            'data' => ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name'),
-                            'options' => ['placeholder' => 'เลือกเงื่อนไขชําระเงิน'],
-                            'pluginOptions' => [
-                                'allowClear' => true
-                            ]
-                        ]) ?>
+<!--                        --><?php //= $form->field($model, 'payment_term_id')->widget(Select2::className(), [
+//                            'data' => ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name'),
+//                            'options' => ['placeholder' => 'เลือกเงื่อนไขชําระเงิน'],
+//                            'pluginOptions' => [
+//                                'allowClear' => true
+//                            ]
+//                        ]) ?>
+                        <?= $form->field($model,'delivery_day_text')->textInput([]) ?>
                         <?= $form->field($model, 'payment_method_id')->widget(Select2::className(), [
                             'data' => ArrayHelper::map(\backend\models\Paymentmethod::find()->all(), 'id', 'name'),
                             'options' => ['placeholder' => 'เลือกวิธีชําระเงิน'],
