@@ -178,7 +178,12 @@ class CreditNote extends \yii\db\ActiveRecord
     {
         $subtotal = 0;
         foreach ($this->creditNoteItems as $item) {
-            $subtotal += $item->amount;
+            // Calculate item amount including discount
+            $itemTotal = ($item->quantity * $item->unit_price) - $item->discount_amount;
+            $item->amount = $itemTotal;
+            $item->save(false);
+
+            $subtotal += $itemTotal;
         }
 
         $this->adjust_amount = $subtotal;

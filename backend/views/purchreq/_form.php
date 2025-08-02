@@ -15,6 +15,7 @@ use yii\helpers\Url;
 /* @var $form yii\widgets\ActiveForm */
 
 $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model->id])->all();
+$yesNo = [['id' => 1, 'name' => 'ใช้'], ['id' => 2, 'name' => 'ไม่ใช้']];
 
 // CSS สำหรับ autocomplete
 $autocompleteCSS = <<<CSS

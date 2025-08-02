@@ -205,6 +205,22 @@
                                     </a>
                                 </li>
                             <?php endif; ?>
+                            <?php //if (\Yii::$app->user->can('invoice/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=debit-note/index" class="nav-link debit-note">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>เพิ่มหนี้</p>
+                                    </a>
+                                </li>
+                            <?php //endif; ?>
+                            <?php //if (\Yii::$app->user->can('invoice/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=credit-note/index" class="nav-link credit-note">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>ลดหนี้</p>
+                                    </a>
+                                </li>
+                            <?php //endif; ?>
                         </ul>
                     </li>
                 <?php endif;?>

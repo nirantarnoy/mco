@@ -1,160 +1,185 @@
 <?php
+
 use yii\helpers\Html;
+use backend\models\Company;
 
-$company = [
-    'name' => 'บริษัท เอ็ม.ซี.โอ. จำกัด',
-    'name_en' => 'M.C.O. CO.,LTD.',
-    'address' => '8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000',
-    'address_en' => '8/18 Koh-Kloy Rd., Tambon Cherngnoeh, Amphur Muang, Rayong 21000',
-    'phone' => 'Tel : (038) 875258-9',
-    'fax' => 'Fax : (038) 619559',
-    'email' => 'e-mail: info@thai-mco.com',
-    'website' => 'www.thai-mco.com',
-    'tax_id' => '0215543000985'
-];
+/* @var $this yii\web\View */
+/* @var $model backend\models\CreditNote */
 
-function convertToThaiText($number) {
-    // Function to convert number to Thai text
-    return 'หนึ่งแสนแปดพันเจ็ดร้อยห้าสิบเอ็ดบาทสิบหกสตางค์'; // Placeholder
-}
+$company = Company::findOne(1); // Get company info
+$formatter = Yii::$app->formatter;
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>ใบลดหนี้ <?= $model->credit_note_no ?></title>
+    <title>ใบลดหนี้ <?= $model->document_no ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        @media print {
-            @page {
-                size: A4;
-                margin: 0.5in;
-            }
-            body {
-                -webkit-print-color-adjust: exact;
-                color-adjust: exact;
-            }
-            .no-print {
-                display: none !important;
-            }
+        @page {
+            size: A4;
+            margin: 10mm;
         }
 
         body {
             font-family: 'Prompt', sans-serif;
             font-size: 14px;
-            margin: 0;
-            padding: 0;
-            background: white;
+            line-height: 1.4;
+            color: #000;
         }
 
-        .print-container {
+        .container {
+            width: 100%;
             max-width: 210mm;
             margin: 0 auto;
-            padding: 20px;
-            background: white;
-            min-height: 297mm;
         }
 
         .header {
-            border-bottom: 2px solid #000;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        .company-info {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+        }
+
+        .company-info {
+            flex: 1;
         }
 
         .company-logo {
-            width: 100px;
-            height: 80px;
-            background: #ff6b35;
-            color: white;
-            text-align: center;
-            line-height: 80px;
-            font-weight: bold;
-            font-size: 24px;
-            flex-shrink: 0;
+            width: 120px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .company-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
         }
 
         .company-details {
-            flex: 1;
-            margin-left: 20px;
-        }
-
-        .company-details h2,
-        .company-details h3 {
-            margin: 5px 0;
-            font-weight: bold;
-        }
-
-        .company-details p {
-            margin: 2px 0;
             font-size: 12px;
-        }
-
-        .document-title {
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            margin: 20px 0;
-        }
-
-        .copy-label {
-            text-align: right;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #666;
+            line-height: 1.6;
         }
 
         .document-info {
-            margin-bottom: 20px;
+            text-align: right;
+            margin-top: 20px;
         }
 
-        .document-info table {
-            width: 100%;
-            border-collapse: collapse;
+        .document-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
         }
 
-        .document-info td {
-            padding: 5px 0;
-            vertical-align: top;
+        .document-title-en {
+            font-size: 16px;
+            font-weight: 400;
+            margin-bottom: 15px;
+        }
+
+        .document-copy {
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .customer-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .section-row {
+            display: flex;
+            margin-bottom: 8px;
+        }
+
+        .label {
+            font-weight: 500;
+            width: 150px;
+            flex-shrink: 0;
+        }
+
+        .value {
+            flex: 1;
         }
 
         .items-table {
             width: 100%;
-            border-collapse: collapse;
             margin: 20px 0;
-        }
-
-        .items-table th,
-        .items-table td {
-            border: 1px solid #000;
-            padding: 8px;
-            text-align: left;
+            border-collapse: collapse;
         }
 
         .items-table th {
-            background-color: #f5f5f5;
+            background-color: #f0f0f0;
+            border: 1px solid #000;
+            padding: 8px;
             text-align: center;
-            font-weight: bold;
+            font-weight: 600;
         }
 
-        .text-right {
+        .items-table td {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        .items-table .text-center {
+            text-align: center;
+        }
+
+        .items-table .text-right {
             text-align: right;
         }
 
-        .text-center {
-            text-align: center;
+        .summary-section {
+            margin-top: 20px;
         }
 
         .summary-box {
             border: 1px solid #000;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .summary-table {
+            width: 100%;
+        }
+
+        .summary-table td {
+            padding: 5px 10px;
+        }
+
+        .summary-table .label {
+            text-align: right;
+            padding-right: 20px;
+        }
+
+        .summary-table .value {
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .total-row {
+            font-size: 16px;
+            font-weight: 600;
+            border-top: 2px solid #000;
+            padding-top: 10px;
+        }
+
+        .amount-text {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            margin: 20px 0;
             padding: 10px;
-            margin-top: 20px;
+            background-color: #f9f9f9;
         }
 
         .signature-section {
@@ -164,208 +189,200 @@ function convertToThaiText($number) {
         }
 
         .signature-box {
-            width: 200px;
+            width: 45%;
             text-align: center;
         }
 
-        .dotted-line {
+        .signature-line {
             border-bottom: 1px dotted #000;
-            height: 30px;
-            margin: 10px 0;
+            margin: 50px 20px 10px;
         }
 
-        .discount-row {
-            color: red;
-        }
-
-        .print-controls {
-            text-align: center;
-            margin: 20px 0;
+        .original-invoice-info {
+            background-color: #f5f5f5;
             padding: 10px;
-            background: #f8f9fa;
+            margin: 15px 0;
             border-radius: 5px;
         }
 
-        .btn {
-            display: inline-block;
-            padding: 8px 16px;
-            margin: 0 5px;
-            text-decoration: none;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
+        .reason-box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 15px 0;
+            min-height: 60px;
         }
 
-        .btn-primary {
-            background-color: #007bff;
-            color: white;
-        }
+        @media print {
+            body {
+                margin: 0;
+            }
 
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
+            .container {
+                width: 100%;
+                max-width: none;
+            }
         }
     </style>
 </head>
 <body>
-<div class="print-container">
-    <!-- Print Controls -->
-    <div class="print-controls no-print">
-        <h4>ใบลดหนี้ <?= $model->credit_note_no ?></h4>
-        <button onclick="window.print()" class="btn btn-primary">
-            <i class="fas fa-print"></i> พิมพ์เอกสาร
-        </button>
-        <a href="javascript:window.close()" class="btn btn-secondary">
-            <i class="fas fa-times"></i> ปิดหน้าต่าง
-        </a>
-    </div>
-
+<div class="container">
     <!-- Header -->
     <div class="header">
         <div class="company-info">
-            <div class="company-logo">MCO</div>
-            <div class="company-details">
-                <h2><?= $company['name'] ?></h2>
-                <h3><?= $company['name_en'] ?></h3>
-                <p><?= $company['phone'] ?> <?= $company['fax'] ?></p>
-                <p><?= $company['email'] ?> <?= $company['website'] ?></p>
-                <p><?= $company['address'] ?></p>
-                <p><?= $company['address_en'] ?></p>
+            <?php if ($company && $company->logo_path): ?>
+                <img src="<?= Yii::getAlias('@web') . '/' . $company->logo_path ?>" class="company-logo" alt="Logo">
+            <?php endif; ?>
+            <div class="company-name">
+                บริษัท เอ็ม.ซี.โอ. จำกัด
             </div>
+            <div class="company-name" style="font-size: 14px;">
+                M.C.O. CO.,LTD.
+            </div>
+            <div class="company-details">
+                Tel : (038) 875258-9 Fax : (038) 619559<br>
+                8/18 Koh-Kloy Rd., Tambon Cherngnoen, Amphur Muang, Rayong 21000<br>
+                e-mail: info@thai-mco.com www.thai-mco.com<br>
+                8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000
+            </div>
+        </div>
+
+        <div class="document-info">
+            <div class="document-title">ใบลดหนี้ / ใบกำกับภาษี</div>
+            <div class="document-title-en">CREDIT NOTE / TAX INVOICE</div>
+            <div class="document-copy">Copy</div>
         </div>
     </div>
 
-    <!-- Copy Label -->
-    <div class="copy-label">Copy</div>
-
-    <!-- Document Title -->
-    <div class="document-title">
-        ใบลดหนี้ / ใบกำกับภาษี<br>
-        CREDIT NOTE / TAX INVOICE
-    </div>
-
-    <!-- Document Information -->
-    <div class="document-info">
-        <table>
-            <tr>
-                <td width="50%">
-                    <strong>เลขประจำตัวผู้เสียภาษี:</strong> <?= $company['tax_id'] ?><br>
-                    <strong>รหัสลูกค้า:</strong> <?= $model->customer->customer_code ?><br>
-                    <strong>ชื่อลูกค้า:</strong> <?= $model->customer->customer_name ?><br>
-                    <strong>ที่อยู่:</strong> <?= $model->customer->address ?><br>
-                    <strong>เลขประจำตัวผู้เสียภาษี:</strong> <?= $model->customer->tax_id ?>
-                </td>
-                <td width="50%" class="text-right">
-                    <strong>เลขที่:</strong> <?= $model->credit_note_no ?><br>
-                    <strong>วันที่:</strong> <?= date('d/m/Y', strtotime($model->issue_date)) ?>
-                </td>
-            </tr>
-        </table>
+    <!-- Customer Section -->
+    <div class="customer-section">
+        <div class="section-row">
+            <div class="label">เลขประจำตัวผู้เสียภาษี</div>
+            <div class="value"><?= $company ? $company->tax_id : '0215543000985' ?></div>
+            <div class="label" style="margin-left: 50px;">เลขที่</div>
+            <div class="value"><?= Html::encode($model->document_no) ?></div>
+        </div>
+        <div class="section-row">
+            <div class="label">รหัสลูกค้า</div>
+            <div class="value"><?= Html::encode($model->customer->customer_code) ?></div>
+            <div class="label" style="margin-left: 50px;">วันที่</div>
+            <div class="value"><?= $formatter->asDate($model->document_date, 'php:d/m/Y') ?></div>
+        </div>
+        <div class="section-row">
+            <div class="label">ชื่อลูกค้า</div>
+            <div class="value"><?= Html::encode($model->customer->customer_name_th) ?></div>
+        </div>
+        <div class="section-row">
+            <div class="label">ที่อยู่</div>
+            <div class="value"><?= Html::encode($model->customer->address_th) ?></div>
+        </div>
+        <?php if ($model->customer->tax_id): ?>
+            <div class="section-row">
+                <div class="label">เลขประจำตัวผู้เสียภาษี</div>
+                <div class="value"><?= Html::encode($model->customer->tax_id) ?></div>
+            </div>
+        <?php endif; ?>
     </div>
 
     <!-- Items Table -->
     <table class="items-table">
         <thead>
         <tr>
-            <th width="8%">ลำดับ</th>
-            <th width="32%">รายการ</th>
-            <th width="12%">จำนวน</th>
-            <th width="12%">ราคา</th>
-            <th width="15%">ราคารวม</th>
+            <th style="width: 60px;">ลำดับ</th>
+            <th>รายการ</th>
+            <th style="width: 100px;">จำนวน</th>
+            <th style="width: 100px;">ราคา</th>
+            <th style="width: 120px;">ราคารวม</th>
         </tr>
         </thead>
         <tbody>
-        <?php foreach ($model->items as $item): ?>
-            <tr>
-                <td class="text-center"><?= $item->item_no ?></td>
-                <td><?= $item->product_code ? $item->product_code . '<br>' : '' ?><?= Html::encode($item->description) ?></td>
-                <td class="text-center"><?= $item->quantity ?> <?= $item->unit ?></td>
-                <td class="text-right"><?= number_format($item->unit_price, 2) ?></td>
-                <td class="text-right"><?= number_format($item->total_price, 2) ?></td>
-            </tr>
-        <?php endforeach; ?>
-
-        <!-- Discount Row -->
         <?php
         $totalDiscount = 0;
-        foreach ($model->items as $item) {
-            $totalDiscount += $item->discount;
-        }
-        if ($totalDiscount > 0):
+        foreach ($model->creditNoteItems as $index => $item):
+            $totalDiscount += $item->discount_amount;
             ?>
-            <tr class="discount-row">
-                <td></td>
-                <td><strong>Discount</strong></td>
-                <td></td>
-                <td></td>
-                <td class="text-right"><strong>-<?= number_format($totalDiscount, 2) ?></strong></td>
+            <tr>
+                <td class="text-center"><?= $index + 1 ?></td>
+                <td><?= nl2br(Html::encode($item->description)) ?></td>
+                <td class="text-center">
+                    <?= $formatter->asDecimal($item->quantity, 0) ?>
+                    <?= Html::encode($item->unit) ?>
+                </td>
+                <td class="text-right"><?= $formatter->asDecimal($item->unit_price, 2) ?></td>
+                <td class="text-right"><?= $formatter->asDecimal($item->quantity * $item->unit_price, 2) ?></td>
+            </tr>
+        <?php endforeach; ?>
+        <?php if ($totalDiscount > 0): ?>
+            <tr>
+                <td colspan="4" class="text-right">Discount</td>
+                <td class="text-right"><?= $formatter->asDecimal(-$totalDiscount, 2) ?></td>
             </tr>
         <?php endif; ?>
-
-        <!-- Empty rows for spacing -->
-        <?php for ($i = count($model->items); $i < 4; $i++): ?>
-            <tr>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-            </tr>
-        <?php endfor; ?>
         </tbody>
     </table>
 
-    <!-- Summary Section -->
+    <!-- Original Invoice Info -->
+    <div class="original-invoice-info">
+        <div class="section-row">
+            <div class="label">ใบกำกับภาษีเดิมเลขที่</div>
+            <div class="value"><?= Html::encode($model->original_invoice_no) ?></div>
+            <div class="label" style="margin-left: 30px;">ลงวันที่</div>
+            <div class="value"><?= $model->original_invoice_date ? $formatter->asDate($model->original_invoice_date, 'php:d/m/Y') : '' ?></div>
+            <div class="label" style="margin-left: 30px;">มูลค่าสินค้าตามใบกำกับฯเดิม</div>
+            <div class="value"><?= $formatter->asDecimal($model->original_amount, 2) ?></div>
+        </div>
+        <?php if ($model->actual_amount): ?>
+            <div class="section-row">
+                <div class="label">มูลค่าสินค้าตามจริง</div>
+                <div class="value"><?= $formatter->asDecimal($model->actual_amount, 2) ?></div>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Reason -->
+    <div class="reason-box">
+        <div style="font-weight: 500; margin-bottom: 5px;">เหตุผลที่ต้องลดหนี้:</div>
+        <?= nl2br(Html::encode($model->reason)) ?>
+    </div>
+
+    <!-- Final Summary -->
     <div class="summary-box">
-        <table width="100%">
+        <table class="summary-table">
             <tr>
-                <td width="70%">
-                    <strong>ใบกำกับภาษีเดิมเลขที่:</strong> <?= $model->original_invoice_no ?><br>
-                    <strong>ลงวันที่:</strong> <?= $model->original_invoice_date ? date('d/m/Y', strtotime($model->original_invoice_date)) : '' ?><br>
-                    <strong>เหตุผลที่ต้องลดหนี้:</strong><br>
-                    <?= Html::encode($model->reason) ?>
-                </td>
-                <td width="30%" class="text-right">
-                    <strong>มูลค่าสินค้าตามใบกำกับเดิม:</strong> <?= number_format($model->original_amount, 2) ?><br>
-                    <strong>มูลค่าสินค้าตามจริง:</strong> -<br>
-                    <strong>รวมมูลค่าลดหนี้:</strong> <?= number_format($model->credit_amount, 2) ?><br>
-                    <strong>ภาษีมูลค่าเพิ่ม:</strong> <?= number_format($model->vat_amount, 2) ?><br>
-                    <strong>รวมเป็นเงินทั้งสิ้น:</strong> <?= number_format($model->total_amount, 2) ?>
-                </td>
+                <td class="label">รวมมูลค่าลดหนี้</td>
+                <td class="value"><?= $formatter->asDecimal($model->adjust_amount, 2) ?></td>
+            </tr>
+            <tr>
+                <td class="label">ภาษีมูลค่าเพิ่ม <?= $formatter->asDecimal($model->vat_percent, 0) ?>%</td>
+                <td class="value"><?= $formatter->asDecimal($model->vat_amount, 2) ?></td>
+            </tr>
+            <tr class="total-row">
+                <td class="label">รวมเป็นเงินทั้งสิ้น</td>
+                <td class="value"><?= $formatter->asDecimal($model->total_amount, 2) ?></td>
             </tr>
         </table>
+    </div>
 
-        <div style="margin-top: 10px;">
-            <strong>(ตัวอักษร)</strong> <?= convertToThaiText($model->total_amount) ?>
-        </div>
+    <!-- Amount in Text -->
+    <div class="amount-text">
+        (ตัวอักษร) <?= Html::encode($model->amount_text) ?>
     </div>
 
     <!-- Signature Section -->
     <div class="signature-section">
         <div class="signature-box">
-            <div><?= $company['name'] ?></div>
-            <div class="dotted-line"></div>
+            <div>บริษัท เอ็ม.ซี.โอ. จำกัด</div>
+            <div class="signature-line"></div>
             <div>ผู้มีอำนาจลงนาม / ผู้รับมอบอำนาจ</div>
-            <div>_____/_____/_____</div>
+            <div style="margin-top: 10px;">_____/_____/_____</div>
         </div>
+
         <div class="signature-box">
-            <div class="dotted-line"></div>
+            <div>&nbsp;</div>
+            <div class="signature-line"></div>
             <div>ลายเซ็นผู้รับเอกสาร</div>
-            <div>_____/_____/_____</div>
+            <div style="margin-top: 10px;">_____/_____/_____</div>
         </div>
     </div>
 </div>
-
-<script>
-    // Auto print on load (optional)
-    // window.onload = function() { window.print(); }
-
-    // Close window after printing
-    window.onafterprint = function() {
-        // Optional: close window after printing
-        // window.close();
-    }
-</script>
 </body>
 </html>
