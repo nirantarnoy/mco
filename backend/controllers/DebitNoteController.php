@@ -292,28 +292,32 @@ class DebitNoteController extends Controller
     {
         $model = $this->findModel($id);
 
-        $content = $this->renderPartial('_print', [
+        return $this->render('_print', [
             'model' => $model,
         ]);
 
-        $pdf = new Pdf([
-            'mode' => Pdf::MODE_UTF8,
-            'format' => Pdf::FORMAT_A4,
-            'orientation' => Pdf::ORIENT_PORTRAIT,
-            'destination' => Pdf::DEST_BROWSER,
-            'content' => $content,
-            'cssFile' => '@backend/web/css/print.css',
-            'options' => [
-                'title' => 'ใบเพิ่มหนี้ ' . $model->document_no,
-                'defaultFont' => 'prompt'
-            ],
-            'methods' => [
-                'SetHeader' => [''],
-                'SetFooter' => [''],
-            ]
-        ]);
+//        $content = $this->render('_print', [
+//            'model' => $model,
+//        ]);
 
-        return $pdf->render();
+//        $pdf = new Pdf([
+//            'mode' => Pdf::MODE_UTF8,
+//            'format' => Pdf::FORMAT_A4,
+//            'orientation' => Pdf::ORIENT_PORTRAIT,
+//            'destination' => Pdf::DEST_BROWSER,
+//            'content' => $content,
+//            'cssFile' => '@backend/web/css/print.css',
+//            'options' => [
+//                'title' => 'ใบเพิ่มหนี้ ' . $model->document_no,
+//                'defaultFont' => 'prompt'
+//            ],
+//            'methods' => [
+//                'SetHeader' => [''],
+//                'SetFooter' => [''],
+//            ]
+//        ]);
+//
+//        return $pdf->render();
     }
 
     /**

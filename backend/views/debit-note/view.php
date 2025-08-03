@@ -1,4 +1,5 @@
 <?php
+
 use yii\helpers\Html;
 use yii\widgets\DetailView;
 
@@ -41,8 +42,18 @@ $model_line = \backend\models\DebitNoteItem::find()->where(['debit_note_id' => $
                                 'options' => ['class' => 'table table-striped table-bordered'],
                                 'attributes' => [
                                     'document_no:text:เลขที่ใบเพิ่มหนี้',
-                                    'customer.customer_name:text:ลูกค้า',
-                                    'issue_date:date:วันที่',
+                                    [
+                                        'attribute' => 'customer_id',
+                                        'value' => function ($model) {
+                                            return \backend\models\Customer::findName($model->customer_id);
+                                        }
+                                    ],
+                                    [
+                                        'attribute' => 'document_date',
+                                        'value' => function ($model) {
+                                            return \Yii::$app->formatter->asDate($model->document_date, 'php:m/d/Y');
+                                        }
+                                    ],
                                     'original_invoice_no:text:เลขที่ใบกำกับเดิม',
                                     'original_invoice_date:date:วันที่ใบกำกับเดิม',
                                     'reason:ntext:เหตุผลที่ต้องเพิ่มหนี้',

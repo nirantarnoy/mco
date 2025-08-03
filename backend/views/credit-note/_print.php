@@ -6,7 +6,7 @@ use backend\models\Company;
 /* @var $this yii\web\View */
 /* @var $model backend\models\CreditNote */
 
-$company = Company::findOne(1); // Get company info
+$company = '';// Company::findOne(1); // Get company info
 $formatter = Yii::$app->formatter;
 ?>
 
@@ -229,9 +229,7 @@ $formatter = Yii::$app->formatter;
     <!-- Header -->
     <div class="header">
         <div class="company-info">
-            <?php if ($company && $company->logo_path): ?>
-                <img src="<?= Yii::getAlias('@web') . '/' . $company->logo_path ?>" class="company-logo" alt="Logo">
-            <?php endif; ?>
+            <?= Html::img('../../backend/web/uploads/logo/mco_logo.png',['style' => 'max-width: 150px;']) ?>
             <div class="company-name">
                 บริษัท เอ็ม.ซี.โอ. จำกัด
             </div>
@@ -263,22 +261,22 @@ $formatter = Yii::$app->formatter;
         </div>
         <div class="section-row">
             <div class="label">รหัสลูกค้า</div>
-            <div class="value"><?= Html::encode($model->customer->customer_code) ?></div>
+            <div class="value"><?= Html::encode(\backend\models\Customer::findCode($model->customer_id)) ?></div>
             <div class="label" style="margin-left: 50px;">วันที่</div>
-            <div class="value"><?= $formatter->asDate($model->document_date, 'php:d/m/Y') ?></div>
+            <div class="value"><?= $formatter->asDate($model->document_date, 'php:m/d/Y') ?></div>
         </div>
         <div class="section-row">
             <div class="label">ชื่อลูกค้า</div>
-            <div class="value"><?= Html::encode($model->customer->customer_name_th) ?></div>
+            <div class="value"><?= Html::encode(\backend\models\Customer::findName($model->customer_id)) ?></div>
         </div>
         <div class="section-row">
             <div class="label">ที่อยู่</div>
-            <div class="value"><?= Html::encode($model->customer->address_th) ?></div>
+            <div class="value"><?= Html::encode(\backend\models\Customer::findFullAddress($model->customer_id)) ?></div>
         </div>
-        <?php if ($model->customer->tax_id): ?>
+        <?php if ($model->customer->taxid): ?>
             <div class="section-row">
                 <div class="label">เลขประจำตัวผู้เสียภาษี</div>
-                <div class="value"><?= Html::encode($model->customer->tax_id) ?></div>
+                <div class="value"><?= Html::encode($model->customer->taxid) ?></div>
             </div>
         <?php endif; ?>
     </div>

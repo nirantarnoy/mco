@@ -105,18 +105,18 @@ $this->params['breadcrumbs'][] = $this->title;
                     'document_no',
                     [
                         'attribute' => 'document_date',
-                        'format' => ['date', 'php:d/m/Y']
+                        'format' => ['date', 'php:m/d/Y']
                     ],
                     [
                         'attribute' => 'customer_id',
                         'value' => function($model) {
-                            return $model->customer->customer_code . ' - ' . $model->customer->customer_name_th;
+                            return \backend\models\Customer::findCode($model->customer_id) . ' - ' . \backend\models\Customer::findName($model->customer_id);
                         }
                     ],
                     'original_invoice_no',
                     [
                         'attribute' => 'original_invoice_date',
-                        'format' => ['date', 'php:d/m/Y']
+                        'format' => ['date', 'php:m/d/Y']
                     ],
                     'original_amount:decimal',
                     'actual_amount:decimal',
@@ -136,11 +136,11 @@ $this->params['breadcrumbs'][] = $this->title;
                     ],
                     [
                         'attribute' => 'created_at',
-                        'format' => ['datetime', 'php:d/m/Y H:i:s']
+                        'format' => ['datetime', 'php:m/d/Y H:i:s']
                     ],
                     [
                         'attribute' => 'updated_at',
-                        'format' => ['datetime', 'php:d/m/Y H:i:s']
+                        'format' => ['datetime', 'php:m/d/Y H:i:s']
                     ],
                 ],
             ]) ?>
