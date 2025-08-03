@@ -223,10 +223,10 @@ function addItemRow(itemData = null) {
             <input type="number" name="DebitNoteItem[` + rowIndex + `][quantity]" class="form-control form-control-sm quantity text-right" step="0.001" min="0" value="` + quantity + `">
         </td>
         <td>
-            <select name="DebitNoteItem[` + rowIndex + `][unit]" class="form-control form-control-sm">
+            <select name="DebitNoteItem[` + rowIndex + `][unit_id]" class="form-control form-control-sm">
                 <option value="">เลือกหน่วย</option>
                 <?php foreach (Unit::find()->where(["status" => 1])->all() as $unit): ?>
-                <option value="<?= $unit->unit_code ?>" ` + (itemData && itemData.unit === "<?= $unit->unit_code ?>" ? "selected" : "") + `><?= $unit->unit_name_th ?></option>
+                <option value="<?= $unit->id ?>"><?= $unit->name ?></option>
                 <?php endforeach; ?>
             </select>
         </td>
@@ -244,6 +244,7 @@ function addItemRow(itemData = null) {
     </tr>`;
     
     $("#items-table tbody").append(newRowHtml);
+    
     
     // Initialize autocomplete for the new row
     initializeAutocomplete($("#items-table tbody tr:last .item-description"));
@@ -708,7 +709,7 @@ $this->registerJs($js);
                                             ])->label(false) ?>
                                         </td>
                                         <td>
-                                            <?= $form->field($modelItem, "[{$i}]unit")->dropDownList(
+                                            <?= $form->field($modelItem, "[{$i}]unit_id")->dropDownList(
                                                 ArrayHelper::map(Unit::find()->where(['status' => 1])->all(), 'unit_code', 'unit_name_th'),
                                                 [
                                                     'prompt' => 'เลือกหน่วย',

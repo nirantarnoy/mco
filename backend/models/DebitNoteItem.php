@@ -14,8 +14,8 @@ class DebitNoteItem extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['debit_note_id', 'item_no', 'description'], 'required'],
-            [['debit_note_id', 'item_no','product_id'], 'integer'],
+            [['debit_note_id', 'product_id', 'description'], 'required'],
+            [['debit_note_id', 'item_no','product_id','unit_id'], 'integer'],
             [['description'], 'string'],
             [['quantity', 'unit_price', 'amount'], 'number'],
             [['unit'], 'string', 'max' => 50],

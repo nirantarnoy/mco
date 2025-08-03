@@ -425,7 +425,7 @@ class DebitNoteController extends Controller
                     'item_description' => $item->item_description,
                     'description' => $item->item_description,
                     'quantity' => number_format($item->quantity, 3),
-                    'unit' => $item->unit,
+                    'unit' => $item->unit_id,
                     'unit_price' => number_format($item->unit_price, 3),
                     'amount' => number_format($item->amount, 3),
                     'product_id' => $item->product_id ?? '',

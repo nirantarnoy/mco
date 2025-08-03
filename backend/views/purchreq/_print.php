@@ -360,7 +360,6 @@ $approverDate = '';
     <div class="document-section">
         <div class="form-row">
             <div style="width: 50%;">
-                <div><strong>ต้องการการตรวจสอบรายละเอียดก่อนซื้อ</strong></div>
                 <?php foreach ($model_footer as $key => $item): ?>
                     <div class="form-group mb-2">
                         <label><?= htmlspecialchars($item->name) ?></label><br>
