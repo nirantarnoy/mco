@@ -6,12 +6,14 @@ use Yii;
 use backend\models\DebitNote;
 use backend\models\DebitNoteItem;
 use backend\models\DebitNoteSearch;
+use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use kartik\mpdf\Pdf;
 use yii\web\Response;
+use yii\widgets\ActiveForm;
 
 /**
  * DebitNoteController implements the CRUD actions for DebitNote model.
@@ -117,6 +119,9 @@ class DebitNoteController extends Controller
                                 break;
                             }
                         }
+                    }else{
+                        $transaction->rollBack();
+                        Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', $model->getErrors());
                     }
 
                     if ($flag) {
@@ -132,6 +137,8 @@ class DebitNoteController extends Controller
                     $transaction->rollBack();
                     Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
                 }
+            }else{
+                Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', $model->getErrors());
             }
         }
 
@@ -368,5 +375,105 @@ class DebitNoteController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionGetInvoiceData($id)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $invoice = \backend\models\Invoice::findOne($id);
+
+        if ($invoice) {
+            $customer_info = \backend\models\Customer::findCustomerInfo($invoice->customer_id);
+            return [
+                'success' => true,
+                'invoice_number' => $invoice->invoice_number,
+                'invoice_date' => $invoice->invoice_date,
+                'total_amount' => $invoice->total_amount,
+                'customer_id' => $invoice->customer_id,
+                'customer_name' => \backend\models\Customer::findName($invoice->customer_id),
+                'customer_address' => \backend\models\Customer::findFullAddress($invoice->customer_id),
+                'customer_tax_id' => \backend\models\Customer::findTaxId($invoice->customer_id),
+            ];
+        }
+
+        return ['success' => false];
+    }
+
+    public function actionGetInvoiceItems($id)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        try {
+            $invoice = \backend\models\Invoice::findOne($id);
+
+            if (!$invoice) {
+                return [
+                    'success' => false,
+                    'message' => 'ไม่พบใบแจ้งหนี้ที่ระบุ'
+                ];
+            }
+
+            // ดึงรายการสินค้าจากใบแจ้งหนี้
+            $items = \backend\models\InvoiceItem::find()
+                ->where(['invoice_id' => $id])
+                ->all();
+
+            $itemsArray = [];
+            foreach ($items as $item) {
+                $itemsArray[] = [
+                    'item_description' => $item->item_description,
+                    'description' => $item->item_description,
+                    'quantity' => number_format($item->quantity, 3),
+                    'unit' => $item->unit,
+                    'unit_price' => number_format($item->unit_price, 3),
+                    'amount' => number_format($item->amount, 3),
+                    'product_id' => $item->product_id ?? '',
+                ];
+            }
+
+            return [
+                'success' => true,
+                'items' => $itemsArray,
+                'count' => count($itemsArray)
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการดึงข้อมูล: ' . $e->getMessage()
+            ];
+        }
+    }
+    public function actionGetProductInfo()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if (\Yii::$app->request->get('action') === 'get-all-products') {
+            try {
+                $products = \backend\models\Product::find()
+                    ->all();
+
+                $productsArray = [];
+                foreach ($products as $product) {
+                    $productsArray[] = [
+                        'id' => $product->id,
+                        'code' => $product->code,
+                        'name' => $product->name,
+                        'description' => $product->description,
+                        'item_description' => $product->description,
+                        'unit_price' => number_format($product->sale_price, 2),
+                        'unit' => $product->unit_id,
+                    ];
+                }
+
+                return $productsArray;
+
+            } catch (\Exception $e) {
+                return [];
+            }
+        }
+
+        return [];
     }
 }

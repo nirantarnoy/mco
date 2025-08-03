@@ -52,18 +52,30 @@ class Job extends \common\models\Job
 
     public static function findCustomerData($quotation_id){
         $data = [];
-        $customer = Quotation::find()->where(['id' => $quotation_id])->one();
-        if($customer){
-            $customer_data = \backend\models\Customer::find()->where(['id' => $customer->customer_id])->one();
+        $quotation = Quotation::find()->where(['id' => $quotation_id])->one();
+        if($quotation){
+            $customer_data = \backend\models\Customer::find()->where(['id' => $quotation->customer_id])->one();
             if($customer_data){
                array_push($data, [
                     'customer_name' => $customer_data->name,
                     'customer_address' => 'เลขที่ '. $customer_data->home_number.' ถนน '.$customer_data->street.' ซอย '.$customer_data->aisle.' ตำบล/แขวง '.$customer_data->district_name.' อําเภอ/เขต '.$customer_data->city_name.' จังหวัด '.$customer_data->province_name.' '.$customer_data->zipcode,
                     'customer_tax_id' => $customer_data->taxid,
+                    'invoice_due_date' => self::calDueDate($quotation->payment_term_id),
                 ]);
             }
         }
         return $data;
+    }
+
+    public static function calDueDate($payment_term_id){
+        $due_date = null;
+        if($payment_term_id){
+            $payment_term = \backend\models\Paymentterm::find()->where(['id' => $payment_term_id])->one();
+            if($payment_term){
+                $due_date = $payment_term->day_count == 0 || $payment_term->day_count== null ? null : date('Y-m-d', strtotime('+'. $payment_term->day_count .' day'));
+            }
+        }
+        return $due_date;
     }
 
     public function getQuotation(){

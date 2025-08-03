@@ -373,7 +373,7 @@ window.onload = function() {
             </div>
             <div class="field-group">
                 <span class="field-label">เงื่อนไข / กำหนดชำระ / Credit, Due:</span>
-                <span class="field-value"><?= Html::encode($model->paymentTerm->name ?: '') ?></span>
+                <span class="field-value"><?= Html::encode(\backend\models\Paymentterm::findName($model->payment_term_id)) ?></span>
             </div>
         </div>
     </div>

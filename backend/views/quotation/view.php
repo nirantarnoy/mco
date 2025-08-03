@@ -41,12 +41,12 @@ $this->params['breadcrumbs'][] = $this->title;
                     'data-method' => 'post',
                 ]) ?>
             <?php endif; ?>
-            <?php if($model->approve_status != Quotation::APPROVE_STATUS_APPROVED && $model->approve_status != Quotation::APPROVE_STATUS_REJECTED && \Yii::$app->user->can('quotation/delete')): ?>
-            <?= Html::a('ลบ', ['delete', 'id' => $model->id], [
-                'class' => 'btn btn-danger',
-                'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะลบใบเสนอราคานี้?',
-                'data-method' => 'post',
-            ]) ?>
+            <?php if ($model->approve_status != Quotation::APPROVE_STATUS_APPROVED && $model->approve_status != Quotation::APPROVE_STATUS_REJECTED && \Yii::$app->user->can('quotation/delete')): ?>
+                <?= Html::a('ลบ', ['delete', 'id' => $model->id], [
+                    'class' => 'btn btn-danger',
+                    'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะลบใบเสนอราคานี้?',
+                    'data-method' => 'post',
+                ]) ?>
             <?php endif; ?>
             <?= Html::a('กลับ', ['index'], ['class' => 'btn btn-secondary']) ?>
         </div>
@@ -84,6 +84,12 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'attribute' => 'total_amount',
                                 'label' => 'ยอดรวม',
                                 'format' => ['currency', 'THB'],
+                            ],
+                            [
+                                'attribute' => 'payment_term_id',
+                                'value' => function ($model) {
+                                    return \backend\models\PaymentTerm::findName($model->payment_term_id);
+                                }
                             ],
                             'note:ntext:หมายเหตุ',
                         ],

@@ -52,6 +52,17 @@ class Customer extends \common\models\Customer
         return $model!= null?$model->name:'';
     }
 
+    public static function findTaxId($id){
+        $model = Customer::find()->where(['id'=>$id])->one();
+        return $model!= null?$model->taxid:'';
+    }
+
+    public static function findFullAddress($id){
+        $model = Customer::find()->where(['id'=>$id])->one();
+        return $model!= null?$model->home_number.' '.$model->street.' '.$model->aisle.' '.$model->district_name.' '.$model->city_name.' '.$model->province_name.' '.$model->zipcode:'';
+    }
+
+
     public static function findCustomerInfo($id){
         $data = [];
         $model = Customer::find()->where(['id'=>$id])->one();

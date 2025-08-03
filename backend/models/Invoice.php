@@ -91,7 +91,7 @@ class Invoice extends ActiveRecord
     {
         return [
             [['invoice_type', 'invoice_date', 'customer_name'], 'required'],
-            [['status','job_id','payment_term_id'], 'integer'],
+            [['status', 'job_id', 'payment_term_id','customer_id'], 'integer'],
             [['invoice_date', 'po_date', 'due_date', 'payment_due_date', 'check_due_date'], 'safe'],
             [['customer_address', 'notes'], 'string'],
             [['subtotal', 'discount_percent', 'discount_amount', 'vat_percent', 'vat_amount', 'total_amount'], 'number', 'min' => 0],
@@ -161,19 +161,23 @@ class Invoice extends ActiveRecord
      * @return \yii\db\ActiveQuery
      */
 
-    public function getQuotation(){
+    public function getQuotation()
+    {
         return $this->hasOne(Quotation::class, ['id' => 'job_id']);
     }
+
     public function getCustomer()
     {
         return $this->hasOne(Customer::class, ['customer_code' => 'customer_code']);
     }
 
-    public function getJob(){
+    public function getJob()
+    {
         return $this->hasOne(Job::class, ['id' => 'job_id']);
     }
 
-    public function getPaymentTerm(){
+    public function getPaymentTerm()
+    {
         return $this->hasOne(PaymentTerm::class, ['id' => 'payment_term_id']);
     }
 
@@ -238,13 +242,13 @@ class Invoice extends ActiveRecord
         $prefix = $prefixes[$this->invoice_type] ?? 'DOC';
 
         // Get or create sequence
-        $sequence = Yii::$app->db->createCommand()
-            ->select(['last_number'])
-            ->from('invoice_sequences')
-            ->where([
-                'invoice_type' => $this->invoice_type,
-                'year' => $year,
-                'month' => 0 // Use 0 for yearly sequence
+        $sequence = Yii::$app->db->createCommand("
+                SELECT last_number 
+                FROM invoice_sequences 
+                WHERE invoice_type = :type AND year = :year AND month = 0
+            ")->bindValues([
+                ':type' => $this->invoice_type,
+                ':year' => $year,
             ])
             ->queryOne();
 
@@ -321,7 +325,7 @@ class Invoice extends ActiveRecord
         $this->total_amount = $afterDiscount + $this->vat_amount;
 
         // Generate amount text
-        $this->total_amount_text = $this->numberToThaiText($this->total_amount);
+        $this->total_amount_text = \backend\models\PurchReq::numtothai($this->total_amount); // $this->numberToThaiText($this->total_amount);
     }
 
     /**

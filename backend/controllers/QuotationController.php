@@ -93,6 +93,7 @@ class QuotationController extends Controller
             if ($valid) {
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
+                    $model->total_amount_text = \backend\models\PurchReq::numtothai($model->total_amount);
                     if ($model->save()) {
                         // Save quotation lines
                         foreach ($quotationLines as $quotationLine) {

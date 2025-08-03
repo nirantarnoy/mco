@@ -309,7 +309,7 @@ $approverDate = '';
         </div>
 
         <div class="form-row">
-            <span class="form-label">การขับเคลื่อนเพิ่มเติม :</span>
+            <span class="form-label">คำอธิบายเพิ่มเติม :</span>
             <span class="form-value" style="min-width: 90%;"></span>
         </div>
     </div>

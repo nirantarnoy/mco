@@ -97,10 +97,6 @@ function selectProduct(input, product) {
     var description = product.description || product.item_description || product.name || '';
     input.val(description);
     
-    // อัพเดต product_id
-    var productId = product.id || product.product_id || '';
-    row.find('.product-id-input').val(productId);
-    
     // อัพเดตราคา
     var price = product.unit_price || product.price || product.item_price || '0.000';
     row.find('.unit-price-input').val(price);
@@ -161,13 +157,11 @@ function addItemRow(itemData = null) {
     var unit = itemData ? itemData.unit || 'หน่วย' : 'หน่วย';
     var unitPrice = itemData ? itemData.unit_price || '0.000' : '0.000';
     var amount = itemData ? itemData.amount || '0.000' : '0.000';
-    var productId = itemData ? itemData.product_id || '' : '';
     
     var newRowHtml = `
     <tr>
         <td class=\"text-center\">` + (rowIndex + 1) + `</td>
         <td>
-            <input type=\"hidden\" name=\"InvoiceItem[` + rowIndex + `][product_id]\" class=\"product-id-input\" value=\"` + productId + `\">
             <input type=\"text\" name=\"InvoiceItem[` + rowIndex + `][item_description]\" class=\"form-control form-control-sm item-description-input\" placeholder=\"รายละเอียดสินค้า/บริการ\" autocomplete=\"off\" value=\"` + description + `\">
             <div class=\"autocomplete-dropdown\"></div>
         </td>
@@ -582,7 +576,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                 'autoclose' => true,
                                 'format' => 'yyyy-mm-dd',
                                 'todayHighlight' => true,
-                            ]
+                            ],
                         ]) ?>
 
                         <?php if ($model->invoice_type == Invoice::TYPE_BILL_PLACEMENT): ?>
@@ -641,9 +635,6 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                             <tr>
                                 <td class="text-center"><?= $index + 1 ?></td>
                                 <td>
-                                    <?= Html::hiddenInput("InvoiceItem[{$index}][product_id]", $item->product_id, [
-                                        'class' => 'product-id-input'
-                                    ]) ?>
                                     <?= Html::textInput("InvoiceItem[{$index}][item_description]", $item->item_description, [
                                         'class' => 'form-control form-control-sm item-description-input',
                                         'placeholder' => 'รายละเอียดสินค้า/บริการ',

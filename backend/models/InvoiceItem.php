@@ -37,7 +37,7 @@ class InvoiceItem extends ActiveRecord
     {
         return [
             [['invoice_id', 'item_description'], 'required'],
-            [['invoice_id', 'item_seq', 'sort_order'], 'integer'],
+            [['invoice_id', 'item_seq', 'sort_order','product_id'], 'integer'],
             [['item_description'], 'string'],
             [['quantity', 'unit_price', 'amount'], 'number', 'min' => 0],
             [['quantity'], 'default', 'value' => 1.000],
@@ -63,6 +63,7 @@ class InvoiceItem extends ActiveRecord
             'unit_price' => 'ราคาต่อหน่วย',
             'amount' => 'จำนวนเงิน',
             'sort_order' => 'Sort Order',
+            'product_id' => 'Product ID',
         ];
     }
 

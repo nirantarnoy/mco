@@ -256,4 +256,62 @@ class PurchReq extends ActiveRecord
     public function getJob(){
         return $this->hasOne(Job::class, ['id' => 'job_id']);
     }
+    public static function numtothai($num)
+    {
+        $return = "";
+        $num = str_replace(",", "", $num);
+        $number = explode(".", $num);
+
+        if (count($number) > 2) {
+            return 'รูปแบบข้อมูลไม่ถูกต้อง';
+        }
+
+        if (count($number) == 1) {
+            $number[1] = "00";
+        } else {
+            $number[1] = str_pad(substr($number[1], 0, 2), 2, "0", STR_PAD_RIGHT);
+        }
+
+        $return .= self::numtothaistring($number[0]) . "บาท";
+
+        $stang = intval($number[1]);
+
+        if ($stang > 0) {
+            $return .= self::numtothaistring($number[1]) . "สตางค์";
+        } else {
+            $return .= "ถ้วน";
+        }
+
+        return $return;
+    }
+
+    public static function numtothaistring($num)
+    {
+        $txtnum1 = array('', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า');
+        $txtnum2 = array('', 'สิบ', 'ร้อย', 'พัน', 'หมื่น', 'แสน', 'ล้าน');
+
+        $num = ltrim($num, '0');
+        if ($num == '') return 'ศูนย์';
+
+        $return_str = '';
+        $len = strlen($num);
+        for ($i = 0; $i < $len; $i++) {
+            $digit = intval($num[$i]);
+            $position = $len - $i - 1;
+
+            if ($digit == 0) continue;
+
+            if ($position == 0 && $digit == 1 && $len > 1) {
+                $return_str .= 'เอ็ด';
+            } else if ($position == 1 && $digit == 2) {
+                $return_str .= 'ยี่' . $txtnum2[$position];
+            } else if ($position == 1 && $digit == 1) {
+                $return_str .= $txtnum2[$position];
+            } else {
+                $return_str .= $txtnum1[$digit] . $txtnum2[$position];
+            }
+        }
+
+        return $return_str;
+    }
 }

@@ -168,6 +168,7 @@ class PurchreqController extends Controller
                         $model->discount_amount = $discountAmount;
                         $model->vat_amount = $vatAmount;
                         $model->net_amount = $netAmount;
+                        $model->total_text = PurchReq::numtothai($netAmount);
                         $model->save(false); // skip validation เพราะ validate แล้ว
 
 
@@ -499,6 +500,7 @@ class PurchreqController extends Controller
             $purchModel->net_amount = $purchReqModel->net_amount;
             $purchModel->discount_percent = $purchReqModel->discount_percent;
             $purchModel->vat_percent = $purchReqModel->vat_percent;
+            $purchModel->total_text = $purchReqModel->total_text;
            // $purchModel->note = 'แปลงจากใบขอซื้อ: ' . $purchReqModel->purch_req_no . ($purchReqModel->note ? ' - ' . $purchReqModel->note : '');
             //$purchModel->ref_text = 'PR: ' . $purchReqModel->purch_req_no;
 

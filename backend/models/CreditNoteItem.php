@@ -14,7 +14,7 @@ class CreditNoteItem extends \yii\db\ActiveRecord
     {
         return [
             [['credit_note_id', 'item_no', 'description'], 'required'],
-            [['credit_note_id', 'item_no'], 'integer'],
+            [['credit_note_id', 'item_no','product_id'], 'integer'],
             [['description'], 'string'],
             [['quantity', 'unit_price', 'amount', 'discount_amount'], 'number'],
             [['unit'], 'string', 'max' => 50],

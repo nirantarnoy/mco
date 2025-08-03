@@ -3,6 +3,7 @@
 namespace backend\controllers;
 
 use backend\models\Job;
+use common\models\JobLine;
 use Yii;
 use backend\models\Invoice;
 use backend\models\InvoiceItem;
@@ -116,9 +117,11 @@ class InvoiceController extends Controller
         }
 
         if ($model->load(Yii::$app->request->post())) {
+           // print_r(Yii::$app->request->post('InvoiceItem', []));return;
             $transaction = Yii::$app->db->beginTransaction();
             try {
-                if ($model->save()) {
+               // $model->total_amount_text = \backend\models\PurchReq::numtothai($model->total_amount);
+                if ($model->save(false)) {
                     // Handle items
                     $itemsData = Yii::$app->request->post('InvoiceItem', []);
                     $this->saveItems($model, $itemsData);
@@ -136,7 +139,7 @@ class InvoiceController extends Controller
         return $this->render('create', [
             'model' => $model,
             'items' => $items,
-            'customers' => $this->getCustomersList(),
+            'customers' =>  $this->getCustomersList(),
         ]);
     }
 
@@ -159,6 +162,7 @@ class InvoiceController extends Controller
         if ($model->load(Yii::$app->request->post())) {
             $transaction = Yii::$app->db->beginTransaction();
             try {
+               // $model->total_amount_text = \backend\models\PurchReq::numtothai($model->total_amount);
                 if ($model->save()) {
                     // Delete existing items
                     InvoiceItem::deleteAll(['invoice_id' => $model->id]);
@@ -279,6 +283,7 @@ class InvoiceController extends Controller
             // Clean and validate data
             $cleanData = [
                 'item_seq' => $sortOrder - 1,
+                'product_id' => isset($itemData['product_id']) ? trim($itemData['product_id']) : '',
                 'item_description' => isset($itemData['item_description']) ? trim($itemData['item_description']) : '',
                 'quantity' => !empty($itemData['quantity']) ? (float)$itemData['quantity'] : 1.000,
                 'unit' => isset($itemData['unit']) ? trim($itemData['unit']) : 'หน่วย',
@@ -304,7 +309,7 @@ class InvoiceController extends Controller
         return ArrayHelper::map(
             Job::find()->all(),
             'job_no',
-            function($model) {
+            function ($model) {
                 return $model->job_no;
             }
         );
@@ -348,15 +353,133 @@ class InvoiceController extends Controller
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
-    public function actionGetJob(){
+    public function actionGetJob()
+    {
         $id = \Yii::$app->request->post('id');
-       $customer_data = null;
-        if($id){
+        $customer_data = null;
+        if ($id) {
             $model = Job::find()->where(['id' => $id])->one();
-            if($model){
+            if ($model) {
                 $customer_data = \backend\models\Job::findCustomerData($model->quotation_id);
             }
         }
         return json_encode($customer_data);
+    }
+
+    public function actionGetJobItems()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $jobId = \Yii::$app->request->post('id');
+
+        if (!$jobId) {
+            return [
+                'success' => false,
+                'message' => 'ไม่พบ ID ของใบงาน'
+            ];
+        }
+
+        try {
+            // ตรวจสอบว่าใบงานมีอยู่จริง
+            $job = \backend\models\Job::findOne($jobId);
+            if (!$job) {
+                return [
+                    'success' => false,
+                    'message' => 'ไม่พบใบงานที่ระบุ'
+                ];
+            }
+
+            // ดึงรายการสินค้า/บริการจากใบงาน
+            // สมมติว่ามีตาราง job_items ที่เก็บรายการสินค้าของแต่ละงาน
+            $jobItems = \common\models\JobLine::find()
+                ->where(['job_id' => $jobId])
+                ->orderBy(['id' => SORT_ASC])
+                ->all();
+
+            if (empty($jobItems)) {
+                return [
+                    'success' => false,
+                    'message' => 'ไม่พบรายการสินค้า/บริการในใบงานนี้'
+                ];
+            }
+
+            // จัดรูปแบบข้อมูลให้ตรงกับที่ฟอร์มต้องการ
+            $items = [];
+            foreach ($jobItems as $jobItem) {
+                $items[] = [
+                    'item_description' => $jobItem->product->name,
+                    'quantity' => number_format($jobItem->qty, 0),
+                    'unit' => $jobItem->product->unit->name ?: 'หน่วย',
+                    'unit_price' => number_format($jobItem->line_price, 2),
+                    'amount' => number_format($jobItem->qty * $jobItem->line_price, 2),
+                    // ข้อมูลเพิ่มเติมที่อาจจำเป็น
+                    'product_id' => $jobItem->product_id,
+                    'notes' => $jobItem->note,
+                ];
+            }
+
+            return [
+                'success' => true,
+                'items' => $items,
+                'job_info' => [
+                    'job_no' => $job->job_no,
+                    'job_name' => $job->job_no,
+                    'customer_name' => 'test',
+                ]
+            ];
+
+        } catch (\Exception $e) {
+            \Yii::error("Error in actionGetJobItems: " . $e->getMessage(), __METHOD__);
+
+            return [
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการดึงข้อมูล: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    public function actionGetProductInfo()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $request = \Yii::$app->request;
+
+        // ถ้าขอข้อมูลสินค้าทั้งหมดสำหรับ autocomplete
+        if ($request->get('action') === 'get-all-products') {
+            $products = \backend\models\Product::find()
+                ->where(['status' => 1])
+                ->all();
+
+            $result = [];
+            foreach ($products as $product) {
+                $result[] = [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'code' => $product->code ?? '',
+                    'price' => $product->sale_price ?? 0,
+                    'display' => $product->code . ($product->name ? ' (' . $product->name . ')' : '')
+                ];
+            }
+
+            return $result;
+        }
+
+        // ถ้าขอข้อมูลสินค้าเฉพาะ ID (สำหรับการเลือกสินค้า)
+        $id = $request->get('id');
+        if ($id) {
+            $product = \backend\models\Product::findOne($id);
+            if ($product) {
+                return [
+                    'id' => $product->id,
+                    'product_name' => $product->name,
+                    'name' => $product->name,
+                    'code' => $product->code ?? '',
+                    'price' => $product->sale_price ?? 0,
+                    'display' => $product->code . ($product->name ? ' (' . $product->name . ')' : '')
+                ];
+            }
+        }
+
+        return ['error' => 'Product not found'];
     }
 }
