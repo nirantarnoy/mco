@@ -335,7 +335,7 @@ $approverDate = '';
                 <td><?= Html::encode($item['stock_no']) ?></td>
                 <td class="description"><?= Html::encode($item['description']) ?></td>
                 <td><?= $item['qty'] ?></td>
-                <td><?= Html::encode(\backend\models\Unit::findName($item['unit'])) ?></td>
+                <td><?= Html::encode(\backend\models\Unit::findName($item['unit_id'])) ?></td>
                 <td class="number"><?= number_format($item['estimated_price'], 2) ?></td>
                 <td class="number"><?= number_format($item['budget'], 2) ?></td>
             </tr>
