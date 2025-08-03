@@ -333,7 +333,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                         <td class="description-cell"><?= Html::encode($line->product->name ?? $line->product_name) ?></td>
                         <td></td>
                         <td><?= number_format($line->qty, 0) ?></td>
-                        <td><?= Html::encode($line->unit_id ?? '') ?></td>
+                        <td><?= Html::encode(\backend\models\Unit::findName($line->unit_id)) ?></td>
                         <td class="number-cell"><?= number_format($line->line_price, 2) ?></td>
                         <td class="number-cell"><?= number_format($line->line_total, 2) ?></td>
                     </tr>

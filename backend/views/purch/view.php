@@ -55,10 +55,10 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
             <div>
                 <?= Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
 
-                    <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
-                        'class' => 'btn btn-info',
-                        'target' => '_blank'
-                    ]) ?>
+                <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
+                    'class' => 'btn btn-info',
+                    'target' => '_blank'
+                ]) ?>
                 <?php if (\Yii::$app->user->can('CanApprovePo') && $model->approve_status == Purch::APPROVE_STATUS_PENDING): ?>
                     <?= Html::a('อนุมัติ', ['approve', 'id' => $model->id], [
                         'class' => 'btn btn-success',
@@ -249,6 +249,12 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                             'headerOptions' => ['style' => 'width: 120px; text-align: right;'],
                             'contentOptions' => ['style' => 'text-align: right;'],
                             'format' => ['currency', 'THB'],
+                        ],
+                        [
+                            'attribute' => 'unit_id',
+                            'value' => function ($model) {
+                                return \backend\models\Unit::findName($model->unit_id);
+                            }
                         ],
                         [
                             'attribute' => 'line_total',

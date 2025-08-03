@@ -557,6 +557,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                             <th style="width: 50px;">ลำดับ</th>
                             <th style="width: 200px;">ชื่อสินค้า</th>
                             <th style="width: 100px;">จำนวน</th>
+                            <th style="width: 100px;">หน่วยนับ</th>
                             <th style="width: 120px;">ราคาต่อหน่วย</th>
                             <th style="width: 120px;">ราคารวม</th>
                             <th style="width: 50px;">
@@ -605,6 +606,9 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                         'class' => 'form-control qty-input',
                                         'data-index' => $index,
                                     ])->label(false) ?>
+                                </td>
+                                <td>
+                                    <?= $form->field($purchReqLine, "[{$index}]unit_id")->dropDownList(ArrayHelper::map(\common\models\Unit::find()->all(), 'id', 'name'), ['class' => 'form-control', 'data-index' => $index])->label(false) ?>
                                 </td>
                                 <td>
                                     <?= $form->field($purchReqLine, "[{$index}]line_price")->textInput([

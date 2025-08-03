@@ -54,9 +54,10 @@ if($model_line !=null){
             'stock_no' => $value->product->code,
             'description' => $value->product->name,
             'qty' => $value->qty,
-            'unit' => $value->product->unit_id,
+            'unit' => $value->unit_id,
             'estimated_price' => $value->line_price,
             'budget' => $value->line_price,
+
         ];
         $items[] = $item;
     }
@@ -334,7 +335,7 @@ $approverDate = '';
                 <td><?= Html::encode($item['stock_no']) ?></td>
                 <td class="description"><?= Html::encode($item['description']) ?></td>
                 <td><?= $item['qty'] ?></td>
-                <td><?= Html::encode($item['unit']) ?></td>
+                <td><?= Html::encode(\backend\models\Unit::findName($item['unit'])) ?></td>
                 <td class="number"><?= number_format($item['estimated_price'], 2) ?></td>
                 <td class="number"><?= number_format($item['budget'], 2) ?></td>
             </tr>

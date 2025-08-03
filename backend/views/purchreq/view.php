@@ -200,10 +200,10 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
                                     'format' => ['datetime', 'php:m/d/Y H:i'],
                                 ],
                                 [
-                                        'attribute' => 'created_by',
+                                    'attribute' => 'created_by',
                                     'label' => 'สร้างโดย',
                                     'value' => function ($model) {
-                                       return \backend\models\User::findEmployeeNameByUserId($model->created_by);
+                                        return \backend\models\User::findEmployeeNameByUserId($model->created_by);
                                     }
                                 ],
                                 [
@@ -293,10 +293,13 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
                             'format' => ['currency', 'THB'],
                         ],
                         [
-                            'attribute' => 'unit',
+                            'attribute' => 'unit_id',
                             'label' => 'หน่วยนับ',
                             'headerOptions' => ['style' => 'width: 80px; text-align: center;'],
                             'contentOptions' => ['style' => 'text-align: center;'],
+                            'value' => function ($model) {
+                                return \backend\models\Unit::findName($model->unit_id);
+                            }
                         ],
                         [
                             'attribute' => 'line_total',
@@ -391,7 +394,8 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
                                 </a>
                             </td>
                             <td style="text-align: center">
-<!--                                <div class="btn btn-danger" data-var="--><?php //= trim($value->doc_name) ?><!--" onclick="delete_doc($(this))">ลบ</div>-->
+                                <!--                                <div class="btn btn-danger" data-var="-->
+                                <?php //= trim($value->doc_name) ?><!--" onclick="delete_doc($(this))">ลบ</div>-->
                             </td>
                         </tr>
                     <?php endforeach; ?>
