@@ -21,6 +21,19 @@ $js = '
 var productsData = [];
 var isProductsLoaded = false;
 
+// ตัวแปรเก็บข้อมูลหน่วย
+var unitsData = ' . json_encode(ArrayHelper::map(Unit::find()->where(['status' => 1])->all(), 'id', 'name')) . ';
+
+// ฟังก์ชันสร้าง options สำหรับ unit dropdown
+function createUnitOptions(selectedUnit = "") {
+    var options = "<option value=\"\">เลือกหน่วย</option>";
+    for (var unitCode in unitsData) {
+        var selected = (unitCode === selectedUnit) ? "selected" : "";
+        options += "<option value=\"" + unitCode + "\" " + selected + ">" + unitsData[unitCode] + "</option>";
+    }
+    return options;
+}
+
 // ฟังก์ชันโหลดข้อมูลสินค้า
 function loadProductsData() {
     if (isProductsLoaded) return;
@@ -224,10 +237,7 @@ function addItemRow(itemData = null) {
         </td>
         <td>
             <select name="DebitNoteItem[` + rowIndex + `][unit_id]" class="form-control form-control-sm">
-                <option value="">เลือกหน่วย</option>
-                <?php foreach (Unit::find()->where(["status" => 1])->all() as $unit): ?>
-                <option value="<?= $unit->id ?>"><?= $unit->name ?></option>
-                <?php endforeach; ?>
+                ` + createUnitOptions(itemData ? itemData.unit : "") + `
             </select>
         </td>
         <td>
@@ -244,7 +254,6 @@ function addItemRow(itemData = null) {
     </tr>`;
     
     $("#items-table tbody").append(newRowHtml);
-    
     
     // Initialize autocomplete for the new row
     initializeAutocomplete($("#items-table tbody tr:last .item-description"));
@@ -710,7 +719,7 @@ $this->registerJs($js);
                                         </td>
                                         <td>
                                             <?= $form->field($modelItem, "[{$i}]unit_id")->dropDownList(
-                                                ArrayHelper::map(Unit::find()->where(['status' => 1])->all(), 'unit_code', 'unit_name_th'),
+                                                ArrayHelper::map(Unit::find()->where(['status' => 1])->all(), 'id', 'name'),
                                                 [
                                                     'prompt' => 'เลือกหน่วย',
                                                     'class' => 'form-control form-control-sm'

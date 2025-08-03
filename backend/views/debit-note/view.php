@@ -2,9 +2,11 @@
 use yii\helpers\Html;
 use yii\widgets\DetailView;
 
-$this->title = 'ใบเพิ่มหนี้ ' . $model->debit_note_no;
+$this->title = 'ใบเพิ่มหนี้ ' . $model->document_no;
 $this->params['breadcrumbs'][] = ['label' => 'จัดการใบเพิ่มหนี้', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
+
+$model_line = \backend\models\DebitNoteItem::find()->where(['debit_note_id' => $model->id])->all();
 ?>
 
 <div class="debit-note-view">
@@ -38,7 +40,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'model' => $model,
                                 'options' => ['class' => 'table table-striped table-bordered'],
                                 'attributes' => [
-                                    'debit_note_no:text:เลขที่ใบเพิ่มหนี้',
+                                    'document_no:text:เลขที่ใบเพิ่มหนี้',
                                     'customer.customer_name:text:ลูกค้า',
                                     'issue_date:date:วันที่',
                                     'original_invoice_no:text:เลขที่ใบกำกับเดิม',
@@ -60,20 +62,20 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <?php foreach ($model->items as $item): ?>
+                                <?php foreach ($model_line as $item): ?>
                                     <tr>
                                         <td><?= $item->item_no ?></td>
                                         <td><?= Html::encode($item->description) ?></td>
                                         <td class="text-center"><?= $item->quantity ?></td>
                                         <td class="text-right"><?= number_format($item->unit_price, 2) ?></td>
-                                        <td class="text-right"><?= number_format($item->total_price, 2) ?></td>
+                                        <td class="text-right"><?= number_format($item->amount, 2) ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                                 </tbody>
                                 <tfoot>
                                 <tr>
                                     <th colspan="4" class="text-right">รวมมูลค่าสินค้า:</th>
-                                    <th class="text-right"><?= number_format($model->subtotal, 2) ?></th>
+                                    <th class="text-right"><?= number_format($model->total_amount - $model->vat_amount, 2) ?></th>
                                 </tr>
                                 <tr>
                                     <th colspan="4" class="text-right">ภาษีมูลค่าเพิ่ม 7%:</th>
