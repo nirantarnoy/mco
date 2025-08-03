@@ -15,7 +15,18 @@ use yii\helpers\Url;
 /* @var $form yii\widgets\ActiveForm */
 
 $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model->id])->all();
-$yesNo = [['id' => 1, 'name' => 'ใช้'], ['id' => 2, 'name' => 'ไม่ใช้']];
+$yesNo = [['id' => 1, 'name' => 'ใช่'], ['id' => 2, 'name' => 'ไม่ใช่']];
+$model_footer = \common\models\PurchReqFootTitle::find()->orderBy(['id' => SORT_ASC])->all();
+$model_footer_data = \common\models\PurchReqFoot::find()->where(['purch_req_id' => $model->id])->all();
+
+//$answers = null;
+//if($model_footer_data) {
+//    foreach ($model_footer_data as $key => $value) {
+//        $answers[$value->footer_id] = $value->is_enable;
+//    }
+//}
+
+//print_r($answers);return;
 
 // CSS สำหรับ autocomplete
 $autocompleteCSS = <<<CSS
@@ -453,7 +464,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                         <?= $form->field($model, 'reason_title_id')->widget(Select2::class, [
                             'data' => \yii\helpers\ArrayHelper::map(\common\models\PurchReqReasonTitle::find()->all(), 'id', 'name'),
                             'language' => 'th',
-                            'options' => ['placeholder' => 'เลือกเหตุผลขอซ์้อ', 'id' => 'reason-title-id','onchange'=>'enableReason($(this))'],
+                            'options' => ['placeholder' => 'เลือกเหตุผลขอซ์้อ', 'id' => 'reason-title-id', 'onchange' => 'enableReason($(this))'],
                         ])->label() ?>
 
                         <?= $form->field($model, 'reason')->textarea([
@@ -638,7 +649,23 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-
+                        <?php foreach ($model_footer as $key => $item): ?>
+                            <div class="form-group mb-2">
+                                <label><?= htmlspecialchars($item->name) ?></label><br>
+                                <input type="checkbox"
+                                       name="answers[<?= $key ?>]"
+                                       value="1"
+                                    <?php echo isChecked($model->id,$item->id, '1') ?>
+                                       onclick="handleExclusiveCheck(this)">
+                                ใช่
+                                <input type="checkbox"
+                                       name="answers[<?= $key ?>]"
+                                       value="0"
+                                    <?php echo isChecked($model->id,$item->id, '0') ?>
+                                       onclick="handleExclusiveCheck(this)">
+                                ไม่ใช่
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                     <div class="col-md-6">
                         <!-- Right side for summary display -->
@@ -758,6 +785,16 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
     </div>
 
 <?php
+function isChecked($purch_req_id, $key, $value) {
+    $model = \common\models\PurchReqFoot::find()->where(['purch_req_id' => $purch_req_id,'footer_id' => $key])->one();
+    if($model) {
+        return $model->is_enable == $value ? 'checked' : '';
+    }else{
+        return '';
+    }
+}
+
+
 $script = <<< JS
 function delete_doc(e){
     var file_name = e.attr('data-var');
@@ -773,6 +810,14 @@ function enableReason(e) {
     }else{
         $('#reason-id').prop('readonly', true);
     }
+}
+
+function handleExclusiveCheck(checkbox) {
+    const name = checkbox.name;
+    const checkboxes = document.querySelectorAll('input[name="' + name + '"]');
+    checkboxes.forEach(cb => {
+        if (cb !== checkbox) cb.checked = false;
+    });
 }
 JS;
 $this->registerJs($script, static::POS_END);

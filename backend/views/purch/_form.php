@@ -451,6 +451,10 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                         Purch::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
                     ], ['prompt' => 'เลือกสถานะอนุมัติ']) ?>
 
+                    <?= $form->field($model, 'ref_no')->textInput([
+                        'maxlength' => true,
+                        'placeholder' => 'REF NO'
+                    ]) ?>
                     <?= $form->field($model, 'note')->textarea([
                         'rows' => 4,
                         'placeholder' => 'หมายเหตุ'
@@ -585,7 +589,16 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <?= $form->field($model, 'delivery_note')->textInput(['placeholder' => 'Delivery Note']) ?>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <?= $form->field($model, 'payment_note')->textInput(['placeholder' => 'Payment Note']) ?>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <!-- Right side for summary display -->

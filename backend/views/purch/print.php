@@ -303,7 +303,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                     </div>
                     <div class="info-row">
                         <span class="info-label">REF. NO. :</span>
-                        <span class="info-value"></span>
+                        <span class="info-value"><?= Html::encode($purchase->ref_no ?? '') ?></span>
                     </div>
                 </div>
             </div>
@@ -391,8 +391,8 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
 
         <!-- Terms -->
         <div class="terms">
-            <div><strong>Delivery :</strong></div>
-            <div><strong>Payment :</strong></div>
+            <div><strong>Delivery :</strong><span> <?= Html::encode($purchase->delivery_note) ?></span></div>
+            <div><strong>Payment :</strong><span> <?= Html::encode($purchase->payment_note) ?></span></div>
             <div><strong>Note 1.</strong> กรณีส่งสินค้าล่าช้ากว่ากำหนด ผู้ขาย/ผู้รับจ้าง ยอมให้ปรับเป็นรายวันในอัตรา 0.5% ของราคาทั้งหมด ทั้งนี้สูงสุดไม่เกินร้อยละ 10 ของราคาดังกล่าว</div>
         </div>
 

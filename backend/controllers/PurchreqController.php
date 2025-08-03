@@ -83,6 +83,7 @@ class PurchreqController extends Controller
         $model->purchReqLines = [new PurchReqLine()];
 
         if ($model->load(Yii::$app->request->post())) {
+           // print_r(\Yii::$app->request->post('answers'));return;
             $purchReqLines = [];
             $valid = $model->validate();
 
@@ -94,6 +95,8 @@ class PurchreqController extends Controller
                     $valid = $purchReqLine->validate() && $valid;
                 }
             }
+
+            $footer_answer = \Yii::$app->request->post('answers');
 
             $ex = explode('-', $model->purch_req_date);
             if($ex!= null){
@@ -128,6 +131,19 @@ class PurchreqController extends Controller
                             $lineTotal = $purchReqLine->qty * $purchReqLine->line_price;
                             $totalAmount += $lineTotal;
                         }
+
+                        // add footer answer
+
+                        if($footer_answer != null) {
+                            for ($i = 0; $i < count($footer_answer); $i++) {
+                                $answer = new \common\models\PurchReqFoot();
+                                $answer->purch_req_id = $model->id;
+                                $answer->footer_id = $i + 1;
+                                $answer->is_enable = $footer_answer[$i];
+                                $answer->save();
+                            }
+                        }
+
                         // คำนวณส่วนลด (สมมติว่ามีฟิลด์ discount_percent ใน model)
                         if (isset($model->discount_percent) && $model->discount_percent > 0) {
                             $discountAmount = ($totalAmount * $model->discount_percent) / 100;
@@ -192,6 +208,8 @@ class PurchreqController extends Controller
             $purchReqLines = [];
             $valid = $model->validate();
 
+            $footer_answer = \Yii::$app->request->post('answers');
+
             if (isset($_POST['PurchReqLine'])) {
                 foreach ($_POST['PurchReqLine'] as $index => $purchReqLineData) {
                     if (isset($purchReqLineData['id']) && !empty($purchReqLineData['id'])) {
@@ -248,6 +266,22 @@ class PurchreqController extends Controller
                                 throw new \Exception('Failed to save purch req line');
                             }
                         }
+
+                        // add footer answer
+
+                        if($footer_answer != null) {
+                            \common\models\PurchReqFoot::deleteAll(['purch_req_id' => $model->id]);
+                            for ($i = 0; $i < count($footer_answer); $i++) {
+                                $answer = new \common\models\PurchReqFoot();
+                                $answer->purch_req_id = $model->id;
+                                $answer->footer_id = $i + 1;
+                                $answer->is_enable = $footer_answer[$i];
+                                $answer->save();
+                            }
+                        }
+
+
+
                         $transaction->commit();
                         Yii::$app->session->setFlash('success', 'แก้ไขข้อมูลเรียบร้อยแล้ว');
                         return $this->redirect(['view', 'id' => $model->id]);

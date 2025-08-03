@@ -15,6 +15,10 @@ $department = $emp_info != null ? $emp_info['department_name'] : '';
 $requestType = $model->reason_title_id; // minimumstock, capex, additional_work, expenses, other
 $deliveryLocation = 'warehouse'; // warehouse, service_support, other_location, other
 
+
+$model_footer = \common\models\PurchReqFootTitle::find()->orderBy(['id' => SORT_ASC])->all();
+$model_footer_data = \common\models\PurchReqFoot::find()->where(['purch_req_id' => $model->id])->all();
+
 //$items = [
 //    [
 //        'stock_no' => 'ST-001',
@@ -356,52 +360,23 @@ $approverDate = '';
         <div class="form-row">
             <div style="width: 50%;">
                 <div><strong>ต้องการการตรวจสอบรายละเอียดก่อนซื้อ</strong></div>
-                <div style="margin-top: 5px;">
-                    <div class="checkbox-group">
-                        <input type="checkbox" <?= $hasQuotation ? 'checked' : '' ?>>
-                        <label>ใช่</label>
+                <?php foreach ($model_footer as $key => $item): ?>
+                    <div class="form-group mb-2">
+                        <label><?= htmlspecialchars($item->name) ?></label><br>
+                        <input type="checkbox"
+                               name="answers[<?= $key ?>]"
+                               value="1"
+                            <?php echo isChecked($model->id,$item->id, '1') ?>
+                               onclick="return false">
+                        ใช่
+                        <input type="checkbox"
+                               name="answers[<?= $key ?>]"
+                               value="0"
+                            <?php echo isChecked($model->id,$item->id, '0') ?>
+                               onclick="return false">
+                        ไม่ใช่
                     </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" <?= !$hasQuotation ? 'checked' : '' ?>>
-                        <label>ไม่ใช่</label>
-                    </div>
-                </div>
-
-                <div style="margin-top: 10px;"><strong>เปรียบเทียบราคา</strong></div>
-                <div style="margin-top: 5px;">
-                    <div class="checkbox-group">
-                        <input type="checkbox" <?= $hasSpecification ? 'checked' : '' ?>>
-                        <label>ใช่</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" <?= !$hasSpecification ? 'checked' : '' ?>>
-                        <label>ไม่ใช่</label>
-                    </div>
-                </div>
-
-                <div style="margin-top: 10px;"><strong>ตรวจรับสินค้าเอง</strong></div>
-                <div style="margin-top: 5px;">
-                    <div class="checkbox-group">
-                        <input type="checkbox" <?= $hasCertificate ? 'checked' : '' ?>>
-                        <label>ใช่</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" <?= !$hasCertificate ? 'checked' : '' ?>>
-                        <label>ไม่ใช่</label>
-                    </div>
-                </div>
-
-                <div style="margin-top: 10px;"><strong>ต้องการ Certificate ของสินค้า</strong></div>
-                <div style="margin-top: 5px;">
-                    <div class="checkbox-group">
-                        <input type="checkbox">
-                        <label>ใช่</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox">
-                        <label>ไม่ใช่</label>
-                    </div>
-                </div>
+                <?php endforeach; ?>
             </div>
         </div>
     </div>
@@ -436,7 +411,17 @@ $approverDate = '';
     </a>
     <button onclick="window.close()" class="btn btn-default" style="font-size: 20px;font-weight: bold;">Close</button>
 </div>
+<?php
+function isChecked($purch_req_id, $key, $value) {
+    $model = \common\models\PurchReqFoot::find()->where(['purch_req_id' => $purch_req_id,'footer_id' => $key])->one();
+    if($model) {
+        return $model->is_enable == $value ? 'checked' : '';
+    }else{
+        return '';
+    }
+}
 
+?>
 <script>
     // Auto print when page loads (optional)
     // window.onload = function() {
