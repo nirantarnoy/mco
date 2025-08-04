@@ -233,6 +233,7 @@ function clearAllItems() {
 
 // Load job items
 function loadJobItems(jobId) {
+  alert(jobId);
     if (jobId) {
         $.ajax({
             url: '" . Url::to(['get-job-items']) . "',
@@ -416,7 +417,7 @@ $(document).on('click', '.btn-load-job-items', function() {
     if (jobId) {
         loadJobItems(jobId);
     } else {
-        showMessage('warning', 'กรุณาเลือกใบงานก่อน');
+        showMessage('warning', 'กรุณาเลือกใบเสนอราคาก่อน');
     }
 });
 
