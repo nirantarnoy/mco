@@ -12,12 +12,14 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
 use yii\helpers\Json;
+use yii\web\UploadedFile;
 
 /**
  * PettyCashVoucherController implements the CRUD actions for PettyCashVoucher model.
  */
 class PettyCashVoucherController extends Controller
 {
+    public $enableCsrfValidation = false;
     /**
      * {@inheritdoc}
      */
@@ -267,5 +269,44 @@ class PettyCashVoucherController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionAddDocFile(){
+        $id = \Yii::$app->request->post('id');
+        if($id){
+            $uploaded = UploadedFile::getInstancesByName('file_doc');
+            if (!empty($uploaded)) {
+                $loop = 0;
+                foreach ($uploaded as $file) {
+                    $upfiles = "invoice_" . time()."_".$loop . "." . $file->getExtension();
+                    if ($file->saveAs('uploads/pettycash_doc/' . $upfiles)) {
+                        $model_doc = new \common\models\PettyCashVoucherDoc();
+                        $model_doc->petty_cash_voucher_id = $id;
+                        $model_doc->doc = $upfiles;
+                        $model_doc->created_by = \Yii::$app->user->id;
+                        $model_doc->created_at = time();
+                        $model_doc->save(false);
+                    }
+                    $loop++;
+                }
+            }
+
+        }
+        return $this->redirect(['update', 'id' => $id]);
+    }
+    public function actionDeleteDocFile(){
+        $id = \Yii::$app->request->post('id');
+        $doc_delete_list = trim(\Yii::$app->request->post('doc_delete_list'));
+        if($id){
+            $model_doc = \common\models\PettyCashVoucherDoc::find()->where(['petty_cash_voucher_id' => $id,'doc' => $doc_delete_list])->one();
+            if($model_doc){
+                if($model_doc->delete()){
+                    if(file_exists('uploads/pettycash_doc/'.$model_doc->doc)){
+                        unlink('uploads/pettycash_doc/'.$model_doc->doc);
+                    }
+                }
+            }
+        }
+        return $this->redirect(['update', 'id' => $id]);
     }
 }

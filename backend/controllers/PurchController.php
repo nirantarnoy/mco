@@ -867,7 +867,7 @@ class PurchController extends Controller
             if (!empty($uploaded)) {
                 $loop = 0;
                 foreach ($uploaded as $file) {
-                    $upfiles = "worker_" . time()."_".$loop . "." . $file->getExtension();
+                    $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
                     if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
                         $model_doc = new \common\models\PurchDoc();
                         $model_doc->purch_id = $id;

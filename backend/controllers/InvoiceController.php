@@ -15,12 +15,14 @@ use yii\filters\VerbFilter;
 use yii\web\Response;
 use yii\helpers\Json;
 use yii\helpers\ArrayHelper;
+use yii\web\UploadedFile;
 
 /**
  * InvoiceController implements the CRUD actions for Invoice model.
  */
 class InvoiceController extends Controller
 {
+    public $enableCsrfValidation = false;
     /**
      * {@inheritdoc}
      */
@@ -152,7 +154,7 @@ class InvoiceController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
-        $items = $model->items;
+        $items = \backend\models\InvoiceItem::find()->where(['invoice_id' => $id])->all();
 
         // Ensure at least one item row
         if (empty($items)) {
@@ -375,31 +377,31 @@ class InvoiceController extends Controller
         if (!$jobId) {
             return [
                 'success' => false,
-                'message' => 'ไม่พบ ID ของใบงาน'
+                'message' => 'ไม่พบ ID ของใบเสนอราคา'
             ];
         }
 
         try {
             // ตรวจสอบว่าใบงานมีอยู่จริง
-            $job = \backend\models\Job::findOne($jobId);
+            $job = \backend\models\Quotation::findOne($jobId);
             if (!$job) {
                 return [
                     'success' => false,
-                    'message' => 'ไม่พบใบงานที่ระบุ'
+                    'message' => 'ไม่พบใบเสนอราคาที่ระบุ'
                 ];
             }
 
             // ดึงรายการสินค้า/บริการจากใบงาน
             // สมมติว่ามีตาราง job_items ที่เก็บรายการสินค้าของแต่ละงาน
-            $jobItems = \common\models\JobLine::find()
-                ->where(['job_id' => $jobId])
+            $jobItems = \backend\models\Quotationline::find()
+                ->where(['quotation_id' => $jobId])
                 ->orderBy(['id' => SORT_ASC])
                 ->all();
 
             if (empty($jobItems)) {
                 return [
                     'success' => false,
-                    'message' => 'ไม่พบรายการสินค้า/บริการในใบงานนี้'
+                    'message' => 'ไม่พบรายการสินค้า/บริการในใบเสนอราคานี้'
                 ];
             }
 
@@ -422,8 +424,8 @@ class InvoiceController extends Controller
                 'success' => true,
                 'items' => $items,
                 'job_info' => [
-                    'job_no' => $job->job_no,
-                    'job_name' => $job->job_no,
+                    'job_no' => $job->quotation_no,
+                    'job_name' => $job->quotation_no,
                     'customer_name' => 'test',
                 ]
             ];
@@ -437,6 +439,77 @@ class InvoiceController extends Controller
             ];
         }
     }
+//    public function actionGetJobItems()
+//    {
+//        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+//
+//        $jobId = \Yii::$app->request->post('id');
+//
+//        if (!$jobId) {
+//            return [
+//                'success' => false,
+//                'message' => 'ไม่พบ ID ของใบงาน'
+//            ];
+//        }
+//
+//        try {
+//            // ตรวจสอบว่าใบงานมีอยู่จริง
+//            $job = \backend\models\Job::findOne($jobId);
+//            if (!$job) {
+//                return [
+//                    'success' => false,
+//                    'message' => 'ไม่พบใบงานที่ระบุ'
+//                ];
+//            }
+//
+//            // ดึงรายการสินค้า/บริการจากใบงาน
+//            // สมมติว่ามีตาราง job_items ที่เก็บรายการสินค้าของแต่ละงาน
+//            $jobItems = \common\models\JobLine::find()
+//                ->where(['job_id' => $jobId])
+//                ->orderBy(['id' => SORT_ASC])
+//                ->all();
+//
+//            if (empty($jobItems)) {
+//                return [
+//                    'success' => false,
+//                    'message' => 'ไม่พบรายการสินค้า/บริการในใบงานนี้'
+//                ];
+//            }
+//
+//            // จัดรูปแบบข้อมูลให้ตรงกับที่ฟอร์มต้องการ
+//            $items = [];
+//            foreach ($jobItems as $jobItem) {
+//                $items[] = [
+//                    'item_description' => $jobItem->product->name,
+//                    'quantity' => number_format($jobItem->qty, 0),
+//                    'unit' => $jobItem->product->unit->name ?: 'หน่วย',
+//                    'unit_price' => number_format($jobItem->line_price, 2),
+//                    'amount' => number_format($jobItem->qty * $jobItem->line_price, 2),
+//                    // ข้อมูลเพิ่มเติมที่อาจจำเป็น
+//                    'product_id' => $jobItem->product_id,
+//                    'notes' => $jobItem->note,
+//                ];
+//            }
+//
+//            return [
+//                'success' => true,
+//                'items' => $items,
+//                'job_info' => [
+//                    'job_no' => $job->job_no,
+//                    'job_name' => $job->job_no,
+//                    'customer_name' => 'test',
+//                ]
+//            ];
+//
+//        } catch (\Exception $e) {
+//            \Yii::error("Error in actionGetJobItems: " . $e->getMessage(), __METHOD__);
+//
+//            return [
+//                'success' => false,
+//                'message' => 'เกิดข้อผิดพลาดในการดึงข้อมูล: ' . $e->getMessage()
+//            ];
+//        }
+//    }
 
     public function actionGetProductInfo()
     {
@@ -481,5 +554,43 @@ class InvoiceController extends Controller
         }
 
         return ['error' => 'Product not found'];
+    }
+    public function actionAddDocFile(){
+        $id = \Yii::$app->request->post('id');
+        if($id){
+            $uploaded = UploadedFile::getInstancesByName('file_doc');
+            if (!empty($uploaded)) {
+                $loop = 0;
+                foreach ($uploaded as $file) {
+                    $upfiles = "invoice_" . time()."_".$loop . "." . $file->getExtension();
+                    if ($file->saveAs('uploads/invoice_doc/' . $upfiles)) {
+                        $model_doc = new \common\models\InvoiceDoc();
+                        $model_doc->invoice_id = $id;
+                        $model_doc->doc = $upfiles;
+                        $model_doc->created_by = \Yii::$app->user->id;
+                        $model_doc->created_at = time();
+                        $model_doc->save(false);
+                    }
+                    $loop++;
+                }
+            }
+
+        }
+        return $this->redirect(['update', 'id' => $id]);
+    }
+    public function actionDeleteDocFile(){
+        $id = \Yii::$app->request->post('id');
+        $doc_delete_list = trim(\Yii::$app->request->post('doc_delete_list'));
+        if($id){
+            $model_doc = \common\models\InvoiceDoc::find()->where(['invoice_id' => $id,'doc' => $doc_delete_list])->one();
+            if($model_doc){
+                if($model_doc->delete()){
+                    if(file_exists('uploads/invoice_doc/'.$model_doc->doc)){
+                        unlink('uploads/invoice_doc/'.$model_doc->doc);
+                    }
+                }
+            }
+        }
+        return $this->redirect(['update', 'id' => $id]);
     }
 }

@@ -13,6 +13,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
 $typeLabels = Invoice::getTypeOptions();
 $statusLabels = Invoice::getStatusOptions();
+
+$model_doc = \common\models\InvoiceDoc::find()->where(['invoice_id' => $model->id])->all();
 ?>
 <div class="invoice-view">
 
@@ -179,7 +181,7 @@ $statusLabels = Invoice::getStatusOptions();
             </h5>
         </div>
         <div class="card-body p-0">
-            <?php if (!empty($model->items)): ?>
+            <?php if (!empty($model->invoiceItems)): ?>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm mb-0">
                         <thead class="table-light">
@@ -193,7 +195,7 @@ $statusLabels = Invoice::getStatusOptions();
                         </tr>
                         </thead>
                         <tbody>
-                        <?php foreach ($model->items as $index => $item): ?>
+                        <?php foreach ($model->invoiceItems as $index => $item): ?>
                             <tr>
                                 <td class="text-center"><?= $index + 1 ?></td>
                                 <td><?= nl2br(Html::encode($item->item_description)) ?></td>
@@ -234,6 +236,48 @@ $statusLabels = Invoice::getStatusOptions();
             </div>
         </div>
     <?php endif; ?>
+
+    <br/>
+    <div class="label">
+        <h4>เอกสารแนบ</h4>
+    </div>
+    <div class="row">
+        <div class="col-lg-8">
+            <table class="table table-bordered table-striped" style="width: 100%">
+                <thead>
+                <tr>
+                    <th style="width: 5%;text-align: center">#</th>
+                    <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
+                    <th style="width: 10%;text-align: center">ดูเอกสาร</th>
+                    <th style="width: 5%;text-align: center">-</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if ($model_doc != null): ?>
+
+                    <?php foreach ($model_doc as $key => $value): ?>
+                        <tr>
+                            <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
+                            <td><?= $value->doc ?></td>
+                            <td style="text-align: center">
+                                <a href="<?= Yii::$app->request->BaseUrl . '/uploads/invoice_doc/' . $value->doc ?>"
+                                   target="_blank">
+                                    ดูเอกสาร
+                                </a>
+                            </td>
+                            <td style="text-align: center">
+                                <!--                                <div class="btn btn-danger" data-var="-->
+                                <?php //= trim($value->doc_name) ?><!--" onclick="delete_doc($(this))">ลบ</div>-->
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-lg-1"></div>
+    </div>
+    <br/>
 
     <!-- Activity Log Section -->
     <div class="card mt-4">

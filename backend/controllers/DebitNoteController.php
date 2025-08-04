@@ -13,6 +13,7 @@ use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use kartik\mpdf\Pdf;
 use yii\web\Response;
+use yii\web\UploadedFile;
 use yii\widgets\ActiveForm;
 
 /**
@@ -20,6 +21,7 @@ use yii\widgets\ActiveForm;
  */
 class DebitNoteController extends Controller
 {
+    public $enableCsrfValidation = false;
     /**
      * {@inheritdoc}
      */
@@ -479,5 +481,44 @@ class DebitNoteController extends Controller
         }
 
         return [];
+    }
+
+    public function actionAddDocFile(){
+        $id = \Yii::$app->request->post('id');
+        if($id){
+            $uploaded = UploadedFile::getInstancesByName('file_doc');
+            if (!empty($uploaded)) {
+                $loop = 0;
+                foreach ($uploaded as $file) {
+                    $upfiles = "invoice_" . time()."_".$loop . "." . $file->getExtension();
+                    if ($file->saveAs('uploads/debitnote_doc/' . $upfiles)) {
+                        $model_doc = new \common\models\DebitNoteDoc();
+                        $model_doc->debit_note_id = $id;
+                        $model_doc->doc = $upfiles;
+                        $model_doc->created_by = \Yii::$app->user->id;
+                        $model_doc->created_at = time();
+                        $model_doc->save(false);
+                    }
+                    $loop++;
+                }
+            }
+
+        }
+        return $this->redirect(['update', 'id' => $id]);
+    }
+    public function actionDeleteDocFile(){
+        $id = \Yii::$app->request->post('id');
+        $doc_delete_list = trim(\Yii::$app->request->post('doc_delete_list'));
+        if($id){
+            $model_doc = \common\models\DebitNoteDoc::find()->where(['debit_note_id' => $id,'doc' => $doc_delete_list])->one();
+            if($model_doc){
+                if($model_doc->delete()){
+                    if(file_exists('uploads/debitnote_doc/'.$model_doc->doc)){
+                        unlink('uploads/debitnote_doc/'.$model_doc->doc);
+                    }
+                }
+            }
+        }
+        return $this->redirect(['update', 'id' => $id]);
     }
 }

@@ -91,7 +91,7 @@ class Invoice extends ActiveRecord
     {
         return [
             [['invoice_type', 'invoice_date', 'customer_name'], 'required'],
-            [['status', 'job_id', 'payment_term_id','customer_id'], 'integer'],
+            [['status', 'job_id', 'payment_term_id','customer_id','quotation_id'], 'integer'],
             [['invoice_date', 'po_date', 'due_date', 'payment_due_date', 'check_due_date'], 'safe'],
             [['customer_address', 'notes'], 'string'],
             [['subtotal', 'discount_percent', 'discount_amount', 'vat_percent', 'vat_amount', 'total_amount'], 'number', 'min' => 0],
@@ -141,6 +141,7 @@ class Invoice extends ActiveRecord
             'updated_at' => 'แก้ไขล่าสุด',
             'job_id' => 'เลขงาน',
             'payment_term_id' => 'เงื่อนไขการชำระ',
+            'quotation_id' => 'ใบเสนอราคา',
         ];
     }
 
@@ -163,7 +164,7 @@ class Invoice extends ActiveRecord
 
     public function getQuotation()
     {
-        return $this->hasOne(Quotation::class, ['id' => 'job_id']);
+        return $this->hasOne(Quotation::class, ['id' => 'quotation_id']);
     }
 
     public function getCustomer()
@@ -304,7 +305,8 @@ class Invoice extends ActiveRecord
     public function calculateAmounts()
     {
         $subtotal = 0;
-        foreach ($this->items as $item) {
+        $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $this->id])->all();
+        foreach ($model_line as $item) {
             $subtotal += $item->amount;
         }
 

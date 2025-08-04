@@ -343,21 +343,21 @@ window.onload = function() {
             </div>
             <div class="field-group">
                 <span class="field-label">ขายให้ / Sold To:</span>
-                <span class="field-value"><?= Html::encode($model->customer_name ?: 'Glow Energy Public Company Limited (Head Office)') ?></span>
+                <span class="field-value"><?= Html::encode($model->quotation->customer->name ?: '') ?></span>
             </div>
             <div class="field-group">
                 <span class="field-label"></span>
-                <span class="field-value"><?= Html::encode($model->customer_address ?: '555/2 Energy Complex Building B, 5th Floor, Vibhavadi-Rangsit Road, Chatuchak, Chatuchak, Bangkok 10900') ?></span>
+                <span class="field-value"><?= Html::encode($model->customer_address ?: '') ?></span>
             </div>
             <div class="field-group">
                 <span class="field-label">เลขประจำตัวผู้เสียภาษี:</span>
-                <span class="field-value"><?= Html::encode($model->customer_tax_id ?: '0107538000461') ?></span>
+                <span class="field-value"><?= Html::encode($model->customer_tax_id ?: '') ?></span>
             </div>
         </div>
         <div class="customer-right">
             <div class="field-group">
                 <span class="field-label">วันที่ / Date:</span>
-                <span class="field-value"><?= Yii::$app->formatter->asDate($model->invoice_date, 'MM/dd/yyyy') ?></span>
+                <span class="field-value"><?= Yii::$app->formatter->asDate($model->invoice_date, '') ?></span>
             </div>
             <div class="field-group">
                 <span class="field-label">เลขที่ / In.No.:</span>
@@ -369,7 +369,7 @@ window.onload = function() {
             </div>
             <div class="field-group">
                 <span class="field-label">วันที่สั่งซื้อ / P/O Date:</span>
-                <span class="field-value"><?= $model->po_date ? Yii::$app->formatter->asDate($model->po_date, 'MM/dd/yyyy') : '' ?></span>
+                <span class="field-value"><?= $model->po_date ? Yii::$app->formatter->asDate($model->po_date, '') : '' ?></span>
             </div>
             <div class="field-group">
                 <span class="field-label">เงื่อนไข / กำหนดชำระ / Credit, Due:</span>
@@ -391,8 +391,11 @@ window.onload = function() {
             </tr>
             </thead>
             <tbody>
-            <?php if (!empty($model->items)): ?>
-                <?php foreach ($model->items as $index => $item): ?>
+            <?php
+              $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
+            ?>
+            <?php if (!empty($model_line)): ?>
+                <?php foreach ($model_line as $index => $item): ?>
                     <tr>
                         <td><?= $index + 1 ?></td>
                         <td class="text-left"><?= nl2br(Html::encode($item->item_description)) ?></td>
@@ -413,7 +416,7 @@ window.onload = function() {
             <?php endif; ?>
 
             <!-- Empty rows for spacing -->
-            <?php for ($i = count($model->items); $i < 10; $i++): ?>
+            <?php for ($i = count($model_line); $i < 10; $i++): ?>
                 <tr class="empty-row">
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>

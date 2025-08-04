@@ -75,7 +75,7 @@ class CreditNote extends \yii\db\ActiveRecord
         return [
             [['document_no', 'document_date', 'customer_id', 'reason'], 'required'],
             [['document_date', 'original_invoice_date', 'approved_date', 'created_at', 'updated_at'], 'safe'],
-            [['customer_id', 'invoice_id', 'approved_by', 'created_by', 'updated_by'], 'integer'],
+            [['customer_id', 'invoice_id', 'approved_by', 'created_by', 'updated_by','quotation_id'], 'integer'],
             [['original_amount', 'actual_amount', 'adjust_amount', 'vat_percent', 'vat_amount', 'total_amount'], 'number'],
             [['reason'], 'string'],
             [['document_no', 'original_invoice_no'], 'string', 'max' => 20],
@@ -118,6 +118,7 @@ class CreditNote extends \yii\db\ActiveRecord
             'updated_at' => 'แก้ไขเมื่อ',
             'created_by' => 'สร้างโดย',
             'updated_by' => 'แก้ไขโดย',
+            'quotation_id' => 'ใบเสนอราคา',
         ];
     }
 
