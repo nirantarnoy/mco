@@ -233,8 +233,8 @@ function clearAllItems() {
 
 // Load job items
 function loadJobItems(jobId) {
-  alert(jobId);
     if (jobId) {
+      alert(jobId);
         $.ajax({
             url: '" . Url::to(['get-job-items']) . "',
             data: {id: jobId},
