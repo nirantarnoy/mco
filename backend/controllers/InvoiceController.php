@@ -3,6 +3,7 @@
 namespace backend\controllers;
 
 use backend\models\Job;
+use backend\models\Quotation;
 use common\models\JobLine;
 use Yii;
 use backend\models\Invoice;
@@ -360,13 +361,25 @@ class InvoiceController extends Controller
         $id = \Yii::$app->request->post('id');
         $customer_data = null;
         if ($id) {
-            $model = Job::find()->where(['id' => $id])->one();
+            $model = Quotation::find()->where(['id' => $id])->one();
             if ($model) {
-                $customer_data = \backend\models\Job::findCustomerData($model->quotation_id);
+                $customer_data = \backend\models\Job::findCustomerData($model->id);
             }
         }
         return json_encode($customer_data);
     }
+//    public function actionGetJob()
+//    {
+//        $id = \Yii::$app->request->post('id');
+//        $customer_data = null;
+//        if ($id) {
+//            $model = Job::find()->where(['id' => $id])->one();
+//            if ($model) {
+//                $customer_data = \backend\models\Job::findCustomerData($model->quotation_id);
+//            }
+//        }
+//        return json_encode($customer_data);
+//    }
 
     public function actionGetJobItems()
     {
