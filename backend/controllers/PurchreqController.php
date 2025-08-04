@@ -564,6 +564,15 @@ class PurchreqController extends Controller
             }
 
             $job_no = $job->job_no;
+            $new_job_no = '';
+            if ($job_no != null) {
+                $xp = explode("-", $job_no);
+                if (count($xp) == 3) {
+                    $new_job_no = $xp[1] . '-' . $xp[2];
+                } else {
+                    $new_job_no = $job_no;
+                }
+            }
 
             // เลขหลัก PO
             $lastPr = \backend\models\Purch::find()
@@ -602,7 +611,7 @@ class PurchreqController extends Controller
 //
 //            $subNumber = $maxSub + 1;
 
-            $fullCode = 'PO-' . sprintf('%05d', $mainNumber) . '-' . $job_no . '.' . sprintf('%02d', $subNumber);
+            $fullCode = 'PO-' . sprintf('%05d', $mainNumber) . '-' . $new_job_no . '.' . sprintf('%02d', $subNumber);
             return $fullCode;
         } else {
             return 'No job ID';
