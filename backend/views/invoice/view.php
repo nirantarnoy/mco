@@ -200,7 +200,7 @@ $model_doc = \common\models\InvoiceDoc::find()->where(['invoice_id' => $model->i
                                 <td class="text-center"><?= $index + 1 ?></td>
                                 <td><?= nl2br(Html::encode($item->item_description)) ?></td>
                                 <td class="text-center"><?= number_format($item->quantity, 3) ?></td>
-                                <td class="text-center"><?= Html::encode($item->unit) ?></td>
+                                <td class="text-center"><?= Html::encode(\backend\models\Unit::findName($item->unit_id)) ?></td>
                                 <td class="text-right"><?= number_format($item->unit_price, 3) ?></td>
                                 <td class="text-right font-weight-bold"><?= number_format($item->amount, 2) ?></td>
                             </tr>

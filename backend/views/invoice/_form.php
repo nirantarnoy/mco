@@ -1,5 +1,6 @@
 <?php
 
+use backend\models\Unit;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
@@ -14,7 +15,21 @@ use backend\models\Invoice;
 /* @var $customers array */
 /* @var $form yii\widgets\ActiveForm */
 
-$this->registerJs("
+$getProductInfoUrl = Url::to(['get-product-info']);
+$getJobItemsUrl = Url::to(['get-job-items']);
+$getCustomerUrl = Url::to(['get-customer']);
+$getJobUrl = Url::to(['get-job']);
+
+
+// ตั้งค่าตัวแปร URLs ก่อน
+$getProductInfoUrl = Url::to(['get-product-info']);
+$getJobItemsUrl = Url::to(['get-job-items']);
+$getCustomerUrl = Url::to(['get-customer']);
+$getJobUrl = Url::to(['get-job']);
+
+$unitsData = json_encode(ArrayHelper::map(Unit::find()->where(['status' => 1])->all(), 'id', 'name'));
+
+$js = <<<JS
 // ตัวแปรเก็บข้อมูลสินค้า
 var productsData = [];
 var isProductsLoaded = false;
@@ -24,7 +39,7 @@ function loadProductsData() {
     if (isProductsLoaded) return;
     
     $.ajax({
-        url: '" . Url::to(['get-product-info']) . "',
+        url: '{$getProductInfoUrl}',
         type: 'GET',
         data: { action: 'get-all-products' },
         dataType: 'json',
@@ -72,9 +87,9 @@ function showAutocompleteResults(input, results) {
         var description = product.description || product.item_description || product.name || 'ไม่ระบุ';
         var code = product.code || product.item_code || '';
         
-        var item = $('<div class=\"autocomplete-item\">')
+        var item = $('<div class="autocomplete-item">')
             .html('<div>' + description + '</div>' + 
-                  (code ? '<div class=\"product-code\">' + code + '</div>' : ''))
+                  (code ? '<div class="product-code">' + code + '</div>' : ''))
             .data('product', product);
         dropdown.append(item);
     });
@@ -107,7 +122,7 @@ function selectProduct(input, product) {
     
     // อัพเดตหน่วย
     var unit = product.unit || product.item_unit || 'หน่วย';
-    row.find('input[name*=\"[unit]\"]').val(unit);
+    row.find('input[name*="[unit_id]"]').val(unit);
     
     // ซ่อน dropdown
     row.find('.autocomplete-dropdown').hide();
@@ -152,40 +167,75 @@ function calculateTotal() {
     $('#invoice-total_amount').val(totalAmount.toFixed(2));
 }
 
+// ตัวแปรเก็บข้อมูลหน่วย (โหลดจาก PHP)
+var unitsData = {$unitsData};
+
+// ฟังก์ชันสร้าง options สำหรับ unit dropdown
+function createUnitOptions(selectedUnit = "") {
+    var options = "<option value=\"\">เลือกหน่วย</option>";
+    for (var unitCode in unitsData) {
+        var selected = (unitCode === selectedUnit) ? "selected" : "";
+        options += "<option value=\"" + unitCode + "\" " + selected + ">" + unitsData[unitCode] + "</option>";
+    }
+    return options;
+}
+// ฟังก์ชันสร้าง unit options (ต้องเพิ่มฟังก์ชันนี้)
+// function createUnitOptions(selectedUnit = '') {
+//     // ตัวอย่างข้อมูลหน่วย - ควรโหลดจากฐานข้อมูล
+//     var units = {
+//         '': 'เลือกหน่วย',
+//         'piece': 'ชิ้น',
+//         'box': 'กล่อง',
+//         'kg': 'กิโลกรัม',
+//         'meter': 'เมตร',
+//         'liter': 'ลิตร'
+//     };
+//    
+//     var options = '';
+//     for (var value in units) {
+//         var selected = (value === selectedUnit) ? 'selected' : '';
+//         options += '<option value="' + value + '" ' + selected + '>' + units[value] + '</option>';
+//     }
+//    
+//     return options;
+// }
+
 // Add new item row
 function addItemRow(itemData = null) {
     var rowIndex = $('#items-table tbody tr').length;
     
     var description = itemData ? itemData.item_description || '' : '';
     var quantity = itemData ? itemData.quantity || '1.000' : '1.000';
-    var unit = itemData ? itemData.unit || 'หน่วย' : 'หน่วย';
+    var unit = itemData ? itemData.unit || '' : '';
     var unitPrice = itemData ? itemData.unit_price || '0.000' : '0.000';
     var amount = itemData ? itemData.amount || '0.000' : '0.000';
     var productId = itemData ? itemData.product_id || '' : '';
     
     var newRowHtml = `
     <tr>
-        <td class=\"text-center\">` + (rowIndex + 1) + `</td>
+        <td class="text-center">` + (rowIndex + 1) + `</td>
         <td>
-            <input type=\"hidden\" name=\"InvoiceItem[` + rowIndex + `][product_id]\" class=\"product-id-input\" value=\"` + productId + `\">
-            <input type=\"text\" name=\"InvoiceItem[` + rowIndex + `][item_description]\" class=\"form-control form-control-sm item-description-input\" placeholder=\"รายละเอียดสินค้า/บริการ\" autocomplete=\"off\" value=\"` + description + `\">
-            <div class=\"autocomplete-dropdown\"></div>
+            <input type="hidden" name="InvoiceItem[` + rowIndex + `][product_id]" class="product-id-input" value="` + productId + `">
+            <input type="text" name="InvoiceItem[` + rowIndex + `][item_description]" class="form-control form-control-sm item-description-input" placeholder="รายละเอียดสินค้า/บริการ" autocomplete="off" value="` + description + `">
+            <div class="autocomplete-dropdown"></div>
         </td>
         <td>
-            <input type=\"number\" name=\"InvoiceItem[` + rowIndex + `][quantity]\" class=\"form-control form-control-sm quantity-input text-right\" step=\"0.001\" min=\"0\" value=\"` + quantity + `\">
+            <input type="number" name="InvoiceItem[` + rowIndex + `][quantity]" class="form-control form-control-sm quantity-input text-right" step="0.001" min="0" value="` + quantity + `">
         </td>
         <td>
-            <input type=\"text\" name=\"InvoiceItem[` + rowIndex + `][unit]\" class=\"form-control form-control-sm text-center\" value=\"` + unit + `\">
+            <select name="InvoiceItem[` + rowIndex + `][unit_id]" class="form-control form-control-sm">
+                ` + createUnitOptions(unit) + `
+            </select>
         </td>
         <td>
-            <input type=\"number\" name=\"InvoiceItem[` + rowIndex + `][unit_price]\" class=\"form-control form-control-sm unit-price-input text-right\" step=\"0.001\" min=\"0\" value=\"` + unitPrice + `\">
+            <input type="number" name="InvoiceItem[` + rowIndex + `][unit_price]" class="form-control form-control-sm unit-price-input text-right" step="0.001" min="0" value="` + unitPrice + `">
         </td>
         <td>
-            <input type=\"number\" name=\"InvoiceItem[` + rowIndex + `][amount]\" class=\"form-control form-control-sm amount-input text-right\" readonly style=\"background-color: #f8f9fa;\" value=\"` + amount + `\">
+            <input type="number" name="InvoiceItem[` + rowIndex + `][amount]" class="form-control form-control-sm amount-input text-right" readonly style="background-color: #f8f9fa;" value="` + amount + `">
         </td>
-        <td class=\"text-center\">
-            <button type=\"button\" class=\"btn btn-sm btn-danger btn-remove-item\" title=\"ลบรายการ\">
-                <i class=\"fas fa-trash\"></i>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-danger btn-remove-item" title="ลบรายการ">
+                <i class="fas fa-trash"></i>
             </button>
         </td>
     </tr>`;
@@ -213,7 +263,7 @@ function removeItemRow(button) {
             $(this).find('input, textarea, select').each(function() {
                 var name = $(this).attr('name');
                 if (name) {
-                    var newName = name.replace(/\[\d+\]/, '[' + index + ']');
+                    var newName = name.replace(/\\[\\d+\\]/, '[' + index + ']');
                     $(this).attr('name', newName);
                 }
             });
@@ -234,9 +284,8 @@ function clearAllItems() {
 // Load job items
 function loadJobItems(jobId) {
     if (jobId) {
-      alert(jobId);
         $.ajax({
-            url: '" . Url::to(['get-job-items']) . "',
+            url: '{$getJobItemsUrl}',
             data: {id: jobId},
             dataType: 'json',
             type: 'POST',
@@ -274,7 +323,7 @@ function loadJobItems(jobId) {
 function loadCustomerData(customerCode) {
     if (customerCode) {
         $.ajax({
-            url: '" . Url::to(['get-customer']) . "',
+            url: '{$getCustomerUrl}',
             data: {code: customerCode},
             dataType: 'json',
             success: function(response) {
@@ -380,10 +429,10 @@ function showMessage(type, message) {
         case 'warning': alertClass = 'alert-warning'; break;
     }
     
-    var alertHtml = '<div class=\"alert ' + alertClass + ' alert-dismissible fade show\" role=\"alert\">' +
+    var alertHtml = '<div class="alert ' + alertClass + ' alert-dismissible fade show" role="alert">' +
                     message +
-                    '<button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\">' +
-                    '<span aria-hidden=\"true\">&times;</span>' +
+                    '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                    '<span aria-hidden="true">&times;</span>' +
                     '</button>' +
                     '</div>';
     
@@ -437,7 +486,7 @@ $(document).on('change', '#invoice-job-id', function() {
     var jobId = $(this).val();
     if (jobId) {
         $.ajax({
-            url: '" . Url::to(['get-job']) . "',
+            url: '{$getJobUrl}',
             data: {id: jobId},
             dataType: 'json',
             type: 'POST',
@@ -469,7 +518,11 @@ $(document).ready(function() {
         initializeAutocomplete($(this));
     });
 });
-");
+JS;
+
+// ใช้งาน
+$this->registerJs($js);
+
 
 $typeLabels = Invoice::getTypeOptions();
 $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$model->invoice_type] : 'เอกสาร';
@@ -665,7 +718,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                     <div class="autocomplete-dropdown"></div>
                                 </td>
                                 <td>
-                                    <?= Html::textInput("InvoiceItem[{$index}][quantity]", $item->quantity ?: '1.000', [
+                                    <?= Html::textInput("InvoiceItem[{$index}][quantity]", $item->quantity ?: '1', [
                                         'class' => 'form-control form-control-sm quantity-input text-right',
                                         'type' => 'number',
                                         'step' => '0.001',
@@ -673,9 +726,15 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                     ]) ?>
                                 </td>
                                 <td>
-                                    <?= Html::textInput("InvoiceItem[{$index}][unit]", $item->unit ?: 'หน่วย', [
-                                        'class' => 'form-control form-control-sm text-center'
-                                    ]) ?>
+                                    <?= Html::dropDownList(
+                                        "InvoiceItem[{$index}][unit_id]",
+                                        $item->unit_id,
+                                        ArrayHelper::map(Unit::find()->where(['status' => 1])->all(), 'id', 'name'),
+                                        [
+                                            'prompt' => 'เลือกหน่วย',
+                                            'class' => 'form-control form-control-sm text-center'
+                                        ]
+                                    ) ?>
                                 </td>
                                 <td>
                                     <?= Html::textInput("InvoiceItem[{$index}][unit_price]", $item->unit_price ?: '0.000', [

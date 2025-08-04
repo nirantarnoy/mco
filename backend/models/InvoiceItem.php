@@ -64,6 +64,7 @@ class InvoiceItem extends ActiveRecord
             'amount' => 'จำนวนเงิน',
             'sort_order' => 'Sort Order',
             'product_id' => 'Product ID',
+            'unit_id' => 'Unit ID',
         ];
     }
 

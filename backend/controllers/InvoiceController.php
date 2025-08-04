@@ -127,6 +127,7 @@ class InvoiceController extends Controller
                 if ($model->save(false)) {
                     // Handle items
                     $itemsData = Yii::$app->request->post('InvoiceItem', []);
+                  //  print_r($itemsData);return;
                     $this->saveItems($model, $itemsData);
 
                     $transaction->commit();
@@ -289,7 +290,7 @@ class InvoiceController extends Controller
                 'product_id' => isset($itemData['product_id']) ? trim($itemData['product_id']) : '',
                 'item_description' => isset($itemData['item_description']) ? trim($itemData['item_description']) : '',
                 'quantity' => !empty($itemData['quantity']) ? (float)$itemData['quantity'] : 1.000,
-                'unit' => isset($itemData['unit']) ? trim($itemData['unit']) : 'หน่วย',
+                'unit_id' => isset($itemData['unit_id']) ? trim($itemData['unit_id']) : 0,
                 'unit_price' => !empty($itemData['unit_price']) ? (float)$itemData['unit_price'] : 0.00,
             ];
 
