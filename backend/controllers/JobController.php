@@ -252,6 +252,16 @@ class JobController extends Controller
                 ->orderBy(['id' => SORT_DESC])
                 ->one();
 
+            $new_job_no ='';
+            if($job_no !=null){
+                $xp = explode("-", $job_no);
+                if(count($xp) == 3){
+                    $new_job_no = $xp[1].'-'.$xp[2];
+                }else{
+                    $new_job_no = $job_no;
+                }
+            }
+
             $mainNumber = 1;
             if ($lastPr) {
                 $prParts = explode('-', $lastPr->purch_req_no);
@@ -271,7 +281,7 @@ class JobController extends Controller
                 $subNumber = 1;
             }
 
-            $fullCode = 'PR-' . sprintf('%05d', $mainNumber) . '-' . $job_no . '.' . sprintf('%02d', $subNumber);
+            $fullCode = 'PR-' . sprintf('%05d', $mainNumber) . '-' . $new_job_no . '.' . sprintf('%02d', $subNumber);
             echo $fullCode;
         } else {
             echo 'No job ID';

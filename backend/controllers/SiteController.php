@@ -70,6 +70,19 @@ class SiteController extends Controller
 
     public function actionIndex()
     {
+//        $job_no = 'QT25-000015';
+//        $new_job_no ='';
+//        if($job_no !=null){
+//            $xp = explode("-", $job_no);
+//            if(count($xp) == 3){
+//                $new_job_no = $xp[1].'-'.$xp[2];
+//            }else{
+//                $new_job_no = $job_no;
+//            }
+//            echo count($xp);
+//        }
+//
+//        echo $new_job_no;
 
         // รับค่าวันที่จาก request หรือใช้ค่า default (30 วันย้อนหลัง)
         $fromDate = Yii::$app->request->get('from_date', date('Y-m-d', strtotime('-30 days')));
