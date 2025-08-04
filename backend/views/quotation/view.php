@@ -88,7 +88,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             [
                                 'attribute' => 'payment_term_id',
                                 'value' => function ($model) {
-                                    return \backend\models\PaymentTerm::findName($model->payment_term_id);
+                                    return \backend\models\Paymentterm::findName($model->payment_term_id);
                                 }
                             ],
                             'note:ntext:หมายเหตุ',
