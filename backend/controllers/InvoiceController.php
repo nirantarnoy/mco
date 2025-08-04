@@ -406,7 +406,7 @@ class InvoiceController extends Controller
 
             // ดึงรายการสินค้า/บริการจากใบงาน
             // สมมติว่ามีตาราง job_items ที่เก็บรายการสินค้าของแต่ละงาน
-            $jobItems = \backend\models\Quotationline::find()
+            $jobItems = \backend\models\QuotationLine::find()
                 ->where(['quotation_id' => $jobId])
                 ->orderBy(['id' => SORT_ASC])
                 ->all();
