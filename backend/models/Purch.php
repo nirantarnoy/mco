@@ -338,4 +338,16 @@ class Purch extends ActiveRecord
     public function getVendor(){
         return $this->hasOne(\backend\models\Vendor::className(), ['id' => 'vendor_id']);
     }
+
+    public static function findPrNo($id){
+        $no = '';
+        $model = \backend\models\PurchReq::findOne($id);
+        if($model){
+           $model_puch = \backend\models\Purch::findOne($model->purch_id);
+           if($model_puch){
+               $no = $model_puch->purch_no;
+           }
+        }
+        return $no;
+    }
 }

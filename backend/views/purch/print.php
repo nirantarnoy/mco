@@ -258,7 +258,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                             </div>
                             <div class="info-row">
                                 <span class="info-label">PR.NO. :</span>
-                                <span class="info-value"></span>
+                                <span class="info-value"><?= Html::encode(\backend\models\Purch::findPrNo($purchase->id)) ?></span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">DATE :</span>
