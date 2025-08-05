@@ -343,10 +343,7 @@ class Purch extends ActiveRecord
         $no = '';
         $model = \backend\models\PurchReq::find()->where(['purch_id'=>$id])->one();
         if($model){
-           $model_puch = \backend\models\Purch::findOne($model->purch_id);
-           if($model_puch){
-               $no = $model_puch->purch_no;
-           }
+          $no = $model->purch_req_no;
         }
         return $no;
     }
