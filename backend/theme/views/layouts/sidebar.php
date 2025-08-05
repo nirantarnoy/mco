@@ -310,7 +310,7 @@
                         </ul>
                     </li>
                 <?php endif;?>
-                <?php if(\Yii::$app->user->can('purch/index')):?>
+                <?php if(\Yii::$app->user->can('journaltransaricat/index')):?>
                     <li class="nav-item has-treeview has-sub">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-archive"></i>
