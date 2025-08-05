@@ -341,7 +341,7 @@ class Purch extends ActiveRecord
 
     public static function findPrNo($id){
         $no = '';
-        $model = \backend\models\PurchReq::findOne($id);
+        $model = \backend\models\PurchReq::find()->where(['purch_id'=>$id])->one();
         if($model){
            $model_puch = \backend\models\Purch::findOne($model->purch_id);
            if($model_puch){
