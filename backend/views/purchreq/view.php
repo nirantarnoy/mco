@@ -163,7 +163,12 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
                                     'format' => ['currency', 'THB'],
                                 ],
                                 'note:ntext:หมายเหตุ',
-                                'purch_id:text:รหัสใบสั่งซื้อ',
+                                [
+                                        'attribute' => 'purch_id',
+                                    'value' => function ($model) {
+                                       return \backend\models\Purch::findNo($model->purch_id);
+                                    }
+                                ],
                                 [
                                     'attribute' => 'purch_id',
                                     'label' => 'สถานะใบสั่งซื้อ',
