@@ -209,7 +209,7 @@ $this->title = 'พิมพ์ใบขอซื้อ: ' . $model->purch_req_n
             </div>
             <div class="company-info">
                 <strong>M.C.O. COMPANY LIMITED</strong><br>
-                เลขที่ ??? ถ.???, เขต???, กรุงเทพฯ 10000<br>
+                8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จ.ระยอง 21000<br>
                 เลขประจำตัวผู้เสียภาษี: 0215430000955<br>
                 Tel: (02) 4752525-9, 094-5944555<br>
                 Email: info@mcomes.com<br>

@@ -239,7 +239,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                 <div class="company-info">
                     <div class="company-name">M.C.O. COMPANY LIMITED</div>
                     <div>บริษัท เอ็ม.ซี.โอ. จำกัด</div>
-                    <div>5/15 ถนนเกาะกลอย ตำบลจอมพลเจ้าพระยา อำเภอเมือง จังหวัดระยอง 21000</div>
+                    <div>8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จ.ระยอง 21000</div>
                     <div>โทรศัพท์/โทรสาร : 021564300025</div>
                     <div>Tel : (038) 475259-6 , 0364364555</div>
                     <div>e-mail : info@thai-mco.com</div>
