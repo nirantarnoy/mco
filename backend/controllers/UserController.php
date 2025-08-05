@@ -118,6 +118,7 @@ class UserController extends Controller
             $model->generateAuthKey();
             $model->email = $model->username . '@vorapat.com';
             //$model->status = $model->status == 1?10:9;
+            $model->created_at = date('Y-m-d H:i:s');
             if ($model->save()) {
                 //$model->assignment();
                 $session = Yii::$app->session;
