@@ -423,8 +423,11 @@ window.onload = function() {
             </tr>
             </thead>
             <tbody>
-            <?php if (!empty($model->items)): ?>
-                <?php foreach ($model->items as $index => $item): ?>
+            <?php
+            $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
+            ?>
+            <?php if (!empty($model_line)): ?>
+                <?php foreach ($model_line as $index => $item): ?>
                     <tr>
                         <td><?= $index + 1 ?></td>
                         <td class="text-left"><?= nl2br(Html::encode($item->item_description)) ?></td>
@@ -445,7 +448,7 @@ window.onload = function() {
             <?php endif; ?>
 
             <!-- Empty rows for spacing -->
-            <?php for ($i = count($model->items); $i < 10; $i++): ?>
+            <?php for ($i = count($model_line); $i < 10; $i++): ?>
                 <tr class="empty-row">
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
