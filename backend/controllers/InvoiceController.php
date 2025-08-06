@@ -24,6 +24,7 @@ use yii\web\UploadedFile;
 class InvoiceController extends Controller
 {
     public $enableCsrfValidation = false;
+
     /**
      * {@inheritdoc}
      */
@@ -120,14 +121,15 @@ class InvoiceController extends Controller
         }
 
         if ($model->load(Yii::$app->request->post())) {
-           // print_r(Yii::$app->request->post('InvoiceItem', []));return;
+            // print_r(Yii::$app->request->post('InvoiceItem', []));return;
             $transaction = Yii::$app->db->beginTransaction();
             try {
-               // $model->total_amount_text = \backend\models\PurchReq::numtothai($model->total_amount);
+                // $model->total_amount_text = \backend\models\PurchReq::numtothai($model->total_amount);
+                $model->status = Invoice::STATUS_ACTIVE;
                 if ($model->save(false)) {
                     // Handle items
                     $itemsData = Yii::$app->request->post('InvoiceItem', []);
-                  //  print_r($itemsData);return;
+                    //  print_r($itemsData);return;
                     $this->saveItems($model, $itemsData);
 
                     $transaction->commit();
@@ -143,7 +145,7 @@ class InvoiceController extends Controller
         return $this->render('create', [
             'model' => $model,
             'items' => $items,
-            'customers' =>  $this->getCustomersList(),
+            'customers' => $this->getCustomersList(),
         ]);
     }
 
@@ -166,7 +168,7 @@ class InvoiceController extends Controller
         if ($model->load(Yii::$app->request->post())) {
             $transaction = Yii::$app->db->beginTransaction();
             try {
-               // $model->total_amount_text = \backend\models\PurchReq::numtothai($model->total_amount);
+                // $model->total_amount_text = \backend\models\PurchReq::numtothai($model->total_amount);
                 if ($model->save()) {
                     // Delete existing items
                     InvoiceItem::deleteAll(['invoice_id' => $model->id]);
@@ -569,14 +571,16 @@ class InvoiceController extends Controller
 
         return ['error' => 'Product not found'];
     }
-    public function actionAddDocFile(){
+
+    public function actionAddDocFile()
+    {
         $id = \Yii::$app->request->post('id');
-        if($id){
+        if ($id) {
             $uploaded = UploadedFile::getInstancesByName('file_doc');
             if (!empty($uploaded)) {
                 $loop = 0;
                 foreach ($uploaded as $file) {
-                    $upfiles = "invoice_" . time()."_".$loop . "." . $file->getExtension();
+                    $upfiles = "invoice_" . time() . "_" . $loop . "." . $file->getExtension();
                     if ($file->saveAs('uploads/invoice_doc/' . $upfiles)) {
                         $model_doc = new \common\models\InvoiceDoc();
                         $model_doc->invoice_id = $id;
@@ -592,15 +596,17 @@ class InvoiceController extends Controller
         }
         return $this->redirect(['update', 'id' => $id]);
     }
-    public function actionDeleteDocFile(){
+
+    public function actionDeleteDocFile()
+    {
         $id = \Yii::$app->request->post('id');
         $doc_delete_list = trim(\Yii::$app->request->post('doc_delete_list'));
-        if($id){
-            $model_doc = \common\models\InvoiceDoc::find()->where(['invoice_id' => $id,'doc' => $doc_delete_list])->one();
-            if($model_doc){
-                if($model_doc->delete()){
-                    if(file_exists('uploads/invoice_doc/'.$model_doc->doc)){
-                        unlink('uploads/invoice_doc/'.$model_doc->doc);
+        if ($id) {
+            $model_doc = \common\models\InvoiceDoc::find()->where(['invoice_id' => $id, 'doc' => $doc_delete_list])->one();
+            if ($model_doc) {
+                if ($model_doc->delete()) {
+                    if (file_exists('uploads/invoice_doc/' . $model_doc->doc)) {
+                        unlink('uploads/invoice_doc/' . $model_doc->doc);
                     }
                 }
             }
