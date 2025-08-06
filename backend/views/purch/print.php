@@ -218,7 +218,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                 <div class="col-lg-6">
                     <div class="logo-section">
                         <div class="logo">
-                            <img src="../../backend/web/uploads/logo/mco_logo.png" width="35%" alt="">
+                            <img src="../../backend/web/uploads/logo/mco_logo_2.png" width="35%" alt="">
                         </div>
                     </div>
                 </div>
