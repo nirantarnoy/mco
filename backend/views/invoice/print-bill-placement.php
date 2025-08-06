@@ -441,7 +441,7 @@ window.onload = function() {
             <tfoot>
             <tr class="total-row">
                 <td colspan="5" class="text-left">
-                    <strong>รวมเงินทั้งสิ้น หึ่งหลื่นสามพันห้าร้อยบาทถ้วน</strong>
+                    <strong>รวมเงินทั้งสิ้น  <?= $model->total_amount_text ?: '' ?></strong>
                 </td>
                 <td class="text-right total-amount"><?= number_format($model->total_amount, 2) ?></td>
             </tr>

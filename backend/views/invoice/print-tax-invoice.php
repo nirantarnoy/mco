@@ -465,7 +465,7 @@ window.onload = function() {
     <div class="summary-section">
         <div class="summary-left">
             <div class="font-bold">ตัวอักษร</div>
-            <div class="amount-text"><?= $model->total_amount_text ?: 'หนึ่งหมื่นหกพันห้าสิบบาทถ้วน' ?></div>
+            <div class="amount-text"><?= $model->total_amount_text ?: '' ?></div>
 
             <div style="margin-top: 30px; font-size: 12px; text-align: center;">
                 <strong>ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง</strong>
