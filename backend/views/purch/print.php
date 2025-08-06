@@ -401,7 +401,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
             <div class="signature-box">
                 <div class="signature-line">
                     <?php
-                    $requestor_signature = \backend\models\User::findEmployeeSignature($model->created_by);
+                    $requestor_signature = \backend\models\User::findEmployeeSignature($purchase->created_by);
                     ?>
                     <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" width="100%" alt="">
                 </div>
@@ -410,7 +410,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
             <div class="signature-box">
                 <div class="signature-line">
                     <?php
-                    $requestor_signature = \backend\models\User::findEmployeeSignature($model->created_by);
+                    $requestor_signature = \backend\models\User::findEmployeeSignature($purchase->created_by);
                     ?>
                     <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" width="100%" alt="">
                 </div>
@@ -419,7 +419,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
             <div class="signature-box">
                 <div class="signature-line">
                     <?php
-                    $approve_signature = \backend\models\User::findEmployeeSignature($model->created_by);
+                    $approve_signature = \backend\models\User::findEmployeeSignature($purchase->created_by);
                     ?>
                     <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" width="100%" alt="">
                 </div>
