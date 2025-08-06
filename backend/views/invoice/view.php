@@ -96,7 +96,7 @@ $model_doc = \common\models\InvoiceDoc::find()->where(['invoice_id' => $model->i
                             [
                                 'attribute' => 'payment_term_id',
                                 'value' => function ($model) {
-                                    return $model->payment_term_id ? $model->paymentterm->name : '-';
+                                    return $model->payment_term_id ? $model->paymentTerm->name : '-';
                                 }
                             ],
                             [
