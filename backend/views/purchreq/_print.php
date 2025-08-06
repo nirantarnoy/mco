@@ -56,41 +56,191 @@ $approverDate = '';
     @media print {
         @page {
             size: A4;
-            margin: 0.4in;
+            margin: 0.15in;
         }
 
-        body {
-            margin: 0;
-            padding: 0;
+        * {
+            margin: 0 !important;
+            padding: 0 !important;
+            box-sizing: border-box !important;
+            -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            print-color-adjust: exact !important;
         }
+
+        html, body {
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+
         .print-container {
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            transform: scale(0.9);
+            width: 100% !important;
+            height: auto !important;
+            min-height: auto !important;
+            margin: 0 !important;
+            padding: 8mm !important;
+            transform: scale(0.95);
             transform-origin: top left;
+            page-break-inside: avoid;
+            page-break-before: auto;
+            page-break-after: auto;
+            position: relative;
+            background: white !important;
         }
 
         .no-print {
             display: none !important;
         }
 
-        /* ปรับขนาดลายเซ็นต์ในโหมดพิมพ์ */
+        /* เพิ่มคุณภาพสำหรับ PDF */
+        .items-table {
+            border-collapse: collapse !important;
+        }
+
+        .items-table,
+        .items-table th,
+        .items-table td {
+            border: 1px solid #000 !important;
+            border-collapse: collapse !important;
+        }
+
+        .form-section {
+            border: 1px solid #000 !important;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #000 !important;
+        }
+
+        .form-value {
+            border-bottom: 1px dotted #999 !important;
+        }
+
+        /* รักษาคุณภาพของรูปภาพ */
+        img {
+            -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        /* ปรับขนาดฟอนต์ให้ใหญ่ขึ้นเพื่อเต็มหน้า */
+        .print-container {
+            font-size: 14px !important;
+            line-height: 1.3 !important;
+            padding: 8mm !important;
+        }
+
+        .company-info h3 {
+            font-size: 16px !important;
+            margin-bottom: 3px !important;
+        }
+
+        .company-info p {
+            font-size: 12px !important;
+            margin: 1px 0 !important;
+            line-height: 1.2 !important;
+        }
+
+        .pr-title {
+            font-size: 20px !important;
+            margin-bottom: 8px !important;
+        }
+
+        .form-label {
+            font-size: 13px !important;
+        }
+
+        .form-value {
+            font-size: 13px !important;
+            min-width: 180px !important;
+        }
+
+        .logo {
+            max-width: 140px !important;
+            margin-bottom: 8px !important;
+        }
+
+        .checkbox-group {
+            font-size: 12px !important;
+            margin-right: 18px !important;
+        }
+
+        /* เพิ่มขนาดส่วนหัว */
+        .header-section {
+            margin-bottom: 18px !important;
+        }
+
+        /* เพิ่มขนาด form sections */
+        .form-section {
+            padding: 12px !important;
+            margin-bottom: 12px !important;
+        }
+
+        .form-row {
+            margin-bottom: 10px !important;
+        }
+
+        /* เพิ่มขนาดตาราง */
+        .items-table {
+            margin-bottom: 18px !important;
+            font-size: 14px !important;
+        }
+
+        .items-table th,
+        .items-table td {
+            padding: 5px !important;
+        }
+
+        .items-table td {
+            height: 28px !important;
+        }
+
+        .items-table th {
+            font-size: 12px !important;
+        }
+
+        /* เพิ่มขนาด document section */
+        .document-section {
+            margin-bottom: 18px !important;
+        }
+
+        .document-section label {
+            font-size: 12px !important;
+        }
+
+        /* เพิ่มขนาดส่วนลายเซ็นต์ */
+        .signature-section {
+            margin-top: 30px !important;
+        }
+
+        .signature-line {
+            margin: 30px 18px 5px 18px !important;
+            min-height: 60px !important;
+        }
+
         .signature-line img {
-            max-width: 100px !important;
-            max-height: 50px !important;
+            max-width: 130px !important;
+            max-height: 55px !important;
             object-fit: contain;
+        }
+
+        /* เพิ่มขนาด form number */
+        .form-number {
+            margin-top: 15px !important;
+            font-size: 12px !important;
         }
     }
 
     .print-container {
         width: 210mm;
-        min-height: 297mm;
         margin: 0 auto;
-        padding: 10mm;
+        padding: 15mm;
         background: white;
         font-family: 'Sarabun', Arial, sans-serif;
-        font-size: 14px;
+        font-size: 15px;
         line-height: 1.4;
         color: #000;
     }
@@ -98,7 +248,7 @@ $approverDate = '';
     .header-section {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 20px;
+        margin-bottom: 18px;
     }
 
     .company-info {
@@ -107,13 +257,13 @@ $approverDate = '';
 
     .company-info h3 {
         margin: 0 0 5px 0;
-        font-size: 16px;
+        font-size: 17px;
         font-weight: bold;
     }
 
     .company-info p {
         margin: 2px 0;
-        font-size: 13px;
+        font-size: 14px;
     }
 
     .pr-info {
@@ -121,7 +271,7 @@ $approverDate = '';
     }
 
     .pr-title {
-        font-size: 20px;
+        font-size: 21px;
         font-weight: bold;
         color: #003366;
         margin-bottom: 10px;
@@ -150,6 +300,7 @@ $approverDate = '';
     .form-label {
         font-weight: bold;
         margin-right: 10px;
+        font-size: 15px;
     }
 
     .form-value {
@@ -157,6 +308,7 @@ $approverDate = '';
         display: inline-block;
         min-width: 200px;
         padding: 0 5px;
+        font-size: 15px;
     }
 
     .checkbox-group {
@@ -171,13 +323,13 @@ $approverDate = '';
     .items-table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 20px;
+        margin-bottom: 18px;
     }
 
     .items-table th,
     .items-table td {
         border: 1px solid #000;
-        padding: 5px;
+        padding: 6px;
         text-align: center;
     }
 
@@ -187,7 +339,7 @@ $approverDate = '';
     }
 
     .items-table td {
-        height: 25px;
+        height: 30px;
     }
 
     .items-table .description {
@@ -201,13 +353,13 @@ $approverDate = '';
     }
 
     .document-section {
-        margin-bottom: 20px;
+        margin-bottom: 18px;
     }
 
     .signature-section {
         display: flex;
         justify-content: space-between;
-        margin-top: 40px;
+        margin-top: 35px;
     }
 
     .signature-box {
@@ -217,8 +369,8 @@ $approverDate = '';
 
     .signature-line {
         border-bottom: 1px solid #000;
-        margin: 40px 20px 5px 20px;
-        min-height: 60px;
+        margin: 35px 20px 5px 20px;
+        min-height: 65px;
         display: flex;
         align-items: flex-end;
         justify-content: center;
@@ -227,7 +379,7 @@ $approverDate = '';
 
     .signature-line img {
         max-width: 150px;
-        max-height: 55px;
+        max-height: 60px;
         object-fit: contain;
         width: auto;
         height: auto;
@@ -238,7 +390,7 @@ $approverDate = '';
     }
 
     .logo {
-        max-width: 150px;
+        max-width: 160px;
         margin-bottom: 10px;
     }
 
@@ -398,7 +550,7 @@ $approverDate = '';
                 <?php
                 $requestor_signature = \backend\models\User::findEmployeeSignature($model->created_by);
                 if(!empty($requestor_signature)): ?>
-                    <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" alt="Requestor Signature" style="width: 100px;">
+                    <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" alt="Requestor Signature">
                 <?php endif; ?>
             </div>
             <div>วันที่ <?= Html::encode($requestorDate) ?></div>
@@ -409,7 +561,7 @@ $approverDate = '';
                 <?php
                 $approve_signature = \backend\models\User::findEmployeeSignature($model->approve_by);
                 if(!empty($approve_signature)): ?>
-                    <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" alt="Approver Signature" style="width: 100px;">
+                    <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" alt="Approver Signature">
                 <?php endif; ?>
             </div>
             <div>วันที่ <?=!empty($model->approve_date) ? date('m/d/Y',strtotime($model->approve_date)) : ''?></div>
@@ -426,10 +578,13 @@ $approverDate = '';
     <button onclick="window.print()" class="btn btn-primary" style="font-size: 20px;font-weight: bold;">
         <i class="glyphicon glyphicon-print"></i> Print
     </button>
-    <a href="<?= \yii\helpers\Url::to(['print', 'id' => $model->id, 'format' => 'pdf']) ?>"
-       class="btn btn-danger" target="_blank" style="font-size: 20px;font-weight: bold;">
-        <i class="glyphicon glyphicon-file"></i> Download PDF
-    </a>
+<!--    <a href="--><?php //= \yii\helpers\Url::to(['print', 'id' => $model->id, 'format' => 'pdf']) ?><!--"-->
+<!--       class="btn btn-danger" target="_blank" style="font-size: 20px;font-weight: bold;">-->
+<!--        <i class="glyphicon glyphicon-file"></i> Download PDF-->
+<!--    </a>-->
+    <button onclick="printToPDF()" class="btn btn-success" style="font-size: 20px;font-weight: bold;">
+        <i class="glyphicon glyphicon-download-alt"></i> Print to PDF
+    </button>
     <button onclick="window.close()" class="btn btn-default" style="font-size: 20px;font-weight: bold;">Close</button>
 </div>
 <?php
@@ -444,8 +599,38 @@ function isChecked($purch_req_id, $key, $value) {
 
 ?>
 <script>
+    // ฟังก์ชันสำหรับ Print to PDF
+    function printToPDF() {
+        // // แสดงคำแนะนำสำหรับการตั้งค่า PDF
+        // alert('เคล็ดลับสำหรับ PDF คุณภาพสูง:\n\n' +
+        //     '1. กด Ctrl+P (Windows) หรือ Cmd+P (Mac)\n' +
+        //     '2. เลือก "Save as PDF" หรือ "Microsoft Print to PDF"\n' +
+        //     '3. ใน More settings:\n' +
+        //     '   - Paper size: A4\n' +
+        //     '   - Margins: Minimum\n' +
+        //     '   - Scale: Custom 100%\n' +
+        //     '   - Options: ✓ Background graphics\n' +
+        //     '4. กด Save');
+
+        // เปิด print dialog
+        setTimeout(() => {
+            window.print();
+        }, 100);
+    }
+
     // Auto print when page loads (optional)
     // window.onload = function() {
     //     window.print();
     // };
+
+    // เพิ่มการตั้งค่าสำหรับ PDF generation
+    window.addEventListener('beforeprint', function() {
+        // เพิ่มคลาสพิเศษก่อน print
+        document.body.classList.add('printing');
+    });
+
+    window.addEventListener('afterprint', function() {
+        // ลบคลาสหลัง print
+        document.body.classList.remove('printing');
+    });
 </script>
