@@ -344,7 +344,7 @@ $approverDate = '';
         <?php endforeach; ?>
 
         <!-- Empty rows -->
-        <?php for ($i = count($items); $i < 15; $i++): ?>
+        <?php for ($i =0; $i <= 10 - count($items); $i++): ?>
             <tr>
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>
