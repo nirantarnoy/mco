@@ -341,7 +341,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
             <?php endif; ?>
 
             <!-- Empty rows -->
-            <?php for ($i = count($purchaseLines); $i < 10; $i++): ?>
+            <?php for ($i = 0; $i <= 10 -count($purchaseLines); $i++): ?>
                 <tr>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
