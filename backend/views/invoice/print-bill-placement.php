@@ -434,7 +434,7 @@ window.onload = function() {
             <?php endif; ?>
 
             <!-- Empty rows for spacing -->
-            <?php for ($i = count($model->items); $i < 12; $i++): ?>
+            <?php for ($i = count($model_line); $i < 12; $i++): ?>
                 <tr class="empty-row"><td colspan="6">&nbsp;</td></tr>
             <?php endfor; ?>
             </tbody>
