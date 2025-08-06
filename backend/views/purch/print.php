@@ -403,7 +403,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                     <?php
                     $requestor_signature = \backend\models\User::findEmployeeSignature($model->created_by);
                     ?>
-                    <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" width="150px" alt="">
+                    <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" width="100%" alt="">
                 </div>
                 <div>PURCHASING</div>
             </div>
@@ -412,7 +412,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                     <?php
                     $requestor_signature = \backend\models\User::findEmployeeSignature($model->created_by);
                     ?>
-                    <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" width="150px" alt="">
+                    <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" width="100%" alt="">
                 </div>
                 <div>REQUEST BY</div>
             </div>
@@ -421,7 +421,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                     <?php
                     $approve_signature = \backend\models\User::findEmployeeSignature($model->created_by);
                     ?>
-                    <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" width="150px" alt="">
+                    <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" width="100%" alt="">
                 </div>
                 <div>AUTHORIZED SIGNATURE</div>
                 <div>F-WP-FMA-002-002 R.1</div>
