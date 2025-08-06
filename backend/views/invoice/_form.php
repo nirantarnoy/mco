@@ -202,15 +202,19 @@ function createUnitOptions(selectedUnit = "") {
 
 // Add new item row
 function addItemRow(itemData = null) {
+    // ลบแถวล่าสุดก่อน
+    $('#items-table tbody tr:first').remove();
+
+    // คำนวณ rowIndex หลังจากลบแถวล่าสุด
     var rowIndex = $('#items-table tbody tr').length;
-    
+
     var description = itemData ? itemData.item_description || '' : '';
     var quantity = itemData ? itemData.quantity || '1.000' : '1.000';
     var unit = itemData ? itemData.unit || '' : '';
     var unitPrice = itemData ? itemData.unit_price || '0.000' : '0.000';
     var amount = itemData ? itemData.amount || '0.000' : '0.000';
     var productId = itemData ? itemData.product_id || '' : '';
-    
+
     var newRowHtml = `
     <tr>
         <td class="text-center">` + (rowIndex + 1) + `</td>
@@ -239,17 +243,18 @@ function addItemRow(itemData = null) {
             </button>
         </td>
     </tr>`;
-    
+
     $('#items-table tbody').append(newRowHtml);
-    
+
     // Initialize autocomplete for the new row
     initializeAutocomplete($('#items-table tbody tr:last .item-description-input'));
-    
+
     // Calculate amount for the new row
     if (itemData) {
         calculateItemAmount($('#items-table tbody tr:last'));
     }
 }
+
 
 // Remove item row
 function removeItemRow(button) {
