@@ -103,6 +103,7 @@ class Purch extends ActiveRecord
             [['total_amount', 'discount_amount', 'vat_amount', 'net_amount'], 'number'],
             [['purch_no', 'vendor_name', 'note','delivery_note','payment_note','footer_delivery','footer_payment','ref_no'], 'string', 'max' => 255],
             [['purch_no'], 'unique'],
+            [['approve_date'], 'safe'],
         ];
     }
 
@@ -132,6 +133,7 @@ class Purch extends ActiveRecord
             'delivery_note' => 'หมายเหตุการจัดส่ง',
             'payment_note' => 'หมายเหตุการชําระเงิน',
             'ref_no' => 'REF NO',
+            'approve_date' => 'วันที่อนุมัติ',
         ];
     }
 

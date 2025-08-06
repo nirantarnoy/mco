@@ -62,7 +62,13 @@ $drivingcard_data = \backend\helpers\DrivingcardType::asArrayObject();
                     ]) ?>
                 </div>
             </div>
-
+            <div class="row">
+                <div class="col-lg-3">
+                    <?= $form->field($model, 'signature')->textInput(['maxlength' => true,'readonly'=>'readonly']) ?>
+                    <input class="form-control" type="file" name="signature_file">
+                </div>
+                <div class="col-lg-1"></div>
+            </div>
             <br>
             <div class="row">
                 <div class="col-lg-4">

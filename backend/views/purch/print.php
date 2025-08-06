@@ -399,15 +399,30 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
         <!-- Signatures -->
         <div class="signature-section">
             <div class="signature-box">
-                <div class="signature-line"></div>
+                <div class="signature-line">
+                    <?php
+                    $requestor_signature = \backend\models\User::findEmployeeSignature($model->created_by);
+                    ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" width="150px" alt="">
+                </div>
                 <div>PURCHASING</div>
             </div>
             <div class="signature-box">
-                <div class="signature-line"></div>
+                <div class="signature-line">
+                    <?php
+                    $requestor_signature = \backend\models\User::findEmployeeSignature($model->created_by);
+                    ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" width="150px" alt="">
+                </div>
                 <div>REQUEST BY</div>
             </div>
             <div class="signature-box">
-                <div class="signature-line"></div>
+                <div class="signature-line">
+                    <?php
+                    $approve_signature = \backend\models\User::findEmployeeSignature($model->created_by);
+                    ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" width="150px" alt="">
+                </div>
                 <div>AUTHORIZED SIGNATURE</div>
                 <div>F-WP-FMA-002-002 R.1</div>
             </div>

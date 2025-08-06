@@ -115,10 +115,16 @@ class EmployeeController extends Controller
 
         if ($model->load(Yii::$app->request->post())) {
             $photo = UploadedFile::getInstance($model, 'photo');
+            $signature = UploadedFile::getInstanceByName('signature_file');
             if (!empty($photo)) {
                 $photo_name = time() . "." . $photo->getExtension();
-                $photo->saveAs(Yii::getAlias('@backend') . '/web/uploads/images/employee/' . $photo_name);
+                $photo->saveAs(Yii::getAlias('@backend') . '/web/uploads/employee/' . $photo_name);
                 $model->photo = $photo_name;
+            }
+            if (!empty($signature)) {
+                $signature_name = 'emp_sig_'.time() . "." . $signature->getExtension();
+                $signature->saveAs(Yii::getAlias('@backend') . '/web/uploads/employee_signature/' . $signature_name);
+                $model->signature = $signature_name;
             }
             if($model->save(false)){
                 $session = Yii::$app->session;
@@ -147,14 +153,26 @@ class EmployeeController extends Controller
 
         if ($model->load(Yii::$app->request->post())) {
             $photo = UploadedFile::getInstance($model, 'photo');
+            $signature = UploadedFile::getInstanceByName('signature_file');
+            $old_sig = $model->signature;
             if (!empty($photo)) {
                 $photo_name = time() . "." . $photo->getExtension();
                 $photo->saveAs(Yii::getAlias('@backend') . '/web/uploads/images/employee/' . $photo_name);
                 $model->photo = $photo_name;
             }
 
+            if (!empty($signature)) {
+                $signature_name = 'emp_sig_'.time() . "." . $signature->getExtension();
+                $signature->saveAs(Yii::getAlias('@backend') . '/web/uploads/employee_signature/' . $signature_name);
+                $model->signature = $signature_name;
+            }
 
             if($model->save(false)){
+                if(!empty($old_sig)){
+                    if(file_exists(Yii::getAlias('@backend') . '/web/uploads/employee_signature/'.$old_sig)){
+                        unlink(Yii::getAlias('@backend') . '/web/uploads/employee_signature/'.$old_sig);
+                    }
+                }
                 $session = Yii::$app->session;
                 $session->setFlash('msg', 'บันทึกข้อมูลเรียบร้อย');
                 return $this->redirect(['index']);

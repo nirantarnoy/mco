@@ -217,4 +217,16 @@ class User extends \common\models\User
         }
         return $emp_name;
     }
+    public static function findEmployeeSignature($id){
+        $emp_name = '';
+        $model = User::find()->where(['id' => $id])->one();
+        if($model){
+            $emp_id = $model->emp_ref_id;
+            $emp = Employee::find()->where(['id' => $emp_id])->one();
+            if($emp){
+                $emp_name = $emp->signature;
+            }
+        }
+        return $emp_name;
+    }
 }

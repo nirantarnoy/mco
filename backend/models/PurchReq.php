@@ -103,7 +103,7 @@ class PurchReq extends ActiveRecord
             [['total_amount', 'discount_amount', 'vat_amount', 'net_amount'], 'number'],
             [['purch_req_no', 'vendor_name', 'note', 'total_text','reason'], 'string', 'max' => 255],
             [['purch_req_no'], 'unique'],
-            [['required_date'], 'safe'],
+            [['required_date','approve_date'], 'safe'],
         ];
     }
 
@@ -137,6 +137,7 @@ class PurchReq extends ActiveRecord
             'reason' => 'ระบุเหตุผล',
             'reason_title_id' => 'เหตุผลขอซื้อ',
             'req_for_dep_id' => 'ค่าใช้จ่ายสําหรับแผนก',
+            'approve_date'=> 'วันที่อนุมัติใบขอซื้อ'
         ];
     }
 

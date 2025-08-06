@@ -246,7 +246,7 @@ $approverDate = '';
     <!-- Header Section -->
     <div class="header-section">
         <div class="company-info">
-            <?= Html::img('../../backend/web/uploads/logo/mco_logo.png',['style' => 'max-width: 150px;']) ?>
+            <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png',['style' => 'max-width: 150px;']) ?>
             <h3>Company Name :</h3>
             <h3>M.C.O. COMPANY LIMITED</h3>
             <p>8/18 Koh-Kloy Road.</p>
@@ -387,13 +387,23 @@ $approverDate = '';
     <div class="signature-section">
         <div class="signature-box">
             <div><strong>ผู้ขอซื้อ</strong></div>
-            <div class="signature-line"></div>
+            <div class="signature-line">
+                <?php
+                $requestor_signature = \backend\models\User::findEmployeeSignature($model->created_by);
+                ?>
+                <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" width="150px" alt="">
+            </div>
             <div>วันที่ <?= Html::encode($requestorDate) ?></div>
         </div>
         <div class="signature-box">
             <div><strong>ผู้อนุมัติ</strong></div>
-            <div class="signature-line"></div>
-            <div>วันที่ _____________________</div>
+            <div class="signature-line">
+                <?php
+                  $approve_signature = \backend\models\User::findEmployeeSignature($model->approve_by);
+                  ?>
+                <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" width="150px" alt="">
+            </div>
+            <div>วันที่ <?=date('m/d/Y',strtotime($model->approve_date))?></div>
         </div>
     </div>
 
