@@ -960,7 +960,8 @@ class ProductController extends Controller
         $product = null;
         $group_id = \Yii::$app->request->post('group_id');
         if($group_id != null && $group_id > 0){
-            $product = Product::find()->where(['product_group_id'=>$group_id])->orderBy(['id'=>SORT_DESC])->limit(1)->one();
+           // $product = Product::find()->where(['product_group_id'=>$group_id])->orderBy(['id'=>SORT_DESC])->limit(1)->one();
+            $product = Product::find()->where(['product_group_id'=>$group_id])->orderBy(['code'=>SORT_DESC])->limit(1)->one();
             if($product != null){
                echo $this->getlastproductcode($product->code);
                // echo $product->code;
