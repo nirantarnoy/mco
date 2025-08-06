@@ -407,8 +407,11 @@ window.onload = function() {
             </tr>
             </thead>
             <tbody>
-            <?php if (!empty($model->items)): ?>
-                <?php foreach ($model->items as $index => $item): ?>
+            <?php
+            $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
+            ?>
+            <?php if (!empty($model_line)): ?>
+                <?php foreach ($model_line as $index => $item): ?>
                     <tr>
                         <td><?= $index + 1 ?></td>
                         <td class="text-left"><?= Html::encode($model->po_number ?: 'RY-UJ24-0002634 Signed') ?></td>
