@@ -391,7 +391,7 @@ $approverDate = '';
                 <?php
                 $requestor_signature = \backend\models\User::findEmployeeSignature($model->created_by);
                 ?>
-                <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" width="100%" alt="">
+                <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" width="90%" alt="">
             </div>
             <div>วันที่ <?= Html::encode($requestorDate) ?></div>
         </div>
@@ -401,7 +401,7 @@ $approverDate = '';
                 <?php
                   $approve_signature = \backend\models\User::findEmployeeSignature($model->approve_by);
                   ?>
-                <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" width="100%" alt="">
+                <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" width="90%" alt="">
             </div>
             <div>วันที่ <?=date('m/d/Y',strtotime($model->approve_date))?></div>
         </div>
