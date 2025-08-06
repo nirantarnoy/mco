@@ -19,33 +19,6 @@ $deliveryLocation = 'warehouse'; // warehouse, service_support, other_location, 
 $model_footer = \common\models\PurchReqFootTitle::find()->orderBy(['id' => SORT_ASC])->all();
 $model_footer_data = \common\models\PurchReqFoot::find()->where(['purch_req_id' => $model->id])->all();
 
-//$items = [
-//    [
-//        'stock_no' => 'ST-001',
-//        'description' => 'กระดาษ A4 80 แกรม',
-//        'qty' => 10,
-//        'unit' => 'รีม',
-//        'estimated_price' => 1200.00,
-//        'budget' => 1500.00
-//    ],
-//    [
-//        'stock_no' => 'ST-002',
-//        'description' => 'หมึกพิมพ์ Canon Black',
-//        'qty' => 5,
-//        'unit' => 'ขวด',
-//        'estimated_price' => 2500.00,
-//        'budget' => 3000.00
-//    ],
-//    [
-//        'stock_no' => 'ST-003',
-//        'description' => 'แฟ้มเอกสาร 2 นิ้ว',
-//        'qty' => 20,
-//        'unit' => 'แฟ้ม',
-//        'estimated_price' => 2000.00,
-//        'budget' => 2500.00
-//    ],
-//];
-
 $items = [];
 
 if($model_line !=null){
@@ -81,15 +54,32 @@ $approverDate = '';
 
 <style>
     @media print {
+        @page {
+            size: A4;
+            margin: 0.4in;
+        }
+
         body {
             margin: 0;
             padding: 0;
         }
         .print-container {
-            width: 210mm;
-            min-height: 297mm;
+            width: 100%;
             margin: 0;
-            padding: 10mm;
+            padding: 0;
+            transform: scale(0.9);
+            transform-origin: top left;
+        }
+
+        .no-print {
+            display: none !important;
+        }
+
+        /* ปรับขนาดลายเซ็นต์ในโหมดพิมพ์ */
+        .signature-line img {
+            max-width: 100px !important;
+            max-height: 50px !important;
+            object-fit: contain;
         }
     }
 
@@ -228,6 +218,23 @@ $approverDate = '';
     .signature-line {
         border-bottom: 1px solid #000;
         margin: 40px 20px 5px 20px;
+        min-height: 60px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        position: relative;
+    }
+
+    .signature-line img {
+        max-width: 150px;
+        max-height: 55px;
+        object-fit: contain;
+        width: auto;
+        height: auto;
+        position: absolute;
+        bottom: 5px;
+        left: 50%;
+        transform: translateX(-50%);
     }
 
     .logo {
@@ -287,12 +294,12 @@ $approverDate = '';
                 <div style="margin-top: 5px;">
                     <?php foreach ($reasons as $reason) :?>
 
-                    <div class="checkbox-group">
-                        <input type="checkbox" <?= $requestType == $reason->id ? 'checked' : '' ?> onclick="return false">
-                        <label><?= Html::encode($reason->name) ?></label>
-                    </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" <?= $requestType == $reason->id ? 'checked' : '' ?> onclick="return false">
+                            <label><?= Html::encode($reason->name) ?></label>
+                        </div>
                     <?php endforeach; ?>
-                  <span><?=$model->reason?></span>
+                    <span><?=$model->reason?></span>
                 </div>
             </div>
             <div class="form-group">
@@ -390,8 +397,9 @@ $approverDate = '';
             <div class="signature-line">
                 <?php
                 $requestor_signature = \backend\models\User::findEmployeeSignature($model->created_by);
-                ?>
-                <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" width="80%" alt="">
+                if(!empty($requestor_signature)): ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" alt="Requestor Signature">
+                <?php endif; ?>
             </div>
             <div>วันที่ <?= Html::encode($requestorDate) ?></div>
         </div>
@@ -399,11 +407,12 @@ $approverDate = '';
             <div><strong>ผู้อนุมัติ</strong></div>
             <div class="signature-line">
                 <?php
-                  $approve_signature = \backend\models\User::findEmployeeSignature($model->approve_by);
-                  ?>
-                <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" width="80%" alt="">
+                $approve_signature = \backend\models\User::findEmployeeSignature($model->approve_by);
+                if(!empty($approve_signature)): ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" alt="Approver Signature">
+                <?php endif; ?>
             </div>
-            <div>วันที่ <?=date('m/d/Y',strtotime($model->approve_date))?></div>
+            <div>วันที่ <?=!empty($model->approve_date) ? date('m/d/Y',strtotime($model->approve_date)) : ''?></div>
         </div>
     </div>
 
