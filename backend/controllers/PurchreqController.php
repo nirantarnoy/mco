@@ -349,6 +349,7 @@ class PurchreqController extends Controller
         $model->approve_status = PurchReq::APPROVE_STATUS_APPROVED;
         $model->approve_by = Yii::$app->user->id;
         $model->status = PurchReq::STATUS_ACTIVE;
+        $model->approve_date = date('Y-m-d H:i:s');
         $transaction = Yii::$app->db->beginTransaction();
         try{
             if ($model->save()) {
@@ -501,6 +502,7 @@ class PurchreqController extends Controller
             $purchModel->discount_percent = $purchReqModel->discount_percent;
             $purchModel->vat_percent = $purchReqModel->vat_percent;
             $purchModel->total_text = $purchReqModel->total_text;
+            $purchModel->approve_date = date('Y-m-d H:i:s');
            // $purchModel->note = 'แปลงจากใบขอซื้อ: ' . $purchReqModel->purch_req_no . ($purchReqModel->note ? ' - ' . $purchReqModel->note : '');
             //$purchModel->ref_text = 'PR: ' . $purchReqModel->purch_req_no;
 

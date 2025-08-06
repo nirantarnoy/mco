@@ -401,7 +401,7 @@ $approverDate = '';
                 <?php
                   $approve_signature = \backend\models\User::findEmployeeSignature($model->approve_by);
                   ?>
-                <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" width="150px" alt="">
+                <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" width="25%" alt="">
             </div>
             <div>วันที่ <?=date('m/d/Y',strtotime($model->approve_date))?></div>
         </div>
