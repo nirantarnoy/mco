@@ -252,6 +252,8 @@ class PurchController extends Controller
         $model = $this->findModel($id);
         $model->approve_status = Purch::APPROVE_STATUS_APPROVED;
         $model->status = Purch::STATUS_ACTIVE;
+        $model->approve_by = Yii::$app->user->id;
+        $model->approve_date = date('Y-m-d H:i:s');
 
         if ($model->save()) {
             Yii::$app->session->setFlash('success', 'อนุมัติใบสั่งซื้อเรียบร้อยแล้ว');

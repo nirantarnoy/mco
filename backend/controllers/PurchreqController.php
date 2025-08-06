@@ -494,7 +494,7 @@ class PurchreqController extends Controller
             $purchModel->vendor_id = $purchReqModel->vendor_id;
             $purchModel->vendor_name = $purchReqModel->vendor_name;
             $purchModel->status = \backend\models\Purch::STATUS_ACTIVE;
-            $purchModel->approve_status = \backend\models\Purch::APPROVE_STATUS_APPROVED;
+            //$purchModel->approve_status = \backend\models\Purch::APPROVE_STATUS_APPROVED;
             $purchModel->total_amount = $purchReqModel->total_amount;
             $purchModel->discount_amount = $purchReqModel->discount_amount;
             $purchModel->vat_amount = $purchReqModel->vat_amount;
@@ -502,7 +502,8 @@ class PurchreqController extends Controller
             $purchModel->discount_percent = $purchReqModel->discount_percent;
             $purchModel->vat_percent = $purchReqModel->vat_percent;
             $purchModel->total_text = $purchReqModel->total_text;
-            $purchModel->approve_date = date('Y-m-d H:i:s');
+           // $purchModel->approve_date = date('Y-m-d H:i:s');
+
            // $purchModel->note = 'แปลงจากใบขอซื้อ: ' . $purchReqModel->purch_req_no . ($purchReqModel->note ? ' - ' . $purchReqModel->note : '');
             //$purchModel->ref_text = 'PR: ' . $purchReqModel->purch_req_no;
 
