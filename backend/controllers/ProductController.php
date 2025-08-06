@@ -981,7 +981,7 @@ class ProductController extends Controller
             // Find last number for this type and date
             $lastRecord = Product::find()
                 ->where(['like', 'code', $prefix])
-                ->orderBy(['id' => SORT_DESC])
+                ->orderBy(['code' => SORT_DESC])
                 ->one();
 
             if ($lastRecord) {
