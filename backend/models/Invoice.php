@@ -179,7 +179,7 @@ class Invoice extends ActiveRecord
 
     public function getPaymentTerm()
     {
-        return $this->hasOne(PaymentTerm::class, ['id' => 'payment_term_id']);
+        return $this->hasOne(Paymentterm::class, ['id' => 'payment_term_id']);
     }
 
     /**
