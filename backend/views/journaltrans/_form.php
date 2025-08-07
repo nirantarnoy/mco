@@ -711,7 +711,7 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
         </div>
     </div>
     <?php
-    $warehouses = ArrayHelper::map(Warehouse::find()->all(), 'id', 'name');
+    $warehouses = ArrayHelper::map(\common\models\Warehouse::find()->all(), 'id', 'name');
     ?>
     <hr>
     <div class="card mt-4">
