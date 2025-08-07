@@ -10,7 +10,8 @@ $this->title = $model->pcv_no;
 $this->params['breadcrumbs'][] = ['label' => 'ใบสำคัญจ่ายเงินสดย่อย', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 
-$model_doc = \common\models\PettyCashVoucherDoc::find()->where(['petty_cash_voucher_id' => $model->id])->all();
+$model_doc_slip = \common\models\PettyCashVoucherDocSlip::find()->where(['petty_cash_voucher_id' => $model->id])->all();
+$model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_cash_voucher_id' => $model->id])->all();
 ?>
 <div class="petty-cash-voucher-view">
 
@@ -155,7 +156,7 @@ $model_doc = \common\models\PettyCashVoucherDoc::find()->where(['petty_cash_vouc
     </div>
     <br/>
     <div class="label">
-        <h4>เอกสารแนบ</h4>
+        <h4>เอกสารแนบสลิป</h4>
     </div>
     <div class="row">
         <div class="col-lg-8">
@@ -169,14 +170,55 @@ $model_doc = \common\models\PettyCashVoucherDoc::find()->where(['petty_cash_vouc
                 </tr>
                 </thead>
                 <tbody>
-                <?php if ($model_doc != null): ?>
+                <?php if ($model_doc_slip != null): ?>
 
-                    <?php foreach ($model_doc as $key => $value): ?>
+                    <?php foreach ($model_doc_slip as $key => $value): ?>
                         <tr>
                             <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
                             <td><?= $value->doc ?></td>
                             <td style="text-align: center">
-                                <a href="<?= Yii::$app->request->BaseUrl . '/uploads/pettycash_doc/' . $value->doc ?>"
+                                <a href="<?= Yii::$app->request->BaseUrl . '/uploads/pettycash_doc_slip/' . $value->doc ?>"
+                                   target="_blank">
+                                    ดูเอกสาร
+                                </a>
+                            </td>
+                            <td style="text-align: center">
+                                <!--                                <div class="btn btn-danger" data-var="-->
+                                <?php //= trim($value->doc_name) ?><!--" onclick="delete_doc($(this))">ลบ</div>-->
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-lg-1"></div>
+    </div>
+    <br/>
+    <br/>
+    <div class="label">
+        <h4>เอกสารแนบใบเสร็จ</h4>
+    </div>
+    <div class="row">
+        <div class="col-lg-8">
+            <table class="table table-bordered table-striped" style="width: 100%">
+                <thead>
+                <tr>
+                    <th style="width: 5%;text-align: center">#</th>
+                    <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
+                    <th style="width: 10%;text-align: center">ดูเอกสาร</th>
+                    <th style="width: 5%;text-align: center">-</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if ($model_doc_bill != null): ?>
+
+                    <?php foreach ($model_doc_bill as $key => $value): ?>
+                        <tr>
+                            <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
+                            <td><?= $value->doc ?></td>
+                            <td style="text-align: center">
+                                <a href="<?= Yii::$app->request->BaseUrl . '/uploads/pettycash_doc_bill/' . $value->doc ?>"
                                    target="_blank">
                                     ดูเอกสาร
                                 </a>

@@ -279,8 +279,32 @@ class PettyCashVoucherController extends Controller
                 $loop = 0;
                 foreach ($uploaded as $file) {
                     $upfiles = "invoice_" . time()."_".$loop . "." . $file->getExtension();
-                    if ($file->saveAs('uploads/pettycash_doc/' . $upfiles)) {
-                        $model_doc = new \common\models\PettyCashVoucherDoc();
+                    if ($file->saveAs('uploads/pettycash_doc_slip/' . $upfiles)) {
+                        $model_doc = new \common\models\PettyCashVoucherDocSlip();
+                        $model_doc->petty_cash_voucher_id = $id;
+                        $model_doc->doc = $upfiles;
+                        $model_doc->created_by = \Yii::$app->user->id;
+                        $model_doc->created_at = time();
+                        $model_doc->save(false);
+                    }
+                    $loop++;
+                }
+            }
+
+        }
+        return $this->redirect(['update', 'id' => $id]);
+    }
+
+    public function actionAddDocFileBill(){
+        $id = \Yii::$app->request->post('id');
+        if($id){
+            $uploaded = UploadedFile::getInstancesByName('file_doc');
+            if (!empty($uploaded)) {
+                $loop = 0;
+                foreach ($uploaded as $file) {
+                    $upfiles = "invoice_" . time()."_".$loop . "." . $file->getExtension();
+                    if ($file->saveAs('uploads/pettycash_doc_bill/' . $upfiles)) {
+                        $model_doc = new \common\models\PettyCashVoucherDocBill();
                         $model_doc->petty_cash_voucher_id = $id;
                         $model_doc->doc = $upfiles;
                         $model_doc->created_by = \Yii::$app->user->id;
