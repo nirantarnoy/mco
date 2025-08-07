@@ -783,7 +783,8 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                                             'placeholder' => 'พิมพ์ชื่อสินค้าหรือรหัสสินค้า...',
                                             'data-index' => $index,
                                             'autocomplete' => 'off',
-                                            'style' => 'width: 100%'
+                                            'style' => 'width: 100%',
+                                            'value' => \backend\models\Product::findName($journaltransline->product_id)
                                         ])->label(false) ?>
 
                                         <div class="autocomplete-dropdown" data-index="<?= $index ?>"></div>
@@ -798,6 +799,7 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                                             'class' => 'form-control warehouse-select',
                                             'data-index' => $index,
                                             'style' => 'width: 100%',
+                                            'value' => \backend\models\Warehouse::findName($journaltransline->warehouse_id)
                                         ]
                                     )->label(false) ?>
                                 </td>
@@ -828,6 +830,7 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                                         'class' => 'form-control line-unit-id',
                                         'style' => 'background-color: #f8f9fa;',
                                         'data-index' => $index,
+                                        'value' => \backend\models\Unit::findName($journaltransline->unit_id),
                                     ])->label(false) ?>
                                 </td>
                                 <td class="text-center">
