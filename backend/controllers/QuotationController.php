@@ -166,20 +166,20 @@ class QuotationController extends Controller
                 try {
                     if ($model->save()) {
                         // Delete existing lines that are not in the new list
-//                        $existingLineIds = [];
-//                        foreach ($quotationLines as $quotationLine) {
-//                            if (!$quotationLine->isNewRecord) {
-//                                $existingLineIds[] = $quotationLine->id;
-//                            }
-//                        }
+                        $existingLineIds = [];
+                        foreach ($quotationLines as $quotationLine) {
+                            if (!$quotationLine->isNewRecord) {
+                                $existingLineIds[] = $quotationLine->id;
+                            }
+                        }
 
-//                        QuotationLine::deleteAll([
-//                            'and',
-//                            ['quotation_id' => $model->id],
-//                            ['not in', 'id', $existingLineIds]
-//                        ]);
+                        QuotationLine::deleteAll([
+                            'and',
+                            ['quotation_id' => $model->id],
+                            ['not in', 'id', $existingLineIds]
+                        ]);
 
-                        \common\models\QuotationLine::DeleteAll(['quotation_id' => $model->id]);
+                       // \common\models\QuotationLine::DeleteAll(['quotation_id' => $model->id]);
                         // Save quotation lines
                         foreach ($quotationLines as $quotationLine) {
                             $quotationLine->quotation_id = $model->id;
