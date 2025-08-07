@@ -214,6 +214,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'format' => ['decimal', 2],
                         'pageSummary' => true,
                         'pageSummaryFunc' => GridView::F_SUM,
+                        'pageSummaryOptions' => ['style' => 'text-align: center;'],
                     ],
                     [
                         'attribute' => 'line_price',
@@ -221,6 +222,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'headerOptions' => ['style' => 'width: 120px; text-align: right;'],
                         'contentOptions' => ['style' => 'text-align: right;'],
                         'format' => ['currency', 'THB'],
+
                     ],
                     [
                         'attribute' => 'discount_amount',
@@ -230,6 +232,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'format' => ['currency', 'THB'],
                         'pageSummary' => true,
                         'pageSummaryFunc' => GridView::F_SUM,
+                        'pageSummaryOptions' => ['style' => 'text-align: right;'],
                     ],
                     [
                         'attribute' => 'line_total',
@@ -239,6 +242,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'format' => ['currency', 'THB'],
                         'pageSummary' => true,
                         'pageSummaryFunc' => GridView::F_SUM,
+                        'pageSummaryOptions' => ['style' => 'text-align: right;'],
                     ],
                     [
                         'attribute' => 'note',
