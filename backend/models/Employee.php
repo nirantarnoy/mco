@@ -217,6 +217,7 @@ class Employee extends \common\models\Employee
                 $data['code'] = $model->emp_code;
                 $data['department_name'] = $model->department->name;
                 $data['position_name'] = $model->position->name;
+                $data['signature'] = $model->signature;
             }
         }
         return $data;

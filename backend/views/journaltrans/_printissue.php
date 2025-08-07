@@ -8,10 +8,10 @@ use yii\helpers\Html;
 $emp_info = \backend\models\Employee::findEmpInfo($model->created_by);
 // Mock data
 $documentNo = '';
-$issueDate = date('m/d/Y',strtotime($model->trans_date));
-$issueTime = date('H:i',strtotime($model->created_at));
+$issueDate = date('m/d/Y', strtotime($model->trans_date));
+$issueTime = date('H:i', strtotime($model->created_at));
 $documentNumber = $model->journal_no;
-$issueDept = $emp_info!=null?$emp_info['department_name']:'';
+$issueDept = $emp_info != null ? $emp_info['department_name'] : '';
 
 // Issue type
 $issueType = 'withdraw'; // 'borrow', 'transfer', 'withdraw'
@@ -66,16 +66,16 @@ $issueType = 'withdraw'; // 'borrow', 'transfer', 'withdraw'
 //];
 
 $items = [];
-foreach($model_line as $line){
+foreach ($model_line as $line) {
     $item = [
-            'item' => $line->id,
+        'item' => $line->id,
         'description' => \backend\models\Product::findProductName($line->product_id),
         'request_qty' => $line->qty,
-        'issue_qty' => $model->stock_type_id == 2? $line->qty: 0,
-        'return_qty' => $model->stock_type_id == 1? $line->qty: 0,
+        'issue_qty' => $model->stock_type_id == 2 ? $line->qty : 0,
+        'return_qty' => $model->stock_type_id == 1 ? $line->qty : 0,
         'price_unit' => $line->line_price,
         'remark' => ''
-        ];
+    ];
     $items[] = $item;
 }
 
@@ -93,6 +93,7 @@ $stockerName = '';
             margin: 0;
             padding: 0;
         }
+
         .print-container {
             width: 210mm;
             min-height: 297mm;
@@ -102,6 +103,7 @@ $stockerName = '';
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
+
         .no-print {
             display: none;
         }
@@ -335,7 +337,8 @@ $stockerName = '';
                             <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                                 <tr>
                                     <td style="width: 50%">
-                                        <div class="doc-info-item">วันที่เบิก : <b><?= Html::encode($issueDate) ?></b></div>
+                                        <div class="doc-info-item">วันที่เบิก : <b><?= Html::encode($issueDate) ?></b>
+                                        </div>
                                     </td>
                                 </tr>
                                 <tr>
@@ -382,7 +385,7 @@ $stockerName = '';
                 <span class="doc-label">ช่องงาน:</span> _____________________
             </div>
             <div>
-                <span class="doc-label">RY-QT:</span> <?= Html::encode($documentNo) ?>
+                <span class="doc-label">RY-QT:</span> <?= Html::encode($documentNumber) ?>
             </div>
         </div>
     </div>
@@ -430,10 +433,18 @@ $stockerName = '';
         </table>
     </div>
 
+    <?php
+    $issue_signature = $emp_info != null ? $emp_info['department_name'] : '';
+    ?>
     <!-- Signature Section -->
     <div class="signature-section">
         <div class="signature-box">
-            <div class="signature-name"><?= $model->stock_type_id == 2? Html::encode(\backend\models\User::findEmployeeNameByUserId(\Yii::$app->user->id)):'' ?></div>
+            <div class="signature-name">
+                <?php if ($model->stock_type_id == 2): ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?= $issue_signature ?>"
+                         alt="Approver Signature">
+                <?php endif; ?>
+            </div>
             <div class="signature-label">ผู้เบิก</div>
         </div>
         <div class="signature-box">
@@ -445,7 +456,12 @@ $stockerName = '';
             <div class="signature-label">ผู้ตรวจสอบ</div>
         </div>
         <div class="signature-box">
-            <div class="signature-name"><?= $model->stock_type_id == 1? Html::encode(\backend\models\User::findEmployeeNameByUserId(\Yii::$app->user->id)):'' ?></div>
+            <div class="signature-name">
+                <?php if ($model->stock_type_id == 2): ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?= $issue_signature ?>"
+                         alt="Approver Signature">
+                <?php endif; ?>
+            </div>
             <div class="signature-label">ผู้คืน</div>
         </div>
     </div>
