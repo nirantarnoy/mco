@@ -335,7 +335,7 @@ $email = $customer_info !== null ? $customer_info['email'] : '';
                     <td><?= $itemNo++ ?></td>
                     <td class="description-cell"><?= Html::encode($line->product->name ?? $line->product_name) ?></td>
                     <td><?= number_format($line->qty, 0) ?></td>
-                    <td><?= Html::encode($line->product->unit_id ?? '') ?></td>
+                    <td><?= Html::encode(\backend\models\Unit::findName($line->product->unit_id) ?? '') ?></td>
                     <td class="number-cell"><?= number_format($line->line_price, 2) ?></td>
                     <td class="number-cell"><?= number_format($line->line_total, 2) ?></td>
                     <td class="number-cell">-</td>
@@ -399,6 +399,7 @@ $email = $customer_info !== null ? $customer_info['email'] : '';
         </div>
     </div>
 
+
     <!-- Signatures -->
     <div class="signature-section">
         <div class="signature-box">
@@ -409,13 +410,25 @@ $email = $customer_info !== null ? $customer_info['email'] : '';
         </div>
 
         <div class="signature-box">
-            <div class="signature-line"></div>
+            <div class="signature-line">
+                <?php
+                $requestor_signature = \backend\models\User::findEmployeeSignature($quotation->created_by);
+                if(!empty($requestor_signature)): ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" alt="Requestor Signature">
+                <?php endif; ?>
+            </div>
             <div>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</div>
             <div><strong>QUOTED BY</strong></div>
         </div>
 
         <div class="signature-box">
-            <div class="signature-line"></div>
+            <div class="signature-line">
+                <?php
+                $approve_signature = \backend\models\User::findEmployeeSignature($quotation->approve_by);
+                if(!empty($approve_signature)): ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" alt="Requestor Signature">
+                <?php endif; ?>
+            </div>
             <div>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</div>
             <div><strong>AUTHORIZED SIGNATURE</strong></div>
         </div>
