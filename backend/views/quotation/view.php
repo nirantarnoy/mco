@@ -313,3 +313,12 @@ $this->params['breadcrumbs'][] = $this->title;
         background-color: #f8f9fa !important;
     }
 </style>
+
+
+<?php
+$this->registerJs("
+    setTimeout(function() {
+        $('.alert').fadeOut('slow');
+    }, 5000);
+");
+?>
