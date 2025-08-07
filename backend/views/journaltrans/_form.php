@@ -710,7 +710,9 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
             <?php endif; ?>
         </div>
     </div>
-
+    <?php
+    $warehouses = ArrayHelper::map(Warehouse::find()->all(), 'id', 'name');
+    ?>
     <hr>
     <div class="card mt-4">
         <div class="card-header">
@@ -793,7 +795,7 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
 
                                 <td>
                                     <?= $form->field($journaltransline, "[{$index}]warehouse_id")->dropDownList(
-                                        [],
+                                        $warehouses,
                                         [
                                             'prompt' => '-- เลือกคลัง --',
                                             'class' => 'form-control warehouse-select',
