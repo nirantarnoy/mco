@@ -154,9 +154,13 @@ class QuotationController extends Controller
                     $quotationLine->load($quotationLineData, '');
                     $quotationLines[] = $quotationLine;
                     $valid = $quotationLine->validate() && $valid;
+
+
+
+
                 }
             }
-
+            echo count($quotationLines);return;
             if ($valid) {
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
@@ -176,7 +180,6 @@ class QuotationController extends Controller
 //                        ]);
 
                         \common\models\QuotationLine::DeleteAll(['quotation_id' => $model->id]);
-
                         // Save quotation lines
                         foreach ($quotationLines as $quotationLine) {
                             $quotationLine->quotation_id = $model->id;
