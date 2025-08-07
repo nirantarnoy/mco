@@ -16,6 +16,7 @@ use yii\helpers\Url;
 
 $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model->id])->all();
 $yesNo = [['id' => 1, 'name' => 'ใช่'], ['id' => 2, 'name' => 'ไม่ใช่']];
+$isVat = [['id' => 1, 'name' => 'VAT'], ['id' => 2, 'name' => 'NO VAT']];
 $model_footer = \common\models\PurchReqFootTitle::find()->orderBy(['id' => SORT_ASC])->all();
 $model_footer_data = \common\models\PurchReqFoot::find()->where(['purch_req_id' => $model->id])->all();
 
@@ -325,9 +326,15 @@ function calculateGrandTotal() {
         subtotal += parseFloat($(this).val()) || 0;
     });
     
+    var purch_req_is_vat =  $("#purch-req-is-vat").val();
+    
     var discount = parseFloat($('#purchreq-discount_amount').val()) || 0;
     var afterDiscount = subtotal - discount;
-    var vat = afterDiscount * 0.07; // 7% VAT
+    var vat = 0;
+    if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){
+        vat = afterDiscount * 0.07; // 7% VAT
+    }
+    
     var netAmount = afterDiscount + vat;
     
     $('#purchreq-total_amount').val(subtotal.toFixed(2));
@@ -433,7 +440,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 ?>
 
     <div class="purch-req-form">
-
+        <input type="hidden" id="purch-req-is-vat" value="">
         <?php $form = ActiveForm::begin([
             'id' => 'purch-req-form',
             'options' => ['class' => 'form-horizontal', 'enctype' => 'multipart/form-data'],
@@ -496,6 +503,15 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                             'rows' => 4,
                             'placeholder' => 'หมายเหตุ'
                         ]) ?>
+
+                        <?= $form->field($model, 'is_vat')->dropDownList([
+                            '1' => 'VAT',
+                            '2' => 'NO VAT',
+                        ],
+                            [
+                                'onchange' => 'enableVat($(this))',
+                                'prompt' => 'เลือกคำนวน VAT'
+                            ],) ?>
                     </div>
                     <div class="col-md-4">
                         <?= $form->field($model, 'approve_status')->dropDownList([
@@ -659,13 +675,13 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <input type="checkbox"
                                        name="answers[<?= $key ?>]"
                                        value="1"
-                                    <?php echo isChecked($model->id,$item->id, '1') ?>
+                                    <?php echo isChecked($model->id, $item->id, '1') ?>
                                        onclick="handleExclusiveCheck(this)">
                                 ใช่
                                 <input type="checkbox"
                                        name="answers[<?= $key ?>]"
                                        value="0"
-                                    <?php echo isChecked($model->id,$item->id, '0') ?>
+                                    <?php echo isChecked($model->id, $item->id, '0') ?>
                                        onclick="handleExclusiveCheck(this)">
                                 ไม่ใช่
                             </div>
@@ -789,11 +805,12 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
     </div>
 
 <?php
-function isChecked($purch_req_id, $key, $value) {
-    $model = \common\models\PurchReqFoot::find()->where(['purch_req_id' => $purch_req_id,'footer_id' => $key])->one();
-    if($model) {
+function isChecked($purch_req_id, $key, $value)
+{
+    $model = \common\models\PurchReqFoot::find()->where(['purch_req_id' => $purch_req_id, 'footer_id' => $key])->one();
+    if ($model) {
         return $model->is_enable == $value ? 'checked' : '';
-    }else{
+    } else {
         return '';
     }
 }
@@ -822,6 +839,44 @@ function handleExclusiveCheck(checkbox) {
     checkboxes.forEach(cb => {
         if (cb !== checkbox) cb.checked = false;
     });
+}
+
+function enableVat(e){
+    var id = $(e).val();
+    if(id!=null || id!=''){
+        $("#purch-req-is-vat").val(id);
+    }else{
+        $("#purch-req-is-vat").val('');
+    }
+    
+    calculateGrandTotal2();
+}
+function calculateGrandTotal2() {
+    var subtotal = 0;
+    $('.line-total').each(function() {
+        subtotal += parseFloat($(this).val()) || 0;
+    });
+    
+    var purch_req_is_vat =  $("#purch-req-is-vat").val();
+    
+    var discount = parseFloat($('#purchreq-discount_amount').val()) || 0;
+    var afterDiscount = subtotal - discount;
+    var vat = 0;
+    if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){
+        vat = afterDiscount * 0.07; // 7% VAT
+    }
+    
+    var netAmount = afterDiscount + vat;
+    
+    $('#purchreq-total_amount').val(subtotal.toFixed(2));
+    $('#purchreq-vat_amount').val(vat.toFixed(2));
+    $('#purchreq-net_amount').val(netAmount.toFixed(2));
+    
+    // Update summary display
+    $('#summary-subtotal').text(subtotal.toFixed(2));
+    $('#summary-discount').text(discount.toFixed(2));
+    $('#summary-vat').text(vat.toFixed(2));
+    $('#summary-net').text(netAmount.toFixed(2));
 }
 JS;
 $this->registerJs($script, static::POS_END);
