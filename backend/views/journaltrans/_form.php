@@ -801,7 +801,6 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                                             'class' => 'form-control warehouse-select',
                                             'data-index' => $index,
                                             'style' => 'width: 100%',
-                                            'value' => \backend\models\Warehouse::findName($journaltransline->warehouse_id)
                                         ]
                                     )->label(false) ?>
                                 </td>
