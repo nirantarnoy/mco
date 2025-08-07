@@ -160,7 +160,7 @@ class QuotationController extends Controller
 
                 }
             }
-            echo count($quotationLines);return;
+
             if ($valid) {
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
