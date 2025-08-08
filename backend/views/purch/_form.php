@@ -425,7 +425,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 
 
     <div class="purch-form">
-        <input type="hidden" id="purch-req-is-vat" value="<?=$model->isNewRecord?'':$model->is_vat?>">
+        <input type="hidden" id="purch-req-is-vat" value="<?= $model->isNewRecord ? '' : $model->is_vat ?>">
         <?php $form = ActiveForm::begin([
             'id' => 'purch-form',
             'options' => ['class' => 'form-horizontal', 'enctype' => 'multipart/form-data'],
@@ -682,9 +682,11 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 
         <div class="form-group mt-3">
             <div class="d-flex justify-content-between">
-                <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
-                    'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
-                ]) ?>
+                <?php if (!$model::APPROVE_STATUS_APPROVED && !$model::STATUS_CANCELLED): ?>
+                    <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
+                        'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
+                    ]) ?>
+                <?php endif; ?>
                 <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
             </div>
         </div>

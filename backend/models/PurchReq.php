@@ -34,7 +34,7 @@ class PurchReq extends ActiveRecord
 {
     const STATUS_DRAFT = 0;
     const STATUS_ACTIVE = 1;
-    const STATUS_CANCELLED = 2;
+    const STATUS_CANCELLED = 3;
 
     const APPROVE_STATUS_PENDING = 0;
     const APPROVE_STATUS_APPROVED = 1;
@@ -173,6 +173,7 @@ class PurchReq extends ActiveRecord
             self::APPROVE_STATUS_PENDING => 'รอพิจารณา',
             self::APPROVE_STATUS_APPROVED => 'อนุมัติ',
             self::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
+            self::STATUS_CANCELLED => 'ยกเลิก',
         ];
         return $statuses[$this->approve_status] ?? 'ไม่ระบุ';
     }
@@ -186,6 +187,7 @@ class PurchReq extends ActiveRecord
             self::APPROVE_STATUS_PENDING => '<span class="badge badge-warning">รอพิจารณา</span>',
             self::APPROVE_STATUS_APPROVED => '<span class="badge badge-success">อนุมัติ</span>',
             self::APPROVE_STATUS_REJECTED => '<span class="badge badge-danger">ไม่อนุมัติ</span>',
+            self::STATUS_CANCELLED => '<span class="badge badge-danger">ยกเลิก</span>',
         ];
         return $badges[$this->approve_status] ?? '<span class="badge badge-secondary">ไม่ระบุ</span>';
     }

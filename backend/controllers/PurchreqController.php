@@ -397,6 +397,21 @@ class PurchreqController extends Controller
         return $this->redirect(['view', 'id' => $model->id]);
     }
 
+    public function actionCancel($id)
+    {
+        $model = $this->findModel($id);
+        $model->approve_status = PurchReq::STATUS_CANCELLED;
+        $model->status = PurchReq::STATUS_CANCELLED;
+
+        if ($model->save()) {
+            Yii::$app->session->setFlash('success', 'ยกเลิกใบขอซื้อเรียบร้อยแล้ว');
+        } else {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถยกเลิกใบขอซื้อได้');
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
     /**
      * Finds the PurchReq model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

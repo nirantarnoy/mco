@@ -144,12 +144,15 @@ $this->params['breadcrumbs'][] = $this->title;
                     PurchReq::APPROVE_STATUS_PENDING => 'รอพิจารณา',
                     PurchReq::APPROVE_STATUS_APPROVED => 'อนุมัติ',
                     PurchReq::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
+                    PurchReq::STATUS_CANCELLED => 'ยกเลิก',
                 ],
                 'value' => function ($model) {
                     if ($model->approve_status == PurchReq::APPROVE_STATUS_APPROVED) {
                         return '<span class="badge bg-success">อนุมัติ</span>';
                     } elseif ($model->approve_status == PurchReq::APPROVE_STATUS_REJECTED) {
                         return '<span class="badge bg-danger">ไม่อนุมัติ</span>';
+                    }elseif ($model->approve_status == PurchReq::STATUS_CANCELLED) {
+                        return '<span class="badge bg-danger">ยกเลิก</span>';
                     } else {
                         return '<span class="badge bg-warning">รอพิจารณา</span>';
                     }
@@ -206,7 +209,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         ]);
                     },
                     'delete' => function ($url, $model, $key) {
-                        return $model->purch_id ==null || $model->approve_status == PurchReq::APPROVE_STATUS_PENDING ? Html::a('<i class="fas fa-trash"></i>', $url, [
+                        return $model->purch_id ==null && $model->approve_status == PurchReq::APPROVE_STATUS_PENDING ? Html::a('<i class="fas fa-trash"></i>', $url, [
                             'title' => 'ลบ',
                             'class' => 'btn btn-sm btn-outline-danger',
                             'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะลบรายการนี้?',

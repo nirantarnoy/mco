@@ -112,6 +112,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     Purch::APPROVE_STATUS_PENDING => 'รอพิจารณา',
                     Purch::APPROVE_STATUS_APPROVED => 'อนุมัติ',
                     Purch::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
+                    Purch::STATUS_CANCELLED => 'ไม่อนุมัติ',
                 ],
                 'value' => function ($model) {
                     $po_remain = \backend\models\Purch::checkPoremain($model->id);
@@ -119,6 +120,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         return '<span class="badge bg-info">อนุมัติ</span>';
                     } elseif($model->approve_status == Purch::APPROVE_STATUS_PENDING && !empty($po_remain)) {
                         return '<span class="badge bg-warning">รอพิจารณา</span>';
+                    }elseif($model->approve_status == Purch::STATUS_CANCELLED) {
+                        return '<span class="badge bg-danger">ยกเลิก</span>';
                     } elseif(empty($po_remain)) {
                         return '<span class="badge bg-success">สำเร็จ</span>';
                     }
@@ -147,13 +150,13 @@ $this->params['breadcrumbs'][] = $this->title;
                         ]);
                     },
                     'delete' => function ($url, $model, $key) {
-                        return Html::a('<i class="fas fa-trash"></i>', $url, [
+                        return $model->approve_status == Purch::APPROVE_STATUS_PENDING ? Html::a('<i class="fas fa-trash"></i>', $url, [
                             'title' => 'ลบ',
                             'class' => 'btn btn-sm btn-outline-danger',
                             'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะลบรายการนี้?',
                             'data-method' => 'post',
                             'data-pjax' => '0'
-                        ]);
+                        ]):'';
                     },
                 ],
                 'urlCreator' => function ($action, $model, $key, $index) {

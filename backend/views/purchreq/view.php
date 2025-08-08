@@ -78,17 +78,25 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
                 <?= Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
                 <?php if ($model->approve_status == PurchReq::APPROVE_STATUS_PENDING): ?>
                     <?php if (\Yii::$app->user->can('CanApprovePr')): ?>
-                        <?= Html::a('อนุมัติ', ['approve', 'id' => $model->id], [
-                            'class' => 'btn btn-success',
-                            'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบขอซื้อนี้?',
-                            'data-method' => 'post',
-                        ]) ?>
                         <?= Html::a('ไม่อนุมัติ', ['reject', 'id' => $model->id], [
                             'class' => 'btn btn-warning',
                             'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะไม่อนุมัติใบขอซื้อนี้?',
                             'data-method' => 'post',
                         ]) ?>
+                        <?= Html::a('อนุมัติ', ['approve', 'id' => $model->id], [
+                            'class' => 'btn btn-success',
+                            'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบขอซื้อนี้?',
+                            'data-method' => 'post',
+                        ]) ?>
+
                     <?php endif; ?>
+                <?php endif; ?>
+                <?php if ($model->status != PurchReq::STATUS_CANCELLED): ?>
+                    <?= Html::a('ยกเลิกใบขอซื้อ', ['cancel', 'id' => $model->id], [
+                        'class' => 'btn btn-warning',
+                        'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะยกเลิกใบสั่งซื้อนี้?',
+                        'data-method' => 'post',
+                    ]) ?>
                 <?php endif; ?>
                 <?php if ($model->purch_id == null || $model->purch_id == ''): ?>
                     <?php if (\Yii::$app->user->can('purchreq/delete')): ?>
@@ -128,7 +136,8 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
                                 [
                                     'attribute' => 'status',
                                     'label' => 'สถานะเอกสาร',
-                                    'value' => $model->getStatusLabel(),
+                                    'format' => 'raw',
+                                    'value' => $model->getApproveStatusBadge(),
                                 ],
                                 [
                                     'attribute' => 'approve_status',
@@ -164,9 +173,9 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
                                 ],
                                 'note:ntext:หมายเหตุ',
                                 [
-                                        'attribute' => 'purch_id',
+                                    'attribute' => 'purch_id',
                                     'value' => function ($model) {
-                                       return \backend\models\Purch::findNo($model->purch_id);
+                                        return \backend\models\Purch::findNo($model->purch_id);
                                     }
                                 ],
                                 [

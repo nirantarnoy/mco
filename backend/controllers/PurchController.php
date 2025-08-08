@@ -333,6 +333,21 @@ class PurchController extends Controller
         return $this->redirect(['view', 'id' => $model->id]);
     }
 
+    public function actionCancel($id)
+    {
+        $model = $this->findModel($id);
+        $model->approve_status = Purch::STATUS_CANCELLED;
+        $model->status = Purch::STATUS_CANCELLED;
+
+        if ($model->save()) {
+            Yii::$app->session->setFlash('success', 'ยกเลิกใบสั่งซื้อเรียบร้อยแล้ว');
+        } else {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถยกเลิกใบสั่งซื้อซื้อได้');
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
     /**
      * Finds the Purch model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
