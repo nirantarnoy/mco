@@ -59,6 +59,10 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                     'class' => 'btn btn-info',
                     'target' => '_blank'
                 ]) ?>
+                <?= Html::a('<i class="fas fa-print"></i> พิมพ์ ตปท.', ['print-for-export', 'id' => $model->id], [
+                    'class' => 'btn btn-info',
+                    'target' => '_blank'
+                ]) ?>
                 <?php if (\Yii::$app->user->can('CanApprovePo') && $model->approve_status == Purch::APPROVE_STATUS_PENDING): ?>
                     <?= Html::a('อนุมัติ', ['approve', 'id' => $model->id], [
                         'class' => 'btn btn-success',

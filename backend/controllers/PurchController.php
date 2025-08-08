@@ -723,6 +723,36 @@ class PurchController extends Controller
         ]);
     }
 
+    public function actionPrintForExport($id, $format = 'html')
+    {
+        $purchase = Purch::findOne($id);
+
+        if (!$purchase) {
+            throw new \yii\web\NotFoundHttpException('The requested page does not exist.');
+        }
+
+        // ดึงข้อมูล purchase lines พร้อม product
+        $purchaseLines = PurchLine::find()
+            ->where(['purch_id' => $id])
+            ->with('product')
+            ->all();
+
+        if ($format == 'pdf') {
+            return $this->generatePdf($purchase, $purchaseLines);
+        }
+
+        // แสดงแบบ HTML
+        $this->layout = '@backend/views/layouts/main_print';
+
+        return $this->render('print-for-export', [
+            'purchase' => $purchase,
+            'purchaseLines' => $purchaseLines,
+            'showButtons' => true,
+        ]);
+    }
+
+
+
     public function actionPrintReceiveBill($id)
     {
        $model = \backend\models\JournalTrans::findOne($id);
