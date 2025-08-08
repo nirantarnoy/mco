@@ -5,7 +5,10 @@ $this->title = 'Purchase Order - ' . $purchase->purch_no;
 
 // คำนวณราคารวม
 $subtotal = 0;
-$discount = $purchase->discount_amount ?? 0;
+$discount = 0;
+
+
+
 $vat = 0;
 $total = 0;
 
@@ -14,6 +17,14 @@ if ($purchaseLines) {
         $subtotal += $line->line_total;
     }
 }
+
+if($purchase->discount_per > 0){
+    $discount = $subtotal * ($purchase->discount_per / 100);
+}
+if($purchase->discount_amount > 0){
+    $discount += $purchase->discount_amount;
+}
+
 
 // คำนวณ VAT 7%
 $netAmount = $subtotal - $discount;
