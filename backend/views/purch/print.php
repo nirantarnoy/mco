@@ -424,7 +424,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                 <div>บริษัท เอ็ม.ซี.โอ. จำกัด</div>
                 <div>8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จ.ระยอง 21000</div>
                 <div>เลขประจำตัวผู้เสียภาษี  0215543000985  </div>
-                <div>Tel : (038) 475259-6 , 0364364555</div>
+                <div>Tel : (038) 875258-9,0946984555</div>
                 <div>e-mail : info@thai-mco.com</div>
                 <div><strong>SUPPLIER : <?= Html::encode($purchase->vendor->name ?? '') ?></strong><br /><?= Html::encode($vendor_address) ?></div>
             </div>
