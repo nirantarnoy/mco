@@ -100,7 +100,7 @@ class Purch extends ActiveRecord
             [['vendor_id'], 'required'],
             [['purch_date'], 'safe'],
             [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by','discount_percent','vat_percent','approve_by'], 'integer'],
-            [['total_amount', 'discount_amount', 'vat_amount', 'net_amount','vat_percent'], 'number'],
+            [['total_amount', 'discount_amount', 'vat_amount', 'net_amount','vat_percent','discount_per'], 'number'],
             [['purch_no', 'vendor_name', 'note','delivery_note','payment_note','footer_delivery','footer_payment','ref_no'], 'string', 'max' => 255],
             [['purch_no'], 'unique'],
             [['approve_date'], 'safe'],
@@ -138,6 +138,7 @@ class Purch extends ActiveRecord
             'approve_by' => 'ผู้อนุมัติ',
             'is_vat' => 'มี VAT',
             'vat_percent' => 'VAT %',
+            'discount_per' => 'ส่วนลด %',
         ];
     }
 
@@ -206,6 +207,30 @@ class Purch extends ActiveRecord
     public function calculateTotalAmount()
     {
         $total = 0;
+        $discount = 0;
+        $vat_amount = 0;
+
+        foreach ($this->purchLines as $line) {
+            $total += $line->line_total;
+        }
+
+        if($this->discount_per >0){
+            $discount = $total * ($this->discount_per / 100);
+        }
+        if($this->discount_amount >0){
+            $discount += $this->discount_amount;
+        }
+        if($this->is_vat == 1){
+            $vat_amount = $total * 0.07;
+        }
+
+        $total -= $discount;
+        $total += $vat_amount;
+
+        return $total;
+    }
+    public function calculateTotalAmount2(){
+        $total = 0;
         foreach ($this->purchLines as $line) {
             $total += $line->line_total;
         }
@@ -215,16 +240,34 @@ class Purch extends ActiveRecord
     /**
      * Before save
      */
+//    public function beforeSave($insert)
+//    {
+//        if (parent::beforeSave($insert)) {
+//            if ($insert && empty($this->purch_no)) {
+//                $this->purch_no = $this->generatePurchNo();
+//            }
+//            return true;
+//        }
+//        return false;
+//    }
+
     public function beforeSave($insert)
     {
         if (parent::beforeSave($insert)) {
-            if ($insert && empty($this->purch_no)) {
-                $this->purch_no = $this->generatePurchNo();
+            if ($insert && !empty($this->purch_no)) {
+                $this->net_amount = $this->calculateTotalAmount();
+                if ($this->is_vat == 1) {
+                    $this->vat_amount = $this->calculateTotalAmount2() * 0.07;
+                } else {
+                    $this->vat_amount = 0;
+                }
             }
             return true;
         }
         return false;
     }
+
+
 
     /**
      * Generate purchase number

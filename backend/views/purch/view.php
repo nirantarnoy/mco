@@ -148,8 +148,29 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                     'label' => 'ยอดรวม',
                                     'format' => ['currency', 'THB'],
                                 ],
-                                'note:ntext:หมายเหตุ',
-                                'ref_text:text:อ้างอิง',
+                                [
+                                    'attribute' => 'discount_per',
+                                    'value' => function ($model) {
+                                        return $model->discount_per . '%';
+                                    }
+                                ],
+                                [
+                                    'attribute' => 'discount_amount',
+                                    'label' => 'ส่วนลด (จำนวนเงิน)',
+                                    'value' => function ($model) {
+                                        return $model->discount_amount;
+                                    }
+                                ],
+                                [
+                                    'attribute' => 'net_amount',
+                                    'label' => 'ยอดรวมทั้งสิ้น',
+                                    'format' => ['currency', 'THB'],
+                                ],
+                                [
+                                    'attribute' => 'total_text',
+                                    'label' => 'ยอดรวมตัวอักษร',
+                                ],
+
                             ],
                         ]) ?>
                     </div>
@@ -188,6 +209,8 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                         return \backend\models\User::findEmployeeNameByUserId($model->updated_by);
                                     }
                                 ],
+                                'note:ntext:หมายเหตุ',
+                                'ref_text:text:อ้างอิง',
                             ],
                         ]) ?>
                     </div>

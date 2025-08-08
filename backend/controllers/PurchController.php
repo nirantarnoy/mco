@@ -3,6 +3,7 @@ namespace backend\controllers;
 
 use app\behaviors\ActionLogBehavior;
 use backend\models\JournalTrans;
+use backend\models\PurchReq;
 use Mpdf\Mpdf;
 use Yii;
 use backend\models\Purch;
@@ -187,6 +188,18 @@ class PurchController extends Controller
                                 throw new \Exception('Failed to save purch line');
                             }
                         }
+
+                        $newTotalAmount = $this->calculateTotalAmount($model->id,$purchLines);
+                        $vat_amount = $this->calculateTotalAmount2($purchLines);
+                        $model->net_amount = $newTotalAmount;
+                        $model->vat_amount = $vat_amount * 0.07;
+                        $model->total_amount = $vat_amount;
+                        $model->total_text = PurchReq::numtothai($newTotalAmount);
+                        if (!$model->save()) {
+                            throw new \Exception('Failed to update total amount');
+                        }
+
+
                         $transaction->commit();
                         Yii::$app->session->setFlash('success', 'แก้ไขข้อมูลเรียบร้อยแล้ว');
                         return $this->redirect(['view', 'id' => $model->id]);
@@ -201,6 +214,41 @@ class PurchController extends Controller
         return $this->render('update', [
             'model' => $model,
         ]);
+    }
+
+    public function calculateTotalAmount($id,$lines)
+    {
+        $total = 0;
+        $discount = 0;
+        $vat_amount = 0;
+
+        $model = $this->findModel($id);
+
+        foreach ($lines as $line) {
+            $total += $line->line_total;
+        }
+
+        if($model->discount_per >0){
+            $discount = $total * ($model->discount_per / 100);
+        }
+        if($model->discount_amount >0){
+            $discount += $model->discount_amount;
+        }
+        if($model->is_vat == 1){
+            $vat_amount = $total * 0.07;
+        }
+
+        $total -= $discount;
+        $total += $vat_amount;
+
+        return $total;
+    }
+    public function calculateTotalAmount2($lines){
+        $total = 0;
+        foreach ($lines as $line) {
+            $total += $line->line_total;
+        }
+        return $total;
     }
 
     /**
