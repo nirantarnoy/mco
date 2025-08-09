@@ -170,7 +170,28 @@ $(document).ready(function() {
                             ]
                         ]) ?>
 
-                        <?= $form->field($model, 'name')->textInput(['maxlength' => true, 'placeholder' => 'ชื่อผู้รับเงิน']) ?>
+                        <?= $form->field($model, 'pay_for_emp_id')->widget(\kartik\select2\Select2::className(), [
+                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Employee::find()->all(), 'id', function ($data) {
+                                return $data->fname . ' ' . $data->lname;
+                            }),
+                            'options' => [
+                                'placeholder' => 'เลือกพนักงาน',
+                            ],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                            ],
+                        ]) ?>
+                        <?= $form->field($model, 'customer_id')->widget(\kartik\select2\Select2::className(), [
+                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Customer::find()->all(), 'id', function ($data) {
+                                return $data->code . ' ' . $data->name;
+                            }),
+                            'options' => [
+                                'placeholder' => 'เลือกลูกค้า',
+                            ],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                            ],
+                        ]) ?>
                     </div>
                     <div class="col-md-6">
                         <?= $form->field($model, 'amount')->textInput([

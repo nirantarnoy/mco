@@ -91,7 +91,7 @@ class Invoice extends ActiveRecord
     {
         return [
             [['invoice_type', 'invoice_date', 'customer_name'], 'required'],
-            [['status', 'job_id', 'payment_term_id','customer_id','quotation_id'], 'integer'],
+            [['status', 'job_id', 'payment_term_id','customer_id','quotation_id','pay_form_emp_id'], 'integer'],
             [['invoice_date', 'po_date', 'due_date', 'payment_due_date', 'check_due_date'], 'safe'],
             [['customer_address', 'notes'], 'string'],
             [['subtotal', 'discount_percent', 'discount_amount', 'vat_percent', 'vat_amount', 'total_amount'], 'number', 'min' => 0],
@@ -142,6 +142,8 @@ class Invoice extends ActiveRecord
             'job_id' => 'เลขงาน',
             'payment_term_id' => 'เงื่อนไขการชำระ',
             'quotation_id' => 'ใบเสนอราคา',
+            'pay_form_emp_id' => 'พนักงาน',
+            'customer_id' => 'ลูกค้า',
         ];
     }
 

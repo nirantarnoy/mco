@@ -61,7 +61,7 @@ class PettyCashVoucher extends ActiveRecord
             [['date', 'issued_date', 'approved_date'], 'safe'],
             [['amount'], 'number', 'min' => 0],
             [['paid_for'], 'string'],
-            [['status','quotation_id'], 'integer'],
+            [['status','quotation_id','customer_id','pay_for_emp_id'], 'integer'],
             [['pcv_no'], 'string', 'max' => 50],
             [['name', 'issued_by', 'approved_by'], 'string', 'max' => 255],
             [['pcv_no'], 'unique'],
@@ -88,6 +88,8 @@ class PettyCashVoucher extends ActiveRecord
             'created_at' => 'สร้างเมื่อ',
             'updated_at' => 'แก้ไขล่าสุด',
             'quotation_id' => 'ใบเสนอราคา',
+            'pay_for_emp_id' => 'พนักงาน',
+            'customer_id' => 'ลูกค้า',
         ];
     }
 
