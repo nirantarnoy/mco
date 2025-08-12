@@ -695,26 +695,26 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <div class="row mb-2">
                                     <div class="col-8">ยอดรวม:</div>
                                     <div class="col-4 text-end">
-                                        <span id="summary-subtotal" class="fw-bold">0.00</span> บาท
+                                        <span id="summary-subtotal" class="fw-bold"><?= $model->total_amount > 0 ?? '0.00' ?></span> บาท
                                     </div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-8">ส่วนลด:</div>
                                     <div class="col-4 text-end">
-                                        <span id="summary-discount" class="fw-bold">0.00</span> บาท
+                                        <span id="summary-discount" class="fw-bold"><?= $model->discount_amount > 0 ?? '0.00' ?></span> บาท
                                     </div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-8">VAT (7%):</div>
                                     <div class="col-4 text-end">
-                                        <span id="summary-vat" class="fw-bold">0.00</span> บาท
+                                        <span id="summary-vat" class="fw-bold"><?= $model->vat_amount > 0 ?? '0.00' ?></span> บาท
                                     </div>
                                 </div>
                                 <hr>
                                 <div class="row">
                                     <div class="col-8"><strong>ยอดรวมสุทธิ:</strong></div>
                                     <div class="col-4 text-end">
-                                        <span id="summary-net" class="fw-bold text-primary h5">0.00</span> บาท
+                                        <span id="summary-net" class="fw-bold text-primary h5"><?= $model->net_amount > 0 ?? '0.00' ?></span> บาท
                                     </div>
                                 </div>
                             </div>
