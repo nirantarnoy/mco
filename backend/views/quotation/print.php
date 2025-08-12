@@ -182,7 +182,7 @@ $email = $customer_info !== null ? $customer_info['email'] : '';
     <div class="header">
         <div class="logo-section">
             <div class="logo">
-                <img src="../../backend/web/uploads/logo/mco_logo_2.png" width="20%" alt="">
+                <img src="../../backend/web/uploads/logo/mco_logo_2.png" width="50%" alt="">
             </div>
 
         </div>
