@@ -388,6 +388,8 @@ class JournalTrans extends ActiveRecord
             $transaction = Yii::$app->db->beginTransaction();
             try {
                 $this->status = self::STATUS_APPROVED;
+                $this->approve_status = self::STATUS_APPROVED;
+                $this->approve_date = date('Y-m-d H:i:s');
                 $this->save(false);
 
                 // Process stock movements
