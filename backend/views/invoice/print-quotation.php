@@ -55,7 +55,6 @@ $this->registerCss("
 .logo {
     width: 70px;
     height: 70px;
-    background: linear-gradient(45deg, #d32f2f, #f57c00);
     border-radius: 6px;
     display: flex;
     align-items: center;
@@ -328,9 +327,19 @@ window.onload = function() {
                 </div>
             </div>
         </div>
-        <div class="invoice-info">
-            <div class="invoice-title">ใบแจ้งหนี้/ใบส่งสินค้า-บริการ</div>
-            <div class="not-tax-invoice">(ไม่ใช่ใบกำกับภาษี)</div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12" style="text-align: center">
+            <div class="invoice-info">
+                <div class="invoice-title">ใบแจ้งหนี้/ใบส่งสินค้า-บริการ</div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12" style="text-align: right">
+            <div class="invoice-infox">
+                <div class="not-tax-invoice">(ไม่ใช่ใบกำกับภาษี)</div>
+            </div>
         </div>
     </div>
 
