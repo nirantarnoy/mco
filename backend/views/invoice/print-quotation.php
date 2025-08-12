@@ -16,6 +16,7 @@ $this->registerCss("
 
 @media print {
     .no-print { display: none !important; }
+    .main-footer { display: none !important; }
     body { 
         margin: 0; 
         padding: 0; 
@@ -24,13 +25,13 @@ $this->registerCss("
         color: #000;
     }
     .print-container { 
-        max-width: 100%; 
+        max-width: 0 auto; 
         width: 100%;
     }
 }
 
 .print-container {
-    max-width: 210mm;
+    max-width: 0 auto;
     margin: 0 auto;
     background: white;
     padding: 15mm;

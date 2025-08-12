@@ -16,6 +16,7 @@ $this->registerCss("
 
 @media print {
     .no-print { display: none !important; }
+    .main-footer { display: none !important; }
     body { 
         margin: 0; 
         padding: 0; 
@@ -45,7 +46,7 @@ body {
 }
 
 .print-container {
-    max-width: 210mm;
+    max-width: 0 auto;
     margin: 0 auto;
     background: white;
     padding: 15px;
@@ -342,7 +343,7 @@ window.onload = function() {
     <!-- Header -->
     <div class="header">
         <div class="company-logo">
-            <div class="logo">
+            <div class="logox">
                 <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png',['style' => 'max-width: 120px;']) ?>
             </div>
             <div class="company-info">
@@ -371,7 +372,7 @@ window.onload = function() {
             </div>
             <div class="field-group">
                 <span class="field-label">รหัสลูกค้า / Code:</span>
-                <span class="field-value"><?= Html::encode($model->quotation->customer->code ?: '') ?></span>
+                <span class="field-value"><?= Html::encode(\backend\models\Customer::findCode($model->customer_id) ?: '') ?></span>
             </div>
             <div class="field-group">
                 <span class="field-label">ขายให้ / Sold To:</span>

@@ -7,216 +7,220 @@ use yii\helpers\Html;
 
 $this->title = 'พิมพ์ใบวางบิล - ' . $model->invoice_number;
 
-// Add print styles that match the original form exactly
+// Optimized CSS for single A4 page
 $this->registerCss("
 @page {
     size: A4;
-    margin: 0.5in;
+    margin: 0.4in 0.5in;
 }
 
 @media print {
     .no-print { display: none !important; }
+    .main-footer { display: none !important; }
     body { 
         margin: 0; 
         padding: 0; 
         font-family: 'Sarabun', 'TH SarabunPSK', Arial, sans-serif; 
-        font-size: 14px;
+        font-size: 13px;
         color: #000;
+        line-height: 1.2;
     }
     .print-container { 
-        max-width: 100%; 
+        max-width: 0 auto; 
+        margin: 0 auto;
         width: 100%;
         box-shadow: none;
         border: none;
+      /*  height: 100vh;
+        overflow: hidden;*/
+        min-height: 280mm;
+        display: flex;
+        flex-direction: column;
+        position: relative;
     }
 }
 
 .print-container {
-    max-width: 210mm;
+    max-width: 0 auto;
     margin: 0 auto;
     background: white;
-    padding: 20px;
-    border: 1px solid #ddd;
+    padding: 15px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    min-height: 280mm;
+    display: flex;
+    flex-direction: column;
+    position: relative;
 }
 
-/* Header Section */
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 20px;
+/* Header Section - Compact */
+.header-section {
     border-bottom: 2px solid #000;
-    padding-bottom: 15px;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
 }
 
 .company-logo {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 10px;
 }
 
 .logo {
-    width: 80px;
-    height: 80px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 24px;
-    font-weight: bold;
+    max-width: 80px;
+    height: auto;
 }
 
 .company-info {
+    text-align: right;
     flex: 1;
-    margin-left: 15px;
+    margin-left: 20px;
 }
 
 .company-name {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
-    margin-bottom: 5px;
-}
-
-.company-address {
-    font-size: 12px;
-    line-height: 1.3;
     margin-bottom: 3px;
 }
 
+.company-address {
+    font-size: 11px;
+    line-height: 1.2;
+    margin-bottom: 2px;
+}
+
 .company-contact {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
 }
 
-.bill-info {
-    text-align: right;
-    min-width: 200px;
+.bill-title-section {
+    text-align: center;
+    margin: 8px 0;
 }
 
 .bill-title {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bold;
-    margin-bottom: 10px;
 }
 
-.bill-details {
-    text-align: left;
-}
-
-.bill-detail-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
-    min-width: 250px;
-}
-
-.bill-detail-row strong {
-    min-width: 120px;
-}
-
-/* Customer Section */
+/* Customer Section - Compact */
 .customer-section {
-    margin: 20px 0;
     border: 1px solid #000;
-    padding: 15px;
+    padding: 10px;
+    margin-bottom: 15px;
 }
 
-.customer-title {
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-.customer-details {
+.customer-row {
     display: flex;
     justify-content: space-between;
-    flex-wrap: wrap;
+    gap: 20px;
 }
 
-.customer-left, .customer-right {
-    width: 48%;
+.customer-left {
+    flex: 1;
+}
+
+.customer-right {
+    min-width: 220px;
 }
 
 .customer-field {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     display: flex;
+    font-size: 12px;
 }
 
 .customer-field strong {
-    min-width: 100px;
+    min-width: 110px;
+    font-weight: bold;
 }
 
 .customer-field span {
-    border-bottom: none;
     flex: 1;
-    min-height: 20px;
+    border-bottom: none;
     padding-left: 5px;
 }
 
-/* Items Table */
+.bill-detail-field {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 5px;
+    font-size: 12px;
+}
+
+.bill-detail-field strong {
+    min-width: 120px;
+    font-weight: bold;
+}
+
+/* Items Section - Optimized height */
 .items-section {
-    margin: 20px 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
 }
 
 .items-title {
     font-weight: bold;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
+    font-size: 13px;
 }
 
 .items-table {
     width: 100%;
     border-collapse: collapse;
     border: 1px solid #000;
+    flex: 1;
 }
 
 .items-table th,
 .items-table td {
     border: 1px solid #000;
-    padding: 8px 5px;
+    padding: 2px 3px;
     text-align: center;
     vertical-align: middle;
-    font-size: 13px;
+    font-size: 11px;
+    line-height: 1.1;
 }
 
 .items-table th {
     background-color: #f8f9fa;
     font-weight: bold;
-    height: 40px;
+    height: 22px;
 }
 
 .items-table td {
-    height: 35px;
+    height: 18px;
 }
 
 .items-table .text-left { text-align: left; }
 .items-table .text-right { text-align: right; }
 
-/* Empty rows for spacing */
-.empty-row {
-    height: 60px;
-}
-
 /* Total Section */
-.total-section {
-    margin-top: 0;
-}
-
 .total-row {
     background-color: #f0f0f0;
     font-weight: bold;
 }
 
 .total-amount {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: bold;
 }
 
-/* Signature Section */
+/* Signature Section - Fixed at bottom */
 .signature-section {
-    margin-top: 30px;
+    margin-top: auto;
     display: flex;
     justify-content: space-between;
+    padding-top: 20px;
 }
 
 .signature-box {
@@ -226,41 +230,18 @@ $this->registerCss("
 
 .signature-label {
     font-weight: bold;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
+    font-size: 12px;
 }
 
 .signature-line {
     border-bottom: 1px solid #000;
-    height: 50px;
-    margin-bottom: 10px;
-    position: relative;
+    height: 40px;
+    margin-bottom: 8px;
 }
 
 .signature-date {
-    font-size: 12px;
-}
-
-/* Payment info */
-.payment-info {
-    margin: 20px 0;
-    display: flex;
-    justify-content: space-between;
-}
-
-.payment-field {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.payment-field strong {
-    min-width: 120px;
-}
-
-.payment-field span {
-    border-bottom: 1px solid #000;
-    min-width: 150px;
-    height: 20px;
+    font-size: 11px;
 }
 
 /* Print buttons */
@@ -270,12 +251,12 @@ $this->registerCss("
 }
 
 .btn {
-    padding: 10px 20px;
+    padding: 8px 16px;
     margin: 0 5px;
     border: none;
-    border-radius: 5px;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     text-decoration: none;
     display: inline-block;
 }
@@ -297,6 +278,27 @@ $this->registerCss("
 
 .btn:hover {
     opacity: 0.8;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+    .header-row {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .customer-row {
+        flex-direction: column;
+    }
+    
+    .signature-section {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .signature-box {
+        width: 100%;
+    }
 }
 ");
 
@@ -325,35 +327,33 @@ window.onload = function() {
 </div>
 
 <div class="print-container">
-    <!-- Header -->
-        <div class="row">
-            <div class="col-lg-3">
-
-                    <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png',['style' => 'max-width: 120px;']) ?>
-
+    <!-- Header Section -->
+    <div class="header-section">
+        <div class="header-row">
+            <div class="company-logo">
+                <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png', [
+                    'class' => 'logo',
+                    'alt' => 'Company Logo'
+                ]) ?>
             </div>
-            <div class="col-lg-9" style="text-align: right">
-
-                    <div class="company-name">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
-                    <div class="company-address">
-                        8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมืองจังหวัดระยอง 21000
-                    </div>
-                    <div class="company-contact">
-                        Tel : (038) 875258-9, Fax : (038) 619559
-                    </div>
-
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-12" style="text-align: center">
-                <div class="bill-title">ใบวางบิล</div>
+            <div class="company-info">
+                <div class="company-name">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
+                <div class="company-address">
+                    8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมืองจังหวัดระยอง 21000
+                </div>
+                <div class="company-contact">
+                    Tel : (038) 875258-9, Fax : (038) 619559
+                </div>
             </div>
         </div>
-
+        <div class="bill-title-section">
+            <div class="bill-title">ใบวางบิล</div>
+        </div>
+    </div>
 
     <!-- Customer Information -->
     <div class="customer-section">
-        <div class="customer-details">
+        <div class="customer-row">
             <div class="customer-left">
                 <div class="customer-field">
                     <strong>ชื่อลูกค้า:</strong>
@@ -364,26 +364,18 @@ window.onload = function() {
                     <span><?= Html::encode($model->customer_address ?: '') ?></span>
                 </div>
                 <div class="customer-field">
-                    <strong></strong>
-                    <span><?= Html::encode($model->customer_address ? '' : '') ?></span>
-                </div>
-                <div class="customer-field">
                     <strong>เลขประจำตัวผู้เสียภาษี:</strong>
                     <span><?= Html::encode($model->customer_tax_id ?: '') ?></span>
                 </div>
             </div>
             <div class="customer-right">
-                <div class="bill-info">
-                    <div class="bill-details">
-                        <div class="bill-detail-rowx">
-                            <strong><u>เลขที่ใบวางบิล:</u></strong>
-                            <span style="text-align: left"><?= Html::encode($model->invoice_number) ?></span>
-                        </div>
-                        <div class="bill-detail-rowx">
-                            <strong><u>วันที่ใบวางบิล:</u></strong>
-                            <span style="text-align: left"><?= Yii::$app->formatter->asDate($model->invoice_date, 'dd-MMM-yy') ?></span>
-                        </div>
-                    </div>
+                <div class="bill-detail-field">
+                    <strong>เลขที่ใบวางบิล:</strong>
+                    <span><?= Html::encode($model->invoice_number) ?></span>
+                </div>
+                <div class="bill-detail-field">
+                    <strong>วันที่ใบวางบิล:</strong>
+                    <span><?= Yii::$app->formatter->asDate($model->invoice_date, 'dd-MMM-yy') ?></span>
                 </div>
             </div>
         </div>
@@ -395,20 +387,21 @@ window.onload = function() {
         <table class="items-table">
             <thead>
             <tr>
-                <th style="width: 8%;">ลำดับที่</th>
-                <th style="width: 25%;">หมายเลขใบสั่งซื้อ</th>
-                <th style="width: 20%;">เลขที่เอกสารตั้งหนี้</th>
-                <th style="width: 15%;">ลงวันที่</th>
-                <th style="width: 15%;">ชำระเงินวันที่</th>
-                <th style="width: 17%;">จำนวนเงิน</th>
+                <th style="width: 6%;">ลำดับที่</th>
+                <th style="width: 22%;">หมายเลขใบสั่งซื้อ</th>
+                <th style="width: 18%;">เลขที่เอกสารตั้งหนี้</th>
+                <th style="width: 14%;">ลงวันที่</th>
+                <th style="width: 14%;">ชำระเงินวันที่</th>
+                <th style="width: 16%;">จำนวนเงิน</th>
             </tr>
             </thead>
             <tbody>
             <?php
             $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
+            $max_rows = 15; // Maximum rows to fit on one page
             ?>
             <?php if (!empty($model_line)): ?>
-                <?php foreach ($model_line as $index => $item): ?>
+                <?php foreach (array_slice($model_line, 0, $max_rows) as $index => $item): ?>
                     <tr>
                         <td><?= $index + 1 ?></td>
                         <td class="text-left"><?= Html::encode($model->po_number ?: 'RY-UJ24-0002634 Signed') ?></td>
@@ -418,21 +411,21 @@ window.onload = function() {
                         <td class="text-right"><?= number_format($item->amount, 2) ?></td>
                     </tr>
                 <?php endforeach; ?>
-            <?php else: ?>
-                <!-- Default sample data -->
-                <tr>
-                    <td></td>
-                    <td class="text-left"></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td class="text-right"></td>
-                </tr>
             <?php endif; ?>
 
-            <!-- Empty rows for spacing -->
-            <?php for ($i = count($model_line); $i < 12; $i++): ?>
-                <tr class="empty-rowx"><td colspan="6">&nbsp;</td></tr>
+            <!-- Fill remaining rows to maintain table structure -->
+            <?php
+            $filled_rows = !empty($model_line) ? min(count($model_line), $max_rows) : 1;
+            for ($i = $filled_rows; $i < $max_rows; $i++):
+                ?>
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
             <?php endfor; ?>
             </tbody>
             <tfoot>
@@ -466,7 +459,7 @@ window.onload = function() {
 </div>
 
 <script>
-    // Sample data for dynamic generation (can be used with backend)
+    // Sample data for dynamic generation
     const sampleBillData = {
         billNumber: '<?= Html::encode($model->invoice_number) ?>',
         billDate: '<?= Yii::$app->formatter->asDate($model->invoice_date, 'MM/dd/yyyy') ?>',
@@ -477,7 +470,7 @@ window.onload = function() {
         },
         items: [
             <?php if (!empty($model->items)): ?>
-            <?php foreach ($model->items as $index => $item): ?>
+            <?php foreach (array_slice($model->items, 0, 15) as $index => $item): ?>
             {
                 seq: <?= $index + 1 ?>,
                 orderNumber: '<?= Html::encode($model->po_number) ?>',
@@ -485,7 +478,7 @@ window.onload = function() {
                 documentDate: '<?= Yii::$app->formatter->asDate($model->invoice_date, 'MM/dd/yyyy') ?>',
                 paymentDate: '<?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'MM/dd/yyyy') : '' ?>',
                 amount: <?= $item->amount ?>
-            }<?= $index < count($model->items) - 1 ? ',' : '' ?>
+            }<?= $index < min(count($model->items), 15) - 1 ? ',' : '' ?>
             <?php endforeach; ?>
             <?php endif; ?>
         ],
@@ -494,12 +487,17 @@ window.onload = function() {
         checkDueDate: '<?= $model->check_due_date ? Yii::$app->formatter->asDate($model->check_due_date, 'MM/dd/yyyy') : '' ?>'
     };
 
-    // Function to populate data dynamically (for backend integration)
+    // Function to populate data dynamically
     function populateData(data) {
-        // This function can be used to populate data dynamically if needed
         console.log('Bill data:', data);
     }
 
     // Initialize with current data
     populateData(sampleBillData);
+
+    // Print optimization
+    window.addEventListener('beforeprint', function() {
+        document.body.style.zoom = '1';
+        document.querySelector('.print-container').style.pageBreakInside = 'avoid';
+    });
 </script>
