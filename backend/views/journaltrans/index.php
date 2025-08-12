@@ -89,9 +89,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         'attribute' => 'status',
                         'format' => 'raw',
                         'value' => function ($model) {
-                            if ($model->status == JournalTrans::ISSUE_TRANS_WAITING) {
+                            if ($model->status == JournalTrans::STATUS_DRAFT) {
                                 return '<div class="badge badge-pill badge-warning" style="padding: 10px;">' . 'Pending' . '</div>';
-                            }else if($model->status == JournalTrans::ISSUE_TRANS_APPROVED){
+                            }else if($model->status == JournalTrans::STATUS_APPROVED){
                                 return '<div class="badge badge-pill badge-success" style="padding: 10px;">' . 'Complete' . '</div>';
                             }
                            // return '<div class="badge badge-pill badge-success" style="padding: 10px;">' . 'Complete' . '</div>';
