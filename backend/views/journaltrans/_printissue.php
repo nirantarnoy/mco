@@ -445,7 +445,8 @@ $stockerName = '';
 
     <?php
     //$issue_signature = $emp_info != null ? $emp_info['department_name'] : '';
-    $issue_signature = \backend\models\User::findEmployeeSignature($model->created_by);
+    $issue_signature = \backend\models\User::findEmployeeSignature($model->emp_trans_id);
+    $approve_signature = \backend\models\User::findEmployeeSignature($model->approve_by);
     ?>
     <!-- Signature Section -->
     <div class="signature-section">
@@ -459,11 +460,17 @@ $stockerName = '';
             <div class="signature-label">ผู้เบิก</div>
         </div>
         <div class="signature-box">
-            <div class="signature-name"><?= Html::encode($receiverName) ?></div>
+            <div class="signature-name">
+                <img src="../../backend/web/uploads/employee_signature/<?= $approve_signature ?>"
+                     alt="Approver Signature">
+            </div>
             <div class="signature-label">ผู้จ่ายเครื่องมือ</div>
         </div>
         <div class="signature-box">
-            <div class="signature-name"><?= Html::encode($approverName) ?></div>
+            <div class="signature-name">
+                <img src="../../backend/web/uploads/employee_signature/<?= $approve_signature ?>"
+                     alt="Approver Signature">
+            </div>
             <div class="signature-label">ผู้ตรวจสอบ</div>
         </div>
         <div class="signature-box">
