@@ -59,7 +59,6 @@ $this->registerCss("
 .logo {
     width: 80px;
     height: 80px;
-    background: linear-gradient(45deg, #d32f2f, #f57c00);
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -149,7 +148,7 @@ $this->registerCss("
 }
 
 .customer-field span {
-    border-bottom: 1px solid #000;
+    border-bottom: none;
     flex: 1;
     min-height: 20px;
     padding-left: 5px;
@@ -327,66 +326,66 @@ window.onload = function() {
 
 <div class="print-container">
     <!-- Header -->
-    <div class="header">
-        <div class="company-logo">
-            <div class="logo">
-                <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png',['style' => 'max-width: 120px;']) ?>
-            </div>
-            <div class="company-info">
-                <div class="company-name">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
-                <div class="company-address">
-                    8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมืองจังหวัดระยอง 21000
-                </div>
-                <div class="company-contact">
-                    Tel : (038) 875258-9, Fax : (038) 619559
+    <div class="headerx">
+        <div class="row">
+            <div class="col-lg-3">
+                <div class="logo">
+                    <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png',['style' => 'max-width: 120px;']) ?>
                 </div>
             </div>
-        </div>
-        <div class="bill-info">
-            <div class="bill-title">ใบวางบิล</div>
-            <div class="bill-details">
-                <div class="bill-detail-row">
-                    <strong>เลขที่ใบวางบิล:</strong>
-                    <span><?= Html::encode($model->invoice_number) ?></span>
-                </div>
-                <div class="bill-detail-row">
-                    <strong>วันที่ใบวางบิล:</strong>
-                    <span><?= Yii::$app->formatter->asDate($model->invoice_date, 'dd-MMM-yy') ?></span>
+            <div class="col-lg-9" style="text-align: right">
+                <div class="company-info">
+                    <div class="company-name">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
+                    <div class="company-address">
+                        8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมืองจังหวัดระยอง 21000
+                    </div>
+                    <div class="company-contact">
+                        Tel : (038) 875258-9, Fax : (038) 619559
+                    </div>
                 </div>
             </div>
         </div>
+        <div class="row">
+            <div class="col-lg-12" style="text-align: center">
+                <div class="bill-title">ใบวางบิล</div>
+            </div>
+        </div>
+
     </div>
 
     <!-- Customer Information -->
     <div class="customer-section">
-        <div class="customer-title">ชื่อลูกค้า</div>
         <div class="customer-details">
             <div class="customer-left">
                 <div class="customer-field">
                     <strong>ชื่อลูกค้า:</strong>
-                    <span><?= Html::encode($model->customer_name ?: 'บริษัท มาลาอากาโซโลจิสติกส์ จำกัด (มหาชน)') ?></span>
+                    <span><?= Html::encode($model->customer_name ?: '') ?></span>
                 </div>
                 <div class="customer-field">
                     <strong>ที่อยู่:</strong>
-                    <span><?= Html::encode($model->customer_address ?: 'เลขที่ 2098 อาคารชาติน ทาวเวอร์ ชั้น 8 ถนนบุญญากรรม แขวงบางจาก') ?></span>
+                    <span><?= Html::encode($model->customer_address ?: '') ?></span>
                 </div>
                 <div class="customer-field">
                     <strong></strong>
-                    <span><?= Html::encode($model->customer_address ? '' : 'เขตพระโขนง กรุงเทพมหานคร 10260 สาขา 00000') ?></span>
+                    <span><?= Html::encode($model->customer_address ? '' : '') ?></span>
                 </div>
                 <div class="customer-field">
                     <strong>เลขประจำตัวผู้เสียภาษี:</strong>
-                    <span><?= Html::encode($model->customer_tax_id ?: '0107536000269') ?></span>
+                    <span><?= Html::encode($model->customer_tax_id ?: '') ?></span>
                 </div>
             </div>
             <div class="customer-right">
-                <div class="customer-field">
-                    <strong>นัดชำระเงินวันที่:</strong>
-                    <span><?= $model->payment_due_date ? Yii::$app->formatter->asDate($model->payment_due_date, 'MM/dd/yyyy') : '' ?></span>
-                </div>
-                <div class="customer-field">
-                    <strong>วันนัดรับเช็ค:</strong>
-                    <span><?= $model->check_due_date ? Yii::$app->formatter->asDate($model->check_due_date, 'MM/dd/yyyy') : '' ?></span>
+                <div class="bill-info">
+                    <div class="bill-details">
+                        <div class="bill-detail-rowx">
+                            <strong><u>เลขที่ใบวางบิล:</u></strong>
+                            <span style="text-align: left"><?= Html::encode($model->invoice_number) ?></span>
+                        </div>
+                        <div class="bill-detail-rowx">
+                            <strong><u>วันที่ใบวางบิล:</u></strong>
+                            <span style="text-align: left"><?= Yii::$app->formatter->asDate($model->invoice_date, 'dd-MMM-yy') ?></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

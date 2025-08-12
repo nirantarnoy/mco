@@ -613,4 +613,15 @@ class InvoiceController extends Controller
         }
         return $this->redirect(['update', 'id' => $id]);
     }
+
+    public function actionGetPaymentTermDay(){
+        $id = \Yii::$app->request->post('id');
+        $model = \common\models\PaymentTerm::find()->where(['id' => $id])->one();
+        if($model) {
+           echo $model->day_count;
+        }else{
+            echo 0;
+        }
+    }
+
 }

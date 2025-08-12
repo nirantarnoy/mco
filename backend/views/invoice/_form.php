@@ -639,7 +639,8 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                 'data' => \yii\helpers\ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name'),
                                 'options' => [
                                     'placeholder' => 'เลือกเงื่อนไขชําระเงิน...',
-                                    'id' => 'invoice-payment_term_id'
+                                    'id' => 'invoice-payment_term_id',
+                                    'onchange' => 'calculateDueDate($(this))',
                                 ],
                                 'pluginOptions' => [
                                     'allowClear' => true,
@@ -1055,6 +1056,7 @@ td:has(.autocomplete-dropdown) {
 ?>
 
 <?php
+$url_to_get_payment_term_day = Url::to(['invoice/get-payment-term-day'], true);
 $script = <<< JS
 function delete_doc(e){
     var file_name = e.attr('data-var');
@@ -1062,6 +1064,30 @@ function delete_doc(e){
         $(".delete-doc-list").val(file_name);
         $("#form-delete-doc-file").submit();
     }
+}
+
+function calculateDueDate(e){
+    var id = $(e).val();
+    if(id!=null || id!=''){
+        $.ajax({
+            url: '$url_to_get_payment_term_day',
+            type: 'post',
+            dataType: 'html',
+            data: {id: id},
+            success: function(data){
+                var startDate = new Date();
+                var dueDate = new Date();
+                startDate.setDate(startDate.getDate() + parseInt(data));
+                dueDate.setDate(startDate.getDate());
+                $("#invoice-due-date").val(dueDate.getFullYear() + "-" + ("0" + (dueDate.getMonth() + 1)).slice(-2) + "-" + ("0" + dueDate.getDate()).slice(-2));
+            },
+            error: function(data){
+                console.log(data);
+            }
+            });
+    }
+    
+   
 }
 JS;
 $this->registerJs($script, static::POS_END);
