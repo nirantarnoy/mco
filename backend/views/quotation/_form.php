@@ -640,7 +640,7 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
             </div>
         </div>
 
-        <?php if ($model->isNewRecord || $model->status == Quotation::STATUS_DRAFT): ?>
+        <?php if ($model->isNewRecord || $model->status == Quotation::STATUS_DRAFT || !checkHasCreateBillPlace($model->id)): ?>
             <div class="form-group mt-3">
                 <div class="d-flex justify-content-between">
                     <?= Html::submitButton($model->isNewRecord ? 'สร้างใบเสนอราคา' : 'บันทึกการแก้ไข', [
@@ -656,6 +656,15 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
     </div>
 
 <?php
+
+function checkHasCreateBillPlace($id){
+    $model = \backend\models\JournalTrans::find()->where(['quotation_id' => $id])->one();
+    if($model){
+        return true;
+    }else{
+        return false;
+    }
+}
 // Simple Dynamic Form JavaScript พร้อม autocomplete
 $dynamicFormJs = <<<JS
 $(document).ready(function() {
