@@ -123,7 +123,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 return '';
                             },
                             'approve' => function ($url, $model, $key) {
-                                if ($model->status === JournalTrans::STATUS_DRAFT) {
+                                if ($model->status === JournalTrans::STATUS_DRAFT && \Yii::$app->user->can('approveJournalTrans')) {
                                     return Html::a('<i class="fa fa-check"></i>', ['approve', 'id' => $model->id], [
                                         'class' => 'btn btn-xs btn-success',
                                         'title' => 'Approve',
