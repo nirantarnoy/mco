@@ -858,6 +858,7 @@ function enableVat(e){
 // return summary-net;
 // } 
 function calculateGrandTotal2() {
+    alert();
     var subtotal = 0;
     $('.line-total').each(function() {
         subtotal += parseFloat($(this).val()) || 0;
