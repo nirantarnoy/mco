@@ -854,7 +854,9 @@ function enableVat(e){
     
     calculateGrandTotal2();
 }
-function calculateGrandTotal2() {
+function getS(){
+return summary-net;
+} function calculateGrandTotal2() {
     var subtotal = 0;
     $('.line-total').each(function() {
         subtotal += parseFloat($(this).val()) || 0;
@@ -879,7 +881,7 @@ function calculateGrandTotal2() {
     $('#summary-subtotal').text(subtotal.toFixed(2));
     $('#summary-discount').text(discount.toFixed(2));
     $('#summary-vat').text(vat.toFixed(2));
-    $('#summary-net').text(netAmount.toFixed(2));
+    $('#' + getS()).text(netAmount.toFixed(2));
 }
 JS;
 $this->registerJs($script, static::POS_END);
