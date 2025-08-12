@@ -438,7 +438,8 @@ $stockerName = '';
     </div>
 
     <?php
-    $issue_signature = $emp_info != null ? $emp_info['department_name'] : '';
+    //$issue_signature = $emp_info != null ? $emp_info['department_name'] : '';
+    $issue_signature = \backend\models\User::findEmployeeSignature($model->created_by);
     ?>
     <!-- Signature Section -->
     <div class="signature-section">
