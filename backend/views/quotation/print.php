@@ -200,7 +200,7 @@ $email = $customer_info !== null ? $customer_info['email'] : '';
                     <span>M.C.O. COMPANY LIMITED</span>
                 </div>
                 <div class="info-row">
-                    <span>5/15 Koh-Kloy Road,</span>
+                    <span>8/18 Koh-kloy Road,</span>
                 </div>
                 <div class="info-row">
                     <span>Tambon Chompoeng,</span>

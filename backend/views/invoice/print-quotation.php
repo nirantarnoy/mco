@@ -314,7 +314,7 @@ window.onload = function() {
     <div class="header">
         <div class="company-logo">
             <div class="logo">
-                <?= Html::img('../../backend/web/uploads/logo/mco_logo.png',['style' => 'max-width: 120px;']) ?>
+                <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png',['style' => 'max-width: 120px;']) ?>
             </div>
             <div class="company-info">
                 <div class="company-name-thai">บริษัท เอ็ม. ซี. โอ. จำกัด (สำนักงานใหญ่)</div>
