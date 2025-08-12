@@ -735,26 +735,27 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
             </div>
         </div>
         <br/>
-
-        <form action="<?= Url::to(['purch/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
-            <input type="hidden" name="id" value="<?= $model->id ?>">
-            <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <label for="">เอกสารแนบ</label>
-                        <input type="file" name="file_doc" multiple>
+        <?php if (!$model->isNewRecord): ?>
+            <form action="<?= Url::to(['purch/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="id" value="<?= $model->id ?>">
+                <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <label for="">เอกสารแนบ</label>
+                            <input type="file" name="file_doc" multiple>
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <button class="btn btn-info">
+                                <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <br/>
-                <div class="row">
-                    <div class="col-lg-12">
-                        <button class="btn btn-info">
-                            <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </form>
+            </form>
+        <?php endif; ?>
         <form id="form-delete-doc-file" action="<?= Url::to(['purch/delete-doc-file'], true) ?>" method="post">
             <input type="hidden" name="id" value="<?= $model->id ?>">
             <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
