@@ -331,10 +331,9 @@ function calculateGrandTotal() {
     var discount = parseFloat($('#purchreq-discount_amount').val()) || 0;
     var afterDiscount = subtotal - discount;
     var vat = 0;
-    if(purch_req_is_vat === 1 || purch_req_is_vat ==='1'){
+    if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){
         vat = afterDiscount * 0.07; // 7% VAT
     }
-    alert(purch_req_is_vat);
     
     var netAmount = afterDiscount + vat;
     
@@ -696,26 +695,26 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <div class="row mb-2">
                                     <div class="col-8">ยอดรวม:</div>
                                     <div class="col-4 text-end">
-                                        <span id="summary-subtotal" class="fw-bold"><?= $model->total_amount > 0 ?? '0.00' ?></span> บาท
+                                        <span id="summary-subtotal" class="fw-bold">0.00</span> บาท
                                     </div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-8">ส่วนลด:</div>
                                     <div class="col-4 text-end">
-                                        <span id="summary-discount" class="fw-bold"><?= $model->discount_amount > 0 ?? '0.00' ?></span> บาท
+                                        <span id="summary-discount" class="fw-bold">0.00</span> บาท
                                     </div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-8">VAT (7%):</div>
                                     <div class="col-4 text-end">
-                                        <span id="summary-vat" class="fw-bold"><?= $model->vat_amount > 0 ?? '10.00' ?></span> บาท
+                                        <span id="summary-vat" class="fw-bold">0.00</span> บาท
                                     </div>
                                 </div>
                                 <hr>
                                 <div class="row">
                                     <div class="col-8"><strong>ยอดรวมสุทธิ:</strong></div>
                                     <div class="col-4 text-end">
-                                        <span id="summary-net" class="fw-bold text-primary h5"><?= $model->net_amount > 0 ?? '0.00' ?></span> บาท
+                                        <span id="summary-net" class="fw-bold text-primary h5">0.00</span> บาท
                                     </div>
                                 </div>
                             </div>
@@ -855,11 +854,7 @@ function enableVat(e){
     
     calculateGrandTotal2();
 }
-function getS(){
-return summary-net;
-} 
 function calculateGrandTotal2() {
-    
     var subtotal = 0;
     $('.line-total').each(function() {
         subtotal += parseFloat($(this).val()) || 0;
@@ -870,7 +865,7 @@ function calculateGrandTotal2() {
     var discount = parseFloat($('#purchreq-discount_amount').val()) || 0;
     var afterDiscount = subtotal - discount;
     var vat = 0;
-    if(purch_req_is_vat === 1 || purch_req_is_vat ==='1'){
+    if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){
         vat = afterDiscount * 0.07; // 7% VAT
     }
     
@@ -884,7 +879,7 @@ function calculateGrandTotal2() {
     $('#summary-subtotal').text(subtotal.toFixed(2));
     $('#summary-discount').text(discount.toFixed(2));
     $('#summary-vat').text(vat.toFixed(2));
-    $('#' + getS()).text(netAmount.toFixed(2));
+    $('#summary-net').text(netAmount.toFixed(2));
 }
 JS;
 $this->registerJs($script, static::POS_END);
