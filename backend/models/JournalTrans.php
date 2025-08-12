@@ -344,10 +344,10 @@ class JournalTrans extends ActiveRecord
         if (parent::beforeSave($insert)) {
             if ($insert) {
                 $this->generateRunningNumber();
-                $this->created_by = Yii::$app->user->identity->username ?? 'system';
+                $this->created_by = Yii::$app->user->id ;// Yii::$app->user->identity->username ?? 'system';
                 $this->status = self::STATUS_DRAFT;
             }
-            $this->updated_by = Yii::$app->user->identity->username ?? 'system';
+            $this->updated_by =  Yii::$app->user->id;
             return true;
         }
         return false;
