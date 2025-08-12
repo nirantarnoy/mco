@@ -230,7 +230,7 @@ $email = $customer_info !== null ? $customer_info['email'] : '';
                     </div>
                     <div class="info-row">
                         <span class="info-label">FROM</span>
-                        <span>: <?= Html::encode($quotation->created_by ?? '') ?></span>
+                        <span>: <?= Html::encode(\backend\models\Employee::findFullName($quotation->sale_emp_id) ?? '') ?></span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">FAX</span>
@@ -301,11 +301,6 @@ $email = $customer_info !== null ? $customer_info['email'] : '';
             </div>
         </div>
         <div class="col-lg-4">
-            <div style="text-align: right;bottom: 0px;">
-                <div>Certificate ISO 9001:2015</div>
-                <div>Certificate No. TH08/2024</div>
-                <div>Issued by Bureau Veritas Certification (Thailand) Ltd.</div>
-            </div>
         </div>
     </div>
     <!-- Items Table -->

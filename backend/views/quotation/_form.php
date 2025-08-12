@@ -478,6 +478,15 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                                 'allowClear' => true
                             ]
                         ]) ?>
+                        <?= $form->field($model, 'sale_emp_id')->widget(Select2::className(), [
+                            'data' => ArrayHelper::map(\backend\models\Employee::find()->all(), 'id', function ($model) {
+                                return $model->fname . ' ' . $model->lname;
+                            }),
+                            'options' => ['placeholder' => 'เลือกพนักงานขาย'],
+                            'pluginOptions' => [
+                                'allowClear' => true
+                            ]
+                        ]) ?>
                     </div>
                 </div>
             </div>
