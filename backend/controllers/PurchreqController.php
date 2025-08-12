@@ -156,7 +156,7 @@ class PurchreqController extends Controller
 
                         // คำนวณ VAT (สมมติว่ามีฟิลด์ vat_percent ใน model หรือใช้ VAT 7%)
                         $vatPercent = isset($model->vat_percent) ? $model->vat_percent : 7;
-                        if ($vatPercent > 0) {
+                        if ($vatPercent > 0 && $model->is_vat == 1) {
                             $vatAmount = ($afterDiscountAmount * $vatPercent) / 100;
                         }
 
@@ -299,8 +299,9 @@ class PurchreqController extends Controller
                         $afterDiscountAmount = $totalAmount - $discountAmount;
 
                         // คำนวณ VAT (สมมติว่ามีฟิลด์ vat_percent ใน model หรือใช้ VAT 7%)
+
                         $vatPercent = isset($model->vat_percent) ? $model->vat_percent : 7;
-                        if ($vatPercent > 0) {
+                        if ($vatPercent > 0 && $model->is_vat == 1) {
                             $vatAmount = ($afterDiscountAmount * $vatPercent) / 100;
                         }
 
