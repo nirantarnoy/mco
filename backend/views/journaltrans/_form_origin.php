@@ -723,7 +723,6 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
                 'options' => [
                     'id' => 'emp-trans-select',
                     'placeholder' => 'เลือกผู้เบิก/คืน',
-                    'disabled' => true
                 ],
             ]) ?>
 
