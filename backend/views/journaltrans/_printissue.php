@@ -444,7 +444,7 @@ $stockerName = '';
     <!-- Signature Section -->
     <div class="signature-section">
         <div class="signature-box">
-            <div class="signature-name">
+            <div class="signature-name" style="max-width: 100px">
                 <?php if ($model->stock_type_id == 2): ?>
                     <img src="../../backend/web/uploads/employee_signature/<?= $issue_signature ?>"
                          alt="Approver Signature">
