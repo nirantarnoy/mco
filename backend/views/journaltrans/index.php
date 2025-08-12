@@ -89,7 +89,12 @@ $this->params['breadcrumbs'][] = $this->title;
                         'attribute' => 'status',
                         'format' => 'raw',
                         'value' => function ($model) {
-                            return '<div class="badge badge-pill badge-success" style="padding: 10px;">' . 'Complete' . '</div>';
+                            if ($model->status == JournalTrans::ISSUE_TRANS_WAITING) {
+                                return '<div class="badge badge-pill badge-warning" style="padding: 10px;">' . 'Pending' . '</div>';
+                            }else if($model->status == JournalTrans::ISSUE_TRANS_APPROVED){
+                                return '<div class="badge badge-pill badge-success" style="padding: 10px;">' . 'Complete' . '</div>';
+                            }
+                           // return '<div class="badge badge-pill badge-success" style="padding: 10px;">' . 'Complete' . '</div>';
                         },
                         'headerOptions' => ['style' => 'width: 100px;text-align: center;'],
                         'contentOptions' => ['style' => 'text-align: center;'],
@@ -136,7 +141,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 return '';
                             },
                             'delete' => function ($url, $model, $key) {
-                                if ($model->status === JournalTrans::STATUS_DRAFT) {
+                                if ($model->status === JournalTrans::STATUS_DRAFT &&  \Yii::$app->user->can('approveJournalTrans')) {
                                     return Html::a('<i class="fa fa-trash"></i>', ['delete', 'id' => $model->id], [
                                         'class' => 'btn btn-xs btn-danger',
                                         'title' => 'Delete',
