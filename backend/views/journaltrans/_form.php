@@ -665,16 +665,6 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                 ['prompt' => 'Select Stock Type', 'id' => 'stock-type-select', 'readonly' => true]
             ) ?>
 
-            <?= $form->field($model, 'emp_trans_id')->widget(Select2::class, [
-                'data' => ArrayHelper::map(\backend\models\Employee::find()->all(), 'id', function ($model) {
-                    return $model->fname . ' - ' . $model->lname;
-                }),
-                'options' => [
-                    'id' => 'emp-trans-select',
-                    'placeholder' => 'เลือกผู้เบิก/คืน',
-                    'disabled' => true
-                ],
-            ]) ?>
 
         </div>
 

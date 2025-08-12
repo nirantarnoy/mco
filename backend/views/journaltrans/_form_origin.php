@@ -716,6 +716,17 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
                 'options' => ['placeholder' => 'เลือกงาน'],
                 'pluginOptions' => ['allowClear' => true],
             ])->label() ?>
+            <?= $form->field($model, 'emp_trans_id')->widget(Select2::class, [
+                'data' => ArrayHelper::map(\backend\models\Employee::find()->all(), 'id', function ($model) {
+                    return $model->fname . ' - ' . $model->lname;
+                }),
+                'options' => [
+                    'id' => 'emp-trans-select',
+                    'placeholder' => 'เลือกผู้เบิก/คืน',
+                    'disabled' => true
+                ],
+            ]) ?>
+
         </div>
 
         <div class="col-md-6">
