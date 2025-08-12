@@ -416,17 +416,17 @@ window.onload = function() {
             <?php else: ?>
                 <!-- Default sample data -->
                 <tr>
-                    <td>1</td>
-                    <td class="text-left">PM O2 Analyzer CFB3 Feb 2025</td>
-                    <td>3 JOB</td>
-                    <td class="text-right">6,400.00</td>
-                    <td class="text-right">19,200.00</td>
+                    <td></td>
+                    <td class="text-left"></td>
+                    <td></td>
+                    <td class="text-right"></td>
+                    <td class="text-right"></td>
                 </tr>
             <?php endif; ?>
 
             <!-- Empty rows for spacing -->
-            <?php for ($i = count($model_line); $i < 10; $i++): ?>
-                <tr class="empty-row">
+            <?php for ($i = count($model_line); $i < 9; $i++): ?>
+                <tr>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>

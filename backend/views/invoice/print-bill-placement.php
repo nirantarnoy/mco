@@ -326,15 +326,14 @@ window.onload = function() {
 
 <div class="print-container">
     <!-- Header -->
-    <div class="headerx">
         <div class="row">
             <div class="col-lg-3">
-                <div class="logo">
+
                     <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png',['style' => 'max-width: 120px;']) ?>
-                </div>
+
             </div>
             <div class="col-lg-9" style="text-align: right">
-                <div class="company-info">
+
                     <div class="company-name">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
                     <div class="company-address">
                         8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมืองจังหวัดระยอง 21000
@@ -342,7 +341,7 @@ window.onload = function() {
                     <div class="company-contact">
                         Tel : (038) 875258-9, Fax : (038) 619559
                     </div>
-                </div>
+
             </div>
         </div>
         <div class="row">
@@ -351,7 +350,6 @@ window.onload = function() {
             </div>
         </div>
 
-    </div>
 
     <!-- Customer Information -->
     <div class="customer-section">
@@ -423,18 +421,18 @@ window.onload = function() {
             <?php else: ?>
                 <!-- Default sample data -->
                 <tr>
-                    <td>1</td>
-                    <td class="text-left">RY-UJ24-0002634 Signed</td>
-                    <td>260/11-003</td>
-                    <td>20-Nov-24</td>
-                    <td>20-Dec-24</td>
-                    <td class="text-right">53,500.00</td>
+                    <td></td>
+                    <td class="text-left"></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td class="text-right"></td>
                 </tr>
             <?php endif; ?>
 
             <!-- Empty rows for spacing -->
             <?php for ($i = count($model_line); $i < 12; $i++): ?>
-                <tr class="empty-row"><td colspan="6">&nbsp;</td></tr>
+                <tr class="empty-rowx"><td colspan="6">&nbsp;</td></tr>
             <?php endfor; ?>
             </tbody>
             <tfoot>
