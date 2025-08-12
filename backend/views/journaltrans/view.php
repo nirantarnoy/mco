@@ -126,7 +126,25 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                                         return date('m-d-Y H:i:s', strtotime($model->created_at));
                                     },
                                 ],
-                                'created_by',
+                                //'created_by',
+                                [
+                                    'attribute' => 'emp_trans_id',
+                                    'value' => function ($model) {
+                                        return \backend\models\User::findEmployeeNameByUserId($model->emp_trans_id);
+                                    }
+                                ],
+                                [
+                                    'attribute' => 'approve_by',
+                                    'value' => function ($model) {
+                                        return \backend\models\User::findEmployeeNameByUserId($model->approve_by);
+                                    }
+                                ],
+                                [
+                                    'attribute' => 'approve_date',
+                                    'value' => function ($model) {
+                                        return date('m-d-Y H:i:s', strtotime($model->approve_date));
+                                    }
+                                ],
                                 [
                                     'attribute' => 'updated_at',
                                     'value' => function ($model) {
