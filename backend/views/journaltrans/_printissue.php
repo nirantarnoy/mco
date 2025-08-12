@@ -332,9 +332,13 @@ $stockerName = '';
                     </td>
                     <td style="width: 25%">
                         <div class="doc-info">
-                            <div class="doc-info-item">เลขที่ <b><?= Html::encode($documentNumber) ?></b></div>
 
                             <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                                <tr>
+                                    <td colspan="2" style="text-align: left">
+                                        <div class="doc-info-item">เลขที่ <b><?= Html::encode($documentNumber) ?></b></div>
+                                    </td>
+                                </tr>
                                 <tr>
                                     <td style="width: 50%;text-align: left">
                                         <div class="doc-info-item">วันที่เบิก : <b><?= Html::encode($issueDate) ?></b>
