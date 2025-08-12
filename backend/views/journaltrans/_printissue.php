@@ -286,8 +286,11 @@ $stockerName = '';
     }
 
     .signature-name {
-        margin-top: 40px;
-        font-size: 13px;
+        max-width: 130px !important;
+        max-height: 55px !important;
+        object-fit: contain;
+    }
+    .signature-name img{
         max-width: 130px !important;
         max-height: 55px !important;
         object-fit: contain;
