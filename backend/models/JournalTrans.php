@@ -57,6 +57,10 @@ class JournalTrans extends ActiveRecord
     const STATUS_ACTIVE = 100;
     const STATUS_INACTIVE = 0;
 
+    const ISSUE_TRANS_WAITING = 0;
+    const ISSUE_TRANS_APPROVED = 1;
+    const ISSUE_TRANS_CANCELLED = 2;
+
     public $journalTransLinesline = [];
 
     public $journalTransLinesaricat = [];
@@ -101,7 +105,7 @@ class JournalTrans extends ActiveRecord
          //   [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_CANCELLED, self::STATUS_ACTIVE, self::STATUS_INACTIVE]],
           //  [['status'], 'in', 'range' => [self::STATUS_ACTIVE]],
             [['trans_ref_id'], 'validateRefTransaction'],
-            [['agency_id','employer_id'], 'integer'],
+            [['agency_id','employer_id','emp_trans_id'], 'integer'],
         ];
     }
 
@@ -252,6 +256,14 @@ class JournalTrans extends ActiveRecord
         ];
     }
 
+    public static function getIssueTransStatus(){
+        return [
+            self::STATUS_PENDING => 'Pending',
+            self::STATUS_APPROVED => 'Approved',
+            self::STATUS_CANCELLED => 'Cancelled',
+        ];
+    }
+
     /**
      * Get status options
      */
@@ -345,9 +357,11 @@ class JournalTrans extends ActiveRecord
             if ($insert) {
                 $this->generateRunningNumber();
                 $this->created_by = Yii::$app->user->id ;// Yii::$app->user->identity->username ?? 'system';
+                $this->emp_trans_id = Yii::$app->user->id ;
                 $this->status = self::STATUS_DRAFT;
             }
             $this->updated_by =  Yii::$app->user->id;
+            $this->emp_trans_id = Yii::$app->user->id;
             return true;
         }
         return false;
