@@ -1,7 +1,7 @@
 <?php
 
 use yii\helpers\Html;
-use yii\grid\GridView;
+use kartik\grid\GridView;
 use yii\widgets\Pjax;
 use backend\models\JournalTrans;
 
@@ -93,6 +93,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                 return '<div class="badge badge-pill badge-warning" style="padding: 10px;">' . 'Pending' . '</div>';
                             }else if($model->status == JournalTrans::STATUS_APPROVED){
                                 return '<div class="badge badge-pill badge-success" style="padding: 10px;">' . 'Complete' . '</div>';
+                            }
+                            else{
+                                return '<div class="badge badge-pill badge-danger" style="padding: 10px;">' . 'Cancel' . '</div>';
                             }
                            // return '<div class="badge badge-pill badge-success" style="padding: 10px;">' . 'Complete' . '</div>';
                         },
