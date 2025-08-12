@@ -468,7 +468,7 @@ $stockerName = '';
         </div>
         <div class="signature-box">
             <div class="signature-name">
-                <?php if ($model->stock_type_id == 2): ?>
+                <?php if ($model->stock_type_id == 1): ?>
                     <img src="../../backend/web/uploads/employee_signature/<?= $issue_signature ?>"
                          alt="Approver Signature">
                 <?php endif; ?>
