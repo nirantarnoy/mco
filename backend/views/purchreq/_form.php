@@ -331,9 +331,10 @@ function calculateGrandTotal() {
     var discount = parseFloat($('#purchreq-discount_amount').val()) || 0;
     var afterDiscount = subtotal - discount;
     var vat = 0;
-    if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){
+    if(purch_req_is_vat === 1 || purch_req_is_vat ==='1'){
         vat = afterDiscount * 0.07; // 7% VAT
     }
+    alert(purch_req_is_vat);
     
     var netAmount = afterDiscount + vat;
     
@@ -858,7 +859,7 @@ function enableVat(e){
 // return summary-net;
 // } 
 function calculateGrandTotal2() {
-    alert();
+    
     var subtotal = 0;
     $('.line-total').each(function() {
         subtotal += parseFloat($(this).val()) || 0;
