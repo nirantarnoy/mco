@@ -97,7 +97,7 @@ class JournalTrans extends ActiveRecord
     {
         return [
             [['trans_date', 'trans_type_id', 'stock_type_id'], 'required'],
-            [['trans_date', 'created_at', 'updated_at'], 'safe'],
+            [['trans_date', 'created_at', 'updated_at','approve_date'], 'safe'],
             [['trans_type_id', 'stock_type_id','job_id', 'customer_id', 'party_id', 'party_type_id', 'warehouse_id','return_for_trans_id','trans_ref_id','status','created_by', 'updated_by','po_rec_status'], 'integer'],
             [['qty',], 'number'],
             [['remark'], 'string'],
@@ -105,7 +105,7 @@ class JournalTrans extends ActiveRecord
          //   [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_CANCELLED, self::STATUS_ACTIVE, self::STATUS_INACTIVE]],
           //  [['status'], 'in', 'range' => [self::STATUS_ACTIVE]],
             [['trans_ref_id'], 'validateRefTransaction'],
-            [['agency_id','employer_id','emp_trans_id'], 'integer'],
+            [['agency_id','employer_id','emp_trans_id','approve_by'], 'integer'],
         ];
     }
 
@@ -227,6 +227,10 @@ class JournalTrans extends ActiveRecord
             'trans_ref_id' => 'Trans Ref ID',
             'agency_id' => 'หน่วยงาน',
             'employer_id' => 'นายจ้าง',
+            'emp_trans_id' => 'ผู้เบิก/ผู้คืน',
+            'approve_date' => 'วันที่อนุมัติ',
+            'approve_by' => 'ผู้อนุมัติ',
+
         ];
     }
 
