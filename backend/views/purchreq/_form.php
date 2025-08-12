@@ -440,7 +440,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 ?>
 
     <div class="purch-req-form">
-        <input type="hidden" id="purch-req-is-vat" value="">
+        <input type="hidden" id="purch-req-is-vat" value="<?=$model->is_vat?>">
         <?php $form = ActiveForm::begin([
             'id' => 'purch-req-form',
             'options' => ['class' => 'form-horizontal', 'enctype' => 'multipart/form-data'],
