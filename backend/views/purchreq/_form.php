@@ -707,7 +707,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <div class="row mb-2">
                                     <div class="col-8">VAT (7%):</div>
                                     <div class="col-4 text-end">
-                                        <span id="summary-vat" class="fw-bold"><?= $model->vat_amount > 0 ?? '0.00' ?></span> บาท
+                                        <span id="summary-vat" class="fw-bold"><?= $model->vat_amount > 0 ?? '10.00' ?></span> บาท
                                     </div>
                                 </div>
                                 <hr>
