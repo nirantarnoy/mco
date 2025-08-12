@@ -658,7 +658,7 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
 <?php
 
 function checkHasCreateBillPlace($id){
-    $model = \backend\models\JournalTrans::find()->where(['quotation_id' => $id])->one();
+    $model = \backend\models\Invoice::find()->where(['quotation_id' => $id])->one();
     if($model){
         return true;
     }else{
