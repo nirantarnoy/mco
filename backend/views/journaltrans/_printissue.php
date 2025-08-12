@@ -336,13 +336,13 @@ $stockerName = '';
 
                             <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                                 <tr>
-                                    <td style="width: 50%">
+                                    <td style="width: 50%;text-align: left">
                                         <div class="doc-info-item">วันที่เบิก : <b><?= Html::encode($issueDate) ?></b>
                                         </div>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="width: 50%">
+                                    <td style="width: 50%;text-align: left">
                                         <div class="doc-info-item">หน่วยงาน : <b><?= $issueDept ?></b></div>
                                     </td>
                                 </tr>
