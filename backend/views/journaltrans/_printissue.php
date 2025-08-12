@@ -382,9 +382,9 @@ $stockerName = '';
 
         <div class="doc-number-section">
             <div>
-                <span class="doc-label">ช่องงาน:</span> _____________________
+                <span class="doc-label">ชื่องาน:</span> _____________________
             </div>
-            <div>
+            <div style="padding-right: 10px">
                 <span class="doc-label">RY-QT:</span> <?= Html::encode($documentNumber) ?>
             </div>
         </div>

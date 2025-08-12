@@ -821,7 +821,7 @@ class JournaltransController extends Controller
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
                     $model->created_at = date('Y-m-d H:i:s');
-                    $model->created_by = Yii::$app->user->id;
+                    $model->created_by = \Yii::$app->user->id;
                     if ($model->save()) {
                         foreach ($journalTransLines as $journalTransLine) {
                             $journalTransLine->journal_trans_id = $model->id;
