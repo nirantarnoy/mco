@@ -854,9 +854,10 @@ function enableVat(e){
     
     calculateGrandTotal2();
 }
-function getS(){
-return summary-net;
-} function calculateGrandTotal2() {
+// function getS(){
+// return summary-net;
+// } 
+function calculateGrandTotal2() {
     var subtotal = 0;
     $('.line-total').each(function() {
         subtotal += parseFloat($(this).val()) || 0;
@@ -867,7 +868,7 @@ return summary-net;
     var discount = parseFloat($('#purchreq-discount_amount').val()) || 0;
     var afterDiscount = subtotal - discount;
     var vat = 0;
-    if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){
+    if(purch_req_is_vat === 1 || purch_req_is_vat ==='1'){
         vat = afterDiscount * 0.07; // 7% VAT
     }
     
@@ -881,7 +882,7 @@ return summary-net;
     $('#summary-subtotal').text(subtotal.toFixed(2));
     $('#summary-discount').text(discount.toFixed(2));
     $('#summary-vat').text(vat.toFixed(2));
-    $('#' + getS()).text(netAmount.toFixed(2));
+   // $('#' + getS()).text(netAmount.toFixed(2));
 }
 JS;
 $this->registerJs($script, static::POS_END);
