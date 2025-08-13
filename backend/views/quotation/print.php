@@ -203,7 +203,7 @@ $email = $customer_info !== null ? $customer_info['email'] : '';
                     <span>8/18 Koh-kloy Road,</span>
                 </div>
                 <div class="info-row">
-                    <span>Tambon Cherngneon,</span>
+                    <span>Tambon Cherngnern,</span>
                 </div>
                 <div class="info-row">
                     <span>Amphur Muang ,</span>
