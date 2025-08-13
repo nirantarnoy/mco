@@ -921,6 +921,7 @@ function calculateDueDate(e){
             success: function(data){
                 var startDate = new Date();
                 var dueDate = new Date();
+                alert(data);
                 startDate.setDate(startDate.getDate() + parseInt(data));
                 dueDate.setDate(startDate.getDate());
                 $("#invoice-due-date").val(dueDate.getFullYear() + "-" + ("0" + (dueDate.getMonth() + 1)).slice(-2) + "-" + ("0" + dueDate.getDate()).slice(-2));
