@@ -60,7 +60,7 @@ body {
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 15px;
-    border-bottom: 2px solid #000;
+  /*  border-bottom: 2px solid #000;*/
     padding-bottom: 10px;
 }
 
@@ -358,8 +358,15 @@ window.onload = function() {
             </div>
         </div>
         <div class="invoice-info">
-            <div class="invoice-title">ใบกำกับภาษี</div>
-            <div class="invoice-subtitle">Tax Invoice</div>
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12" style="text-align: center">
+            <div class="invoice-info">
+                <div class="invoice-title">ใบกำกับภาษี</div>
+                <div class="invoice-subtitle">Tax Invoice</div>
+            </div>
         </div>
     </div>
 
