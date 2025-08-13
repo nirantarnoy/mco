@@ -1075,12 +1075,15 @@ function calculateDueDate(e){
             dataType: 'html',
             data: {id: id},
             success: function(data){
-                 alert(data);
+                 //alert(data);
                 var startDate = new Date();
-                var dueDate = new Date();
-                startDate.setDate(startDate.getDate() + parseInt(data));
-                dueDate.setDate(startDate.getDate());
-                $("#invoice-due-date").val(dueDate.getFullYear() + "-" + ("0" + (dueDate.getMonth() + 1)).slice(-2) + "-" + ("0" + dueDate.getDate()).slice(-2));
+                var dueDate = new Date(startDate); // copy date object
+                dueDate.setDate(dueDate.getDate() + parseInt(data)); // เพิ่มจำนวนวัน
+                $("#invoice-due-date").val(
+                    dueDate.getFullYear() + "-" + 
+                    ("0" + (dueDate.getMonth() + 1)).slice(-2) + "-" + 
+                    ("0" + dueDate.getDate()).slice(-2)
+                );
             },
             error: function(data){
                 console.log(data);
