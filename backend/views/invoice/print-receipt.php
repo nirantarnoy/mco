@@ -16,8 +16,14 @@ use yii\helpers\Html;
         }
 
         @media print {
-            .no-print { display: none !important; }
-            .main-footer { display: none !important; }
+            .no-print {
+                display: none !important;
+            }
+
+            .main-footer {
+                display: none !important;
+            }
+
             body {
                 margin: 0;
                 padding: 0;
@@ -26,6 +32,7 @@ use yii\helpers\Html;
                 color: #000;
                 line-height: 1.2;
             }
+
             .print-container {
                 max-width: 0;
                 margin: 0 auto;
@@ -49,7 +56,7 @@ use yii\helpers\Html;
             margin: 0 auto;
             background: white;
             padding: 15px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             min-height: 280mm;
         }
 
@@ -74,10 +81,24 @@ use yii\helpers\Html;
             display: inline-block;
         }
 
-        .btn-primary { background-color: #007bff; color: white; }
-        .btn-success { background-color: #28a745; color: white; }
-        .btn-secondary { background-color: #6c757d; color: white; }
-        .btn:hover { opacity: 0.8; }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
 
         /* Top Border with Tax ID */
         .top-info {
@@ -133,7 +154,7 @@ use yii\helpers\Html;
             color: white;
             font-weight: bold;
             font-size: 24px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         .company-info {
@@ -261,8 +282,13 @@ use yii\helpers\Html;
             height: 25px;
         }
 
-        .text-left { text-align: left !important; }
-        .text-right { text-align: right !important; }
+        .text-left {
+            text-align: left !important;
+        }
+
+        .text-right {
+            text-align: right !important;
+        }
 
         /* Note and Total Section */
         .note-total-section {
@@ -419,7 +445,7 @@ use yii\helpers\Html;
     <div class="header-section">
         <div class="header-left">
             <div class="logo-section">
-                <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png',['style' => 'max-width: 190px;']) ?>
+                <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png', ['style' => 'max-width: 190px;']) ?>
             </div>
             <div class="company-info">
                 <div class="company-name-thai">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
@@ -433,9 +459,9 @@ use yii\helpers\Html;
     </div>
     <div class="row">
         <div class="col-lg-4">
-           <div style="vertical-align: bottom;">
-               เลขประจำตัวผู้เสียภาษี 0215543000985
-           </div>
+            <div style="vertical-align: bottom;">
+                เลขประจำตัวผู้เสียภาษี 0215543000985
+            </div>
         </div>
         <div class="col-lg-4" style="text-align: center;">
             <div class="receipt-title">ใบเสร็จรับเงิน<br>RECEIPT</div>
@@ -447,28 +473,60 @@ use yii\helpers\Html;
         <div class="col-lg-12">
             <table style="width: 100%;collapse: collapse;">
                 <tr>
-                    <td style="width: 10%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">รหัสลูกค้า <br>CODE</td>
-                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;"><span style="padding-top: 5px;padding-bottom: 5px;"><?=$model->customer_id;?></span></td>
-                    <td style="width: 15%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">วันที่ <br>DATE</td>
-                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;"><span style="padding-top: 5px;padding-bottom: 5px;"><?=date('m/d/Y')?></span></td>
-                    <td style="width: 10%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">เลขที่ <br>NO</td>
-                    <td style="width: 15%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;"><span style="padding-top: 5px;padding-bottom: 5px;">MCO-25-000042</span></td>
+                    <td style="width: 10%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                        รหัสลูกค้า <br>CODE
+                    </td>
+                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                        <span style="padding-top: 5px;padding-bottom: 5px;"><?= Html::encode(\backend\models\Customer::findCode($model->customer_id) ?: '') ?></span>
+                    </td>
+                    <td style="width: 15%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                        วันที่ <br>DATE
+                    </td>
+                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                        <span style="padding-top: 5px;padding-bottom: 5px;"><?= date('m/d/Y', strtotime($model->invoice_date)) ?></span>
+                    </td>
+                    <td style="width: 10%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                        เลขที่ <br>NO
+                    </td>
+                    <td style="width: 15%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                        <span style="padding-top: 5px;padding-bottom: 5px;"><?= Html::encode($model->invoice_number) ?></span>
+                    </td>
                 </tr>
                 <tr>
-                    <td style="width: 10%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: top;" rowspan="2">ขายให้ <br>SALE TO</td>
-                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;border-bottom: none;"><span style="padding-top: 5px;padding-bottom: 5px;">การไฟฟ้าฝ่ายผลิตแห่งประเทศไทย สาขาที่ 00028</span></td>
-                    <td style="width: 15%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">ใบสั่งซื้อเลขที่ <br>PO NO</td>
-                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;"><span style="padding-top: 5px;padding-bottom: 5px;">MCO-25-000041</span></td>
-                    <td style="width: 10%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">วันที่สั่งซื้อ <br>PO DATE</td>
-                    <td style="width: 15%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;"><span style="padding-top: 5px;padding-bottom: 5px;"><?=date('m/d/Y')?></span></td>
+                    <td style="width: 10%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: top;"
+                        rowspan="2">ขายให้ <br>SALE TO
+                    </td>
+                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;border-bottom: none;">
+                        <span style="padding-top: 5px;padding-bottom: 5px;"><?= Html::encode($model->customer_name ?: '') ?></span>
+                    </td>
+                    <td style="width: 15%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                        ใบสั่งซื้อเลขที่ <br>PO NO
+                    </td>
+                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                        <span style="padding-top: 5px;padding-bottom: 5px;"><?= Html::encode($model->po_number ?: '') ?></span>
+                    </td>
+                    <td style="width: 10%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                        วันที่สั่งซื้อ <br>PO DATE
+                    </td>
+                    <td style="width: 15%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                        <span style="padding-top: 5px;padding-bottom: 5px;"><?= date('m/d/Y', strtotime($model->po_date)) ?></span>
+                    </td>
                 </tr>
                 <tr>
 
-                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;border-top: none;"><span style="padding-top: 5px;padding-bottom: 5px;">การไฟฟ้าฝ่ายผลิตแห่งประเทศไทย สาขาที่ 00028</span></td>
-                    <td style="width: 15%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">อ้างถึงเลขที่ใบแจ้งหนี้ <br>RFQ.IV</td>
-                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;"><span style="padding-top: 5px;padding-bottom: 5px;"></span></td>
-                    <td style="width: 10%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">อ้างถึงวันที่ใบแจ้งหนี้ <br>RFQ.DATE.IV</td>
-                    <td style="width: 15%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;"><span style="padding-top: 5px;padding-bottom: 5px;"></span></td>
+                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;border-top: none;">
+                        <span style="padding-top: 5px;padding-bottom: 5px;"><?= Html::encode($model->customer_address ?: '') ?></span>
+                    </td>
+                    <td style="width: 15%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                        อ้างถึงเลขที่ใบแจ้งหนี้ <br>RFQ.IV
+                    </td>
+                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                        <span style="padding-top: 5px;padding-bottom: 5px;"></span></td>
+                    <td style="width: 10%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                        อ้างถึงวันที่ใบแจ้งหนี้ <br>RFQ.DATE.IV
+                    </td>
+                    <td style="width: 15%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                        <span style="padding-top: 5px;padding-bottom: 5px;"></span></td>
                 </tr>
             </table>
         </div>
@@ -478,32 +536,59 @@ use yii\helpers\Html;
     <table class="items-tablex">
         <tbody>
         <tr>
-            <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"><span><strong>ลำดับ<br/>ITEM</strong></span></td>
-            <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"><span><strong>รายการ<br/>DESCRIPTION</strong></span></td>
-            <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"><span><strong>จำนวน<br/>QUANTITY</strong></span></td>
-            <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"><span><strong>ราคาต่อหน่วย<br/>UNIT PRICE</strong></span></td>
-            <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"><span><strong>จำนวนเงิน<br/>AMOUNT</strong></span></td>
+            <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;">
+                <span><strong>ลำดับ<br/>ITEM</strong></span></td>
+            <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;">
+                <span><strong>รายการ<br/>DESCRIPTION</strong></span></td>
+            <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;">
+                <span><strong>จำนวน<br/>QUANTITY</strong></span></td>
+            <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;">
+                <span><strong>ราคาต่อหน่วย<br/>UNIT PRICE</strong></span></td>
+            <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;">
+                <span><strong>จำนวนเงิน<br/>AMOUNT</strong></span></td>
         </tr>
-        <tr>
-            <td style="width: 8%;border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;">1</td>
-            <td style="width: 52%;border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;" class="text-left">ใบกำกับภาษี/ใบส่งของ เลขที่ INV-25-000041</td>
-            <td style="width: 10%;border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;">1 LOT</td>
-            <td style="width: 15%;border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;" class="text-right">87,160.00</td>
-            <td style="width: 15%;border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;" class="text-right">87,160.00</td>
-        </tr>
-        <?php for($i=0;$i<2;$i++):?>
-        <tr>
-            <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"> &nbsp;</td>
-            <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"> &nbsp;</td>
-            <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"> &nbsp;</td>
-            <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"> &nbsp;</td>
-            <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"> &nbsp;</td>
-        </tr>
-        <?php endfor;?>
+        <?php
+        $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
+        ?>
+        <?php if (!empty($model_line)): ?>
+            <?php foreach ($model_line as $index => $item): ?>
+                <tr>
+                    <td style="width: 8%;border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;">
+                        <?= $index + 1 ?>
+                    </td>
+                    <td style="width: 52%;border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"
+                        class="text-left"><?= nl2br(Html::encode($item->item_description)) ?>
+                    </td>
+                    <td style="width: 10%;border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;">
+                        <?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?>
+                    </td>
+                    <td style="width: 15%;border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"
+                        class="text-right"><?= number_format($item->unit_price, 3) ?>
+                    </td>
+                    <td style="width: 15%;border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"
+                        class="text-right"><?= number_format($item->amount, 3) ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        <?php endif; ?>
+        <?php for ($i = 0; $i < 2; $i++): ?>
+            <tr>
+                <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"> &nbsp;
+                </td>
+                <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"> &nbsp;
+                </td>
+                <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"> &nbsp;
+                </td>
+                <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"> &nbsp;
+                </td>
+                <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;"> &nbsp;
+                </td>
+            </tr>
+        <?php endfor; ?>
         </tbody>
         <tfoot>
         <tr>
-            <td colspan="3" rowspan="2" style="border-bottom: none;" >
+            <td colspan="3" rowspan="2" style="border-bottom: none;">
                 <div style="text-align: left">
                     <div style="text-align: center;width: 100%">
                         <strong>ผิด ตก ยกเว็น E.&O.E.</strong><br>
@@ -513,21 +598,27 @@ use yii\helpers\Html;
                     <strong>This receipt will be valued only when the cheque is cleared with the Bank</strong>
                 </div>
             </td>
-            <td style="border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;"> <span>รวมเงิน<br/>TOTAL</span></td>
-            <td style="border: 1px solid #000;padding: 4px 6px;text-align: right;vertical-align: middle;"><span>87,160.00</span></td>
+            <td style="border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                <span>รวมเงิน<br/>TOTAL</span></td>
+            <td style="border: 1px solid #000;padding: 4px 6px;text-align: right;vertical-align: middle;"><span><?= number_format($model->subtotal, 2) ?></span>
+            </td>
         </tr>
         <tr>
-            <td style="border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;"><span>ภาษีมูลค่าเพิ่ม<br/>VAT 7%</span></td>
-            <td style="border: 1px solid #000;padding: 4px 6px;text-align: right;vertical-align: middle;"><span>6,101.20</span></td>
+            <td style="border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;"><span>ภาษีมูลค่าเพิ่ม<br/>VAT 7%</span>
+            </td>
+            <td style="border: 1px solid #000;padding: 4px 6px;text-align: right;vertical-align: middle;">
+                <span><?= number_format($model->vat_amount, 2) ?></span></td>
         </tr>
         <tr>
             <td colspan="3" style="border-bottom: none;border-top: none;border-left: none;">
                 <div style="text-align: left;height: 100%;width: 100%;background-color: lightslategray;border-radius: 5px;padding: 10px;">
-                    <strong>เก็บเงินรายทิม้าพอสมยร์นทการร่รปรอยทางขามขนา้นส์</strong>
+                    <strong><?= $model->total_amount_text ?: '' ?></strong>
                 </div>
             </td>
-            <td style="border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;"><span>รวมเงินทั้งสิ้น<br/>TOTAL AMOUNT</span></td>
-            <td style="border: 1px solid #000;padding: 4px 6px;text-align: right;vertical-align: middle;"><span>93,261.20</span></td>
+            <td style="border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;"><span>รวมเงินทั้งสิ้น<br/>TOTAL AMOUNT</span>
+            </td>
+            <td style="border: 1px solid #000;padding: 4px 6px;text-align: right;vertical-align: middle;"><span><?= number_format($model->total_amount, 2) ?></span>
+            </td>
         </tr>
         </tfoot>
     </table>
@@ -537,7 +628,7 @@ use yii\helpers\Html;
                 <table style="width: 100%;collapse: collapse;">
                     <tr>
                         <td><span>ชำระโดย<br/>PAID BY</span></td>
-                        <td>   <span class="checkbox"></span>
+                        <td><span class="checkbox"></span>
                             <span>เงินสด<br/>CASH</span></td>
                         <td>
                             <span class="checkbox"></span>
@@ -567,11 +658,11 @@ use yii\helpers\Html;
 
         </tr>
         <tr>
-           <td style="width: 33%;border: 1px solid #000;text-align: center">
+            <td style="width: 33%;border: 1px solid #000;text-align: center">
                 <div class="signature-line"></div>
                 <div class="signature-label">จำนวนเงิน / AMOUNT</div>
 
-           </td>
+            </td>
             <td style="border: 1px solid #000;text-align: center">
                 <div class="signature-line"></div>
                 <div class="signature-label">ผู้เก็บเงิน / COLLECTOR / วันที่ / DATE</div>
@@ -627,7 +718,7 @@ use yii\helpers\Html;
         document.querySelectorAll('.total-row span:last-child')[2].textContent = total.toLocaleString('th-TH', {minimumFractionDigits: 2});
     }
 
-    window.addEventListener('beforeprint', function() {
+    window.addEventListener('beforeprint', function () {
         document.body.style.zoom = '1';
     });
 </script>
