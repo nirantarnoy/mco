@@ -1075,6 +1075,7 @@ function calculateDueDate(e){
             dataType: 'html',
             data: {id: id},
             success: function(data){
+                 alert(data);
                 var startDate = new Date();
                 var dueDate = new Date();
                 startDate.setDate(startDate.getDate() + parseInt(data));
