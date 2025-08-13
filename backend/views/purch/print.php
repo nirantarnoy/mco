@@ -601,7 +601,8 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
         <div class="signature-box">
             <div class="signature-line">
                 <?php
-                $requestor_signature = \backend\models\User::findEmployeeSignature($purchase->created_by);
+                $emp_id = getEmpRequestor($purchase->id);
+                $requestor_signature = \backend\models\User::findEmployeeSignature($emp_id);
                 if(!empty($requestor_signature)): ?>
                     <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" alt="Request By Signature">
                 <?php endif; ?>
@@ -621,6 +622,18 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
         </div>
     </div>
 </div>
+<?php
+function getEmpRequestor($purch_id) {
+    $emp_id = 0;
+    if($purch_id > 0) {
+        $model = \backend\models\PurchReq::find()->where(['purch_id'=>$purch_id])->one();
+        if($model) {
+            $emp_id = $model->created_by;
+        }
+    }
+    return $emp_id;
+}
+?>
 
 <!-- Print Buttons -->
 <?php if (isset($showButtons) && $showButtons): ?>
