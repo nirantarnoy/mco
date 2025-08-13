@@ -682,7 +682,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 
         <div class="form-group mt-3">
             <div class="d-flex justify-content-between">
-                <?php if ((!$model::APPROVE_STATUS_APPROVED && !$model::STATUS_CANCELLED) || $model->isNewRecord): ?>
+                <?php if ((!$model::APPROVE_STATUS_APPROVED && !$model::STATUS_CANCELLED) || $model->isNewRecord || $model::APPROVE_STATUS_PENDING): ?>
                     <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
                         'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
                     ]) ?>
