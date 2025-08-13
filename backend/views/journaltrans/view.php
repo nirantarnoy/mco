@@ -396,8 +396,8 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                     if ($line->product !== null) {
                         $stockStatusData[] = [
                             'product' => $line->product,
-                            'current_stock' => $line->product->getStockInWarehouse($model->warehouse_id),
-                            'available_stock' => $line->product->getAvailableStockInWarehouse($model->warehouse_id),
+                            'current_stock' => $line->product->getStockInWarehouse($line->warehouse_id),
+                            'available_stock' => $line->product->getAvailableStockInWarehouse($line->warehouse_id),
                             'total_stock' => $line->product->stock_qty,
                             'minimum_stock' => $line->product->minimum_stock,
                         ];

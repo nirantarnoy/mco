@@ -262,6 +262,7 @@ class JournalTrans extends ActiveRecord
 
     public static function getIssueTransStatus(){
         return [
+            self::STATUS_DRAFT => 'Draft',
             self::STATUS_PENDING => 'Pending',
             self::STATUS_APPROVED => 'Approved',
             self::STATUS_CANCELLED => 'Cancelled',
@@ -376,7 +377,7 @@ class JournalTrans extends ActiveRecord
      */
     public function canApprove()
     {
-        return $this->status === self::STATUS_PENDING;
+        return $this->status === self::STATUS_DRAFT; // self::STATUS_PENDING;
     }
 
     /**
@@ -388,7 +389,7 @@ class JournalTrans extends ActiveRecord
             $transaction = Yii::$app->db->beginTransaction();
             try {
                 $this->status = self::STATUS_APPROVED;
-                $this->approve_status = self::STATUS_APPROVED;
+                $this->approve_by = \Yii::$app->user->id;
                 $this->approve_date = date('Y-m-d H:i:s');
                 $this->save(false);
 
@@ -429,7 +430,7 @@ class JournalTrans extends ActiveRecord
             $stockTrans->save();
 
             // Update stock summary
-            $this->updateStockSummary($line->product_id, $this->warehouse_id, $line->qty);
+            $this->updateStockSummary($line->product_id, $line->warehouse_id, $line->qty);
         }
     }
 

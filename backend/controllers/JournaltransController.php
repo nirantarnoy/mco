@@ -328,7 +328,7 @@ class JournaltransController extends Controller
             // Validate stock availability for outbound transactions
             if ($model->stock_type_id == JournalTrans::STOCK_TYPE_OUT) {
                 foreach ($model->journalTransLines as $line) {
-                    $availableStock = $line->product->getAvailableStockInWarehouse($model->warehouse_id);
+                    $availableStock = $line->product->getAvailableStockInWarehouse($line->warehouse_id);
                     if ($availableStock < $line->qty) {
                         throw new \Exception("Insufficient stock for product: {$line->product->name}. Available: {$availableStock}, Required: {$line->qty}");
                     }
