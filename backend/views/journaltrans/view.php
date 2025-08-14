@@ -187,7 +187,7 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                                     'value' => function ($model) {
                                         return \backend\models\User::findEmployeeNameByUserId($model->updated_by);
                                     }
-                                ],,
+                                ],
                             ],
                         ]) ?>
                     </div>
