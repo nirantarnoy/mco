@@ -41,15 +41,7 @@ $this->registerCss("
         page-break-after: auto;
     }
     .copy-watermark {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(-45deg);
-        font-size: 48px;
-        font-weight: bold;
-        color: rgba(255, 0, 0, 0.1);
-        z-index: 1;
-        pointer-events: none;
+        display: none !important;
     }
 }
 
@@ -67,15 +59,7 @@ $this->registerCss("
 }
 
 .copy-watermark {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(-45deg);
-    font-size: 48px;
-    font-weight: bold;
-    color: rgba(255, 0, 0, 0.15);
-    z-index: 1;
-    pointer-events: none;
+    display: none;
 }
 
 /* Header Section - Compact */
@@ -131,11 +115,25 @@ $this->registerCss("
 .bill-title-section {
     text-align: center;
     margin: 8px 0;
+    position: relative;
 }
 
 .bill-title {
     font-size: 18px;
     font-weight: bold;
+}
+
+.copy-label {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    font-weight: bold;
+    color: #ff0000;
+    border: 2px solid #ff0000;
+    padding: 4px 8px;
+    background-color: rgba(255, 255, 255, 0.9);
 }
 
 /* Customer Section - Compact */
@@ -431,11 +429,14 @@ window.createPrintCopies = function() {
         copy.classList.remove('original');
         copy.classList.add('print-copy');
         
-        // Add watermark for copies
-        const watermark = document.createElement('div');
-        watermark.className = 'copy-watermark';
-        watermark.textContent = 'สำเนา';
-        copy.appendChild(watermark);
+        // Add copy label next to bill title
+        const billTitleSection = copy.querySelector('.bill-title-section');
+        if (billTitleSection) {
+            const copyLabel = document.createElement('div');
+            copyLabel.className = 'copy-label';
+            copyLabel.textContent = 'สำเนา';
+            billTitleSection.appendChild(copyLabel);
+        }
         
         originalContainer.parentNode.appendChild(copy);
     }
