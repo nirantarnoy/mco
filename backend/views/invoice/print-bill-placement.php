@@ -130,10 +130,18 @@ $this->registerCss("
     transform: translateY(-50%);
     font-size: 16px;
     font-weight: bold;
-    color: #ff0000;
-    border: 2px solid #ff0000;
     padding: 4px 8px;
     background-color: rgba(255, 255, 255, 0.9);
+}
+
+.copy-label.original {
+    color: #0066cc;
+    border: 2px solid #0066cc;
+}
+
+.copy-label.copy {
+    color: #ff0000;
+    border: 2px solid #ff0000;
 }
 
 /* Customer Section - Compact */
@@ -432,8 +440,14 @@ window.createPrintCopies = function() {
         // Add copy label next to bill title
         const billTitleSection = copy.querySelector('.bill-title-section');
         if (billTitleSection) {
+            // Remove existing label if any
+            const existingLabel = billTitleSection.querySelector('.copy-label');
+            if (existingLabel) {
+                existingLabel.remove();
+            }
+            
             const copyLabel = document.createElement('div');
-            copyLabel.className = 'copy-label';
+            copyLabel.className = 'copy-label copy';
             copyLabel.textContent = 'สำเนา';
             billTitleSection.appendChild(copyLabel);
         }
@@ -545,6 +559,7 @@ window.addEventListener('afterprint', function() {
         </div>
         <div class="bill-title-section">
             <div class="bill-title">ใบวางบิล</div>
+            <div class="copy-label original">ต้นฉบับ</div>
         </div>
     </div>
 

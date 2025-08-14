@@ -7,7 +7,7 @@ use yii\helpers\Html;
 
 $this->title = 'พิมพ์ใบกำกับภาษี - ' . $model->invoice_number;
 
-// Add print styles that match the original form exactly with multi-copy support
+// Add print styles that match the original form exactly
 $this->registerCss("
 @page {
     size: A4;
@@ -28,13 +28,6 @@ $this->registerCss("
         max-width: 100%; 
         box-shadow: none; 
         border: none; 
-        page-break-after: always;
-    }
-    .print-container:last-child {
-        page-break-after: auto;
-    }
-    .copy-watermark {
-        display: none !important;
     }
 }
 
@@ -59,12 +52,6 @@ body {
     padding: 15px;
     border: 1px solid #ddd;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-    position: relative;
-}
-
-.copy-watermark {
-    display: none;
 }
 
 /* Header Section */
@@ -73,6 +60,7 @@ body {
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 15px;
+  /*  border-bottom: 2px solid #000;*/
     padding-bottom: 10px;
 }
 
@@ -127,40 +115,11 @@ body {
     font-size: 18px;
     font-weight: bold;
     margin-bottom: 5px;
-    position: relative;
 }
 
 .invoice-subtitle {
     font-size: 14px;
     margin-bottom: 10px;
-}
-
-/* Copy Label Styles */
-.invoice-title-section {
-    text-align: center;
-    position: relative;
-    margin: 8px 0;
-}
-
-.copy-label {
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 16px;
-    font-weight: bold;
-    padding: 4px 8px;
-    background-color: rgba(255, 255, 255, 0.9);
-}
-
-.copy-label.original {
-    color: #0066cc;
-    border: 2px solid #0066cc;
-}
-
-.copy-label.copy {
-    color: #ff0000;
-    border: 2px solid #ff0000;
 }
 
 /* Customer Section */
@@ -352,224 +311,25 @@ body {
 .btn-secondary { background-color: #6c757d; color: white; }
 .btn:hover { opacity: 0.8; }
 
-.btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* Progress Bar */
-.progress-container {
-    margin: 20px 0;
-    display: none;
-}
-
-.progress-bar {
-    width: 100%;
-    height: 30px;
-    background-color: #f0f0f0;
-    border-radius: 15px;
-    overflow: hidden;
-    border: 2px solid #ddd;
-}
-
-.progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #007bff, #28a745);
-    width: 0%;
-    transition: width 0.5s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    font-size: 12px;
-}
-
-.progress-text {
-    text-align: center;
-    margin-top: 10px;
-    font-weight: bold;
-    color: #333;
-}
-
 /* Utilities */
 .text-center { text-align: center; }
 .text-right { text-align: right; }
 .font-bold { font-weight: bold; }
-
-/* Responsive adjustments */
-@media screen and (max-width: 768px) {
-    .header {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .customer-section {
-        flex-direction: column;
-    }
-    
-    .signature-section {
-        flex-direction: column;
-        gap: 20px;
-    }
-    
-    .signature-box {
-        width: 100%;
-    }
-}
 ");
 
-// Enhanced JavaScript for multi-copy printing with progress
+// Auto print when page loads
 $this->registerJs("
-// Global variables
-let printInProgress = false;
-let currentCopy = 0;
-const totalCopies = 3;
-
-// Function declarations with window object to ensure global scope
-window.updateProgress = function(current, total) {
-    const progressContainer = document.querySelector('.progress-container');
-    const progressFill = document.querySelector('.progress-fill');
-    const progressText = document.querySelector('.progress-text');
-    
-    if (!progressContainer) return;
-    
-    progressContainer.style.display = 'block';
-    const percentage = (current / total) * 100;
-    progressFill.style.width = percentage + '%';
-    progressFill.textContent = percentage.toFixed(0) + '%';
-    
-    if (current === 0) {
-        progressText.textContent = 'กำลังเตรียมพิมพ์...';
-    } else if (current === total) {
-        progressText.textContent = 'พิมพ์เสร็จสิ้น!';
-        setTimeout(() => {
-            progressContainer.style.display = 'none';
-            progressFill.style.width = '0%';
-        }, 2000);
-    } else {
-        progressText.textContent = 'กำลังพิมพ์ใบที่ ' + current + ' จาก ' + total + ' ใบ';
-    }
-};
-
-window.createPrintCopies = function() {
-    // Remove existing copies if any
-    const existingCopies = document.querySelectorAll('.print-copy');
-    existingCopies.forEach(copy => copy.remove());
-    
-    let originalContainer = document.querySelector('.print-container.original');
-    if (!originalContainer) {
-        const container = document.querySelector('.print-container');
-        if (container) {
-            container.classList.add('original');
-            originalContainer = container;
-        }
-    }
-    
-    if (!originalContainer) return;
-    
-    // Add original label to the first copy
-    const originalTitleSection = originalContainer.querySelector('.invoice-title-section');
-    if (originalTitleSection && !originalTitleSection.querySelector('.copy-label')) {
-        const originalLabel = document.createElement('div');
-        originalLabel.className = 'copy-label original';
-        originalLabel.textContent = 'ต้นฉบับ';
-        originalTitleSection.appendChild(originalLabel);
-    }
-    
-    // Create 2 copies
-    for (let i = 1; i <= 2; i++) {
-        const copy = originalContainer.cloneNode(true);
-        copy.classList.remove('original');
-        copy.classList.add('print-copy');
-        
-        // Add copy label next to invoice title
-        const titleSection = copy.querySelector('.invoice-title-section');
-        if (titleSection) {
-            // Remove existing label if any
-            const existingLabel = titleSection.querySelector('.copy-label');
-            if (existingLabel) {
-                existingLabel.remove();
-            }
-            
-            const copyLabel = document.createElement('div');
-            copyLabel.className = 'copy-label copy';
-            copyLabel.textContent = 'สำเนา';
-            titleSection.appendChild(copyLabel);
-        }
-        
-        originalContainer.parentNode.appendChild(copy);
-    }
-};
-
-window.printMultipleCopies = function() {
-    if (printInProgress) return;
-    
-    printInProgress = true;
-    currentCopy = 0;
-    
-    // Disable print button
-    const printBtn = document.querySelector('.btn-print');
-    if (printBtn) {
-        printBtn.disabled = true;
-        printBtn.innerHTML = '⏳ กำลังพิมพ์...';
-    }
-    
-    window.updateProgress(0, totalCopies);
-    
-    // Create copies for printing
-    window.createPrintCopies();
-    
-    // Start printing process
-    setTimeout(() => {
+window.onload = function() {
+    setTimeout(function() {
         window.print();
-    }, 500);
-};
-
-// Enhanced print event handlers
-window.addEventListener('beforeprint', function() {
-    document.body.style.zoom = '1';
-    window.updateProgress(1, totalCopies);
-});
-
-window.addEventListener('afterprint', function() {
-    currentCopy++;
-    window.updateProgress(totalCopies, totalCopies);
-    
-    // Re-enable print button
-    const printBtn = document.querySelector('.btn-print');
-    if (printBtn) {
-        printBtn.disabled = false;
-        printBtn.innerHTML = '🖨️ พิมพ์ 3 ใบ';
-    }
-    
-    printInProgress = false;
-    
-    // Clean up copies after printing
-    setTimeout(() => {
-        const copies = document.querySelectorAll('.print-copy');
-        copies.forEach(copy => copy.remove());
-        
-        // Also remove the original label from the first copy
-        const originalLabel = document.querySelector('.copy-label.original');
-        if (originalLabel) {
-            originalLabel.remove();
-        }
     }, 1000);
-});
-
-// Auto print when page loads (disabled for demo)
-// window.onload = function() {
-//     setTimeout(function() {
-//         window.printMultipleCopies();
-//     }, 1000);
-// };
+};
 ");
 ?>
 
 <div class="print-controls no-print">
-    <button onclick="window.printMultipleCopies()" class="btn btn-primary btn-print">
-        🖨️ พิมพ์ 3 ใบ (ต้นฉบับ + สำเนา 2 ใบ)
+    <button onclick="window.print()" class="btn btn-primary">
+        🖨️ พิมพ์
     </button>
     <button onclick="window.close()" class="btn btn-secondary">
         ❌ ปิด
@@ -577,17 +337,9 @@ window.addEventListener('afterprint', function() {
     <a href="<?= \yii\helpers\Url::to(['view', 'id' => $model->id]) ?>" class="btn btn-success">
         👁️ ดูรายละเอียด
     </a>
-
-    <!-- Progress Bar -->
-    <div class="progress-container">
-        <div class="progress-bar">
-            <div class="progress-fill"></div>
-        </div>
-        <div class="progress-text">เตรียมพิมพ์...</div>
-    </div>
 </div>
 
-<div class="print-container original">
+<div class="print-container">
     <!-- Header -->
     <div class="header">
         <div class="company-logo">
@@ -611,7 +363,7 @@ window.addEventListener('afterprint', function() {
     </div>
     <div class="row">
         <div class="col-lg-12" style="text-align: center">
-            <div class="invoice-title-section">
+            <div class="invoice-info">
                 <div class="invoice-title">ใบกำกับภาษี</div>
                 <div class="invoice-subtitle">Tax Invoice</div>
             </div>
