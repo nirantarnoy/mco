@@ -7,7 +7,7 @@ use yii\helpers\Html;
 
 $this->title = 'พิมพ์ใบวางบิล - ' . $model->invoice_number;
 
-// Optimized CSS for single A4 page with multiple copies
+// Optimized CSS for single A4 page
 $this->registerCss("
 @page {
     size: A4;
@@ -31,25 +31,12 @@ $this->registerCss("
         width: 100%;
         box-shadow: none;
         border: none;
+      /*  height: 100vh;
+        overflow: hidden;*/
         min-height: 280mm;
         display: flex;
         flex-direction: column;
         position: relative;
-        page-break-after: always;
-    }
-    .print-container:last-child {
-        page-break-after: auto;
-    }
-    .copy-watermark {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(-45deg);
-        font-size: 48px;
-        font-weight: bold;
-        color: rgba(255, 0, 0, 0.1);
-        z-index: 1;
-        pointer-events: none;
     }
 }
 
@@ -63,19 +50,6 @@ $this->registerCss("
     display: flex;
     flex-direction: column;
     position: relative;
-    margin-bottom: 20px;
-}
-
-.copy-watermark {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(-45deg);
-    font-size: 48px;
-    font-weight: bold;
-    color: rgba(255, 0, 0, 0.15);
-    z-index: 1;
-    pointer-events: none;
 }
 
 /* Header Section - Compact */
@@ -83,8 +57,6 @@ $this->registerCss("
     border-bottom: 2px solid #000;
     padding-bottom: 10px;
     margin-bottom: 15px;
-    position: relative;
-    z-index: 2;
 }
 
 .header-row {
@@ -143,8 +115,6 @@ $this->registerCss("
     border: 1px solid #000;
     padding: 10px;
     margin-bottom: 15px;
-    position: relative;
-    z-index: 2;
 }
 
 .customer-row {
@@ -196,8 +166,6 @@ $this->registerCss("
     display: flex;
     flex-direction: column;
     margin-bottom: 15px;
-    position: relative;
-    z-index: 2;
 }
 
 .items-title {
@@ -253,8 +221,6 @@ $this->registerCss("
     display: flex;
     justify-content: space-between;
     padding-top: 20px;
-    position: relative;
-    z-index: 2;
 }
 
 .signature-box {
@@ -278,7 +244,7 @@ $this->registerCss("
     font-size: 11px;
 }
 
-/* Print buttons and progress */
+/* Print buttons */
 .print-controls {
     margin-bottom: 20px;
     text-align: center;
@@ -314,46 +280,6 @@ $this->registerCss("
     opacity: 0.8;
 }
 
-.btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* Progress Bar */
-.progress-container {
-    margin: 20px 0;
-    display: none;
-}
-
-.progress-bar {
-    width: 100%;
-    height: 30px;
-    background-color: #f0f0f0;
-    border-radius: 15px;
-    overflow: hidden;
-    border: 2px solid #ddd;
-}
-
-.progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #007bff, #28a745);
-    width: 0%;
-    transition: width 0.5s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    font-size: 12px;
-}
-
-.progress-text {
-    text-align: center;
-    margin-top: 10px;
-    font-weight: bold;
-    color: #333;
-}
-
 /* Responsive adjustments */
 @media screen and (max-width: 768px) {
     .header-row {
@@ -376,134 +302,20 @@ $this->registerCss("
 }
 ");
 
-// Enhanced JavaScript for multi-copy printing with progress
+// Auto print when page loads
 $this->registerJs("
-// Global variables
-let printInProgress = false;
-let currentCopy = 0;
-const totalCopies = 3;
-
-// Function declarations with window object to ensure global scope
-window.updateProgress = function(current, total) {
-    const progressContainer = document.querySelector('.progress-container');
-    const progressFill = document.querySelector('.progress-fill');
-    const progressText = document.querySelector('.progress-text');
-    
-    if (!progressContainer) return;
-    
-    progressContainer.style.display = 'block';
-    const percentage = (current / total) * 100;
-    progressFill.style.width = percentage + '%';
-    progressFill.textContent = percentage.toFixed(0) + '%';
-    
-    if (current === 0) {
-        progressText.textContent = 'กำลังเตรียมพิมพ์...';
-    } else if (current === total) {
-        progressText.textContent = 'พิมพ์เสร็จสิ้น!';
-        setTimeout(() => {
-            progressContainer.style.display = 'none';
-            progressFill.style.width = '0%';
-        }, 2000);
-    } else {
-        progressText.textContent = 'กำลังพิมพ์ใบที่ ' + current + ' จาก ' + total + ' ใบ';
-    }
-};
-
-window.createPrintCopies = function() {
-    // Remove existing copies if any
-    const existingCopies = document.querySelectorAll('.print-copy');
-    existingCopies.forEach(copy => copy.remove());
-    
-    let originalContainer = document.querySelector('.print-container.original');
-    if (!originalContainer) {
-        const container = document.querySelector('.print-container');
-        if (container) {
-            container.classList.add('original');
-            originalContainer = container;
-        }
-    }
-    
-    if (!originalContainer) return;
-    
-    // Create 2 copies
-    for (let i = 1; i <= 2; i++) {
-        const copy = originalContainer.cloneNode(true);
-        copy.classList.remove('original');
-        copy.classList.add('print-copy');
-        
-        // Add watermark for copies
-        const watermark = document.createElement('div');
-        watermark.className = 'copy-watermark';
-        watermark.textContent = 'สำเนา';
-        copy.appendChild(watermark);
-        
-        originalContainer.parentNode.appendChild(copy);
-    }
-};
-
-window.printMultipleCopies = function() {
-    if (printInProgress) return;
-    
-    printInProgress = true;
-    currentCopy = 0;
-    
-    // Disable print button
-    const printBtn = document.querySelector('.btn-print');
-    if (printBtn) {
-        printBtn.disabled = true;
-        printBtn.innerHTML = '<i class=\"fas fa-spinner fa-spin\"></i> กำลังพิมพ์...';
-    }
-    
-    window.updateProgress(0, totalCopies);
-    
-    // Create copies for printing
-    window.createPrintCopies();
-    
-    // Start printing process
-    setTimeout(() => {
+window.onload = function() {
+    setTimeout(function() {
         window.print();
-    }, 500);
-};
-
-// Enhanced print event handlers
-window.addEventListener('beforeprint', function() {
-    document.body.style.zoom = '1';
-    window.updateProgress(1, totalCopies);
-});
-
-window.addEventListener('afterprint', function() {
-    currentCopy++;
-    window.updateProgress(totalCopies, totalCopies);
-    
-    // Re-enable print button
-    const printBtn = document.querySelector('.btn-print');
-    if (printBtn) {
-        printBtn.disabled = false;
-        printBtn.innerHTML = '<i class=\"fas fa-print\"></i> พิมพ์ 3 ใบ';
-    }
-    
-    printInProgress = false;
-    
-    // Clean up copies after printing
-    setTimeout(() => {
-        const copies = document.querySelectorAll('.print-copy');
-        copies.forEach(copy => copy.remove());
     }, 1000);
-});
-
-// Auto print when page loads (disabled for demo)
-// window.onload = function() {
-//     setTimeout(function() {
-//         window.printMultipleCopies();
-//     }, 1000);
-// };
+};
 ");
 ?>
 
 <div class="print-controls no-print">
     <div class="btn-group">
-        <button onclick="window.printMultipleCopies()" class="btn btn-primary btn-print">
-            <i class="fas fa-print"></i> พิมพ์ 3 ใบ (ต้นฉบับ + สำเนา 2 ใบ)
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print"></i> พิมพ์
         </button>
         <button onclick="window.close()" class="btn btn-secondary">
             <i class="fas fa-times"></i> ปิด
@@ -512,17 +324,9 @@ window.addEventListener('afterprint', function() {
             <i class="fas fa-eye"></i> ดูรายละเอียด
         </a>
     </div>
-
-    <!-- Progress Bar -->
-    <div class="progress-container">
-        <div class="progress-bar">
-            <div class="progress-fill"></div>
-        </div>
-        <div class="progress-text">เตรียมพิมพ์...</div>
-    </div>
 </div>
 
-<div class="print-container original">
+<div class="print-container">
     <!-- Header Section -->
     <div class="header-section">
         <div class="header-row">
@@ -665,16 +469,16 @@ window.addEventListener('afterprint', function() {
             taxId: '<?= Html::encode($model->customer_tax_id) ?>'
         },
         items: [
-            <?php if (!empty($model_line)): ?>
-            <?php foreach (array_slice($model_line, 0, 15) as $index => $item): ?>
+            <?php if (!empty($model->items)): ?>
+            <?php foreach (array_slice($model->items, 0, 15) as $index => $item): ?>
             {
                 seq: <?= $index + 1 ?>,
-                orderNumber: '<?= Html::encode($model->po_number ?: '') ?>',
+                orderNumber: '<?= Html::encode($model->po_number) ?>',
                 documentNumber: '<?= Html::encode($model->invoice_number) ?>',
                 documentDate: '<?= Yii::$app->formatter->asDate($model->invoice_date, 'MM/dd/yyyy') ?>',
                 paymentDate: '<?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'MM/dd/yyyy') : '' ?>',
                 amount: <?= $item->amount ?>
-            }<?= $index < min(count($model_line), 15) - 1 ? ',' : '' ?>
+            }<?= $index < min(count($model->items), 15) - 1 ? ',' : '' ?>
             <?php endforeach; ?>
             <?php endif; ?>
         ],
@@ -690,4 +494,10 @@ window.addEventListener('afterprint', function() {
 
     // Initialize with current data
     populateData(sampleBillData);
+
+    // Print optimization
+    window.addEventListener('beforeprint', function() {
+        document.body.style.zoom = '1';
+        document.querySelector('.print-container').style.pageBreakInside = 'avoid';
+    });
 </script>

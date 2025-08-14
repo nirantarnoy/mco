@@ -531,7 +531,7 @@ use yii\helpers\Html;
             </table>
         </div>
     </div>
-
+    <div style="height: 10px"></div>
     <!-- Items Table -->
     <table class="items-tablex">
         <tbody>
@@ -622,6 +622,7 @@ use yii\helpers\Html;
         </tr>
         </tfoot>
     </table>
+    <div style="height: 10px"></div>
     <table style="width: 100%;collapse: collapse;border: 1px solid #000">
         <tr>
             <td style="width: 33%;border: 1px solid #000;">
