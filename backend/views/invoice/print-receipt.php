@@ -476,19 +476,19 @@ use yii\helpers\Html;
                     <td style="width: 10%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
                         รหัสลูกค้า <br>CODE
                     </td>
-                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                    <td style="width: 20%;background-color: lightgrey;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
                         <span style="padding-top: 5px;padding-bottom: 5px;"><?= Html::encode(\backend\models\Customer::findCode($model->customer_id) ?: '') ?></span>
                     </td>
                     <td style="width: 15%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
                         วันที่ <br>DATE
                     </td>
-                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                    <td style="width: 20%;background-color: lightgrey;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
                         <span style="padding-top: 5px;padding-bottom: 5px;"><?= date('m/d/Y', strtotime($model->invoice_date)) ?></span>
                     </td>
                     <td style="width: 10%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
                         เลขที่ <br>NO
                     </td>
-                    <td style="width: 15%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                    <td style="width: 15%;background-color: lightgrey;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
                         <span style="padding-top: 5px;padding-bottom: 5px;"><?= Html::encode($model->invoice_number) ?></span>
                     </td>
                 </tr>
@@ -496,36 +496,36 @@ use yii\helpers\Html;
                     <td style="width: 10%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: top;"
                         rowspan="2">ขายให้ <br>SALE TO
                     </td>
-                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;border-bottom: none;">
+                    <td style="width: 20%;background-color: lightgrey;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;border-bottom: none;">
                         <span style="padding-top: 5px;padding-bottom: 5px;"><?= Html::encode($model->customer_name ?: '') ?></span>
                     </td>
                     <td style="width: 15%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
                         ใบสั่งซื้อเลขที่ <br>PO NO
                     </td>
-                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                    <td style="width: 20%;background-color: lightgrey;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
                         <span style="padding-top: 5px;padding-bottom: 5px;"><?= Html::encode($model->po_number ?: '') ?></span>
                     </td>
                     <td style="width: 10%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
                         วันที่สั่งซื้อ <br>PO DATE
                     </td>
-                    <td style="width: 15%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                    <td style="width: 15%;background-color: lightgrey;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
                         <span style="padding-top: 5px;padding-bottom: 5px;"><?= date('m/d/Y', strtotime($model->po_date)) ?></span>
                     </td>
                 </tr>
                 <tr>
 
-                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;border-top: none;">
-                        <span style="padding-top: 5px;padding-bottom: 5px;"><?= Html::encode($model->customer_address ?: '') ?></span>
+                    <td style="width: 20%;background-color: lightgrey;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;border-top: none;">
+                        <span style="padding-top: 5px;padding-bottom: 5px;"><?= Html::encode($model->customer_address ?: '') ?> <br/>TEXID: <?= Html::encode($model->customer_tax_id ?: '') ?></span>
                     </td>
                     <td style="width: 15%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
                         อ้างถึงเลขที่ใบแจ้งหนี้ <br>RFQ.IV
                     </td>
-                    <td style="width: 20%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                    <td style="width: 20%;background-color: lightgrey;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
                         <span style="padding-top: 5px;padding-bottom: 5px;"></span></td>
                     <td style="width: 10%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
                         อ้างถึงวันที่ใบแจ้งหนี้ <br>RFQ.DATE.IV
                     </td>
-                    <td style="width: 15%;background-color: lightslategray;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
+                    <td style="width: 15%;background-color: lightgrey;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
                         <span style="padding-top: 5px;padding-bottom: 5px;"></span></td>
                 </tr>
             </table>
@@ -611,7 +611,7 @@ use yii\helpers\Html;
         </tr>
         <tr>
             <td colspan="3" style="border-bottom: none;border-top: none;border-left: none;">
-                <div style="text-align: left;height: 100%;width: 100%;background-color: lightslategray;border-radius: 5px;padding: 10px;">
+                <div style="text-align: left;height: 100%;width: 100%;background-color: lightgrey;border-radius: 5px;padding: 10px;">
                     <strong><?= $model->total_amount_text ?: '' ?></strong>
                 </div>
             </td>
