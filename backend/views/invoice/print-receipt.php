@@ -533,7 +533,7 @@ use yii\helpers\Html;
     </div>
     <div style="height: 10px"></div>
     <!-- Items Table -->
-    <table class="items-tablex">
+    <table class="items-tablex" style="width: 100%;collapse: collapse;">
         <tbody>
         <tr>
             <td style="border: 1px solid #000;padding: 4px 6px;text-align: center;vertical-align: middle;">
