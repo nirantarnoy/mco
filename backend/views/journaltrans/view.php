@@ -182,7 +182,12 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                                         return date('m-d-Y H:i:s', strtotime($model->updated_at));
                                     },
                                 ],
-                                'updated_by',
+                                [
+                                    'attribute' => 'updated_by',
+                                    'value' => function ($model) {
+                                        return \backend\models\User::findEmployeeNameByUserId($model->updated_by);
+                                    }
+                                ],,
                             ],
                         ]) ?>
                     </div>
