@@ -515,7 +515,7 @@ use yii\helpers\Html;
                 <tr>
 
                     <td style="width: 20%;background-color: lightgrey;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;border-top: none;">
-                        <span style="padding-top: 5px;padding-bottom: 5px;"><?= Html::encode($model->customer_address ?: '') ?> <br/>TEXID: <?= Html::encode($model->customer_tax_id ?: '') ?></span>
+                        <span style="padding-top: 5px;padding-bottom: 5px;"><?= Html::encode($model->customer_address ?: '') ?> <br/>TAXID: <?= Html::encode($model->customer_tax_id ?: '') ?></span>
                     </td>
                     <td style="width: 15%;border: 1px solid #000;padding: 4px 6px;text-align: left;vertical-align: middle;">
                         อ้างถึงเลขที่ใบแจ้งหนี้ <br>RFQ.IV
