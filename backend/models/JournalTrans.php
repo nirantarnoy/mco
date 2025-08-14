@@ -413,7 +413,7 @@ class JournalTrans extends ActiveRecord
     {
         foreach ($this->journalTransLines as $line) {
             // Create stock transaction
-            $stockTrans = new StockTrans();
+            $stockTrans = new \backend\models\StockTrans();
             $stockTrans->journal_trans_id = $this->id;
             $stockTrans->trans_date = $this->trans_date;
             $stockTrans->product_id = $line->product_id;
