@@ -151,7 +151,7 @@ class ProductController extends Controller
                                     continue;
                                 }
 
-                                $model_trans = new \backend\models\Stocktrans();
+                                $model_trans = new \backend\models\StockTrans();
                                 $model_trans->product_id = $model->id;
                                 $model_trans->trans_date = date('Y-m-d H:i:s');
                                 $model_trans->trans_type_id = 1; // 1 ปรับสต๊อก 2 รับเข้า 3 จ่ายออก

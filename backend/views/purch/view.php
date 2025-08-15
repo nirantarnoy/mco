@@ -174,6 +174,19 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                     }
                                 ],
                                 [
+                                    'attribute' => 'vat_amount',
+                                    'label' => 'VAT (จำนวนเงิน)',
+                                    'value' => function ($model) {
+                                        return $model->vat_amount;
+                                    }
+                                ],
+                                [
+                                    'attribute' => 'whd_tax_amount',
+                                    'value' => function ($model) {
+                                        return $model->whd_tax_amount;
+                                    }
+                                ],
+                                [
                                     'attribute' => 'net_amount',
                                     'label' => 'ยอดรวมทั้งสิ้น',
                                     'format' => ['currency', 'THB'],
@@ -265,7 +278,8 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                             'headerOptions' => ['style' => 'width: 250px;'],
                             'contentOptions' => ['style' => 'text-align: left;'],
                             'value' => function ($data) {
-                                return \backend\models\Product::findName($data->product_id);
+                              //  return \backend\models\Product::findName($data->product_id);
+                                return $data->product_name;
                             },
                         ],
                         [

@@ -324,6 +324,9 @@ function calculateGrandTotal() {
     var discount_per = parseFloat($('#purch-discount_per').val()) || 0;
     var discount_amount = parseFloat($('#purch-discount_amount').val()) || 0;
     
+    var tax_per = parseFloat($('#purch-tax_per').val()) || 0;
+    $(".tax-text").text(tax_per + '%');
+    
   //  alert(discount_per);
     
     if(discount_per > 0){
@@ -332,12 +335,19 @@ function calculateGrandTotal() {
     discount = discount + discount_amount;
     
     var afterDiscount = subtotal - discount;
+    
+    var tax_amount = 0;
+    
+    if(afterDiscount > 0){
+       tax_amount = afterDiscount * (tax_per / 100);
+    }
+    
     var vat = 0;
     if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){
         vat = afterDiscount * 0.07; // 7% VAT
     }
     
-    var netAmount = afterDiscount + vat;
+    var netAmount = afterDiscount + vat - tax_amount;
     
     $('#purchreq-total_amount').val(subtotal.toFixed(2));
     $('#purchreq-vat_amount').val(vat.toFixed(2));
@@ -347,6 +357,7 @@ function calculateGrandTotal() {
     $('#summary-subtotal').text(subtotal.toFixed(2));
     $('#summary-discount').text(discount.toFixed(2));
     $('#summary-vat').text(vat.toFixed(2));
+    $('#summary-tax').text(tax_amount.toFixed(2));
     $('#summary-net').text(netAmount.toFixed(2));
 }
 
@@ -493,15 +504,21 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                         <?= $form->field($model, 'is_vat')->dropDownList([
                             '1' => 'VAT',
                             '2' => 'NO VAT',
-                        ],) ?>
+                        ],
+                            [
+                                'onchange' => 'enableVat($(this))',
+                                'prompt' => 'เลือกคำนวน VAT'
+                            ],) ?>
                         <?= $form->field($model, 'whd_tax_per')->textInput([
                             'type' => 'number',
                             'min' => 0,
+                            'id' => 'purch-tax_per',
                             'value' => $model->isNewRecord ? 0 : $model->whd_tax_per ?? 0,
                             'onChange' => 'calculateGrandTotal2();',
                         ])->label() ?>
                         <?= $form->field($model, 'whd_tax_amount')->textInput([
-                            'readOnly' => true
+                            'readOnly' => true,
+                            'id' => 'purch-tax_amount',
                         ])->label() ?>
                         <?= $form->field($model, 'note')->textarea([
                             'rows' => 4,
@@ -671,6 +688,12 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                         <span id="summary-vat" class="fw-bold">0.00</span> บาท
                                     </div>
                                 </div>
+                                <div class="row mb-2">
+                                    <div class="col-8">TAX <span class="tax-text"></span>:</div>
+                                    <div class="col-4 text-end">
+                                        <span id="summary-tax" class="fw-bold">0.00</span> บาท
+                                    </div>
+                                </div>
                                 <hr>
                                 <div class="row">
                                     <div class="col-8"><strong>ยอดรวมสุทธิ:</strong></div>
@@ -794,11 +817,17 @@ function calculateGrandTotal2() {
         subtotal += parseFloat($(this).val()) || 0;
     });
     
+    
+    
     var purch_req_is_vat =  $("#purch-req-is-vat").val();
     
     var discount = 0;
     var discount_per = parseFloat($('#purch-discount_per').val()) || 0;
     var discount_amount = parseFloat($('#purch-discount_amount').val()) || 0;
+    
+    var tax_per = parseFloat($('#purch-tax_per').val()) || 0;
+    
+    $(".tax-text").text(tax_per + '%');
     
   //  alert(discount_per);
     
@@ -808,21 +837,30 @@ function calculateGrandTotal2() {
     discount = discount + discount_amount;
     
     var afterDiscount = subtotal - discount;
+    var tax_amount = 0;
+    
+    if(afterDiscount > 0){
+       tax_amount = afterDiscount * (tax_per / 100);
+    }
+    
     var vat = 0;
     if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){
         vat = afterDiscount * 0.07; // 7% VAT
     }
     
-    var netAmount = afterDiscount + vat;
+    var netAmount = afterDiscount + vat - tax_amount;
     
     $('#purchreq-total_amount').val(subtotal.toFixed(2));
     $('#purchreq-vat_amount').val(vat.toFixed(2));
     $('#purchreq-net_amount').val(netAmount.toFixed(2));
     
+    $('#purch-tax_amount').val(tax_amount.toFixed(2));
+    
     // Update summary display
     $('#summary-subtotal').text(subtotal.toFixed(2));
     $('#summary-discount').text(discount.toFixed(2));
     $('#summary-vat').text(vat.toFixed(2));
+    $('#summary-tax').text(tax_amount.toFixed(2));
     $('#summary-net').text(netAmount.toFixed(2));
 }
 JS;

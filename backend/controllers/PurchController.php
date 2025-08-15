@@ -167,6 +167,11 @@ class PurchController extends Controller
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
                     if ($model->save()) {
+                        $totalAmount = 0;
+                        $discountAmount = 0;
+                        $vatAmount = 0;
+                        $netAmount = 0;
+                        $tax_amount = 0;
                         // Delete existing lines that are not in the new list
                         $existingLineIds = [];
                         foreach ($purchLines as $purchLine) {
@@ -187,14 +192,44 @@ class PurchController extends Controller
                             if (!$purchLine->save()) {
                                 throw new \Exception('Failed to save purch line');
                             }
+                            // คำนวณยอดรวมจากแต่ละรายการ
+                            $lineTotal = $purchLine->qty * $purchLine->line_price;
+                            $totalAmount += $lineTotal;
                         }
 
-                        $newTotalAmount = $this->calculateTotalAmount($model->id,$purchLines);
-                        $vat_amount = $this->calculateTotalAmount2($purchLines);
-                        $model->net_amount = $newTotalAmount;
-                        $model->vat_amount = $vat_amount * 0.07;
-                        $model->total_amount = $vat_amount;
-                        $model->total_text = PurchReq::numtothai($newTotalAmount);
+                        // คำนวณส่วนลด (สมมติว่ามีฟิลด์ discount_percent ใน model)
+                        if (isset($model->discount_per) && $model->discount_per > 0) {
+                            $discountAmount = ($totalAmount * $model->discount_per) / 100;
+                        } else if (isset($model->discount_amount) && $model->discount_amount > 0) {
+                            $discountAmount = $model->discount_amount;
+                        }
+
+                        // คำนวณยอดหลังหักส่วนลด
+                        $afterDiscountAmount = $totalAmount - $discountAmount;
+
+                        // คำนวณ VAT (สมมติว่ามีฟิลด์ vat_percent ใน model หรือใช้ VAT 7%)
+
+                        $vatPercent = isset($model->vat_percent) ? $model->vat_percent : 7;
+                        if ($vatPercent > 0 && $model->is_vat == 1) {
+                            $vatAmount = ($afterDiscountAmount * $vatPercent) / 100;
+                        }
+
+                        // คำนวน WHT
+
+                        if($model->whd_tax_per > 0){
+                            $tax_amount = ($afterDiscountAmount * $model->whd_tax_per) / 100;
+                        }
+
+                        // คำนวณยอดสุทธิ
+                        $netAmount = $afterDiscountAmount + $vatAmount - $tax_amount;
+
+
+                        $model->total_amount = $totalAmount; // sub total
+                        $model->discount_total_amount = $discountAmount;
+                        $model->vat_amount = $vatAmount;
+                        $model->whd_tax_amount = $tax_amount;
+                        $model->net_amount = $netAmount;
+                        $model->total_text = PurchReq::numtothai($netAmount);
                         if (!$model->save()) {
                             throw new \Exception('Failed to update total amount');
                         }

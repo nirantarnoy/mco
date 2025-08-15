@@ -6,30 +6,34 @@ $this->title = 'Purchase Order - ' . $purchase->purch_no;
 // คำนวณราคารวม
 $subtotal = 0;
 $discount = 0;
+$tax_amount = 0;
 
 
 
 $vat = 0;
 $total = 0;
 
-if ($purchaseLines) {
-    foreach ($purchaseLines as $line) {
-        $subtotal += $line->line_total;
-    }
-}
-
-if($purchase->discount_per > 0){
-    $discount = $subtotal * ($purchase->discount_per / 100);
-}
-if($purchase->discount_amount > 0){
-    $discount += $purchase->discount_amount;
-}
-
-
-// คำนวณ VAT 7%
-$netAmount = $subtotal - $discount;
-$vat = $netAmount * 0.07;
-$total = $netAmount + $vat;
+//if ($purchaseLines) {
+//    foreach ($purchaseLines as $line) {
+//        $subtotal += $line->line_total;
+//    }
+//}
+//
+//if($purchase->discount_per > 0){
+//    $discount = $subtotal * ($purchase->discount_per / 100);
+//}
+//if($purchase->discount_amount > 0){
+//    $discount += $purchase->discount_amount;
+//}
+//
+//if($purchase->whd_tax_per > 0){
+//    $tax_amount = ($subtotal - $discount) * ($purchase->whd_tax_per / 100);
+//}
+//
+//// คำนวณ VAT 7%
+//$netAmount = $subtotal - $discount;
+//$vat = $netAmount * 0.07;
+//$total = $netAmount + $vat - $tax_amount;
 
 $vendor_info = \backend\models\Vendor::findVendorInfo($purchase->vendor_id);
 $vendor_address = $vendor_info !== null ? $vendor_info['home_number'].' '.$vendor_info['street'].' '.$vendor_info['aisle'].', '.$vendor_info['district_name'].', '.$vendor_info['city_name'].', '.$vendor_info['province_name'].', '.$vendor_info['zipcode'] : '';
@@ -517,7 +521,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                 <tr>
                     <td><?= $itemNo++ ?></td>
                     <td><?= Html::encode($line->product->code ?? '') ?></td>
-                    <td class="description-cell"><?= Html::encode($line->product->name ?? $line->product_name) ?></td>
+                    <td class="description-cell"><?= Html::encode($line->product_name) ?></td>
                     <td></td>
                     <td><?= number_format($line->qty, 0) ?></td>
                     <td><?= Html::encode(\backend\models\Unit::findName($line->unit_id)) ?></td>
@@ -558,24 +562,28 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
             <table class="summary-table">
                 <tr>
                     <td class="summary-label">TOTAL</td>
-                    <td class="number-cell"><?= number_format($subtotal, 2) ?></td>
+                    <td class="number-cell"><?= number_format($purchase->total_amount, 2) ?></td>
                 </tr>
                 <tr>
                     <td class="summary-label">DISCOUNT</td>
-                    <td class="number-cell"><?= number_format($discount, 2) ?></td>
+                    <td class="number-cell"><?= number_format($purchase->discount_total_amount, 2) ?></td>
                 </tr>
                 <tr>
                     <td class="summary-label">NET AMOUNT</td>
-                    <td class="number-cell"><?= number_format($netAmount, 2) ?></td>
+                    <td class="number-cell"><?= number_format(($purchase->total_amount - $purchase->discount_amount), 2) ?></td>
                 </tr>
                 <tr>
                     <td class="summary-label">VAT 7%</td>
-                    <td class="number-cell"><?= number_format($vat, 2) ?></td>
+                    <td class="number-cell"><?= number_format($purchase->vat_amount, 2) ?></td>
+                </tr>
+                <tr>
+                    <td class="summary-label">TAX <?=$purchase->whd_tax_per?> %</td>
+                    <td class="number-cell"><?= number_format($purchase->whd_tax_amount, 2) ?></td>
                 </tr>
                 <tr>
                     <td class="summary-label" style="font-size: 16px;">TOTAL</td>
                     <td class="number-cell" style="font-size: 16px; font-weight: bold;">
-                        <?= number_format($total, 2) ?>
+                        <?= number_format($purchase->net_amount, 2) ?>
                     </td>
                 </tr>
             </table>
