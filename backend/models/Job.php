@@ -82,6 +82,11 @@ class Job extends \common\models\Job
         return $this->hasOne(Quotation::className(), ['id' => 'quotation_id']);
     }
 
+    public static function findJobNo($id){
+        $model = \backend\models\Job::find()->where(['id' => $id])->one();
+        return $model != null ? $model->job_no : '';
+    }
+
     public  static function generateJobNo()
     {
         $prefix = 'JO' . date('Ym');

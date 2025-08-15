@@ -493,11 +493,16 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                         <?= $form->field($model, 'is_vat')->dropDownList([
                             '1' => 'VAT',
                             '2' => 'NO VAT',
-                        ],
-                            [
-                                'onchange' => 'enableVat($(this))',
-                                'prompt' => 'เลือกคำนวน VAT'
-                            ],) ?>
+                        ],) ?>
+                        <?= $form->field($model, 'whd_tax_per')->textInput([
+                            'type' => 'number',
+                            'min' => 0,
+                            'value' => $model->isNewRecord ? 0 : $model->whd_tax_per ?? 0,
+                            'onChange' => 'calculateGrandTotal2();',
+                        ])->label() ?>
+                        <?= $form->field($model, 'whd_tax_amount')->textInput([
+                            'readOnly' => true
+                        ])->label() ?>
                         <?= $form->field($model, 'note')->textarea([
                             'rows' => 4,
                             'placeholder' => 'หมายเหตุ'
@@ -682,7 +687,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 
         <div class="form-group mt-3">
             <div class="d-flex justify-content-between">
-                <?php if (($model->approve_status !=1 && $model->status != 3) || $model->isNewRecord): ?>
+                <?php if (($model->approve_status != 1 && $model->status != 3) || $model->isNewRecord): ?>
                     <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
                         'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
                     ]) ?>

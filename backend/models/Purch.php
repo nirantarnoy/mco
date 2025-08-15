@@ -100,7 +100,7 @@ class Purch extends ActiveRecord
             [['vendor_id'], 'required'],
             [['purch_date'], 'safe'],
             [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by','discount_percent','vat_percent','approve_by'], 'integer'],
-            [['total_amount', 'discount_amount', 'vat_amount', 'net_amount','vat_percent','discount_per'], 'number'],
+            [['total_amount', 'discount_amount', 'vat_amount', 'net_amount','vat_percent','discount_per','whd_tax_per','whd_tax_amount'], 'number'],
             [['purch_no', 'vendor_name', 'note','delivery_note','payment_note','footer_delivery','footer_payment','ref_no'], 'string', 'max' => 255],
             [['purch_no'], 'unique'],
             [['approve_date'], 'safe'],
@@ -139,6 +139,8 @@ class Purch extends ActiveRecord
             'is_vat' => 'มี VAT',
             'vat_percent' => 'VAT %',
             'discount_per' => 'ส่วนลด %',
+            'whd_tax_per' => 'หัก ณ ที่จ่าย %',
+            'whd_tax_amount' => 'หัก ณ ที่จ่าย (บาท)',
         ];
     }
 

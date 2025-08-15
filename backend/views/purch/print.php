@@ -460,8 +460,8 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                     <span class="info-value">1</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">EXPRICE JOB NO. :</span>
-                    <span class="info-value"><?= Html::encode($purchase->job_id ?? '') ?></span>
+                    <span class="info-label">EXPENSE JOB NO. :</span>
+                    <span class="info-value"><?= Html::encode(\backend\models\Job::findJobNo($purchase->job_id) ?? '') ?></span>
                 </div>
             </div>
         </div>
