@@ -550,6 +550,9 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
     <div class="summary-section">
         <div class="summary-left">
             <div class="acknowledgment">ACKNOWLEDGMENT BY :</div>
+            <div style="text-align: center;">
+                <div class="signature-line"></div>
+            </div>
         </div>
         <div class="summary-right">
             <table class="summary-table">
