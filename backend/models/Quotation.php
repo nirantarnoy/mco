@@ -314,7 +314,7 @@ class Quotation extends ActiveRecord
     public static function findNo($id){
         $quotation = Quotation::find()->where(['id' => $id])->one();
         if($quotation){
-            return $quotation->no;
+            return $quotation->quotation_no;
         }else{
             return '';
         }
