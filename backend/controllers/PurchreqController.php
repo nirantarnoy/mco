@@ -554,6 +554,7 @@ class PurchreqController extends Controller
             $purchModel->total_text = $purchReqModel->total_text;
             $purchModel->is_vat = $purchReqModel->is_vat;
             $purchModel->vat_percent = $purchReqModel->vat_percent;
+            $purchModel->job_id = $purchReqModel->job_id;
            // $purchModel->approve_date = date('Y-m-d H:i:s');
 
            // $purchModel->note = 'แปลงจากใบขอซื้อ: ' . $purchReqModel->purch_req_no . ($purchReqModel->note ? ' - ' . $purchReqModel->note : '');
