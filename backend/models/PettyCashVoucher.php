@@ -57,7 +57,7 @@ class PettyCashVoucher extends ActiveRecord
     public function rules()
     {
         return [
-            [['pcv_no', 'date', 'name', 'amount'], 'required'],
+            [['pcv_no', 'date', 'amount'], 'required'],
             [['date', 'issued_date', 'approved_date'], 'safe'],
             [['amount'], 'number', 'min' => 0],
             [['paid_for'], 'string'],
