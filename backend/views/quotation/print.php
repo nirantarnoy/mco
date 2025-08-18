@@ -188,37 +188,34 @@ $email = $customer_info !== null ? $customer_info['email'] : '';
         </div>
         <div class="quotation-title">Quotation</div>
     </div>
-
-    <div class="row">
-        <div class="col-lg-6">
-            <!-- Company Info -->
-            <div class="info-section">
-                <div>
-                    <span class="info-label">Company Name :</span>
+    <table style="width: 100%;border: none;">
+        <tr>
+            <td style="width: 50%;border: none;text-align: left;">
+                <div class="info-section">
+                    <div>
+                        <span class="info-label">Company Name :</span>
+                    </div>
+                    <div class="info-row">
+                        <span>M.C.O. COMPANY LIMITED</span>
+                    </div>
+                    <div class="info-row">
+                        <span>8/18 Koh-kloy Road,</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Tambon Cherngnern,</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Amphur Muang ,</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Rayong 21000 Thailand.</span>
+                    </div>
+                    <div class="info-row">
+                        <span>info@thai-mco.com</span>
+                    </div>
                 </div>
-                <div class="info-row">
-                    <span>M.C.O. COMPANY LIMITED</span>
-                </div>
-                <div class="info-row">
-                    <span>8/18 Koh-kloy Road,</span>
-                </div>
-                <div class="info-row">
-                    <span>Tambon Cherngnern,</span>
-                </div>
-                <div class="info-row">
-                    <span>Amphur Muang ,</span>
-                </div>
-                <div class="info-row">
-                    <span>Rayong 21000 Thailand.</span>
-                </div>
-                <div class="info-row">
-                    <span>info@thai-mco.com</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-6">
-            <!-- Quotation Details -->
-            <div style="justify-content: space-between; margin-bottom: 20px;">
+            </td>
+            <td style="width: 50%;border: none;text-align: right;">
                 <div>
                     <div class="info-row">
                         <span class="info-label">Date</span>
@@ -245,9 +242,9 @@ $email = $customer_info !== null ? $customer_info['email'] : '';
                         <span>: </span>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
+            </td>
+        </tr>
+    </table>
 
     <div class="row">
         <div class="col-lg-12">
