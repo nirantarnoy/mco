@@ -695,7 +695,7 @@ class PurchreqController extends Controller
                     'name' => $product->name,
                     'code' => $product->code ?? '',
                     'price' => $product->sale_price ?? 0,
-                    'display' => $product->code . ($product->name ? ' (' . $product->name . ')' : '')
+                    'display' => $product->name,// $product->code . ($product->name ? ' (' . $product->name . ')' : '')
                 ];
             }
 
