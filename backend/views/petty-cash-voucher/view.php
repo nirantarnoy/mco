@@ -57,6 +57,18 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                                 'value' => $model->paid_for ?: '-',
                                 'format' => 'ntext',
                             ],
+                            [
+                                'attribute' => 'quotation_id',
+                                'value' => function ($model) {
+                                    return \backend\models\Quotation::findNo($model->quotation_id);
+                                },
+                            ],
+                            [
+                                'attribute' => 'job_id',
+                                'value' => function ($model) {
+                                    return \backend\models\Job::findJobNo($model->job_id);
+                                },
+                            ],
                         ],
                     ]) ?>
                 </div>
