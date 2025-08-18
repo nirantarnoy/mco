@@ -532,7 +532,10 @@ class PurchreqController extends Controller
             return $this->redirect(['view', 'id' => $purchReqModel->id]);
         }
 
-        $last_no = $this->getPurchNo($purchReqModel->job_id);
+        $last_no = ''; // $this->getPurchNo($purchReqModel->job_id);
+        if($purchReqModel->purch_req_no != null){
+            $last_no = preg_replace("/^PR/", "PO", $purchReqModel->purch_req_no);
+        }
 
         $transaction = Yii::$app->db->beginTransaction();
         try {
