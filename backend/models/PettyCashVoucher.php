@@ -65,6 +65,7 @@ class PettyCashVoucher extends ActiveRecord
             [['pcv_no'], 'string', 'max' => 50],
             [['name', 'issued_by', 'approved_by'], 'string', 'max' => 255],
             [['pcv_no'], 'unique'],
+            [['name'],'default','value' => null],
         ];
     }
 
