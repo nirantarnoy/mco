@@ -65,6 +65,7 @@ class Quotation extends ActiveRecord
     public function rules()
     {
         return [
+            [['customer_id'],'required'],
             [['quotation_date'], 'safe'],
             [['customer_id', 'status', 'approve_status', 'approve_by', 'created_at', 'created_by', 'updated_at', 'updated_by','payment_term_id','payment_method_id','sale_emp_id'], 'integer'],
             [['total_amount'], 'number'],
