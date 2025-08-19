@@ -406,7 +406,6 @@ $approverDate = '';
     <div class="header-section">
         <div class="company-info">
             <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png',['style' => 'max-width: 150px;']) ?>
-            <h3>Company Name :</h3>
             <h3>M.C.O. COMPANY LIMITED</h3>
             <p>8/18 Koh-Kloy Road.</p>
             <p>Tambon Cherngnern,</p>
@@ -498,7 +497,7 @@ $approverDate = '';
                 <td><?= $item['qty'] ?></td>
                 <td><?= Html::encode(\backend\models\Unit::findName($item['unit'])) ?></td>
                 <td class="number"><?= number_format($item['estimated_price'], 2) ?></td>
-                <td class="number"><?= number_format($item['budget'], 2) ?></td>
+                <td class="number"><?= number_format($item['qty'] * $item['estimated_price'], 2) ?></td>
             </tr>
         <?php endforeach; ?>
 
