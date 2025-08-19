@@ -25,6 +25,7 @@ $customer_name = $customer_info !== null && count($customer_info)>0 ? $customer_
 $customer_address = $customer_info !== null && count($customer_info)>0 ? $customer_info['home_number'].' '.$customer_info['street'].' '.$customer_info['aisle'].', '.$customer_info['district_name'].', '.$customer_info['city_name'].', '.$customer_info['province_name'].', '.$customer_info['zipcode'] : '';
 $phone = $customer_info !== null && count($customer_info)>0 ? $customer_info['phone'] : '';
 $email = $customer_info !== null && count($customer_info)>0 ? $customer_info['email'] : '';
+$customer_taxid = $customer_info !== null && count($customer_info)>0 ? $customer_info['taxid'] : '';
 ?>
 
 <style>
@@ -38,7 +39,7 @@ $email = $customer_info !== null && count($customer_info)>0 ? $customer_info['em
     .header {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 30px;
+        margin-bottom: 1px;
     }
 
     .logo-section {
@@ -72,14 +73,14 @@ $email = $customer_info !== null && count($customer_info)>0 ? $customer_info['em
 
     .info-section {
         background: #E6F2FF;
-        padding: 10px;
-        margin-bottom: 20px;
+        padding: 5px;
+        /*margin-bottom: 5px;*/
         border-radius: 5px;
     }
 
     .info-row {
         display: flex;
-        margin-bottom: 5px;
+        margin-bottom: 0;
     }
 
     .info-label {
@@ -91,7 +92,7 @@ $email = $customer_info !== null && count($customer_info)>0 ? $customer_info['em
     .address-section {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 20px;
+        margin-bottom: 1px;
     }
 
     .address-box {
@@ -100,15 +101,15 @@ $email = $customer_info !== null && count($customer_info)>0 ? $customer_info['em
 
     .address-header {
         background: #E6F2FF;
-        padding: 5px 10px;
+        /*padding: 5px 10px;*/
         font-weight: bold;
-        margin-bottom: 10px;
+        margin-bottom: 0;
     }
 
     table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 20px;
+        margin-bottom: 1px;
     }
 
     th {
@@ -136,7 +137,7 @@ $email = $customer_info !== null && count($customer_info)>0 ? $customer_info['em
     .summary-section {
         display: flex;
         justify-content: space-between;
-        margin-top: 20px;
+        margin-top: 10px;
     }
 
     .summary-box {
@@ -151,7 +152,7 @@ $email = $customer_info !== null && count($customer_info)>0 ? $customer_info['em
 
     .terms-section {
         margin-top: 20px;
-        font-size: 12px;
+        font-size: 16px;
     }
 
     .signature-section {
@@ -180,17 +181,27 @@ $email = $customer_info !== null && count($customer_info)>0 ? $customer_info['em
 <div class="quotation-container">
     <!-- Header -->
     <div class="header">
-        <div class="logo-section">
-            <div class="logo">
-                <img src="../../backend/web/uploads/logo/mco_logo_2.png" width="50%" alt="">
-            </div>
+        <table style="width: 100%;border: none;">
+            <tr>
+                <td style="width: 60%;border: none;text-align: left;">
+                    <div class="logo-section">
+                        <div class="logo">
+                            <img src="../../backend/web/uploads/logo/mco_logo_2.png" width="50%" alt="">
+                        </div>
 
-        </div>
-        <div class="quotation-title">Quotation</div>
+                    </div>
+                </td>
+                <td style="width: 40%;border: none;text-align: center;">
+                    <div class="quotation-title">Quotation</div>
+                </td>
+            </tr>
+        </table>
+
+
     </div>
     <table style="width: 100%;border: none;">
         <tr>
-            <td style="width: 50%;border: none;text-align: left;">
+            <td style="width: 60%;border: none;text-align: left;">
                 <div class="info-section">
                     <div>
                         <span class="info-label">Company Name :</span>
@@ -215,7 +226,7 @@ $email = $customer_info !== null && count($customer_info)>0 ? $customer_info['em
                     </div>
                 </div>
             </td>
-            <td style="width: 50%;border: none;text-align: right;">
+            <td style="width: 40%;border: none;text-align: right;vertical-align: top">
                 <div>
                     <div class="info-row">
                         <span class="info-label">Date</span>
@@ -244,58 +255,67 @@ $email = $customer_info !== null && count($customer_info)>0 ? $customer_info['em
                 </div>
             </td>
         </tr>
+        <tr>
+            <td style="width: 60%;border: none;text-align: left;">
+                <table style="width: 100%;border: none;">
+                    <tr>
+                        <td style="width: 100%;border: none;text-align: left;">
+                            <div class="address-header">Customer :</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 100%;border: none;text-align: left;">
+                            <?= Html::encode($customer_name).'<br />'.Html::encode($customer_address).'<br />'.'tax id :'.Html::encode($customer_taxid) ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 100%;border: none;text-align: left;">
+                            <div class="address-section">
+                                    <div>
+                                        <div class="info-row">
+                                            <span class="info-label">Tel : <?= Html::encode($phone) ?></span>
+                                            <span></span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Fax :</span>
+                                            <span></span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">To :</span>
+                                            <span><?= Html::encode($quotation->customer_name ?? 'Purchaser') ?></span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Purchaser</span>
+                                            <span></span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label">Project Name :</span>
+                                            <span></span>
+                                        </div>
+                                    </div>
+
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+            </td>
+            <td style="width: 40%;border: none;text-align: left;">
+
+            </td>
+        </tr>
+
     </table>
 
     <div class="row">
         <div class="col-lg-12">
-            <table style="width: 100%;border: none;">
-                <tr>
-                    <td style="width: 50%;border: none;text-align: left;">
-                        <div class="address-header">Customer :</div>
-                    </td>
-                    <td style="width: 50%;border: none;text-align: left;"></td>
-                </tr>
-                <tr>
-                    <td colspan="2" style="border: none;text-align: left;">
-                        <?= Html::encode($customer_name).'<br />'.Html::encode($customer_address).'<br />' ?>
-                    </td>
-                </tr>
-            </table>
 
         </div>
     </div>
     <div class="row">
         <div class="col-lg-8">
             <!-- Customer Info -->
-            <div class="address-section">
-                <div class="address-box">
 
-                    <div>
-                        <div class="info-row">
-                            <span class="info-label">Tel : <?= Html::encode($phone) ?></span>
-                            <span></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Fax :</span>
-                            <span></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">To :</span>
-                            <span><?= Html::encode($quotation->customer_name ?? 'Purchaser') ?></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Purchaser</span>
-                            <span></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Project Name :</span>
-                            <span></span>
-                        </div>
-                    </div>
-                </div>
-
-
-            </div>
         </div>
         <div class="col-lg-4">
         </div>

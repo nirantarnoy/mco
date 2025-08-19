@@ -82,6 +82,7 @@ class Customer extends \common\models\Customer
             $data['contact_name'] = $model->contact_name;
             $data['phone'] = $model->phone;
             $data['email'] = $model->email;
+            $data['taxid'] = $model->taxid;
 
         }
         return $data;
