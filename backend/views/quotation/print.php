@@ -21,7 +21,7 @@ $grandTotal = $subtotal + $vat - $discount;
 
 $customer_info = \backend\models\Customer::findCustomerInfo($quotation->customer_id);
 //print_r($customer_info);return;
-$customer_name = $customer_info !== null ? $customer_info['name'] : '';
+$customer_name = $customer_info !== null ? $customer_info[0]['name'] : '';
 $customer_address = $customer_info !== null ? $customer_info['home_number'].' '.$customer_info['street'].' '.$customer_info['aisle'].', '.$customer_info['district_name'].', '.$customer_info['city_name'].', '.$customer_info['province_name'].', '.$customer_info['zipcode'] : '';
 $phone = $customer_info !== null ? $customer_info['phone'] : '';
 $email = $customer_info !== null ? $customer_info['email'] : '';
