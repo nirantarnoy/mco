@@ -15,10 +15,10 @@ use backend\models\Invoice;
 /* @var $customers array */
 /* @var $form yii\widgets\ActiveForm */
 
-$getProductInfoUrl = Url::to(['get-product-info']);
-$getJobItemsUrl = Url::to(['get-job-items']);
-$getCustomerUrl = Url::to(['get-customer']);
-$getJobUrl = Url::to(['get-job']);
+//$getProductInfoUrl = Url::to(['get-product-info']);
+//$getJobItemsUrl = Url::to(['get-job-items']);
+//$getCustomerUrl = Url::to(['get-customer']);
+//$getJobUrl = Url::to(['get-job']);
 
 
 // ตั้งค่าตัวแปร URLs ก่อน
@@ -344,6 +344,7 @@ function loadJobItems(jobId) {
                                'หมายเหตุ: การโหลดจะเขียนทับรายการที่มีอยู่')) {
                         clearAllItems();
                         
+                        console.log('Job items:', response.items);
                         // Add items from job
                         response.items.forEach(function(item) {
                             addItemRow(item);
