@@ -349,7 +349,7 @@ $customer_taxid = $customer_info !== null && count($customer_info)>0 ? $customer
                 <tr>
                     <td><?= $itemNo++ ?></td>
                     <td class="description-cell"><?= Html::encode($line->product_name ?? '') ?></td>
-                    <td><?= number_format($line->qty, 0) ?></td>
+                    <td><?= number_format($line->qty, 1) ?></td>
                     <td><?= Html::encode(\backend\models\Unit::findName($line->product->unit_id) ?? '') ?></td>
                     <td class="number-cell"><?= number_format($line->line_price, 2) ?></td>
                     <td class="number-cell"><?= number_format($line->line_total, 2) ?></td>
