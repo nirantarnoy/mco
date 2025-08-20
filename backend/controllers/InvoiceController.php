@@ -428,7 +428,7 @@ class InvoiceController extends Controller
                     'item_description' => $jobItem->product->name,
                     'quantity' => number_format($jobItem->qty, 0),
                     'unit' => $jobItem->product->unit->name ?: 'หน่วย',
-                    'unit_price' => number_format($jobItem->line_price, 2),
+                    'unit_price' => $jobItem->line_price,
                     'amount' => number_format($jobItem->qty * $jobItem->line_price, 2),
                     // ข้อมูลเพิ่มเติมที่อาจจำเป็น
                     'product_id' => $jobItem->product_id,
