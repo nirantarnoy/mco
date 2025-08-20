@@ -221,7 +221,7 @@ function addItemRow(itemData = null) {
         emptyDescriptionRow.find('.product-id-input').val(productId);
         emptyDescriptionRow.find('.item-description-input').val(description);
         emptyDescriptionRow.find('.quantity-input').val(quantity);
-        emptyDescriptionRow.find('.unit-price-input').val(unitPrice);
+        emptyDescriptionRow.find('.unit-price-input').val(parseFloat(unitPrice).toFixed(2));
         emptyDescriptionRow.find('.amount-input').val(amount);
         
         // ตั้งค่า unit dropdown
@@ -274,7 +274,7 @@ function addItemRow(itemData = null) {
             </select>
         </td>
         <td>
-            <input type="number" name="InvoiceItem[` + rowIndex + `][unit_price]" class="form-control form-control-sm unit-price-input text-right" step="0.001" min="0" value="` + unitPrice + `">
+            <input type="number" name="InvoiceItem[` + rowIndex + `][unit_price]" class="form-control form-control-sm unit-price-input text-right" step="0.001" min="0" value="` + parseFloat(unitPrice).toFixed(2) + `">
         </td>
         <td>
             <input type="number" name="InvoiceItem[` + rowIndex + `][amount]" class="form-control form-control-sm amount-input text-right" readonly style="background-color: #f8f9fa;" value="` + amount + `">
