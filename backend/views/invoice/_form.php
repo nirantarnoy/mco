@@ -202,8 +202,50 @@ function createUnitOptions(selectedUnit = "") {
 
 // Add new item row
 function addItemRow(itemData = null) {
-    // ลบแถวล่าสุดก่อน
-    $('#items-table tbody tr:first').remove();
+    // เช็คว่ามีแถวที่ item_description ว่างอยู่หรือไม่
+    var emptyDescriptionRow = $('#items-table tbody tr').filter(function() {
+        var description = $(this).find('.item-description-input').val();
+        return description === '' || description.trim() === '';
+    }).first();
+
+    // ถ้าพบแถวที่ว่าง ให้ใส่ข้อมูลลงในแถวที่ว่างนั้น
+    if (emptyDescriptionRow.length > 0) {
+        var description = itemData.item_description || '';
+        var quantity = itemData.quantity || '1.000';
+        var unit = itemData.unit || '';
+        var unitPrice = itemData.unit_price || '0.000';
+        var amount = itemData.amount || '0.000';
+        var productId = itemData.product_id || '';
+
+        // ใส่ข้อมูลลงในแถวที่ว่าง
+        emptyDescriptionRow.find('.product-id-input').val(productId);
+        emptyDescriptionRow.find('.item-description-input').val(description);
+        emptyDescriptionRow.find('.quantity-input').val(quantity);
+        emptyDescriptionRow.find('.unit-price-input').val(unitPrice);
+        emptyDescriptionRow.find('.amount-input').val(amount);
+        
+        // ตั้งค่า unit dropdown
+        if (unit) {
+            emptyDescriptionRow.find('select[name*="[unit_id]"] option').each(function() {
+                if ($(this).text() === unit || $(this).val() === unit) {
+                    $(this).prop('selected', true);
+                }
+            });
+        }
+
+        // คำนวณ amount ใหม่
+        calculateItemAmount(emptyDescriptionRow);
+        
+        return; // ออกจากฟังก์ชันโดยไม่เพิ่มแถวใหม่
+    }
+
+    // ถ้าไม่มี itemData ไม่ต้องทำอะไร
+    if (!itemData) {
+        return;
+    }
+
+    // ลบแถวล่าสุดก่อน (ถ้าต้องการ)
+    // $('#items-table tbody tr:first').remove();
 
     // คำนวณ rowIndex หลังจากลบแถวล่าสุด
     var rowIndex = $('#items-table tbody tr').length;
