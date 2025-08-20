@@ -68,7 +68,7 @@ class Quotation extends ActiveRecord
             [['customer_id'],'required'],
             [['quotation_date'], 'safe'],
             [['customer_id', 'status', 'approve_status', 'approve_by', 'created_at', 'created_by', 'updated_at', 'updated_by','payment_term_id','payment_method_id','sale_emp_id'], 'integer'],
-            [['total_amount'], 'number'],
+            [['total_amount','discount_amount','discount_percent','total_discount_amount','vat_percent','vat_total_amount'], 'number'],
             [['quotation_no', 'customer_name', 'total_amount_text', 'note','delivery_day_text'], 'string', 'max' => 255],
             [['quotation_no'], 'unique'],
         ];
@@ -99,6 +99,11 @@ class Quotation extends ActiveRecord
             'payment_method_id' => 'วิธีชำระเงิน',
             'delivery_day_text' => 'กำหนดส่งของ',
             'sale_emp_id' => 'พนักงานขาย',
+            'discount_amount' => 'ส่วนลด(จำนวนเงิน)',
+            'discount_percent' => 'ส่วนลด %',
+            'total_discount_amount' => 'รวมส่วนลด',
+            'vat_percent' => 'VAT %',
+            'vat_total_amount' => 'รวม VAT',
         ];
     }
 

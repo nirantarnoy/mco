@@ -400,7 +400,38 @@ JS;
 
 $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
 ?>
+    <!-- Flash Messages -->
+<?php if (\Yii::$app->session->hasFlash('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <?= \Yii::$app->session->getFlash('success') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
 
+<?php if (\Yii::$app->session->hasFlash('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <?= \Yii::$app->session->getFlash('error') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
+
+<?php if (\Yii::$app->session->hasFlash('warning')): ?>
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <?= \Yii::$app->session->getFlash('warning') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
+
+<?php if (\Yii::$app->session->hasFlash('info')): ?>
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <?= \Yii::$app->session->getFlash('info') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
     <div class="quotation-form">
 
         <?php $form = ActiveForm::begin([
@@ -463,14 +494,14 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                         ]) ?>
                     </div>
                     <div class="col-lg-4">
-<!--                        --><?php //= $form->field($model, 'payment_term_id')->widget(Select2::className(), [
-//                            'data' => ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name'),
-//                            'options' => ['placeholder' => 'เลือกเงื่อนไขชําระเงิน'],
-//                            'pluginOptions' => [
-//                                'allowClear' => true
-//                            ]
-//                        ]) ?>
-                        <?= $form->field($model,'delivery_day_text')->textInput([]) ?>
+                        <!--                        --><?php //= $form->field($model, 'payment_term_id')->widget(Select2::className(), [
+                        //                            'data' => ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name'),
+                        //                            'options' => ['placeholder' => 'เลือกเงื่อนไขชําระเงิน'],
+                        //                            'pluginOptions' => [
+                        //                                'allowClear' => true
+                        //                            ]
+                        //                        ]) ?>
+                        <?= $form->field($model, 'delivery_day_text')->textInput([]) ?>
                         <?= $form->field($model, 'payment_term_id')->widget(Select2::className(), [
                             'data' => ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name'),
                             'options' => ['placeholder' => 'เลือกเงื่อนไขชําระเงิน'],
@@ -486,6 +517,20 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                             'pluginOptions' => [
                                 'allowClear' => true
                             ]
+                        ]) ?>
+                        <?= $form->field($model, 'discount_percent')->textInput([
+                            'type' => 'number',
+                            'min' => 0,
+                            'id' => 'purch-discount_per',
+                            'onchange' => 'calculateGrandTotal();',
+
+                        ]) ?>
+                        <?= $form->field($model, 'discount_amount')->textInput([
+                            'type' => 'number',
+                            'min' => 0,
+                            'id' => 'purch-discount_amount',
+                            'onchange' => 'calculateGrandTotal();'
+
                         ]) ?>
                     </div>
                 </div>
@@ -628,43 +673,66 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                         <div class="card bg-light">
                             <div class="card-body">
                                 <div class="row">
+                                    <div class="col-8"><strong>ยอดรวม:</strong></div>
+                                    <div class="col-4 text-end">
+                                        <span id="sub-total" class="fw-bold text-primary h5">0.00</span> บาท
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-8"><strong>ส่วนลด:</strong></div>
+                                    <div class="col-4 text-end">
+                                        <span id="discount-total" class="fw-bold text-primary h5">0.00</span> บาท
+                                    </div>
+                                </div>
+                                <div class="row">
                                     <div class="col-8"><strong>ยอดรวมทั้งสิ้น:</strong></div>
                                     <div class="col-4 text-end">
                                         <span id="summary-total" class="fw-bold text-primary h5">0.00</span> บาท
                                     </div>
                                 </div>
                             </div>
+
                         </div>
+
                     </div>
                 </div>
+
             </div>
         </div>
-
-        <?php if ($model->isNewRecord || $model->status == Quotation::STATUS_DRAFT || !checkHasCreateBillPlace($model->id)): ?>
-            <div class="form-group mt-3">
-                <div class="d-flex justify-content-between">
-                    <?= Html::submitButton($model->isNewRecord ? 'สร้างใบเสนอราคา' : 'บันทึกการแก้ไข', [
-                        'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
-                    ]) ?>
-                    <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
-                </div>
-            </div>
-        <?php endif; ?>
-
-        <?php ActiveForm::end(); ?>
-
     </div>
+
+
+    <input type="hidden" id="sub-total-amount" name="sub_total_amount" value="0">
+    <input type="hidden" id="discount-total-amount" name="discount_total_amount" value="0">
+    <input type="hidden" id="total-vat-amount" name="total_vat_amount" value="0">
+    <input type="hidden" id="summary-total-amount" name="summary_total_amount" value="0">
+
+<?php if ($model->isNewRecord || $model->status == Quotation::STATUS_DRAFT || !checkHasCreateBillPlace($model->id)): ?>
+    <div class="form-group mt-3">
+        <div class="d-flex justify-content-between">
+            <?= Html::submitButton($model->isNewRecord ? 'สร้างใบเสนอราคา' : 'บันทึกการแก้ไข', [
+                'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
+            ]) ?>
+            <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php ActiveForm::end(); ?>
+
 
 <?php
 
-function checkHasCreateBillPlace($id){
+function checkHasCreateBillPlace($id)
+{
     $model = \backend\models\Invoice::find()->where(['quotation_id' => $id])->one();
-    if($model){
+    if ($model) {
         return true;
-    }else{
+    } else {
         return false;
     }
 }
+
 // Simple Dynamic Form JavaScript พร้อม autocomplete
 $dynamicFormJs = <<<JS
 $(document).ready(function() {
@@ -732,6 +800,7 @@ $(document).ready(function() {
     updateAllDataIndexes();
     updateItemNumbers();
     calculateGrandTotal();
+    //  calculateGrandTotal2();
 });
 
 // ฟังก์ชันคำนวณยอดรวมในแต่ละรายการ
@@ -753,15 +822,46 @@ function calculateLineTotal(index) {
 // ฟังก์ชันคำนวณยอดรวมทั้งหมด
 function calculateGrandTotal() {
     var total = 0;
+    var total_before_discount = 0;
     $('.line-total').each(function() {
         var value = parseFloat($(this).val()) || 0;
         total += value;
     });
     
-    console.log('Grand total:', total);
+    var discount = 0;
+    var discount_per = parseFloat($('#purch-discount_per').val()) || 0;
+    var discount_amount = parseFloat($('#purch-discount_amount').val()) || 0;
+    
+    var tax_per = 7;
+    
+    $(".tax-text").text(tax_per + '%');
+    
+    if(discount_per > 0){
+        discount = total * (discount_per / 100);
+    }
+    discount = discount + discount_amount;
+    
+    total_before_discount = total;
+    total = total - discount;
+    
+       var vat = 0;
+   // if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){
+        vat = total * 0.07; // 7% VAT
+    //}
+    
+    total = total + vat;
+    
+    // console.log('Grand total:', total);
     
     $('#quotation-total_amount').val(total.toFixed(2));
+    $("#sub-total").html(total_before_discount.toFixed(2));
+    $("#discount-total").html(discount.toFixed(2));
     $('#summary-total').text(total.toFixed(2));
+    
+    $('#sub-total-amount').val(total_before_discount.toFixed(2));
+    $('#discount-total-amount').val(discount.toFixed(2));
+    $('#total-vat-amount').val(vat.toFixed(2));
+    $('#summary-total-amount').val(total.toFixed(2));
 }
 
 // Event handlers สำหรับการคำนวณ
@@ -774,5 +874,5 @@ $(document).on('change keyup input', '.qty-input, .price-input, .discount-input'
 });
 JS;
 
-$this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
+$this->registerJs($dynamicFormJs, static::POS_END);
 ?>

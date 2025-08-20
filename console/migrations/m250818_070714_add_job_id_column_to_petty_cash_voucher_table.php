@@ -12,7 +12,7 @@ class m250818_070714_add_job_id_column_to_petty_cash_voucher_table extends Migra
      */
     public function safeUp()
     {
-        $this->addColumn('{{%petty_cash_voucher}}', 'job_id', $this->integer());
+//        $this->addColumn('{{%petty_cash_voucher}}', 'job_id', $this->integer());
     }
 
     /**
@@ -20,6 +20,6 @@ class m250818_070714_add_job_id_column_to_petty_cash_voucher_table extends Migra
      */
     public function safeDown()
     {
-        $this->dropColumn('{{%petty_cash_voucher}}', 'job_id');
+//        $this->dropColumn('{{%petty_cash_voucher}}', 'job_id');
     }
 }

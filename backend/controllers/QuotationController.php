@@ -78,6 +78,10 @@ class QuotationController extends Controller
         $model->quotationLines = [new QuotationLine()];
 
         if ($model->load(Yii::$app->request->post())) {
+            $discount_total_amount = \Yii::$app->request->post('discount_total_amount');
+            $total_vat_amount = \Yii::$app->request->post('total_vat_amount');
+            $sum_total_amount = \Yii::$app->request->post('summary_total_amount');
+
             $quotationLines = [];
             $valid = $model->validate();
 
@@ -93,6 +97,10 @@ class QuotationController extends Controller
             if ($valid) {
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
+                    $model->total_discount_amount = $discount_total_amount;
+                    $model->vat_percent = 7;
+                    $model->vat_total_amount = $total_vat_amount;
+                    $model->total_amount = $sum_total_amount;
                     $model->total_amount_text = \backend\models\PurchReq::numtothai($model->total_amount);
                     if ($model->save()) {
                         // Save quotation lines
@@ -136,6 +144,11 @@ class QuotationController extends Controller
         }
 
         if ($model->load(Yii::$app->request->post())) {
+
+            $discount_total_amount = \Yii::$app->request->post('discount_total_amount');
+            $total_vat_amount = \Yii::$app->request->post('total_vat_amount');
+            $sum_total_amount = \Yii::$app->request->post('summary_total_amount');
+
             $quotationLines = [];
             $valid = $model->validate();
 
@@ -164,6 +177,10 @@ class QuotationController extends Controller
             if ($valid) {
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
+                    $model->total_discount_amount = $discount_total_amount;
+                    $model->vat_percent = 7;
+                    $model->vat_total_amount = $total_vat_amount;
+                    $model->total_amount = $sum_total_amount;
                     if ($model->save()) {
                         // Delete existing lines that are not in the new list
                         $existingLineIds = [];

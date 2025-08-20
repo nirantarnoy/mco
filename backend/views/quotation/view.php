@@ -14,6 +14,14 @@ $this->params['breadcrumbs'][] = ['label' => 'ใบเสนอราคา', '
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>
+
+<?php
+$sub_total_amount = 0;
+$modelline = \backend\models\QuotationLine::find()->where(['quotation_id' => $model->id])->all();
+foreach ($modelline as $line) {
+    $sub_total_amount += $line->line_total;
+}
+?>
 <div class="quotation-view">
     <!-- Flash Messages -->
     <?php if (\Yii::$app->session->hasFlash('success')): ?>
@@ -112,9 +120,21 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'value' => $model->getApproveStatusBadge(),
                             ],
                             [
-                                'attribute' => 'total_amount',
+                                'attribute' => 'sub_amount',
                                 'label' => 'ยอดรวม',
-                                'format' => ['currency', 'THB'],
+                          //      'format' => ['currency', 'THB'],
+                                'value' => number_format($sub_total_amount, 2),
+                            ],
+                            [
+                                'attribute' => 'total_discount_amount',
+                                'label' => 'ยอดส่วนลด',
+                            //    'format' => ['currency', 'THB'],
+                            ],
+                            [
+                                'attribute' => 'total_amount',
+                                'label' => 'ยอดรวมทั้งสิ้น',
+                           //     'format' => ['currency', 'THB'],
+                                'value' => number_format($model->total_amount, 2),
                             ],
                             [
                                 'attribute' => 'payment_term_id',
@@ -254,6 +274,8 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 
+
+
     <!-- Summary Section -->
     <div class="card mt-4">
         <div class="card-header">
@@ -267,20 +289,26 @@ $this->params['breadcrumbs'][] = $this->title;
                             <div class="row mb-2">
                                 <div class="col-8">ยอดรวม:</div>
                                 <div class="col-4 text-end">
-                                    <span class="fw-bold"><?= Yii::$app->formatter->asCurrency($model->total_amount, 'THB') ?></span>
+                                    <span class="fw-bold"><?= Yii::$app->formatter->asCurrency($sub_total_amount, 'THB') ?></span>
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-8">ส่วนลด:</div>
+                                <div class="col-4 text-end">
+                                    <span class="fw-bold"><?= Yii::$app->formatter->asCurrency($model->total_discount_amount, 'THB') ?></span>
                                 </div>
                             </div>
                             <div class="row mb-2">
                                 <div class="col-8">VAT (7%):</div>
                                 <div class="col-4 text-end">
-                                    <span class="fw-bold"><?= Yii::$app->formatter->asCurrency($model->total_amount * 0.07, 'THB') ?></span>
+                                    <span class="fw-bold"><?= Yii::$app->formatter->asCurrency($model->vat_total_amount, 'THB') ?></span>
                                 </div>
                             </div>
                             <hr>
                             <div class="row">
                                 <div class="col-8"><strong>ยอดรวมทั้งสิ้น:</strong></div>
                                 <div class="col-4 text-end">
-                                    <span class="fw-bold text-primary h5"><?= Yii::$app->formatter->asCurrency($model->total_amount * 1.07, 'THB') ?></span>
+                                    <span class="fw-bold text-primary h5"><?= Yii::$app->formatter->asCurrency($model->total_amount, 'THB') ?></span>
                                 </div>
                             </div>
                         </div>

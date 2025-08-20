@@ -6,7 +6,7 @@ $this->title = 'Quotation - ' . $quotation->quotation_no;
 // คำนวณราคารวม
 $subtotal = 0;
 $vat = 0;
-$discount = 0;
+$discount = $quotation->total_discount_amount;
 $grandTotal = 0;
 
 if ($quotationLines) {
@@ -16,8 +16,11 @@ if ($quotationLines) {
 }
 
 // คำนวณ VAT 7%
-$vat = $subtotal * 0.07;
-$grandTotal = $subtotal + $vat - $discount;
+//$vat = $subtotal * 0.07;
+//$grandTotal = $subtotal + $vat - $discount;
+
+$vat = $quotation->vat_total_amount == null ? 0 : $quotation->vat_total_amount;
+$grandTotal = $quotation->total_amount == null ? 0 : $quotation->total_amount;
 
 $customer_info = \backend\models\Customer::findCustomerInfo($quotation->customer_id);
 //print_r($customer_info);return;
