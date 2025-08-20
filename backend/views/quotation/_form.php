@@ -547,7 +547,7 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                     'widgetContainer' => 'dynamicform_wrapper',
                     'widgetBody' => '.container-items',
                     'widgetItem' => '.item',
-                    'limit' => 15,
+                    'limit' => 30,
                     'min' => 1,
                     'insertButton' => '.add-item',
                     'deleteButton' => '.remove-item',
