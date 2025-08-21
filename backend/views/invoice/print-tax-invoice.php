@@ -629,8 +629,8 @@ window.addEventListener('afterprint', function() {
 
       }
 
-      $po_no = $quotation_data->po_no;
-      $po_date = $quotation_data->po_date;
+      $po_no = $model->po_no;
+      $po_date = $model->po_date;
     ?>
 
     <!-- Customer Information -->
