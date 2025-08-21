@@ -719,7 +719,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                         <?php endif; ?>
                     </div>
                     <div class="col-md-4" style="padding-top: 20px;">
-                        <?php if ($model->invoice_type == Invoice::TYPE_TAX_INVOICE): ?>
+                        <?php //if ($model->invoice_type == Invoice::TYPE_TAX_INVOICE): ?>
                             <?= $form->field($model, 'po_number')->textInput(['maxlength' => true, 'placeholder' => 'เลขที่ใบสั่งซื้อ']) ?>
 
                             <?= $form->field($model, 'po_date')->widget(DatePicker::class, [
@@ -729,7 +729,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                     'format' => 'yyyy-mm-dd',
                                 ]
                             ]) ?>
-                        <?php endif; ?>
+                        <?php //endif; ?>
                     </div>
                 </div>
             </div>
