@@ -126,6 +126,7 @@ class InvoiceController extends Controller
             try {
                 // $model->total_amount_text = \backend\models\PurchReq::numtothai($model->total_amount);
                 $model->status = Invoice::STATUS_ACTIVE;
+                $model->is_billed = 0;
                 if ($model->save(false)) {
                     // Handle items
                     $itemsData = Yii::$app->request->post('InvoiceItem', []);
