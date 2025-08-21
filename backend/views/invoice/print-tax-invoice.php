@@ -627,15 +627,10 @@ window.addEventListener('afterprint', function() {
       if($quotation_data != null){
         $customer_code = \backend\models\Customer::findCode($quotation_data->customer_id);
 
-        $model_job = \backend\models\Job::find()->where(['quotation_id' => $quotation_data->id])->one();
-        if($model_job != null){
-            $model_po = \backend\models\Purch::find()->where(['job_id' => $model_job->id])->one();
-            if($model_po != null){
-                $po_no = $model_po->purch_no;
-                $po_date = $model_po->purch_date;
-            }
-        }
       }
+
+      $po_no = $quotation_data->po_no;
+      $po_date = $quotation_data->po_date;
     ?>
 
     <!-- Customer Information -->

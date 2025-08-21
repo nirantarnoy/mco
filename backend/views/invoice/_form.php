@@ -605,7 +605,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <?= $form->field($model, 'invoice_number')->textInput([
                             'maxlength' => true,
                             'readonly' => !$model->isNewRecord,
@@ -657,7 +657,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                             'id' => 'invoice-customer-address',
                         ]) ?>
                     </div>
-                    <div class="col-md-6" style="padding-top: 20px;">
+                    <div class="col-md-4" style="padding-top: 20px;">
                         <?= $form->field($model, 'customer_tax_id')->textInput([
                             'maxlength' => true,
                             'placeholder' => 'เลขประจำตัวผู้เสียภาษี',
@@ -711,6 +711,19 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
 
                             <?= $form->field($model, 'check_due_date')->widget(DatePicker::class, [
                                 'options' => ['placeholder' => 'วันนัดรับเช็ค'],
+                                'pluginOptions' => [
+                                    'autoclose' => true,
+                                    'format' => 'yyyy-mm-dd',
+                                ]
+                            ]) ?>
+                        <?php endif; ?>
+                    </div>
+                    <div class="col-md-4" style="padding-top: 20px;">
+                        <?php if ($model->invoice_type == Invoice::TYPE_TAX_INVOICE): ?>
+                            <?= $form->field($model, 'po_number')->textInput(['maxlength' => true, 'placeholder' => 'เลขที่ใบสั่งซื้อ']) ?>
+
+                            <?= $form->field($model, 'po_date')->widget(DatePicker::class, [
+                                'options' => ['placeholder' => 'วันที่ใบสั่งซื้อ'],
                                 'pluginOptions' => [
                                     'autoclose' => true,
                                     'format' => 'yyyy-mm-dd',
