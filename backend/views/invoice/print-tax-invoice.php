@@ -618,6 +618,26 @@ window.addEventListener('afterprint', function() {
         </div>
     </div>
 
+    <?php
+      $customer_code = '';
+      $po_no = '';
+      $po_date  = null;
+      $job_id = 0;
+      $quotation_data = \backend\models\Quotation::find()->where(['id' => $model->quotation_id])->one();
+      if($quotation_data != null){
+        $customer_code = \backend\models\Customer::findCode($quotation_data->customer_id);
+
+        $model_job = \backend\models\Job::find()->where(['quotation_id' => $quotation_data->id])->one();
+        if($model_job != null){
+            $model_po = \backend\models\Purch::find()->where(['job_id' => $model_job->id])->one();
+            if($model_po != null){
+                $po_no = $model_po->purch_no;
+                $po_date = $model_po->purch_date;
+            }
+        }
+      }
+    ?>
+
     <!-- Customer Information -->
     <div class="customer-section">
         <div class="customer-left">
@@ -627,7 +647,7 @@ window.addEventListener('afterprint', function() {
             </div>
             <div class="field-group">
                 <span class="field-label">รหัสลูกค้า / Code:</span>
-                <span class="field-value"><?= Html::encode(\backend\models\Customer::findCode($model->customer_id) ?: '') ?></span>
+                <span class="field-value"><?= $customer_code ?></span>
             </div>
             <div class="field-group">
                 <span class="field-label">ขายให้ / Sold To:</span>
@@ -653,11 +673,11 @@ window.addEventListener('afterprint', function() {
             </div>
             <div class="field-group">
                 <span class="field-label">ใบสั่งซื้อเลขที่ / P/O No.:</span>
-                <span class="field-value"><?= Html::encode($model->po_number ?: '') ?></span>
+                <span class="field-value"><?= Html::encode($po_no ?: '') ?></span>
             </div>
             <div class="field-group">
                 <span class="field-label">วันที่สั่งซื้อ / P/O Date:</span>
-                <span class="field-value"><?= $model->po_date ? Yii::$app->formatter->asDate($model->po_date, 'MM/dd/yyyy') : '' ?></span>
+                <span class="field-value"><?= $po_date ? Yii::$app->formatter->asDate($po_date, 'MM/dd/yyyy') : '' ?></span>
             </div>
             <div class="field-group">
                 <span class="field-label">เงื่อนไข / กำหนดชำระ / Credit, Due:</span>
