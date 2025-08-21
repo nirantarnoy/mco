@@ -702,7 +702,7 @@ window.addEventListener('afterprint', function() {
                     <tr>
                         <td><?= $index + 1 ?></td>
                         <td class="text-left"><?= nl2br(Html::encode($item->item_description)) ?></td>
-                        <td><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
+                        <td><?= number_format($item->quantity, 0) ?> <?= Html::encode(\backend\models\Unit::findName($item->unit_id)) ?></td>
                         <td class="text-right"><?= number_format($item->unit_price, 3) ?></td>
                         <td class="text-right"><?= number_format($item->amount, 3) ?></td>
                     </tr>
