@@ -629,7 +629,7 @@ window.addEventListener('afterprint', function() {
 
       }
 
-      $po_no = $model->po_no;
+      $po_no = $model->po_number;
       $po_date = $model->po_date;
     ?>
 
