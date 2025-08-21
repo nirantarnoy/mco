@@ -41,21 +41,21 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
 
                             <!-- ใบวางบิล -->
-                            <div class="col-md-6 col-lg-3 mb-4">
-                                <div class="card h-100 border-info shadow-sm invoice-type-card">
-                                    <div class="card-body text-center">
-                                        <div class="mb-3">
-                                            <i class="fas fa-file-invoice fa-3x text-info"></i>
-                                        </div>
-                                        <h5 class="card-text">ใบวางบิล</h5>
-                                        <p class="card-text">Bill Placement</p>
-                                        <p class="small text-muted">สำหรับวางบิลชำระเงิน</p>
-                                        <?= Html::a('<i class="fas fa-plus"></i> สร้างใบวางบิล',
-                                            ['create', 'type' => Invoice::TYPE_BILL_PLACEMENT],
-                                            ['class' => 'btn btn-info btn-block']) ?>
-                                    </div>
-                                </div>
-                            </div>
+<!--                            <div class="col-md-6 col-lg-3 mb-4">-->
+<!--                                <div class="card h-100 border-info shadow-sm invoice-type-card">-->
+<!--                                    <div class="card-body text-center">-->
+<!--                                        <div class="mb-3">-->
+<!--                                            <i class="fas fa-file-invoice fa-3x text-info"></i>-->
+<!--                                        </div>-->
+<!--                                        <h5 class="card-text">ใบวางบิล</h5>-->
+<!--                                        <p class="card-text">Bill Placement</p>-->
+<!--                                        <p class="small text-muted">สำหรับวางบิลชำระเงิน</p>-->
+<!--                                        --><?php //= Html::a('<i class="fas fa-plus"></i> สร้างใบวางบิล',
+//                                            ['create', 'type' => Invoice::TYPE_BILL_PLACEMENT],
+//                                            ['class' => 'btn btn-info btn-block']) ?>
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            </div>-->
 
                             <!-- ใบกำกับภาษี -->
                             <div class="col-md-6 col-lg-3 mb-4">
