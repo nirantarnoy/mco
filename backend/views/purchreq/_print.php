@@ -25,7 +25,7 @@ if($model_line !=null){
     foreach($model_line as $value){
         $item = [
             'stock_no' => \backend\models\Product::findCode($value->product_id),
-            'description' => \backend\models\Product::findName(($value->product_id)),
+            'description' => $value->product_name ,//\backend\models\Product::findName(($value->product_id)),
             'qty' => $value->qty,
             'unit' => $value->unit_id,
             'estimated_price' => $value->line_price,
