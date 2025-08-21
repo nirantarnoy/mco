@@ -1,7 +1,10 @@
 <?php
+
 namespace backend\models;
+
 use Yii;
 use yii\db\ActiveRecord;
+
 date_default_timezone_set('Asia/Bangkok');
 
 class Job extends \common\models\Job
@@ -9,22 +12,23 @@ class Job extends \common\models\Job
     const JOB_STATUS_OPEN = 1;
     const JOB_STATUS_CLOSED = 2;
     const JOB_STATUS_CANCELLED = 3;
+
     public function behaviors()
     {
         return [
-            'timestampcdate'=>[
-                'class'=> \yii\behaviors\AttributeBehavior::className(),
-                'attributes'=>[
-                    ActiveRecord::EVENT_BEFORE_INSERT=>'created_at',
+            'timestampcdate' => [
+                'class' => \yii\behaviors\AttributeBehavior::className(),
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_INSERT => 'created_at',
                 ],
-                'value'=> time(),
+                'value' => time(),
             ],
-            'timestampudate'=>[
-                'class'=> \yii\behaviors\AttributeBehavior::className(),
-                'attributes'=>[
-                    ActiveRecord::EVENT_BEFORE_INSERT=>'updated_at',
+            'timestampudate' => [
+                'class' => \yii\behaviors\AttributeBehavior::className(),
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_INSERT => 'updated_at',
                 ],
-                'value'=> time(),
+                'value' => time(),
             ],
 //            'timestampcby'=>[
 //                'class'=> \yii\behaviors\AttributeBehavior::className(),
@@ -40,25 +44,27 @@ class Job extends \common\models\Job
 //                ],
 //                'value'=> Yii::$app->user->identity->id,
 //            ],
-            'timestampupdate'=>[
-                'class'=> \yii\behaviors\AttributeBehavior::className(),
-                'attributes'=>[
-                    ActiveRecord::EVENT_BEFORE_UPDATE=>'updated_at',
+            'timestampupdate' => [
+                'class' => \yii\behaviors\AttributeBehavior::className(),
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_UPDATE => 'updated_at',
                 ],
-                'value'=> time(),
+                'value' => time(),
             ],
         ];
     }
 
-    public static function findCustomerData($quotation_id){
+    public static function findCustomerData($quotation_id)
+    {
         $data = [];
         $quotation = Quotation::find()->where(['id' => $quotation_id])->one();
-        if($quotation){
+        if ($quotation) {
             $customer_data = \backend\models\Customer::find()->where(['id' => $quotation->customer_id])->one();
-            if($customer_data){
-               array_push($data, [
+            if ($customer_data) {
+                array_push($data, [
+                    'customer_id' => $customer_data->id,
                     'customer_name' => $customer_data->name,
-                    'customer_address' => 'เลขที่ '. $customer_data->home_number.' ถนน '.$customer_data->street.' ซอย '.$customer_data->aisle.' ตำบล/แขวง '.$customer_data->district_name.' อําเภอ/เขต '.$customer_data->city_name.' จังหวัด '.$customer_data->province_name.' '.$customer_data->zipcode,
+                    'customer_address' => 'เลขที่ ' . $customer_data->home_number . ' ถนน ' . $customer_data->street . ' ซอย ' . $customer_data->aisle . ' ตำบล/แขวง ' . $customer_data->district_name . ' อําเภอ/เขต ' . $customer_data->city_name . ' จังหวัด ' . $customer_data->province_name . ' ' . $customer_data->zipcode,
                     'customer_tax_id' => $customer_data->taxid,
                     'invoice_due_date' => self::calDueDate($quotation->payment_term_id),
                 ]);
@@ -67,27 +73,30 @@ class Job extends \common\models\Job
         return $data;
     }
 
-    public static function calDueDate($payment_term_id){
+    public static function calDueDate($payment_term_id)
+    {
         $due_date = null;
-        if($payment_term_id){
+        if ($payment_term_id) {
             $payment_term = \backend\models\Paymentterm::find()->where(['id' => $payment_term_id])->one();
-            if($payment_term){
-                $due_date = $payment_term->day_count == 0 || $payment_term->day_count== null ? null : date('Y-m-d', strtotime('+'. $payment_term->day_count .' day'));
+            if ($payment_term) {
+                $due_date = $payment_term->day_count == 0 || $payment_term->day_count == null ? null : date('Y-m-d', strtotime('+' . $payment_term->day_count . ' day'));
             }
         }
         return $due_date;
     }
 
-    public function getQuotation(){
+    public function getQuotation()
+    {
         return $this->hasOne(Quotation::className(), ['id' => 'quotation_id']);
     }
 
-    public static function findJobNo($id){
+    public static function findJobNo($id)
+    {
         $model = \backend\models\Job::find()->where(['id' => $id])->one();
         return $model != null ? $model->job_no : '';
     }
 
-    public  static function generateJobNo()
+    public static function generateJobNo()
     {
         $prefix = 'JO' . date('Ym');
         $lastRecord = self::find()
@@ -105,16 +114,18 @@ class Job extends \common\models\Job
         return $prefix . sprintf('%04d', $newNumber);
     }
 
-    public static function getJobStatus($status = null){
-      $statuses = [
-          self::JOB_STATUS_OPEN => 'Open',
-          self::JOB_STATUS_CLOSED => 'Closed',
-          self::JOB_STATUS_CANCELLED => 'Cancelled',
-      ];
-      return $statuses[$status] ?? 'ไม่ระบุ';
+    public static function getJobStatus($status = null)
+    {
+        $statuses = [
+            self::JOB_STATUS_OPEN => 'Open',
+            self::JOB_STATUS_CLOSED => 'Closed',
+            self::JOB_STATUS_CANCELLED => 'Cancelled',
+        ];
+        return $statuses[$status] ?? 'ไม่ระบุ';
     }
 
-    public static function getJobStatusBadge($status = null){
+    public static function getJobStatusBadge($status = null)
+    {
         $badges = [
             self::JOB_STATUS_OPEN => '<span class="badge badge-warning">Open</span>',
             self::JOB_STATUS_CLOSED => '<span class="badge badge-success">Closed</span>',

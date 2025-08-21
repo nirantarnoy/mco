@@ -541,6 +541,7 @@ $(document).on('change', '#invoice-job-id', function() {
             success: function(data) {
                 console.log(data);
                 if (data != null) {
+                    $('#invoice-customer-id').val(data[0].customer_id);
                     $('#invoice-customer-name').val(data[0].customer_name);
                     $('#invoice-customer-address').val(data[0].customer_address);
                     $('#invoice-customer-tax-id').val(data[0].customer_tax_id);
@@ -735,6 +736,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
             </div>
         </div>
         <?= $form->field($model, 'invoice_type')->hiddenInput(['value' => $model->invoice_type])->label(false) ?>
+        <?= $form->field($model, 'customer_id')->hiddenInput(['value' => $model->customer_id,'id' => 'invoice-customer-id'])->label(false) ?>
 
         <div class="card mt-3">
             <div class="card-header d-flex justify-content-between align-items-center">
