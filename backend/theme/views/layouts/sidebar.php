@@ -205,6 +205,14 @@
                                     </a>
                                 </li>
                             <?php endif; ?>
+                            <?php //if (\Yii::$app->user->can('billing-invoice/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=billing-invoice/index" class="nav-link billing-invoice">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>วางบิล</p>
+                                    </a>
+                                </li>
+                            <?php //endif; ?>
                             <?php //if (\Yii::$app->user->can('invoice/index')): ?>
                                 <li class="nav-item">
                                     <a href="index.php?r=debit-note/index" class="nav-link debit-note">

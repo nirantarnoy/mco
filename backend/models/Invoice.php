@@ -395,4 +395,18 @@ class Invoice extends ActiveRecord
 
         return false;
     }
+
+    public function getBillingInvoiceItems()
+    {
+        return $this->hasMany(BillingInvoiceItem::class, ['invoice_id' => 'id']);
+    }
+
+    // Get unbilled invoices for a customer
+    public static function getUnbilledInvoices($customerId)
+    {
+        return self::find()
+            ->where(['customer_id' => $customerId, 'is_billed' => 0])
+            ->orderBy('invoice_date DESC')
+            ->all();
+    }
 }
