@@ -405,7 +405,7 @@ class Invoice extends ActiveRecord
     public static function getUnbilledInvoices($customerId)
     {
         return self::find()
-            ->where(['customer_id' => $customerId, 'is_billed' => 0])
+            ->where(['customer_id' => $customerId, 'is_billed' => 0,'status' => 1])
             ->orderBy('invoice_date DESC')
             ->all();
     }
