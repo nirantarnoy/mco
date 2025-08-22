@@ -235,7 +235,7 @@ $this->title = 'ใบวางบิล - ' . $model->billing_number;
 
 <div class="header-section">
     <div class="mco-logo">
-        <?= Html::img('../../backend/web/uploads/logo/mco_logo.png',['style' => 'max-width: 120px;']) ?>
+        <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png',['style' => 'max-width: 120px;']) ?>
     </div>
     <div class="company-details">
         <h1>บริษัท เอ็ม.ซี.โอ. จำกัด</h1>
@@ -286,7 +286,6 @@ $this->title = 'ใบวางบิล - ' . $model->billing_number;
         <th style="width: 12%;">ลงวันที่</th>
         <th style="width: 12%;">วันที่ครบกำหนดชำระ</th>
         <th style="width: 15%;">จำนวนเงิน</th>
-        <th style="width: 17%;">หมายเหตุ</th>
     </tr>
     </thead>
     <tbody>
@@ -307,7 +306,6 @@ $this->title = 'ใบวางบิล - ' . $model->billing_number;
             <td><?= Yii::$app->formatter->asDate($invoice->invoice_date ?? $model->billing_date, 'php:j/n/y') ?></td>
             <td><?= Yii::$app->formatter->asDate($invoice->payment_due_date ?? $model->payment_due_date ?? date('Y-m-d', strtotime($model->billing_date . ' +30 days')), 'php:j/n/y') ?></td>
             <td class="text-right"><?= number_format($item->amount, 2) ?></td>
-            <td>&nbsp;</td>
         </tr>
     <?php endforeach; ?>
 
@@ -331,7 +329,6 @@ $this->title = 'ใบวางบิล - ' . $model->billing_number;
     for ($i = 0; $i < $emptyRows; $i++):
         ?>
         <tr style="height: 35px;">
-            <td>&nbsp;</td>
             <td>&nbsp;</td>
             <td>&nbsp;</td>
             <td>&nbsp;</td>
