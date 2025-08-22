@@ -274,15 +274,12 @@ $this->title = 'ใบวางบิล - ' . $model->billing_number;
         </div>
     </div>
 </div>
-
-<div class="section-header">รายการใบกำกับภาษีในงวดนี้</div>
-
 <table class="items-table">
     <thead>
     <tr>
         <th style="width: 8%;">ลำดับที่</th>
-        <th style="width: 18%;">หมายเลขใบเสร็จรับเงิน</th>
-        <th style="width: 18%;">เลขที่ใบกำกับภาษีภายในกำหนด</th>
+        <th style="width: 18%;">หมายเลขใบสั่งซื้อ</th>
+        <th style="width: 18%;">เลขที่เอกสารตั้งหนี้</th>
         <th style="width: 12%;">ลงวันที่</th>
         <th style="width: 12%;">วันที่ครบกำหนดชำระ</th>
         <th style="width: 15%;">จำนวนเงิน</th>
