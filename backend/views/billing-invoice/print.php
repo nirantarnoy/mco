@@ -338,25 +338,50 @@ $this->title = 'ใบวางบิล - ' . $model->billing_number;
 </table>
 
 <div class="total-section">
-    <div class="total-box">
-        รวมเงินทั้งสิ้น &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <?= number_format($totalAmount > 0 ? $totalAmount : $model->total_amount, 2) ?>
-    </div>
+
+      <table style="width: 100%">
+          <tr>
+              <td style="text-align: left;font-weight: bold;font-size: 16px">
+                  <u>รวมเงินทั้งสิ้น</u> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <?=\backend\models\PurchReq::numtothai($model->total_amount)?>
+              </td>
+              <td style="text-align: right">
+                  <div class="total-box">
+                  <?= number_format($totalAmount > 0 ? $totalAmount : $model->total_amount, 2) ?>
+                  </div>
+              </td>
+          </tr>
+      </table>
+
+
 </div>
 
 <div class="signature-section">
-    <div class="signature-block">
-        <div class="signature-label"><strong>ผู้วางบิล</strong></div>
-        <div class="signature-line"></div>
-        <div class="signature-date">วันที่อนุมัติ ................................</div>
-    </div>
 
-    <div class="signature-block">
-        <div class="signature-label"><strong>ผู้รับบิล</strong></div>
-        <div class="signature-line">
-            <div class="signature-name"></div>
-        </div>
-        <div class="signature-date">วันที่อนุมัติ ................................</div>
-    </div>
+     <table style="width: 100%">
+         <tr>
+             <td style="width: 50%">
+                 <table style="width: 100%">
+                     <tr>
+                         <td style="width: 20%;font-size: 14px;padding:10px;text-align: left"><u>ผู้รับวางบิล</u></td>
+                         <td style="padding:10px;text-align: left;width: 80%">_____________________________</td>
+                     </tr>
+                     <tr>
+                         <td style="width: 80%;font-size: 14px;text-align: left"><u>วัดนัดรับเช็ค</u></td>
+                         <td style="padding:10px;text-align: left">_____________________________</td>
+                     </tr>
+                 </table>
+             </td>
+             <td style="width: 50%">
+                 <table style="width: 100%">
+                     <tr>
+                         <td style="width: 20%;font-size: 14px"><u>ผู้วางบิล</u></td>
+                         <td style="padding:10px;text-align: left">_____________________________</td>
+                     </tr>
+                 </table>
+             </td>
+         </tr>
+     </table>
+
 </div>
 
 </body>
