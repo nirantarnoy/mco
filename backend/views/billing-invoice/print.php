@@ -362,20 +362,20 @@ $this->title = 'ใบวางบิล - ' . $model->billing_number;
              <td style="width: 50%">
                  <table style="width: 100%">
                      <tr>
-                         <td style="width: 20%;font-size: 14px;padding:10px;text-align: left"><u>ผู้รับวางบิล</u></td>
-                         <td style="padding:10px;text-align: left;width: 80%">_____________________________</td>
+                         <td style="width: 80%;font-size: 14px;padding:10px;text-align: left"><u>ผู้รับวางบิล</u> <span> ..................................................................</span></td>
+                         <td style="text-align: left;"></td>
                      </tr>
                      <tr>
-                         <td style="width: 80%;font-size: 14px;text-align: left"><u>วัดนัดรับเช็ค</u></td>
-                         <td style="padding:10px;text-align: left">_____________________________</td>
+                         <td style="width: 80%;font-size: 14px;text-align: left"><u>วัดนัดรับเช็ค</u> <span> ..................................................................</span></td>
+                         <td style="text-align: left"></td>
                      </tr>
                  </table>
              </td>
              <td style="width: 50%">
                  <table style="width: 100%">
                      <tr>
-                         <td style="width: 20%;font-size: 14px"><u>ผู้วางบิล</u></td>
-                         <td style="padding:10px;text-align: left">_____________________________</td>
+                         <td style="width: 80%;font-size: 14px"><u>ผู้วางบิล</u> <span> ..................................................................</span></td>
+                         <td style="text-align: left"></td>
                      </tr>
                  </table>
              </td>
