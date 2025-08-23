@@ -156,6 +156,12 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                     }
                                 ],
                                 [
+                                    'attribute' => 'currency_id',
+                                    'value'=>function($data){
+                                    return \backend\models\Currency::findCode($data->currency_id);
+                                    }
+                                ],
+                                [
                                     'attribute' => 'total_amount',
                                     'label' => 'ยอดรวม',
                                     'format' => ['currency', 'THB'],
@@ -278,7 +284,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                             'headerOptions' => ['style' => 'width: 250px;'],
                             'contentOptions' => ['style' => 'text-align: left;'],
                             'value' => function ($data) {
-                              //  return \backend\models\Product::findName($data->product_id);
+                                //  return \backend\models\Product::findName($data->product_id);
                                 return $data->product_name;
                             },
                         ],

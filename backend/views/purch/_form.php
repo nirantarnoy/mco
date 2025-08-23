@@ -470,6 +470,13 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 'allowClear' => true
                             ]
                         ]) ?>
+                        <?= $form->field($model, 'currency_id')->widget(Select2::className(), [
+                            'data' => ArrayHelper::map(\backend\models\Currency::find()->all(), 'id', 'code'),
+                            'options' => ['placeholder' => 'เลือกสกุลเงิน'],
+                            'pluginOptions' => [
+                                'allowClear' => true
+                            ]
+                        ]) ?>
                         <?= $form->field($model, 'discount_per')->textInput([
                             'type' => 'number',
                             'min' => 0,

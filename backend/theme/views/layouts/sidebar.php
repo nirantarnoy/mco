@@ -46,12 +46,20 @@
                         </li>
                         <?php endif; ?>
                         <?php if (\Yii::$app->user->can('paymentmethod/index')): ?>
-                        <li class="nav-item">
-                            <a href="index.php?r=paymentmethod/index" class="nav-link paymentmethod">
-                                <i class="far fa-circlez nav-icon"></i>
-                                <p>วิธีการชําระเงิน</p>
-                            </a>
-                        </li>
+                            <li class="nav-item">
+                                <a href="index.php?r=paymentmethod/index" class="nav-link paymentmethod">
+                                    <i class="far fa-circlez nav-icon"></i>
+                                    <p>วิธีการชําระเงิน</p>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+                        <?php if (\Yii::$app->user->can('currency/index')): ?>
+                            <li class="nav-item">
+                                <a href="index.php?r=currency/index" class="nav-link currency">
+                                    <i class="far fa-circlez nav-icon"></i>
+                                    <p>สกุลเงิน</p>
+                                </a>
+                            </li>
                         <?php endif; ?>
                     </ul>
                 </li>
