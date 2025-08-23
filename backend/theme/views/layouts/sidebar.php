@@ -53,14 +53,14 @@
                                 </a>
                             </li>
                         <?php endif; ?>
-                        <?php if (\Yii::$app->user->can('currency/index')): ?>
+                        <?php //if (\Yii::$app->user->can('currency/index')): ?>
                             <li class="nav-item">
                                 <a href="index.php?r=currency/index" class="nav-link currency">
                                     <i class="far fa-circlez nav-icon"></i>
                                     <p>สกุลเงิน</p>
                                 </a>
                             </li>
-                        <?php endif; ?>
+                        <?php //endif; ?>
                     </ul>
                 </li>
                 <?php endif;?>
