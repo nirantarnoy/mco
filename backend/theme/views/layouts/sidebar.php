@@ -205,6 +205,22 @@
                                     </a>
                                 </li>
                             <?php endif; ?>
+                            <?php //if (\Yii::$app->user->can('pettycashadvance/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=petty-cash-advance/index" class="nav-link petty-cash-advance">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>เบิกเงินทดแทน</p>
+                                    </a>
+                                </li>
+                            <?php //endif; ?>
+                            <?php //if (\Yii::$app->user->can('pettycashadvance/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=petty-cash-report/index" class="nav-link petty-cash-report">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>รายงานเงินสดย่อย</p>
+                                    </a>
+                                </li>
+                            <?php //endif; ?>
                             <?php if (\Yii::$app->user->can('invoice/index')): ?>
                                 <li class="nav-item">
                                     <a href="index.php?r=invoice/index" class="nav-link invoice">

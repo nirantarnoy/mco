@@ -170,7 +170,7 @@ $(document).ready(function() {
         <?php endif; ?>
         <?php $form = ActiveForm::begin([
             'id' => 'petty-cash-form',
-            'options' => ['class' => 'form-horizontal'],
+            'options' => ['class' => 'form-horizontal','enctype'=>'multipart/form-data',],
             'fieldConfig' => [
                 'template' => '<div class="col-sm-3">{label}</div><div class="col-sm-9">{input}{error}</div>',
                 'labelOptions' => ['class' => 'control-label'],
@@ -212,12 +212,12 @@ $(document).ready(function() {
                                 'allowClear' => true,
                             ],
                         ]) ?>
-                        <?= $form->field($model, 'customer_id')->widget(\kartik\select2\Select2::className(), [
-                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Customer::find()->all(), 'id', function ($data) {
+                        <?= $form->field($model, 'vendor_id')->widget(\kartik\select2\Select2::className(), [
+                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Vendor::find()->all(), 'id', function ($data) {
                                 return $data->code . ' ' . $data->name;
                             }),
                             'options' => [
-                                'placeholder' => 'เลือกลูกค้า',
+                                'placeholder' => 'เลือกผู้จำหน่าย',
                             ],
                             'pluginOptions' => [
                                 'allowClear' => true,
@@ -254,9 +254,9 @@ $(document).ready(function() {
                             ],
                         ]) ?>
 
-                        <?= $form->field($model, 'issued_by')->textInput(['maxlength' => true, 'placeholder' => 'ผู้จัดทำ','readonly' => 'readonly','value' => $model->isNewRecord?\backend\models\User::findEmployeeNameByUserId(\Yii::$app->user->id):$model->issued_by]) ?>
+                        <?= $form->field($model, 'issued_by')->textInput(['maxlength' => true, 'placeholder' => 'ผู้จัดทำ', 'readonly' => 'readonly', 'value' => $model->isNewRecord ? \backend\models\User::findEmployeeNameByUserId(\Yii::$app->user->id) : $model->issued_by]) ?>
 
-                        <?= $form->field($model, 'approved_by')->textInput(['maxlength' => true, 'placeholder' => 'ผู้อนุมัติ','readonly' => 'readonly']) ?>
+                        <?= $form->field($model, 'approved_by')->textInput(['maxlength' => true, 'placeholder' => 'ผู้อนุมัติ', 'readonly' => 'readonly']) ?>
                     </div>
                 </div>
 
@@ -398,6 +398,26 @@ $(document).ready(function() {
                 <?php endif; ?>
             </div>
         </div>
+        <?php if ($model->isNewRecord): ?>
+            <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <label for="">อัพโหลดเอกสารแนบสลิป</label>
+                        <input type="file" name="file_doc_slip" multiple>
+                    </div>
+                </div>
+            </div>
+            <br/>
+            <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <label for="">อัพโหลดเอกสารค่าสินค้า</label>
+                        <input type="file" name="file_doc_bill" multiple>
+                    </div>
+                </div>
+
+            </div>
+        <?php endif; ?>
 
         <?php ActiveForm::end(); ?>
 
