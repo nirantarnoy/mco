@@ -14,7 +14,6 @@ class m250826_074357_add_special_note_column_to_invoices_table extends Migration
     {
         $this->addColumn('{{%invoices}}', 'special_note', $this->string());
     }
-
     /**
      * {@inheritdoc}
      */
