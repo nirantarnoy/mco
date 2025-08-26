@@ -321,6 +321,8 @@ function updateHiddenInputs() {
     });
 }
 ");
+
+$new_billing_no = \backend\models\BillingInvoice::generateBillingNumber();
 ?>
 
 <div class="billing-invoice-form">
@@ -329,7 +331,7 @@ function updateHiddenInputs() {
 
     <div class="row">
         <div class="col-md-6">
-            <?= $form->field($model, 'billing_number')->textInput(['maxlength' => true, 'readonly' => true]) ?>
+            <?= $form->field($model, 'billing_number')->textInput(['maxlength' => true, 'value'=>$model->isNewRecord?$new_billing_no:$model->billing_number]) ?>
         </div>
         <div class="col-md-6">
             <?= $form->field($model, 'billing_date')->widget(DatePicker::class, [
