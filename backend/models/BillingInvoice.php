@@ -151,7 +151,7 @@ class BillingInvoice extends ActiveRecord
 
     public static function generateBillingNumber()
     {
-        $prefix = 'BV-' . date('Y') . '-';
+        $prefix = 'BP-' . date('Y') . '-';
         $lastBilling = self::find()
             ->where(['like', 'billing_number', $prefix])
             ->orderBy('id DESC')
