@@ -9,222 +9,277 @@
     <title>Product Tags - M.C.O.CO.,LTD</title>
     <style>
         @page {
-            size: A4;
-            margin: 10mm;
+            size: A4 landscape;
+            margin: 8mm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            margin: 0;
-            padding: 0;
             font-family: Arial, sans-serif;
+            font-size: 12px;
+            background: white;
         }
 
         .print-container {
             width: 100%;
-            display: table;
-            border-collapse: collapse;
-        }
-
-        .tag-row {
-            display: table-row;
-            page-break-inside: avoid;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3mm;
+            justify-content: flex-start;
+            align-content: flex-start;
         }
 
         .tag-cell {
-            display: table-cell;
             width: 7cm;
             height: 4cm;
             border: 2px solid #0066CC;
-            padding: 5px;
-            vertical-align: top;
+            padding: 2mm;
             position: relative;
-            box-sizing: border-box;
             background-color: white;
+            page-break-inside: avoid;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
         .tag-header {
+            height: 1.2cm;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: space-between;
-            margin-bottom: 5px;
-            padding-bottom: 5px;
+            margin-bottom: 2mm;
+            padding-bottom: 1mm;
             border-bottom: 1px solid #ddd;
-        }
-
-        .company-logo {
-            display: flex;
-            align-items: center;
-        }
-
-        .logo-text {
-            font-size: 18px;
-            font-weight: bold;
-            color: #FF6600;
-            margin-right: 5px;
-        }
-
-        .logo-subtext {
-            font-size: 10px;
-            color: #666;
-        }
-
-        .company-info {
-            text-align: right;
-            font-size: 9px;
-            color: #666;
-        }
-
-        .iso-info {
-            background-color: #FF6600;
-            color: white;
-            padding: 2px 5px;
-            font-size: 8px;
-            margin-bottom: 2px;
-        }
-
-        .tag-content {
-            font-size: 11px;
-            line-height: 1.4;
-        }
-
-        .tag-field {
-            margin-bottom: 3px;
-            display: flex;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 2px;
-        }
-
-        .field-label {
-            font-weight: bold;
-            width: 60px;
             flex-shrink: 0;
         }
 
-        .field-value {
-            flex: 1;
-            padding-left: 5px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+        .company-logo {
+            flex: 0 0 40%;
+            display: flex;
+            align-items: center;
+            gap: 2px;
         }
 
+        .logo-img {
+            height: 8mm;
+        }
+
+        .company-info {
+            flex: 0 0 58%;
+            text-align: left;
+        }
+
+        .company-info h3 {
+            font-size: 10px;
+            font-weight: bold;
+            margin: 0 0 1px 0;
+            color: #333;
+        }
+
+        .iso-info {
+            font-size: 7px;
+            line-height: 1.1;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .tag-content {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .content-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9px;
+            height: 100%;
+        }
+
+        .content-table td {
+            border: 1px solid #999;
+            padding: 1mm;
+            vertical-align: top;
+            word-wrap: break-word;
+            overflow: hidden;
+        }
+
+        .content-table .label-col {
+            width: 18%;
+            text-align: center;
+            font-weight: bold;
+            background-color: #f8f9fa;
+            font-size: 8px;
+        }
+
+        .content-table .value-col {
+            width: 82%;
+            text-align: left;
+            font-weight: bold;
+            font-size: 9px;
+            word-break: break-word;
+            hyphens: auto;
+        }
+
+        .content-table tr {
+            height: 4mm;
+        }
+
+        /* Print-specific styles */
         @media print {
             body {
                 margin: 0;
                 padding: 0;
+                background: white;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
 
             .no-print {
-                display: none;
+                display: none !important;
+            }
+
+            .print-container {
+                gap: 2mm;
             }
 
             .tag-cell {
                 page-break-inside: avoid;
+                break-inside: avoid;
+            }
+
+            /* Force exact dimensions in print */
+            .tag-cell {
+                min-width: 7cm;
+                max-width: 7cm;
+                min-height: 4cm;
+                max-height: 4cm;
             }
         }
 
         .print-actions {
             margin: 20px;
             text-align: center;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
         }
 
         .print-actions button {
-            margin: 0 5px;
+            margin: 0 10px;
             padding: 10px 20px;
             font-size: 14px;
             cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background: #007bff;
+            color: white;
+        }
+
+        .print-actions button:hover {
+            background: #0056b3;
+        }
+
+        .print-actions button:last-child {
+            background: #6c757d;
+        }
+
+        .print-actions button:last-child:hover {
+            background: #545b62;
+        }
+
+        /* Responsive grid for screen view */
+        @media screen and (max-width: 1200px) {
+            .print-container {
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body>
 <div class="print-actions no-print">
-    <button onclick="window.print();">พิมพ์</button>
-    <button onclick="window.close();">ปิดหน้าต่าง</button>
+    <button onclick="window.print();">🖨️ พิมพ์</button>
+    <button onclick="window.close();">❌ ปิดหน้าต่าง</button>
 </div>
 
 <div class="print-container">
-    <?php
-    $count = 0;
-    // print_r($printData);
-    foreach ($printData as $index => $product):
-        if ($count % 3 == 0): // Start new row every 3 tags
-            ?>
-            <div class="tag-row">
-        <?php endif; ?>
-
+    <?php foreach ($printData as $index => $product): ?>
         <div class="tag-cell">
             <div class="tag-header">
-
-
-                <table style="width: 100%">
-                    <tr>
-                        <td style="width: 40%; text-align: left">
-                            <div class="company-logo">
-                                <span class="logo-text">
-                                      <img src="../../backend/web/uploads/logo/mco_logo.png" width="60%" alt="">
-                                      <img src="../../backend/web/uploads/logo/verity.jpg" width="30%" alt="">
-                                </span>
-
-                            </div>
-                        </td>
-                        <td style="width: 60%; text-align: left">
-                            <div>
-                                <h3>M.C.O.CO.,LTD</h3>
-                            </div>
-                            <div class="company-info" style="text-align: left">
-                                <div style="font-size: 14px"><b>Certified ISO 9001:2015</b></div>
-                                <div style="font-size: 14px"><b>Certificate No: TH020629</b></div>
-                                <div style="font-size: 14px"><b>Issued by Bureau Veritas Cetification (Thailand) Ltd.</b></div>
-                                <div style="font-size: 14px"><b>Tel : 038-875258 www.thai-mco.com</b> </div>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
+                <div class="company-logo">
+                    <img src="../../backend/web/uploads/logo/mco_logo.png" class="logo-img" alt="MCO Logo">
+                    <img src="../../backend/web/uploads/logo/verity.jpg" class="logo-img" alt="Verity Logo">
+                </div>
+                <div class="company-info">
+                    <h3>M.C.O.CO.,LTD</h3>
+                    <div class="iso-info">
+                        <div>Certified ISO 9001:2015</div>
+                        <div>Certificate No: TH020629</div>
+                        <div>Issued by Bureau Veritas</div>
+                        <div>Tel: 038-875258</div>
+                        <div>www.thai-mco.com</div>
+                    </div>
+                </div>
             </div>
+
             <div class="tag-content">
-                <table style="width: 100%;border: 1px solid gray;border-collapse: collapse">
+                <table class="content-table">
                     <tr>
-                        <td style="width: 10%;text-align: center;font-size: 14px;font-weight: bold;border: 1px solid gray;padding: 5px">Ref.Po</td>
-                        <td style="width: 90%;text-align: left;font-size: 14px;font-weight: bold;border: 1px solid gray;padding: 5px"><?= htmlspecialchars($product['ref_po']) ?></td>
+                        <td class="label-col">Ref.Po</td>
+                        <td class="value-col"><?= htmlspecialchars($product['ref_po'] ?? '') ?></td>
                     </tr>
                     <tr>
-                        <td style="width: 10%;text-align: center;font-size: 14px;font-weight: bold;border: 1px solid gray;padding: 5px">Descrip.</td>
-                        <td style="width: 90%;text-align: left;font-size: 14px;font-weight: bold;border: 1px solid gray;padding: 5px"><?= htmlspecialchars($product['description']) ?></td>
+                        <td class="label-col">Descrip.</td>
+                        <td class="value-col"><?= htmlspecialchars($product['description'] ?? '') ?></td>
                     </tr>
                     <tr>
-                        <td style="width: 10%;text-align: center;font-size: 14px;font-weight: bold;border: 1px solid gray;padding: 5px">Model</td>
-                        <td style="width: 90%;text-align: left;font-size: 14px;font-weight: bold;border: 1px solid gray;padding: 5px"><?= htmlspecialchars($product['model']) ?></td>
+                        <td class="label-col">Model</td>
+                        <td class="value-col"><?= htmlspecialchars($product['model'] ?? '') ?></td>
                     </tr>
                     <tr>
-                        <td style="width: 10%;text-align: center;font-size: 14px;font-weight: bold;border: 1px solid gray;padding: 5px">Brand</td>
-                        <td style="width: 90%;text-align: left;font-size: 14px;font-weight: bold;border: 1px solid gray;padding: 5px"><?= htmlspecialchars($product['brand']) ?></td>
+                        <td class="label-col">Brand</td>
+                        <td class="value-col"><?= htmlspecialchars($product['brand'] ?? '') ?></td>
                     </tr>
                     <tr>
-                        <td style="width: 10%;text-align: center;font-size: 14px;font-weight: bold;border: 1px solid gray;padding: 5px">Q'ty</td>
-                        <td style="width: 90%;text-align: left;font-size: 14px;font-weight: bold;border: 1px solid gray;padding: 5px"><?= htmlspecialchars($product['quantity']) ?></td>
+                        <td class="label-col">Q'ty</td>
+                        <td class="value-col"><?= htmlspecialchars($product['quantity'] ?? '') ?></td>
                     </tr>
                 </table>
             </div>
-
         </div>
-
-        <?php
-        $count++;
-        if ($count % 3 == 0 || $index == count($printData) - 1): // End row
-            // Fill empty cells if this is the last row and it's not complete
-            if ($index == count($printData) - 1 && $count % 3 != 0):
-                for ($i = $count % 3; $i < 3; $i++):
-                    ?>
-                    <div class="tag-cell" style="visibility: hidden;"></div>
-                <?php
-                endfor;
-            endif;
-            ?>
-            </div>
-        <?php
-        endif;
-    endforeach;
-    ?>
+    <?php endforeach; ?>
 </div>
+
+<script>
+    // Auto-adjust layout for optimal printing
+    document.addEventListener('DOMContentLoaded', function() {
+        // Calculate optimal spacing for print
+        const container = document.querySelector('.print-container');
+        const tags = document.querySelectorAll('.tag-cell');
+
+        console.log('Total tags:', tags.length);
+
+        // Ensure consistent sizing
+        tags.forEach((tag, index) => {
+            tag.style.minWidth = '7cm';
+            tag.style.maxWidth = '7cm';
+            tag.style.minHeight = '4cm';
+            tag.style.maxHeight = '4cm';
+        });
+    });
+
+    // Print event handlers
+    window.addEventListener('beforeprint', function() {
+        document.body.style.zoom = '1';
+    });
+
+    window.addEventListener('afterprint', function() {
+        console.log('Print completed');
+    });
+</script>
 </body>
 </html>
