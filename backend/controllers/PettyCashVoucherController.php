@@ -30,7 +30,7 @@ class PettyCashVoucherController extends Controller
             'verbs' => [
                 'class' => VerbFilter::class,
                 'actions' => [
-                    'delete' => ['POST'],
+                    'delete' => ['POST','GET'],
                 ],
             ],
         ];
@@ -413,5 +413,23 @@ class PettyCashVoucherController extends Controller
             }
         }
         return $this->redirect(['update', 'id' => $id]);
+    }
+
+    public function actionApprove($id){
+        if($id){
+            $model = \backend\models\PettyCashVoucher::find()->where(['id'=>$id])->one();
+            if($model){
+                $model->approved_by = \Yii::$app->user->id;
+                $model->approve_status = 1;
+                $model->approved_date = date('Y-m-d H:i:s');
+                if($model->save(false)){
+                    Yii::$app->session->setFlash('success', 'บันทึกข้อมูลเรียบร้อยแล้ว');
+                    return $this->redirect(['view', 'id' => $model->id]);
+                }else{
+                    Yii::$app->session->setFlash('error', 'พบปัญหาการบันทึกข้อมูล');
+                    return $this->redirect(['view', 'id' => $model->id]);
+                }
+            }
+        }
     }
 }
