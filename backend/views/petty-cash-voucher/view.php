@@ -22,6 +22,16 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                 'class' => 'btn btn-info',
                 'target' => '_blank'
             ]) ?>
+            <?php if ($model->approve_status !=1): ?>
+                <?php if (\Yii::$app->user->can('CanApprovePettyCash')): ?>
+                    <?= Html::a('อนุมัติ', ['approve', 'id' => $model->id], [
+                        'class' => 'btn btn-success',
+                        'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบจ่ายเงินสดย่อย ?',
+                        'data-method' => 'post',
+                    ]) ?>
+
+                <?php endif; ?>
+            <?php endif; ?>
             <?= Html::a('<i class="fas fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
                 'class' => 'btn btn-danger',
                 'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะลบรายการนี้?',
@@ -92,6 +102,16 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                             [
                                 'attribute' => 'issued_date',
                                 'value' => $model->issued_date ? Yii::$app->formatter->asDate($model->issued_date, 'dd/MM/yyyy') : '-',
+                            ],
+                            [
+                                'attribute' => 'approved_status',
+                                'value' => function ($data) {
+                                    if($data->approve_status == 1){
+                                        return 'อนุมัติ';
+                                    }else {
+                                        return 'ไม่อนุมัติ';
+                                    }
+                                }
                             ],
                             [
                                 'attribute' => 'approved_by',
