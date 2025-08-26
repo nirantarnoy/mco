@@ -69,7 +69,7 @@ $this->params['breadcrumbs'][] = 'ประวัติการรับสิ�
                         </small>
                     </div>
                     <div>
-                        <?php if ($receive->status == \backend\models\JournalTrans::STATUS_ACTIVE): ?>
+                        <?php if ($receive->status == 0): ?>
                             <span class="badge bg-success">ใช้งาน</span>
                             <?= Html::a('<i class="fas fa-times"></i> ยกเลิก',
                                 ['cancel-receive', 'id' => $receive->id], [
@@ -77,7 +77,7 @@ $this->params['breadcrumbs'][] = 'ประวัติการรับสิ�
                                     'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะยกเลิกการรับสินค้านี้? จำนวนสต๊อกจะถูกปรับลด',
                                     'data-method' => 'post',
                                 ]) ?>
-                        <?php else: ?>
+                        <?php elseif ($receive->status == \backend\models\JournalTrans::STATUS_CANCELLED): ?>
                             <span class="badge bg-danger">ยกเลิกแล้ว</span>
                         <?php endif; ?>
                     </div>
