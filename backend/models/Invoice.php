@@ -100,7 +100,7 @@ class Invoice extends ActiveRecord
             [['customer_code', 'customer_tax_id'], 'string', 'max' => 20],
             [['customer_name'], 'string', 'max' => 255],
             [['credit_terms'], 'string', 'max' => 100],
-            [['total_amount_text'], 'string', 'max' => 500],
+            [['total_amount_text','special_note'], 'string', 'max' => 500],
             [['invoice_type'], 'in', 'range' => [self::TYPE_QUOTATION, self::TYPE_BILL_PLACEMENT, self::TYPE_TAX_INVOICE, self::TYPE_RECEIPT]],
             [['invoice_number'], 'unique', 'targetAttribute' => ['invoice_number', 'invoice_type']],
         ];
@@ -144,6 +144,7 @@ class Invoice extends ActiveRecord
             'quotation_id' => 'ใบเสนอราคา',
             'pay_for_emp_id' => 'พนักงาน',
             'customer_id' => 'ลูกค้า',
+            'special_note' => 'บันทึกอื่นๆ'
         ];
     }
 

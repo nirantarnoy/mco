@@ -104,7 +104,8 @@ class PurchReq extends ActiveRecord
             [['purch_req_no', 'vendor_name', 'note', 'total_text','reason'], 'string', 'max' => 255],
             [['purch_req_no'], 'unique'],
             [['required_date','approve_date'], 'safe'],
-            [['is_vat'],'integer']
+            [['is_vat'],'integer'],
+            [['special_note'],'string','max'=>500]
         ];
     }
 
@@ -141,6 +142,7 @@ class PurchReq extends ActiveRecord
             'approve_date'=> 'วันที่อนุมัติใบขอซื้อ',
             'is_vat' => 'มี VAT',
             'vat_percent' => 'VAT %',
+            'special_note' => 'บันทึกอื่นๆ'
         ];
     }
 

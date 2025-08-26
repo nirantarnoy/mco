@@ -44,7 +44,7 @@ class BillingInvoice extends ActiveRecord
             [['subtotal', 'discount_amount', 'vat_amount', 'total_amount'], 'number'],
             [['discount_percent', 'vat_percent'], 'number', 'max' => 100],
             [['status'], 'in', 'range' => ['draft', 'issued', 'paid', 'cancelled']],
-            [['notes'], 'string'],
+            [['notes','special_note'], 'string'],
             [['selectedInvoices'], 'safe'],
         ];
     }
@@ -66,6 +66,7 @@ class BillingInvoice extends ActiveRecord
             'payment_due_date' => 'กำหนดชำระ',
             'status' => 'สถานะ',
             'selectedInvoices' => 'เลือกใบแจ้งหนี้',
+            'special_note' => 'บันทึกอื่นๆ'
         ];
     }
 

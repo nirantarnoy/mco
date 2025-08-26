@@ -374,8 +374,14 @@ $new_billing_no = \backend\models\BillingInvoice::generateBillingNumber();
             <?= $form->field($model, 'vat_percent')->textInput(['type' => 'number', 'step' => '0.01', 'min' => '0', 'max' => '100']) ?>
         </div>
     </div>
-
-    <?= $form->field($model, 'notes')->textarea(['rows' => 3]) ?>
+    <div class="row">
+        <div class="col-lg-12">
+            <?= $form->field($model, 'notes')->textarea([
+                'rows' => 3,
+                'placeholder' => 'หมายเหตุ'
+            ]) ?>
+        </div>
+    </div>
 
     <div class="form-group">
         <?= Html::submitButton('บันทึก', ['class' => 'btn btn-success btn-lg']) ?>

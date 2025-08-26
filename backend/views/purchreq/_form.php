@@ -539,6 +539,14 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                         ])->label() ?>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <?= $form->field($model, 'special_note')->textarea([
+                            'rows' => 3,
+                            'placeholder' => 'บันทึกอื่นๆ'
+                        ]) ?>
+                    </div>
+                </div>
             </div>
         </div>
 

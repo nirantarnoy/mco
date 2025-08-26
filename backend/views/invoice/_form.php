@@ -733,6 +733,14 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                         <?php //endif; ?>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <?= $form->field($model, 'special_note')->textarea([
+                            'rows' => 3,
+                            'placeholder' => 'บันทึกอื่นๆ'
+                        ]) ?>
+                    </div>
+                </div>
             </div>
         </div>
         <?= $form->field($model, 'invoice_type')->hiddenInput(['value' => $model->invoice_type])->label(false) ?>
