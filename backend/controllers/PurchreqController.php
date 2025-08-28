@@ -188,13 +188,6 @@ class PurchreqController extends Controller
         ]);
     }
 
-    /**
-     * Updates an existing PurchReq model.
-     * If update is successful, the browser will be redirected to the 'view' page.
-     * @param int $id ID
-     * @return mixed
-     * @throws NotFoundHttpException if the model cannot be found
-     */
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
@@ -213,16 +206,8 @@ class PurchreqController extends Controller
 
             if (isset($_POST['PurchReqLine'])) {
                 foreach ($_POST['PurchReqLine'] as $index => $purchReqLineData) {
-                    if (isset($purchReqLineData['id']) && !empty($purchReqLineData['id'])) {
-                        // Update existing line
-                        $purchReqLine = PurchReqLine::findOne($purchReqLineData['id']);
-                        if (!$purchReqLine) {
-                            $purchReqLine = new PurchReqLine();
-                        }
-                    } else {
-                        // Create new line
-                        $purchReqLine = new PurchReqLine();
-                    }
+                    // สร้างรายการใหม่ทั้งหมด (ไม่อัพเดทรายการเดิม)
+                    $purchReqLine = new PurchReqLine();
                     $purchReqLine->load($purchReqLineData, '');
                     $purchReqLines[] = $purchReqLine;
                     $valid = $purchReqLine->validate() && $valid;
@@ -250,21 +235,11 @@ class PurchreqController extends Controller
                         $discountAmount = 0;
                         $vatAmount = 0;
                         $netAmount = 0;
-                        // Delete existing lines that are not in the new list
-                        $existingLineIds = [];
-                        foreach ($purchReqLines as $purchReqLine) {
-                            if (!$purchReqLine->isNewRecord) {
-                                $existingLineIds[] = $purchReqLine->id;
-                            }
-                        }
 
-                        PurchReqLine::deleteAll([
-                            'and',
-                            ['purch_req_id' => $model->id],
-                            ['not in', 'id', $existingLineIds]
-                        ]);
+                        // ลบ PurchReqLine ทั้งหมดที่เกี่ยวข้องกับ purch_req_id นี้
+                        PurchReqLine::deleteAll(['purch_req_id' => $model->id]);
 
-                        // Save purch req lines
+                        // บันทึก purch req lines ใหม่ทั้งหมด
                         foreach ($purchReqLines as $purchReqLine) {
                             $purchReqLine->purch_req_id = $model->id;
                             if (!$purchReqLine->save()) {
@@ -276,7 +251,6 @@ class PurchreqController extends Controller
                         }
 
                         // add footer answer
-
                         if($footer_answer != null) {
                             \common\models\PurchReqFoot::deleteAll(['purch_req_id' => $model->id]);
                             for ($i = 0; $i < count($footer_answer); $i++) {
@@ -299,7 +273,6 @@ class PurchreqController extends Controller
                         $afterDiscountAmount = $totalAmount - $discountAmount;
 
                         // คำนวณ VAT (สมมติว่ามีฟิลด์ vat_percent ใน model หรือใช้ VAT 7%)
-
                         $vatPercent = isset($model->vat_percent) ? $model->vat_percent : 7;
                         if ($vatPercent > 0 && $model->is_vat == 1) {
                             $vatAmount = ($afterDiscountAmount * $vatPercent) / 100;
@@ -316,8 +289,6 @@ class PurchreqController extends Controller
                         $model->total_text = PurchReq::numtothai($netAmount);
                         $model->save(false); // skip validation เพราะ validate แล้ว
 
-
-
                         $transaction->commit();
                         Yii::$app->session->setFlash('success', 'แก้ไขข้อมูลเรียบร้อยแล้ว');
                         return $this->redirect(['view', 'id' => $model->id]);
@@ -333,6 +304,151 @@ class PurchreqController extends Controller
             'model' => $model,
         ]);
     }
+    /**
+     * Updates an existing PurchReq model.
+     * If update is successful, the browser will be redirected to the 'view' page.
+     * @param int $id ID
+     * @return mixed
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+//    public function actionUpdate($id)
+//    {
+//        $model = $this->findModel($id);
+//
+//        // Load existing purch req lines
+//        $model->purchReqLines = $model->getPurchReqLines()->all();
+//        if (empty($model->purchReqLines)) {
+//            $model->purchReqLines = [new PurchReqLine()];
+//        }
+//
+//        if ($model->load(Yii::$app->request->post())) {
+//            $purchReqLines = [];
+//            $valid = $model->validate();
+//
+//            $footer_answer = \Yii::$app->request->post('answers');
+//
+//            if (isset($_POST['PurchReqLine'])) {
+//                foreach ($_POST['PurchReqLine'] as $index => $purchReqLineData) {
+//                    if (isset($purchReqLineData['id']) && !empty($purchReqLineData['id'])) {
+//                        // Update existing line
+//                        $purchReqLine = PurchReqLine::findOne($purchReqLineData['id']);
+//                        if (!$purchReqLine) {
+//                            $purchReqLine = new PurchReqLine();
+//                        }
+//                    } else {
+//                        // Create new line
+//                        $purchReqLine = new PurchReqLine();
+//                    }
+//                    $purchReqLine->load($purchReqLineData, '');
+//                    $purchReqLines[] = $purchReqLine;
+//                    $valid = $purchReqLine->validate() && $valid;
+//                }
+//            }
+//
+//            $ex = explode('-', $model->purch_req_date);
+//            if($ex!= null){
+//                if(count($ex) > 1){
+//                    $model->purch_req_date = date('Y-m-d',strtotime($ex[2] . '/'. $ex[0].'/'.$ex[1]));
+//                }
+//            }
+//            $exx = explode('-', $model->required_date);
+//            if($exx!= null){
+//                if(count($exx) > 1){
+//                    $model->required_date = date('Y-m-d',strtotime($exx[2] . '/'. $exx[0].'/'.$exx[1]));
+//                }
+//            }
+//
+//            if ($valid) {
+//                $transaction = Yii::$app->db->beginTransaction();
+//                try {
+//                    if ($model->save()) {
+//                        $totalAmount = 0;
+//                        $discountAmount = 0;
+//                        $vatAmount = 0;
+//                        $netAmount = 0;
+//                        // Delete existing lines that are not in the new list
+//                        $existingLineIds = [];
+//                        foreach ($purchReqLines as $purchReqLine) {
+//                            if (!$purchReqLine->isNewRecord) {
+//                                $existingLineIds[] = $purchReqLine->id;
+//                            }
+//                        }
+//
+//                        PurchReqLine::deleteAll([
+//                            'and',
+//                            ['purch_req_id' => $model->id],
+//                            ['not in', 'id', $existingLineIds]
+//                        ]);
+//
+//                        // Save purch req lines
+//                        foreach ($purchReqLines as $purchReqLine) {
+//                            $purchReqLine->purch_req_id = $model->id;
+//                            if (!$purchReqLine->save()) {
+//                                throw new \Exception('Failed to save purch req line');
+//                            }
+//                            // คำนวณยอดรวมจากแต่ละรายการ
+//                            $lineTotal = $purchReqLine->qty * $purchReqLine->line_price;
+//                            $totalAmount += $lineTotal;
+//                        }
+//
+//                        // add footer answer
+//
+//                        if($footer_answer != null) {
+//                            \common\models\PurchReqFoot::deleteAll(['purch_req_id' => $model->id]);
+//                            for ($i = 0; $i < count($footer_answer); $i++) {
+//                                $answer = new \common\models\PurchReqFoot();
+//                                $answer->purch_req_id = $model->id;
+//                                $answer->footer_id = $i + 1;
+//                                $answer->is_enable = $footer_answer[$i];
+//                                $answer->save();
+//                            }
+//                        }
+//
+//                        // คำนวณส่วนลด (สมมติว่ามีฟิลด์ discount_percent ใน model)
+//                        if (isset($model->discount_percent) && $model->discount_percent > 0) {
+//                            $discountAmount = ($totalAmount * $model->discount_percent) / 100;
+//                        } else if (isset($model->discount_amount) && $model->discount_amount > 0) {
+//                            $discountAmount = $model->discount_amount;
+//                        }
+//
+//                        // คำนวณยอดหลังหักส่วนลด
+//                        $afterDiscountAmount = $totalAmount - $discountAmount;
+//
+//                        // คำนวณ VAT (สมมติว่ามีฟิลด์ vat_percent ใน model หรือใช้ VAT 7%)
+//
+//                        $vatPercent = isset($model->vat_percent) ? $model->vat_percent : 7;
+//                        if ($vatPercent > 0 && $model->is_vat == 1) {
+//                            $vatAmount = ($afterDiscountAmount * $vatPercent) / 100;
+//                        }
+//
+//                        // คำนวณยอดสุทธิ
+//                        $netAmount = $afterDiscountAmount + $vatAmount;
+//
+//                        // อัพเดทยอดรวมใน purch_req ถ้าจำเป็น
+//                        $model->total_amount = $totalAmount;
+//                        $model->discount_amount = $discountAmount;
+//                        $model->vat_amount = $vatAmount;
+//                        $model->net_amount = $netAmount;
+//                        $model->total_text = PurchReq::numtothai($netAmount);
+//                        $model->save(false); // skip validation เพราะ validate แล้ว
+//
+//
+//
+//                        $transaction->commit();
+//                        Yii::$app->session->setFlash('success', 'แก้ไขข้อมูลเรียบร้อยแล้ว');
+//                        return $this->redirect(['view', 'id' => $model->id]);
+//                    }
+//                } catch (\Exception $e) {
+//                    $transaction->rollBack();
+//                    Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+//                }
+//            }
+//        }
+//
+//        return $this->render('update', [
+//            'model' => $model,
+//        ]);
+//    }
 
     /**
      * Deletes an existing PurchReq model.
