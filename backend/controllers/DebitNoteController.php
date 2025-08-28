@@ -2,6 +2,7 @@
 
 namespace backend\controllers;
 
+use backend\models\Invoice;
 use Yii;
 use backend\models\DebitNote;
 use backend\models\DebitNoteItem;
@@ -520,5 +521,32 @@ class DebitNoteController extends Controller
             }
         }
         return $this->redirect(['update', 'id' => $id]);
+    }
+
+    public function actionGetInvoicesByCustomer($customer_id)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if (empty($customer_id)) {
+            return ['success' => false, 'message' => 'Customer ID required'];
+        }
+
+        $invoices = Invoice::find()
+            ->where(['customer_id' => $customer_id])
+            ->orderBy('invoice_number DESC')
+            ->all();
+
+        $invoiceList = [];
+        foreach ($invoices as $invoice) {
+            $invoiceList[] = [
+                'id' => $invoice->id,
+                'invoice_number' => $invoice->invoice_number
+            ];
+        }
+
+        return [
+            'success' => true,
+            'invoices' => $invoiceList
+        ];
     }
 }
