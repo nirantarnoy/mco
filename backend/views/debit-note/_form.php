@@ -430,7 +430,7 @@ $("#debit-note-invoice_id").on("change", function() {
                 $("#debit-note-original_invoice_no").val(data.invoice_number);
                 $("#debit-note-original_invoice_date").val(data.invoice_date);
                 $("#debit-note-original_amount").val(data.total_amount);
-                $("#debit-note-customer_id").val(data.customer_id).trigger("change");
+              //  $("#debit-note-customer_id").val(data.customer_id).trigger("change");
             }
         });
     }
