@@ -213,9 +213,10 @@ function initializeAutocomplete(element) {
     });
 }
 
-// ฟังก์ชันเพิ่มรายการใหม่
+// ฟังก์ชันเพิ่มรายการใหม่ - แก้ไขให้ไม่เพิ่มแถวเปล่าเมื่อมีข้อมูลอยู่แล้ว
 function addItemRow(itemData = null) {
-    var rowIndex = $("#items-table tbody tr").length;
+    var existingRows = $("#items-table tbody tr");
+    var rowIndex = existingRows.length;
     
     var description = itemData ? itemData.description || "" : "";
     var quantity = itemData ? itemData.quantity || "1.000" : "1.000";
@@ -265,6 +266,7 @@ function addItemRow(itemData = null) {
     
     updateRowNumbers();
 }
+
 
 // ฟังก์ชันลบรายการ
 function removeItemRow(button) {
