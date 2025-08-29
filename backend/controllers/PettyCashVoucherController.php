@@ -236,8 +236,9 @@ class PettyCashVoucherController extends Controller
     public function actionDelete($id)
     {
         $model = $this->findModel($id);
-        $model->status = 0; // Soft delete
-        $model->save(false);
+        //$model->status = 0; // Soft delete
+       // $model->save(false);
+        PettyCashVoucher::deleteAll(['id'=>$id]);
 
         Yii::$app->session->setFlash('success', 'ลบข้อมูลเรียบร้อยแล้ว');
         return $this->redirect(['index']);
