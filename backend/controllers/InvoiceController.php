@@ -203,9 +203,11 @@ class InvoiceController extends Controller
      */
     public function actionDelete($id)
     {
-        $model = $this->findModel($id);
-        $model->status = Invoice::STATUS_CANCELLED;
-        $model->save(false);
+  //      $model = $this->findModel($id);
+//        $model->status = Invoice::STATUS_CANCELLED;
+//        $model->save(false);
+
+        Invoice::deleteAll(['id' => $id]);
 
         Yii::$app->session->setFlash('success', 'ยกเลิกเอกสารเรียบร้อยแล้ว');
         return $this->redirect(['index']);
