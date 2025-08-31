@@ -724,14 +724,6 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
         </div>
 
         <div class="form-group mt-3">
-            <div class="d-flex justify-content-between">
-                <?php if (($model->approve_status != 1 && $model->status != 3) || $model->isNewRecord): ?>
-                    <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
-                        'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
-                    ]) ?>
-                <?php endif; ?>
-                <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
-            </div>
             <br />
             <div class="row">
                 <div class="col-lg-4">
@@ -766,7 +758,15 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                 </div>
             </div>
         </div>
-
+        <div class="d-flex justify-content-between">
+            <?php if (($model->approve_status != 1 && $model->status != 3) || $model->isNewRecord): ?>
+                <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
+                    'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
+                ]) ?>
+            <?php endif; ?>
+            <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
+        </div>
+        <br />
 
         <?php ActiveForm::end(); ?>
 

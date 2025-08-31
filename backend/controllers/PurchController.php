@@ -300,8 +300,8 @@ class PurchController extends Controller
                             foreach ($uploaded as $file) {
                                 $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
                                 if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
-                                    $model_doc = new \common\models\PurchReqDoc();
-                                    $model_doc->purch_req_id = $id;
+                                    $model_doc = new \common\models\PurchDoc();
+                                    $model_doc->purch_id = $id;
                                     $model_doc->doc_name = $upfiles;
                                     $model_doc->doc_type_id = 1;
                                     $model_doc->created_by = \Yii::$app->user->id;
@@ -316,8 +316,8 @@ class PurchController extends Controller
                             foreach ($uploaded1 as $file) {
                                 $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
                                 if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
-                                    $model_doc = new \common\models\PurchReqDoc();
-                                    $model_doc->purch_req_id = $id;
+                                    $model_doc = new \common\models\PurchDoc();
+                                    $model_doc->purch_id = $id;
                                     $model_doc->doc_name = $upfiles;
                                     $model_doc->doc_type_id = 2;
                                     $model_doc->created_by = \Yii::$app->user->id;
@@ -332,8 +332,8 @@ class PurchController extends Controller
                             foreach ($uploaded2 as $file) {
                                 $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
                                 if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
-                                    $model_doc = new \common\models\PurchReqDoc();
-                                    $model_doc->purch_req_id = $id;
+                                    $model_doc = new \common\models\PurchDoc();
+                                    $model_doc->purch_id = $id;
                                     $model_doc->doc_name = $upfiles;
                                     $model_doc->doc_type_id = 3;
                                     $model_doc->created_by = \Yii::$app->user->id;
