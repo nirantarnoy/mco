@@ -328,7 +328,14 @@ function calculateGrandTotal() {
     
     var purch_req_is_vat =  $("#purch-req-is-vat").val();
     
-    var discount = parseFloat($('#purchreq-discount_amount').val()) || 0;
+     var discount = 0;
+    var discount_per = parseFloat($('#purch-discount_per').val()) || 0;
+    var discount_amount = parseFloat($('#purch-discount_amount').val()) || 0;
+    
+      if(discount_per > 0){
+        discount = subtotal * (discount_per / 100);
+    }
+    discount = discount + discount_amount;
     var afterDiscount = subtotal - discount;
     var vat = 0;
     if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){
@@ -355,7 +362,7 @@ $(document).on('change keyup input', '.qty-input, .price-input', function() {
     }
 });
 
-$(document).on('change keyup', '#purchreq-discount_amount', function() {
+$(document).on('change keyup', '#purch-discount_amount', function() {
     calculateGrandTotal();
 });
 
@@ -537,6 +544,20 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                             'language' => 'th',
                             'options' => ['placeholder' => 'เลือกแผนก', 'id' => 'department-id'],
                         ])->label() ?>
+                        <?= $form->field($model, 'discount_percent')->textInput([
+                            'type' => 'number',
+                            'min' => 0,
+                            'id' => 'purch-discount_per',
+                            'onchange' => 'calculateGrandTotal2();',
+
+                        ]) ?>
+                        <?= $form->field($model, 'discount_amount')->textInput([
+                            'type' => 'number',
+                            'min' => 0,
+                            'id' => 'purch-discount_amount',
+                            'onchange' => 'calculateGrandTotal2();'
+
+                        ]) ?>
                     </div>
                 </div>
                 <div class="row">
@@ -870,7 +891,15 @@ function calculateGrandTotal2() {
     
     var purch_req_is_vat =  $("#purch-req-is-vat").val();
     
-    var discount = parseFloat($('#purchreq-discount_amount').val()) || 0;
+    var discount = 0;
+    var discount_per = parseFloat($('#purch-discount_per').val()) || 0;
+    var discount_amount = parseFloat($('#purch-discount_amount').val()) || 0;
+    
+      if(discount_per > 0){
+        discount = subtotal * (discount_per / 100);
+    }
+    discount = discount + discount_amount;
+    
     var afterDiscount = subtotal - discount;
     var vat = 0;
     if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){

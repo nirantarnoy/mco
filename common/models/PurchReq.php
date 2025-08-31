@@ -44,7 +44,7 @@ class PurchReq extends \yii\db\ActiveRecord
             [['purch_req_no', 'purch_req_date', 'vendor_id', 'vendor_name', 'status', 'note', 'approve_status', 'total_amount', 'total_text', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'default', 'value' => null],
             [['purch_req_date'], 'safe'],
             [['vendor_id', 'status', 'approve_status', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
-            [['total_amount'], 'number'],
+            [['total_amount','discount_percent','discount_amount','discount_total_amount'], 'number'],
             [['purch_req_no', 'vendor_name', 'note', 'total_text'], 'string', 'max' => 255],
         ];
     }
@@ -70,6 +70,9 @@ class PurchReq extends \yii\db\ActiveRecord
             'created_by' => 'Created By',
             'updated_at' => 'Updated At',
             'updated_by' => 'Updated By',
+            'discount_percent'=>'Discount Percent',
+            'discount_amount'=>'Discount Amount',
+            'discount_total_amount'=>'Discount Total Amount',
         ];
     }
 

@@ -326,7 +326,7 @@ function calculateTotal() {
 // ฟังก์ชันล้างรายการทั้งหมด
 function clearAllItems() {
     $("#items-table tbody").empty();
-    addItemRow(); // เพิ่มแถวเปล่า 1 แถว
+//    addItemRow(); // เพิ่มแถวเปล่า 1 แถว
 }
 
 // ฟังก์ชันโหลดข้อมูลจากใบแจ้งหนี้
@@ -460,7 +460,7 @@ $(document).ready(function() {
     
     // เพิ่มแถวเปล่าถ้ายังไม่มีรายการ
     if ($("#items-table tbody tr").length === 0) {
-        addItemRow();
+        //addItemRow();
     }
 });
 ';
