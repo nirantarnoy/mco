@@ -33,7 +33,7 @@ class PurchDoc extends \yii\db\ActiveRecord
     {
         return [
             [['purch_id', 'doc_name', 'note', 'created_at', 'created_by'], 'default', 'value' => null],
-            [['purch_id', 'created_at', 'created_by'], 'integer'],
+            [['purch_id', 'created_at', 'created_by','doc_type_id'], 'integer'],
             [['doc_name', 'note'], 'string', 'max' => 255],
         ];
     }
@@ -50,6 +50,7 @@ class PurchDoc extends \yii\db\ActiveRecord
             'note' => 'Note',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
+            'doc_type_id'=>'ประเภทเอกสาร',
         ];
     }
 

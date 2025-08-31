@@ -108,6 +108,61 @@ class PurchController extends Controller
                                 throw new \Exception('Failed to save purch line');
                             }
                         }
+
+                        // upload
+
+                        $uploaded = UploadedFile::getInstancesByName('file_acknowledge_doc');
+                        $uploaded1 = UploadedFile::getInstancesByName('file_invoice_doc');
+                        $uploaded2 = UploadedFile::getInstancesByName('file_slip_doc');
+                        if (!empty($uploaded)) {
+                            $loop = 0;
+                            foreach ($uploaded as $file) {
+                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
+                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
+                                    $model_doc = new \common\models\PurchReqDoc();
+                                    $model_doc->purch_req_id = $id;
+                                    $model_doc->doc_name = $upfiles;
+                                    $model_doc->doc_type_id = 1;
+                                    $model_doc->created_by = \Yii::$app->user->id;
+                                    $model_doc->created_at = time();
+                                    $model_doc->save(false);
+                                }
+                                $loop++;
+                            }
+                        }
+                        if (!empty($uploaded1)) {
+                            $loop = 0;
+                            foreach ($uploaded1 as $file) {
+                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
+                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
+                                    $model_doc = new \common\models\PurchReqDoc();
+                                    $model_doc->purch_req_id = $id;
+                                    $model_doc->doc_name = $upfiles;
+                                    $model_doc->doc_type_id = 2;
+                                    $model_doc->created_by = \Yii::$app->user->id;
+                                    $model_doc->created_at = time();
+                                    $model_doc->save(false);
+                                }
+                                $loop++;
+                            }
+                        }
+                        if (!empty($uploaded2)) {
+                            $loop = 0;
+                            foreach ($uploaded2 as $file) {
+                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
+                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
+                                    $model_doc = new \common\models\PurchReqDoc();
+                                    $model_doc->purch_req_id = $id;
+                                    $model_doc->doc_name = $upfiles;
+                                    $model_doc->doc_type_id = 3;
+                                    $model_doc->created_by = \Yii::$app->user->id;
+                                    $model_doc->created_at = time();
+                                    $model_doc->save(false);
+                                }
+                                $loop++;
+                            }
+                        }
+
                         $transaction->commit();
                         Yii::$app->session->setFlash('success', 'สร้างใบสั่งซื้อเรียบร้อยแล้ว');
                         return $this->redirect(['view', 'id' => $model->id]);
@@ -232,6 +287,61 @@ class PurchController extends Controller
                         $model->total_text = PurchReq::numtothai($netAmount);
                         if (!$model->save()) {
                             throw new \Exception('Failed to update total amount');
+                        }
+
+
+                        // upload
+
+                        $uploaded = UploadedFile::getInstancesByName('file_acknowledge_doc');
+                        $uploaded1 = UploadedFile::getInstancesByName('file_invoice_doc');
+                        $uploaded2 = UploadedFile::getInstancesByName('file_slip_doc');
+                        if (!empty($uploaded)) {
+                            $loop = 0;
+                            foreach ($uploaded as $file) {
+                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
+                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
+                                    $model_doc = new \common\models\PurchReqDoc();
+                                    $model_doc->purch_req_id = $id;
+                                    $model_doc->doc_name = $upfiles;
+                                    $model_doc->doc_type_id = 1;
+                                    $model_doc->created_by = \Yii::$app->user->id;
+                                    $model_doc->created_at = time();
+                                    $model_doc->save(false);
+                                }
+                                $loop++;
+                            }
+                        }
+                        if (!empty($uploaded1)) {
+                            $loop = 0;
+                            foreach ($uploaded1 as $file) {
+                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
+                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
+                                    $model_doc = new \common\models\PurchReqDoc();
+                                    $model_doc->purch_req_id = $id;
+                                    $model_doc->doc_name = $upfiles;
+                                    $model_doc->doc_type_id = 2;
+                                    $model_doc->created_by = \Yii::$app->user->id;
+                                    $model_doc->created_at = time();
+                                    $model_doc->save(false);
+                                }
+                                $loop++;
+                            }
+                        }
+                        if (!empty($uploaded2)) {
+                            $loop = 0;
+                            foreach ($uploaded2 as $file) {
+                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
+                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
+                                    $model_doc = new \common\models\PurchReqDoc();
+                                    $model_doc->purch_req_id = $id;
+                                    $model_doc->doc_name = $upfiles;
+                                    $model_doc->doc_type_id = 3;
+                                    $model_doc->created_by = \Yii::$app->user->id;
+                                    $model_doc->created_at = time();
+                                    $model_doc->save(false);
+                                }
+                                $loop++;
+                            }
                         }
 
 

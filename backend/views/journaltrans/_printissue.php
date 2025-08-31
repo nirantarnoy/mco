@@ -328,11 +328,11 @@ $stockerName = '';
             <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                 <tr>
                     <td style="width: 25%">
-                        <img src="../../backend/web/uploads/logo/mco_logo.png" width="50%" alt="">
+                        <img src="../../backend/web/uploads/logo/mco_logo.png" width="100%" alt="">
                     </td>
                     <td style="width: 50%">
                         <div>
-                            <div class="company-name">M.C.O. COMPANY LIMITED</div>
+                            <div class="company-name" style="text-align: center;">M.C.O. COMPANY LIMITED</div>
                             <div class="form-title">ใบเบิก - คืน</div>
                         </div>
                     </td>
@@ -392,10 +392,10 @@ $stockerName = '';
 
         <div class="doc-number-section">
             <div>
-                <span class="doc-label">ชื่องาน:</span> _____________________
+                <span class="doc-label">ชื่องาน:</span> <?=$model->customer_name?>
             </div>
             <div style="padding-right: 10px">
-                <span class="doc-label">RY-QT:</span> <?= Html::encode($documentNumber) ?>
+                <span class="doc-label">RY-QT:</span> <?= Html::encode(\backend\models\Job::findJobNo($model->job_id)) ?>
             </div>
         </div>
     </div>

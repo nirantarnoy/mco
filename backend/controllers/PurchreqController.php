@@ -289,6 +289,8 @@ class PurchreqController extends Controller
                         $model->total_text = PurchReq::numtothai($netAmount);
                         $model->save(false); // skip validation เพราะ validate แล้ว
 
+
+
                         $transaction->commit();
                         Yii::$app->session->setFlash('success', 'แก้ไขข้อมูลเรียบร้อยแล้ว');
                         return $this->redirect(['view', 'id' => $model->id]);

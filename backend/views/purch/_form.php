@@ -732,7 +732,41 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                 <?php endif; ?>
                 <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
             </div>
+            <br />
+            <div class="row">
+                <div class="col-lg-4">
+                    <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <label for="">เอกสารแนบ PO Acknowledge</label>
+                                <input type="file" name="file_acknowledge_doc" multiple>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <label for="">เอกสารแนบ ใบกำกับภาษี</label>
+                                <input type="file" name="file_invoice_doc" multiple>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <label for="">เอกสารแนบ เอกสารจ่ายเงิน</label>
+                                <input type="file" name="file_slip_doc" multiple>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+
 
         <?php ActiveForm::end(); ?>
 
@@ -748,6 +782,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                     <tr>
                         <th style="width: 5%;text-align: center">#</th>
                         <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
+                        <th style="width: 50%;text-align: center">ประเภทเอกสาร</th>
                         <th style="width: 10%;text-align: center">ดูเอกสาร</th>
                         <th style="width: 5%;text-align: center">-</th>
                     </tr>
@@ -759,6 +794,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                             <tr>
                                 <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
                                 <td><?= $value->doc_name ?></td>
+                                <td><?= \backend\helpers\PurchDocType::getTypeById($value->doc_type_id) ?></td>
                                 <td style="text-align: center">
                                     <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $value->doc_name ?>"
                                        target="_blank">
@@ -779,25 +815,25 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
         </div>
         <br/>
         <?php if (!$model->isNewRecord): ?>
-            <form action="<?= Url::to(['purch/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="id" value="<?= $model->id ?>">
-                <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <label for="">เอกสารแนบ</label>
-                            <input type="file" name="file_doc" multiple>
-                        </div>
-                    </div>
-                    <br/>
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <button class="btn btn-info">
-                                <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </form>
+<!--            <form action="--><?php //= Url::to(['purch/add-doc-file'], true) ?><!--" method="post" enctype="multipart/form-data">-->
+<!--                <input type="hidden" name="id" value="--><?php //= $model->id ?><!--">-->
+<!--                <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">-->
+<!--                    <div class="row">-->
+<!--                        <div class="col-lg-12">-->
+<!--                            <label for="">เอกสารแนบ</label>-->
+<!--                            <input type="file" name="file_doc" multiple>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <br/>-->
+<!--                    <div class="row">-->
+<!--                        <div class="col-lg-12">-->
+<!--                            <button class="btn btn-info">-->
+<!--                                <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ-->
+<!--                            </button>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </form>-->
         <?php endif; ?>
         <form id="form-delete-doc-file" action="<?= Url::to(['purch/delete-doc-file'], true) ?>" method="post">
             <input type="hidden" name="id" value="<?= $model->id ?>">

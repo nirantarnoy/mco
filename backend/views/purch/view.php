@@ -343,6 +343,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                 <tr>
                     <th style="width: 5%;text-align: center">#</th>
                     <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
+                    <th style="width: 50%;text-align: center">ประเภท</th>
                     <th style="width: 10%;text-align: center">ดูเอกสาร</th>
                     <th style="width: 5%;text-align: center">-</th>
                 </tr>
@@ -354,6 +355,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                         <tr>
                             <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
                             <td><?= $value->doc_name ?></td>
+                            <td><?= \backend\helpers\PurchDocType::getTypeById($value->doc_type_id) ?></td>
                             <td style="text-align: center">
                                 <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $value->doc_name ?>"
                                    target="_blank">
