@@ -165,7 +165,7 @@ class PurchreqController extends Controller
 
                         // อัพเดทยอดรวมใน purch_req ถ้าจำเป็น
                         $model->total_amount = $totalAmount;
-                        $model->discount_amount = $discountAmount;
+                        $model->discount_total_amount = $discountAmount;
                         $model->vat_amount = $vatAmount;
                         $model->net_amount = $netAmount;
                         $model->total_text = PurchReq::numtothai($netAmount);
@@ -283,7 +283,7 @@ class PurchreqController extends Controller
 
                         // อัพเดทยอดรวมใน purch_req ถ้าจำเป็น
                         $model->total_amount = $totalAmount;
-                        $model->discount_amount = $discountAmount;
+                        $model->discount_total_amount = $discountAmount;
                         $model->vat_amount = $vatAmount;
                         $model->net_amount = $netAmount;
                         $model->total_text = PurchReq::numtothai($netAmount);
