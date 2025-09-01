@@ -10,7 +10,8 @@ $emp_info  = \backend\models\Employee::findEmpInfo(\Yii::$app->user->id);
 // Mock data
 $prNumber = $model->purch_req_no;
 $date = date('d/m/Y',strtotime($model->purch_req_date));
-$requestor = $emp_info != null ? $emp_info['fname'] . ' ' . $emp_info['lname'] : '';
+//$requestor = $emp_info != null ? $emp_info['fname'] . ' ' . $emp_info['lname'] : '';
+$requestor = \backend\models\User::findEmployeeNameByUserId($model->created_by);
 $department = $emp_info != null ? $emp_info['department_name'] : '';
 $requestType = $model->reason_title_id; // minimumstock, capex, additional_work, expenses, other
 $deliveryLocation = 'warehouse'; // warehouse, service_support, other_location, other
