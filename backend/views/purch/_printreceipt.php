@@ -78,8 +78,17 @@ $hasManual = false;
 
 // Signatures
 $purchasingRep = \backend\models\User::findEmployeeNameByUserId($model->created_by);
+$requestor = getEmpRequestor($model->id);
 $requestorRep = 'นายสมศักดิ์ ขอสินค้า';
 
+function getEmpRequestor($id){
+    $name = '';
+    $modelx = \backend\models\PurchReq::find()->where(['purch_id'=>$id])->one();
+    if($modelx){
+        $name = \backend\models\User::findEmployeeNameByUserId($modelx->created_by);
+    }
+    return $name;
+}
 ?>
 
 <style>
@@ -447,7 +456,7 @@ $requestorRep = 'นายสมศักดิ์ ขอสินค้า';
         <div class="signature-box">
             <div>ลงชื่อ</div>
             <div class="signature-line"></div>
-            <div>(<?= Html::encode($purchasingRep) ?>)</div>
+            <div>(<?= Html::encode($requestor) ?>)</div>
             <div>ตัวแทนผู้ขอซื้อ</div>
         </div>
         <div class="signature-box">
