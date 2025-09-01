@@ -347,7 +347,7 @@ function getEmpRequestor($id){
                     <?= isset($items[$i]) ? Html::encode($items[$i]['description']) : '&nbsp;' ?>
                 </td>
                 <td>
-                    <?= isset($items[$i]) ? $items[$i]['qty'] . ' ' . $items[$i]['unit'] : '&nbsp;' ?>
+                    <?= isset($items[$i]) ? $items[$i]['qty'] : '&nbsp;' ?>
                 </td>
                 <td>
                     <?= isset($items[$i]) ? Html::encode($items[$i]['inspection_result']) : '&nbsp;' ?>
