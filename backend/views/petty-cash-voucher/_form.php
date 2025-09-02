@@ -457,7 +457,7 @@ $(document).ready(function() {
                                     </td>
                                     <td style="text-align: center">
                                         <div class="btn btn-danger" data-var="<?= trim($value->doc) ?>"
-                                             onclick="delete_doc($(this))">ลบ
+                                             onclick="delete_doc($(this),1)">ลบ
                                         </div>
                                     </td>
                                 </tr>
@@ -526,7 +526,7 @@ $(document).ready(function() {
                                     </td>
                                     <td style="text-align: center">
                                         <div class="btn btn-danger" data-var="<?= trim($value->doc) ?>"
-                                             onclick="delete_doc($(this))">ลบ
+                                             onclick="delete_doc($(this),2)">ลบ
                                         </div>
                                     </td>
                                 </tr>
@@ -562,15 +562,18 @@ $(document).ready(function() {
                   method="post">
                 <input type="hidden" name="id" value="<?= $model->id ?>">
                 <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
+                <input type="hidden" class="delete-doc-type" name="doc_delete_type" value="">
             </form>
         <?php endif; ?>
     </div>
 <?php
 $script = <<< JS
-function delete_doc(e){
+function delete_doc(e,typeid){
     var file_name = e.attr('data-var');
     if(file_name != null){
+       // alert();
         $(".delete-doc-list").val(file_name);
+        $(".delete-doc-type").val(typeid);
         $("#form-delete-doc-file").submit();
     }
 }

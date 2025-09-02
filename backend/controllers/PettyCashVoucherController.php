@@ -403,15 +403,28 @@ class PettyCashVoucherController extends Controller
     public function actionDeleteDocFile(){
         $id = \Yii::$app->request->post('id');
         $doc_delete_list = trim(\Yii::$app->request->post('doc_delete_list'));
+        $doc_type_id = trim(\Yii::$app->request->post('doc_delete_type'));
         if($id){
-            $model_doc = \common\models\PettyCashVoucherDoc::find()->where(['petty_cash_voucher_id' => $id,'doc' => $doc_delete_list])->one();
-            if($model_doc){
-                if($model_doc->delete()){
-                    if(file_exists('uploads/pettycash_doc/'.$model_doc->doc)){
-                        unlink('uploads/pettycash_doc/'.$model_doc->doc);
+            if($doc_type_id ==2){
+                $model_doc = \common\models\PettyCashVoucherDocBill::find()->where(['petty_cash_voucher_id' => $id,'doc' => $doc_delete_list])->one();
+                if($model_doc){
+                    if($model_doc->delete()){
+                        if(file_exists('uploads/pettycash_doc_bill/'.$model_doc->doc)){
+                            unlink('uploads/pettycash_doc_bill/'.$model_doc->doc);
+                        }
+                    }
+                }
+            }else{
+                $model_doc = \common\models\PettyCashVoucherDocSlip::find()->where(['petty_cash_voucher_id' => $id,'doc' => $doc_delete_list])->one();
+                if($model_doc){
+                    if($model_doc->delete()){
+                        if(file_exists('uploads/pettycash_doc_slip/'.$model_doc->doc)){
+                            unlink('uploads/pettycash_doc_slip/'.$model_doc->doc);
+                        }
                     }
                 }
             }
+
         }
         return $this->redirect(['update', 'id' => $id]);
     }
