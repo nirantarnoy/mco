@@ -489,11 +489,11 @@ $(document).ready(function() {
                     </div>
                 </div>
             </form>
-            <form id="form-delete-doc-file" action="<?= Url::to(['petty-cash-voucher/delete-doc-file'], true) ?>"
-                  method="post">
-                <input type="hidden" name="id" value="<?= $model->id ?>">
-                <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
-            </form>
+<!--            <form id="form-delete-doc-file" action="--><?php //= Url::to(['petty-cash-voucher/delete-doc-file'], true) ?><!--"-->
+<!--                  method="post">-->
+<!--                <input type="hidden" name="id" value="--><?php //= $model->id ?><!--">-->
+<!--                <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">-->
+<!--            </form>-->
 
             <hr>
             <br/>

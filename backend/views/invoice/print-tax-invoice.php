@@ -11,30 +11,41 @@ $this->title = 'พิมพ์ใบกำกับภาษี - ' . $model->i
 $this->registerCss("
 @page {
     size: A4;
-    margin: 10mm;
+    margin: 1.5cm;
 }
 
 @media print {
     .no-print { display: none !important; }
-    .main-footer { display: none !important; }
+    .main-footer,
+    .main-header,
+    .main-sidebar,
+    .content-wrapper .content-header { 
+        display: none !important; 
+    }
     body { 
-        margin: 0; 
-        padding: 0; 
-        font-family: 'Sarabun', 'TH SarabunPSK', Arial, sans-serif; 
-        font-size: 13px;
-        color: #000;
+        margin: 0 !important; 
+        padding: 0 !important; 
+        font-family: 'Sarabun', 'TH SarabunPSK', Arial, sans-serif !important; 
+        font-size: 13px !important;
+        color: #000 !important;
     }
     .print-container { 
-        max-width: 100%; 
-        box-shadow: none; 
-        border: none; 
-        page-break-after: always;
+        max-width: none !important; 
+        box-shadow: none !important; 
+        border: none !important; 
+        page-break-after: always !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
     }
     .print-container:last-child {
-        page-break-after: auto;
+        page-break-after: auto !important;
     }
     .copy-watermark {
         display: none !important;
+    }
+    * {
+        box-sizing: border-box !important;
     }
 }
 
@@ -619,18 +630,18 @@ window.addEventListener('afterprint', function() {
     </div>
 
     <?php
-      $customer_code = '';
-      $po_no = '';
-      $po_date  = null;
-      $job_id = 0;
-      $quotation_data = \backend\models\Quotation::find()->where(['id' => $model->quotation_id])->one();
-      if($quotation_data != null){
+    $customer_code = '';
+    $po_no = '';
+    $po_date  = null;
+    $job_id = 0;
+    $quotation_data = \backend\models\Quotation::find()->where(['id' => $model->quotation_id])->one();
+    if($quotation_data != null){
         $customer_code = \backend\models\Customer::findCode($quotation_data->customer_id);
 
-      }
+    }
 
-      $po_no = $model->po_number;
-      $po_date = $model->po_date;
+    $po_no = $model->po_number;
+    $po_date = $model->po_date;
     ?>
 
     <!-- Customer Information -->
@@ -653,7 +664,7 @@ window.addEventListener('afterprint', function() {
                 <span class="field-value"><?= Html::encode($model->customer_address ?: '') ?></span>
             </div>
             <div class="field-group">
-                <span class="field-label">TAXID:</span>
+                <span class="field-label">TAX ID:</span>
                 <span class="field-value"><?= Html::encode($model->customer_tax_id ?: '') ?></span>
             </div>
         </div>
@@ -700,32 +711,25 @@ window.addEventListener('afterprint', function() {
             <?php if (!empty($model_line)): ?>
                 <?php foreach ($model_line as $index => $item): ?>
                     <tr>
-                        <td><?= $index + 1 ?></td>
-                        <td class="text-left"><?= nl2br(Html::encode($item->item_description)) ?></td>
-                        <td><?= number_format($item->quantity, 0) ?> <?= Html::encode(\backend\models\Unit::findName($item->unit_id)) ?></td>
-                        <td class="text-right"><?= number_format($item->unit_price, 3) ?></td>
-                        <td class="text-right"><?= number_format($item->amount, 3) ?></td>
+                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= $index + 1 ?></td>
+                        <td class="text-left" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= nl2br(Html::encode($item->item_description)) ?></td>
+                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= number_format($item->quantity, 0) ?> <?= Html::encode(\backend\models\Unit::findName($item->unit_id)) ?></td>
+                        <td class="text-right" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= number_format($item->unit_price, 3) ?></td>
+                        <td class="text-right" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= number_format($item->amount, 3) ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>
-                <!-- Default sample data -->
-                <tr>
-                    <td>1</td>
-                    <td class="text-left">Service Charge of Observer Golden Spatula on Songkran Festival (15/04/2025)</td>
-                    <td>1 JOB</td>
-                    <td class="text-right">15,000.000</td>
-                    <td class="text-right">15,000.000</td>
-                </tr>
+
             <?php endif; ?>
 
             <!-- Empty rows for spacing -->
-            <?php for ($i = count($model_line); $i < 10; $i++): ?>
+            <?php for ($i = count($model_line); $i < 16; $i++): ?>
                 <tr class="empty-row">
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
                 </tr>
             <?php endfor; ?>
             </tbody>
@@ -734,9 +738,9 @@ window.addEventListener('afterprint', function() {
 
     <!-- Summary Section -->
     <div class="summary-section">
-        <div class="summary-left">
+        <div class="summary-left" style="border: 1px solid gray;">
             <div class="font-bold">ตัวอักษร</div>
-            <div class="amount-text"><?= $model->total_amount_text ?: '' ?></div>
+            <div class="amount-text" style="text-align:center;"><h4><?= $model->total_amount_text ?: '' ?></h4></div>
 
             <div style="margin-top: 30px; font-size: 12px; text-align: center;">
                 <strong>ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง</strong>
@@ -791,4 +795,3 @@ window.addEventListener('afterprint', function() {
             <div class="signature-date">วันที่ / Date ___/____/____</div>
         </div>
     </div>
-</div>

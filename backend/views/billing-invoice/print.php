@@ -13,25 +13,36 @@ $this->registerCss("
 
 @media print {
     .no-print { display: none !important; }
-    .main-footer { display: none !important; }
+    .main-footer,
+    .main-header,
+    .main-sidebar,
+    .content-wrapper .content-header { 
+        display: none !important; 
+    }
     body { 
-        margin: 0; 
-        padding: 0; 
-        font-family: 'Sarabun', 'THSarabunNew', Arial, sans-serif; 
-        font-size: 12px;
-        color: #000;
+        margin: 0 !important; 
+        padding: 0 !important; 
+        font-family: 'Sarabun', 'THSarabunNew', Arial, sans-serif !important; 
+        font-size: 12px !important;
+        color: #000 !important;
     }
     .print-container { 
-        max-width: 100%; 
-        box-shadow: none; 
-        border: none; 
-        page-break-after: always;
+        max-width: none !important; 
+        box-shadow: none !important; 
+        border: none !important; 
+        page-break-after: always !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
     }
     .print-container:last-child {
-        page-break-after: auto;
+        page-break-after: auto !important;
     }
     .copy-watermark {
         display: none !important;
+    }
+    * {
+        box-sizing: border-box !important;
     }
 }
 
@@ -232,6 +243,14 @@ body {
     display: inline-block;
     border-top: 2px solid #333;
     border-bottom: 2px solid #333;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    min-width: 200px;
+}
+.total-box2 {
+    display: inline-block;
+    border-top: 2px solid #333;
     padding: 12px 20px;
     font-size: 16px;
     font-weight: bold;
@@ -522,7 +541,7 @@ window.addEventListener('afterprint', function() {
 <div class="print-container original">
     <div class="header-section">
         <div class="mco-logo">
-            <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png',['style' => 'max-width: 120px;']) ?>
+            <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png', ['style' => 'max-width: 120px;']) ?>
         </div>
         <div class="company-details">
             <h1>บริษัท เอ็ม.ซี.โอ. จำกัด</h1>
@@ -540,7 +559,9 @@ window.addEventListener('afterprint', function() {
             <table>
                 <tr>
                     <td><strong>ชื่อลูกค้า</strong></td>
-                    <td><strong><?= Html::encode($model->customer->name ?? 'บริษัท ส.สิริเสถ จำกัด (สำนักงานใหญ่)') ?></strong></td>
+                    <td>
+                        <strong><?= Html::encode($model->customer->name ?? 'บริษัท ส.สิริเสถ จำกัด (สำนักงานใหญ่)') ?></strong>
+                    </td>
                 </tr>
                 <tr>
                     <td><strong>ที่อยู่</strong></td>
@@ -587,12 +608,14 @@ window.addEventListener('afterprint', function() {
             $invoice = $item->invoice; // ดึงข้อมูล invoice ที่เกี่ยวข้อง
             ?>
             <tr>
-                <td><?= $itemCount ?></td>
-                <td class="text-left"><?= Html::encode($invoice->invoice_number ?? '-') ?></td>
-                <td><?= Html::encode($invoice->invoice_number ?? '-') ?></td>
-                <td><?= Yii::$app->formatter->asDate($invoice->invoice_date ?? $model->billing_date, 'php:j/n/y') ?></td>
-                <td><?= Yii::$app->formatter->asDate($invoice->payment_due_date ?? $model->payment_due_date ?? date('Y-m-d', strtotime($model->billing_date . ' +30 days')), 'php:j/n/y') ?></td>
-                <td class="text-right"><?= number_format($item->amount, 2) ?></td>
+                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= $itemCount ?></td>
+                <td class="text-left"
+                    style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= Html::encode($invoice->invoice_number ?? '-') ?></td>
+                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= Html::encode($invoice->invoice_number ?? '-') ?></td>
+                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= Yii::$app->formatter->asDate($invoice->invoice_date ?? $model->billing_date, 'php:j/n/y') ?></td>
+                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= Yii::$app->formatter->asDate($invoice->payment_due_date ?? $model->payment_due_date ?? date('Y-m-d', strtotime($model->billing_date . ' +30 days')), 'php:j/n/y') ?></td>
+                <td class="text-right"
+                    style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= number_format($item->amount, 2) ?></td>
             </tr>
         <?php endforeach; ?>
 
@@ -610,19 +633,54 @@ window.addEventListener('afterprint', function() {
 
         <?php
         // เติมแถวว่าง
-        $emptyRows = 15 - $itemCount;
+        $emptyRows = 22 - $itemCount;
         if ($itemCount == 0) $emptyRows = 14;
 
         for ($i = 0; $i < $emptyRows; $i++):
             ?>
+            <?php if ($i<$emptyRows-1): ?>
             <tr style="height: 35px;">
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
+                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
+                    &nbsp;
+                </td>
+                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
+                    &nbsp;
+                </td>
+                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
+                    &nbsp;
+                </td>
+                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
+                    &nbsp;
+                </td>
+                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
+                    &nbsp;
+                </td>
+                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
+                    &nbsp;
+                </td>
             </tr>
+        <?php else: ?>
+            <tr style="height: 35px;">
+                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; padding:8px;">
+                    &nbsp;
+                </td>
+                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; padding:8px;">
+                    &nbsp;
+                </td>
+                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; padding:8px;">
+                    &nbsp;
+                </td>
+                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; padding:8px;">
+                    &nbsp;
+                </td>
+                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000;  padding:8px;">
+                    &nbsp;
+                </td>
+                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; padding:8px;">
+                    &nbsp;
+                </td>
+            </tr>
+        <?php endif; ?>
         <?php endfor; ?>
         </tbody>
     </table>
@@ -638,6 +696,8 @@ window.addEventListener('afterprint', function() {
                     <div class="total-box">
                         <?= number_format($totalAmount > 0 ? $totalAmount : $model->total_amount, 2) ?>
                     </div>
+                    <div style="height: 5px;"></div>
+                    <div class="total-box2" style="top: 15px;"></div>
                 </td>
             </tr>
         </table>

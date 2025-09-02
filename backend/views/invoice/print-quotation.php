@@ -11,7 +11,7 @@ $this->title = 'พิมพ์ใบแจ้งหนี้ - ' . $model->invo
 $this->registerCss("
 @page {
     size: A4;
-    margin: 0.5in;
+    margin: 1.5cm;
 }
 
 @media print {
@@ -694,65 +694,74 @@ window.addEventListener('afterprint', function() {
             <?php if (!empty($model_line)): ?>
                 <?php foreach ($model_line as $index => $item): ?>
                     <tr>
-                        <td><?= $index + 1 ?></td>
-                        <td class="text-left"><?= nl2br(Html::encode($item->item_description)) ?></td>
-                        <td><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
-                        <td class="text-right"><?= number_format($item->unit_price, 2) ?></td>
-                        <td class="text-right"><?= number_format($item->amount, 2) ?></td>
+                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= $index + 1 ?></td>
+                        <td class="text-left" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= nl2br(Html::encode($item->item_description)) ?></td>
+                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
+                        <td class="text-right" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= number_format($item->unit_price, 2) ?></td>
+                        <td class="text-right" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= number_format($item->amount, 2) ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>
                 <!-- Default sample data -->
                 <tr>
-                    <td></td>
-                    <td class="text-left"></td>
-                    <td></td>
-                    <td class="text-right"></td>
-                    <td class="text-right"></td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"></td>
+                    <td class="text-left" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"></td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"></td>
+                    <td class="text-right" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"></td>
+                    <td class="text-right" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"></td>
                 </tr>
             <?php endif; ?>
 
             <!-- Empty rows for spacing -->
-            <?php for ($i = count($model_line); $i < 9; $i++): ?>
+            <?php for ($i = count($model_line); $i < 16; $i++): ?>
                 <tr>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
                 </tr>
             <?php endfor; ?>
             </tbody>
+            <tfoot>
+            <tr>
+                <td colspan="3" rowspan="3" style="padding: 8px;text-align: left;">
+                    <div class="summary-left">
+                        <div class="amount-text">(ตัวอักษร)</div>
+                        <div style="font-size: 14px; font-weight: bold;text-align: center;">
+                            <?= $model->total_amount_text ?: '' ?>
+                        </div>
+
+                        <div style="margin-top: 20px; font-size: 12px; text-align: center;">
+                            <strong>ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง</strong>
+                        </div>
+                    </div>
+                </td>
+                <td><span>รวมเงิน / Total</span></td>
+                <td><span><?= number_format($model->subtotal, 2) ?></span></td>
+            </tr>
+            <tr>
+<!--                <td colspan="3" style="padding: 8px;"></td>-->
+                <td>
+                    <span>ภาษีมูลค่าเพิ่ม / Vat <?= $model->vat_percent ?>%</span>
+                </td>
+                <td>
+                    <span><?= number_format($model->vat_amount, 2) ?></span>
+                </td>
+            </tr>
+            <tr>
+<!--                <td colspan="3" style="padding: 8px;"></td>-->
+                <td>
+                    <span>รวมเงินทั้งสิ้น / Grand Total</span>
+                </td>
+                <td>
+                    <span><?= number_format($model->total_amount, 2) ?></span>
+                </td>
+            </tr>
+            </tfoot>
         </table>
     </div>
 
-    <!-- Summary Section -->
-    <div class="summary-section">
-        <div class="summary-left">
-            <div class="amount-text">(ตัวอักษร)</div>
-            <div style="font-size: 14px; font-weight: bold;">
-                <?= $model->total_amount_text ?: '' ?>
-            </div>
-
-            <div style="margin-top: 20px; font-size: 12px; text-align: center;">
-                <strong>ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง</strong>
-            </div>
-        </div>
-        <div class="summary-right">
-            <div class="summary-row">
-                <span>รวมเงิน / Total</span>
-                <span><?= number_format($model->subtotal, 2) ?></span>
-            </div>
-            <div class="summary-row">
-                <span>ภาษีมูลค่าเพิ่ม / Vat <?= $model->vat_percent ?>%</span>
-                <span><?= number_format($model->vat_amount, 2) ?></span>
-            </div>
-            <div class="summary-row total">
-                <span>รวมเงินทั้งสิ้น / Grand Total</span>
-                <span><?= number_format($model->total_amount, 2) ?></span>
-            </div>
-        </div>
-    </div>
 
     <!-- Notes Section -->
     <div class="notes-section">
@@ -767,17 +776,17 @@ window.addEventListener('afterprint', function() {
         <div class="signature-box">
             <div class="signature-title">ผู้รับสินค้า / Received By</div>
             <div class="signature-line"></div>
-            <div class="signature-date">วันที่ / Date______/_________/________</div>
+            <div style="text-align: center;">วันที่ / Date______/_____/_____</div>
         </div>
         <div class="signature-box">
             <div class="signature-title">ผู้ส่งสินค้า / Send By</div>
             <div class="signature-line"></div>
-            <div class="signature-date">วันที่ / Date______/_________/________</div>
+            <div  style="text-align: center;">วันที่ / Date______/_____/_____</div>
         </div>
         <div class="signature-box">
             <div class="signature-title">ผู้มีอำนาจลงนาม / Authorized Signature</div>
             <div class="signature-line"></div>
-            <div class="signature-date">วันที่ / Date______/_________/________</div>
+            <div style="text-align: center;">วันที่ / Date______/_____/_____</div>
         </div>
     </div>
 </div>
