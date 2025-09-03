@@ -759,7 +759,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
             </div>
         </div>
         <div class="d-flex justify-content-between">
-            <?php if (($model->approve_status != 1 && $model->status != 3) || $model->isNewRecord): ?>
+            <?php if ( $model->status != 3 || $model->isNewRecord): ?>
                 <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
                     'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
                 ]) ?>
