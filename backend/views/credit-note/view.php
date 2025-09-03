@@ -115,6 +115,12 @@ $model_doc = \common\models\CreditNoteDoc::find()->where(['credit_note_id' => $m
                             return \backend\models\Customer::findCode($model->customer_id) . ' - ' . \backend\models\Customer::findName($model->customer_id);
                         }
                     ],
+                    [
+                        'attribute' => 'vendor_id',
+                        'value' => function ($model) {
+                            return \backend\models\Vendor::findName($model->vendor_id);
+                        }
+                    ],
                     'original_invoice_no',
                     [
                         'attribute' => 'original_invoice_date',

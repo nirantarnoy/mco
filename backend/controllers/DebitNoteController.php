@@ -549,4 +549,30 @@ class DebitNoteController extends Controller
             'invoices' => $invoiceList
         ];
     }
+    public function actionGetPurchByVendor($vendor_id)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if (empty($vendor_id)) {
+            return ['success' => false, 'message' => 'Vendor ID required'];
+        }
+
+        $purch = \backend\models\Purch::find()
+            ->where(['vendor_id' => $vendor_id])
+            ->orderBy('purch_no DESC')
+            ->all();
+
+        $invoiceList = [];
+        foreach ($purch as $invoice) {
+            $invoiceList[] = [
+                'id' => $invoice->id,
+                'purch_no' => $invoice->purch_no
+            ];
+        }
+
+        return [
+            'success' => true,
+            'invoices' => $invoiceList
+        ];
+    }
 }

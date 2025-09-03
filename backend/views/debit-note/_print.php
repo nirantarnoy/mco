@@ -251,17 +251,17 @@ $formatter = Yii::$app->formatter;
         </div>
         <div class="section-row">
             <div class="label">รหัสลูกค้า</div>
-            <div class="value"><?= Html::encode(\backend\models\Customer::findCode($model->customer_id)) ?></div>
+            <div class="value"><?= $model->customer_id!=null ? Html::encode(\backend\models\Customer::findCode($model->customer_id)) : Html::encode(\backend\models\Vendor::findCode($model->vendor_id)) ?></div>
             <div class="label" style="margin-left: 50px;">วันที่</div>
             <div class="value"><?= $formatter->asDate($model->document_date, 'php:m/d/Y') ?></div>
         </div>
         <div class="section-row">
             <div class="label">ชื่อลูกค้า</div>
-            <div class="value"><?= Html::encode(\backend\models\Customer::findName($model->customer_id)) ?></div>
+            <div class="value"><?= $model->customer_id != null ? Html::encode(\backend\models\Customer::findName($model->customer_id)): Html::encode(\backend\models\Vendor::findName($model->vendor_id)) ?></div>
         </div>
         <div class="section-row">
             <div class="label">ที่อยู่</div>
-            <div class="value"><?= Html::encode(Html::encode(\backend\models\Customer::findFullAddress($model->customer_id))) ?></div>
+            <div class="value"><?= $model->customer_id !=null ? Html::encode(Html::encode(\backend\models\Customer::findFullAddress($model->customer_id))) : Html::encode(Html::encode(\backend\models\Vendor::findFullAddress($model->vendor_id))) ?></div>
         </div>
     </div>
 
@@ -295,9 +295,9 @@ $formatter = Yii::$app->formatter;
     <!-- Summary Section -->
     <div class="summary-section">
         <div class="summary-box">
-            <table class="summary-table">
+            <table class="summary-table" style="width: 100%;">
                 <tr>
-                    <td class="label">รวมมูลค่าสินค้าทั้งสิ้น</td>
+                    <td class="label" style="width:50%;text-align: left;">รวมมูลค่าสินค้าทั้งสิ้น</td>
                     <td class="value"><?= $formatter->asDecimal($model->adjust_amount, 2) ?></td>
                 </tr>
             </table>
@@ -325,17 +325,17 @@ $formatter = Yii::$app->formatter;
 
         <!-- Final Summary -->
         <div class="summary-box">
-            <table class="summary-table">
+            <table class="summary-table" style="width: 100%">
                 <tr>
-                    <td class="label">รวมมูลค่าเพิ่มหนี้</td>
+                    <td class="label" style="width:50%;text-align: left;">รวมมูลค่าเพิ่มหนี้</td>
                     <td class="value"><?= $formatter->asDecimal($model->adjust_amount, 2) ?></td>
                 </tr>
                 <tr>
-                    <td class="label">ภาษีมูลค่าเพิ่ม <?= $formatter->asDecimal($model->vat_percent, 0) ?>%</td>
+                    <td class="label" style="width:50%;text-align: left;">ภาษีมูลค่าเพิ่ม <?= $formatter->asDecimal($model->vat_percent, 0) ?>%</td>
                     <td class="value"><?= $formatter->asDecimal($model->vat_amount, 2) ?></td>
                 </tr>
                 <tr class="total-row">
-                    <td class="label">รวมเป็นเงินทั้งสิ้น</td>
+                    <td class="label" style="width:50%;text-align: left;">รวมเป็นเงินทั้งสิ้น</td>
                     <td class="value"><?= $formatter->asDecimal($model->total_amount, 2) ?></td>
                 </tr>
             </table>

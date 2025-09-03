@@ -50,6 +50,12 @@ $model_doc = \common\models\DebitNoteDoc::find()->where(['debit_note_id' => $mod
                                         }
                                     ],
                                     [
+                                        'attribute' => 'vendor_id',
+                                        'value' => function ($model) {
+                                            return \backend\models\Vendor::findName($model->vendor_id);
+                                        }
+                                    ],
+                                    [
                                         'attribute' => 'document_date',
                                         'value' => function ($model) {
                                             return \Yii::$app->formatter->asDate($model->document_date, 'php:m/d/Y');

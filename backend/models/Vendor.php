@@ -55,6 +55,17 @@ class Vendor extends \common\models\Vendor
         $model = Vendor::find()->where(['id' => $id])->one();
         return $model != null ? $model->name : '';
     }
+    public static function findCode($id)
+    {
+        $model = Vendor::find()->where(['id' => $id])->one();
+        return $model != null ? $model->code : '';
+    }
+
+    public static function findFullAddress($id){
+        $model = Vendor::find()->where(['id'=>$id])->one();
+        return $model!= null?$model->home_number.' '.$model->street.' '.$model->aisle.' '.$model->district_name.' '.$model->city_name.' '.$model->province_name.' '.$model->zipcode:'';
+    }
+
 
     public static function getlastno()
     {

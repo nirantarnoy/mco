@@ -491,6 +491,60 @@ $("#debit-note-invoice_id").on("change", function() {
     }
 });
 
+// Event สำหรับการเปลี่ยนแปลงลูกค้า - โหลดใบแจ้งหนี้ตามลูกค้า
+$("#credit-note-vendor_id").on("change", function() {
+    var vendorId = $(this).val();
+    
+    // ล้างข้อมูลใบแจ้งหนี้เดิม
+    $("#debit-note-invoice_id").val("").trigger("change");
+    $("#debit-note-original_invoice_no").val("");
+    $("#debit-note-original_invoice_date").val("");
+    $("#debit-note-original_amount").val("");
+    
+    if (vendorId) {
+        loadPurchByVendor(vendorId);
+    }
+});
+
+// ฟังก์ชันโหลดใบแจ้งหนี้ตามลูกค้า
+function loadPurchByVendor(vendorId) {
+    var invoiceSelect = $("#debit-note-invoice_id");
+    
+    // ล้าง options เดิม
+    invoiceSelect.empty().append("<option value=\"\">เลือกใบแจ้งหนี้...</option>");
+    
+    if (vendorId) {
+        $.ajax({
+            url: "' . Url::to(['debit-note/get-purch-by-vendor']) . '",
+            data: {vendor_id: vendorId},
+            dataType: "json",
+            type: "GET",
+            success: function(response) {
+                console.log("Vendor invoices response:", response);
+                if (response.success && response.invoices && response.invoices.length > 0) {
+                    // เพิ่ม options ใหม่
+                    response.invoices.forEach(function(invoice) {
+                        invoiceSelect.append("<option value=\"" + invoice.id + "\">" + invoice.purch_no + "</option>");
+                    });
+                    
+                    // Refresh Select2 if it\'s initialized
+                    if (invoiceSelect.hasClass("select2-hidden-accessible")) {
+                        invoiceSelect.trigger("change");
+                    }
+                    
+                    showMessage("info", "โหลดใบแจ้งหนี้ของลูกค้านี้เรียบร้อยแล้ว (" + response.invoices.length + " รายการ)");
+                } else {
+                    showMessage("warning", "ไม่พบใบแจ้งหนี้ของลูกค้านี้");
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error loading vendor purchage:", error);
+                showMessage("error", "เกิดข้อผิดพลาดในการโหลดใบสั่งซื้อ");
+            }
+        });
+    }
+}
+
 $(document).on("click", ".autocomplete-item", function() {
     var product = $(this).data("product");
     var dropdown = $(this).closest(".autocomplete-dropdown");
@@ -626,6 +680,39 @@ $this->registerJs($js);
         }
     </style>
 
+    <!-- Flash Messages -->
+<?php if (\Yii::$app->session->hasFlash('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <?= \Yii::$app->session->getFlash('success') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
+
+<?php if (\Yii::$app->session->hasFlash('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <?= \Yii::$app->session->getFlash('error') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
+
+<?php if (\Yii::$app->session->hasFlash('warning')): ?>
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <?= \Yii::$app->session->getFlash('warning') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
+
+<?php if (\Yii::$app->session->hasFlash('info')): ?>
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <?= \Yii::$app->session->getFlash('info') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
+
     <div class="debit-note-form">
 
         <?php $form = ActiveForm::begin(['id' => 'debit-note-form']); ?>
@@ -654,7 +741,7 @@ $this->registerJs($js);
                                 ]
                             ]) ?>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <?= $form->field($model, 'customer_id')->widget(Select2::class, [
                                 'data' => ArrayHelper::map(Customer::find()->orderBy('code')->all(), 'id', function($model) {
                                     return $model->code . ' - ' . $model->name;
@@ -662,6 +749,20 @@ $this->registerJs($js);
                                 'options' => [
                                     'placeholder' => 'เลือกลูกค้า...',
                                     'id' => 'debit-note-customer_id'
+                                ],
+                                'pluginOptions' => [
+                                    'allowClear' => true
+                                ],
+                            ]) ?>
+                        </div>
+                        <div class="col-md-3">
+                            <?= $form->field($model, 'vendor_id')->widget(Select2::class, [
+                                'data' => ArrayHelper::map(\backend\models\Vendor::find()->orderBy('code')->all(), 'id', function($model) {
+                                    return $model->code . ' - ' . $model->name;
+                                }),
+                                'options' => [
+                                    'placeholder' => 'เลือกผู้ขาย...',
+                                    'id' => 'credit-note-vendor_id'
                                 ],
                                 'pluginOptions' => [
                                     'allowClear' => true

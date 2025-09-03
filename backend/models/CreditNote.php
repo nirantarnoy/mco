@@ -73,9 +73,9 @@ class CreditNote extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['document_no', 'document_date', 'customer_id', 'reason'], 'required'],
+            [['document_no', 'document_date', 'reason'], 'required'],
             [['document_date', 'original_invoice_date', 'approved_date', 'created_at', 'updated_at'], 'safe'],
-            [['customer_id', 'invoice_id', 'approved_by', 'created_by', 'updated_by','quotation_id'], 'integer'],
+            [['customer_id', 'invoice_id', 'approved_by', 'created_by', 'updated_by','quotation_id','vendor_id'], 'integer'],
             [['original_amount', 'actual_amount', 'adjust_amount', 'vat_percent', 'vat_amount', 'total_amount'], 'number'],
             [['reason'], 'string'],
             [['document_no', 'original_invoice_no'], 'string', 'max' => 20],
@@ -85,7 +85,8 @@ class CreditNote extends \yii\db\ActiveRecord
             [['status'], 'default', 'value' => self::STATUS_DRAFT],
             [['vat_percent'], 'default', 'value' => 7],
             [['document_no'], 'unique'],
-            [['customer_id'], 'exist', 'skipOnError' => true, 'targetClass' => Customer::class, 'targetAttribute' => ['customer_id' => 'id']],
+           // [['customer_id'],'default','value'=>0],
+           // [['customer_id'], 'exist', 'skipOnError' => true, 'targetClass' => Customer::class, 'targetAttribute' => ['customer_id' => 'id']],
             [['invoice_id'], 'exist', 'skipOnError' => true, 'targetClass' => Invoice::class, 'targetAttribute' => ['invoice_id' => 'id']],
         ];
     }
@@ -119,6 +120,7 @@ class CreditNote extends \yii\db\ActiveRecord
             'created_by' => 'สร้างโดย',
             'updated_by' => 'แก้ไขโดย',
             'quotation_id' => 'ใบเสนอราคา',
+            'vendor_id' => 'ผู้ขาย',
         ];
     }
 
@@ -130,6 +132,10 @@ class CreditNote extends \yii\db\ActiveRecord
     public function getCustomer()
     {
         return $this->hasOne(Customer::class, ['id' => 'customer_id']);
+    }
+    public function getVendor()
+    {
+        return $this->hasOne(Vendor::class, ['id' => 'vendor_id']);
     }
 
     /**
