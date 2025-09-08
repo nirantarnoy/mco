@@ -740,7 +740,7 @@ window.addEventListener('afterprint', function() {
     <div class="summary-section">
         <div class="summary-left" style="border: 1px solid gray;">
             <div class="font-bold">ตัวอักษร</div>
-            <div class="amount-text" style="text-align:center;"><h4><?= $model->total_amount_text ?: '' ?></h4></div>
+            <div class="amount-text" style="text-align:center;"><h6><?= $model->total_amount_text ?: '' ?></h6></div>
 
             <div style="margin-top: 30px; font-size: 14px; text-align: center;">
                 <strong>ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง</strong>

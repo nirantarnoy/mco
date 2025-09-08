@@ -90,7 +90,7 @@ body {
 
 .company-details {
     text-align: right;
-    font-size: 11px;
+    font-size: 14px;
     line-height: 1.3;
 }
 
@@ -151,7 +151,7 @@ body {
 
 .customer-details table {
     width: 100%;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .customer-details td {
@@ -175,7 +175,7 @@ body {
 
 .number-box .label {
     font-weight: bold;
-    font-size: 11px;
+    font-size: 14px;
     margin-bottom: 5px;
 }
 
@@ -198,7 +198,7 @@ body {
 .items-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 11px;
+    font-size: 14px;
     margin-bottom: 20px;
 }
 
@@ -208,7 +208,7 @@ body {
     padding: 8px 4px;
     text-align: center;
     font-weight: bold;
-    font-size: 10px;
+    font-size: 14px;
     line-height: 1.2;
 }
 
@@ -292,7 +292,7 @@ body {
 
 .signature-date {
     margin-top: 15px;
-    font-size: 11px;
+    font-size: 14px;
 }
 
 /* Print controls */
