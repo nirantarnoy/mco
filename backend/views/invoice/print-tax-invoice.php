@@ -793,6 +793,6 @@ window.addEventListener('afterprint', function() {
             <div class="signature-title">&nbsp;</div>
             <div class="signature-line"></div>
             <div class="signature-title">ผู้มีอำนาจลงนาม / Authorized Signature</div>
-            <div class="signature-date" style="top: 20px;">วันที่ / Date _______/________/_______</div>
+            <div class="signature-date" style="margin-top: 20px;">วันที่ / Date _______/________/_______</div>
         </div>
     </div>
