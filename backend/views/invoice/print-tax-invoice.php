@@ -336,6 +336,7 @@ body {
 .signature-date {
     font-size: 12px;
     position: absolute;
+    top: 10px;
     bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
@@ -723,7 +724,7 @@ window.addEventListener('afterprint', function() {
             <?php endif; ?>
 
             <!-- Empty rows for spacing -->
-            <?php for ($i = count($model_line); $i < 11; $i++): ?>
+            <?php for ($i = count($model_line); $i < 12; $i++): ?>
                 <tr class="empty-row">
                     <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
                     <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
