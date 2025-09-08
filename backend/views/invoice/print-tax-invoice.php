@@ -118,13 +118,13 @@ body {
 }
 
 .company-name-eng {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: bold;
     margin-bottom: 3px;
 }
 
 .company-address {
-    font-size: 11px;
+    font-size: 16px;
     line-height: 1.2;
     margin-bottom: 2px;
 }
@@ -142,7 +142,7 @@ body {
 }
 
 .invoice-subtitle {
-    font-size: 14px;
+    font-size: 16px;
     margin-bottom: 10px;
 }
 
@@ -203,7 +203,7 @@ body {
     flex: 1;
     padding: 2px 5px;
     min-height: 18px;
-    font-size: 12px;
+    font-size: 16px;
 }
 
 /* Items Table */
@@ -215,7 +215,7 @@ body {
     width: 100%;
     border-collapse: collapse;
     border: 1px solid #000;
-    font-size: 12px;
+    font-size: 16px;
 }
 
 .items-table th,
@@ -230,7 +230,7 @@ body {
     background-color: #f8f9fa;
     font-weight: bold;
     height: 35px;
-    font-size: 11px;
+    font-size: 16px;
 }
 
 .items-table td {
@@ -271,7 +271,7 @@ body {
     justify-content: space-between;
     padding: 6px 10px;
     border-bottom: 1px solid #000;
-    font-size: 12px;
+    font-size: 16px;
 }
 
 .summary-row:last-child {
@@ -285,13 +285,13 @@ body {
 
 .amount-text {
     margin-top: 5px;
-    font-size: 11px;
+    font-size: 16px;
 }
 
 /* Notes Section */
 .notes-section {
     margin: 15px 0;
-    font-size: 11px;
+    font-size: 16px;
     line-height: 1.4;
 }
 
@@ -334,7 +334,7 @@ body {
 }
 
 .signature-date {
-    font-size: 11px;
+    font-size: 12px;
     position: absolute;
     bottom: 10px;
     left: 50%;
@@ -742,7 +742,7 @@ window.addEventListener('afterprint', function() {
             <div class="font-bold">ตัวอักษร</div>
             <div class="amount-text" style="text-align:center;"><h4><?= $model->total_amount_text ?: '' ?></h4></div>
 
-            <div style="margin-top: 30px; font-size: 12px; text-align: center;">
+            <div style="margin-top: 30px; font-size: 14px; text-align: center;">
                 <strong>ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง</strong>
             </div>
         </div>
