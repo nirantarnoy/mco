@@ -335,7 +335,7 @@ body {
 
 .signature-date {
     font-size: 12px;
-    position: absolute;
+//    position: absolute;
     top: 10px;
     bottom: 10px;
     left: 50%;
