@@ -337,7 +337,7 @@ body {
     font-size: 12px;
     position: absolute;
     bottom: 10px;
-    padding-top: 10px;
+    padding-top: 25px;
     left: 50%;
     transform: translateX(-50%);
 }
