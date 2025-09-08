@@ -336,7 +336,7 @@ body {
 .signature-date {
     font-size: 12px;
     position: absolute;
-    bottom: 10px;
+    bottom: 2px;
     padding-top: 25px;
     left: 50%;
     transform: translateX(-50%);
@@ -781,18 +781,18 @@ window.addEventListener('afterprint', function() {
             <div class="signature-title">ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง</div>
             <div class="signature-line"></div>
             <div class="signature-title">ผู้รับสินค้า / Received By</div>
-            <div class="signature-date">วันที่ / Date ______/______/_____</div>
+            <div class="signature-date">วันที่ / Date ____/_____/_____</div>
         </div>
         <div class="signature-box">
             <div class="signature-title">&nbsp;</div>
             <div class="signature-line"></div>
             <div class="signature-title">ผู้ส่งสินค้า / Delivery By</div>
-            <div class="signature-date">วันที่ / Date ______/______/_____</div>
+            <div class="signature-date">วันที่ / Date ____/_____/_____</div>
         </div>
         <div class="signature-box">
             <div class="signature-title">&nbsp;</div>
             <div class="signature-line"></div>
             <div class="signature-title">ผู้มีอำนาจลงนาม / Authorized Signature</div><br />
-            <div class="signature-date">วันที่ / Date ______/______/_____</div>
+            <div class="signature-date">วันที่ / Date ____/_____/_____</div>
         </div>
     </div>
