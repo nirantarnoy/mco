@@ -338,7 +338,7 @@ body {
     position: absolute;
     bottom: 2px;
     padding-top: 25px;
-    left: 20%;
+    text-align: center;
     transform: translateX(-50%);
 }
 
