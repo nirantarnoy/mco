@@ -14,39 +14,6 @@ $taxId = \backend\models\Purch::findVendorTaxID($model->vendor_id);
 $poNumber = $model->purch_no;
 
 // Items for inspection
-//$items = [
-//    [
-//        'description' => 'กระดาษ A4 80 แกรม Double A',
-//        'qty' => 50,
-//        'unit' => 'รีม',
-//        'inspection_result' => 'ผ่าน'
-//    ],
-//    [
-//        'description' => 'หมึกพิมพ์ Canon Black (PG-740)',
-//        'qty' => 10,
-//        'unit' => 'ขวด',
-//        'inspection_result' => 'ผ่าน'
-//    ],
-//    [
-//        'description' => 'แฟ้มเอกสาร 2 นิ้ว สีน้ำเงิน',
-//        'qty' => 30,
-//        'unit' => 'แฟ้ม',
-//        'inspection_result' => 'ผ่าน'
-//    ],
-//    [
-//        'description' => 'ปากกาลูกลื่น 0.5 มม. สีน้ำเงิน',
-//        'qty' => 100,
-//        'unit' => 'ด้าม',
-//        'inspection_result' => 'ผ่าน'
-//    ],
-//    [
-//        'description' => 'กรรไกร 8 นิ้ว สแตนเลส',
-//        'qty' => 5,
-//        'unit' => 'อัน',
-//        'inspection_result' => 'ผ่าน'
-//    ],
-//];
-
 $items = [];
 foreach($model_line as $line){
     $item = [
@@ -101,6 +68,54 @@ function getEmpRequestorId($id){
 ?>
 
 <style>
+    /* Print Button Styles */
+    .print-controls {
+        text-align: center;
+        margin: 20px 0;
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .print-btn {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 0 10px;
+        transition: background-color 0.3s;
+        font-family: 'Sarabun', Arial, sans-serif;
+    }
+
+    .print-btn:hover {
+        background-color: #218838;
+    }
+
+    .print-btn:active {
+        background-color: #1e7e34;
+    }
+
+    .preview-btn {
+        background-color: #17a2b8;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 0 10px;
+        transition: background-color 0.3s;
+        font-family: 'Sarabun', Arial, sans-serif;
+    }
+
+    .preview-btn:hover {
+        background-color: #138496;
+    }
+
     @media print {
         body {
             margin: 0;
@@ -111,6 +126,9 @@ function getEmpRequestorId($id){
             min-height: 297mm;
             margin: 0;
             padding: 10mm;
+        }
+        .print-controls {
+            display: none !important;
         }
     }
 
@@ -294,6 +312,18 @@ function getEmpRequestorId($id){
     }
 </style>
 
+<!-- Print Controls (Hidden when printing) -->
+<div class="print-controls">
+    <h3 style="margin-top: 0; color: #333;">ใบตรวจรับสินค้า/วัสดุ</h3>
+    <p style="color: #666; margin-bottom: 15px;">คลิกปุ่มด้านล่างเพื่อพิมพ์เอกสาร</p>
+    <button type="button" class="print-btn" onclick="printDocument()">
+        🖨️ พิมพ์เอกสาร
+    </button>
+    <button type="button" class="preview-btn" onclick="printPreview()">
+        👁️ ดูตัวอย่างก่อนพิมพ์
+    </button>
+</div>
+
 <div class="print-container">
     <!-- Header Section -->
     <div class="header-section">
@@ -378,7 +408,6 @@ function getEmpRequestorId($id){
         <tr>
             <td class="row-header">1. สภาพทั่วไปของสินค้า/</td>
             <?php for ($j = 0; $j < 15; $j++): ?>
-<!--                <td class="check-cell">--><?php //= isset($inspectionMatrix[0][$j]) && $inspectionMatrix[0][$j] ? '✓' : '' ?><!--</td>-->
                 <td class="check-cell"><?= isset($inspectionMatrix[0][$j]) && $inspectionMatrix[0][$j] ? '' : '' ?></td>
             <?php endfor; ?>
             <td>&nbsp;</td>
@@ -495,8 +524,68 @@ function getEmpRequestorId($id){
 </div>
 
 <script>
-    // Auto print when page loads (optional)
+    // Function to print the document
+    function printDocument() {
+        // Show loading message
+        showLoadingMessage();
+
+        // Small delay to ensure page is ready
+        setTimeout(function() {
+            window.print();
+            hideLoadingMessage();
+        }, 100);
+    }
+
+    // Function to show print preview
+    function printPreview() {
+        showLoadingMessage();
+        setTimeout(function() {
+            // Open print dialog which shows preview in most browsers
+            window.print();
+            hideLoadingMessage();
+        }, 100);
+    }
+
+    // Show loading message
+    function showLoadingMessage() {
+        const controls = document.querySelector('.print-controls');
+        if (controls) {
+            const originalContent = controls.innerHTML;
+            controls.innerHTML = '<p style="color: #666;">กำลังเตรียมการพิมพ์...</p>';
+            controls.setAttribute('data-original', originalContent);
+        }
+    }
+
+    // Hide loading message
+    function hideLoadingMessage() {
+        const controls = document.querySelector('.print-controls');
+        if (controls && controls.getAttribute('data-original')) {
+            controls.innerHTML = controls.getAttribute('data-original');
+            controls.removeAttribute('data-original');
+        }
+    }
+
+    // Auto print when page loads (commented out - uncomment if needed)
     // window.onload = function() {
-    //     window.print();
+    //     setTimeout(function() {
+    //         window.print();
+    //     }, 1000);
     // };
+
+    // Keyboard shortcut for printing (Ctrl+P)
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.key === 'p') {
+            e.preventDefault();
+            printDocument();
+        }
+    });
+
+    // Additional print settings
+    window.addEventListener('beforeprint', function() {
+        console.log('เตรียมพิมพ์เอกสาร...');
+    });
+
+    window.addEventListener('afterprint', function() {
+        console.log('พิมพ์เอกสารเสร็จสิ้น');
+    });
 </script>
