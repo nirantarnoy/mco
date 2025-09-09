@@ -94,7 +94,7 @@ $(document).ready(function() {
     <!-- Receive Form -->
     <?php $form = ActiveForm::begin([
         'method' => 'post',
-        'options' => ['class' => 'receive-form'],
+        'options' => ['class' => 'receive-form','enctype'=>'multipart/form-data'],
     ]); ?>
 
     <div class="card">
@@ -212,6 +212,13 @@ $(document).ready(function() {
             </div>
         </div>
     </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <label for="">เอกสารแนบ</label>
+            <input type="file" name="file_doc" multiple>
+        </div>
+    </div>
+    <br/>
 
     <div class="form-group mt-3">
         <div class="d-flex justify-content-between">

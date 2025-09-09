@@ -537,6 +537,7 @@ class PurchController extends Controller
             $receiveData = \Yii::$app->request->post('receive', []);
             $warehouseId = \Yii::$app->request->post('line_warehouse_id');
             $remark = \Yii::$app->request->post('remark', '');
+            $uploaded = UploadedFile::getInstancesByName('file_doc');
 
 //            echo '<pre>';
 //            print_r($receiveData);
@@ -547,6 +548,21 @@ class PurchController extends Controller
             } else {
                 $result = $this->processReceive($purchModel, $receiveData, $warehouseId, $remark);
                 if ($result['success']) {
+                    if (!empty($uploaded)) {
+                        $loop = 0;
+                        foreach ($uploaded as $file) {
+                            $upfiles = "purch_receive_" . time()."_".$loop . "." . $file->getExtension();
+                            if ($file->saveAs('uploads/purch_receive_doc/' . $upfiles)) {
+                                $model_doc = new \backend\models\PurchReceiveDoc();
+                                $model_doc->purch_id = $id;
+                                $model_doc->doc_name = $upfiles;
+                                $model_doc->created_by = \Yii::$app->user->id;
+                                $model_doc->created_at = time();
+                                $model_doc->save(false);
+                            }
+                            $loop++;
+                        }
+                    }
                     \Yii::$app->session->setFlash('success', $result['message']);
                     return $this->redirect(['view', 'id' => $purchModel->id]);
                 } else {

@@ -136,6 +136,16 @@ $this->params['breadcrumbs'][] = 'ประวัติการรับสิ�
     <?php endif; ?>
 </div>
 
+<?php
+function findDoc($id){
+    $data = null;
+    if($id){
+        $model = \backend\models\PurchReceiveDoc::find()->where(['purch_id'=>$id])->all();
+    }
+    return $data;
+}
+?>
+
 <style>
     .card {
         box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);

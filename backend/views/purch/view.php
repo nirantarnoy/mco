@@ -333,18 +333,19 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
 
     </div>
     <br/>
-    <div class="label">
-        <h4>เอกสารแนบ</h4>
-    </div>
+
     <div class="row">
-        <div class="col-lg-8">
+        <div class="col-lg-6">
+            <div class="label">
+                <h4>เอกสารแนบ</h4>
+            </div>
             <table class="table table-bordered table-striped" style="width: 100%">
                 <thead>
                 <tr>
                     <th style="width: 5%;text-align: center">#</th>
                     <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
-                    <th style="width: 50%;text-align: center">ประเภท</th>
-                    <th style="width: 10%;text-align: center">ดูเอกสาร</th>
+                    <th style="width: 20%;text-align: center">ประเภท</th>
+                    <th style="width: 20%;text-align: center">ดูเอกสาร</th>
                     <th style="width: 5%;text-align: center">-</th>
                 </tr>
                 </thead>
@@ -372,7 +373,43 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                 </tbody>
             </table>
         </div>
-        <div class="col-lg-1"></div>
+        <div class="col-lg-6">
+            <div class="label">
+                <h4>เอกสารแนบใบรับสินค้า</h4>
+            </div>
+            <table class="table table-bordered table-striped" style="width: 100%">
+                <thead>
+                <tr>
+                    <th style="width: 5%;text-align: center">#</th>
+                    <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
+                    <th style="width: 20%;text-align: center">ดูเอกสาร</th>
+                    <th style="width: 5%;text-align: center">-</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php $model_rec_doc = findDoc($model->id);?>
+                <?php if ($model_rec_doc != null): ?>
+
+                    <?php for($i=0;$i<=count($model_rec_doc)-1;$i++): ?>
+                        <tr>
+                            <td style="width: 10px;text-align: center"><?= $i + 1 ?></td>
+                            <td><?= $model_rec_doc[$i] ?></td>
+                            <td style="text-align: center">
+                                <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_receive_doc/' . $model_rec_doc[$i] ?>"
+                                   target="_blank">
+                                    ดูเอกสาร
+                                </a>
+                            </td>
+                            <td style="text-align: center">
+                                <!--                                <div class="btn btn-danger" data-var="-->
+                                <?php //= trim($value->doc_name) ?><!--" onclick="delete_doc($(this))">ลบ</div>-->
+                            </td>
+                        </tr>
+                    <?php endfor; ?>
+                <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
     <br/>
     <br/>
@@ -411,6 +448,18 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
     </style>
 
 <?php
+function findDoc($id){
+    $data = [];
+    if($id){
+        $model = \backend\models\PurchReceiveDoc::find()->where(['purch_id'=>$id])->all();
+        if($model){
+            foreach ($model as $value){
+                array_push($data,$value->doc_name);
+            }
+        }
+    }
+    return $data;
+}
 $this->registerJs("
     setTimeout(function() {
         $('.alert').fadeOut('slow');
