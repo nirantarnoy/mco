@@ -156,8 +156,8 @@
             .tag-cell {
                 min-width: 7cm;
                 max-width: 7cm;
-                min-height: 5cm;
-                max-height: 5cm;
+                min-height: 4cm;
+                max-height: 4cm;
             }
         }
 
@@ -267,8 +267,8 @@
         tags.forEach((tag, index) => {
             tag.style.minWidth = '7cm';
             tag.style.maxWidth = '7cm';
-            tag.style.minHeight = '4cm';
-            tag.style.maxHeight = '4cm';
+            tag.style.minHeight = '5cm';
+            tag.style.maxHeight = '5cm';
         });
     });
 

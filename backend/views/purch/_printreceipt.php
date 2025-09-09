@@ -79,6 +79,7 @@ $hasManual = false;
 // Signatures
 $purchasingRep = \backend\models\User::findEmployeeNameByUserId($model->created_by);
 $requestor = getEmpRequestor($model->id);
+$requestor_id = getEmpRequestorId($model->id);
 $requestorRep = 'นายสมศักดิ์ ขอสินค้า';
 
 function getEmpRequestor($id){
@@ -88,6 +89,14 @@ function getEmpRequestor($id){
         $name = \backend\models\User::findEmployeeNameByUserId($modelx->created_by);
     }
     return $name;
+}
+function getEmpRequestorId($id){
+    $id =0;
+    $modelx = \backend\models\PurchReq::find()->where(['purch_id'=>$id])->one();
+    if($modelx){
+        $id = $modelx->created_by;
+    }
+    return $id;
 }
 ?>
 
@@ -448,14 +457,26 @@ function getEmpRequestor($id){
     <div class="signature-section">
         <div class="signature-box">
             <div>ลงชื่อ</div>
-            <div class="signature-line"></div>
+            <div class="signature-line">
+                <?php
+                $purchasing_signature = \backend\models\User::findEmployeeSignature($model->created_by);
+                if(!empty($purchasing_signature)): ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?=$purchasing_signature?>" alt="Purchasing Signature">
+                <?php endif; ?>
+            </div>
             <div>(<?= Html::encode($purchasingRep) ?>)</div>
             <div>ตัวแทนหน่วยงานจัดซื้อ</div>
         </div>
 
         <div class="signature-box">
             <div>ลงชื่อ</div>
-            <div class="signature-line"></div>
+            <div class="signature-line">
+                <?php
+                $requestor_signature = \backend\models\User::findEmployeeSignature($requestor_id);
+                if(!empty($requestor_signature)): ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" alt="Purchasing Signature">
+                <?php endif; ?>
+            </div>
             <div>(<?= Html::encode($requestor) ?>)</div>
             <div>ตัวแทนผู้ขอซื้อ</div>
         </div>

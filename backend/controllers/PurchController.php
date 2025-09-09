@@ -197,6 +197,7 @@ class PurchController extends Controller
         }
 
         if ($model->load(Yii::$app->request->post())) {
+            $custom_vat_amount = \Yii::$app->request->post('purch_vat_amount');
             $purchLines = [];
             $valid = $model->validate();
 
@@ -266,7 +267,12 @@ class PurchController extends Controller
 
                         $vatPercent = isset($model->vat_percent) ? $model->vat_percent : 7;
                         if ($vatPercent > 0 && $model->is_vat == 1) {
-                            $vatAmount = ($afterDiscountAmount * $vatPercent) / 100;
+                            if($custom_vat_amount !=null){
+                                $vatAmount = $custom_vat_amount;
+                            }else{
+                                $vatAmount = ($afterDiscountAmount * $vatPercent) / 100;
+                            }
+
                         }
 
                         // คำนวน WHT
@@ -999,8 +1005,8 @@ class PurchController extends Controller
         $printData = [];
 
         $id = \Yii::$app->request->post('purch_id');
-        $purch_no = \backend\models\Purch::findNo($id);
-        $line_ref_po = $purch_no; // \Yii::$app->request->post('line_ref_po');
+       // $purch_no = \backend\models\Purch::findNo($id);
+        $line_ref_po =  \Yii::$app->request->post('line_ref_po');
         $line_description = \Yii::$app->request->post('line_description');
         $line_model = \Yii::$app->request->post('line_model');
         $line_brand = \Yii::$app->request->post('line_brand');
