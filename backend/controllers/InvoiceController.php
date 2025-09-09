@@ -429,9 +429,9 @@ class InvoiceController extends Controller
             foreach ($jobItems as $jobItem) {
                 $items[] = [
                     'item_description' => $jobItem->product->name,
-                    'quantity' => number_format($jobItem->qty, 0),
+                    'quantity' => number_format($jobItem->qty, 2),
                     'unit' => $jobItem->product->unit->name ?: 'หน่วย',
-                    'unit_price' => $jobItem->line_price,
+                    'unit_price' => number_format($jobItem->line_price,2),
                     'amount' => number_format($jobItem->qty * $jobItem->line_price, 2),
                     // ข้อมูลเพิ่มเติมที่อาจจำเป็น
                     'product_id' => $jobItem->product_id,
