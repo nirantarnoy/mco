@@ -999,7 +999,8 @@ class PurchController extends Controller
         $printData = [];
 
         $id = \Yii::$app->request->post('purch_id');
-        $line_ref_po = \Yii::$app->request->post('line_ref_po');
+        $purch_no = \backend\models\Purch::findNo($id);
+        $line_ref_po = $purch_no; // \Yii::$app->request->post('line_ref_po');
         $line_description = \Yii::$app->request->post('line_description');
         $line_model = \Yii::$app->request->post('line_model');
         $line_brand = \Yii::$app->request->post('line_brand');

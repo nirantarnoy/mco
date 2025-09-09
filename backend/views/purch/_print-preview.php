@@ -156,8 +156,8 @@
             .tag-cell {
                 min-width: 7cm;
                 max-width: 7cm;
-                min-height: 4cm;
-                max-height: 4cm;
+                min-height: 5cm;
+                max-height: 5cm;
             }
         }
 
