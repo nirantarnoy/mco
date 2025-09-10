@@ -85,7 +85,7 @@ class BillingInvoiceController extends Controller
         foreach ($model->billingInvoiceItems as $item) {
             $invoice = $item->invoice;
             $invoice->is_billed = 0;
-            $invoice->status = 'issued';
+            $invoice->status = 1;
             $invoice->save();
         }
 
