@@ -690,7 +690,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                 <tr>
                     <td class="summary-label">GRAND TOTAL</td>
                     <td class="number-cell" style="font-weight: bold;">
-                        <?= number_format($total, 2) ?>
+                        <?= number_format($subtotal, 2) ?>
                     </td>
                 </tr>
             </table>
