@@ -74,6 +74,55 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
             display: none !important;
         }
 
+        /* Fix for print layout */
+        .row {
+            display: table !important;
+            width: 100% !important;
+            table-layout: fixed !important;
+        }
+
+        .col-lg-7,
+        .col-lg-5 {
+            display: table-cell !important;
+            vertical-align: top !important;
+            float: none !important;
+        }
+
+        .col-lg-7 {
+            width: 58% !important;
+            padding-right: 15px !important;
+        }
+
+        .col-lg-5 {
+            width: 42% !important;
+            padding-left: 15px !important;
+        }
+
+        .main-content {
+            display: table !important;
+            width: 100% !important;
+            table-layout: fixed !important;
+        }
+
+        .left-section {
+            display: table-cell !important;
+            width: 100% !important;
+            vertical-align: top !important;
+        }
+
+        .contact-info {
+            display: table !important;
+            width: 100% !important;
+            table-layout: fixed !important;
+        }
+
+        .contact-column {
+            display: table-cell !important;
+            width: 50% !important;
+            vertical-align: top !important;
+            padding-right: 10px !important;
+        }
+
         .items {
             border-collapse: collapse !important;
         }
@@ -103,92 +152,137 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
         }
 
         .po-container {
-            font-size: 11px !important;
-            line-height: 1.2 !important;
+            font-size: 12px !important;
+            line-height: 1.3 !important;
         }
 
         .header {
-            margin-bottom: 8px !important;
+            margin-bottom: 10px !important;
+            display: table !important;
+            width: 100% !important;
+        }
+
+        .header > div {
+            display: table-cell !important;
+            vertical-align: top !important;
+        }
+
+        .header > div:first-child {
+            width: 60% !important;
+        }
+
+        .header > div:last-child {
+            width: 40% !important;
+            text-align: right !important;
         }
 
         .po-title {
-            font-size: 18px !important;
+            font-size: 20px !important;
         }
 
         .company-info {
-            margin-bottom: 8px !important;
-            line-height: 1.1 !important;
+            margin-bottom: 10px !important;
+            line-height: 1.2 !important;
         }
 
         .company-name {
-            font-size: 14px !important;
+            font-size: 16px !important;
         }
 
         .info-section {
-            margin-bottom: 6px !important;
+            margin-bottom: 8px !important;
         }
 
         .info-row {
-            margin-bottom: 2px !important;
+            margin-bottom: 3px !important;
+            display: table !important;
+            width: 100% !important;
         }
 
         .info-label {
-            font-size: 10px !important;
+            font-size: 11px !important;
+            display: table-cell !important;
+            width: 80px !important;
         }
 
         .info-value {
-            font-size: 10px !important;
-        }
-
-        .items {
-            margin: 8px 0 !important;
-            font-size: 10px !important;
-        }
-
-        .items th {
-            padding: 3px !important;
-            font-size: 9px !important;
-        }
-
-        .items td {
-            padding: 2px !important;
-            height: 18px !important;
-            font-size: 9px !important;
-        }
-
-        .summary-section {
-            margin-top: 10px !important;
-        }
-
-        .summary-table td {
-            padding: 2px !important;
-            font-size: 10px !important;
-        }
-
-        .acknowledgment {
-            margin: 6px 0 !important;
+            display: table-cell !important;
             font-size: 11px !important;
         }
 
+        .items {
+            margin: 10px 0 !important;
+            font-size: 11px !important;
+        }
+
+        .items th {
+            padding: 4px !important;
+            font-size: 10px !important;
+        }
+
+        .items td {
+            padding: 3px !important;
+            height: 20px !important;
+            font-size: 10px !important;
+        }
+
+        .summary-section {
+            margin-top: 12px !important;
+            display: table !important;
+            width: 100% !important;
+        }
+
+        .summary-left {
+            display: table-cell !important;
+            width: 65% !important;
+            vertical-align: top !important;
+        }
+
+        .summary-right {
+            display: table-cell !important;
+            width: 35% !important;
+            vertical-align: top !important;
+        }
+
+        .summary-table td {
+            padding: 3px !important;
+            font-size: 11px !important;
+        }
+
+        .acknowledgment {
+            margin: 8px 0 !important;
+            font-size: 12px !important;
+        }
+
         .signature-section {
-            margin-top: 20px !important;
+            margin-top: 25px !important;
+            display: table !important;
+            width: 100% !important;
+            table-layout: fixed !important;
+        }
+
+        .signature-box {
+            display: table-cell !important;
+            width: 33.33% !important;
+            text-align: center !important;
+            vertical-align: top !important;
         }
 
         .signature-line {
-            margin: 20px 0 6px 0 !important;
-            min-height: 35px !important;
+            margin: 25px 0 8px 0 !important;
+            min-height: 40px !important;
         }
 
         .signature-line img {
-            max-width: 100px !important;
-            max-height: 30px !important;
+            max-width: 120px !important;
+            max-height: 35px !important;
             object-fit: contain;
         }
 
         .terms {
-            margin-top: 10px !important;
-            font-size: 9px !important;
-            line-height: 1.2 !important;
+            margin-top: 12px !important;
+            font-size: 10px !important;
+            line-height: 1.3 !important;
         }
     }
 
@@ -234,6 +328,21 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
     .company-name {
         font-weight: bold;
         font-size: 14px;
+    }
+
+    .row {
+        display: flex;
+        margin-bottom: 15px;
+    }
+
+    .col-lg-7 {
+        flex: 0 0 58.33%;
+        padding-right: 15px;
+    }
+
+    .col-lg-5 {
+        flex: 0 0 41.67%;
+        padding-left: 15px;
     }
 
     .main-content {
@@ -442,49 +551,43 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
             <!-- Supplier Section -->
             <div class="supplier-section">
                 <div class="section-title">SUPPLIER :</div>
-                <div class="address-box">
+                <div class="address-boxx">
                     <?= Html::encode($purchase->vendor->name ?? '') ?><br>
                     <?= Html::encode($vendor_address) ?>
                 </div>
             </div>
-
         </div>
         <div class="col-lg-5">
-<!--            <div class="right-section">-->
-                <div class="info-row">
-                    <span class="info-label">PO.NO. :</span>
-                    <span class="info-value"><?= Html::encode($purchase->purch_no) ?></span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">DATE :</span>
-                    <span class="info-value"><?= Yii::$app->formatter->asDate($purchase->purch_date, 'php:d/m/Y') ?></span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">PAGE :</span>
-                    <span class="info-value">1</span>
-                </div>
-                <br>
-                <div style="font-weight: bold;">Buyer (if other then consignee)</div>
-                <div class="info-row">
-                    <span class="info-label">Contact :</span>
-                    <span class="info-value"></span>
-                </div>
-                <br>
-                <div style="font-weight: bold;">Consignee :</div>
-                <div>M.C.O.Co., Ltd.</div>
-                <div>8/18 Koh-Kloy Road. ,Tambon Cherngnoen,</div>
-                <div>Amphur Muang , Rayong 21000 Thailand.</div>
-                <div>Tel : (038)-875258-9 , 094-6984555</div>
-<!--            </div>-->
+            <div class="info-row">
+                <span class="info-label">PO.NO. :</span>
+                <span class="info-value"><?= Html::encode($purchase->purch_no) ?></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">DATE :</span>
+                <span class="info-value"><?= Yii::$app->formatter->asDate($purchase->purch_date, 'php:d/m/Y') ?></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">PAGE :</span>
+                <span class="info-value">1</span>
+            </div>
+            <br>
+            <div style="font-weight: bold;">Buyer (if other then consignee)</div>
+            <div class="info-row">
+                <span class="info-label">Contact :</span>
+                <span class="info-value"></span>
+            </div>
+            <br>
+            <div style="font-weight: bold;">Consignee :</div>
+            <div>M.C.O.Co., Ltd.</div>
+            <div>8/18 Koh-Kloy Road. ,Tambon Cherngnoen,</div>
+            <div>Amphur Muang , Rayong 21000 Thailand.</div>
+            <div>Tel : (038)-875258-9 , 094-6984555</div>
         </div>
-
     </div>
-
 
     <!-- Main Content -->
     <div class="main-content">
         <div class="left-section">
-
             <!-- Contact Info -->
             <div class="contact-info">
                 <div class="contact-column">
@@ -521,8 +624,6 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                 </div>
             </div>
         </div>
-
-
     </div>
 
     <!-- Items Table -->
@@ -558,7 +659,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
 
         <!-- Empty rows -->
         <?php
-        $emptyRows = 10 - (isset($purchaseLines) ? count($purchaseLines) : 0);
+        $emptyRows = 20 - (isset($purchaseLines) ? count($purchaseLines) : 0);
         for ($i = 0; $i < $emptyRows; $i++):
             ?>
             <tr>
@@ -609,7 +710,8 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
         <div class="signature-box">
             <div class="signature-line">
                 <?php
-                $requestor_signature = \backend\models\User::findEmployeeSignature($purchase->created_by);
+                $created_by = \backend\models\Purch::findPrcreatedBy($purchase->id);
+                $requestor_signature = \backend\models\User::findEmployeeSignature($created_by);
                 if(!empty($requestor_signature)): ?>
                     <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" alt="Request By Signature">
                 <?php endif; ?>

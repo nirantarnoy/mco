@@ -405,4 +405,10 @@ class Purch extends ActiveRecord
         }
         return $no;
     }
+
+    public static function findPrcreatedBy($purch_id){
+        $emp_id = 0;
+        $model = \backend\models\PurchReq::find()->where(['purch_id'=>$purch_id])->one();
+        return $model !=null?$model->created_by:0;
+    }
 }
