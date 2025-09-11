@@ -35,7 +35,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <?php
             $ref_po = \backend\models\Purch::findNo($product['purch_id']);
             $description = \backend\models\Product::findDescription($product['product_id']);
-            $model = \backend\models\Product::findCode($product['product_id']);
+            $model = \backend\models\Product::findModelName($product['product_id']);
             $brand = \backend\models\Product::findBrand($product['product_id']);
             $quantity = $product['qty'];
             ?>

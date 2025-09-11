@@ -181,6 +181,14 @@ class Product extends \common\models\Product
         }
         return $name;
     }
+    public static function findModelName($id){
+        $name = '';
+        $model = \backend\models\Product::find()->where(['id' => $id])->one();
+        if($model){
+            $name = $model->model_name;
+        }
+        return $name;
+    }
 
     public static function findBrand($id){
         $name = '';
