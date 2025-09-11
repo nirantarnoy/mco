@@ -27,6 +27,7 @@ $this->params['breadcrumbs'][] = $this->title;
     $attributes = [
         'name',
         'description',
+        'model_name',
         [
             'attribute' => 'product_group_id',
             'value' => function ($data) {
