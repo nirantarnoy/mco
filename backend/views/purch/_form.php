@@ -709,7 +709,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                     <div class="col-4 text-end">
 <!--                                        <span id="summary-vat" class="fw-bold">-->
                                         <span>
-                                            <input type="number" id="summary-vat-amount" style="text-align: right;" class="form-control" name="purch_vat_amount" onchange="calculateGrandTotal3();" value="<?=$model->vat_amount?>">
+                                            <input type="number" min="0" step="any" id="summary-vat-amount" style="text-align: right;" class="form-control" name="purch_vat_amount" onchange="calculateGrandTotal3();" value="<?=$model->vat_amount?>">
                                             </span>
 <!--                                        </span> บาท-->
                                         <span> บาท</span>

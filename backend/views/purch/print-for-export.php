@@ -250,8 +250,15 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
         }
 
         .acknowledgment {
-            margin: 8px 0 !important;
-            font-size: 12px !important;
+            /*margin: 8px 0 !important;*/
+            /*font-size: 12px !important;*/
+            /*bottom: 20px !important;*/
+            text-align: center;
+            margin: 15px 0;
+            font-weight: bold;
+            font-size: 12px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 30px;
         }
 
         .signature-section {
@@ -679,7 +686,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
     <!-- Summary -->
     <div class="summary-section">
         <div class="summary-left">
-            <div class="acknowledgment">ACKNOWLEDGMENT BY :</div>
+            <div class="acknowledgment">ACKNOWLEDGMENT BY : <div style="height: 30px;"></div> </div>
         </div>
         <div class="summary-right">
             <table class="summary-table">
