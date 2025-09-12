@@ -606,11 +606,12 @@ window.addEventListener('afterprint', function() {
             $itemCount++;
             $totalAmount += $item->amount;
             $invoice = $item->invoice; // ดึงข้อมูล invoice ที่เกี่ยวข้อง
+            $quotation_no = \backend\models\Invoice::getQuotationNo($invoice->id);
             ?>
             <tr>
                 <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= $itemCount ?></td>
                 <td class="text-left"
-                    style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= Html::encode($invoice->invoice_number ?? '-') ?></td>
+                    style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= Html::encode($quotation_no ?? '-') ?></td>
                 <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= Html::encode($invoice->invoice_number ?? '-') ?></td>
                 <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= Yii::$app->formatter->asDate($invoice->invoice_date ?? $model->billing_date, 'php:j/n/y') ?></td>
                 <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= Yii::$app->formatter->asDate($invoice->payment_due_date ?? $model->payment_due_date ?? date('Y-m-d', strtotime($model->billing_date . ' +30 days')), 'php:j/n/y') ?></td>

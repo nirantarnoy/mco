@@ -410,4 +410,16 @@ class Invoice extends ActiveRecord
             ->orderBy('invoice_date DESC')
             ->all();
     }
+
+    public static function getQuotationNo($inv_id){
+        $no = '';
+        $model = \backend\models\Invoice::find()->where(['id'=>$inv_id])->one();
+        if($model){
+            $model_q = \backend\models\Quotation::find()->where(['id'=>$model->quotation_id])->one();
+            if($model_q){
+                $no = $model_q->quotation_no;
+            }
+        }
+        return $no;
+    }
 }
