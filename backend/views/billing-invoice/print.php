@@ -567,7 +567,7 @@ window.addEventListener('afterprint', function() {
                     <td><strong>ที่อยู่</strong></td>
                     <td>
                         <?= Html::encode($model->customer->address ?? '140 ถ.วิภาวดีรังสิต แขวงดินแดง เขตดินแดง') ?><br>
-                        <?= Html::encode($model->customer->tax_id ?? 'กรุงเทพมหานคร 10400 TAXID 0105520017611.') ?>
+                        <?= Html::encode($model->customer->tax_id ?? 'กรุงเทพมหานคร 10400 TAXID 0105520017611') ?>
                     </td>
                 </tr>
             </table>
@@ -584,7 +584,7 @@ window.addEventListener('afterprint', function() {
             </div>
         </div>
     </div>
-
+    <p>ดังรายการต่อไปนี้</p>
     <table class="items-table">
         <thead>
         <tr>
@@ -689,8 +689,7 @@ window.addEventListener('afterprint', function() {
         <table style="width: 100%">
             <tr>
                 <td style="text-align: left;font-weight: bold;font-size: 16px">
-                    <u>รวมเงินทั้งสิ้น</u> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                    <?= \backend\models\PurchReq::numtothai($model->total_amount) ?>
+                    <u>รวมเงินทั้งสิ้น</u><span> <?= \backend\models\PurchReq::numtothai($model->total_amount) ?></span>
                 </td>
                 <td style="text-align: right">
                     <div class="total-box">
