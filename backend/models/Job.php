@@ -245,4 +245,102 @@ class Job extends \common\models\Job
             return 'secondary'; // เท่ากัน - สีเทา
         }
     }
+
+    /**
+     * ตรวจสอบว่ามีใบขอซื้อหรือไม่
+     * @return bool
+     */
+    public function hasPurchaseRequest()
+    {
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch_req WHERE job_id = :jobId')
+            ->bindParam(':jobId', $this->id)
+            ->queryScalar();
+        return $count > 0;
+    }
+
+    /**
+     * ตรวจสอบว่ามีใบสั่งซื้อหรือไม่
+     * @return bool
+     */
+    public function hasPurchaseOrder()
+    {
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch WHERE job_id = :jobId')
+            ->bindParam(':jobId', $this->id)
+            ->queryScalar();
+        return $count > 0;
+    }
+
+    /**
+     * ตรวจสอบว่ามีรายการรับสินค้าหรือไม่
+     * @return bool
+     */
+    public function hasReceiveTransaction()
+    {
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM journal_trans WHERE job_id = :jobId AND trans_type_id = \'IN\'')
+            ->bindParam(':jobId', $this->id)
+            ->queryScalar();
+        return $count > 0;
+    }
+
+    /**
+     * ตรวจสอบว่ามีรายการเบิกสินค้าหรือไม่
+     * @return bool
+     */
+    public function hasWithdrawTransaction()
+    {
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM journal_trans WHERE job_id = :jobId AND trans_type_id = \'OUT\'')
+            ->bindParam(':jobId', $this->id)
+            ->queryScalar();
+        return $count > 0;
+    }
+
+    /**
+     * ตรวจสอบว่ามีการแจ้งหนี้หรือไม่
+     * @return bool
+     */
+    public function hasDebtNotification()
+    {
+        // สมมติว่ามีตาราง debt_notification หรือใช้จาก invoices ที่เป็น draft
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices WHERE job_id = :jobId AND status = \'draft\'')
+            ->bindParam(':jobId', $this->id)
+            ->queryScalar();
+        return $count > 0;
+    }
+
+    /**
+     * ตรวจสอบว่ามีการวางบิลหรือไม่
+     * @return bool
+     */
+    public function hasBilling()
+    {
+        // สมมติว่าใช้จาก invoices ที่มีสถานะ pending หรือ sent
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices WHERE job_id = :jobId AND status IN (\'pending\', \'sent\')')
+            ->bindParam(':jobId', $this->id)
+            ->queryScalar();
+        return $count > 0;
+    }
+
+    /**
+     * ตรวจสอบว่ามีใบกำกับภาษีหรือไม่
+     * @return bool
+     */
+    public function hasTaxInvoice()
+    {
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices WHERE job_id = :jobId AND invoice_type = \'TAX\'')
+            ->bindParam(':jobId', $this->id)
+            ->queryScalar();
+        return $count > 0;
+    }
+
+    /**
+     * ตรวจสอบว่ามีใบเสร็จหรือไม่
+     * @return bool
+     */
+    public function hasReceipt()
+    {
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices WHERE job_id = :jobId AND invoice_type = \'RECEIPT\'')
+            ->bindParam(':jobId', $this->id)
+            ->queryScalar();
+        return $count > 0;
+    }
 }

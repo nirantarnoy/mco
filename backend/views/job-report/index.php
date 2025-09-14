@@ -219,7 +219,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                             'class' => 'btn btn-sm btn-outline-success',
                                             'title' => 'Timeline รายละเอียด',
                                             'data-pjax' => '0',
-//                                            'target' => '_blank'
+                                            'target' => '_blank'
                                         ]);
                                     },
                                 ],
@@ -325,6 +325,59 @@ $this->params['breadcrumbs'][] = $this->title;
 
     .badge {
         font-size: 0.8em;
+    }
+
+    /* สไตล์สำหรับสถานะกิจกรรม */
+    .activity-status-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+        padding: 5px;
+    }
+
+    .activity-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 15px;
+        font-size: 0.7em;
+        font-weight: 500;
+        text-align: center;
+        min-width: 50px;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+        cursor: default;
+    }
+
+    .activity-completed {
+        background-color: #28a745;
+        color: white;
+        box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+    }
+
+    .activity-pending {
+        background-color: #e9ecef;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+    }
+
+    .activity-badge:hover {
+        transform: scale(1.05);
+        opacity: 0.9;
+    }
+
+    @media (max-width: 1200px) {
+        .activity-status-container {
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .activity-badge {
+            font-size: 0.65em;
+            padding: 2px 6px;
+            min-width: 40px;
+        }
     }
 
     @media print {
