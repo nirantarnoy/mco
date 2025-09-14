@@ -402,8 +402,8 @@ class JobController extends Controller
                 jt.status,
                 jt.party_id,
                 jt.warehouse_id
-            FROM journal_trans jt
-            WHERE jt.job_id = :jobId
+            FROM journal_trans jt INNER JOIN purch as pc ON jt.trans_ref_id=pc.id
+            WHERE jt.job_id = :jobId AND jt.po_rec_status =1
             ORDER BY jt.trans_date DESC
         ";
 
