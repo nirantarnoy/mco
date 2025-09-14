@@ -447,8 +447,8 @@ $this->registerCss('
                                         <th>วันที่</th>
                                         <th>ประเภท</th>
                                         <th>ลูกค้า</th>
-                                        <th>จำนวน</th>
-                                        <th>สถานะ</th>
+                                        <th style="text-align: right;">จำนวน</th>
+                                        <th style="text-align: center;">สถานะ</th>
                                         <th>หมายเหตุ</th>
                                     </tr>
                                     </thead>
@@ -463,8 +463,8 @@ $this->registerCss('
                                                 ]) ?>
                                             </td>
                                             <td><?= Html::encode($trans['customer_name']) ?></td>
-                                            <td class="text-center"><?= number_format($trans['qty'], 0) ?></td>
-                                            <td>
+                                            <td style="text-align: right;"><?= number_format($trans['qty'], 0) ?></td>
+                                            <td style="text-align: center;">
                                                 <?= Html::tag('span', $trans['status'], [
                                                     'class' => 'badge badge-' . ($trans['status'] == 'approved' ? 'success' : 'warning')
                                                 ]) ?>
@@ -506,11 +506,11 @@ $this->registerCss('
                                         <th>วันที่</th>
                                         <th>ลูกค้า</th>
                                         <th>รหัสลูกค้า</th>
-                                        <th>ยอดก่อนภาษี</th>
-                                        <th>ส่วนลด</th>
-                                        <th>VAT</th>
-                                        <th>ยอดสุทธิ</th>
-                                        <th>สถานะ</th>
+                                        <th style="text-align: right;">ยอดก่อนภาษี</th>
+                                        <th style="text-align: right;">ส่วนลด</th>
+                                        <th style="text-align: right;">VAT</th>
+                                        <th style="text-align: right;">ยอดสุทธิ</th>
+                                        <th style="text-align: center;">สถานะ</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -529,7 +529,7 @@ $this->registerCss('
                                             <td class="text-right"><?= number_format($invoice['discount_amount'], 2) ?></td>
                                             <td class="text-right"><?= number_format($invoice['vat_amount'], 2) ?></td>
                                             <td class="text-right font-weight-bold"><?= number_format($invoice['total_amount'], 2) ?></td>
-                                            <td>
+                                            <td style="text-align: center;">
                                                 <?= Html::tag('span', $invoice['status'], [
                                                     'class' => 'badge badge-' . ($invoice['status'] == 'paid' ? 'success' : 'warning')
                                                 ]) ?>
