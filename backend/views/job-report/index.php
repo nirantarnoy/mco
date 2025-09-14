@@ -148,6 +148,35 @@ $this->params['breadcrumbs'][] = $this->title;
                             ],
 
                             [
+                                'label' => 'สถานะกิจกรรม',
+                                'format' => 'raw',
+                                'value' => function ($model) {
+                                    // ตรวจสอบสถานะของแต่ละกิจกรรม
+                                    $activities = [
+                                        'ขอซื้อ' => $model->hasPurchaseRequest(),
+                                        'สั่งซื้อ' => $model->hasPurchaseOrder(),
+                                        'รับสินค้า' => $model->hasReceiveTransaction(),
+                                        'เบิกสินค้า' => $model->hasWithdrawTransaction(),
+                                        'แจ้งหนี้' => $model->hasDebtNotification(),
+                                        'วางบิล' => $model->hasBilling(),
+                                        'กำกับภาษี' => $model->hasTaxInvoice(),
+                                        'ใบเสร็จ' => $model->hasReceipt()
+                                    ];
+
+                                    $output = '<div class="activity-status-container">';
+                                    foreach ($activities as $activityName => $hasActivity) {
+                                        $statusClass = $hasActivity ? 'activity-completed' : 'activity-pending';
+                                        $output .= '<span class="activity-badge ' . $statusClass . '" title="' . $activityName . '">' .
+                                            $activityName . '</span>';
+                                    }
+                                    $output .= '</div>';
+
+                                    return $output;
+                                },
+                                'contentOptions' => ['style' => 'width: 320px; text-align: center;'],
+                            ],
+
+                            [
                                 'label' => 'มูลค่างาน',
                                 'format' => 'raw',
                                 'value' => function ($model) {
@@ -219,7 +248,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                             'class' => 'btn btn-sm btn-outline-success',
                                             'title' => 'Timeline รายละเอียด',
                                             'data-pjax' => '0',
-                                            'target' => '_blank'
+//                                            'target' => '_blank'
                                         ]);
                                     },
                                 ],
@@ -333,27 +362,28 @@ $this->params['breadcrumbs'][] = $this->title;
         flex-wrap: wrap;
         justify-content: center;
         align-items: center;
-        gap: 4px;
+        gap: 3px;
         padding: 5px;
     }
 
     .activity-badge {
         display: inline-block;
-        padding: 3px 8px;
-        border-radius: 15px;
-        font-size: 0.7em;
+        padding: 2px 6px;
+        border-radius: 12px;
+        font-size: 0.65em;
         font-weight: 500;
         text-align: center;
-        min-width: 50px;
+        min-width: 35px;
         white-space: nowrap;
         transition: all 0.2s ease;
         cursor: default;
+        line-height: 1.2;
     }
 
     .activity-completed {
         background-color: #28a745;
         color: white;
-        box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+        box-shadow: 0 1px 3px rgba(40, 167, 69, 0.3);
     }
 
     .activity-pending {
@@ -367,16 +397,28 @@ $this->params['breadcrumbs'][] = $this->title;
         opacity: 0.9;
     }
 
-    @media (max-width: 1200px) {
+    @media (max-width: 1400px) {
         .activity-status-container {
-            flex-direction: column;
             gap: 2px;
         }
 
         .activity-badge {
-            font-size: 0.65em;
-            padding: 2px 6px;
-            min-width: 40px;
+            font-size: 0.6em;
+            padding: 1px 4px;
+            min-width: 30px;
+        }
+    }
+
+    @media (max-width: 1200px) {
+        .activity-status-container {
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .activity-badge {
+            font-size: 0.55em;
+            padding: 1px 3px;
+            min-width: 25px;
         }
     }
 
