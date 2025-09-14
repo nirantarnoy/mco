@@ -362,15 +362,15 @@ class JobController extends Controller
                 p.purch_no,
                 p.purch_date,
                 p.vendor_id,
-                p.vendor_name,
                 p.status,
                 p.total_amount,
                 p.discount_amount,
                 p.vat_amount,
                 p.net_amount,
                 p.payment_note,
-                p.delivery_note
-            FROM purch p
+                p.delivery_note,
+                vd.name as vendor_name
+            FROM purch p INNER JOIN vendor as vd ON vd.id = p.vendor_id
             WHERE p.job_id = :jobId
             ORDER BY p.purch_date DESC
         ";

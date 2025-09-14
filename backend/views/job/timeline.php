@@ -346,10 +346,10 @@ $this->registerCss('
                                     <tbody>
                                     <?php foreach ($purchReqs as $req): ?>
                                         <tr>
-                                            <td><?= Html::encode($req['purch_req_no']) ?></td>
-                                            <td><?= date('d/m/Y', strtotime($req['purch_req_date'])) ?></td>
-                                            <td><?= Html::encode($req['fname'] . ' ' . $req['lname']) ?></td>
-                                            <td>
+                                            <td style="text-align: center;"><?= Html::encode($req['purch_req_no']) ?></td>
+                                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($req['purch_req_date'])) ?></td>
+                                            <td style="text-align: center;"><?= Html::encode($req['fname'] . ' ' . $req['lname']) ?></td>
+                                            <td style="text-align: center;">
                                                 <?= Html::tag('span', $req['status'], [
                                                     'class' => 'badge badge-' . ($req['status'] == 'approved' ? 'success' : 'warning')
                                                 ]) ?>
@@ -400,10 +400,10 @@ $this->registerCss('
                                     <tbody>
                                     <?php foreach ($purchases as $purchase): ?>
                                         <tr>
-                                            <td><?= Html::encode($purchase['purch_no']) ?></td>
-                                            <td><?= date('d/m/Y', strtotime($purchase['purch_date'])) ?></td>
-                                            <td><?= Html::encode($purchase['vendor_name']) ?></td>
-                                            <td>
+                                            <td style="text-align: center;"><?= Html::encode($purchase['purch_no']) ?></td>
+                                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($purchase['purch_date'])) ?></td>
+                                            <td style="text-align: center;"><?= Html::encode($purchase['vendor_name']) ?></td>
+                                            <td style="text-align: center;">
                                                 <?= Html::tag('span', $purchase['status'], [
                                                     'class' => 'badge badge-' . ($purchase['status'] == 'approved' ? 'success' : 'warning')
                                                 ]) ?>
