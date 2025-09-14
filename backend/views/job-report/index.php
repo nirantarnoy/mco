@@ -219,7 +219,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                             'class' => 'btn btn-sm btn-outline-success',
                                             'title' => 'Timeline รายละเอียด',
                                             'data-pjax' => '0',
-                                            'target' => '_blank'
+//                                            'target' => '_blank'
                                         ]);
                                     },
                                 ],
