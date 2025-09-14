@@ -348,7 +348,7 @@ $this->registerCss('
                                         <tr>
                                             <td><?= Html::encode($req['purch_req_no']) ?></td>
                                             <td><?= date('d/m/Y', strtotime($req['purch_req_date'])) ?></td>
-                                            <td><?= Html::encode($req['vendor_name']) ?></td>
+                                            <td><?= Html::encode($req['fname'] . ' ' . $req['lname']) ?></td>
                                             <td>
                                                 <?= Html::tag('span', $req['status'], [
                                                     'class' => 'badge badge-' . ($req['status'] == 'approved' ? 'success' : 'warning')

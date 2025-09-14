@@ -334,8 +334,11 @@ class JobController extends Controller
                 pr.vendor_name,
                 pr.status,
                 pr.total_amount,
-                pr.note
-            FROM purch_req pr
+                pr.note,
+                pr.created_by,
+                em.fname,
+                em.lname
+            FROM purch_req pr INNER JOIN user ON user.id = pr.created_by INNER JOIN employee as em ON em.id = user.emp_ref_id
             WHERE pr.job_id = :jobId
             ORDER BY pr.purch_req_date DESC
         ";
