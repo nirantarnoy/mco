@@ -287,5 +287,325 @@ class JobController extends Controller
             echo 'No job ID';
         }
     }
+    /**
+     * แสดง Timeline รายละเอียดของใบงาน
+     * @param integer $id
+     * @return mixed
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionTimeline($id)
+    {
+        $model = $this->findModel($id);
+
+        // ดึงข้อมูล Purchase Request ที่เกี่ยวข้องกับใบงาน
+        $purchReqs = $this->getPurchaseRequests($model->id);
+
+        // ดึงข้อมูล Purchase Order ที่เกี่ยวข้องกับใบงาน
+        $purchases = $this->getPurchaseOrders($model->id);
+
+        // ดึงข้อมูล Journal Transaction ที่เกี่ยวข้องกับใบงาน
+        $journalTrans = $this->getJournalTransactions($model->id);
+
+        // ดึงข้อมูล Invoice ที่เกี่ยวข้องกับใบงาน
+        $invoices = $this->getInvoices($model->id);
+
+        return $this->render('timeline', [
+            'model' => $model,
+            'purchReqs' => $purchReqs,
+            'purchases' => $purchases,
+            'journalTrans' => $journalTrans,
+            'invoices' => $invoices,
+        ]);
+    }
+
+    /**
+     * ดึงข้อมูล Purchase Request ที่เกี่ยวข้องกับใบงาน
+     * @param integer $jobId
+     * @return array
+     */
+    protected function getPurchaseRequests($jobId)
+    {
+        $query = "
+            SELECT 
+                pr.id,
+                pr.purch_req_no,
+                pr.purch_req_date,
+                pr.vendor_id,
+                pr.vendor_name,
+                pr.status,
+                pr.total_amount,
+                pr.note
+            FROM purch_req pr
+            WHERE pr.job_id = :jobId
+            ORDER BY pr.purch_req_date DESC
+        ";
+
+        $command = Yii::$app->db->createCommand($query);
+        $command->bindParam(':jobId', $jobId);
+
+        return $command->queryAll();
+    }
+
+    /**
+     * ดึงข้อมูล Purchase Order ที่เกี่ยวข้องกับใบงาน
+     * @param integer $jobId
+     * @return array
+     */
+    protected function getPurchaseOrders($jobId)
+    {
+        $query = "
+            SELECT 
+                p.id,
+                p.purch_no,
+                p.purch_date,
+                p.vendor_id,
+                p.vendor_name,
+                p.status,
+                p.total_amount,
+                p.discount_amount,
+                p.vat_amount,
+                p.net_amount,
+                p.payment_note,
+                p.delivery_note
+            FROM purch p
+            WHERE p.job_id = :jobId
+            ORDER BY p.purch_date DESC
+        ";
+
+        $command = Yii::$app->db->createCommand($query);
+        $command->bindParam(':jobId', $jobId);
+
+        return $command->queryAll();
+    }
+
+    /**
+     * ดึงข้อมูล Journal Transaction ที่เกี่ยวข้องกับใบงาน
+     * @param integer $jobId
+     * @return array
+     */
+    protected function getJournalTransactions($jobId)
+    {
+        $query = "
+            SELECT 
+                jt.id,
+                jt.journal_no,
+                jt.trans_date,
+                jt.trans_type_id,
+                jt.stock_type_id,
+                jt.customer_id,
+                jt.customer_name,
+                jt.qty,
+                jt.remark,
+                jt.status,
+                jt.party_id,
+                jt.warehouse_id
+            FROM journal_trans jt
+            WHERE jt.job_id = :jobId
+            ORDER BY jt.trans_date DESC
+        ";
+
+        $command = Yii::$app->db->createCommand($query);
+        $command->bindParam(':jobId', $jobId);
+
+        return $command->queryAll();
+    }
+
+    /**
+     * ดึงข้อมูล Invoice ที่เกี่ยวข้องกับใบงาน
+     * @param integer $jobId
+     * @return array
+     */
+    protected function getInvoices($jobId)
+    {
+        $query = "
+            SELECT 
+                i.id,
+                i.invoice_type,
+                i.invoice_number,
+                i.invoice_date,
+                i.customer_code,
+                i.customer_name,
+                i.customer_address,
+                i.customer_tax_id,
+                i.po_number,
+                i.po_date,
+                i.credit_terms,
+                i.due_date,
+                i.subtotal,
+                i.discount_percent,
+                i.discount_amount,
+                i.vat_percent,
+                i.vat_amount,
+                i.total_amount,
+                i.total_amount_text,
+                i.payment_due_date,
+                i.check_due_date,
+                i.notes,
+                i.status
+            FROM invoices i
+            WHERE i.job_id = :jobId
+            ORDER BY i.invoice_date DESC
+        ";
+
+        $command = Yii::$app->db->createCommand($query);
+        $command->bindParam(':jobId', $jobId);
+
+        return $command->queryAll();
+    }
+
+    /**
+     * ดึงรายการสินค้า/บริการของใบงาน
+     * @param integer $jobId
+     * @return array
+     */
+    protected function getJobLines($jobId)
+    {
+        $query = "
+            SELECT 
+                jl.id,
+                jl.product_id,
+                jl.product_name,
+                jl.line_price,
+                jl.line_total,
+                jl.note,
+                jl.status
+            FROM job_line jl
+            WHERE jl.job_id = :jobId
+            ORDER BY jl.id
+        ";
+
+        $command = Yii::$app->db->createCommand($query);
+        $command->bindParam(':jobId', $jobId);
+
+        return $command->queryAll();
+    }
+
+    /**
+     * ดึงรายการรายละเอียดใบขอซื้อ
+     * @param integer $purchReqId
+     * @return array
+     */
+    protected function getPurchaseRequestLines($purchReqId)
+    {
+        $query = "
+            SELECT 
+                prl.id,
+                prl.product_id,
+                prl.product_name,
+                prl.product_type,
+                prl.qty,
+                prl.line_price,
+                prl.line_total,
+                prl.status,
+                prl.note,
+                prl.unit_id
+            FROM purch_req_line prl
+            WHERE prl.purch_req_id = :purchReqId
+            ORDER BY prl.id
+        ";
+
+        $command = Yii::$app->db->createCommand($query);
+        $command->bindParam(':purchReqId', $purchReqId);
+
+        return $command->queryAll();
+    }
+
+    /**
+     * ดึงรายการรายละเอียดใบสั่งซื้อ
+     * @param integer $purchId
+     * @return array
+     */
+    protected function getPurchaseOrderLines($purchId)
+    {
+        $query = "
+            SELECT 
+                pl.id,
+                pl.product_id,
+                pl.product_name,
+                pl.product_type,
+                pl.qty,
+                pl.line_price,
+                pl.line_total,
+                pl.status,
+                pl.note,
+                pl.unit_id
+            FROM purch_line pl
+            WHERE pl.purch_id = :purchId
+            ORDER BY pl.id
+        ";
+
+        $command = Yii::$app->db->createCommand($query);
+        $command->bindParam(':purchId', $purchId);
+
+        return $command->queryAll();
+    }
+
+    /**
+     * ดึงรายการรายละเอียด Journal Transaction
+     * @param integer $journalTransId
+     * @return array
+     */
+    protected function getJournalTransactionLines($journalTransId)
+    {
+        $query = "
+            SELECT 
+                jtl.id,
+                jtl.product_id,
+                jtl.warehouse_id,
+                jtl.qty,
+                jtl.remark,
+                jtl.status,
+                jtl.line_price,
+                jtl.return_to_type,
+                jtl.sale_price,
+                jtl.return_note,
+                jtl.good_qty,
+                jtl.damaged_qty,
+                jtl.missing_qty,
+                jtl.condition_note,
+                jtl.item_condition,
+                jtl.unit_id,
+                jtl.line_total,
+                jtl.is_damage
+            FROM journal_trans_line jtl
+            WHERE jtl.journal_trans_id = :journalTransId
+            ORDER BY jtl.id
+        ";
+
+        $command = Yii::$app->db->createCommand($query);
+        $command->bindParam(':journalTransId', $journalTransId);
+
+        return $command->queryAll();
+    }
+
+    /**
+     * ดึงรายการรายละเอียดใบกำกับภาษี
+     * @param integer $invoiceId
+     * @return array
+     */
+    protected function getInvoiceItems($invoiceId)
+    {
+        $query = "
+            SELECT 
+                ii.id,
+                ii.item_seq,
+                ii.item_description,
+                ii.quantity,
+                ii.unit,
+                ii.unit_price,
+                ii.amount,
+                ii.sort_order,
+                ii.product_id,
+                ii.unit_id
+            FROM invoice_items ii
+            WHERE ii.invoice_id = :invoiceId
+            ORDER BY ii.sort_order, ii.item_seq
+        ";
+
+        $command = Yii::$app->db->createCommand($query);
+        $command->bindParam(':invoiceId', $invoiceId);
+
+        return $command->queryAll();
+    }
 
 }

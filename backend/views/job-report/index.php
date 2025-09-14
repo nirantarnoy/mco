@@ -128,10 +128,10 @@ $this->params['breadcrumbs'][] = $this->title;
                             [
                                 'attribute' => 'start_date',
                                 'label' => 'วันที่เริ่ม',
-                              //  'format' => 'date',
+                                //  'format' => 'date',
                                 'contentOptions' => ['style' => 'width: 120px;'],
                                 'value' => function ($model) {
-                                     return date('m/d/Y', strtotime($model->start_date));
+                                    return date('m/d/Y', strtotime($model->start_date));
                                 }
                             ],
 
@@ -205,7 +205,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             [
                                 'class' => 'yii\grid\ActionColumn',
                                 'header' => 'จัดการ',
-                                'template' => '{view}',
+                                'template' => '{view} {timeline}',
                                 'buttons' => [
                                     'view' => function ($url, $model, $key) {
                                         return Html::a('<i class="fas fa-eye"></i>', ['/job/view', 'id' => $model->id], [
@@ -214,8 +214,16 @@ $this->params['breadcrumbs'][] = $this->title;
                                             'data-pjax' => '0'
                                         ]);
                                     },
+                                    'timeline' => function ($url, $model, $key) {
+                                        return Html::a('<i class="fas fa-project-diagram"></i>', ['/job/timeline', 'id' => $model->id], [
+                                            'class' => 'btn btn-sm btn-outline-success',
+                                            'title' => 'Timeline รายละเอียด',
+                                            'data-pjax' => '0',
+                                            'target' => '_blank'
+                                        ]);
+                                    },
                                 ],
-                                'contentOptions' => ['style' => 'width: 80px; text-align: center;'],
+                                'contentOptions' => ['style' => 'width: 120px; text-align: center;'],
                             ],
                         ],
                     ]); ?>
