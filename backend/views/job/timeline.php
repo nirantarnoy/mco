@@ -569,7 +569,7 @@ $this->registerCss('
 
                         <div class="row mb-4">
                             <div class="col-md-3">
-                                <div class="card bg-primary text-dark">
+                                <div class="card bg-warning text-dark">
                                     <div class="card-body text-center">
                                         <h5>มูลค่างานทั้งหมด</h5>
                                         <h3><?= number_format($model->job_amount, 2) ?></h3>
@@ -589,7 +589,7 @@ $this->registerCss('
                             </div>
 
                             <div class="col-md-3">
-                                <div class="card bg-info text-dark">
+                                <div class="card bg-warning text-dark">
                                     <div class="card-body text-center">
                                         <h5>ยอดขายรวม</h5>
                                         <h3><?= number_format($totalInvoiceAmount, 2) ?></h3>
@@ -599,7 +599,7 @@ $this->registerCss('
                             </div>
 
                             <div class="col-md-3">
-                                <div class="card <?= $profitLoss >= 0 ? 'bg-success' : 'bg-danger' ?> text-dark">
+                                <div class="card <?= $profitLoss >= 0 ? 'bg-warning' : 'bg-warning' ?> text-dark">
                                     <div class="card-body text-center">
                                         <h5><?= $profitLoss >= 0 ? 'กำไร' : 'ขาดทุน' ?></h5>
                                         <h3><?= number_format(abs($profitLoss), 2) ?></h3>
