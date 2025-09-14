@@ -339,7 +339,7 @@ $this->registerCss('
                                         <th>วันที่</th>
                                         <th>ผู้ขอ</th>
                                         <th>สถานะ</th>
-                                        <th>มูลค่า</th>
+                                        <th style="text-align: right;">มูลค่า</th>
                                         <th>หมายเหตุ</th>
                                     </tr>
                                     </thead>
@@ -391,10 +391,10 @@ $this->registerCss('
                                         <th>วันที่</th>
                                         <th>ผู้จำหน่าย</th>
                                         <th>สถานะ</th>
-                                        <th>มูลค่า</th>
-                                        <th>ส่วนลด</th>
-                                        <th>VAT</th>
-                                        <th>สุทธิ</th>
+                                        <th style="text-align: right;">มูลค่า</th>
+                                        <th style="text-align: right;">ส่วนลด</th>
+                                        <th style="text-align: right;">VAT</th>
+                                        <th style="text-align: right;">สุทธิ</th>
                                     </tr>
                                     </thead>
                                     <tbody>
