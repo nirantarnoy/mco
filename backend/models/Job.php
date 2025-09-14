@@ -250,10 +250,10 @@ class Job extends \common\models\Job
      * ตรวจสอบว่ามีใบขอซื้อหรือไม่
      * @return bool
      */
-    public function hasPurchaseRequest()
+    public function hasPurchaseRequest($id)
     {
         $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch_req WHERE job_id = :jobId')
-            ->bindParam(':jobId', $this->id)
+            ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
     }
@@ -262,10 +262,10 @@ class Job extends \common\models\Job
      * ตรวจสอบว่ามีใบสั่งซื้อหรือไม่
      * @return bool
      */
-    public function hasPurchaseOrder()
+    public function hasPurchaseOrder($id)
     {
         $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch WHERE job_id = :jobId')
-            ->bindParam(':jobId', $this->id)
+            ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
     }
@@ -274,10 +274,10 @@ class Job extends \common\models\Job
      * ตรวจสอบว่ามีรายการรับสินค้าหรือไม่
      * @return bool
      */
-    public function hasReceiveTransaction()
+    public function hasReceiveTransaction($id)
     {
         $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM journal_trans WHERE job_id = :jobId AND trans_type_id = \'IN\'')
-            ->bindParam(':jobId', $this->id)
+            ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
     }
@@ -286,10 +286,10 @@ class Job extends \common\models\Job
      * ตรวจสอบว่ามีรายการเบิกสินค้าหรือไม่
      * @return bool
      */
-    public function hasWithdrawTransaction()
+    public function hasWithdrawTransaction($id)
     {
         $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM journal_trans WHERE job_id = :jobId AND trans_type_id = \'OUT\'')
-            ->bindParam(':jobId', $this->id)
+            ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
     }
@@ -298,11 +298,11 @@ class Job extends \common\models\Job
      * ตรวจสอบว่ามีการแจ้งหนี้หรือไม่
      * @return bool
      */
-    public function hasDebtNotification()
+    public function hasDebtNotification($id)
     {
         // สมมติว่ามีตาราง debt_notification หรือใช้จาก invoices ที่เป็น draft
         $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices WHERE job_id = :jobId AND status = \'draft\'')
-            ->bindParam(':jobId', $this->id)
+            ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
     }
@@ -311,11 +311,11 @@ class Job extends \common\models\Job
      * ตรวจสอบว่ามีการวางบิลหรือไม่
      * @return bool
      */
-    public function hasBilling()
+    public function hasBilling($id)
     {
         // สมมติว่าใช้จาก invoices ที่มีสถานะ pending หรือ sent
         $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices WHERE job_id = :jobId AND status IN (\'pending\', \'sent\')')
-            ->bindParam(':jobId', $this->id)
+            ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
     }
@@ -324,10 +324,10 @@ class Job extends \common\models\Job
      * ตรวจสอบว่ามีใบกำกับภาษีหรือไม่
      * @return bool
      */
-    public function hasTaxInvoice()
+    public function hasTaxInvoice($id)
     {
         $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices WHERE job_id = :jobId AND invoice_type = \'TAX\'')
-            ->bindParam(':jobId', $this->id)
+            ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
     }
@@ -336,10 +336,10 @@ class Job extends \common\models\Job
      * ตรวจสอบว่ามีใบเสร็จหรือไม่
      * @return bool
      */
-    public function hasReceipt()
+    public function hasReceipt($id)
     {
         $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices WHERE job_id = :jobId AND invoice_type = \'RECEIPT\'')
-            ->bindParam(':jobId', $this->id)
+            ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
     }

@@ -153,14 +153,14 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'value' => function ($model) {
                                     // ตรวจสอบสถานะของแต่ละกิจกรรม
                                     $activities = [
-                                        'ขอซื้อ' => $model->hasPurchaseRequest(),
-                                        'สั่งซื้อ' => $model->hasPurchaseOrder(),
-                                        'รับสินค้า' => $model->hasReceiveTransaction(),
-                                        'เบิกสินค้า' => $model->hasWithdrawTransaction(),
-                                        'แจ้งหนี้' => $model->hasDebtNotification(),
-                                        'วางบิล' => $model->hasBilling(),
-                                        'กำกับภาษี' => $model->hasTaxInvoice(),
-                                        'ใบเสร็จ' => $model->hasReceipt()
+                                        'ขอซื้อ' => $model->hasPurchaseRequest($model->id),
+                                        'สั่งซื้อ' => $model->hasPurchaseOrder($model->id),
+                                        'รับสินค้า' => $model->hasReceiveTransaction($model->id),
+                                        'เบิกสินค้า' => $model->hasWithdrawTransaction($model->id),
+                                        'แจ้งหนี้' => $model->hasDebtNotification($model->id),
+                                        'วางบิล' => $model->hasBilling($model->id),
+                                        'กำกับภาษี' => $model->hasTaxInvoice($model->id),
+                                        'ใบเสร็จ' => $model->hasReceipt($model->id)
                                     ];
 
                                     $output = '<div class="activity-status-container">';
