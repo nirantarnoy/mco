@@ -217,13 +217,13 @@ class Job extends \common\models\Job
     public function getStatusColor()
     {
         switch ($this->status) {
-            case 'pending':
+            case '0':
+                return 'secondary';
+            case '1':
                 return 'warning';
-            case 'in_progress':
-                return 'info';
-            case 'completed':
+            case '2':
                 return 'success';
-            case 'cancelled':
+            case '3':
                 return 'danger';
             default:
                 return 'secondary';
