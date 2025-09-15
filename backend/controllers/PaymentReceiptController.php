@@ -201,7 +201,7 @@ class PaymentReceiptController extends Controller
                 'total_amount' => $invoice->total_amount,
                 'paid_amount' => $totalPaid,
                 'remaining_balance' => $remainingBalance,
-                'job_id' => $invoice->job_id,
+                'job_id' => 0,// $invoice->job_id,
                 'vat_amount' => $invoice->vat_amount,
             ]
         ];

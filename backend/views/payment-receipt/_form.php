@@ -129,7 +129,7 @@ togglePaymentFields();
                             'data' => ArrayHelper::map(
                                 BillingInvoice::find()
                                     ->with(['customer'])
-                                    ->where(['status' => ['pending', 'partial_paid']])
+                                    ->where(['status' => ['issued','pending', 'partial_paid']])
                                     ->orderBy(['created_at' => SORT_DESC])
                                     ->all(),
                                 'id',
