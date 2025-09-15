@@ -411,13 +411,25 @@ $this->registerCss('
                                     </thead>
                                     <tbody>
                                     <?php foreach ($purchases as $purchase): ?>
+                                        <?php
+                                        $line_status = '';
+                                        if ($req['approve_status'] == 0) {
+                                            $line_status = 'รอพิจารณา';
+                                        } else if ($req['approve_status'] == 1) {
+                                            $line_status = 'อนุมัติ';
+                                        } else if ($req['approve_status'] == 2) {
+                                            $line_status = 'ไม่อนุมัติ';
+                                        } else if ($req['approve_status'] == 3) {
+                                            $line_status = 'ยกเลิก';
+                                        }
+                                        ?>
                                         <tr>
                                             <td style="text-align: center;"><?= Html::encode($purchase['purch_no']) ?></td>
                                             <td style="text-align: center;"><?= date('d/m/Y', strtotime($purchase['purch_date'])) ?></td>
                                             <td style="text-align: center;"><?= Html::encode($purchase['vendor_name']) ?></td>
                                             <td style="text-align: center;">
-                                                <?= Html::tag('span', $purchase['status'], [
-                                                    'class' => 'badge badge-' . ($purchase['status'] == 'approved' ? 'success' : 'warning')
+                                                <?= Html::tag('span', $line_status, [
+                                                    'class' => 'badge badge-' . ($line_status == 'อนุมัติ' ? 'success' : 'warning')
                                                 ]) ?>
                                             </td>
                                             <td class="text-right"><?= number_format($purchase['total_amount'], 2) ?></td>
@@ -466,15 +478,27 @@ $this->registerCss('
                                     </thead>
                                     <tbody>
                                     <?php foreach ($journalTrans as $trans): ?>
+                                        <?php
+                                           $line_type_name = '';
+                                           if($trans['trans_type_id']==3){
+                                               $line_type_name ='เบิกสินค้า';
+                                           }else if($trans['trans_type_id']==4){
+                                               $line_type_name ='คืนสินค้า';
+                                           }else if($trans['trans_type_id']==5){
+                                               $line_type_name ='ยืมสินค้า';
+                                           }else if($trans['trans_type_id']==6){
+                                               $line_type_name ='คืนยืมสินค้า';
+                                           }
+                                        ?>
                                         <tr>
-                                            <td><?= Html::encode($trans['journal_no']) ?></td>
-                                            <td><?= date('d/m/Y', strtotime($trans['trans_date'])) ?></td>
-                                            <td>
-                                                <?= Html::tag('span', $trans['trans_type_id'], [
-                                                    'class' => 'badge badge-' . ($trans['trans_type_id'] == 'IN' ? 'success' : 'danger')
+                                            <td style="text-align: center;"><?= Html::encode($trans['journal_no']) ?></td>
+                                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($trans['trans_date'])) ?></td>
+                                            <td style="text-align: center;">
+                                                <?= Html::tag('span', $line_type_name, [
+                                                    'class' => 'badge badge-' . (in_array((int)$trans['trans_type_id'],[4,6] )  ? 'success' : 'danger')
                                                 ]) ?>
                                             </td>
-                                            <td><?= Html::encode($trans['customer_name']) ?></td>
+                                            <td style="text-align: left;"><?= Html::encode($trans['customer_name']) ?></td>
                                             <td style="text-align: right;"><?= number_format($trans['qty'], 0) ?></td>
                                             <td style="text-align: center;">
                                                 <?= Html::tag('span', $trans['status'], [
@@ -499,11 +523,75 @@ $this->registerCss('
 
             <!-- Invoice Section -->
             <div class="timeline-section">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            ใบกำกับภาษี/ใบเสร็จ (Invoices)
+                            <span class="badge badge-light text-dark ml-2"><?= count($invoices) ?> รายการ</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($invoices)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-sm">
+                                    <thead class="thead-light">
+                                    <tr>
+                                        <th>เลขใบกำกับ</th>
+                                        <th>ประเภท</th>
+                                        <th>วันที่</th>
+                                        <th>ลูกค้า</th>
+                                        <th>รหัสลูกค้า</th>
+                                        <th style="text-align: right;">ยอดก่อนภาษี</th>
+                                        <th style="text-align: right;">ส่วนลด</th>
+                                        <th style="text-align: right;">VAT</th>
+                                        <th style="text-align: right;">ยอดสุทธิ</th>
+                                        <th style="text-align: center;">สถานะ</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php foreach ($invoices as $invoice): ?>
+                                        <tr>
+                                            <td><?= Html::encode($invoice['invoice_number']) ?></td>
+                                            <td>
+                                                <?= Html::tag('span', $invoice['invoice_type'], [
+                                                    'class' => 'badge badge-' . ($invoice['invoice_type'] == 'TAX' ? 'primary' : 'info')
+                                                ]) ?>
+                                            </td>
+                                            <td><?= date('d/m/Y', strtotime($invoice['invoice_date'])) ?></td>
+                                            <td><?= Html::encode($invoice['customer_name']) ?></td>
+                                            <td><?= Html::encode($invoice['customer_code']) ?></td>
+                                            <td class="text-right"><?= number_format($invoice['subtotal'], 2) ?></td>
+                                            <td class="text-right"><?= number_format($invoice['discount_amount'], 2) ?></td>
+                                            <td class="text-right"><?= number_format($invoice['vat_amount'], 2) ?></td>
+                                            <td class="text-right font-weight-bold"><?= number_format($invoice['total_amount'], 2) ?></td>
+                                            <td style="text-align: center;">
+                                                <?= Html::tag('span', $invoice['status'], [
+                                                    'class' => 'badge badge-' . ($invoice['status'] == 'paid' ? 'success' : 'warning')
+                                                ]) ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-success mb-0">
+                                <i class="fas fa-info-circle"></i>
+                                ไม่มีข้อมูลใบกำกับภาษี/ใบเสร็จสำหรับใบงานนี้
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bill Invoice Section -->
+            <div class="timeline-section">
                 <div class="card border-success">
                     <div class="card-header bg-success text-white">
                         <h5 class="mb-0">
                             <i class="fas fa-file-invoice-dollar"></i>
-                            ใบกำกับภาษี/ใบเสร็จ (Invoices)
+                            ใบวางบิล (Bill placement)
                             <span class="badge badge-light text-dark ml-2"><?= count($invoices) ?> รายการ</span>
                         </h5>
                     </div>

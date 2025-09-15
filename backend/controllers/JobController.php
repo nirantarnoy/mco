@@ -362,7 +362,7 @@ class JobController extends Controller
                 p.purch_no,
                 p.purch_date,
                 p.vendor_id,
-                p.status,
+                p.approve_status,
                 p.total_amount,
                 p.discount_amount,
                 p.vat_amount,
@@ -402,8 +402,8 @@ class JobController extends Controller
                 jt.status,
                 jt.party_id,
                 jt.warehouse_id
-            FROM journal_trans jt INNER JOIN purch as pc ON jt.trans_ref_id=pc.id
-            WHERE jt.job_id = :jobId AND jt.po_rec_status =1
+            FROM journal_trans jt
+            WHERE jt.job_id = :jobId AND jt.trans_type_id = 3
             ORDER BY jt.trans_date DESC
         ";
 
@@ -445,8 +445,8 @@ class JobController extends Controller
                 i.check_due_date,
                 i.notes,
                 i.status
-            FROM invoices i
-            WHERE i.job_id = :jobId
+            FROM invoices i LEFT JOIN quotation q ON q.id = i.quotation_id LEFT JOIN job j ON q.id=j.quotation_id
+            WHERE j.id = :jobId
             ORDER BY i.invoice_date DESC
         ";
 
