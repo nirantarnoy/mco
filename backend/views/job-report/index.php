@@ -159,9 +159,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                         'รับสินค้า' => $model->hasReceiveTransaction($model->id),
                                         'เบิกสินค้า' => $model->hasWithdrawTransaction($model->id),
                                         'แจ้งหนี้' => $model->hasDebtNotification($model->id),
-                                        'วางบิล' => $model->hasBilling($model->id),
                                         'กำกับภาษี' => $model->hasTaxInvoice($model->id),
-                                        'ใบเสร็จ' => $model->hasReceipt($model->id)
+                                        'ใบเสร็จ' => $model->hasReceipt($model->id),
+                                        'วางบิล' => $model->hasBilling($model->id),
                                     ];
 
                                     $output = '<div class="activity-status-container">';
