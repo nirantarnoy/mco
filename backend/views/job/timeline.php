@@ -501,8 +501,8 @@ $this->registerCss('
                                             <td style="text-align: left;"><?= Html::encode($trans['customer_name']) ?></td>
                                             <td style="text-align: right;"><?= number_format($trans['qty'], 0) ?></td>
                                             <td style="text-align: center;">
-                                                <?= Html::tag('span', $trans['status'], [
-                                                    'class' => 'badge badge-' . ($trans['status'] == 'approved' ? 'success' : 'warning')
+                                                <?= Html::tag('span', 'completed', [
+                                                    'class' => 'badge badge-' . ($trans['status'] == 0 ? 'success' : 'warning')
                                                 ]) ?>
                                             </td>
                                             <td><?= Html::encode($trans['remark']) ?></td>
@@ -566,8 +566,8 @@ $this->registerCss('
                                             <td class="text-right"><?= number_format($invoice['vat_amount'], 2) ?></td>
                                             <td class="text-right font-weight-bold"><?= number_format($invoice['total_amount'], 2) ?></td>
                                             <td style="text-align: center;">
-                                                <?= Html::tag('span', $invoice['status'], [
-                                                    'class' => 'badge badge-' . ($invoice['status'] == 'paid' ? 'success' : 'warning')
+                                                <?= Html::tag('span', 'completed', [
+                                                    'class' => 'badge badge-' . ($invoice['status'] == 1 ? 'success' : 'warning')
                                                 ]) ?>
                                             </td>
                                         </tr>

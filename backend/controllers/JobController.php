@@ -309,12 +309,15 @@ class JobController extends Controller
         // ดึงข้อมูล Invoice ที่เกี่ยวข้องกับใบงาน
         $invoices = $this->getInvoices($model->id);
 
+        $billinginvoices = $this->getBillingInvoices($model->id);
+
         return $this->render('timeline', [
             'model' => $model,
             'purchReqs' => $purchReqs,
             'purchases' => $purchases,
             'journalTrans' => $journalTrans,
             'invoices' => $invoices,
+            'billingInvoices'=> $billinginvoices,
         ]);
     }
 
@@ -454,6 +457,81 @@ class JobController extends Controller
         $command->bindParam(':jobId', $jobId);
 
         return $command->queryAll();
+    }
+
+    /**
+     * ดึงข้อมูล Billing Invoice ที่เกี่ยวข้องกับใบงาน
+     * @param integer $jobId
+     * @return array
+     */
+    protected function getBillingInvoices($jobId)
+    {
+        // ดึงข้อมูลใบวางบิลหลัก
+        $billingQuery = "
+            SELECT 
+                bi.id,
+                bi.billing_number,
+                bi.billing_date,
+                bi.customer_id,
+                bi.customer_name,
+                bi.subtotal,
+                bi.discount_percent,
+                bi.discount_amount,
+                bi.vat_percent,
+                bi.vat_amount,
+                bi.total_amount,
+                bi.payment_due_date,
+                bi.credit_terms,
+                bi.notes,
+                bi.status
+            FROM billing_invoices bi
+            WHERE bi.job_id = :jobId
+            ORDER BY bi.billing_date DESC
+        ";
+
+        $command = Yii::$app->db->createCommand($billingQuery);
+        $command->bindParam(':jobId', $jobId);
+        $billings = $command->queryAll();
+
+        // ดึงรายการ invoice ที่อยู่ในแต่ละใบวางบิล
+        foreach ($billings as &$billing) {
+            $invoicesQuery = "
+                SELECT 
+                    i.id,
+                    i.invoice_type,
+                    i.invoice_number,
+                    i.invoice_date,
+                    i.customer_code,
+                    i.customer_name,
+                    i.customer_address,
+                    i.customer_tax_id,
+                    i.po_number,
+                    i.po_date,
+                    i.credit_terms,
+                    i.due_date,
+                    i.subtotal,
+                    i.discount_percent,
+                    i.discount_amount,
+                    i.vat_percent,
+                    i.vat_amount,
+                    i.total_amount,
+                    i.total_amount_text,
+                    i.payment_due_date,
+                    i.check_due_date,
+                    i.notes,
+                    i.status
+                FROM invoices i
+                INNER JOIN billing_invoice_items bii ON bii.invoice_id = i.id
+                WHERE bii.billing_invoice_id = :billingId
+                ORDER BY i.invoice_date DESC
+            ";
+
+            $invoicesCommand = Yii::$app->db->createCommand($invoicesQuery);
+            $invoicesCommand->bindParam(':billingId', $billing['id']);
+            $billing['invoices'] = $invoicesCommand->queryAll();
+        }
+
+        return $billings;
     }
 
     /**
