@@ -691,7 +691,7 @@ $this->registerCss('
                                                         <td class="text-right font-weight-bold"><?= number_format($invoice['total_amount'], 2) ?></td>
                                                         <td class="text-center">
                                                             <?= Html::tag('span', $invoice['status'], [
-                                                                'class' => 'badge badge-' . ($invoice['status'] == 'paid' ? 'success' : 'warning'),
+                                                                'class' => 'badge badge-' . ($invoice['status'] == 1 ? 'success' : 'warning'),
                                                                 'style' => 'font-size: 0.7em;'
                                                             ]) ?>
                                                         </td>
