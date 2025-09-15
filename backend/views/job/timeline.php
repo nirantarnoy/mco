@@ -280,7 +280,7 @@ $this->registerCss('
                                 </h4>
                             </div>
                             <div class="col-md-4 text-right">
-                                <?= Html::a('<i class="fas fa-arrow-left"></i> กลับ', ['index'], [
+                                <?= Html::a('<i class="fas fa-arrow-left"></i> กลับ', ['job-report/index'], [
                                     'class' => 'btn btn-light btn-sm'
                                 ]) ?>
                                 <?= Html::a('<i class="fas fa-print"></i> พิมพ์', '#', [
