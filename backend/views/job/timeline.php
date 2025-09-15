@@ -263,6 +263,17 @@ $this->registerCss('
     }
 }
 ');
+
+$start = new DateTime($model->start_date);
+$end   = new DateTime($model->end_date);
+
+$today = new DateTime("now");
+$is_over = 0;
+$diff = $start->diff($end);
+if($today > $end){
+    $is_over = 1;
+  $diff = $today->diff($end);
+}
 ?>
 
     <div class="job-timeline-view">
@@ -292,21 +303,29 @@ $this->registerCss('
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <strong>รหัสใบงาน:</strong><br>
                                 <span class="text-primary h5"><?= Html::encode($model->job_no) ?></span>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <strong>วันที่เริ่ม:</strong><br>
                                 <span class="text-info"><?= $model->start_date ? date('d/m/Y', strtotime($model->start_date)) : '-' ?></span>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
+                                <strong>ถึงวันที่:</strong><br>
+                                <span class="text-info"><?= $model->end_date ? date('d/m/Y', strtotime($model->end_date)) : '-' ?></span>
+                            </div>
+                            <div class="col-md-2">
+                                <strong>ครบกำหนดในอีก:</strong><br>
+                                <span class="<?= $is_over==1? 'text-danger' : 'text-success' ?>"><?= $is_over==1? 'เกินกำหนด '. $diff->format("%a").' วัน' : $diff->format("%a").' วัน' ?></span>
+                            </div>
+                            <div class="col-md-2">
                                 <strong>สถานะ:</strong><br>
                                 <?= Html::tag('span', $model->getStatusText(), [
                                     'class' => 'badge badge-' . $model->getStatusColor() . ' p-2'
                                 ]) ?>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <strong>มูลค่างาน:</strong><br>
                                 <span class="text-success h5"><?= number_format($model->job_amount, 2) ?> บาท</span>
                             </div>

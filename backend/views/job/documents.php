@@ -101,7 +101,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                             <?= isset($doc['created_at']) ? date('d/m/Y H:i', strtotime($doc['created_at'])) : '-' ?>
                                         </td>
                                         <td>
-                                            <?= Html::encode($doc['created_by'] ?? '-') ?>
+                                            <?= Html::encode(\backend\models\User::findEmployeeNameByUserId($doc['created_by']) ?? '-') ?>
                                         </td>
                                         <td class="text-center">
                                             <?php
