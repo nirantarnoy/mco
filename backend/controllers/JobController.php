@@ -702,4 +702,297 @@ class JobController extends Controller
         return $command->queryAll();
     }
 
+    /**
+     * แสดงรายการเอกสารแนบของกิจกรรม
+     * @param integer $id Job ID
+     * @param string $type ประเภทกิจกรรม (purch_req, purchase, journal_trans, invoice, billing)
+     * @param integer $activityId ID ของกิจกรรม
+     * @return mixed
+     */
+    public function actionDocuments($id, $type, $activityId)
+    {
+        $model = $this->findModel($id);
+
+        // ตรวจสอบประเภทกิจกรรมและดึงข้อมูลเอกสาร
+        $documents = $this->getActivityDocuments($type, $activityId);
+        $activityName = $this->getActivityName($type, $activityId);
+
+        return $this->render('documents', [
+            'model' => $model,
+            'activityType' => $type,
+            'activityId' => $activityId,
+            'activityName' => $activityName,
+            'documents' => $documents,
+        ]);
+    }
+
+    /**
+     * ดูเอกสาร
+     * @param string $type ประเภทกิจกรรม
+     * @param integer $id ID ของกิจกรรม
+     * @param integer $docId ID ของเอกสาร
+     * @return Response
+     */
+    public function actionViewDocument($type, $id, $docId)
+    {
+        $document = $this->findDocument($type, $docId);
+
+        if (!$document) {
+            throw new NotFoundHttpException('ไม่พบเอกสารที่ต้องการ');
+        }
+
+        $document_name = '';
+        if(!empty($document['doc'])){
+            $document_name = $document['doc'];
+        }else if(!empty($document['doc_name'])){
+            $document_name = $document['doc_name'];
+        }
+
+        $filePath = $this->getDocumentPath($type, $document_name);
+
+        if (!file_exists($filePath)) {
+            throw new NotFoundHttpException('ไม่พบไฟล์เอกสาร');
+        }
+
+        // ตั้งค่า header สำหรับการแสดงผล
+        $response = Yii::$app->response;
+        $response->headers->set('Content-Type', $this->getMimeType($document_name));
+        $response->headers->set('Content-Disposition', 'inline; filename="' . $document_name . '"');
+
+        return $response->sendFile($filePath);
+    }
+
+    /**
+     * ดาวน์โหลดเอกสาร
+     * @param string $type ประเภทกิจกรรม
+     * @param integer $id ID ของกิจกรรม
+     * @param integer $docId ID ของเอกสาร
+     * @return Response
+     */
+    public function actionDownloadDocument($type, $id, $docId)
+    {
+        $document = $this->findDocument($type, $docId);
+
+        if (!$document) {
+            throw new NotFoundHttpException('ไม่พบเอกสารที่ต้องการ');
+        }
+
+        $document_name = '';
+        if(!empty($document['doc'])){
+            $document_name = $document['doc'];
+        }else if(!empty($document['doc_name'])){
+            $document_name = $document['doc_name'];
+        }
+        $filePath = $this->getDocumentPath($type, $document_name);
+
+        if (!file_exists($filePath)) {
+            throw new NotFoundHttpException('ไม่พบไฟล์เอกสาร');
+        }
+
+        return Yii::$app->response->sendFile($filePath, $document_name);
+    }
+
+    /**
+     * พิมพ์เอกสาร
+     * @param string $type ประเภทกิจกรรม
+     * @param integer $id ID ของกิจกรรม
+     * @param integer $docId ID ของเอกสาร
+     * @return Response
+     */
+    public function actionPrintDocument($type, $id, $docId)
+    {
+        $document = $this->findDocument($type, $docId);
+
+        if (!$document) {
+            throw new NotFoundHttpException('ไม่พบเอกสารที่ต้องการ');
+        }
+
+        $document_name = '';
+        if(!empty($document['doc'])){
+            $document_name = $document['doc'];
+        }else if(!empty($document['doc_name'])){
+            $document_name = $document['doc_name'];
+        }
+
+        $filePath = $this->getDocumentPath($type, $document_name);
+
+        if (!file_exists($filePath)) {
+            throw new NotFoundHttpException('ไม่พบไฟล์เอกสาร');
+        }
+
+        // ตั้งค่า header สำหรับการพิมพ์
+        $response = Yii::$app->response;
+        $response->headers->set('Content-Type', $this->getMimeType($document_name));
+        $response->headers->set('Content-Disposition', 'inline; filename="print_' . $document_name . '"');
+
+        return $response->sendFile($filePath);
+    }
+
+    /**
+     * ดึงข้อมูลเอกสารของกิจกรรม
+     * @param string $type ประเภทกิจกรรม
+     * @param integer $activityId ID ของกิจกรรม
+     * @return array
+     */
+    protected function getActivityDocuments($type, $activityId)
+    {
+        $tableName = $this->getDocumentTableName($type);
+        $foreignKey = $this->getDocumentForeignKey($type);
+
+        $doc_name = 'doc';
+        if($tableName =='purch_req_doc'){
+            $doc_name = 'doc_name';
+        }
+
+        $query = "
+            SELECT 
+                id,
+                {$foreignKey},
+                {$doc_name} as doc,
+                created_at,
+                created_by
+            FROM {$tableName}
+            WHERE {$foreignKey} = :activityId
+            ORDER BY created_at DESC
+        ";
+
+        $command = Yii::$app->db->createCommand($query);
+        $command->bindParam(':activityId', $activityId);
+        $documents = $command->queryAll();
+
+        // เพิ่มข้อมูลขนาดไฟล์
+        foreach ($documents as &$doc) {
+            $filePath = $this->getDocumentPath($type, $doc['doc']);
+            $doc['file_size'] = file_exists($filePath) ? filesize($filePath) : 0;
+        }
+
+        return $documents;
+    }
+
+    /**
+     * ค้นหาเอกสาร
+     * @param string $type ประเภทกิจกรรม
+     * @param integer $docId ID ของเอกสาร
+     * @return array|null
+     */
+    protected function findDocument($type, $docId)
+    {
+        $tableName = $this->getDocumentTableName($type);
+
+        $query = "
+            SELECT *
+            FROM {$tableName}
+            WHERE id = :docId
+        ";
+
+        $command = Yii::$app->db->createCommand($query);
+        $command->bindParam(':docId', $docId);
+
+        return $command->queryOne();
+    }
+
+    /**
+     * รับชื่อตารางเอกสารตามประเภทกิจกรรม
+     * @param string $type ประเภทกิจกรรม
+     * @return string
+     */
+    protected function getDocumentTableName($type)
+    {
+        $tableMap = [
+            'purch_req' => 'purch_req_doc',
+            'purchase' => 'purch_doc',
+            'journal_trans' => 'journal_trans_doc',
+            'invoice' => 'invoice_doc',
+            'billing' => 'invoice_doc', // ใช้ตารางเดียวกับ invoice
+        ];
+
+        return $tableMap[$type] ?? 'document';
+    }
+
+    /**
+     * รับชื่อ foreign key ตามประเภทกิจกรรม
+     * @param string $type ประเภทกิจกรรม
+     * @return string
+     */
+    protected function getDocumentForeignKey($type)
+    {
+        $keyMap = [
+            'purch_req' => 'purch_req_id',
+            'purchase' => 'purch_id',
+            'journal_trans' => 'journal_trans_id',
+            'invoice' => 'invoice_id',
+            'billing' => 'invoice_id',
+        ];
+
+        return $keyMap[$type] ?? 'reference_id';
+    }
+
+    /**
+     * รับชื่อกิจกรรม
+     * @param string $type ประเภทกิจกรรม
+     * @param integer $activityId ID ของกิจกรรม
+     * @return string
+     */
+    protected function getActivityName($type, $activityId)
+    {
+        $queries = [
+            'purch_req' => "SELECT CONCAT('ใบขอซื้อ: ', purch_req_no) FROM purch_req WHERE id = :id",
+            'purchase' => "SELECT CONCAT('ใบสั่งซื้อ: ', purch_no) FROM purch WHERE id = :id",
+            'journal_trans' => "SELECT CONCAT('รายการ: ', journal_no) FROM journal_trans WHERE id = :id",
+            'invoice' => "SELECT CONCAT('ใบกำกับ: ', invoice_number) FROM invoices WHERE id = :id",
+            'billing' => "SELECT CONCAT('ใบวางบิล: ', billing_number) FROM billing_invoices WHERE id = :id",
+        ];
+
+        if (!isset($queries[$type])) {
+            return 'กิจกรรมไม่ทราบ';
+        }
+
+        $command = Yii::$app->db->createCommand($queries[$type]);
+        $command->bindParam(':id', $activityId);
+        $result = $command->queryScalar();
+
+        return $result ?: 'ไม่พบข้อมูล';
+    }
+
+    /**
+     * รับ path ของไฟล์เอกสาร
+     * @param string $type ประเภทกิจกรรม
+     * @param string $filename ชื่อไฟล์
+     * @return string
+     */
+    protected function getDocumentPath($type, $filename)
+    {
+        $basePath = Yii::getAlias('@webroot/uploads/documents');
+        return $basePath . '/' . $type . '/' . $filename;
+    }
+
+    /**
+     * รับ MIME type ของไฟล์
+     * @param string $filename ชื่อไฟล์
+     * @return string
+     */
+    protected function getMimeType($filename)
+    {
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+        $mimeTypes = [
+            'pdf' => 'application/pdf',
+            'doc' => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xls' => 'application/vnd.ms-excel',
+            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'ppt' => 'application/vnd.ms-powerpoint',
+            'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'txt' => 'text/plain',
+            'zip' => 'application/zip',
+            'rar' => 'application/x-rar-compressed',
+        ];
+
+        return $mimeTypes[$extension] ?? 'application/octet-stream';
+    }
+
 }

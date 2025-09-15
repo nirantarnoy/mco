@@ -341,6 +341,7 @@ $this->registerCss('
                                         <th>สถานะ</th>
                                         <th style="text-align: right;">มูลค่า</th>
                                         <th>หมายเหตุ</th>
+                                        <th>เอกสาร</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -368,6 +369,7 @@ $this->registerCss('
                                             </td>
                                             <td class="text-right"><?= number_format($req['total_amount'], 2) ?></td>
                                             <td><?= Html::encode($req['note']) ?></td>
+                                            <td style="text-align: center;"><a class="badge badge-info" href="<?=Url::to(['job/documents','id'=>$model->id,'type'=>'purch_req','activityId'=>$req['id']],true)?>"><i class="fa fa-eye"></i></a></td>
                                         </tr>
                                     <?php endforeach; ?>
                                     </tbody>
@@ -407,6 +409,7 @@ $this->registerCss('
                                         <th style="text-align: right;">ส่วนลด</th>
                                         <th style="text-align: right;">VAT</th>
                                         <th style="text-align: right;">สุทธิ</th>
+                                        <th>เอกสาร</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -436,6 +439,7 @@ $this->registerCss('
                                             <td class="text-right"><?= number_format($purchase['discount_amount'], 2) ?></td>
                                             <td class="text-right"><?= number_format($purchase['vat_amount'], 2) ?></td>
                                             <td class="text-right font-weight-bold"><?= number_format($purchase['net_amount'], 2) ?></td>
+                                            <td style="text-align: center;"><a class="badge badge-info" href="<?=Url::to(['job/documents','id'=>$model->id,'type'=>'purch','activityId'=>$purchase['id']],true)?>"><i class="fa fa-eye"></i></a></td>
                                         </tr>
                                     <?php endforeach; ?>
                                     </tbody>
@@ -474,6 +478,7 @@ $this->registerCss('
                                         <th style="text-align: right;">จำนวน</th>
                                         <th style="text-align: center;">สถานะ</th>
                                         <th>หมายเหตุ</th>
+                                        <th>เอกสาร</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -506,6 +511,7 @@ $this->registerCss('
                                                 ]) ?>
                                             </td>
                                             <td><?= Html::encode($trans['remark']) ?></td>
+                                            <td style="text-align: center;"><a class="badge badge-info" href="<?=Url::to(['job/documents','id'=>$model->id,'type'=>'journal_trans','activityId'=>$trans['id']],true)?>"><i class="fa fa-eye"></i></a></td>
                                         </tr>
                                     <?php endforeach; ?>
                                     </tbody>

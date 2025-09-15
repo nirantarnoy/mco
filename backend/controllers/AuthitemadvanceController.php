@@ -11,9 +11,9 @@ use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 
 /**
- * AuthitemXController implements the CRUD actions for Authitem model.
+ * AuthitemadvanceController implements the CRUD actions for Authitem model.
  */
-class AuthitemXController extends Controller
+class AuthitemadvanceController extends Controller
 {
     public $enableCsrfValidation = false;
 
