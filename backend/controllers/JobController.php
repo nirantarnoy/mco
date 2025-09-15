@@ -314,6 +314,9 @@ class JobController extends Controller
         // ดึงข้อมูล Petty Cash Voucher ที่เกี่ยวข้องกับใบงาน
         $pettyCashVouchers = $this->getPettyCashVouchers($model->id);
 
+        // ดึงข้อมูล Payment Receipt ที่เกี่ยวข้องกับใบงาน
+        $paymentReceipts = $this->getPaymentReceipts($model->id);
+
         return $this->render('timeline', [
             'model' => $model,
             'purchReqs' => $purchReqs,
@@ -322,6 +325,7 @@ class JobController extends Controller
             'invoices' => $invoices,
             'billingInvoices'=> $billinginvoices,
             'pettyCashVouchers' => $pettyCashVouchers,
+            'paymentReceipts' => $paymentReceipts,
         ]);
     }
 
@@ -354,6 +358,84 @@ class JobController extends Controller
         $command->bindParam(':jobId', $jobId);
 
         return $command->queryAll();
+    }
+
+    /**
+     * ดึงข้อมูล Payment Receipt ที่เกี่ยวข้องกับใบงาน
+     * @param integer $jobId
+     * @return array
+     */
+    protected function getPaymentReceipts($jobId)
+    {
+        $query = "
+        SELECT 
+            pr.id,
+            pr.receipt_number,
+            pr.billing_invoice_id,
+            pr.job_id,
+            pr.payment_date,
+            pr.payment_method,
+            pr.bank_name,
+            pr.account_number,
+            pr.cheque_number,
+            pr.cheque_date,
+            pr.received_amount,
+            pr.discount_amount,
+            pr.vat_amount,
+            pr.withholding_tax,
+            pr.net_amount,
+            pr.remaining_balance,
+            pr.payment_status,
+            pr.attachment_path,
+            pr.attachment_name,
+            pr.notes,
+            pr.received_by,
+            pr.created_by,
+            pr.status,
+            bi.billing_number,
+            bi.total_amount as billing_amount,
+            c.name as customer_name,
+            CONCAT(e.fname, ' ', e.lname) as receiver_name
+        FROM payment_receipts pr
+        LEFT JOIN billing_invoices bi ON bi.id = pr.billing_invoice_id
+        LEFT JOIN customer c ON c.id = bi.customer_id
+        LEFT JOIN user u ON u.id = pr.received_by
+        LEFT JOIN employee e ON e.id = u.emp_ref_id
+        WHERE pr.job_id = :jobId
+        ORDER BY pr.payment_date DESC
+    ";
+
+        $command = Yii::$app->db->createCommand($query);
+        $command->bindParam(':jobId', $jobId);
+        $receipts = $command->queryAll();
+
+        // ดึงรายละเอียดของแต่ละ receipt
+        foreach ($receipts as &$receipt) {
+            $detailQuery = "
+            SELECT 
+                prd.id,
+                prd.payment_receipt_id,
+                prd.billing_invoice_item_id,
+                prd.description,
+                prd.amount,
+                bii.invoice_id,
+                i.invoice_number
+            FROM payment_receipt_details prd
+            LEFT JOIN billing_invoice_items bii ON bii.id = prd.billing_invoice_item_id
+            LEFT JOIN invoices i ON i.id = bii.invoice_id
+            WHERE prd.payment_receipt_id = :receiptId
+            ORDER BY prd.id
+        ";
+
+            $detailCommand = Yii::$app->db->createCommand($detailQuery);
+            $detailCommand->bindParam(':receiptId', $receipt['id']);
+            $receipt['details'] = $detailCommand->queryAll();
+
+            // คำนวณยอดรวมจาก details
+            $receipt['total_detail_amount'] = array_sum(array_column($receipt['details'], 'amount'));
+        }
+
+        return $receipts;
     }
 
     /**

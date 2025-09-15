@@ -162,6 +162,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         'กำกับภาษี' => $model->hasTaxInvoice($model->id),
                                         'ใบเสร็จ' => $model->hasReceipt($model->id),
                                         'วางบิล' => $model->hasBilling($model->id),
+                                        'ชำระเงิน' => $model->hasPayment($model->id),
                                     ];
 
                                     $output = '<div class="activity-status-container">';
@@ -191,6 +192,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         'กำกับภาษี' => $model->hasTaxInvoice($model->id),
                                         'ใบเสร็จ' => $model->hasReceipt($model->id),
                                         'วางบิล' => $model->hasBilling($model->id),
+                                        'ชำระเงิน' => $model->hasPayment($model->id),
                                     ];
 
                                     // คำนวณเปอร์เซ็นต์ความคืบหน้า

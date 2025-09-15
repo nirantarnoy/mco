@@ -344,6 +344,12 @@ class Job extends \common\models\Job
         return $count > 0;
     }
 
+    public function hasPayment($id){
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM payment_receipts WHERE job_id=:jobId')
+        ->bindParam(':jobId',$id)->queryScalar();
+        return $count > 0;
+    }
+
     /**
      * ตรวจสอบว่ามีเงินสดย่อยหรือไม่
      * @param integer $jobId
