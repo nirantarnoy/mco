@@ -690,7 +690,7 @@ $this->registerCss('
                                                         <td class="text-right"><?= number_format($invoice['vat_amount'], 2) ?></td>
                                                         <td class="text-right font-weight-bold"><?= number_format($invoice['total_amount'], 2) ?></td>
                                                         <td class="text-center">
-                                                            <?= Html::tag('span', $invoice['status'], [
+                                                            <?= Html::tag('span', $invoice['status']==1?'completed':'draft', [
                                                                 'class' => 'badge badge-' . ($invoice['status'] == 1 ? 'success' : 'warning'),
                                                                 'style' => 'font-size: 0.7em;'
                                                             ]) ?>
