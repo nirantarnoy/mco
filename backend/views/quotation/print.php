@@ -346,15 +346,21 @@ $customer_taxid = $customer_info !== null && count($customer_info)>0 ? $customer
         <?php if ($quotationLines): ?>
             <?php $itemNo = 1; ?>
             <?php foreach ($quotationLines as $line): ?>
+                <?php
+                    $is_labour_price = 0;
+                     if(substr($line->product_name,0,3) == 'SER'){
+                         $is_labour_price = 1;
+                     }
+                ?>
                 <tr>
                     <td><?= $itemNo++ ?></td>
                     <td class="description-cell"><?= Html::encode($line->product_name ?? '') ?></td>
                     <td><?= number_format($line->qty, 1) ?></td>
                     <td><?= Html::encode(\backend\models\Unit::findName($line->product->unit_id) ?? '') ?></td>
-                    <td class="number-cell"><?= number_format($line->line_price, 2) ?></td>
-                    <td class="number-cell"><?= number_format($line->line_total, 2) ?></td>
-                    <td class="number-cell">-</td>
-                    <td class="number-cell">-</td>
+                    <td class="number-cell"><?= $is_labour_price == 0?number_format($line->line_price, 2):'-' ?></td>
+                    <td class="number-cell"><?= $is_labour_price == 0?number_format($line->line_total, 2):'-' ?></td>
+                    <td class="number-cell"><?= $is_labour_price == 1?number_format($line->line_price, 2):'-' ?></td>
+                    <td class="number-cell"><?= $is_labour_price == 1?number_format($line->line_total, 2):'-' ?></td>
                     <td class="number-cell"><?= number_format($line->line_total, 2) ?></td>
                 </tr>
             <?php endforeach; ?>
