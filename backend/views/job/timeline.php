@@ -546,6 +546,128 @@ if($today > $end){
                 </div>
             </div>
 
+            <!-- Petty Cash Voucher Section -->
+            <div class="timeline-section">
+                <div class="card border-dark">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cash-register"></i>
+                            ใบเบิกเงินสดย่อย (Petty Cash Voucher)
+                            <span class="badge badge-light text-dark ml-2"><?= count($pettyCashVouchers) ?> รายการ</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($pettyCashVouchers)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-sm">
+                                    <thead class="thead-light">
+                                    <tr>
+                                        <th style="text-align: center;">เลขที่ใบเบิก</th>
+                                        <th style="text-align: center;">วันที่</th>
+                                        <th style="text-align: center;">ผู้เบิก</th>
+                                        <th style="text-align: center;">เบิกให้กับ</th>
+                                        <th style="text-align: center;">วัตถุประสงค์</th>
+                                        <th style="text-align: right;">จำนวนเงิน</th>
+                                        <th style="text-align: center;">สถานะ</th>
+                                        <th style="text-align: center;">ผู้อนุมัติ</th>
+                                        <th style="text-align: center;">เอกสาร</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php
+                                    $totalPettyCash = 0;
+                                    foreach ($pettyCashVouchers as $voucher):
+                                        $totalPettyCash += $voucher['amount'];
+
+                                        $approve_status_text = '';
+                                        $approve_status_color = '';
+                                        if ($voucher['approve_status'] == 0) {
+                                            $approve_status_text = 'รอพิจารณา';
+                                            $approve_status_color = 'warning';
+                                        } else if ($voucher['approve_status'] == 1) {
+                                            $approve_status_text = 'อนุมัติ';
+                                            $approve_status_color = 'success';
+                                        } else if ($voucher['approve_status'] == 2) {
+                                            $approve_status_text = 'ไม่อนุมัติ';
+                                            $approve_status_color = 'danger';
+                                        } else if ($voucher['approve_status'] == 3) {
+                                            $approve_status_text = 'ยกเลิก';
+                                            $approve_status_color = 'secondary';
+                                        }
+
+                                        // กำหนดชื่อผู้รับเงิน
+                                        $recipient_name = '';
+                                        if (!empty($voucher['employee_name'])) {
+                                            $recipient_name = $voucher['employee_name'] . ' (พนักงาน)';
+                                        } else if (!empty($voucher['customer_name'])) {
+                                            $recipient_name = $voucher['customer_name'] . ' (ลูกค้า)';
+                                        } else if (!empty($voucher['vendor_name'])) {
+                                            $recipient_name = $voucher['vendor_name'] . ' (ผู้จำหน่าย)';
+                                        } else {
+                                            $recipient_name = Html::encode($voucher['name']);
+                                        }
+                                        ?>
+                                        <tr>
+                                            <td style="text-align: center;"><?= Html::encode($voucher['pcv_no']) ?></td>
+                                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($voucher['pcv_date'])) ?></td>
+                                            <td style="text-align: center;"><?= Html::encode($voucher['issued_by']) ?></td>
+                                            <td style="text-align: center;"><?= $recipient_name ?></td>
+                                            <td><?= Html::encode($voucher['paid_for']) ?></td>
+                                            <td style="text-align: right;" class="font-weight-bold"><?= number_format($voucher['amount'], 2) ?></td>
+                                            <td style="text-align: center;">
+                                                <?= Html::tag('span', $approve_status_text, [
+                                                    'class' => 'badge badge-' . $approve_status_color
+                                                ]) ?>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <?php if (!empty($voucher['approved_by'])): ?>
+                                                    <?= Html::encode($voucher['approved_by']) ?><br>
+                                                    <small class="text-muted"><?= date('d/m/Y', strtotime($voucher['approved_date'])) ?></small>
+                                                <?php else: ?>
+                                                    <span class="text-muted">-</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <a class="badge badge-info" href="<?=Url::to(['job/documents','id'=>$model->id,'type'=>'petty_cash_voucher','activityId'=>$voucher['id']],true)?>">
+                                                    <i class="fa fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+
+                                        <?php if (!empty($voucher['details'])): ?>
+                                        <tr class="bg-light">
+                                            <td colspan="9" style="padding-left: 50px;">
+                                                <small>
+                                                    <strong>รายละเอียด:</strong>
+                                                    <?php foreach ($voucher['details'] as $detail): ?>
+                                                        <br>• <?= Html::encode($detail['detail']) ?>
+                                                        (<?= number_format($detail['amount'], 2) ?> บาท)
+                                                    <?php endforeach; ?>
+                                                </small>
+                                            </td>
+                                        </tr>
+                                    <?php endif; ?>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                    <tfoot class="bg-light">
+                                    <tr>
+                                        <td colspan="5" class="text-right font-weight-bold">รวมเงินสดย่อยทั้งหมด:</td>
+                                        <td class="text-right font-weight-bold text-danger"><?= number_format($totalPettyCash, 2) ?></td>
+                                        <td colspan="3"></td>
+                                    </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-secondary mb-0">
+                                <i class="fas fa-info-circle"></i>
+                                ไม่มีข้อมูลใบเบิกเงินสดย่อยสำหรับใบงานนี้
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
             <!-- Invoice Section -->
             <div class="timeline-section">
                 <div class="card border-primary">
@@ -761,8 +883,10 @@ if($today > $end){
                         <?php
                         // คำนวณสรุปทางการเงิน
                         $totalPurchaseAmount = array_sum(array_column($purchases, 'net_amount'));
+                        $totalPettyCashAmount = array_sum(array_column($pettyCashVouchers, 'amount')); // เพิ่มบรรทัดนี้
                         $totalInvoiceAmount = array_sum(array_column($invoices, 'total_amount'));
-                        $profitLoss = $model->job_amount - $totalPurchaseAmount;
+                        $totalExpenses = $totalPurchaseAmount + $totalPettyCashAmount; // รวมค่าใช้จ่ายทั้งหมด
+                        $profitLoss = $model->job_amount - $totalExpenses; // ใช้ totalExpenses แทน
                         $profitLossPercentage = $model->job_amount > 0 ? ($profitLoss / $model->job_amount) * 100 : 0;
                         ?>
 
@@ -780,9 +904,11 @@ if($today > $end){
                             <div class="col-md-3">
                                 <div class="card bg-warning text-dark">
                                     <div class="card-body text-center">
-                                        <h5>ค่าใช้จ่ายรวม</h5>
-                                        <h3><?= number_format($totalPurchaseAmount, 2) ?></h3>
-                                        <small>บาท</small>
+                                        <div class="card-body text-center">
+                                            <h5>ค่าใช้จ่ายรวม</h5>
+                                            <h3><?= number_format($totalExpenses, 2) ?></h3>
+                                            <small>บาท<br>(ซื้อ: <?= number_format($totalPurchaseAmount, 2) ?> + เงินสดย่อย: <?= number_format($totalPettyCashAmount, 2) ?>)</small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -819,7 +945,9 @@ if($today > $end){
                                             'ใบขอซื้อ' => !empty($purchReqs),
                                             'ใบสั่งซื้อ' => !empty($purchases),
                                             'รับ-เบิกของ' => !empty($journalTrans),
-                                            'ใบกำกับ/ใบเสร็จ' => !empty($invoices)
+                                            'เงินสดย่อย' => !empty($voucher),
+                                            'ใบกำกับ/ใบเสร็จ' => !empty($invoices),
+                                            'วางบิล' => !empty($billingInvoices)
                                         ];
                                         $completedSteps = array_sum($steps);
                                         $totalSteps = count($steps);
@@ -837,7 +965,7 @@ if($today > $end){
 
                                     <div class="row">
                                         <?php foreach ($steps as $stepName => $isCompleted): ?>
-                                            <div class="col-md-3">
+                                            <div class="col-md-2">
                                                 <div class="text-center">
                                                     <i class="fas <?= $isCompleted ? 'fa-check-circle text-success' : 'fa-clock text-muted' ?> fa-2x"></i>
                                                     <br>

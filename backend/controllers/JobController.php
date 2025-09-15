@@ -311,6 +311,9 @@ class JobController extends Controller
 
         $billinginvoices = $this->getBillingInvoices($model->id);
 
+        // ดึงข้อมูล Petty Cash Voucher ที่เกี่ยวข้องกับใบงาน
+        $pettyCashVouchers = $this->getPettyCashVouchers($model->id);
+
         return $this->render('timeline', [
             'model' => $model,
             'purchReqs' => $purchReqs,
@@ -318,6 +321,7 @@ class JobController extends Controller
             'journalTrans' => $journalTrans,
             'invoices' => $invoices,
             'billingInvoices'=> $billinginvoices,
+            'pettyCashVouchers' => $pettyCashVouchers,
         ]);
     }
 
@@ -700,6 +704,72 @@ class JobController extends Controller
         $command->bindParam(':invoiceId', $invoiceId);
 
         return $command->queryAll();
+    }
+
+    /**
+     * ดึงข้อมูล Petty Cash Voucher ที่เกี่ยวข้องกับใบงาน
+     * @param integer $jobId
+     * @return array
+     */
+    protected function getPettyCashVouchers($jobId)
+    {
+        $query = "
+        SELECT 
+            pcv.id,
+            pcv.pcv_no,
+            pcv.date as pcv_date,
+            pcv.name,
+            pcv.amount,
+            pcv.paid_for,
+            pcv.issued_by,
+            pcv.issued_date,
+            pcv.approved_by,
+            pcv.approved_date,
+            pcv.status,
+            pcv.quotation_id,
+            pcv.pay_for_emp_id,
+            pcv.customer_id,
+            pcv.vendor_id,
+            pcv.approve_status,
+            c.name as customer_name,
+            v.name as vendor_name,
+            CONCAT(e.fname, ' ', e.lname) as employee_name
+        FROM petty_cash_voucher pcv
+        LEFT JOIN customer c ON c.id = pcv.customer_id
+        LEFT JOIN vendor v ON v.id = pcv.vendor_id
+        LEFT JOIN employee e ON e.id = pcv.pay_for_emp_id
+        WHERE pcv.job_id = :jobId
+        ORDER BY pcv.date DESC
+    ";
+
+        $command = Yii::$app->db->createCommand($query);
+        $command->bindParam(':jobId', $jobId);
+        $vouchers = $command->queryAll();
+
+        // ดึงรายละเอียดของแต่ละ voucher
+        foreach ($vouchers as &$voucher) {
+            $detailQuery = "
+            SELECT 
+                pcd.id,
+                pcd.voucher_id,
+                pcd.ac_code,
+                pcd.detail_date,
+                pcd.detail,
+                pcd.amount
+            FROM petty_cash_detail pcd
+            WHERE pcd.voucher_id = :voucherId
+            ORDER BY pcd.detail_date, pcd.id
+        ";
+
+            $detailCommand = Yii::$app->db->createCommand($detailQuery);
+            $detailCommand->bindParam(':voucherId', $voucher['id']);
+            $voucher['details'] = $detailCommand->queryAll();
+
+            // คำนวณยอดรวมจาก details
+            $voucher['total_detail_amount'] = array_sum(array_column($voucher['details'], 'amount'));
+        }
+
+        return $vouchers;
     }
 
     /**
