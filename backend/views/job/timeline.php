@@ -345,13 +345,25 @@ $this->registerCss('
                                     </thead>
                                     <tbody>
                                     <?php foreach ($purchReqs as $req): ?>
+                                        <?php
+                                        $line_status = '';
+                                        if ($req['approve_status'] == 0) {
+                                            $line_status = 'รอพิจารณา';
+                                        } else if ($req['approve_status'] == 1) {
+                                            $line_status = 'อนุมัติ';
+                                        } else if ($req['approve_status'] == 2) {
+                                            $line_status = 'ไม่อนุมัติ';
+                                        } else if ($req['approve_status'] == 3) {
+                                            $line_status = 'ยกเลิก';
+                                        }
+                                        ?>
                                         <tr>
                                             <td style="text-align: center;"><?= Html::encode($req['purch_req_no']) ?></td>
                                             <td style="text-align: center;"><?= date('d/m/Y', strtotime($req['purch_req_date'])) ?></td>
                                             <td style="text-align: center;"><?= Html::encode($req['fname'] . ' ' . $req['lname']) ?></td>
                                             <td style="text-align: center;">
-                                                <?= Html::tag('span', $req['status'], [
-                                                    'class' => 'badge badge-' . ($req['status'] == 'approved' ? 'success' : 'warning')
+                                                <?= Html::tag('span', $line_status, [
+                                                    'class' => 'badge badge-' . ($line_status == 'อนุมัติ' ? 'success' : 'warning')
                                                 ]) ?>
                                             </td>
                                             <td class="text-right"><?= number_format($req['total_amount'], 2) ?></td>

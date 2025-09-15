@@ -332,7 +332,7 @@ class JobController extends Controller
                 pr.purch_req_date,
                 pr.vendor_id,
                 pr.vendor_name,
-                pr.status,
+                pr.approve_status,
                 pr.total_amount,
                 pr.note,
                 pr.created_by,
