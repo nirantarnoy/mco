@@ -1,5 +1,5 @@
 <?php
-// backend/views/billing-invoice/_form.php
+// backend/views/billing-invoice/__form.php
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 use yii\helpers\ArrayHelper;
