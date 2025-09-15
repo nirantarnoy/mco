@@ -585,64 +585,138 @@ $this->registerCss('
                 </div>
             </div>
 
-            <!-- Bill Invoice Section -->
+            <!-- Billing Invoice Placement Section -->
             <div class="timeline-section">
                 <div class="card border-success">
                     <div class="card-header bg-success text-white">
                         <h5 class="mb-0">
                             <i class="fas fa-file-invoice-dollar"></i>
-                            ใบวางบิล (Bill placement)
-                            <span class="badge badge-light text-dark ml-2"><?= count($invoices) ?> รายการ</span>
+                            ใบวางบิล (Bill Placement)
+                            <span class="badge badge-light text-dark ml-2"><?= count($billingInvoices) ?> รายการ</span>
                         </h5>
                     </div>
                     <div class="card-body">
-                        <?php if (!empty($invoices)): ?>
-                            <div class="table-responsive">
-                                <table class="table table-striped table-sm">
-                                    <thead class="thead-light">
-                                    <tr>
-                                        <th>เลขใบกำกับ</th>
-                                        <th>ประเภท</th>
-                                        <th>วันที่</th>
-                                        <th>ลูกค้า</th>
-                                        <th>รหัสลูกค้า</th>
-                                        <th style="text-align: right;">ยอดก่อนภาษี</th>
-                                        <th style="text-align: right;">ส่วนลด</th>
-                                        <th style="text-align: right;">VAT</th>
-                                        <th style="text-align: right;">ยอดสุทธิ</th>
-                                        <th style="text-align: center;">สถานะ</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <?php foreach ($invoices as $invoice): ?>
-                                        <tr>
-                                            <td><?= Html::encode($invoice['invoice_number']) ?></td>
-                                            <td>
-                                                <?= Html::tag('span', $invoice['invoice_type'], [
-                                                    'class' => 'badge badge-' . ($invoice['invoice_type'] == 'TAX' ? 'primary' : 'info')
+                        <?php if (!empty($billingInvoices)): ?>
+                            <?php foreach ($billingInvoices as $billing): ?>
+                                <div class="billing-group mb-4">
+                                    <!-- หัวข้อใบวางบิล -->
+                                    <div class="billing-header bg-light p-3 rounded mb-2">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <strong>เลขใบวางบิล:</strong>
+                                                <span class="text-primary"><?= Html::encode($billing['billing_number']) ?></span>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <strong>วันที่:</strong>
+                                                <?= date('d/m/Y', strtotime($billing['billing_date'])) ?>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <strong>ลูกค้า:</strong>
+                                                <?= Html::encode($billing['customer_name']) ?>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <strong>ยอดรวม:</strong>
+                                                <span class="text-success font-weight-bold"><?= number_format($billing['total_amount'], 2) ?></span>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <strong>สถานะ:</strong>
+                                                <?= Html::tag('span', $billing['status'], [
+                                                    'class' => 'badge badge-' . ($billing['status'] == 'issued' ? 'success' : 'warning')
                                                 ]) ?>
-                                            </td>
-                                            <td><?= date('d/m/Y', strtotime($invoice['invoice_date'])) ?></td>
-                                            <td><?= Html::encode($invoice['customer_name']) ?></td>
-                                            <td><?= Html::encode($invoice['customer_code']) ?></td>
-                                            <td class="text-right"><?= number_format($invoice['subtotal'], 2) ?></td>
-                                            <td class="text-right"><?= number_format($invoice['discount_amount'], 2) ?></td>
-                                            <td class="text-right"><?= number_format($invoice['vat_amount'], 2) ?></td>
-                                            <td class="text-right font-weight-bold"><?= number_format($invoice['total_amount'], 2) ?></td>
-                                            <td style="text-align: center;">
-                                                <?= Html::tag('span', $invoice['status'], [
-                                                    'class' => 'badge badge-' . ($invoice['status'] == 'paid' ? 'success' : 'warning')
-                                                ]) ?>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- ข้อมูลเพิ่มเติม -->
+                                        <div class="row mt-2">
+                                            <div class="col-md-3">
+                                                <small class="text-muted">ยอดก่อนภาษี: <?= number_format($billing['subtotal'], 2) ?></small>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <small class="text-muted">ส่วนลด: <?= number_format($billing['discount_amount'], 2) ?> (<?= $billing['discount_percent'] ?>%)</small>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <small class="text-muted">VAT: <?= number_format($billing['vat_amount'], 2) ?> (<?= $billing['vat_percent'] ?>%)</small>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <small class="text-muted">กำหนดชำระ: <?= $billing['payment_due_date'] ? date('d/m/Y', strtotime($billing['payment_due_date'])) : '-' ?></small>
+                                            </div>
+                                        </div>
+
+                                        <?php if (!empty($billing['notes'])): ?>
+                                            <div class="row mt-2">
+                                                <div class="col-md-12">
+                                                    <small class="text-muted"><strong>หมายเหตุ:</strong> <?= Html::encode($billing['notes']) ?></small>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <!-- รายการ Invoice ในใบวางบิล -->
+                                    <div class="invoice-list">
+                                        <h6 class="text-muted mb-2">
+                                            <i class="fas fa-list"></i>
+                                            รายการใบกำกับในใบวางบิลนี้ (<?= count($billing['invoices']) ?> รายการ)
+                                        </h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-bordered">
+                                                <thead class="thead-light">
+                                                <tr>
+                                                    <th width="15%">เลขใบกำกับ</th>
+                                                    <th width="8%">ประเภท</th>
+                                                    <th width="10%">วันที่</th>
+                                                    <th width="12%">รหัสลูกค้า</th>
+                                                    <th width="10%" class="text-right">ก่อนภาษี</th>
+                                                    <th width="8%" class="text-right">ส่วนลด</th>
+                                                    <th width="8%" class="text-right">VAT</th>
+                                                    <th width="10%" class="text-right">ยอดสุทธิ</th>
+                                                    <th width="8%" class="text-center">สถานะ</th>
+                                                    <th width="11%">หมายเหตุ</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <?php foreach ($billing['invoices'] as $invoice): ?>
+                                                    <tr>
+                                                        <td><?= Html::encode($invoice['invoice_number']) ?></td>
+                                                        <td>
+                                                            <?= Html::tag('span', $invoice['invoice_type'], [
+                                                                'class' => 'badge badge-' . ($invoice['invoice_type'] == 'TAX' ? 'primary' : 'info'),
+                                                                'style' => 'font-size: 0.7em;'
+                                                            ]) ?>
+                                                        </td>
+                                                        <td><?= date('d/m/Y', strtotime($invoice['invoice_date'])) ?></td>
+                                                        <td><?= Html::encode($invoice['customer_code']) ?></td>
+                                                        <td class="text-right"><?= number_format($invoice['subtotal'], 2) ?></td>
+                                                        <td class="text-right"><?= number_format($invoice['discount_amount'], 2) ?></td>
+                                                        <td class="text-right"><?= number_format($invoice['vat_amount'], 2) ?></td>
+                                                        <td class="text-right font-weight-bold"><?= number_format($invoice['total_amount'], 2) ?></td>
+                                                        <td class="text-center">
+                                                            <?= Html::tag('span', $invoice['status'], [
+                                                                'class' => 'badge badge-' . ($invoice['status'] == 'paid' ? 'success' : 'warning'),
+                                                                'style' => 'font-size: 0.7em;'
+                                                            ]) ?>
+                                                        </td>
+                                                        <td><small><?= Html::encode($invoice['notes']) ?></small></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                                </tbody>
+                                                <tfoot class="bg-light">
+                                                <tr>
+                                                    <td colspan="7" class="text-right font-weight-bold">รวมในใบวางบิลนี้:</td>
+                                                    <td class="text-right font-weight-bold text-success">
+                                                        <?= number_format(array_sum(array_column($billing['invoices'], 'total_amount')), 2) ?>
+                                                    </td>
+                                                    <td colspan="2"></td>
+                                                </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
                         <?php else: ?>
                             <div class="alert alert-success mb-0">
                                 <i class="fas fa-info-circle"></i>
-                                ไม่มีข้อมูลใบกำกับภาษี/ใบเสร็จสำหรับใบงานนี้
+                                ไม่มีข้อมูลใบวางบิลสำหรับใบงานนี้
                             </div>
                         <?php endif; ?>
                     </div>

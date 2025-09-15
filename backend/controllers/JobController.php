@@ -466,14 +466,15 @@ class JobController extends Controller
      */
     protected function getBillingInvoices($jobId)
     {
-        // ดึงข้อมูลใบวางบิลหลัก
+        // ดึงข้อมูลใบวางบิลที่เกี่ยวข้องกับใบงาน
+        // เนื่องจาก billing_invoices ไม่มี job_id ต้อง join ผ่าน billing_invoice_items -> invoices -> job
         $billingQuery = "
-            SELECT 
+            SELECT DISTINCT
                 bi.id,
                 bi.billing_number,
                 bi.billing_date,
                 bi.customer_id,
-                bi.customer_name,
+                cm.name as customer_name,
                 bi.subtotal,
                 bi.discount_percent,
                 bi.discount_amount,
@@ -485,7 +486,12 @@ class JobController extends Controller
                 bi.notes,
                 bi.status
             FROM billing_invoices bi
-            WHERE bi.job_id = :jobId
+            LEFT JOIN customer cm ON cm.id = bi.customer_id
+            INNER JOIN billing_invoice_items bii ON bii.billing_invoice_id = bi.id
+            INNER JOIN invoices i ON i.id = bii.invoice_id
+            LEFT JOIN quotation qt ON qt.id = i.quotation_id
+            LEFT JOIN job j ON j.quotation_id = qt.id
+            WHERE j.id = :jobId
             ORDER BY bi.billing_date DESC
         ";
 
@@ -493,7 +499,7 @@ class JobController extends Controller
         $command->bindParam(':jobId', $jobId);
         $billings = $command->queryAll();
 
-        // ดึงรายการ invoice ที่อยู่ในแต่ละใบวางบิล
+        // ดึงรายการ invoice ที่อยู่ในแต่ละใบวางบิล (เฉพาะที่เกี่ยวข้องกับ job นี้)
         foreach ($billings as &$billing) {
             $invoicesQuery = "
                 SELECT 
@@ -519,20 +525,27 @@ class JobController extends Controller
                     i.payment_due_date,
                     i.check_due_date,
                     i.notes,
-                    i.status
+                    i.status,
+                    bii.item_seq,
+                    bii.amount
                 FROM invoices i
                 INNER JOIN billing_invoice_items bii ON bii.invoice_id = i.id
+                LEFT JOIN quotation qt ON qt.id = i.quotation_id
+                LEFT JOIN job j ON j.quotation_id = qt.id
                 WHERE bii.billing_invoice_id = :billingId
-                ORDER BY i.invoice_date DESC
+                AND j.id = :jobId AND i.is_billed = 1
+                ORDER BY bii.item_seq, i.invoice_date DESC
             ";
 
             $invoicesCommand = Yii::$app->db->createCommand($invoicesQuery);
             $invoicesCommand->bindParam(':billingId', $billing['id']);
+            $invoicesCommand->bindParam(':jobId', $jobId);
             $billing['invoices'] = $invoicesCommand->queryAll();
         }
 
         return $billings;
     }
+
 
     /**
      * ดึงรายการสินค้า/บริการของใบงาน
