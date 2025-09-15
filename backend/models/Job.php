@@ -288,7 +288,7 @@ class Job extends \common\models\Job
      */
     public function hasWithdrawTransaction($id)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM journal_trans WHERE job_id = :jobId AND trans_type_id = \'OUT\'')
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM journal_trans WHERE job_id = :jobId AND trans_type_id in(3,5)')
             ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
@@ -301,7 +301,7 @@ class Job extends \common\models\Job
     public function hasDebtNotification($id)
     {
         // สมมติว่ามีตาราง debt_notification หรือใช้จาก invoices ที่เป็น draft
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices WHERE job_id = :jobId AND status = \'draft\'')
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices WHERE job_id = :jobId AND status = 1')
             ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
@@ -314,7 +314,7 @@ class Job extends \common\models\Job
     public function hasBilling($id)
     {
         // สมมติว่าใช้จาก invoices ที่มีสถานะ pending หรือ sent
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices WHERE job_id = :jobId AND status IN (\'pending\', \'sent\')')
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices i LEFT JOIN billing_invoice_items b ON b.invoice_id = i.id LEFT JOIN quotation q ON q.id =i.quotation_id LEFT JOIN job j ON j.quotation_id = q.id  WHERE j.id = :jobId AND i.is_billed=1')
             ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
@@ -326,7 +326,7 @@ class Job extends \common\models\Job
      */
     public function hasTaxInvoice($id)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices WHERE job_id = :jobId AND invoice_type = \'TAX\'')
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices i LEFT JOIN quotation q ON q.id =i.quotation_id LEFT JOIN job j ON j.quotation_id = q.id  WHERE j.id = :jobId AND i.invoice_type = \'tax_invoice\'')
             ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
@@ -338,7 +338,7 @@ class Job extends \common\models\Job
      */
     public function hasReceipt($id)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices WHERE job_id = :jobId AND invoice_type = \'RECEIPT\'')
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices i LEFT JOIN quotation q ON q.id =i.quotation_id LEFT JOIN job j ON j.quotation_id = q.id WHERE j.id = :jobId AND i.invoice_type = \'receipt\'')
             ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
