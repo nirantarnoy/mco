@@ -276,7 +276,7 @@ class Job extends \common\models\Job
      */
     public function hasReceiveTransaction($id)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM journal_trans WHERE job_id = :jobId AND trans_type_id = \'IN\'')
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM journal_trans jt LEFT JOIN purch p ON p.id=jt.trans_ref_id LEFT JOIN job j ON j.id=p.job_id WHERE j.id = :jobId AND jt.trans_type_id = 1 AND jt.po_rec_status=1')
             ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
