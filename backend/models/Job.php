@@ -343,4 +343,19 @@ class Job extends \common\models\Job
             ->queryScalar();
         return $count > 0;
     }
+
+    /**
+     * ตรวจสอบว่ามีเงินสดย่อยหรือไม่
+     * @param integer $jobId
+     * @return boolean
+     */
+    public function hasPettyCash($jobId)
+    {
+        $sql = "SELECT COUNT(*) FROM petty_cash_voucher WHERE job_id = :jobId AND approve_status = 1";
+        $count = Yii::$app->db->createCommand($sql)
+            ->bindParam(':jobId', $jobId)
+            ->queryScalar();
+
+        return $count > 0;
+    }
 }

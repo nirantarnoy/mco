@@ -176,6 +176,60 @@ $this->params['breadcrumbs'][] = $this->title;
                                 },
                                 'contentOptions' => ['style' => 'width: 320px; text-align: center;'],
                             ],
+                            [
+                                'label' => 'ความคืบหน้า',
+                                'format' => 'raw',
+                                'value' => function ($model) {
+                                    // ตรวจสอบสถานะของแต่ละกิจกรรม
+                                    $activities = [
+                                        'ขอซื้อ' => $model->hasPurchaseRequest($model->id),
+                                        'สั่งซื้อ' => $model->hasPurchaseOrder($model->id),
+                                        'รับสินค้า' => $model->hasReceiveTransaction($model->id),
+                                        'เบิกสินค้า' => $model->hasWithdrawTransaction($model->id),
+                                        'เงินสดย่อย' => $model->hasPettyCash($model->id), // เพิ่มเงินสดย่อย
+                                        'แจ้งหนี้' => $model->hasDebtNotification($model->id),
+                                        'กำกับภาษี' => $model->hasTaxInvoice($model->id),
+                                        'ใบเสร็จ' => $model->hasReceipt($model->id),
+                                        'วางบิล' => $model->hasBilling($model->id),
+                                    ];
+
+                                    // คำนวณเปอร์เซ็นต์ความคืบหน้า
+                                    $totalActivities = count($activities);
+                                    $completedActivities = count(array_filter($activities));
+                                    $progressPercentage = ($completedActivities / $totalActivities) * 100;
+
+                                    // กำหนดสีของ progress bar
+                                    $progressColor = $progressPercentage == 100 ? 'success' : 'warning';
+
+                                    // สร้าง tooltip แสดงรายละเอียด
+                                    $tooltipContent = [];
+                                    foreach ($activities as $activityName => $hasActivity) {
+                                        $icon = $hasActivity ? '✓' : '✗';
+                                        $tooltipContent[] = $icon . ' ' . $activityName;
+                                    }
+                                    $tooltipText = implode("\n", $tooltipContent);
+
+                                    $output = '<div class="progress-container" data-toggle="tooltip" data-placement="top" data-html="true" title="' . Html::encode($tooltipText) . '">';
+                                    $output .= '<div class="progress" style="height: 25px; position: relative;">';
+                                    $output .= '<div class="progress-bar bg-' . $progressColor . ' progress-bar-striped" role="progressbar" style="width: ' . $progressPercentage . '%" aria-valuenow="' . $progressPercentage . '" aria-valuemin="0" aria-valuemax="100">';
+                                    $output .= '<span style="position: absolute; width: 100%; left: 0; top: 50%; transform: translateY(-50%); color: ' . ($progressPercentage > 50 ? 'white' : 'black') . '; font-weight: bold;">';
+                                    $output .= number_format($progressPercentage, 0) . '% (' . $completedActivities . '/' . $totalActivities . ')';
+                                    $output .= '</span>';
+                                    $output .= '</div>';
+                                    $output .= '</div>';
+
+                                    // แสดงรายการกิจกรรมขนาดเล็กด้านล่าง
+                                    $output .= '<div class="activity-mini-list mt-1" style="font-size: 0.7em; line-height: 1.2;">';
+
+                                    $output .= '</div>';
+
+                                    $output .= '</div>';
+
+                                    return $output;
+                                },
+                                'contentOptions' => ['style' => 'width: 150px; text-align: center;'],
+                                'headerOptions' => ['style' => 'text-align: center;'],
+                            ],
 
                             [
                                 'label' => 'มูลค่างาน',
@@ -371,7 +425,7 @@ $this->params['breadcrumbs'][] = $this->title;
         display: inline-block;
         padding: 2px 6px;
         border-radius: 12px;
-        font-size: 0.65em;
+        font-size: 0.75em;
         font-weight: 500;
         text-align: center;
         min-width: 35px;
@@ -397,6 +451,58 @@ $this->params['breadcrumbs'][] = $this->title;
         transform: scale(1.05);
         opacity: 0.9;
     }
+
+    /* สไตล์สำหรับ progress bar */
+    .progress-container {
+        width: 100%;
+    }
+
+    .progress {
+        background-color: #e9ecef;
+        border-radius: 0.25rem;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .progress-bar {
+        transition: width 0.6s ease;
+        position: relative;
+        animation: progress-bar-stripes 1s linear infinite;
+    }
+
+    @keyframes progress-bar-stripes {
+        from {
+            background-position: 1rem 0;
+        }
+        to {
+            background-position: 0 0;
+        }
+    }
+
+    .progress-bar-striped {
+        background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent);
+        background-size: 1rem 1rem;
+    }
+
+    .activity-mini-list {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 2px;
+    }
+
+    .activity-mini-list .badge {
+        display: inline-block;
+        min-width: 25px;
+        text-align: center;
+    }
+
+    /* Tooltip styling */
+    .tooltip-inner {
+        text-align: left;
+        max-width: 300px;
+        white-space: pre-line;
+    }
+
 
     @media (max-width: 1400px) {
         .activity-status-container {
@@ -434,6 +540,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <script>
     $(document).ready(function() {
+
+        // เปิดใช้งาน tooltip
+        $('[data-toggle="tooltip"]').tooltip({
+            html: true,
+            boundary: 'window'
+        });
         // เพิ่ม tooltip สำหรับปุ่มต่างๆ
         $('[title]').tooltip();
 
