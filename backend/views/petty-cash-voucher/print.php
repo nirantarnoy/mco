@@ -265,7 +265,9 @@ window.onload = function() {
 <div class="print-container">
     <!-- Company Header -->
     <div class="company-header">
-        <div class="company-logo">MCO</div>
+        <div class="logo">
+            <img src="../../backend/web/uploads/logo/mco_logo.png" class="logo-img" style="width: 32%;bottom: 5px;" alt="">
+        </div>
         <div class="company-name">M.C.O. COMPANY LIMITED</div>
         <div class="form-title">PETTY CASH VOUCHER</div>
     </div>
@@ -275,12 +277,12 @@ window.onload = function() {
         <div class="voucher-left">
             <div class="header-field">
                 <span class="header-label">NAME:</span>
-                <span><?= Html::encode($model->name) ?></span>
+                <span><?= Html::encode(\backend\models\Employee::findFullName($model->pay_for_emp_id)) ?></span>
             </div>
             <div class="header-field">
                 <span class="header-label">AMOUNT:</span>
                 <span><?= number_format($model->amount, 2) ?></span>
-                <span style="margin-left: 20px;">Paid For</span>
+<!--                <span style="margin-left: 20px;">Paid For</span>-->
             </div>
         </div>
         <div class="voucher-right">
