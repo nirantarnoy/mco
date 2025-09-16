@@ -110,7 +110,8 @@ class QuotationController extends Controller
                         // Save quotation lines
                         foreach ($quotationLines as $quotationLine) {
                             $quotationLine->quotation_id = $model->id;
-                            if (!$quotationLine->save()) {
+                            $quotationLine->status = 1;
+                            if (!$quotationLine->save(false)) {
                                 throw new \Exception('Failed to save quotation line');
                             }
                         }

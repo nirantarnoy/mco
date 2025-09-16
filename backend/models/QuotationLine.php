@@ -40,12 +40,13 @@ class QuotationLine extends ActiveRecord
     public function rules()
     {
         return [
-            [['quotation_id', 'product_id', 'status'], 'integer'],
+            [['quotation_id', 'product_id'], 'integer'],
             [['qty', 'line_price', 'line_total', 'discount_amount'], 'number'],
             [['product_name', 'note'], 'string', 'max' => 255],
             [['qty', 'line_price'], 'required'],
+            [[ 'status'],'safe'],
          //   [['quotation_id'], 'exist', 'skipOnError' => true, 'targetClass' => Quotation::class, 'targetAttribute' => ['quotation_id' => 'id']],
-          //  [['product_id'], 'exist', 'skipOnError' => true, 'targetClass' => Product::class, 'targetAttribute' => ['product_id' => 'id']],
+         //   [['product_id'], 'exist', 'skipOnError' => true, 'targetClass' => Product::class, 'targetAttribute' => ['product_id' => 'id']],
         ];
     }
 
