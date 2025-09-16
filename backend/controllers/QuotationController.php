@@ -86,9 +86,13 @@ class QuotationController extends Controller
             $valid = $model->validate();
 
             if (isset($_POST['QuotationLine'])) {
+//                echo "จำนวนแถวที่ส่งมา: " . count($_POST['QuotationLine']);
+//                var_dump($_POST['QuotationLine']);
+//                exit; // ใส่ไว้ชั่วคราวเพื่อดูข้อมูล
                 foreach ($_POST['QuotationLine'] as $index => $quotationLineData) {
                     $quotationLine = new QuotationLine();
-                    $quotationLine->load($quotationLineData, '');
+                 //   $quotationLine->load($quotationLineData, '');
+                    $quotationLine->setAttributes($quotationLineData);
                     $quotationLines[] = $quotationLine;
                     $valid = $quotationLine->validate() && $valid;
                 }
@@ -164,7 +168,8 @@ class QuotationController extends Controller
                         // Create new line
                         $quotationLine = new QuotationLine();
                     }
-                    $quotationLine->load($quotationLineData, '');
+                   // $quotationLine->load($quotationLineData, '');
+                    $quotationLine->setAttributes($quotationLineData);
                     $quotationLines[] = $quotationLine;
                     $valid = $quotationLine->validate() && $valid;
 
