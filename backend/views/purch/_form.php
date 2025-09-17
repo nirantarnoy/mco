@@ -355,15 +355,15 @@ function calculateGrandTotal() {
     var netAmount = afterDiscount + vat - tax_amount;
     
     $('#purchreq-total_amount').val(subtotal.toFixed(2));
-    $('#purchreq-vat_amount').val(vat.toFixed(2));
+    $('#purchreq-vat_amount').val(parseFloat(vat).toFixed(2));
     $('#purchreq-net_amount').val(netAmount.toFixed(2));
     
     // Update summary display
     $('#summary-subtotal').text(subtotal.toFixed(2));
     $('#summary-discount').text(discount.toFixed(2));
-    $('#summary-vat').text(vat.toFixed(2));
-    $('#summary-vat-amount').val(vat.toFixed(2));
-    $('#summary-tax').text(tax_amount.toFixed(2));
+    $('#summary-vat').text(parseFloat(vat).toFixed(2));
+    $('#summary-vat-amount').val(parseFloat(vat).toFixed(2));
+    $('#summary-tax').text(parseFloat(tax_amount).toFixed(2));
     $('#summary-net').text(netAmount.toFixed(2));
 }
 
@@ -712,13 +712,16 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                             <input type="number" min="0" step="any" id="summary-vat-amount" style="text-align: right;" class="form-control" name="purch_vat_amount" onchange="calculateGrandTotal3();" value="<?=$model->vat_amount?>">
                                             </span>
 <!--                                        </span> บาท-->
-                                        <span> บาท</span>
+<!--                                        <span> บาท</span>-->
                                     </div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-8">TAX <span class="tax-text"></span>:</div>
                                     <div class="col-4 text-end">
-                                        <span id="summary-tax" class="fw-bold">0.00</span> บาท
+<!--                                        <span id="summary-tax" class="fw-bold">0.00</span> บาท-->
+                                        <span>
+                                            <input type="number" min="0" step="any" id="summary-tax" style="text-align: right;" class="form-control" name="purch_tax_amount" onchange="calculateGrandTotal3();" value="<?=$model->whd_tax_amount?>">
+                                        </span>
                                     </div>
                                 </div>
                                 <hr>
@@ -917,7 +920,7 @@ function calculateGrandTotal2() {
     //     vat = afterDiscount * 0.07; // 7% VAT
     // }
     
-    var netAmount = afterDiscount + vat - tax_amount;
+    var netAmount = parseFloat(afterDiscount) + parseFloat(vat) - parseFloat(tax_amount);
     
     $('#purchreq-total_amount').val(subtotal.toFixed(2));
     $('#purchreq-vat_amount').val(vat.toFixed(2));
@@ -957,11 +960,18 @@ function calculateGrandTotal3() {
     discount = discount + discount_amount;
     
     var afterDiscount = subtotal - discount;
-    var tax_amount = 0;
     
-    if(afterDiscount > 0){
-       tax_amount = afterDiscount * (tax_per / 100);
+    // var tax_amount = 0;
+    //
+    // if(afterDiscount > 0){
+    //    tax_amount = afterDiscount * (tax_per / 100);
+    // }
+    
+    var tax_amount = $("#summary-tax").val();
+    if(parseFloat(tax_amount) === 0 || tax_amount ==null){
+       tax_amount = 0;
     }
+   
     
     var after_save_vat_amount = $("#after-save-vat-amount").val();
     var vat = parseFloat($("#summary-vat-amount").val());
@@ -972,21 +982,21 @@ function calculateGrandTotal3() {
     //     vat = afterDiscount * 0.07; // 7% VAT
     // }
     
-    var netAmount = afterDiscount + vat - tax_amount;
-    
+    var netAmount = parseFloat(afterDiscount) + parseFloat(vat) - parseFloat(tax_amount);
+    // alert(netAmount);
     $('#purchreq-total_amount').val(subtotal.toFixed(2));
-    $('#purchreq-vat_amount').val(vat.toFixed(2));
+    $('#purchreq-vat_amount').val(parseFloat(vat).toFixed(2));
     $('#purchreq-net_amount').val(netAmount.toFixed(2));
     
-    $('#purch-tax_amount').val(tax_amount.toFixed(2));
+    $('#purch-tax_amount').val(parseFloat(tax_amount).toFixed(2));
     
     // Update summary display
     $('#summary-subtotal').text(subtotal.toFixed(2));
     $('#summary-discount').text(discount.toFixed(2));
-    $('#summary-vat').text(vat.toFixed(2));
-    $('#summary-vat-amount').val(vat.toFixed(2));
-    $('#summary-tax').text(tax_amount.toFixed(2));
-    $('#summary-net').text(netAmount.toFixed(2));
+    $('#summary-vat').text(parseFloat(vat).toFixed(2));
+    $('#summary-vat-amount').val(parseFloat(vat).toFixed(2));
+    $('#summary-tax').val(parseFloat(tax_amount).toFixed(2));
+    $('#summary-net').text(parseFloat(netAmount).toFixed(2));
 }
 JS;
 $this->registerJs($script, static::POS_END);

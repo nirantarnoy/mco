@@ -198,6 +198,7 @@ class PurchController extends Controller
 
         if ($model->load(Yii::$app->request->post())) {
             $custom_vat_amount = \Yii::$app->request->post('purch_vat_amount');
+            $customer_tax_amount = \Yii::$app->request->post('purch_tax_amount');
             $purchLines = [];
             $valid = $model->validate();
 
@@ -278,7 +279,12 @@ class PurchController extends Controller
                         // คำนวน WHT
 
                         if($model->whd_tax_per > 0){
-                            $tax_amount = ($afterDiscountAmount * $model->whd_tax_per) / 100;
+                            if($customer_tax_amount !=null){
+                                $tax_amount = $customer_tax_amount;
+                            }else{
+                                $tax_amount = ($afterDiscountAmount * $model->whd_tax_per) / 100;
+                            }
+
                         }
 
                         // คำนวณยอดสุทธิ
