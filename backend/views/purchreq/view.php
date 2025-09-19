@@ -290,6 +290,11 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
                             'headerOptions' => ['style' => 'width: 200px;'],
                         ],
                         [
+                            'attribute' => 'doc_ref_no',
+                            'label' => 'อ้างอิง',
+                            'headerOptions' => ['style' => 'width: 100px;'],
+                        ],
+                        [
                             'attribute' => 'qty',
                             'label' => 'จำนวน',
                             'headerOptions' => ['style' => 'width: 100px; text-align: center;'],

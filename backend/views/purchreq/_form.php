@@ -589,6 +589,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                     'formFields' => [
                         'product_id',
                         'product_name',
+                        'doc_ref_no',
                         'qty',
                         'line_price',
                         'line_total',
@@ -601,6 +602,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                         <tr>
                             <th style="width: 50px;">ลำดับ</th>
                             <th style="width: 200px;">ชื่อสินค้า</th>
+                            <th style="width: 100px;">เลขอ้างอิง</th>
                             <th style="width: 100px;">จำนวน</th>
                             <th style="width: 100px;">หน่วยนับ</th>
                             <th style="width: 120px;">ราคาต่อหน่วย</th>
@@ -641,6 +643,9 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 
                                         <div class="autocomplete-dropdown" data-index="<?= $index ?>"></div>
                                     </div>
+                                </td>
+                                <td>
+                                    <?=$form->field($purchReqLine,"[{$index}]doc_ref_no")->label(false);?>
                                 </td>
                                 <td>
                                     <?= $form->field($purchReqLine, "[{$index}]qty")->textInput([

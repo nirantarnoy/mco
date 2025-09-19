@@ -443,7 +443,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 
     <div class="purch-form">
         <input type="hidden" id="purch-req-is-vat" value="<?= $model->isNewRecord ? '' : $model->is_vat ?>">
-        <input type="hidden" id="after-save-vat-amount" value="<?=$model->vat_amount?>">
+        <input type="hidden" id="after-save-vat-amount" value="<?= $model->vat_amount ?>">
         <?php $form = ActiveForm::begin([
             'id' => 'purch-form',
             'options' => ['class' => 'form-horizontal', 'enctype' => 'multipart/form-data'],
@@ -569,6 +569,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                     'formFields' => [
                         'product_id',
                         'product_name',
+                        'doc_ref_no',
 //                    'product_description',
                         'qty',
                         'line_price',
@@ -583,6 +584,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                         <tr>
                             <th style="width: 50px;">ลำดับ</th>
                             <th style="width: 200px;">ชื่อสินค้า</th>
+                            <th style="width: 100px;">อ้างอิง</th>
                             <th style="width: 100px;">จำนวน</th>
                             <th style="width: 120px;">ราคาต่อหน่วย</th>
                             <th style="width: 120px;">ราคารวม</th>
@@ -622,6 +624,9 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 
                                         <div class="autocomplete-dropdown" data-index="<?= $index ?>"></div>
                                     </div>
+                                </td>
+                                <td>
+                                    <?= $form->field($purchLine, "[{$index}]doc_ref_no")->label(false); ?>
                                 </td>
                                 <td>
                                     <?= $form->field($purchLine, "[{$index}]qty")->textInput([
@@ -707,20 +712,26 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <div class="row mb-2">
                                     <div class="col-8">VAT (7%):</div>
                                     <div class="col-4 text-end">
-<!--                                        <span id="summary-vat" class="fw-bold">-->
+                                        <!--                                        <span id="summary-vat" class="fw-bold">-->
                                         <span>
-                                            <input type="number" min="0" step="any" id="summary-vat-amount" style="text-align: right;" class="form-control" name="purch_vat_amount" onchange="calculateGrandTotal3();" value="<?=$model->vat_amount?>">
+                                            <input type="number" min="0" step="any" id="summary-vat-amount"
+                                                   style="text-align: right;" class="form-control"
+                                                   name="purch_vat_amount" onchange="calculateGrandTotal3();"
+                                                   value="<?= $model->vat_amount ?>">
                                             </span>
-<!--                                        </span> บาท-->
-<!--                                        <span> บาท</span>-->
+                                        <!--                                        </span> บาท-->
+                                        <!--                                        <span> บาท</span>-->
                                     </div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-8">TAX <span class="tax-text"></span>:</div>
                                     <div class="col-4 text-end">
-<!--                                        <span id="summary-tax" class="fw-bold">0.00</span> บาท-->
+                                        <!--                                        <span id="summary-tax" class="fw-bold">0.00</span> บาท-->
                                         <span>
-                                            <input type="number" min="0" step="any" id="summary-tax" style="text-align: right;" class="form-control" name="purch_tax_amount" onchange="calculateGrandTotal3();" value="<?=$model->whd_tax_amount?>">
+                                            <input type="number" min="0" step="any" id="summary-tax"
+                                                   style="text-align: right;" class="form-control"
+                                                   name="purch_tax_amount" onchange="calculateGrandTotal3();"
+                                                   value="<?= $model->whd_tax_amount ?>">
                                         </span>
                                     </div>
                                 </div>
@@ -739,7 +750,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
         </div>
 
         <div class="form-group mt-3">
-            <br />
+            <br/>
             <div class="row">
                 <div class="col-lg-4">
                     <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
@@ -774,14 +785,14 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
             </div>
         </div>
         <div class="d-flex justify-content-between">
-            <?php if ( $model->status != 3 || $model->isNewRecord): ?>
+            <?php if ($model->status != 3 || $model->isNewRecord): ?>
                 <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
                     'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
                 ]) ?>
             <?php endif; ?>
             <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
         </div>
-        <br />
+        <br/>
 
         <?php ActiveForm::end(); ?>
 
@@ -830,25 +841,25 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
         </div>
         <br/>
         <?php if (!$model->isNewRecord): ?>
-<!--            <form action="--><?php //= Url::to(['purch/add-doc-file'], true) ?><!--" method="post" enctype="multipart/form-data">-->
-<!--                <input type="hidden" name="id" value="--><?php //= $model->id ?><!--">-->
-<!--                <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">-->
-<!--                    <div class="row">-->
-<!--                        <div class="col-lg-12">-->
-<!--                            <label for="">เอกสารแนบ</label>-->
-<!--                            <input type="file" name="file_doc" multiple>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                    <br/>-->
-<!--                    <div class="row">-->
-<!--                        <div class="col-lg-12">-->
-<!--                            <button class="btn btn-info">-->
-<!--                                <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ-->
-<!--                            </button>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--            </form>-->
+            <!--            <form action="--><?php //= Url::to(['purch/add-doc-file'], true) ?><!--" method="post" enctype="multipart/form-data">-->
+            <!--                <input type="hidden" name="id" value="--><?php //= $model->id ?><!--">-->
+            <!--                <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">-->
+            <!--                    <div class="row">-->
+            <!--                        <div class="col-lg-12">-->
+            <!--                            <label for="">เอกสารแนบ</label>-->
+            <!--                            <input type="file" name="file_doc" multiple>-->
+            <!--                        </div>-->
+            <!--                    </div>-->
+            <!--                    <br/>-->
+            <!--                    <div class="row">-->
+            <!--                        <div class="col-lg-12">-->
+            <!--                            <button class="btn btn-info">-->
+            <!--                                <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ-->
+            <!--                            </button>-->
+            <!--                        </div>-->
+            <!--                    </div>-->
+            <!--                </div>-->
+            <!--            </form>-->
         <?php endif; ?>
         <form id="form-delete-doc-file" action="<?= Url::to(['purch/delete-doc-file'], true) ?>" method="post">
             <input type="hidden" name="id" value="<?= $model->id ?>">

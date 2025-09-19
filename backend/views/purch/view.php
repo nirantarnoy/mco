@@ -289,6 +289,11 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                             },
                         ],
                         [
+                            'attribute' => 'doc_ref_no',
+                            'label' => 'อ้างอิง',
+                            'headerOptions' => ['style' => 'width: 100px;'],
+                        ],
+                        [
                             'attribute' => 'qty',
                             'label' => 'จำนวน',
                             'headerOptions' => ['style' => 'width: 100px; text-align: center;'],

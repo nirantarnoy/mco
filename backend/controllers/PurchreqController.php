@@ -701,6 +701,7 @@ class PurchreqController extends Controller
                     $purchLine->unit_id = $reqLine->unit_id;
                     $purchLine->status = \backend\models\PurchLine::STATUS_ACTIVE;
                     $purchLine->note = $reqLine->note . ($reqLine->product_name ? ' - ' . $reqLine->product_name : '');
+                    $purchLine->doc_ref_no = $reqLine->doc_ref_no;
 
                     if (!$purchLine->save(false)) {
                         throw new \Exception('ไม่สามารถสร้างรายการสินค้าได้: ' . implode(', ', $purchLine->getFirstErrors()));
