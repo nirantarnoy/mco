@@ -285,6 +285,10 @@ class PurchController extends Controller
                                 $tax_amount = ($afterDiscountAmount * $model->whd_tax_per) / 100;
                             }
 
+                        }else{
+                            if($customer_tax_amount !=null){
+                                $tax_amount = $customer_tax_amount;
+                            }
                         }
 
                         // คำนวณยอดสุทธิ
