@@ -317,6 +317,7 @@ class PettyCashVoucherController extends Controller
                 'ac_code' => isset($detailData['ac_code']) ? trim($detailData['ac_code']) : '',
                 'detail_date' => !empty($detailData['detail_date']) ? $detailData['detail_date'] : null,
                 'detail' => isset($detailData['detail']) ? trim($detailData['detail']) : '',
+                'job_ref_id' => isset($detailData['job_ref_id']) ? trim($detailData['job_ref_id']) : 0,
                 'amount' => !empty($detailData['amount']) ? (float)$detailData['amount'] : 0.00,
                 'vat' => !empty($detailData['vat']) ? (float)$detailData['vat'] : 0.00,
                 'vat_amount' => !empty($detailData['vat_amount']) ? (float)$detailData['vat_amount'] : 0.00,
@@ -445,5 +446,49 @@ class PettyCashVoucherController extends Controller
                 }
             }
         }
+    }
+
+    public function actionGetJobInfo()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $request = \Yii::$app->request;
+
+        // ถ้าขอข้อมูลสินค้าทั้งหมดสำหรับ autocomplete
+        if ($request->get('action') === 'get-all-jobs') {
+            $jobs = \backend\models\Job::find()
+                ->where(['status' => 1]) // approved
+                ->all();
+
+            $result = [];
+            foreach ($jobs as $job) {
+                $result[] = [
+                    'id' => $job->id,
+                    'job_no' => $job->job_no,
+                    'quotation_id' => $job->quotation_id ?? '',
+                    'job_amount' => $job->job_amount ?? 0,
+                    'display' => $job->job_no,// $product->code . ($product->name ? ' (' . $product->name . ')' : '')
+                ];
+            }
+
+            return $result;
+        }
+
+        // ถ้าขอข้อมูลสินค้าเฉพาะ ID (สำหรับการเลือกสินค้า)
+        $id = $request->get('id');
+        if ($id) {
+            $job = \backend\models\Job::findOne($id);
+            if ($job) {
+                return [
+                    'id' => $job->id,
+                    'job_no' => $job->job_no,
+                    'quotation_id' => $job->quotation_id ?? '',
+                    'job_amount' => $job->job_amount ?? 0,
+                    'display' => $job->job_no,// $product->code . ($product->name ? ' (' . $product->name . ')' : '')
+                ];
+            }
+        }
+
+        return ['error' => 'Product not found'];
     }
 }

@@ -170,9 +170,10 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                         <thead class="table-light">
                         <tr>
                             <th width="5%">#</th>
-                            <th width="10%">A/C CODE</th>
+                            <th width="10%">สำหรับเลขที่บิล</th>
                             <th width="10%">DATE</th>
                             <th width="30%">DETAIL</th>
+                            <th width="10%">JOB</th>
                             <th width="12%">AMOUNT</th>
                             <th width="8%">VAT</th>
                             <th width="10%">VAT จำนวน</th>
@@ -191,6 +192,7 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                                     <?= $detail->detail_date ? Yii::$app->formatter->asDate($detail->detail_date, 'dd/MM/yyyy') : '-' ?>
                                 </td>
                                 <td><?= Html::encode($detail->detail) ?></td>
+                                <td><?= Html::encode(\backend\models\Job::findJobNo($detail->job_ref_id)) ?></td>
                                 <td class="text-right"><?= number_format($detail->amount, 2) ?></td>
                                 <td class="text-right"><?= number_format($detail->vat, 2) ?></td>
                                 <td class="text-right"><?= number_format($detail->vat_amount, 2) ?></td>

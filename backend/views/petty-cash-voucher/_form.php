@@ -9,7 +9,103 @@ use kartik\date\DatePicker;
 /* @var $model backend\models\PettyCashVoucher */
 /* @var $details backend\models\PettyCashDetail[] */
 /* @var $form yii\widgets\ActiveForm */
+// CSS สำหรับ autocomplete
+$autocompleteCSS = <<<CSS
+.autocomplete-dropdown {
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
 
+.autocomplete-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+}
+
+.autocomplete-item:hover {
+    background-color: #f5f5f5;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item.highlighted {
+    background-color: #007bff;
+    color: white;
+}
+
+.product-code {
+    color: #666;
+    font-size: 12px;
+}
+
+.product-field-container {
+    position: relative;
+}
+
+.autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    background: white;
+    border: 1px solid #ccc;
+    max-height: 200px;
+    overflow-y: auto;
+    width: 100%;
+    display: none;
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.item-number {
+    font-weight: bold;
+    color: #6c757d;
+}
+
+.dynamicform_wrapper .btn-success {
+    margin-right: 5px;
+}
+
+.table-responsive {
+    overflow: visible !important; /* แทน auto */
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+}
+
+.table-responsive .table {
+    overflow: visible !important;
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+CSS;
+
+$this->registerCss($autocompleteCSS);
+
+// Register Font Awesome
+$this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css');
 $this->registerJs("
 // Function to calculate row total
 function calculateRowTotal(row) {
@@ -33,48 +129,48 @@ function calculateGrandTotal() {
     $('#pettycashvoucher-amount').val(grandTotal.toFixed(2));
 }
 
-// Add new row
-function addDetailRow() {
-    var rowIndex = $('#details-table tbody tr').length;
-    
-    var newRowHtml = `
-    <tr>
-        <td>
-            <input type=\"text\" name=\"PettyCashDetail[` + rowIndex + `][ac_code]\" class=\"form-control form-control-sm\" placeholder=\"รหัสบัญชี\" maxlength=\"50\">
-        </td>
-        <td>
-            <input type=\"date\" name=\"PettyCashDetail[` + rowIndex + `][detail_date]\" class=\"form-control form-control-sm\">
-        </td>
-        <td>
-            <textarea name=\"PettyCashDetail[` + rowIndex + `][detail]\" class=\"form-control form-control-sm\" rows=\"2\" placeholder=\"รายละเอียดการจ่าย\"></textarea>
-        </td>
-        <td>
-            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][amount]\" class=\"form-control form-control-sm amount-input text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
-        </td>
-        <td>
-            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][vat]\" class=\"form-control form-control-sm text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
-        </td>
-        <td>
-            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][vat_amount]\" class=\"form-control form-control-sm vat-amount-input text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
-        </td>
-        <td>
-            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][wht]\" class=\"form-control form-control-sm wht-input text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
-        </td>
-        <td>
-            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][other]\" class=\"form-control form-control-sm other-input text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
-        </td>
-        <td>
-            <input type=\"text\" name=\"PettyCashDetail[` + rowIndex + `][total]\" class=\"form-control form-control-sm total-input text-right\" readonly style=\"background-color: #f8f9fa;\" value=\"0.00\">
-        </td>
-        <td class=\"text-center\">
-            <button type=\"button\" class=\"btn btn-sm btn-danger btn-remove-row\" title=\"ลบรายการ\">
-                <i class=\"fas fa-trash\"></i>
-            </button>
-        </td>
-    </tr>`;
-    
-    $('#details-table tbody').append(newRowHtml);
-}
+//// Add new row
+//function addDetailRow() {
+//    var rowIndex = $('#details-table tbody tr').length;
+//    
+//    var newRowHtml = `
+//    <tr>
+//        <td>
+//            <input type=\"text\" name=\"PettyCashDetail[` + rowIndex + `][ac_code]\" class=\"form-control form-control-sm\" placeholder=\"รหัสบัญชี\" maxlength=\"50\">
+//        </td>
+//        <td>
+//            <input type=\"date\" name=\"PettyCashDetail[` + rowIndex + `][detail_date]\" class=\"form-control form-control-sm\">
+//        </td>
+//        <td>
+//            <textarea name=\"PettyCashDetail[` + rowIndex + `][detail]\" class=\"form-control form-control-sm\" rows=\"2\" placeholder=\"รายละเอียดการจ่าย\"></textarea>
+//        </td>
+//        <td>
+//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][amount]\" class=\"form-control form-control-sm amount-input text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
+//        </td>
+//        <td>
+//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][vat]\" class=\"form-control form-control-sm text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
+//        </td>
+//        <td>
+//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][vat_amount]\" class=\"form-control form-control-sm vat-amount-input text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
+//        </td>
+//        <td>
+//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][wht]\" class=\"form-control form-control-sm wht-input text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
+//        </td>
+//        <td>
+//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][other]\" class=\"form-control form-control-sm other-input text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
+//        </td>
+//        <td>
+//            <input type=\"text\" name=\"PettyCashDetail[` + rowIndex + `][total]\" class=\"form-control form-control-sm total-input text-right\" readonly style=\"background-color: #f8f9fa;\" value=\"0.00\">
+//        </td>
+//        <td class=\"text-center\">
+//            <button type=\"button\" class=\"btn btn-sm btn-danger btn-remove-row\" title=\"ลบรายการ\">
+//                <i class=\"fas fa-trash\"></i>
+//            </button>
+//        </td>
+//    </tr>`;
+//    
+//    $('#details-table tbody').append(newRowHtml);
+//}
 
 // Remove row
 function removeDetailRow(button) {
@@ -291,9 +387,10 @@ $(document).ready(function() {
                     <table id="details-table" class="table table-bordered table-sm mb-0">
                         <thead class="table-light">
                         <tr>
-                            <th width="10%">A/C CODE</th>
+                            <th width="10%">สำหรับเลขที่บิล</th>
                             <th width="10%">DATE</th>
                             <th width="25%">DETAIL</th>
+                            <th width="10%">ใบงาน</th>
                             <th width="12%">AMOUNT</th>
                             <th width="8%">VAT</th>
                             <th width="10%">VAT จำนวน</th>
@@ -323,6 +420,19 @@ $(document).ready(function() {
                                         'rows' => 2,
                                         'placeholder' => 'รายละเอียด'
                                     ]) ?>
+                                </td>
+                                <td>
+                                    <?= Html::textInput("PettyCashDetail[{$index}][job_ref_detail]", \backend\models\Job::findJobNo($detail->job_ref_id), [
+                                        'class' => 'form-control form-control-sm job-autocomplete',
+                                        'placeholder' => 'ใบงาน',
+                                        'data-index' => $index,
+                                        'autocomplete'=>'off',
+                                    ]) ?>
+                                    <?= Html::hiddenInput("PettyCashDetail[{$index}][job_ref_id]", $detail->job_ref_id, [
+                                        'class' => 'job-id-hidden',
+                                        'data-index' => $index
+                                    ]) ?>
+                                    <div class="autocomplete-dropdown" data-index="<?= $index ?>"></div>
                                 </td>
                                 <td>
                                     <?= Html::textInput("PettyCashDetail[{$index}][amount]", $detail->amount, [
@@ -567,7 +677,312 @@ $(document).ready(function() {
         <?php endif; ?>
     </div>
 <?php
+// URL สำหรับ AJAX
+$ajax_url = Url::to(['get-job-info']);
 $script = <<< JS
+// ตัวแปรเก็บข้อมูลสินค้า
+var productsData = [];
+var isProductsLoaded = false;
+
+// Function to add new row (แก้ไขในส่วนนี้)
+function addDetailRow() {
+    var rowIndex = $('#details-table tbody tr').length;
+    
+    var newRowHtml = `
+    <tr>
+        <td>
+            <input type="text" name="PettyCashDetail[` + rowIndex + `][ac_code]" class="form-control form-control-sm" placeholder="รหัสบัญชี" maxlength="50">
+        </td>
+        <td>
+            <input type="date" name="PettyCashDetail[` + rowIndex + `][detail_date]" class="form-control form-control-sm">
+        </td>
+        <td>
+            <textarea name="PettyCashDetail[` + rowIndex + `][detail]" class="form-control form-control-sm" rows="2" placeholder="รายละเอียดการจ่าย"></textarea>
+        </td>
+        <td>
+            <div class="product-field-container">
+                <input type="text" name="PettyCashDetail[` + rowIndex + `][job_ref_id]" class="form-control form-control-sm job-autocomplete" data-index="` + rowIndex + `" placeholder="ใบงาน">
+                <div class="autocomplete-dropdown" data-index="` + rowIndex + `"></div>
+            </div>
+        </td>
+        <td>
+            <input type="number" name="PettyCashDetail[` + rowIndex + `][amount]" class="form-control form-control-sm amount-input text-right" step="0.01" min="0" placeholder="0.00" value="0.00">
+        </td>
+        <td>
+            <input type="number" name="PettyCashDetail[` + rowIndex + `][vat]" class="form-control form-control-sm text-right" step="0.01" min="0" placeholder="0.00" value="0.00">
+        </td>
+        <td>
+            <input type="number" name="PettyCashDetail[` + rowIndex + `][vat_amount]" class="form-control form-control-sm vat-amount-input text-right" step="0.01" min="0" placeholder="0.00" value="0.00">
+        </td>
+        <td>
+            <input type="number" name="PettyCashDetail[` + rowIndex + `][wht]" class="form-control form-control-sm wht-input text-right" step="0.01" min="0" placeholder="0.00" value="0.00">
+        </td>
+        <td>
+            <input type="number" name="PettyCashDetail[` + rowIndex + `][other]" class="form-control form-control-sm other-input text-right" step="0.01" min="0" placeholder="0.00" value="0.00">
+        </td>
+        <td>
+            <input type="text" name="PettyCashDetail[` + rowIndex + `][total]" class="form-control form-control-sm total-input text-right" readonly style="background-color: #f8f9fa;" value="0.00">
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-danger btn-remove-row" title="ลบรายการ">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    </tr>`;
+    
+    $('#details-table tbody').append(newRowHtml);
+}
+// ฟังก์ชันโหลดข้อมูลสินค้า
+function loadProductsData() {
+    if (isProductsLoaded) return;
+    $.ajax({
+        url: '$ajax_url',
+        type: 'GET',
+        data: { action: 'get-all-jobs' },
+        dataType: 'json',
+        success: function(data) {
+            productsData = data;
+            isProductsLoaded = true;
+            console.log('Loading data is ',productsData);
+        },
+        error: function() {
+            console.log('Error loading jobs data');
+            productsData = [];
+        }
+    });
+}
+
+// ฟังก์ชันค้นหาสินค้า
+function searchProducts(query) {
+    if (!query || query.length < 1) return [];
+    
+    query = query.toLowerCase();
+    return productsData.filter(function(product) {
+        return product.job_no.toLowerCase().includes(query) || 
+               product.display.toLowerCase().includes(query);
+    }).slice(0, 10);
+}
+
+// ฟังก์ชันแสดงผลลัพธ์ (แก้ไขเล็กน้อย)
+function showAutocompleteResults(input, results) {
+    var index = input.attr('data-index') || input.closest('tr').index();
+    var dropdown = input.siblings('.autocomplete-dropdown');
+    
+    // ถ้าไม่เจอ dropdown ที่เป็น sibling ให้หาจาก data-index
+    if (dropdown.length === 0) {
+        dropdown = $('.autocomplete-dropdown[data-index="' + index + '"]');
+    }
+    
+    dropdown.empty();
+    
+    if (results.length === 0) {
+        dropdown.hide();
+        return;
+    }
+    
+    results.forEach(function(product) {
+        var item = $('<div class="autocomplete-item">')
+            .html('<div>' + product.job_no + '</div><div class="product-code">' + product.display + '</div>')
+            .data('product', product);
+        dropdown.append(item);
+    });
+    
+    dropdown.show();
+    console.log('Showing dropdown with', results.length, 'results'); // Debug log
+}
+
+// ฟังก์ชันซ่อน dropdown
+function hideAutocomplete(index) {
+    setTimeout(function() {
+        $('.autocomplete-dropdown[data-index="' + index + '"]').hide();
+    }, 200);
+}
+
+// แก้ไขส่วนของ existing rows เพื่อให้มี data-index
+$(document).ready(function() {
+    // เพิ่ม data-index ให้กับแถวที่มีอยู่แล้ว
+    $('#details-table tbody tr').each(function(index) {
+        $(this).find('.job-autocomplete').attr('data-index', index);
+        $(this).find('.autocomplete-dropdown').attr('data-index', index);
+    });
+    
+    // โหลดข้อมูลสินค้าตอนเริ่มต้น
+    loadProductsData();
+    
+    // Event สำหรับ autocomplete
+    $(document).on('input', '.job-autocomplete', function() {
+        var input = $(this);
+        var query = input.val();
+        
+        console.log('Input query:', query); // Debug log
+        
+        if (!isProductsLoaded) {
+            console.log('Products not loaded yet'); // Debug log
+            loadProductsData();
+            return;
+        }
+        
+        var results = searchProducts(query);
+        console.log('Search results:', results); // Debug log
+        showAutocompleteResults(input, results);
+    });
+    
+    $(document).on('focus', '.job-autocomplete', function() {
+        var input = $(this);
+        var query = input.val();
+       
+        if (!isProductsLoaded) {
+            loadProductsData();
+            return;
+        }
+       
+        if (query) {
+            var results = searchProducts(query);
+            showAutocompleteResults(input, results);
+        }
+    });
+    
+    $(document).on('blur', '.job-autocomplete', function() {
+        var input = $(this);
+        setTimeout(function() {
+            input.siblings('.autocomplete-dropdown').hide();
+        }, 200);
+    });
+    
+    $(document).on('click', '.autocomplete-item', function() {
+        var product = $(this).data('product');
+        var dropdown = $(this).closest('.autocomplete-dropdown');
+        var input = dropdown.siblings('.job-autocomplete');
+        selectProduct(input, product);
+    });
+    
+    // Event navigation ด้วย keyboard
+    $(document).on('keydown', '.job-autocomplete', function(e) {
+        var input = $(this);
+        var dropdown = input.siblings('.autocomplete-dropdown');
+        var items = dropdown.find('.autocomplete-item');
+        var highlighted = items.filter('.highlighted');
+        
+        if (e.keyCode === 40) { // Arrow Down
+            e.preventDefault();
+            if (highlighted.length === 0) {
+                items.first().addClass('highlighted');
+            } else {
+                highlighted.removeClass('highlighted');
+                var next = highlighted.next('.autocomplete-item');
+                if (next.length) {
+                    next.addClass('highlighted');
+                } else {
+                    items.first().addClass('highlighted');
+                }
+            }
+        } else if (e.keyCode === 38) { // Arrow Up
+            e.preventDefault();
+            if (highlighted.length === 0) {
+                items.last().addClass('highlighted');
+            } else {
+                highlighted.removeClass('highlighted');
+                var prev = highlighted.prev('.autocomplete-item');
+                if (prev.length) {
+                    prev.addClass('highlighted');
+                } else {
+                    items.last().addClass('highlighted');
+                }
+            }
+        } else if (e.keyCode === 13) { // Enter
+            e.preventDefault();
+            if (highlighted.length) {
+                var product = highlighted.data('product');
+                selectProduct(input, product);
+            }
+        } else if (e.keyCode === 27) { // Escape
+            dropdown.hide();
+        }
+    });
+});
+
+// // แก้ไขฟังก์ชันเลือกสินค้า
+// function selectProduct(input, product) {
+//     // อัพเดตค่า
+//     input.val(product.display);
+//    
+//     // ซ่อน dropdown
+//     input.siblings('.autocomplete-dropdown').hide();
+//    
+//     // คำนวณยอดรวม (ถ้ามี)
+//     // calculateLineTotal(index);
+// }
+// ฟังก์ชันเลือกสินค้า - แสดง job_no แต่เก็บ id
+function selectProduct(input, product) {
+    var index = input.attr('data-index');
+    
+    // แสดง job_no ใน input (แทนที่จะเป็น display)
+    input.val(product.job_no);
+    
+    // บันทึก product.id ใน hidden input
+    var hiddenInput = input.siblings('.job-id-hidden');
+    if (hiddenInput.length === 0) {
+        hiddenInput = $('.job-id-hidden[data-index="' + index + '"]');
+    }
+    hiddenInput.val(product.id);
+    
+    // อัพเดตจำนวนเงิน (ถ้ามีข้อมูล)
+    if (product.job_amount) {
+        var amountInput = input.closest('tr').find('.amount-input');
+        amountInput.val(parseFloat(product.job_amount).toFixed(2));
+        
+        // คำนวณยอดรวมใหม่
+      //  calculateRowTotal(input.closest('tr'));
+    }
+    
+    // ซ่อน dropdown
+    input.siblings('.autocomplete-dropdown').hide();
+    
+    console.log('Selected job:', product.job_no, 'ID:', product.id, 'Display in input:', product.job_no);
+}
+
+// ฟังก์ชันตรวจสอบการเลือก job โดยใช้ job_no
+function validateJobSelection(input) {
+    var hiddenInput = input.siblings('.job-id-hidden');
+    if (hiddenInput.length === 0) {
+        var index = input.attr('data-index');
+        hiddenInput = $('.job-id-hidden[data-index="' + index + '"]');
+    }
+    
+    var displayValue = input.val(); // ตอนนี้เป็น job_no
+    var jobId = hiddenInput.val();
+    
+    // ถ้ามี job_no แต่ไม่มี job_id แสดงว่าพิมพ์เอง ไม่ได้เลือกจาก dropdown
+    if (displayValue && !jobId) {
+        // ลองหา job ที่ตรงกับ job_no ที่พิมพ์
+        var matchedJob = productsData.find(function(product) {
+            return product.job_no.toLowerCase() === displayValue.toLowerCase();
+        });
+        
+        if (matchedJob) {
+            // ถ้าเจอ job ที่ตรงกัน ให้ set id อัตโนมัติ
+            hiddenInput.val(matchedJob.id);
+            console.log('Auto-matched job:', matchedJob.job_no, 'ID:', matchedJob.id);
+            return true;
+        } else {
+            // ถ้าไม่เจอ ให้แสดงเตือน
+            console.warn('Job "' + displayValue + '" not found. Please select from dropdown.');
+            
+            // อาจจะเปลี่ยนสีกรอบเป็นแดงเพื่อแสดงข้อผิดพลาด
+            input.addClass('is-invalid');
+            
+            // หรือล้างค่า
+            // input.val('');
+            // hiddenInput.val('');
+            
+            return false;
+        }
+    }
+    
+    // ถ้าทั้งคู่ว่าง หรือทั้งคู่มีค่า ถือว่าถูกต้อง
+    input.removeClass('is-invalid');
+    return true;
+}
 function delete_doc(e,typeid){
     var file_name = e.attr('data-var');
     if(file_name != null){

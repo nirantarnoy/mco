@@ -41,7 +41,7 @@ class PettyCashDetail extends ActiveRecord
         return [
             [['voucher_id'], 'required'],
             [['voucher_id', 'sort_order'], 'integer'],
-            [['detail_date'], 'safe'],
+            [['detail_date','job_ref_id'], 'safe'],
             [['detail'], 'string'],
             [['amount', 'vat', 'vat_amount', 'wht', 'other', 'total'], 'number', 'min' => 0],
             [['ac_code'], 'string', 'max' => 50],
