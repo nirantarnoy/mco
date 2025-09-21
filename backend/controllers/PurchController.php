@@ -261,6 +261,8 @@ class PurchController extends Controller
                             $discountAmount = $model->discount_amount;
                         }
 
+                        if()
+
                         // คำนวณยอดหลังหักส่วนลด
                         $afterDiscountAmount = $totalAmount - $discountAmount;
 

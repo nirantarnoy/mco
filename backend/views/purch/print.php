@@ -566,7 +566,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                 </tr>
                 <tr>
                     <td class="summary-label">DISCOUNT</td>
-                    <td class="number-cell"><?= number_format($purchase->discount_total_amount, 2) ?></td>
+                    <td class="number-cell"><?= number_format($purchase->discount_total_amount == 0 ?$purchase->discount_amount : $purchase->discount_total_amount, 2) ?></td>
                 </tr>
                 <tr>
                     <td class="summary-label">NET AMOUNT</td>
