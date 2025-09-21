@@ -226,7 +226,7 @@ class Purch extends ActiveRecord
         if($this->discount_per >0){
             $discount = $total * ($this->discount_per / 100);
         }
-        if($this->discount_amount >0){
+        if($this->discount_amount > 0.00){
             $discount += $this->discount_amount;
         }
         if($this->is_vat == 1){
