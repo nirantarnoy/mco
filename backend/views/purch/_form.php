@@ -440,7 +440,22 @@ JS;
 $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 ?>
 
+    <!-- Flash Messages -->
+<?php if (\Yii::$app->session->hasFlash('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <?= \Yii::$app->session->getFlash('success') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
 
+<?php if (\Yii::$app->session->hasFlash('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <?= \Yii::$app->session->getFlash('error') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
     <div class="purch-form">
         <input type="hidden" id="purch-req-is-vat" value="<?= $model->isNewRecord ? '' : $model->is_vat ?>">
         <input type="hidden" id="after-save-vat-amount" value="<?= $model->vat_amount ?>">
@@ -493,7 +508,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                         ]) ?>
                         <?= $form->field($model, 'discount_amount')->textInput([
                             'type' => 'number',
-                            'min' => 0,
+                            'min' => 0.01,
                             'id' => 'purch-discount_amount',
                             'onchange' => 'calculateGrandTotal2();'
 
