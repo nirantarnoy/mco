@@ -391,7 +391,7 @@ $customer_taxid = $customer_info !== null && count($customer_info)>0 ? $customer
                 <div><strong>EXCLUDES VAT AND SEPARATED PURCHASING IS NOT ALLOWED.</strong></div>
                 <div><strong>CURRENCY :</strong> Baht</div>
                 <div><strong>DELIVERY :</strong></div>
-                <div><strong>PAYMENT :</strong> Cash</div>
+                <div><strong>PAYMENT :</strong> <?=\backend\models\Paymentterm::findName($quotation->payment_term_id)?></div>
                 <div><strong>VALIDITY :</strong> 7 day after today.</div>
                 <div><strong>REMARK</strong></div>
             </div>
