@@ -369,6 +369,8 @@ class PurchController extends Controller
                     $transaction->rollBack();
                     Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
                 }
+            }else{
+                Yii::$app->session->setFlash('error','เกิดข้อผิดพลาด');
             }
         }
 

@@ -42,13 +42,13 @@ class PurchLine extends ActiveRecord
     public function rules()
     {
         return [
-            [['purch_id', 'product_id', 'product_type', 'status'], 'integer'],
+            [['purch_id', 'product_id',], 'integer'],
             [['qty', 'line_price', 'line_total'], 'number'],
             [['product_name',  'note','doc_ref_no'], 'string', 'max' => 255],
             [['qty', 'line_price'], 'required'],
             [['purch_id'], 'exist', 'skipOnError' => true, 'targetClass' => Purch::class, 'targetAttribute' => ['purch_id' => 'id']],
             [['product_id'], 'exist', 'skipOnError' => true, 'targetClass' => Product::class, 'targetAttribute' => ['product_id' => 'id']],
-            [['product_description', 'unit',],'safe'],
+            [['product_description', 'unit', 'product_type', 'status'],'safe'],
         ];
     }
 

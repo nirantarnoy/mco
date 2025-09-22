@@ -508,7 +508,8 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                         ]) ?>
                         <?= $form->field($model, 'discount_amount')->textInput([
                             'type' => 'number',
-                            'min' => 0.01,
+                            'min' => 0,
+                            'step' => '0.01',
                             'id' => 'purch-discount_amount',
                             'onchange' => 'calculateGrandTotal2();'
 
@@ -1001,9 +1002,10 @@ function calculateGrandTotal3() {
     
     var after_save_vat_amount = $("#after-save-vat-amount").val();
     var vat = parseFloat($("#summary-vat-amount").val());
-    if(after_save_vat_amount !=null || after_save_vat_amount !=''){
-        vat = after_save_vat_amount;
-    }
+   
+    // if(after_save_vat_amount !=null || after_save_vat_amount !=''){
+    //     vat = after_save_vat_amount;
+    // }
     // if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){
     //     vat = afterDiscount * 0.07; // 7% VAT
     // }
