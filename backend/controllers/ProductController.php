@@ -222,6 +222,10 @@ class ProductController extends Controller
 
             if ($model->save(false)) {
                 if (!empty($uploaded)) {
+                    if(count($uploaded)>2){
+                        \Yii::$app->session->setFlash('error', 'ไม่สามารถอัพโหลดรูปเกิน 2 รูป');
+                        return $this->redirect(['update', 'id' => $model->id]);
+                    }
                     $loop = 1;
                     foreach ($uploaded as $file){
                         if($loop == 1){
