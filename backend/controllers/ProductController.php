@@ -127,23 +127,33 @@ class ProductController extends Controller
                //  $model->code = $model->name;
                 if($model->validate()){
                     if ($model->save()) {
-                        $uploaded = UploadedFile::getInstanceByName('product_photo');
+                        $uploaded = UploadedFile::getInstancesByName('product_photo');
                         $uploaded2 = UploadedFile::getInstanceByName('product_photo_2');
 
                         if (!empty($uploaded)) {
-                            $upfiles = "photo_" . time() . "." . $uploaded->getExtension();
-                            if ($uploaded->saveAs('uploads/product_photo/' . $upfiles)) {
-                                \backend\models\Product::updateAll(['photo' => $upfiles], ['id' => $model->id]);
+                            $loop = 1;
+                            foreach ($uploaded as $file){
+                                if($loop == 1){
+                                    $upfiles = "photo_" . time() . "." . $file->getExtension();
+                                    if ($file->saveAs('uploads/product_photo/' . $upfiles)) {
+                                        \backend\models\Product::updateAll(['photo' => $upfiles], ['id' => $model->id]);
+                                    }
+                                }else{
+                                    $upfiles = "photo_" . time() . "." . $file->getExtension();
+                                    if ($file->saveAs('uploads/product_photo/' . $upfiles)) {
+                                        \backend\models\Product::updateAll(['photo2' => $upfiles], ['id' => $model->id]);
+                                    }
+                                }
+                                $loop++;
                             }
-
                         }
-                        if (!empty($uploaded2)) {
-                            $upfiles2 = "photo_" . time() . "." . $uploaded2->getExtension();
-                            if ($uploaded2->saveAs('uploads/product_photo/' . $upfiles2)) {
-                                \backend\models\Product::updateAll(['photo_2' => $upfiles2], ['id' => $model->id]);
-                            }
-
-                        }
+//                        if (!empty($uploaded2)) {
+//                            $upfiles2 = "photo_" . time() . "." . $uploaded2->getExtension();
+//                            if ($uploaded2->saveAs('uploads/product_photo/' . $upfiles2)) {
+//                                \backend\models\Product::updateAll(['photo_2' => $upfiles2], ['id' => $model->id]);
+//                            }
+//
+//                        }
 
                         if($line_warehouse != null){
                             for($i=0;$i<count($line_warehouse);$i++){
@@ -200,26 +210,44 @@ class ProductController extends Controller
         $model_line = \common\models\StockSum::find()->where(['product_id'=>$id])->all();
         $work_photo = '';
         if ($this->request->isPost && $model->load($this->request->post())) {
-            $uploaded = UploadedFile::getInstanceByName('product_photo');
+            $uploaded = UploadedFile::getInstancesByName('product_photo');
 
 
             $line_rec_id = \Yii::$app->request->post('line_rec_id');
             $removelist = \Yii::$app->request->post('remove_list');
             $old_photo = \Yii::$app->request->post('old_photo');
+            $old_photo2 = \Yii::$app->request->post('old_photo2');
 
             //  print_r($line_customer_rec_id);return;
 
             if ($model->save(false)) {
                 if (!empty($uploaded)) {
-                    $upfiles = "photo_" . time() . "." . $uploaded->getExtension();
-                    if ($uploaded->saveAs('uploads/product_photo/' . $upfiles)) {
-                        \backend\models\Product::updateAll(['photo' => $upfiles], ['id' => $model->id]);
-
-                        if($old_photo != null){
-                            if(file_exists('uploads/product_photo/'.$old_photo)){
-                                unlink('uploads/product_photo/'.$old_photo);
+                    $loop = 1;
+                    foreach ($uploaded as $file){
+                        if($loop == 1){
+                            $upfiles = "photo_".$loop . time() . "." . $file->getExtension();
+                            if ($file->saveAs('uploads/product_photo/' . $upfiles)) {
+                                \backend\models\Product::updateAll(['photo' => $upfiles], ['id' => $model->id]);
+                                if($old_photo != null){
+                                    if(file_exists('uploads/product_photo/'.$old_photo)){
+                                        unlink('uploads/product_photo/'.$old_photo);
+                                    }
+                                }
+                            }
+                        }else{
+                            $upfiles = "photo_".$loop . time() . "." . $file->getExtension();
+                            if ($file->saveAs('uploads/product_photo/' . $upfiles)) {
+                                \backend\models\Product::updateAll(['photo2' => $upfiles], ['id' => $model->id]);
+                                if($old_photo != null){
+                                    if($old_photo2!=null){
+                                        if(file_exists('uploads/product_photo/'.$old_photo2)){
+                                            unlink('uploads/product_photo/'.$old_photo2);
+                                        }
+                                    }
+                                }
                             }
                         }
+                      $loop++;
                     }
 
                 }

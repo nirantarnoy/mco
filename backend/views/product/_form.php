@@ -125,6 +125,10 @@ if (!$model->isNewRecord) {
                                 <i class="fa fa-ban fa-lg" style="color: grey"></i>
                                 <span style="color: lightgrey">ไม่พบไฟล์แนบ</span>
                             </td>
+                            <td style="border: 1px dashed grey;height: 250px;text-align: center;">
+                                <i class="fa fa-ban fa-lg" style="color: grey"></i>
+                                <span style="color: lightgrey">ไม่พบไฟล์แนบ</span>
+                            </td>
                         </tr>
                     </table>
                 <?php else: ?>
@@ -143,10 +147,23 @@ if (!$model->isNewRecord) {
                                     <span style="color: lightgrey">ไม่พบไฟล์แนบ</span>
                                 </td>
                             <?php endif; ?>
+                            <?php if ($model->photo2 != ''): ?>
+                                <td style="border: 1px dashed grey;height: 250px;text-align: center;">
+                                    <a href="<?= \Yii::$app->getUrlManager()->baseUrl . '/uploads/product_photo/' . $model->photo2 ?>"
+                                       target="_blank"><img
+                                                src="<?= \Yii::$app->getUrlManager()->baseUrl . '/uploads/product_photo/' . $model->photo2 ?>"
+                                                style="max-width: 130px;margin-top: 5px;" alt=""></a>
+                                </td>
+                            <?php else: ?>
+                                <td style="border: 1px dashed grey;height: 250px;text-align: center;">
+                                    <i class="fa fa-ban fa-lg" style="color: grey"></i>
+                                    <span style="color: lightgrey">ไม่พบไฟล์แนบ</span>
+                                </td>
+                            <?php endif; ?>
                         </tr>
                     </table>
                 <?php endif; ?>
-                <input type="file" name="product_photo" class="form-control">
+                <input type="file" name="product_photo[]" class="form-control" multiple>
             </div>
             <div class="col-lg-6">
                 <label for="">สินค้าคงเหลือ</label>
