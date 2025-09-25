@@ -16,55 +16,6 @@ $issueDept = $emp_info != null ? $emp_info['department_name'] : '';
 // Issue type
 $issueType = 'withdraw'; // 'borrow', 'transfer', 'withdraw'
 
-// Items
-//$items = [
-//    [
-//        'item' => 1,
-//        'description' => 'กระดาษ A4 80 แกรม Double A',
-//        'request_qty' => 10,
-//        'issue_qty' => 10,
-//        'return_qty' => 0,
-//        'price_unit' => 120.00,
-//        'remark' => 'ใช้งานฝ่ายบัญชี'
-//    ],
-//    [
-//        'item' => 2,
-//        'description' => 'หมึกพิมพ์ Canon PG-740 Black',
-//        'request_qty' => 2,
-//        'issue_qty' => 2,
-//        'return_qty' => 0,
-//        'price_unit' => 450.00,
-//        'remark' => 'เปลี่ยนหมึกเครื่องพิมพ์'
-//    ],
-//    [
-//        'item' => 3,
-//        'description' => 'แฟ้มเอกสาร 2 นิ้ว สีน้ำเงิน',
-//        'request_qty' => 5,
-//        'issue_qty' => 5,
-//        'return_qty' => 0,
-//        'price_unit' => 65.00,
-//        'remark' => 'จัดเก็บเอกสารประจำปี'
-//    ],
-//    [
-//        'item' => 4,
-//        'description' => 'ปากกาลูกลื่น Pilot 0.5mm สีน้ำเงิน',
-//        'request_qty' => 20,
-//        'issue_qty' => 20,
-//        'return_qty' => 0,
-//        'price_unit' => 15.00,
-//        'remark' => ''
-//    ],
-//    [
-//        'item' => 5,
-//        'description' => 'ลวดเย็บกระดาษ No.10',
-//        'request_qty' => 10,
-//        'issue_qty' => 10,
-//        'return_qty' => 0,
-//        'price_unit' => 12.00,
-//        'remark' => ''
-//    ]
-//];
-
 $items = [];
 foreach ($model_line as $line) {
     $item = [
@@ -89,23 +40,176 @@ $stockerName = '';
 
 <style>
     @media print {
-        body {
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
             margin: 0;
             padding: 0;
+            width: 100%;
+            height: 100%;
         }
 
         .print-container {
-            width: 210mm;
-            min-height: 297mm;
-            margin: 0;
-            padding: 10mm;
-            background: #fcf8e3 !important;
+            width: 138mm !important;
+            height: 200mm !important;
+            margin: 0 !important;
+            padding: 5mm !important;
+            background: white !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+            font-size: 9px !important;
+            line-height: 1.1 !important;
+            box-sizing: border-box !important;
+            transform-origin: top left !important;
+        }
+
+        .header-section {
+            border: 1px solid #000 !important;
+            padding: 3px !important;
+        }
+
+        .company-name {
+            font-size: 10px !important;
+        }
+
+        .form-title {
+            font-size: 12px !important;
+            margin: 1px 0 !important;
+        }
+
+        .doc-info {
+            font-size: 8px !important;
+        }
+
+        .doc-info-item {
+            margin-bottom: 0.5px !important;
+        }
+
+        .issue-type {
+            gap: 6px !important;
+            margin: 3px 0 !important;
+            flex-wrap: wrap !important;
+        }
+
+        .issue-type label {
+            font-size: 7px !important;
+        }
+
+        .issue-type input[type="checkbox"] {
+            width: 10px !important;
+            height: 10px !important;
+            margin-right: 1px !important;
+        }
+
+        .doc-number-section {
+            margin-top: 3px !important;
+            font-size: 8px !important;
+        }
+
+        .table-section {
+            border: 1px solid #000 !important;
+        }
+
+        .items-table th,
+        .items-table td {
+            border: 0.5px solid #000 !important;
+            padding: 1px !important;
+            font-size: 7px !important;
+        }
+
+        .items-table th {
+            background-color: white !important;
+            font-weight: bold;
+            height: 16px !important;
+        }
+
+        .items-table td {
+            height: 14px !important;
+        }
+
+        .items-table .description {
+            padding-left: 2px !important;
+        }
+
+        .items-table .number {
+            padding-right: 2px !important;
+        }
+
+        .items-table .item-col {
+            width: 20px !important;
+        }
+
+        .items-table .desc-col {
+            width: 30% !important;
+        }
+
+        .items-table .qty-col {
+            width: 30px !important;
+        }
+
+        .items-table .price-col {
+            width: 30px !important;
+        }
+
+        .signature-section {
+            border: 1px solid #000 !important;
+            height: 50px !important;
+        }
+
+        .signature-box {
+            padding: 2px !important;
+        }
+
+        .signature-label {
+            font-size: 7px !important;
+            bottom: 1px !important;
+        }
+
+        .signature-name {
+            max-width: 50px !important;
+            max-height: 30px !important;
+        }
+
+        .signature-name img {
+            max-width: 50px !important;
+            max-height: 30px !important;
+        }
+
+        .header-table td {
+            padding: 1px !important;
+        }
+
+        .doc-info-table td {
+            padding: 0.5px !important;
+        }
+
+        .header-table td:first-child {
+            width: 18% !important;
+        }
+
+        .header-table td:nth-child(2) {
+            width: 54% !important;
+        }
+
+        .header-table td:last-child {
+            width: 28% !important;
+        }
+
+        .company-logo {
+            max-width: 40px !important;
+            margin-right: 6px !important;
         }
 
         .no-print {
             display: none;
+        }
+
+        @page {
+            size: A5 portrait;
+            margin: 0;
+            padding: 0;
         }
     }
 
@@ -114,7 +218,7 @@ $stockerName = '';
         min-height: 297mm;
         margin: 0 auto;
         padding: 10mm;
-        background: #fcf8e3;
+        background: white;
         font-family: 'Sarabun', Arial, sans-serif;
         font-size: 14px;
         line-height: 1.4;
@@ -217,7 +321,7 @@ $stockerName = '';
     }
 
     .items-table th {
-        background-color: #fcf8e3;
+        background-color: white;
         font-weight: bold;
         height: 35px;
     }
@@ -314,23 +418,44 @@ $stockerName = '';
     .print-button:hover {
         background-color: #0056b3;
     }
+
+    /* ปรับ table ให้ใช้พื้นที่เต็มที่ */
+    .header-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    .header-table td {
+        vertical-align: top;
+        padding: 2px;
+    }
+
+    .doc-info-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .doc-info-table td {
+        text-align: left;
+        padding: 1px;
+    }
 </style>
 
 <div class="no-print">
-    <button class="print-button" onclick="window.print()">พิมพ์ใบเบิก</button>
+    <button class="print-button" onclick="window.print()">พิมพ์ใบเบิก A5</button>
 </div>
 
 <div class="print-container">
     <!-- Header Section -->
     <div class="header-section">
         <div class="header-top">
-
-            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <table class="header-table">
                 <tr>
-                    <td style="width: 25%">
+                    <td style="width: 20%">
                         <img src="../../backend/web/uploads/logo/mco_logo.png" width="100%" alt="">
                     </td>
-                    <td style="width: 50%">
+                    <td style="width: 55%">
                         <div>
                             <div class="company-name" style="text-align: center;">M.C.O. COMPANY LIMITED</div>
                             <div class="form-title">ใบเบิก - คืน</div>
@@ -338,21 +463,19 @@ $stockerName = '';
                     </td>
                     <td style="width: 25%">
                         <div class="doc-info">
-
-                            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                            <table class="doc-info-table">
                                 <tr>
-                                    <td colspan="2" style="text-align: left">
+                                    <td colspan="2">
                                         <div class="doc-info-item">เลขที่ <b><?= Html::encode($documentNumber) ?></b></div>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="width: 50%;text-align: left">
-                                        <div class="doc-info-item">วันที่เบิก : <b><?= Html::encode($issueDate) ?></b>
-                                        </div>
+                                    <td>
+                                        <div class="doc-info-item">วันที่เบิก : <b><?= Html::encode($issueDate) ?></b></div>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td style="width: 50%;text-align: left">
+                                    <td>
                                         <div class="doc-info-item">หน่วยงาน : <b><?= $issueDept ?></b></div>
                                     </td>
                                 </tr>
@@ -366,27 +489,27 @@ $stockerName = '';
         <div class="issue-type">
             <label>
                 <input type="checkbox" <?= $issueType == 'borrow' ? 'checked' : '' ?>>
-                <span style="font-size: 12px;">วัสดุสิ้นเปลือง</span>
+                <span>วัสดุสิ้นเปลือง</span>
             </label>
             <label>
                 <input type="checkbox" <?= $issueType == 'transfer' ? 'checked' : '' ?>>
-                <span style="font-size: 12px;"> อุปกรณ์ไฟฟ้า</span>
+                <span>อุปกรณ์ไฟฟ้า</span>
             </label>
             <label>
                 <input type="checkbox" <?= $issueType == 'withdraw' ? 'checked' : '' ?>>
-                <span style="font-size: 12px;"> เครื่องมือ</span>
+                <span>เครื่องมือ</span>
             </label>
             <label>
                 <input type="checkbox">
-                <span style="font-size: 12px;"> วัสดุประกอบงาน</span>
+                <span>วัสดุประกอบงาน</span>
             </label>
             <label>
                 <input type="checkbox">
-                <span style="font-size: 12px;"> สินค้าซ่อมาขายไป</span>
+                <span>สินค้าซ่อมาขายไป</span>
             </label>
             <label>
                 <input type="checkbox">
-                <span style="font-size: 12px;"> N-Vent</span>
+                <span>N-Vent</span>
             </label>
         </div>
 
@@ -394,7 +517,7 @@ $stockerName = '';
             <div>
                 <span class="doc-label">ชื่องาน:</span> <?=$model->customer_name?>
             </div>
-            <div style="padding-right: 10px">
+            <div>
                 <span class="doc-label">RY-QT:</span> <?= Html::encode(\backend\models\Job::findJobNo($model->job_id)) ?>
             </div>
         </div>
@@ -444,7 +567,6 @@ $stockerName = '';
     </div>
 
     <?php
-    //$issue_signature = $emp_info != null ? $emp_info['department_name'] : '';
     $issue_signature = \backend\models\User::findEmployeeSignature($model->emp_trans_id);
     $approve_signature = \backend\models\User::findEmployeeSignature($model->approve_by);
     ?>
