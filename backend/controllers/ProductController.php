@@ -131,6 +131,10 @@ class ProductController extends Controller
                         $uploaded2 = UploadedFile::getInstanceByName('product_photo_2');
 
                         if (!empty($uploaded)) {
+                            if(count($uploaded)>2){
+                                \Yii::$app->session->setFlash('error', 'ไม่สามารถอัพโหลดรูปเกิน 2 รูป');
+                                return $this->redirect(['update', 'id' => $model->id]);
+                            }
                             $loop = 1;
                             foreach ($uploaded as $file){
                                 if($loop == 1){

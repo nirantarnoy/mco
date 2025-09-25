@@ -56,10 +56,10 @@ class JournalTransLine extends ActiveRecord
         return [
             [['warehouse_id', 'qty'], 'required'],
           //  [['product_id', 'warehouse_id', 'qty'], 'required'],
-            [['journal_trans_id', 'product_id', 'warehouse_id','is_damage'], 'integer'],
+            [['journal_trans_id', 'product_id', 'warehouse_id','is_damage','status'], 'integer'],
             [['qty', 'line_price', 'sale_price', 'good_qty', 'damaged_qty', 'missing_qty'], 'number'],
             [['remark', 'condition_note'], 'string'],
-            [['status', 'return_to_type', 'item_condition','return_note'], 'string', 'max' => 255],
+            [['return_to_type', 'item_condition','return_note'], 'string', 'max' => 255],
             [['return_to_type'], 'in', 'range' => [self::RETURN_TYPE_COMPLETE, self::RETURN_TYPE_DAMAGED, self::RETURN_TYPE_INCOMPLETE]],
             [['item_condition'], 'in', 'range' => [self::CONDITION_GOOD, self::CONDITION_DAMAGED, self::CONDITION_MISSING]],
             [['journal_trans_id'], 'exist', 'skipOnError' => true, 'targetClass' => JournalTrans::class, 'targetAttribute' => ['journal_trans_id' => 'id']],

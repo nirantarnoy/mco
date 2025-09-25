@@ -114,7 +114,11 @@ class JournaltransController extends Controller
                     if ($model->save()) {
                         foreach ($journalTransLines as $journalTransLine) {
                             $journalTransLine->journal_trans_id = $model->id;
-                            if(!$journalTransLine->save()) {
+                            $journalTransLine->status = 0;
+                            if($journalTransLine->save(false)){
+                                $trans_type_id = 3;
+                                 $this->calStock($journalTransLine->product_id,$journalTransLine->qty,$journalTransLine->warehouse_id,$trans_type_id);
+                            }else{
                                 throw new \Exception('Failed to save journal trans line');
                             }
                         }
@@ -826,10 +830,12 @@ class JournaltransController extends Controller
                         foreach ($journalTransLines as $journalTransLine) {
                             $journalTransLine->journal_trans_id = $model->id;
                             $journalTransLine->status = 0;
-                            if(!$journalTransLine->save(false)) {
+                            if($journalTransLine->save(false)){
+                                $trans_type_id = 4;
+                               $this->calStock($journalTransLine->product_id,$journalTransLine->qty,$journalTransLine->warehouse_id,$trans_type_id);
+                            }else{
                                 throw new \Exception('Failed to save journal trans line');
                             }
-
                         }
                         $transaction->commit();
                         Yii::$app->session->setFlash('success', 'บันทึกข้อมูลเรียบร้อยแล้ว');
@@ -869,6 +875,64 @@ class JournaltransController extends Controller
             'lines' => $lines,
         ]);
     }
+
+    public function calStock($product_id, $qty, $warehouse_id, $trans_type_id) {
+        $res = 0;
+        if ($product_id && $qty && $warehouse_id) {
+            $stock_sum = \backend\models\StockSum::find()
+                ->where(['product_id' => $product_id, 'warehouse_id' => $warehouse_id])
+                ->one();
+
+            if ($stock_sum) {
+                if ($trans_type_id == 3 || $trans_type_id == 5) {
+                    // ตัดสต็อก
+                    if ($stock_sum->qty >= $qty) {
+                        $stock_sum->qty = ($stock_sum->qty ?: 0) - $qty;
+                    } else {
+                        return 0; // ❗ สต็อกไม่พอ
+                    }
+                } else {
+                    // เพิ่มสต็อก
+                    $stock_sum->qty = ($stock_sum->qty ?: 0) + $qty;
+                }
+
+                if ($stock_sum->save(false)) {
+                    $res = 1;
+                }
+            } else {
+                // ถ้าไม่มี record เดิม
+                if ($trans_type_id == 3 || $trans_type_id == 5) {
+                    $res = 0; // ❗ ไม่มีสินค้าให้ตัด
+                } else {
+                    $stock_new = new \backend\models\StockSum();
+                    $stock_new->product_id = $product_id;
+                    $stock_new->warehouse_id = $warehouse_id;
+                    $stock_new->qty = $qty;
+                    if ($stock_new->save(false)) {
+                        $res = 1;
+                    }
+                }
+            }
+
+            $this->updateProductStock($product_id);
+        }
+
+        return $res;
+    }
+
+    function updateProductStock($product_id) {
+        if ($product_id) {
+            $total_stock = \backend\models\StockSum::find()
+                ->where(['product_id' => $product_id])
+                ->sum('qty');
+
+            \backend\models\Product::updateAll(
+                ['stock_qty' => $total_stock ?: 0],
+                ['id' => $product_id]
+            );
+        }
+    }
+
     public function actionPrint($id){
         if($id){
             $model = JournalTrans::findOne($id);
