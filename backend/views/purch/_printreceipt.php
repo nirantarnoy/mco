@@ -116,37 +116,85 @@ function getEmpRequestorId($id){
         background-color: #138496;
     }
 
+    /* Print Styles - ปรับให้เต็มหน้า A4 */
     @media print {
+        @page {
+            size: A4;
+            margin: 5mm 8mm;
+        }
+
+        * {
+            -webkit-print-color-adjust: exact;
+            color-adjust: exact;
+        }
+
         body {
             margin: 0;
             padding: 0;
+            font-size: 12px;
         }
+
         .print-container {
-            width: 210mm;
-            min-height: 297mm;
+            width: 100%;
+            max-width: none;
             margin: 0;
-            padding: 10mm;
+            padding: 0;
+            box-shadow: none;
+            page-break-inside: avoid;
         }
+
         .print-controls {
             display: none !important;
         }
+
+        .header-section {
+            margin-bottom: 6px;
+        }
+
+        .company-header .logo {
+            max-width: 75px;
+            max-height: 55px;
+        }
+
+        .form-title {
+            font-size: 18px;
+            margin: 5px 0;
+        }
+
+        .items-table,
+        .inspection-table {
+            font-size: 10px;
+        }
+
+        .signature-section {
+            margin-top: 10px;
+            page-break-inside: avoid;
+        }
+
+        .signature-box .signature-line img {
+            max-width: 120px !important;
+            max-height: 40px !important;
+            object-fit: contain;
+        }
     }
 
+    /* Screen Styles */
     .print-container {
         width: 210mm;
         min-height: 297mm;
         margin: 0 auto;
-        padding: 10mm;
+        padding: 8mm;
         background: white;
         font-family: 'Sarabun', Arial, sans-serif;
-        font-size: 14px;
-        line-height: 1.3;
+        font-size: 13px;
+        line-height: 1.4;
         color: #000;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
 
     .header-section {
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
     }
 
     .company-header {
@@ -157,8 +205,10 @@ function getEmpRequestorId($id){
     }
 
     .logo {
-        max-width: 120px;
+        max-width: 100px;
+        max-height: 80px;
         margin-right: 20px;
+        object-fit: contain;
     }
 
     .company-info {
@@ -179,12 +229,12 @@ function getEmpRequestorId($id){
     .form-title {
         font-size: 20px;
         font-weight: bold;
-        margin: 15px 0;
+        margin: 12px 0;
     }
 
     .form-field {
         display: inline-block;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
 
     .form-label {
@@ -201,14 +251,19 @@ function getEmpRequestorId($id){
     }
 
     .supplier-section {
-        margin-bottom: 15px;
+        margin-bottom: 8px;
         text-align: left;
+    }
+
+    .date-field {
+        text-align: right;
+        margin-bottom: 8px;
     }
 
     .items-table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 15px;
+        margin-bottom: 8px;
     }
 
     .items-table th,
@@ -216,7 +271,8 @@ function getEmpRequestorId($id){
         border: 1px solid #000;
         padding: 4px;
         text-align: center;
-        font-size: 13px;
+        font-size: 12px;
+        vertical-align: middle;
     }
 
     .items-table th {
@@ -226,36 +282,38 @@ function getEmpRequestorId($id){
 
     .items-table .description {
         text-align: left;
-        padding-left: 8px;
+        padding-left: 6px;
     }
 
     .items-table .narrow {
-        width: 30px;
+        width: 40px;
     }
 
     .inspection-table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 15px;
+        margin-bottom: 8px;
     }
 
     .inspection-table td {
         border: 1px solid #000;
-        padding: 3px;
+        padding: 2px;
         text-align: center;
-        font-size: 12px;
-        height: 20px;
+        font-size: 11px;
+        height: 18px;
+        vertical-align: middle;
     }
 
     .inspection-table .row-header {
         text-align: left;
-        padding-left: 8px;
+        padding-left: 6px;
         font-weight: bold;
-        width: 200px;
+        width: 180px;
+        font-size: 11px;
     }
 
     .inspection-table .check-cell {
-        width: 25px;
+        width: 22px;
     }
 
     .checkbox-group {
@@ -269,46 +327,83 @@ function getEmpRequestorId($id){
     }
 
     .result-section {
-        margin: 20px 0;
-        padding: 10px;
+        margin: 10px 0;
+        padding: 6px;
         border: 1px solid #000;
     }
 
     .result-section h4 {
-        margin: 0 0 10px 0;
-        font-size: 14px;
+        margin: 0 0 6px 0;
+        font-size: 13px;
     }
 
+    /* ปรับปรุงส่วนลายเซ็นต์ */
     .signature-section {
         display: flex;
         justify-content: space-between;
-        margin-top: 40px;
+        margin-top: 15px;
+        align-items: flex-end;
     }
 
     .signature-box {
-        width: 30%;
+        width: 32%;
         text-align: center;
+        font-size: 12px;
     }
 
     .signature-line {
         border-bottom: 1px solid #000;
-        margin: 40px 10px 5px 10px;
+        margin: 20px 5px 5px 5px;
+        height: 45px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .signature-line img {
+        max-width: 130px;
+        max-height: 45px;
+        object-fit: contain;
+        display: block;
     }
 
     .form-number {
         text-align: right;
-        font-size: 12px;
-        margin-top: 20px;
+        font-size: 11px;
+        margin-top: 10px;
     }
 
     .notes-section {
-        margin-top: 15px;
-        font-size: 13px;
+        margin-top: 8px;
+        font-size: 12px;
     }
 
-    .date-field {
-        text-align: right;
-        margin-bottom: 15px;
+    /* เพิ่มการจัดการสำหรับหน้าจอขนาดเล็ก */
+    @media screen and (max-width: 900px) {
+        .print-container {
+            width: 95%;
+            padding: 10px;
+        }
+
+        .company-header {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo {
+            margin-right: 0;
+            margin-bottom: 10px;
+        }
+
+        .signature-section {
+            flex-direction: column;
+        }
+
+        .signature-box {
+            width: 100%;
+            margin-bottom: 20px;
+        }
     }
 </style>
 
@@ -368,14 +463,14 @@ function getEmpRequestorId($id){
     </div>
 
     <!-- Items Table -->
-    <p style="margin-bottom: 10px;"><strong>รายการสินค้าที่ส่ง ณ จุดรับ/ส่ง มีดังต่อไปนี้</strong></p>
+    <p style="margin-bottom: 8px;"><strong>รายการสินค้าที่ส่ง ณ จุดรับ/ส่ง มีดังต่อไปนี้</strong></p>
     <table class="items-table">
         <thead>
         <tr>
             <th class="narrow">ลำดับที่</th>
             <th>รายละเอียด</th>
-            <th style="width: 80px;">จำนวน</th>
-            <th style="width: 100px;">ผลการตรวจ</th>
+            <th style="width: 70px;">จำนวน</th>
+            <th style="width: 90px;">ผลการตรวจ</th>
         </tr>
         </thead>
         <tbody>
@@ -403,12 +498,12 @@ function getEmpRequestorId($id){
             <?php for ($j = 1; $j <= 15; $j++): ?>
                 <td class="check-cell"><?= $j ?></td>
             <?php endfor; ?>
-            <td style="width: 80px;">บันทึก</td>
+            <td style="width: 70px;">บันทึก</td>
         </tr>
         <tr>
             <td class="row-header">1. สภาพทั่วไปของสินค้า/</td>
             <?php for ($j = 0; $j < 15; $j++): ?>
-                <td class="check-cell"><?= isset($inspectionMatrix[0][$j]) && $inspectionMatrix[0][$j] ? '' : '' ?></td>
+                <td class="check-cell"><?= isset($inspectionMatrix[0][$j]) && $inspectionMatrix[0][$j] ? '✓' : '' ?></td>
             <?php endfor; ?>
             <td>&nbsp;</td>
         </tr>
@@ -420,23 +515,23 @@ function getEmpRequestorId($id){
             <td>&nbsp;</td>
         </tr>
         <tr>
-            <td class="row-header" style="padding-left: 20px;">2.1 ยี่ห้อและรุ่น</td>
+            <td class="row-header" style="padding-left: 15px;">2.1 ยี่ห้อและรุ่น</td>
             <?php for ($j = 0; $j < 15; $j++): ?>
-                <td class="check-cell"><?= $hasCorrectBrand && $j < count($items) ? '' : '' ?></td>
+                <td class="check-cell"><?= $hasCorrectBrand && $j < count($items) ? '✓' : '' ?></td>
             <?php endfor; ?>
             <td>&nbsp;</td>
         </tr>
         <tr>
-            <td class="row-header" style="padding-left: 20px;">2.2 รูปร่างและขนาด</td>
+            <td class="row-header" style="padding-left: 15px;">2.2 รูปร่างและขนาด</td>
             <?php for ($j = 0; $j < 15; $j++): ?>
-                <td class="check-cell"><?= $hasCorrectSize && $j < count($items) ? '' : '' ?></td>
+                <td class="check-cell"><?= $hasCorrectSize && $j < count($items) ? '✓' : '' ?></td>
             <?php endfor; ?>
             <td>&nbsp;</td>
         </tr>
         <tr>
-            <td class="row-header" style="padding-left: 20px;">2.3 จำนวนที่ส่ง</td>
+            <td class="row-header" style="padding-left: 15px;">2.3 จำนวนที่ส่ง</td>
             <?php for ($j = 0; $j < 15; $j++): ?>
-                <td class="check-cell"><?= $hasCorrectQty && $j < count($items) ? '' : '' ?></td>
+                <td class="check-cell"><?= $hasCorrectQty && $j < count($items) ? '✓' : '' ?></td>
             <?php endfor; ?>
             <td>&nbsp;</td>
         </tr>
@@ -448,16 +543,16 @@ function getEmpRequestorId($id){
             <td>&nbsp;</td>
         </tr>
         <tr>
-            <td class="row-header" style="padding-left: 20px;">3.1 ใบ certificate</td>
+            <td class="row-header" style="padding-left: 15px;">3.1 ใบ certificate</td>
             <?php for ($j = 0; $j < 15; $j++): ?>
-                <td class="check-cell"><?= $hasCertificate && $j < 3 ? '' : '' ?></td>
+                <td class="check-cell"><?= $hasCertificate && $j < 3 ? '✓' : '' ?></td>
             <?php endfor; ?>
             <td>&nbsp;</td>
         </tr>
         <tr>
-            <td class="row-header" style="padding-left: 20px;">3.2 คู่มือการใช้งาน</td>
+            <td class="row-header" style="padding-left: 15px;">3.2 คู่มือการใช้งาน</td>
             <?php for ($j = 0; $j < 15; $j++): ?>
-                <td class="check-cell"><?= $hasManual && $j < 2 ? '' : '' ?></td>
+                <td class="check-cell"><?= $hasManual && $j < 2 ? '✓' : '' ?></td>
             <?php endfor; ?>
             <td>&nbsp;</td>
         </tr>
@@ -503,12 +598,13 @@ function getEmpRequestorId($id){
                 <?php
                 $requestor_signature = \backend\models\User::findEmployeeSignature($requestor_id);
                 if(!empty($requestor_signature)): ?>
-                    <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" alt="Purchasing Signature">
+                    <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" alt="Requestor Signature">
                 <?php endif; ?>
             </div>
             <div>(<?= Html::encode($requestor) ?>)</div>
             <div>ตัวแทนผู้ขอซื้อ</div>
         </div>
+
         <div class="signature-box">
             <div>ลงชื่อ</div>
             <div class="signature-line"></div>

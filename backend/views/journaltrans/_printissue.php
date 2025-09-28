@@ -6,374 +6,171 @@
 use yii\helpers\Html;
 
 $emp_info = \backend\models\Employee::findEmpInfo($model->created_by);
-// Mock data
-$documentNo = '';
-$issueDate = date('m/d/Y', strtotime($model->trans_date));
-$issueTime = date('H:i', strtotime($model->created_at));
+
+// ข้อมูลเอกสาร
+$issueDate = date('d/m/Y', strtotime($model->trans_date));
 $documentNumber = $model->journal_no;
 $issueDept = $emp_info != null ? $emp_info['department_name'] : '';
-
-// Issue type
 $issueType = 'withdraw'; // 'borrow', 'transfer', 'withdraw'
 
+// รายการสินค้า
 $items = [];
 foreach ($model_line as $line) {
-    $item = [
+    $items[] = [
         'item' => $line->id,
         'description' => \backend\models\Product::findProductName($line->product_id),
-        'request_qty' => $line->qty,
         'issue_qty' => $model->stock_type_id == 2 ? $line->qty : 0,
         'return_qty' => $model->stock_type_id == 1 ? $line->qty : 0,
         'price_unit' => $line->line_price,
         'remark' => ''
     ];
-    $items[] = $item;
 }
 
-// Signatures
-$issuerName = '';
-$receiverName = '';
-$approverName = '';
-$stockerName = '';
-
+// ลายเซ็น
+$issue_signature = \backend\models\User::findEmployeeSignature($model->emp_trans_id);
+$approve_signature = \backend\models\User::findEmployeeSignature($model->approve_by);
 ?>
 
 <style>
     @media print {
-        * {
-            box-sizing: border-box;
+        @page {
+            size: A5 landscape;
+            margin: 5mm;
         }
 
-        html, body {
+        body {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
+            background: white !important;
+            font-family: 'Sarabun', Arial, sans-serif !important;
         }
 
         .print-container {
-            width: 138mm !important;
-            height: 200mm !important;
-            margin: 0 !important;
+            width: 210mm !important;
+            height: 148mm !important;
+            margin: 0 auto !important;
             padding: 5mm !important;
             background: white !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-            font-size: 9px !important;
-            line-height: 1.1 !important;
-            box-sizing: border-box !important;
-            transform-origin: top left !important;
-        }
-
-        .header-section {
-            border: 1px solid #000 !important;
-            padding: 3px !important;
-        }
-
-        .company-name {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
             font-size: 10px !important;
-        }
-
-        .form-title {
-            font-size: 12px !important;
-            margin: 1px 0 !important;
-        }
-
-        .doc-info {
-            font-size: 8px !important;
-        }
-
-        .doc-info-item {
-            margin-bottom: 0.5px !important;
-        }
-
-        .issue-type {
-            gap: 6px !important;
-            margin: 3px 0 !important;
-            flex-wrap: wrap !important;
-        }
-
-        .issue-type label {
-            font-size: 7px !important;
-        }
-
-        .issue-type input[type="checkbox"] {
-            width: 10px !important;
-            height: 10px !important;
-            margin-right: 1px !important;
-        }
-
-        .doc-number-section {
-            margin-top: 3px !important;
-            font-size: 8px !important;
-        }
-
-        .table-section {
-            border: 1px solid #000 !important;
-        }
-
-        .items-table th,
-        .items-table td {
-            border: 0.5px solid #000 !important;
-            padding: 1px !important;
-            font-size: 7px !important;
-        }
-
-        .items-table th {
-            background-color: white !important;
-            font-weight: bold;
-            height: 16px !important;
-        }
-
-        .items-table td {
-            height: 14px !important;
-        }
-
-        .items-table .description {
-            padding-left: 2px !important;
-        }
-
-        .items-table .number {
-            padding-right: 2px !important;
-        }
-
-        .items-table .item-col {
-            width: 20px !important;
-        }
-
-        .items-table .desc-col {
-            width: 30% !important;
-        }
-
-        .items-table .qty-col {
-            width: 30px !important;
-        }
-
-        .items-table .price-col {
-            width: 30px !important;
-        }
-
-        .signature-section {
-            border: 1px solid #000 !important;
-            height: 50px !important;
-        }
-
-        .signature-box {
-            padding: 2px !important;
-        }
-
-        .signature-label {
-            font-size: 7px !important;
-            bottom: 1px !important;
-        }
-
-        .signature-name {
-            max-width: 50px !important;
-            max-height: 30px !important;
-        }
-
-        .signature-name img {
-            max-width: 50px !important;
-            max-height: 30px !important;
-        }
-
-        .header-table td {
-            padding: 1px !important;
-        }
-
-        .doc-info-table td {
-            padding: 0.5px !important;
-        }
-
-        .header-table td:first-child {
-            width: 18% !important;
-        }
-
-        .header-table td:nth-child(2) {
-            width: 54% !important;
-        }
-
-        .header-table td:last-child {
-            width: 28% !important;
-        }
-
-        .company-logo {
-            max-width: 40px !important;
-            margin-right: 6px !important;
+            line-height: 1.2 !important;
         }
 
         .no-print {
-            display: none;
-        }
-
-        @page {
-            size: A5 portrait;
-            margin: 0;
-            padding: 0;
+            display: none !important;
         }
     }
 
+    /* สำหรับแสดงในหน้าเว็บ */
     .print-container {
         width: 210mm;
-        min-height: 297mm;
+        height: 148mm;
         margin: 0 auto;
-        padding: 10mm;
+        padding: 5mm;
         background: white;
         font-family: 'Sarabun', Arial, sans-serif;
         font-size: 14px;
-        line-height: 1.4;
         color: #000;
-        position: relative;
+        box-sizing: border-box;
+        /*border: 1px solid #ccc;*/
     }
 
     .header-section {
-        border: 2px solid #000;
-        padding: 10px;
+        border: 1px solid #000;
+        padding: 3mm;
         margin-bottom: 0;
     }
 
-    .header-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-
-    .company-section {
-        display: flex;
-        align-items: center;
-    }
-
-    .company-logo {
-        max-width: 80px;
-        margin-right: 20px;
-    }
-
     .company-name {
-        font-size: 18px;
+        font-size: 14px;
         font-weight: bold;
     }
 
     .form-title {
-        font-size: 20px;
+        font-size: 16px;
         font-weight: bold;
         text-align: center;
-        margin: 5px 0;
+        margin: 2px 0;
     }
 
     .doc-info {
+        font-size: 14px;
         text-align: right;
-        font-size: 13px;
-    }
-
-    .doc-info-item {
-        margin-bottom: 3px;
     }
 
     .issue-type {
         display: flex;
-        justify-content: center;
-        gap: 30px;
-        margin: 10px 0;
+        justify-content: space-around;
+        margin: 2mm 0;
+        flex-wrap: wrap;
     }
 
     .issue-type label {
-        display: flex;
-        align-items: center;
         font-size: 14px;
     }
 
-    .issue-type input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        margin-right: 5px;
+    .issue-type input {
+        width: 10px;
+        height: 10px;
+        margin-right: 2px;
     }
 
     .doc-number-section {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        margin-top: 10px;
-    }
-
-    .doc-label {
-        font-weight: bold;
         font-size: 14px;
+        margin-top: 2mm;
     }
 
     .table-section {
-        margin: 0;
-        border: 2px solid #000;
+        border: 1px solid #000;
         border-top: none;
+        margin-top: 1mm;
     }
 
     .items-table {
         width: 100%;
         border-collapse: collapse;
+        table-layout: fixed;
     }
 
     .items-table th,
     .items-table td {
         border: 1px solid #000;
-        padding: 5px;
+        padding: 2px;
+        font-size: 9px;
         text-align: center;
-        font-size: 13px;
+        vertical-align: middle;
     }
 
     .items-table th {
-        background-color: white;
         font-weight: bold;
-        height: 35px;
-    }
-
-    .items-table td {
-        height: 30px;
+        background-color: #f9f9f9;
     }
 
     .items-table .description {
         text-align: left;
-        padding-left: 10px;
-    }
-
-    .items-table .number {
-        text-align: right;
-        padding-right: 10px;
-    }
-
-    .items-table .item-col {
-        width: 50px;
-    }
-
-    .items-table .desc-col {
-        width: 40%;
-    }
-
-    .items-table .qty-col {
-        width: 80px;
-    }
-
-    .items-table .price-col {
-        width: 80px;
-    }
-
-    .items-table .remark-col {
-        width: auto;
+        padding-left: 3px;
     }
 
     .signature-section {
         display: flex;
         justify-content: space-between;
-        border: 2px solid #000;
+        border: 1px solid #000;
         border-top: none;
-        height: 120px;
+        height: 35mm;
+        margin-top: 1mm;
     }
 
     .signature-box {
         flex: 1;
         border-right: 1px solid #000;
-        padding: 10px;
         text-align: center;
-        position: relative;
+        padding: 2mm;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }
 
     .signature-box:last-child {
@@ -382,159 +179,86 @@ $stockerName = '';
 
     .signature-label {
         font-weight: bold;
-        font-size: 14px;
-        position: absolute;
-        bottom: 10px;
-        left: 50%;
-        transform: translateX(-50%);
+        font-size: 10px;
+        margin-top: 5mm;
     }
 
-    .signature-name {
-        max-width: 130px !important;
-        max-height: 55px !important;
-        object-fit: contain;
-    }
-    .signature-name img{
-        max-width: 130px !important;
-        max-height: 55px !important;
+    .signature-name img {
+        max-width: 40mm;
+        max-height: 15mm;
         object-fit: contain;
     }
 
     .no-print {
         text-align: center;
-        margin: 20px 0;
+        margin-bottom: 10px;
     }
 
     .print-button {
         background-color: #007bff;
-        color: white;
+        color: #fff;
         border: none;
-        padding: 10px 20px;
-        font-size: 16px;
-        cursor: pointer;
+        padding: 8px 16px;
         border-radius: 4px;
+        cursor: pointer;
     }
 
     .print-button:hover {
         background-color: #0056b3;
     }
-
-    /* ปรับ table ให้ใช้พื้นที่เต็มที่ */
-    .header-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-    }
-
-    .header-table td {
-        vertical-align: top;
-        padding: 2px;
-    }
-
-    .doc-info-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .doc-info-table td {
-        text-align: left;
-        padding: 1px;
-    }
 </style>
 
 <div class="no-print">
-    <button class="print-button" onclick="window.print()">พิมพ์ใบเบิก A5</button>
+    <button class="print-button" onclick="window.print()">🖨️ พิมพ์ใบเบิก A5</button>
 </div>
 
 <div class="print-container">
-    <!-- Header Section -->
+    <!-- Header -->
     <div class="header-section">
-        <div class="header-top">
-            <table class="header-table">
-                <tr>
-                    <td style="width: 20%">
-                        <img src="../../backend/web/uploads/logo/mco_logo.png" width="100%" alt="">
-                    </td>
-                    <td style="width: 55%">
-                        <div>
-                            <div class="company-name" style="text-align: center;">M.C.O. COMPANY LIMITED</div>
-                            <div class="form-title">ใบเบิก - คืน</div>
-                        </div>
-                    </td>
-                    <td style="width: 25%">
-                        <div class="doc-info">
-                            <table class="doc-info-table">
-                                <tr>
-                                    <td colspan="2">
-                                        <div class="doc-info-item">เลขที่ <b><?= Html::encode($documentNumber) ?></b></div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="doc-info-item">วันที่เบิก : <b><?= Html::encode($issueDate) ?></b></div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="doc-info-item">หน่วยงาน : <b><?= $issueDept ?></b></div>
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
-                    </td>
-                </tr>
-            </table>
-        </div>
+        <table width="100%">
+            <tr>
+                <td width="20%">
+                    <img src="../../backend/web/uploads/logo/mco_logo.png" class="company-logo" style="max-width: 60px;">
+                </td>
+                <td width="55%" style="text-align: center;">
+                    <div class="company-name">M.C.O. COMPANY LIMITED</div>
+                    <div class="form-title">ใบเบิก - คืน</div>
+                </td>
+                <td width="25%" class="doc-info">
+                    <div>เลขที่: <b><?= Html::encode($documentNumber) ?></b></div>
+                    <div>วันที่เบิก: <b><?= Html::encode($issueDate) ?></b></div>
+                    <div>หน่วยงาน: <b><?= Html::encode($issueDept) ?></b></div>
+                </td>
+            </tr>
+        </table>
 
         <div class="issue-type">
-            <label>
-                <input type="checkbox" <?= $issueType == 'borrow' ? 'checked' : '' ?>>
-                <span>วัสดุสิ้นเปลือง</span>
-            </label>
-            <label>
-                <input type="checkbox" <?= $issueType == 'transfer' ? 'checked' : '' ?>>
-                <span>อุปกรณ์ไฟฟ้า</span>
-            </label>
-            <label>
-                <input type="checkbox" <?= $issueType == 'withdraw' ? 'checked' : '' ?>>
-                <span>เครื่องมือ</span>
-            </label>
-            <label>
-                <input type="checkbox">
-                <span>วัสดุประกอบงาน</span>
-            </label>
-            <label>
-                <input type="checkbox">
-                <span>สินค้าซ่อมาขายไป</span>
-            </label>
-            <label>
-                <input type="checkbox">
-                <span>N-Vent</span>
-            </label>
+            <label><input type="checkbox" <?= $issueType == 'borrow' ? 'checked' : '' ?>> วัสดุสิ้นเปลือง</label>
+            <label><input type="checkbox" <?= $issueType == 'transfer' ? 'checked' : '' ?>> อุปกรณ์ไฟฟ้า</label>
+            <label><input type="checkbox" <?= $issueType == 'withdraw' ? 'checked' : '' ?>> เครื่องมือ</label>
+            <label><input type="checkbox"> วัสดุประกอบงาน</label>
+            <label><input type="checkbox"> สินค้าซ่อมไปขาย</label>
+            <label><input type="checkbox"> N-Vent</label>
         </div>
 
         <div class="doc-number-section">
-            <div>
-                <span class="doc-label">ชื่องาน:</span> <?=$model->customer_name?>
-            </div>
-            <div>
-                <span class="doc-label">RY-QT:</span> <?= Html::encode(\backend\models\Job::findJobNo($model->job_id)) ?>
-            </div>
+            <div><b>ชื่องาน:</b> <?= Html::encode($model->customer_name) ?></div>
+            <div><b>RY-QT:</b> <?= Html::encode(\backend\models\Job::findJobNo($model->job_id)) ?></div>
         </div>
     </div>
 
-    <!-- Table Section -->
+    <!-- รายการสินค้า -->
     <div class="table-section">
         <table class="items-table">
             <thead>
             <tr>
-                <th class="item-col">ลำดับ</th>
-                <th class="desc-col">รายละเอียด/รายการ</th>
-                <th class="qty-col">จำนวนที่เบิก</th>
-                <th class="qty-col">จำนวนรับคืน</th>
-                <th class="qty-col">วันที่รับคืน</th>
-                <th class="price-col">ราคา/ชิ้น</th>
-                <th class="remark-col">หมายเหตุ</th>
+                <th>ลำดับ</th>
+                <th>รายละเอียด/รายการ</th>
+                <th>จำนวนเบิก</th>
+                <th>จำนวนคืน</th>
+                <th>วันที่คืน</th>
+                <th>ราคา/ชิ้น</th>
+                <th>หมายเหตุ</th>
             </tr>
             </thead>
             <tbody>
@@ -545,15 +269,14 @@ $stockerName = '';
                     <td><?= $item['issue_qty'] ?></td>
                     <td><?= $item['return_qty'] ?></td>
                     <td><?= $item['return_qty'] > 0 ? date('d/m/Y') : '' ?></td>
-                    <td class="number"><?= number_format($item['price_unit'], 2) ?></td>
-                    <td class="description"><?= Html::encode($item['remark']) ?></td>
+                    <td><?= number_format($item['price_unit'], 2) ?></td>
+                    <td><?= Html::encode($item['remark']) ?></td>
                 </tr>
             <?php endforeach; ?>
 
-            <!-- Empty rows -->
             <?php for ($i = count($items); $i < 10; $i++): ?>
                 <tr>
-                    <td><?= $i + 1 ?></td>
+                    <td style="padding:10px;">&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
@@ -566,50 +289,35 @@ $stockerName = '';
         </table>
     </div>
 
-    <?php
-    $issue_signature = \backend\models\User::findEmployeeSignature($model->emp_trans_id);
-    $approve_signature = \backend\models\User::findEmployeeSignature($model->approve_by);
-    ?>
-    <!-- Signature Section -->
+    <!-- ลายเซ็น -->
     <div class="signature-section">
         <div class="signature-box">
             <div class="signature-name">
                 <?php if ($model->stock_type_id == 2): ?>
-                    <img src="../../backend/web/uploads/employee_signature/<?= $issue_signature ?>"
-                         alt="Approver Signature">
+                    <img src="../../backend/web/uploads/employee_signature/<?= $issue_signature ?>" alt="">
                 <?php endif; ?>
             </div>
             <div class="signature-label">ผู้เบิก</div>
         </div>
         <div class="signature-box">
             <div class="signature-name">
-                <img src="../../backend/web/uploads/employee_signature/<?= $approve_signature ?>"
-                     alt="Approver Signature">
+                <img src="../../backend/web/uploads/employee_signature/<?= $approve_signature ?>" alt="">
             </div>
             <div class="signature-label">ผู้จ่ายเครื่องมือ</div>
         </div>
         <div class="signature-box">
             <div class="signature-name">
-                <img src="../../backend/web/uploads/employee_signature/<?= $approve_signature ?>"
-                     alt="Approver Signature">
+                <img src="../../backend/web/uploads/employee_signature/<?= $approve_signature ?>" alt="">
             </div>
             <div class="signature-label">ผู้ตรวจสอบ</div>
         </div>
         <div class="signature-box">
             <div class="signature-name">
                 <?php if ($model->stock_type_id == 1): ?>
-                    <img src="../../backend/web/uploads/employee_signature/<?= $issue_signature ?>"
-                         alt="Approver Signature">
+                    <img src="../../backend/web/uploads/employee_signature/<?= $issue_signature ?>" alt="">
                 <?php endif; ?>
             </div>
             <div class="signature-label">ผู้คืน</div>
         </div>
     </div>
 </div>
-
-<script>
-    // Optional: Add functionality to print directly when page loads
-    // window.onload = function() {
-    //     window.print();
-    // };
-</script>
