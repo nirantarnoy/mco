@@ -694,6 +694,7 @@ class PurchreqController extends Controller
                     $purchLine->purch_id = $purchModel->id;
                     $purchLine->product_id = $reqLine->product_id;
                     $purchLine->product_name = $reqLine->product_name;
+                    $purchLine->product_description = $reqLine->product_description;
                     $purchLine->product_type = $reqLine->product_type;
                     $purchLine->qty = $reqLine->qty;
                     $purchLine->line_price = $reqLine->line_price;
@@ -816,6 +817,7 @@ class PurchreqController extends Controller
                     'id' => $product->id,
                     'name' => $product->name,
                     'code' => $product->code ?? '',
+                    'description' => $product->description ?? '',
                     'price' => $product->sale_price ?? 0,
                     'display' => $product->name,// $product->code . ($product->name ? ' (' . $product->name . ')' : '')
                 ];
@@ -834,6 +836,7 @@ class PurchreqController extends Controller
                     'product_name' => $product->name,
                     'name' => $product->name,
                     'code' => $product->code ?? '',
+                    'description' => $product->description ?? '',
                     'price' => $product->sale_price ?? 0,
                     'display' => $product->name ,//. ($product->name ? ' (' . $product->name . ')' : '')
                 ];

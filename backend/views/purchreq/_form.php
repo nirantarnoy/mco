@@ -204,6 +204,8 @@ function selectProduct(input, product) {
     // อัพเดตค่า
     input.val(product.display);
     $('.product-id-hidden[data-index="' + index + '"]').val(product.id);
+   // alert();
+    $('.line-product-description[data-index="'+ index + '"]').val(product.description);
     
     // อัพเดตราคา
     $('.price-input[data-index="' + index + '"]').val(product.price);
@@ -387,6 +389,7 @@ $(document).ready(function() {
             var \$item = $(item);
             \$item.find('.product-autocomplete').val('');
             \$item.find('.product-id-hidden').val('');
+            \$item.find('.line-product-description').val('');
             \$item.find('input[type="number"]').val('');
             
             calculateGrandTotal();
@@ -407,6 +410,7 @@ $(document).ready(function() {
             
             \$item.find('.product-autocomplete').attr('data-index', index);
             \$item.find('.product-id-hidden').attr('data-index', index);
+            \$item.find('.line-product-description').attr('data-index', index);
             \$item.find('.autocomplete-dropdown').attr('data-index', index);
             \$item.find('.qty-input').attr('data-index', index);
             \$item.find('.price-input').attr('data-index', index);
@@ -589,6 +593,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                     'formFields' => [
                         'product_id',
                         'product_name',
+                        'product_description',
                         'doc_ref_no',
                         'qty',
                         'line_price',
@@ -602,6 +607,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                         <tr>
                             <th style="width: 50px;">ลำดับ</th>
                             <th style="width: 200px;">ชื่อสินค้า</th>
+                            <th style="width: 200px;">รายละเอียด</th>
                             <th style="width: 100px;">เลขอ้างอิง</th>
                             <th style="width: 100px;">จำนวน</th>
                             <th style="width: 100px;">หน่วยนับ</th>
@@ -643,6 +649,9 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 
                                         <div class="autocomplete-dropdown" data-index="<?= $index ?>"></div>
                                     </div>
+                                </td>
+                                <td>
+                                    <?=$form->field($purchReqLine,"[{$index}]product_description")->textarea(['class'=>'form-control line-product-description'])->label(false);?>
                                 </td>
                                 <td>
                                     <?=$form->field($purchReqLine,"[{$index}]doc_ref_no")->label(false);?>

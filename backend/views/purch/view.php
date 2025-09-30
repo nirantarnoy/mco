@@ -288,6 +288,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                 return $data->product_name;
                             },
                         ],
+                        'product_description',
                         [
                             'attribute' => 'doc_ref_no',
                             'label' => 'อ้างอิง',
