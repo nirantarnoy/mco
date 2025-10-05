@@ -10,6 +10,7 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use Yii;
+use yii\web\UploadedFile;
 
 /**
  * JobController implements the CRUD actions for Job model.
@@ -100,13 +101,38 @@ class JobController extends Controller
                         $ndate = $xp3[0] . '/'. $xp3[1].'/'.$xp3[2];
                     }
                 }
+                $cus_po_date = date('Y-m-d H:i:s');
+                $xp4 = explode("/", $model->cus_po_date);
+                if($xp4 != null){
+                    if(count($xp4) > 1){
+                        $cus_po_date = $xp4[0] . '/'. $xp4[1].'/'.$xp4[2];
+                    }
+                }
+
+                $line_name = \Yii::$app->request->post('line_name');
+                $line_description = \Yii::$app->request->post('line_description');
+                $line_phone = \Yii::$app->request->post('line_phone');
+                $line_email = \Yii::$app->request->post('line_email');
 
 
                 $model->quotation_id = 0;
                 $model->job_date = date('Y-m-d',strtotime($jdate));
                 $model->start_date = date('Y-m-d',strtotime($sdate));
                 $model->end_date = date('Y-m-d',strtotime($ndate));
-                $model->save();
+                $model->cus_po_date = date('Y-m-d',strtotime($cus_po_date));
+                if($model->save()){
+                  if($line_name !=null){
+                      for($i=0;$i<=count($line_name)-1;$i++){
+                          $model_line = new \common\models\JobContactInfo();
+                          $model_line->job_id = $model->id;
+                          $model_line->name = $line_name[$i];
+                        //  $model_line->description = $line_description[$i];
+                          $model_line->phone = $line_phone[$i];
+                          $model_line->email = $line_email[$i];
+                          $model_line->save(false);
+                      }
+                  }
+                }
                 return $this->redirect(['view', 'id' => $model->id]);
             }
         } else {
@@ -129,6 +155,7 @@ class JobController extends Controller
     {
         $model = $this->findModel($id);
         $model_line = JobLine::find()->where(['job_id' => $model->id])->all();
+        $model_contact = \common\models\JobContactInfo::find()->where(['job_id' => $model->id])->all();
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             $jdate = date('Y-m-d H:i:s');
@@ -153,20 +180,92 @@ class JobController extends Controller
                 }
             }
 
+            $cus_po_date = date('Y-m-d H:i:s');
+            $xp4 = explode("/", $model->cus_po_date);
+            if($xp4 != null){
+                if(count($xp4) > 1){
+                    $cus_po_date = $xp4[0] . '/'. $xp4[1].'/'.$xp4[2];
+                }
+            }
+
+            $line_name = \Yii::$app->request->post('line_name');
+            $line_description = \Yii::$app->request->post('line_description');
+            $line_phone = \Yii::$app->request->post('line_phone');
+            $line_email = \Yii::$app->request->post('line_email');
+
+            $recordDel = \Yii::$app->request->post('removelist');
+
+
             //echo $ndate;return;
             $model->job_date = date('Y-m-d',strtotime($jdate));
             $model->start_date = date('Y-m-d',strtotime($sdate));
             $model->end_date = date('Y-m-d',strtotime($ndate));
+            $model->cus_po_date = date('Y-m-d',strtotime($cus_po_date));
 
-            if($model->save()){
+            if($model->save(false)){
+                if($recordDel != null){
+                    $recordDel = explode(",", $recordDel);
+                    for($i=0;$i<=count($recordDel)-1;$i++){
+                        $model_line = \common\models\JobContactInfo::find()->where(['id'=>$recordDel[$i]])->one();
+                        $model_line->delete();
+                    }
+                }
+                if($line_name !=null){
+                    for($i=0;$i<=count($line_name)-1;$i++){
+                        if($line_name[$i]=='')continue;
+                       $model_dup = \common\models\JobContactInfo::find()->where(['job_id'=>$model->id,'name'=>trim($line_name[$i])])->one();
+                       if($model_dup == null){
+                           $model_line = new \common\models\JobContactInfo();
+                           $model_line->job_id = $model->id;
+                           $model_line->name = $line_name[$i];
+                        //   $model_line->description = $line_description[$i];
+                           $model_line->phone = $line_phone[$i];
+                           $model_line->email = $line_email[$i];
+                           $model_line->save(false);
+                       }else{
+                          // $model_dup->description = $line_description[$i];
+                           $model_dup->phone = $line_phone[$i];
+                           $model_dup->email = $line_email[$i];
+                           $model_dup->save(false);
+                       }
+                    }
+                }
+
+                $uploaded = UploadedFile::getInstances($model, 'jsa_doc');
+                if (!empty($uploaded)) {
+                    $loop = 0;
+                    foreach ($uploaded as $file) {
+                        $upfiles = "jsa_" . time()."_".$loop . "." . $file->getExtension();
+                        if ($file->saveAs('uploads/job/' . $upfiles)) {
+                            $model->jsa_doc = $upfiles;
+                            $model->save(false);
+                        }
+                        $loop++;
+                    }
+                }
+
+                $uploaded = UploadedFile::getInstances($model, 'report_doc');
+                if (!empty($uploaded)) {
+                    $loop = 0;
+                    foreach ($uploaded as $file) {
+                        $upfiles = "report_" . time()."_".$loop . "." . $file->getExtension();
+                        if ($file->saveAs('uploads/job/' . $upfiles)) {
+                            $model->report_doc = $upfiles;
+                            $model->save(false);
+                        }
+                        $loop++;
+                    }
+                }
+
+
                 return $this->redirect(['view', 'id' => $model->id]);
             }
-
         }
 
         return $this->render('update', [
             'model' => $model,
-            'model_line' => $model_line
+            'model_line' => $model_line,
+            'model_contact' => $model_contact,
         ]);
     }
 
@@ -1146,6 +1245,38 @@ class JobController extends Controller
 
         return $mimeTypes[$extension] ?? 'application/octet-stream';
     }
+
+    public function actionGetcustomerinfo(){
+       $id = \Yii::$app->request->post('id');
+       $customer_name = '';
+       if($id){
+           $model = \backend\models\Quotation::find()->where(['id'=>$id])->one();
+           if($model){
+               $customer_name = \backend\models\Customer::findName($model->customer_id);
+           }
+       }
+
+       echo $customer_name;
+    }
+    public function actionDeleteFile($id)
+    {
+        $model = $this->findModel($id);
+        if ($model && $model->jsa_doc) {
+            $filePath = Yii::getAlias('@webroot/uploads/่job/' . $model->jsa_doc);
+
+            if (file_exists($filePath)) {
+                @unlink($filePath); // ลบไฟล์จริง
+            }
+
+            $model->jsa_doc = null;
+            $model->save(false); // อัปเดตข้อมูล
+
+            Yii::$app->session->setFlash('success', 'ลบไฟล์เรียบร้อยแล้ว');
+        }
+
+        return $this->redirect(['update', 'id' => $id]);
+    }
+
 
 
 

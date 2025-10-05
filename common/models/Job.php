@@ -42,6 +42,12 @@ class Job extends \yii\db\ActiveRecord
             [['job_date','start_date','end_date'], 'safe'],
             [['job_amount'], 'number'],
             [['job_no'], 'string', 'max' => 255],
+            [['cus_po_no'], 'string', 'max' => 255],
+            [['cus_po_date'], 'safe'],
+            [['cus_po_doc'], 'string', 'max' => 255],
+            [['summary_note'], 'string', 'max' => 255],
+            [['jsa_doc'], 'string', 'max' => 255],
+            [['report_doc'], 'string', 'max' => 255],
         ];
     }
 
@@ -63,6 +69,12 @@ class Job extends \yii\db\ActiveRecord
             'created_by' => 'Created By',
             'updated_at' => 'Updated At',
             'updated_by' => 'Updated By',
+            'cus_po_no' => 'คำสั่งซื้อลูกค้า',
+            'cus_po_date' => 'วันที่คำสั่งซื้อลูกค้า',
+            'cus_po_doc' => 'เอกสารคำสั่งซื้อลูกค้า',
+            'summary_note' => 'สรุป',
+            'jsa_doc' => 'เอกสาร JSAS',
+            'report_doc' => 'เอกสารรายงาน'
         ];
     }
 
