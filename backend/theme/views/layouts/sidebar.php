@@ -339,6 +339,15 @@
                                 </li>
                             <?php endif; ?>
 
+                            <?php //if (\Yii::$app->user->can('job/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=vehicle-expense/list" class="nav-link vehicle-expense">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>ค่าใช้จ่ายรถ</p>
+                                    </a>
+                                </li>
+                            <?php //endif; ?>
+
                         </ul>
                     </li>
                 <?php endif;?>
