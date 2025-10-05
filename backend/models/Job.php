@@ -252,7 +252,7 @@ class Job extends \common\models\Job
      */
     public function hasPurchaseRequest($id)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch_req WHERE job_id = :jobId')
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch_req pr INNER JOIN purch_req_doc prd ON prd.purch_req_id = pr.id WHERE pr.job_id = :jobId')
             ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
@@ -264,7 +264,7 @@ class Job extends \common\models\Job
      */
     public function hasPurchaseOrder($id)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch WHERE job_id = :jobId')
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch p INNER JOIN purch_doc pd ON pd.purch_id = p.id WHERE p.job_id = :jobId')
             ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
@@ -314,7 +314,7 @@ class Job extends \common\models\Job
     public function hasBilling($id)
     {
         // สมมติว่าใช้จาก invoices ที่มีสถานะ pending หรือ sent
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices i LEFT JOIN billing_invoice_items b ON b.invoice_id = i.id LEFT JOIN quotation q ON q.id =i.quotation_id LEFT JOIN job j ON j.quotation_id = q.id  WHERE j.id = :jobId AND i.is_billed=1')
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices i LEFT JOIN billing_invoice_items b ON b.invoice_id = i.id LEFT JOIN quotation q ON q.id =i.quotation_id LEFT JOIN job j ON j.quotation_id = q.id LEFT JOIN invoice_doc ivd ON ivd.invoice_id = i.id  WHERE j.id = :jobId AND i.is_billed=1')
             ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
@@ -326,7 +326,7 @@ class Job extends \common\models\Job
      */
     public function hasTaxInvoice($id)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices i LEFT JOIN quotation q ON q.id =i.quotation_id LEFT JOIN job j ON j.quotation_id = q.id  WHERE j.id = :jobId AND i.invoice_type = \'tax_invoice\'')
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices i LEFT JOIN quotation q ON q.id =i.quotation_id LEFT JOIN job j ON j.quotation_id = q.id LEFT JOIN invoice_doc ivd ON ivd.invoice_id = i.id WHERE j.id = :jobId AND i.invoice_type = \'tax_invoice\'')
             ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
@@ -338,7 +338,7 @@ class Job extends \common\models\Job
      */
     public function hasReceipt($id)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices i LEFT JOIN quotation q ON q.id =i.quotation_id LEFT JOIN job j ON j.quotation_id = q.id WHERE j.id = :jobId AND i.invoice_type = \'receipt\'')
+        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices i LEFT JOIN quotation q ON q.id =i.quotation_id LEFT JOIN job j ON j.quotation_id = q.id LEFT JOIN invoice_doc ivd ON ivd.invoice_id = i.id WHERE j.id = :jobId AND i.invoice_type = \'receipt\'')
             ->bindParam(':jobId', $id)
             ->queryScalar();
         return $count > 0;
@@ -357,7 +357,7 @@ class Job extends \common\models\Job
      */
     public function hasPettyCash($jobId)
     {
-        $sql = "SELECT COUNT(*) FROM petty_cash_voucher WHERE job_id = :jobId AND approve_status = 1";
+        $sql = "SELECT COUNT(*) FROM petty_cash_voucher pcv LEFT JOIN petty_cash_voucher_doc_bill pcvd ON pcvd.petty_cash_voucher_id = pcv.id WHERE job_id = :jobId AND approve_status = 1";
         $count = Yii::$app->db->createCommand($sql)
             ->bindParam(':jobId', $jobId)
             ->queryScalar();
