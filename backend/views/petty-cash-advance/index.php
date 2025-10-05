@@ -216,7 +216,7 @@ $minAmount = \backend\models\PettyCashAdvance::MIN_AMOUNT;
                 [
                     'class' => 'yii\grid\ActionColumn',
                     'header' => 'จัดการ',
-                    'template' => '{view} {update} {approve} {reject} {print}',
+                    'template' => '{view} {update} {approve} {reject} {print} {delete}',
                     'buttons' => [
                         'view' => function ($url, $model, $key) {
                             return Html::a('<i class="fas fa-eye"></i>', $url, [
@@ -265,6 +265,15 @@ $minAmount = \backend\models\PettyCashAdvance::MIN_AMOUNT;
                                 'class' => 'btn btn-sm btn-outline-secondary',
                                 'target' => '_blank'
                             ]);
+                        },
+                        'delete' => function ($url, $model, $key) {
+                            return $model->status != 'approved' ? Html::a('<i class="fas fa-trash"></i>', $url, [
+                                'title' => 'ลบ',
+                                'class' => 'btn btn-sm btn-outline-danger',
+                                'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะลบรายการนี้?',
+                                'data-method' => 'post',
+                                'data-pjax' => '0'
+                            ]):'';
                         },
                     ],
                     'headerOptions' => ['style' => 'width: 150px; text-align: center;'],

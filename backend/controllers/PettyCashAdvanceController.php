@@ -229,6 +229,7 @@ class PettyCashAdvanceController extends Controller
             'pettyCashLimit' => $pettyCashLimit,
             'from_date'=>null,
             'to_date'=>null,
+            'reportData' => null,
         ]);
     }
 

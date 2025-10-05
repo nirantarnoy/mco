@@ -277,7 +277,7 @@ window.onload = function() {
         <div class="voucher-left">
             <div class="header-field">
                 <span class="header-label">NAME:</span>
-                <span><?= Html::encode(\backend\models\Employee::findFullName($model->pay_for_emp_id)) ?></span>
+                <span><?= Html::encode(\backend\models\Vendor::findName($model->vendor_id)) ?></span>
             </div>
             <div class="header-field">
                 <span class="header-label">AMOUNT:</span>
@@ -405,7 +405,12 @@ window.onload = function() {
         <div class="signature-box">
             <div class="signature-label">APPROVED BY</div>
             <div class="signature-name">
-                <?= $model->approved_by ? Html::encode($model->approved_by) : '&nbsp;' ?>
+                <?php
+                $approve_signature = \backend\models\User::findEmployeeSignature(trim($model->approved_by));
+                if(!empty($approve_signature)): ?>
+                <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" alt="Requestor Signature">
+                <?php endif; ?>
+<!--                --><?php //= $model->approved_by ? Html::encode($model->approved_by) : '&nbsp;' ?>
             </div>
             <div class="signature-date">
                 <span class="date-field">
