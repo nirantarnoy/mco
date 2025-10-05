@@ -26,10 +26,10 @@ function checkBalance() {
     
     if (totalAfterRequest > maxAmount) {
         $('#balance-warning').show();
-        $('#submit-btn').prop('disabled', true);
+       // $('#submit-btn').prop('disabled', true);
     } else {
         $('#balance-warning').hide();
-        $('#submit-btn').prop('disabled', false);
+       // $('#submit-btn').prop('disabled', false);
     }
 }
 
@@ -226,7 +226,7 @@ $(document).ready(function() {
     <!-- คำเตือนเมื่อเกินวงเงิน -->
     <div id="balance-warning" class="alert alert-danger" style="display: none;">
         <i class="fas fa-exclamation-triangle"></i>
-        <strong>ไม่สามารถเบิกได้:</strong>
+        <strong>แจ้งเตือน:</strong>
         จำนวนเงินที่เบิกจะทำให้เกินวงเงินสูงสุด <?= number_format($maxAmount, 2) ?> บาท
     </div>
 
