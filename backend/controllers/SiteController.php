@@ -133,7 +133,8 @@ class SiteController extends Controller
                     \Yii::$app->user->logout();
                 }
             }
-            return $this->redirect(['site/index']);
+        //    return $this->redirect(['site/index']);
+            return $this->redirect(['search/index']);
         }
 
         //   $model->password = '';

@@ -17,7 +17,7 @@
                      with font-awesome or any other icon font library -->
                 <?php if(\Yii::$app->user->can('site/index')):?>
                 <li class="nav-item">
-                    <a href="index.php?r=site/index" class="nav-link site">
+                    <a href="index.php?r=search/index" class="nav-link search">
                         <i class="nav-icon fas fa-tachometer-alt"></i>
                         <p>
                             ภาพรวมระบบ

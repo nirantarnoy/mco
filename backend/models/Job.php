@@ -2,6 +2,7 @@
 
 namespace backend\models;
 
+use common\models\JobLine;
 use Yii;
 use yii\db\ActiveRecord;
 
@@ -88,6 +89,10 @@ class Job extends \common\models\Job
     public function getQuotation()
     {
         return $this->hasOne(Quotation::className(), ['id' => 'quotation_id']);
+    }
+
+    public function getJobLines(){
+        return $this->hasMany(JobLine::className(), ['job_id' => 'id']);
     }
 
     public static function findJobNo($id)
