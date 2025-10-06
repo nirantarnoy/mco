@@ -416,6 +416,8 @@ class JobController extends Controller
         // ดึงข้อมูล Payment Receipt ที่เกี่ยวข้องกับใบงาน
         $paymentReceipts = $this->getPaymentReceipts($model->id);
 
+        $vehicleExpense = $this->getJobVehicleExpense($model->job_no);
+
         return $this->render('timeline', [
             'model' => $model,
             'purchReqs' => $purchReqs,
@@ -425,6 +427,7 @@ class JobController extends Controller
             'billingInvoices'=> $billinginvoices,
             'pettyCashVouchers' => $pettyCashVouchers,
             'paymentReceipts' => $paymentReceipts,
+            'vehicleExpense' => $vehicleExpense,
         ]);
     }
 
@@ -951,6 +954,29 @@ class JobController extends Controller
         }
 
         return $vouchers;
+    }
+
+    protected function getJobVehicleExpense($job_no)
+    {
+        $query = "
+            SELECT 
+                ve.id,
+                ve.vehicle_no,
+                ve.expense_date,
+                ve.job_description,
+                ve.total_distance,
+                ve.vehicle_cost,
+                ve.passenger_count,
+                ve.total_wage
+            FROM vehicle_expense ve
+            WHERE ve.job_no = :jobNo
+            ORDER BY ve.expense_date DESC
+        ";
+
+        $command = Yii::$app->db->createCommand($query);
+        $command->bindParam(':jobNo', $job_no);
+
+        return $command->queryAll();
     }
 
     /**

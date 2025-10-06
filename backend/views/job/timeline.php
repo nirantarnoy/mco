@@ -668,6 +668,54 @@ if($today > $end){
                 </div>
             </div>
 
+            <!-- Journal Transaction Section -->
+            <div class="timeline-section">
+                <div class="card border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-truck"></i>
+                            ค่าใช้จ่ายรถ
+                            <span class="badge badge-light text-dark ml-2"><?= count($vehicleExpense) ?> รายการ</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($vehicleExpense)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-sm">
+                                    <thead class="thead-light">
+                                    <tr>
+                                        <th style="text-align: center;">ทะเบียนรถ</th>
+                                        <th style="text-align: center;">วันที่</th>
+                                        <th style="text-align: right;">ระยะทาง</th>
+                                        <th style="text-align: right;">ค่าใช้จ่ายรถ</th>
+                                        <th style="text-align: right;">จำนวนคน</th>
+                                        <th style="text-align: right;">ค่าจ้างรวม</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php foreach ($vehicleExpense as $expanse): ?>
+                                        <tr>
+                                            <td style="text-align: center;"><?= Html::encode($expanse['vehicle_no']) ?></td>
+                                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($expanse['expense_date'])) ?></td>
+                                            <td style="text-align: right;"><?= number_format($expanse['total_distance'],0) ?></td>
+                                            <td style="text-align: right;"><?= number_format($expanse['vehicle_cost'], 0) ?></td>
+                                            <td style="text-align: right;"><?= number_format($expanse['passenger_count'], 0) ?></td>
+                                            <td style="text-align: right;"><?= number_format($expanse['total_wage'], 0) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-danger mb-0">
+                                <i class="fas fa-info-circle"></i>
+                                ไม่มีข้อมูลรายการรับ-เบิกของสำหรับใบงานนี้
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
             <!-- Invoice Section -->
             <div class="timeline-section">
                 <div class="card border-primary">
@@ -1054,7 +1102,8 @@ if($today > $end){
                         $totalPettyCashAmount = array_sum(array_column($pettyCashVouchers, 'amount'));
                         $totalPaymentReceived = array_sum(array_column($paymentReceipts, 'net_amount')); // เพิ่มยอดรับชำระ
                         $totalInvoiceAmount = array_sum(array_column($invoices, 'total_amount'));
-                        $totalExpenses = $totalPurchaseAmount + $totalPettyCashAmount;
+                        $totalVehicleExpenseAmount = array_sum(array_column($vehicleExpense,'total_wage'));
+                        $totalExpenses = $totalPurchaseAmount + $totalPettyCashAmount + $totalVehicleExpenseAmount;
                         $totalRevenue = $totalPaymentReceived; // รายได้จากการรับชำระ
                         $profitLoss = $totalRevenue - $totalExpenses; // คำนวณกำไรขาดทุนจากรายได้ - ค่าใช้จ่าย
                         $profitLossPercentage = $model->job_amount > 0 ? ($profitLoss / $model->job_amount) * 100 : 0;
@@ -1115,6 +1164,7 @@ if($today > $end){
                                             'ใบสั่งซื้อ' => !empty($purchases),
                                             'รับ-เบิกของ' => !empty($journalTrans),
                                             'เงินสดย่อย' => !empty($voucher),
+                                            'ค่าใช้จ่ายรถ' => !empty($vehicleExpense),
                                             'ใบกำกับ/ใบเสร็จ' => !empty($invoices),
                                             'วางบิล' => !empty($billingInvoices),
                                             'รับชำระเงิน' => !empty($paymentReceipts)
