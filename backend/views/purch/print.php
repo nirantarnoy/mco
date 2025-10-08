@@ -515,15 +515,21 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
         </tr>
         </thead>
         <tbody>
+        <?php
+         $total = 0;
+        ?>
         <?php if ($purchaseLines): ?>
             <?php $itemNo = 1; ?>
             <?php foreach ($purchaseLines as $line): ?>
+                <?php
+                   $total += $line->line_total;
+                ?>
                 <tr>
                     <td><?= $itemNo++ ?></td>
                     <td><?= Html::encode($line->product->code ?? '') ?></td>
                     <td class="description-cell"><?= Html::encode($line->product_name) ?></td>
                     <td></td>
-                    <td><?= number_format($line->qty, 0) ?></td>
+                    <td><?= number_format($line->qty, 1) ?></td>
                     <td><?= Html::encode(\backend\models\Unit::findName($line->unit_id)) ?></td>
                     <td class="number-cell"><?= number_format($line->line_price, 2) ?></td>
                     <td class="number-cell"><?= number_format($line->line_total, 2) ?></td>
@@ -562,7 +568,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
             <table class="summary-table">
                 <tr>
                     <td class="summary-label">TOTAL</td>
-                    <td class="number-cell"><?= number_format($purchase->total_amount, 2) ?></td>
+                    <td class="number-cell"><?= number_format($total, 2) ?></td>
                 </tr>
                 <tr>
                     <td class="summary-label">DISCOUNT</td>
@@ -570,7 +576,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                 </tr>
                 <tr>
                     <td class="summary-label">NET AMOUNT</td>
-                    <td class="number-cell"><?= number_format(($purchase->total_amount - $purchase->discount_amount), 2) ?></td>
+                    <td class="number-cell"><?= number_format(($total - $purchase->discount_amount), 2) ?></td>
                 </tr>
                 <tr>
                     <td class="summary-label">VAT 7%</td>
