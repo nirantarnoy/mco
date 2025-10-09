@@ -677,6 +677,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                         'placeholder' => '0.00',
                                         'class' => 'form-control price-input',
                                         'data-index' => $index,
+                                        'value' => number_format($purchReqLine->line_price, 2, '.', ''),
                                     ])->label(false) ?>
                                 </td>
                                 <td>
@@ -687,6 +688,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                         'class' => 'form-control line-total',
                                         'style' => 'background-color: #f8f9fa;',
                                         'data-index' => $index,
+                                        'value' => number_format($purchReqLine->line_total, 2, '.', ''),
                                     ])->label(false) ?>
                                 </td>
                                 <td class="text-center align-middle">
