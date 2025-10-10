@@ -5,6 +5,7 @@ namespace backend\controllers;
 use backend\models\Product;
 use backend\models\ProductSearch;
 use backend\models\WarehouseSearch;
+use common\models\JournalTrans;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -222,6 +223,9 @@ class ProductController extends Controller
             $old_photo = \Yii::$app->request->post('old_photo');
             $old_photo2 = \Yii::$app->request->post('old_photo2');
 
+            $line_warehouse = \Yii::$app->request->post('warehouse_id');
+            $line_qty = \Yii::$app->request->post('line_qty');
+
             //  print_r($line_customer_rec_id);return;
 
             if ($model->save(false)) {
@@ -260,11 +264,74 @@ class ProductController extends Controller
 
                 }
 
+                if($line_warehouse != null){
+                    $model_journal_trans = new \backend\models\JournalTrans();
+                    $model_journal_trans->trans_date = date('Y-m-d H:i:s');
+                    $model_journal_trans->journal_no = '';
+                    $model_journal_trans->remark = '';
+                    $model_journal_trans->trans_type_id = 2;
+                    $model_journal_trans->status = 3; // 3 complete
+                    $model_journal_trans->stock_type_id = 0;
+                    $model_journal_trans->warehouse_id = 0;
+
+                    if($model_journal_trans->save(false)){
+//                        if($line_warehouse!=null){
+//                            \backend\models\Stocksum::updateAll(['qty'=>0],['product_id'=>$model->id]);
+//                        }
+                        for($i=0;$i<=count($line_warehouse)-1;$i++){
+
+                            if($line_warehouse[$i] == null || $line_qty[$i] == null || $line_warehouse[$i] <= 0 || $line_warehouse[$i] == ''){
+                                continue;
+                            }
+
+                            if($this->checkEditChange($model->id,$line_warehouse[$i],$line_qty[$i]) == 0){ // check is edited
+                                continue;
+                            }
+
+                            $model_trans = new \backend\models\JournalTransLine();
+                            $model_trans->product_id = $model->id;
+                            $model_trans->journal_trans_id = $model_journal_trans->id;
+                            $model_trans->warehouse_id = $line_warehouse[$i];
+                            $model_trans->qty = $line_qty[$i];
+                            $model_trans->status = 1;
+                            if($model_trans->save(false)){
+                                $model_sum = \backend\models\Stocksum::find()->where(['product_id'=>$model->id,'warehouse_id'=>$line_warehouse[$i]])->one();
+                                if($model_sum){
+                                    $model_sum->qty = $line_qty[$i];
+                                    //   $model_sum->qty = $line_qty[$i] + ($model_sum->qty ?? 0);
+                                    if($model_sum->save(false)){
+//                                        $model->stock_qty = $line_qty[$i];
+//                                        $model->save(false);
+                                        //  $this->updateProductStock($model->id);
+                                    }
+                                }else{
+
+                                    $model_sum = new \backend\models\Stocksum();
+                                    $model_sum->product_id = $model->id;
+                                    $model_sum->warehouse_id = $line_warehouse[$i];
+                                    $model_sum->qty = $line_qty[$i];
+                                    if($model_sum->save(false)){
+//                                        $model->stock_qty = $line_qty[$i];
+//                                        $model->save(false);
+                                        // $this->updateProductStock($model->id);
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+
+                }
+
+                $this->updateProductStock($model->id);
+
                 if($removelist!=null){
                     $xdel = explode(',', $removelist);
                     for($i=0;$i<count($xdel);$i++){
                         \backend\models\StockSum::deleteAll(['id'=>$xdel[$i]]);
                     }
+
+                    $this->updateProductStock($model->id);
                 }
 
             }
@@ -278,6 +345,32 @@ class ProductController extends Controller
             'model_line' => $model_line,
             'model_customer_line'=>null,
         ]);
+    }
+
+    function checkEditChange($product_id,$warehouse_id,$qty){
+        $res = 0;
+        $model = \backend\models\Stocksum::find()->where(['product_id'=>$product_id,'warehouse_id'=>$warehouse_id])->one();
+        if($model){
+            if($model->qty != $qty){ // is edited
+                $res = 1;
+            }
+        }else{
+            $res = 1;
+        }
+        return $res;
+    }
+
+    function updateProductStock($product_id){
+        if($product_id){
+            $total_stock = \backend\models\Stocksum::find()
+                ->where(['product_id' => $product_id])
+                ->sum('qty + COALESCE(reserv_qty, 0)');
+
+            \backend\models\Product::updateAll(
+                ['stock_qty' => $total_stock ?: 0],
+                ['id' => $product_id]
+            );
+        }
     }
 
     /**
