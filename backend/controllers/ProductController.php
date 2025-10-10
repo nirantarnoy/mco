@@ -295,7 +295,7 @@ class ProductController extends Controller
                             $model_trans->qty = $line_qty[$i];
                             $model_trans->status = 1;
                             if($model_trans->save(false)){
-                                $model_sum = \backend\models\Stocksum::find()->where(['product_id'=>$model->id,'warehouse_id'=>$line_warehouse[$i]])->one();
+                                $model_sum = \backend\models\StockSum::find()->where(['product_id'=>$model->id,'warehouse_id'=>$line_warehouse[$i]])->one();
                                 if($model_sum){
                                     $model_sum->qty = $line_qty[$i];
                                     //   $model_sum->qty = $line_qty[$i] + ($model_sum->qty ?? 0);
@@ -306,7 +306,7 @@ class ProductController extends Controller
                                     }
                                 }else{
 
-                                    $model_sum = new \backend\models\Stocksum();
+                                    $model_sum = new \backend\models\StockSum();
                                     $model_sum->product_id = $model->id;
                                     $model_sum->warehouse_id = $line_warehouse[$i];
                                     $model_sum->qty = $line_qty[$i];
@@ -349,7 +349,7 @@ class ProductController extends Controller
 
     function checkEditChange($product_id,$warehouse_id,$qty){
         $res = 0;
-        $model = \backend\models\Stocksum::find()->where(['product_id'=>$product_id,'warehouse_id'=>$warehouse_id])->one();
+        $model = \backend\models\StockSum::find()->where(['product_id'=>$product_id,'warehouse_id'=>$warehouse_id])->one();
         if($model){
             if($model->qty != $qty){ // is edited
                 $res = 1;
@@ -362,7 +362,7 @@ class ProductController extends Controller
 
     function updateProductStock($product_id){
         if($product_id){
-            $total_stock = \backend\models\Stocksum::find()
+            $total_stock = \backend\models\StockSum::find()
                 ->where(['product_id' => $product_id])
                 ->sum('qty + COALESCE(reserv_qty, 0)');
 
