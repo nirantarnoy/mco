@@ -9,6 +9,7 @@ use yii\data\ActiveDataProvider;
  */
 class PurchReqSearch extends PurchReq
 {
+    public $vendor_name;
     /**
      * {@inheritdoc}
      */
@@ -39,7 +40,7 @@ class PurchReqSearch extends PurchReq
      */
     public function search($params)
     {
-        $query = PurchReq::find();
+        $query = PurchReq::find()->alias('pr')->joinWith(['vendor v']);
 
         // add conditions that should always apply here
 
@@ -65,19 +66,19 @@ class PurchReqSearch extends PurchReq
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'id' => $this->id,
-            'purch_req_date' => $this->purch_req_date,
-            'vendor_id' => $this->vendor_id,
-            'status' => $this->status,
-            'approve_status' => $this->approve_status,
-            'total_amount' => $this->total_amount,
-            'discount_amount' => $this->discount_amount,
-            'vat_amount' => $this->vat_amount,
-            'net_amount' => $this->net_amount,
-            'created_at' => $this->created_at,
-            'created_by' => $this->created_by,
-            'updated_at' => $this->updated_at,
-            'updated_by' => $this->updated_by,
+            'pr.id' => $this->id,
+            'pr.purch_req_date' => $this->purch_req_date,
+            'pr.vendor_id' => $this->vendor_id,
+            'pr.status' => $this->status,
+            'pr.approve_status' => $this->approve_status,
+            'pr.total_amount' => $this->total_amount,
+            'pr.discount_amount' => $this->discount_amount,
+            'pr.vat_amount' => $this->vat_amount,
+            'pr.net_amount' => $this->net_amount,
+            'pr.created_at' => $this->created_at,
+            'pr.created_by' => $this->created_by,
+            'pr.updated_at' => $this->updated_at,
+            'pr.updated_by' => $this->updated_by,
         ]);
 
         // Handle purch_id filter for converted status
@@ -89,10 +90,10 @@ class PurchReqSearch extends PurchReq
             }
         }
 
-        $query->andFilterWhere(['like', 'purch_req_no', $this->purch_req_no])
-            ->andFilterWhere(['like', 'vendor_name', $this->vendor_name])
-            ->andFilterWhere(['like', 'note', $this->note])
-            ->andFilterWhere(['like', 'total_text', $this->total_text]);
+        $query->andFilterWhere(['like', 'pr.purch_req_no', $this->purch_req_no])
+            ->andFilterWhere(['like', 'v.name', $this->vendor_name])
+            ->andFilterWhere(['like', 'pr.note', $this->note])
+            ->andFilterWhere(['like', 'pr.total_text', $this->total_text]);
 
         return $dataProvider;
     }

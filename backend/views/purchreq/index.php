@@ -93,13 +93,19 @@ $this->params['breadcrumbs'][] = $this->title;
                     ]
                 ]),
             ],
+//            [
+//                'attribute' => 'vendor_id',
+//                'label' => 'ผู้ขาย',
+//                'headerOptions' => ['style' => 'width: 200px;'],
+//                'value' => function ($model) {
+//                    return $model->vendor_id ? \backend\models\Vendor::findName($model->vendor_id) : 'ไม่ระบุ';
+//                },
+//            ],
             [
-                'attribute' => 'vendor_id',
+                'attribute' => 'vendor_name',
                 'label' => 'ผู้ขาย',
                 'headerOptions' => ['style' => 'width: 200px;'],
-                'value' => function ($model) {
-                    return $model->vendor_id ? \backend\models\Vendor::findName($model->vendor_id) : 'ไม่ระบุ';
-                },
+                'value' => 'vendor.name', // ✅ แสดงชื่อ vendor
             ],
             [
                     'attribute' => 'job_id',

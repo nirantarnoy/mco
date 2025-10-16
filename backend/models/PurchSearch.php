@@ -9,6 +9,7 @@ use yii\data\ActiveDataProvider;
  */
 class PurchSearch extends Purch
 {
+    public $vendor_name;
     /**
      * {@inheritdoc}
      */
@@ -39,7 +40,7 @@ class PurchSearch extends Purch
      */
     public function search($params)
     {
-        $query = Purch::find();
+        $query = Purch::find()->alias('p')->joinWith(['vendor v']);
 
         // add conditions that should always apply here
 
@@ -65,21 +66,22 @@ class PurchSearch extends Purch
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'id' => $this->id,
-            'purch_date' => $this->purch_date,
-            'vendor_id' => $this->vendor_id,
-            'status' => $this->status,
-            'approve_status' => $this->approve_status,
-            'total_amount' => $this->total_amount,
-            'created_at' => $this->created_at,
-            'created_by' => $this->created_by,
-            'updated_at' => $this->updated_at,
-            'updated_by' => $this->updated_by,
+            'p.id' => $this->id,
+            'p.purch_date' => $this->purch_date,
+           // 'vendor_id' => $this->vendor_id,
+            'p.status' => $this->status,
+            'p.approve_status' => $this->approve_status,
+            'p.total_amount' => $this->total_amount,
+            'p.created_at' => $this->created_at,
+            'p.created_by' => $this->created_by,
+            'p.updated_at' => $this->updated_at,
+            'p.updated_by' => $this->updated_by,
         ]);
 
-        $query->andFilterWhere(['like', 'purch_no', $this->purch_no])
-            ->andFilterWhere(['like', 'vendor_name', $this->vendor_name])
-            ->andFilterWhere(['like', 'note', $this->note]);
+        $query->andFilterWhere(['like', 'p.purch_no', $this->purch_no])
+            //->andFilterWhere(['like', 'vendor_name', $this->vendor_name])
+            ->andFilterWhere(['like', 'v.name', $this->vendor_name])
+            ->andFilterWhere(['like', 'p.note', $this->note]);
 
         return $dataProvider;
     }

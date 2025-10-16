@@ -1,4 +1,5 @@
 <?php
+
 namespace backend\models;
 
 use NumberFormatter;
@@ -59,33 +60,33 @@ class PurchReq extends ActiveRecord
     public function behaviors()
     {
         return [
-            'timestampcdate'=>[
-                'class'=> \yii\behaviors\AttributeBehavior::className(),
-                'attributes'=>[
-                    ActiveRecord::EVENT_BEFORE_INSERT=>'created_at',
+            'timestampcdate' => [
+                'class' => \yii\behaviors\AttributeBehavior::className(),
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_INSERT => 'created_at',
                 ],
-                'value'=> time(),
+                'value' => time(),
             ],
-            'timestampudate'=>[
-                'class'=> \yii\behaviors\AttributeBehavior::className(),
-                'attributes'=>[
-                    ActiveRecord::EVENT_BEFORE_INSERT=>'updated_at',
+            'timestampudate' => [
+                'class' => \yii\behaviors\AttributeBehavior::className(),
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_INSERT => 'updated_at',
                 ],
-                'value'=> time(),
+                'value' => time(),
             ],
-            'timestampcby'=>[
-                'class'=> \yii\behaviors\AttributeBehavior::className(),
-                'attributes'=>[
-                    ActiveRecord::EVENT_BEFORE_INSERT=>'created_by',
+            'timestampcby' => [
+                'class' => \yii\behaviors\AttributeBehavior::className(),
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_INSERT => 'created_by',
                 ],
-                'value'=> Yii::$app->user->id,
+                'value' => Yii::$app->user->id,
             ],
-            'timestamuby'=>[
-                'class'=> \yii\behaviors\AttributeBehavior::className(),
-                'attributes'=>[
-                    ActiveRecord::EVENT_BEFORE_UPDATE=>'updated_by',
+            'timestamuby' => [
+                'class' => \yii\behaviors\AttributeBehavior::className(),
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_UPDATE => 'updated_by',
                 ],
-                'value'=> Yii::$app->user->id,
+                'value' => Yii::$app->user->id,
             ],
 
         ];
@@ -97,15 +98,15 @@ class PurchReq extends ActiveRecord
     public function rules()
     {
         return [
-            [['vendor_id','job_id'], 'required'],
+            [['vendor_id', 'job_id'], 'required'],
             [['purch_req_date'], 'safe'],
-            [['vendor_id', 'status', 'approve_status', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by','job_id','discount_percent','vat_percent','approve_by','reason_title_id','req_for_dep_id'], 'integer'],
-            [['total_amount', 'discount_amount', 'vat_amount', 'net_amount','vat_percent','discount_total_amount','discount_percent'], 'number'],
-            [['purch_req_no', 'vendor_name', 'note', 'total_text','reason'], 'string', 'max' => 255],
+            [['vendor_id', 'status', 'approve_status', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by', 'job_id', 'discount_percent', 'vat_percent', 'approve_by', 'reason_title_id', 'req_for_dep_id'], 'integer'],
+            [['total_amount', 'discount_amount', 'vat_amount', 'net_amount', 'vat_percent', 'discount_total_amount', 'discount_percent'], 'number'],
+            [['purch_req_no', 'vendor_name', 'note', 'total_text', 'reason'], 'string', 'max' => 255],
             [['purch_req_no'], 'unique'],
-            [['required_date','approve_date'], 'safe'],
-            [['is_vat'],'integer'],
-            [['special_note'],'string','max'=>500]
+            [['required_date', 'approve_date'], 'safe'],
+            [['is_vat'], 'integer'],
+            [['special_note'], 'string', 'max' => 500]
         ];
     }
 
@@ -139,12 +140,12 @@ class PurchReq extends ActiveRecord
             'reason' => 'ระบุเหตุผล',
             'reason_title_id' => 'เหตุผลขอซื้อ',
             'req_for_dep_id' => 'ค่าใช้จ่ายสําหรับแผนก',
-            'approve_date'=> 'วันที่อนุมัติใบขอซื้อ',
+            'approve_date' => 'วันที่อนุมัติใบขอซื้อ',
             'is_vat' => 'มี VAT',
             'vat_percent' => 'VAT %',
             'special_note' => 'บันทึกอื่นๆ',
-            'discount_percent'=>'Discount Percent',
-            'discount_total_amount'=>'Discount Total Amount',
+            'discount_percent' => 'Discount Percent',
+            'discount_total_amount' => 'Discount Total Amount',
         ];
     }
 
@@ -263,9 +264,12 @@ class PurchReq extends ActiveRecord
     {
         return $this->hasMany(PurchReqLine::class, ['purch_req_id' => 'id']);
     }
-    public function getJob(){
+
+    public function getJob()
+    {
         return $this->hasOne(Job::class, ['id' => 'job_id']);
     }
+
     public static function numtothai($num)
     {
         $return = "";
@@ -323,5 +327,10 @@ class PurchReq extends ActiveRecord
         }
 
         return $return_str;
+    }
+
+    public function getVendor()
+    {
+        return $this->hasOne(\backend\models\Vendor::className(), ['id' => 'vendor_id']);
     }
 }
