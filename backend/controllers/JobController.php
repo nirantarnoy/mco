@@ -3,9 +3,11 @@
 namespace backend\controllers;
 
 use backend\models\Job;
+use backend\models\JobExpense;
 use backend\models\JobSearch;
 use backend\models\UnitSearch;
 use common\models\JobLine;
+use yii\helpers\ArrayHelper;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -151,11 +153,200 @@ class JobController extends Controller
      * @return string|\yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
+//    public function actionUpdate($id)
+//    {
+//        $model = $this->findModel($id);
+//        $model_line = JobLine::find()->where(['job_id' => $model->id])->all();
+//        $model_contact = \common\models\JobContactInfo::find()->where(['job_id' => $model->id])->all();
+//
+//        // เพิ่มส่วน expense
+//        $model_expenses = $model->jobExpenses;
+//        if(empty($model_expenses)){
+//            $model_expenses = [new JobExpense()];
+//        }
+//
+//        if ($this->request->isPost && $model->load($this->request->post())) {
+//            $jdate = date('Y-m-d H:i:s');
+//            $xp = explode("/", $model->job_date);
+//            if($xp != null){
+//                if(count($xp) > 1){
+//                    $jdate = $xp[2] . '/'. $xp[0].'/'.$xp[1];
+//                }
+//            }
+//            $sdate = date('Y-m-d H:i:s');
+//            $xp2 = explode("/", $model->start_date);
+//            if($xp2 != null){
+//                if(count($xp2) > 1){
+//                    $sdate = $xp2[2] . '/'. $xp2[0].'/'.$xp2[1];
+//                }
+//            }
+//            $ndate = date('Y-m-d H:i:s');
+//            $xp3 = explode("/", $model->end_date);
+//            if($xp3 != null){
+//                if(count($xp3) > 1){
+//                    $ndate = $xp3[2] . '/'. $xp3[0].'/'.$xp3[1];
+//                }
+//            }
+//
+//            $cus_po_date = date('Y-m-d H:i:s');
+//            $xp4 = explode("/", $model->cus_po_date);
+//            if($xp4 != null){
+//                if(count($xp4) > 1){
+//                    $cus_po_date = $xp4[0] . '/'. $xp4[1].'/'.$xp4[2];
+//                }
+//            }
+//
+//            $line_name = \Yii::$app->request->post('line_name');
+//            $line_description = \Yii::$app->request->post('line_description');
+//            $line_phone = \Yii::$app->request->post('line_phone');
+//            $line_email = \Yii::$app->request->post('line_email');
+//
+//            $recordDel = \Yii::$app->request->post('removelist');
+//
+//
+//            //echo $ndate;return;
+//            $model->job_date = date('Y-m-d',strtotime($jdate));
+//            $model->start_date = date('Y-m-d',strtotime($sdate));
+//            $model->end_date = date('Y-m-d',strtotime($ndate));
+//            $model->cus_po_date = date('Y-m-d',strtotime($cus_po_date));
+//
+//
+//            $oldExpenseIDs = ArrayHelper::map($model_expenses, 'id', 'id');
+//            $model_expenses = \backend\models\Model::createMultiple(JobExpense::classname(), $model_expenses);
+//            \backend\models\Model::loadMultiple($model_expenses, Yii::$app->request->post());
+//            $deletedExpenseIDs = array_diff($oldExpenseIDs, array_filter(ArrayHelper::map($model_expenses, 'id', 'id')));
+//
+//            $valid = $model->validate();
+//            $valid = \backend\models\Model::validateMultiple($model_expenses) && $valid;
+//
+//          //  print_r($model_expenses);return;
+//            if($valid) {
+//                $transaction = \Yii::$app->db->beginTransaction();
+//                try {
+//                    if ($flag = $model->save(false)) {
+//                        /// contact info
+//                        if ($recordDel != null) {
+//                            $recordDel = explode(",", $recordDel);
+//                            for ($i = 0; $i <= count($recordDel) - 1; $i++) {
+//                                $model_line = \common\models\JobContactInfo::find()->where(['id' => $recordDel[$i]])->one();
+//                                $model_line->delete();
+//                            }
+//                        }
+//                        if ($line_name != null) {
+//                            for ($i = 0; $i <= count($line_name) - 1; $i++) {
+//                                if ($line_name[$i] == '') continue;
+//                                $model_dup = \common\models\JobContactInfo::find()->where(['job_id' => $model->id, 'name' => trim($line_name[$i])])->one();
+//                                if ($model_dup == null) {
+//                                    $model_line = new \common\models\JobContactInfo();
+//                                    $model_line->job_id = $model->id;
+//                                    $model_line->name = $line_name[$i];
+//                                    //   $model_line->description = $line_description[$i];
+//                                    $model_line->phone = $line_phone[$i];
+//                                    $model_line->email = $line_email[$i];
+//                                    $model_line->save(false);
+//                                } else {
+//                                    // $model_dup->description = $line_description[$i];
+//                                    $model_dup->phone = $line_phone[$i];
+//                                    $model_dup->email = $line_email[$i];
+//                                    $model_dup->save(false);
+//                                }
+//                            }
+//                        }
+//
+//                        $uploaded = UploadedFile::getInstances($model, 'jsa_doc');
+//                        if (!empty($uploaded)) {
+//                            $loop = 0;
+//                            foreach ($uploaded as $file) {
+//                                $upfiles = "jsa_" . time() . "_" . $loop . "." . $file->getExtension();
+//                                if ($file->saveAs('uploads/job/' . $upfiles)) {
+//                                    $model->jsa_doc = $upfiles;
+//                                    $model->save(false);
+//                                }
+//                                $loop++;
+//                            }
+//                        }
+//
+//                        $uploaded = UploadedFile::getInstances($model, 'report_doc');
+//                        if (!empty($uploaded)) {
+//                            $loop = 0;
+//                            foreach ($uploaded as $file) {
+//                                $upfiles = "report_" . time() . "_" . $loop . "." . $file->getExtension();
+//                                if ($file->saveAs('uploads/job/' . $upfiles)) {
+//                                    $model->report_doc = $upfiles;
+//                                    $model->save(false);
+//                                }
+//                                $loop++;
+//                            }
+//                        }
+//
+//                        // ลบรายการเก่า
+//                        if (!empty($deletedExpenseIDs)) {
+//                            JobExpense::deleteAll(['id' => $deletedExpenseIDs]);
+//                        }
+//
+//                        $i = 0;
+//                        foreach ($model_expenses as $expense) {
+//                            $expense->job_id = $model->id;
+//
+//                            // จัดการ upload file
+//                            $expense->expense_file = UploadedFile::getInstance($expense, "[{$i}]expense_file");
+//
+//                            if ($expense->expense_file) {
+//                                $fileName = 'expense_' . time() . '_' . $i . '_' . rand(1000, 9999) . '.' . $expense->expense_file->extension;
+//                                $uploadPath = 'uploads/expense/';
+//
+//                                if (!is_dir($uploadPath)) {
+//                                    mkdir($uploadPath, 0777, true);
+//                                }
+//
+//                                $expense->expense_file->saveAs($uploadPath . $fileName);
+//                                $expense->line_doc = $fileName;
+//                            }
+//
+//                            if (!($flag = $expense->save(false))) {
+//                                $transaction->rollBack();
+//                                Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $expense->getErrors());
+//                                break;
+//                            }
+//                            $i++;
+//                        }
+//
+//
+//                        if ($flag) {
+//                            $transaction->commit();
+//                            return $this->redirect(['view', 'id' => $model->id]);
+//                        }
+//                    }
+//                }catch (\Exception $e){
+//                    $transaction->rollBack();
+//                    Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+//                }
+//            }else{
+//                Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: '. json_encode($model->getErrors()));
+//                Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: '. json_encode($model_expenses));
+//            }
+//        }
+//
+//        return $this->render('update', [
+//            'model' => $model,
+//            'model_line' => $model_line,
+//            'model_contact' => $model_contact,
+//            'model_expenses' => (empty($model_expenses)) ? [new JobExpense] : $model_expenses
+//        ]);
+//    }
+
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
         $model_line = JobLine::find()->where(['job_id' => $model->id])->all();
         $model_contact = \common\models\JobContactInfo::find()->where(['job_id' => $model->id])->all();
+
+        // เพิ่มส่วน expense
+        $model_expenses = JobExpense::find()->where(['job_id' => $model->id])->all();
+        if(empty($model_expenses)){
+            $model_expenses = [new JobExpense()]; // สร้าง model ใหม่ถ้าไม่มี
+        }
+
 
         if ($this->request->isPost && $model->load($this->request->post())) {
             $jdate = date('Y-m-d H:i:s');
@@ -188,13 +379,20 @@ class JobController extends Controller
                 }
             }
 
+            // Contact info variables
             $line_name = \Yii::$app->request->post('line_name');
             $line_description = \Yii::$app->request->post('line_description');
             $line_phone = \Yii::$app->request->post('line_phone');
             $line_email = \Yii::$app->request->post('line_email');
 
-            $recordDel = \Yii::$app->request->post('removelist');
+            // Expense variables - เพิ่มใหม่
+            $expense_id = \Yii::$app->request->post('expense_id');
+            $expense_date = \Yii::$app->request->post('expense_date');
+            $expense_desc = \Yii::$app->request->post('expense_desc');
+            $expense_amount = \Yii::$app->request->post('expense_amount');
 
+            $recordDel = \Yii::$app->request->post('removelist');
+            $expenseRemoveList = \Yii::$app->request->post('expense_removelist'); // เพิ่มใหม่
 
             //echo $ndate;return;
             $model->job_date = date('Y-m-d',strtotime($jdate));
@@ -203,34 +401,135 @@ class JobController extends Controller
             $model->cus_po_date = date('Y-m-d',strtotime($cus_po_date));
 
             if($model->save(false)){
+                // จัดการลบ contact
                 if($recordDel != null){
                     $recordDel = explode(",", $recordDel);
                     for($i=0;$i<=count($recordDel)-1;$i++){
+                        if($recordDel[$i] == '') continue;
                         $model_line = \common\models\JobContactInfo::find()->where(['id'=>$recordDel[$i]])->one();
-                        $model_line->delete();
-                    }
-                }
-                if($line_name !=null){
-                    for($i=0;$i<=count($line_name)-1;$i++){
-                        if($line_name[$i]=='')continue;
-                       $model_dup = \common\models\JobContactInfo::find()->where(['job_id'=>$model->id,'name'=>trim($line_name[$i])])->one();
-                       if($model_dup == null){
-                           $model_line = new \common\models\JobContactInfo();
-                           $model_line->job_id = $model->id;
-                           $model_line->name = $line_name[$i];
-                        //   $model_line->description = $line_description[$i];
-                           $model_line->phone = $line_phone[$i];
-                           $model_line->email = $line_email[$i];
-                           $model_line->save(false);
-                       }else{
-                          // $model_dup->description = $line_description[$i];
-                           $model_dup->phone = $line_phone[$i];
-                           $model_dup->email = $line_email[$i];
-                           $model_dup->save(false);
-                       }
+                        if($model_line != null){
+                            $model_line->delete();
+                        }
                     }
                 }
 
+                // จัดการลบ expense - เพิ่มใหม่
+                if($expenseRemoveList != null){
+                    $expenseRemoveList = explode(",", $expenseRemoveList);
+                    for($i=0;$i<=count($expenseRemoveList)-1;$i++){
+                        if($expenseRemoveList[$i] == '') continue;
+                        $model_expense_del = JobExpense::find()->where(['id'=>$expenseRemoveList[$i]])->one();
+                        if($model_expense_del != null){
+                            // ลบไฟล์ถ้ามี
+                            if($model_expense_del->line_doc){
+                                $oldFile = 'uploads/expense/' . $model_expense_del->line_doc;
+                                if(file_exists($oldFile)){
+                                    unlink($oldFile);
+                                }
+                            }
+                            $model_expense_del->delete();
+                        }
+                    }
+                }
+
+                // บันทึก contact info
+                if($line_name !=null){
+                    for($i=0;$i<=count($line_name)-1;$i++){
+                        if($line_name[$i]=='')continue;
+                        $model_dup = \common\models\JobContactInfo::find()->where(['job_id'=>$model->id,'name'=>trim($line_name[$i])])->one();
+                        if($model_dup == null){
+                            $model_line = new \common\models\JobContactInfo();
+                            $model_line->job_id = $model->id;
+                            $model_line->name = $line_name[$i];
+                            //   $model_line->description = $line_description[$i];
+                            $model_line->phone = $line_phone[$i];
+                            $model_line->email = $line_email[$i];
+                            $model_line->save(false);
+                        }else{
+                            // $model_dup->description = $line_description[$i];
+                            $model_dup->phone = $line_phone[$i];
+                            $model_dup->email = $line_email[$i];
+                            $model_dup->save(false);
+                        }
+                    }
+                }
+
+                // บันทึก expense - เพิ่มใหม่
+                if($expense_desc != null){
+                    // รับไฟล์ที่อัพโหลด
+                    $uploadedFiles = UploadedFile::getInstancesByName('expense_file');
+
+                    for($i=0; $i<=count($expense_desc)-1; $i++){
+                        if($expense_desc[$i]=='') continue;
+
+                        // แปลงวันที่
+                        $exp_date = null;
+                        if($expense_date[$i] != ''){
+                            $exp_date = date('Y-m-d', strtotime($expense_date[$i]));
+                        }
+
+                        // ตรวจสอบว่าเป็นการอัพเดทหรือเพิ่มใหม่
+                        if(isset($expense_id[$i]) && $expense_id[$i] > 0){
+                            // อัพเดทข้อมูลเดิม
+                            $model_expense = JobExpense::find()->where(['id'=>$expense_id[$i]])->one();
+                            if($model_expense != null){
+                                $model_expense->trans_date = $exp_date;
+                                $model_expense->description = $expense_desc[$i];
+                                $model_expense->line_amount = $expense_amount[$i] ?: 0;
+
+                                // จัดการไฟล์อัพโหลด
+                                if(isset($uploadedFiles[$i]) && $uploadedFiles[$i] != null && !$uploadedFiles[$i]->error){
+                                    // ลบไฟล์เก่า
+                                    if($model_expense->line_doc){
+                                        $oldFile = 'uploads/expense/' . $model_expense->line_doc;
+                                        if(file_exists($oldFile)){
+                                            unlink($oldFile);
+                                        }
+                                    }
+
+                                    // อัพโหลดไฟล์ใหม่
+                                    $fileName = 'expense_' . time() . '_' . $i . '.' . $uploadedFiles[$i]->getExtension();
+                                    $uploadPath = 'uploads/expense/';
+
+                                    if(!is_dir($uploadPath)){
+                                        mkdir($uploadPath, 0777, true);
+                                    }
+
+                                    if($uploadedFiles[$i]->saveAs($uploadPath . $fileName)){
+                                        $model_expense->line_doc = $fileName;
+                                    }
+                                }
+
+                                $model_expense->save(false);
+                            }
+                        }else{
+                            // เพิ่มข้อมูลใหม่
+                            $model_expense = new JobExpense();
+                            $model_expense->job_id = $model->id;
+                            $model_expense->trans_date = $exp_date;
+                            $model_expense->description = $expense_desc[$i];
+                            $model_expense->line_amount = $expense_amount[$i] ?: 0;
+
+                            // จัดการไฟล์อัพโหลด
+                            if(isset($uploadedFiles[$i]) && $uploadedFiles[$i] != null && !$uploadedFiles[$i]->error){
+                                $fileName = 'expense_' . time() . '_' . $i . '.' . $uploadedFiles[$i]->getExtension();
+                                $uploadPath = 'uploads/expense/';
+
+                                if(!is_dir($uploadPath)){
+                                    mkdir($uploadPath, 0777, true);
+                                }
+
+                                if($uploadedFiles[$i]->saveAs($uploadPath . $fileName)){
+                                    $model_expense->line_doc = $fileName;
+                                }
+                            }
+
+                            $model_expense->save(false);
+                        }
+                    }
+                }
+
+                // จัดการไฟล์ jsa_doc (โค้ดเดิม)
                 $uploaded = UploadedFile::getInstances($model, 'jsa_doc');
                 if (!empty($uploaded)) {
                     $loop = 0;
@@ -244,6 +543,7 @@ class JobController extends Controller
                     }
                 }
 
+                // จัดการไฟล์ report_doc (โค้ดเดิม)
                 $uploaded = UploadedFile::getInstances($model, 'report_doc');
                 if (!empty($uploaded)) {
                     $loop = 0;
@@ -257,7 +557,6 @@ class JobController extends Controller
                     }
                 }
 
-
                 return $this->redirect(['view', 'id' => $model->id]);
             }
         }
@@ -266,6 +565,7 @@ class JobController extends Controller
             'model' => $model,
             'model_line' => $model_line,
             'model_contact' => $model_contact,
+            'model_expenses' => $model_expenses
         ]);
     }
 
@@ -1301,6 +1601,23 @@ class JobController extends Controller
         }
 
         return $this->redirect(['update', 'id' => $id]);
+    }
+
+
+    public function actionDeleteExpenseFile($id)
+    {
+        $model = JobExpense::findOne($id);
+
+        if($model !== null && $model->line_doc){
+            $filePath = Yii::getAlias('@webroot/uploads/่job/'. $model->line_doc);
+            if(file_exists($filePath)){
+                unlink($filePath);
+            }
+            $model->line_doc = null;
+            $model->save(false);
+        }
+
+        return $this->redirect(Yii::$app->request->referrer);
     }
 
 

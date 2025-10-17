@@ -4,6 +4,7 @@ use kartik\date\DatePicker;
 use kartik\select2\Select2;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+use wbraganca\dynamicform\DynamicFormWidget;
 
 /** @var yii\web\View $this */
 /** @var backend\models\Job $model */
@@ -11,8 +12,7 @@ use yii\widgets\ActiveForm;
 
 $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id])->all();
 ?>
-
-    <!-- Flash Messages -->
+<!-- Flash Messages -->
 <?php if (\Yii::$app->session->hasFlash('success')): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="fas fa-check-circle me-2"></i>
@@ -28,13 +28,10 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 <?php endif; ?>
-
     <div class="job-form">
-        <?php $form = ActiveForm::begin(['options' => ['enctype' => 'multipart/form-data']]); ?>
-        <input type="hidden" class="removelist" name="removelist" value="">
-        <input type="hidden" class="expense_removelist" name="expense_removelist" value="">
 
-        <!-- ส่วนฟอร์มหลัก (เหมือนเดิม) -->
+        <?php $form = ActiveForm::begin(['id'=>'dynamic-form','options' => ['enctype' => 'multipart/form-data']]); ?>
+        <input type="hidden" class="removelist" name="removelist" value="">
         <div class="row">
             <div class="col-lg-3">
                 <?= $form->field($model, 'job_no')->textInput(['maxlength' => true]) ?>
@@ -68,7 +65,6 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
                     ])->label('วันที่') ?>
             </div>
         </div>
-
         <div class="row">
             <div class="col-lg-3">
                 <?php $model->start_date = $model->start_date ? date('m/d/Y', strtotime($model->start_date)) : ''; ?>
@@ -94,8 +90,7 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
                             'autoclose' => true,
                             'format' => 'mm/dd/yyyy',
                         ]
-                    ])->label() ?>
-            </div>
+                    ])->label() ?></div>
             <div class="col-lg-3">
                 <?= $form->field($model, 'cus_po_no')->textInput() ?>
             </div>
@@ -110,10 +105,8 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
                             'autoclose' => true,
                             'format' => 'mm/dd/yyyy',
                         ]
-                    ])->label() ?>
-            </div>
+                    ])->label() ?></div>
         </div>
-
         <div class="row">
             <div class="col-lg-3">
                 <label for="">สถานะ</label>
@@ -124,17 +117,25 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
             </div>
             <div class="col-lg-3">
                 <?= $form->field($model, 'jsa_doc')->fileInput() ?>
+
                 <?php if ($model->jsa_doc): ?>
                     <div class="alert alert-info">
                         <strong>ไฟล์ปัจจุบัน:</strong><br>
+
                         <?php
+                        // สร้าง URL ของไฟล์ (ปรับ path ให้ตรงกับของโปรเจกต์คุณ)
                         $fileUrl = Yii::getAlias('@web/uploads/job/' . $model->jsa_doc);
+                        $ext = pathinfo($model->jsa_doc, PATHINFO_EXTENSION);
                         ?>
+
+                        <!-- เปิดไฟล์ในแท็บใหม่ -->
                         <?= Html::a('📂 เปิดไฟล์', $fileUrl, [
                             'class' => 'btn btn-sm btn-outline-primary mt-2',
                             'target' => '_blank',
                             'data-pjax' => '0'
                         ]) ?>
+
+                        <!-- ปุ่มลบไฟล์ -->
                         <?= Html::a('🗑️ ลบไฟล์', ['delete-file', 'id' => $model->id], [
                             'class' => 'btn btn-sm btn-outline-danger mt-2',
                             'data' => [
@@ -142,14 +143,21 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
                                 'method' => 'post',
                             ],
                         ]) ?>
+
+                        <!-- แสดงภาพตัวอย่างถ้าเป็นไฟล์รูป -->
+<!--                        --><?php //if (in_array(strtolower($ext), ['jpg','jpeg','png','gif','webp'])): ?>
+<!--                            <div class="mt-2">-->
+<!--                                <img src="--><?php //= $fileUrl ?><!--" alt="preview" style="max-width: 100%; height: auto; border: 1px solid #ccc; padding: 3px;">-->
+<!--                            </div>-->
+<!--                        --><?php //endif; ?>
                     </div>
                 <?php endif; ?>
             </div>
+
             <div class="col-lg-3">
                 <?= $form->field($model, 'report_doc')->fileInput() ?>
             </div>
         </div>
-
         <div class="row">
             <div class="col-lg-6">
                 <?= $form->field($model, 'summary_note')->textarea() ?>
@@ -158,131 +166,133 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
 
         <?= $form->field($model, 'status')->hiddenInput()->label(false) ?>
 
-        <!-- ส่วนรายการค่าใช้จ่าย (แบบ Manual) -->
         <br/>
         <div class="row">
             <div class="col-lg-12">
                 <label for="">รายการค่าใช้จ่ายของใบงาน</label>
             </div>
         </div>
-        <div class="row">
-            <div class="col-lg-12">
-                <table class="table table-bordered table-striped" id="expense-table">
+
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <?php DynamicFormWidget::begin([
+                    'widgetContainer' => 'dynamicform_wrapper', // เปลี่ยนชื่อให้ไม่ซ้ำ
+                    'widgetBody' => '.container-items',
+                    'widgetItem' => '.item',
+                    'limit' => 50,
+                    'min' => 1,
+                    'insertButton' => '.add-item',
+                    'deleteButton' => '.remove-item',
+                    'model' => $model_expenses[0],
+                    'formId' => 'dynamic-form',
+                    'formFields' => [
+                        'trans_date',
+                        'description',
+                        'line_amount',
+                        'expense_file',
+                    ],
+                ]); ?>
+
+                <table class="table table-bordered">
                     <thead>
                     <tr>
-                        <th style="width: 5%;text-align: center;">#</th>
-                        <th style="width: 15%">วันที่</th>
-                        <th style="width: 35%">รายการค่าใช้จ่าย</th>
-                        <th style="width: 15%">จำนวนเงิน</th>
-                        <th style="width: 25%">เอกสารแนบ</th>
-                        <th style="width: 5%;text-align: center;">-</th>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 15%;">วันที่</th>
+                        <th style="width: 35%;">รายการค่าใช้จ่าย</th>
+                        <th style="width: 15%;">จำนวนเงิน</th>
+                        <th style="width: 25%;">เอกสารแนบ</th>
+                        <th style="width: 5%;text-align:center">
+                            <button type="button" class="add-item btn btn-success btn-xs">
+                                <span class="fa fa-plus"></span>
+                            </button>
+                        </th>
                     </tr>
                     </thead>
-                    <tbody>
-                    <?php if (!empty($model_expenses)): ?>
-                        <?php foreach ($model_expenses as $idx => $expense): ?>
-                            <tr data-val="<?= $expense->id ?>">
-                                <td style="text-align: center;">
-                                    <input type="hidden" class="expense-id" name="expense_id[]"
-                                           value="<?= $expense->id ?>">
-                                    <input type="text" class="form-control" value="<?= ($idx + 1) ?>" readonly>
-                                </td>
-                                <td>
-                                    <input type="date" class="form-control expense-date" name="expense_date[]"
-                                           value="<?= date('Y-m-d',strtotime($expense->trans_date)) ?>">
-<!--                                    --><?php
-//                                    echo DatePicker::widget([
-//                                        'name' => 'expense_date[]',
-//                                        'type' => DatePicker::TYPE_INPUT,
-//                                        'value' => date('Y-m-d', strtotime($expense->trans_date)),
-//                                        'options' => [
-//                                             'class'=>'form-control expense-date'
-//                                        ],
-//                                        'pluginOptions' => [
-//                                            'autoclose' => true,
-//                                            'format' => 'dd-mm-yyyy'
-//                                        ]
-//                                    ])
-//                                    ?>
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control expense-desc" name="expense_desc[]"
-                                           value="<?= $expense->description ?>">
-                                </td>
-                                <td>
-                                    <input type="number" step="0.01" class="form-control expense-amount"
-                                           name="expense_amount[]" value="<?= $expense->line_amount ?>"
-                                           onchange="calculateTotal()">
-                                </td>
-                                <td>
-                                    <input type="file" class="form-control expense-file" name="expense_file[]">
-                                    <?php if ($expense->line_doc): ?>
-                                        <div class="file-info mt-1">
-                                            <a href="<?= Yii::getAlias('@web/uploads/expense/' . $expense->line_doc) ?>"
-                                               target="_blank" class="btn btn-link btn-sm p-0">
-                                                📎 <?= $expense->line_doc ?>
-                                            </a>
-                                            <?= Html::a('ลบไฟล์', ['delete-expense-file', 'id' => $expense->id], [
-                                                'class' => 'btn btn-danger btn-xs ms-2',
-                                                'data' => [
-                                                    'confirm' => 'ต้องการลบไฟล์นี้หรือไม่?',
-                                                    'method' => 'post',
-                                                ],
-                                            ]) ?>
-                                        </div>
-                                    <?php endif; ?>
-                                </td>
-                                <td style="text-align: center;">
-                                    <div class="btn btn-sm btn-danger" onclick="removeExpenseLine($(this))">ลบ</div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr data-val="">
-                            <td style="text-align: center;">
-                                <input type="hidden" class="expense-id" name="expense_id[]" value="">
-                                <input type="text" class="form-control" value="1" readonly>
+                    <tbody class="container-items">
+                    <?php foreach ($model_expenses as $i => $expense): ?>
+                        <tr class="item">
+                            <td class="item-number" style="text-align: center;">
+                                <?= ($i + 1) ?>
                             </td>
                             <td>
-                                <input type="date" class="form-control expense-date" name="expense_date[]" value="">
+                                <?php
+                                if (!$expense->isNewRecord && $expense->trans_date) {
+                                    $expense->trans_date = date('m/d/Y', strtotime($expense->trans_date));
+                                }
+                                ?>
+                                <?= $form->field($expense, "[{$i}]trans_date")->widget(DatePicker::className(), [
+                                    'options' => [
+                                        'placeholder' => 'เลือกวันที่',
+                                        'class' => 'form-control expense-date'
+                                    ],
+                                    'pluginOptions' => [
+                                        'autoclose' => true,
+                                        'format' => 'mm/dd/yyyy',
+                                    ]
+                                ])->label(false) ?>
                             </td>
                             <td>
-                                <input type="text" class="form-control expense-desc" name="expense_desc[]" value=""
-                                       placeholder="ระบุรายการค่าใช้จ่าย">
+                                <?= $form->field($expense, "[{$i}]description")->textInput([
+                                    'maxlength' => true,
+                                    'class' => 'form-control expense-desc'
+                                ])->label(false) ?>
                             </td>
                             <td>
-                                <input type="number" step="0.01" class="form-control expense-amount"
-                                       name="expense_amount[]" value="" placeholder="0.00"
-                                       onchange="calculateTotal()">
+                                <?= $form->field($expense, "[{$i}]line_amount")->textInput([
+                                    'type' => 'number',
+                                    'step' => '0.01',
+                                    'class' => 'form-control expense-amount'
+                                ])->label(false) ?>
                             </td>
                             <td>
-                                <input type="file" class="form-control expense-file" name="expense_file[]">
+                                <?= $form->field($expense, "[{$i}]expense_file")->fileInput([
+                                    'class' => 'form-control expense-file'
+                                ])->label(false) ?>
+
+                                <?php if (!$expense->isNewRecord && $expense->line_doc): ?>
+                                    <div class="file-preview">
+                                        <?php
+                                        $fileUrl = Yii::getAlias('@web/uploads/expense/' . $expense->line_doc);
+                                        ?>
+                                        <?= Html::a('📎 ' . $expense->line_doc, $fileUrl, [
+                                            'target' => '_blank',
+                                            'data-pjax' => '0',
+                                            'class' => 'btn btn-link btn-sm'
+                                        ]) ?>
+                                        <?= Html::a('ลบไฟล์', ['delete-expense-file', 'id' => $expense->id], [
+                                            'class' => 'btn btn-danger btn-xs',
+                                            'data' => [
+                                                'confirm' => 'ต้องการลบไฟล์นี้หรือไม่?',
+                                                'method' => 'post',
+                                            ],
+                                        ]) ?>
+                                    </div>
+                                <?php endif; ?>
                             </td>
                             <td style="text-align: center;">
-                                <div class="btn btn-sm btn-danger" onclick="removeExpenseLine($(this))">ลบ</div>
+                                <button type="button" class="remove-item btn btn-danger btn-xs">
+                                    <span class="fa fa-minus"></span>
+                                </button>
                             </td>
                         </tr>
-                    <?php endif; ?>
+                    <?php endforeach; ?>
                     </tbody>
                     <tfoot>
                     <tr>
-                        <td>
-                            <div class="btn btn-sm btn-primary" onclick="addExpenseLine()">เพิ่มรายการ</div>
+                        <td colspan="3" style="text-align: right;"><strong>รวมค่าใช้จ่าย:</strong></td>
+                        <td colspan="3">
+                            <strong><span id="total-expense">0.00</span></strong> บาท
                         </td>
-                        <td colspan="2" style="text-align: right;"><strong>รวมค่าใช้จ่าย:</strong></td>
-                        <td><strong><span id="total-expense">0.00</span> บาท</strong></td>
-                        <td colspan="2"></td>
                     </tr>
                     </tfoot>
                 </table>
+                <?php DynamicFormWidget::end(); ?>
             </div>
         </div>
 
         <div class="form-group">
             <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
         </div>
-
-        <!-- ส่วนที่เหลือเหมือนเดิม -->
         <br/>
         <div class="row">
             <div class="col-lg-12">
@@ -318,7 +328,6 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
                 </table>
             </div>
         </div>
-
         <br/>
         <div class="row">
             <div class="col-lg-12">
@@ -340,26 +349,21 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
                     <tbody>
                     <?php if ($model_contact != null): ?>
                         <?php foreach ($model_contact as $inx => $value): ?>
-                            <tr data-val="<?= $value->id ?>">
+                            <tr data-val="<?=$value->id?>">
                                 <td style="text-align: center;">
-                                    <input type="hidden" class="rec-id" name="rec_id[]" value="<?= $value->id ?>">
-                                    <input type="text" class="form-control" value="<?= ($inx + 1) ?>" readonly>
+                                    <input type="hidden" class="rec-id" name="rec_id[]" value="<?=$value->id?>">
+                                    <input type="text" class="form-control" value="<?=($inx +1)?>" readonly>
                                 </td>
                                 <td>
-                                    <input type="text" class="form-control line-name" name="line_name[]"
-                                           value="<?= $value->name ?>">
+                                    <input type="text" class="form-control line-name" name="line_name[]" value="<?=$value->name?>" >
                                 </td>
                                 <td>
-                                    <input type="text" class="form-control line-phone" name="line_phone[]"
-                                           value="<?= $value->phone ?>">
+                                    <input type="text" class="form-control line-phone" name="line_phone[]" value="<?=$value->phone?>" >
                                 </td>
                                 <td>
-                                    <input type="text" class="form-control line-email" name="line_email[]"
-                                           value="<?= $value->email ?>">
+                                    <input type="text" class="form-control line-email" name="line_email[]" value="<?=$value->email?>" >
                                 </td>
-                                <td style="text-align: center;">
-                                    <div class="btn btn-sm btn-danger" onclick="removeLine($(this))">ลบ</div>
-                                </td>
+                                <td style="text-align: center;"><div class="btn btn-sm btn-danger" onclick="removeLine($(this))">ลบ</div></td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
@@ -394,13 +398,13 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
                 </table>
             </div>
         </div>
-
         <br/>
         <div class="row">
             <div class="col-lg-12">
                 <label for="">รายการสั่งซื้อสำหรับใบงานนี้</label>
             </div>
         </div>
+
         <div class="row">
             <div class="col-lg-12">
                 <table class="table table-bordered">
@@ -442,104 +446,171 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
         </div>
 
         <?php ActiveForm::end(); ?>
-    </div>
 
+    </div>
 <?php
 $url_to_getcustomerinfo = \yii\helpers\Url::to(['job/getcustomerinfo'], true);
 $js = <<<JS
 var removelist = [];
-var removeExpenseList = [];
-
-$(function(){
-    calculateTotal();
+$(document).ready(function() {
+    // คำนวณยอดรวมเมื่อเปลี่ยนค่า
+    $(document).on('change', 'input[name*="[line_amount]"]', function() {
+        calculateExpenseTotal();
+    });
+    
+    // คำนวณเมื่อเพิ่ม/ลบแถว
+    $('.dynamicform_expense').on('afterInsert afterDelete', function(e) {
+        calculateExpenseTotal();
+    });
+    
+    // คำนวณครั้งแรก
+    calculateExpenseTotal();
+    
+    function calculateExpenseTotal() {
+        var total = 0;
+        $('input[name*="[line_amount]"]').each(function() {
+            var val = parseFloat($(this).val()) || 0;
+            total += val;
+        });
+        $('#total-expense').text(total.toFixed(2));
+    }
 });
-
 function getCustomerinfo(e){
     var id = e.val();
     if(id){
         $.ajax({
-            url: '$url_to_getcustomerinfo',
-            type: 'POST',
-            data: {'id':id},
-            dataType: 'html',
-            success: function(data) {
-               $(".customer-name").val(data);
-            },
-            error: function() {
-                console.log('Error loading customer info data');
-            }
-        });
+        url: '$url_to_getcustomerinfo',
+        type: 'POST',
+        data: {'id':id},
+        dataType: 'html',
+        success: function(data) {
+           $(".customer-name").val(data);
+        },
+        error: function() {
+            console.log('Error loading customer info data');
+        }
+    });
     }
+    
 }
 
-// ฟังก์ชันสำหรับ Contact
 function addline(){
     var lastRow = $("#table-list tbody tr:last");
     var input = lastRow.find('.line-name');
 
+    // trim() เอาช่องว่างออกก่อนเช็ค
     if (input.val().trim() === '') {
+        // ใส่ focus
         input.focus();
+
+        // เพิ่มสไตล์ขอบแดง
         input.css("border", "1px solid red");
+
+        // ถ้ายังไม่มีข้อความ required ให้เพิ่ม
         if (lastRow.find('.error-required').length === 0) {
             input.after('<div class="error-required" style="color:red;font-size:12px;">* Required</div>');
         }
+
+        // หยุดไม่ให้ทำงานต่อ
         return false;
     } else {
+        // ถ้าไม่ว่าง ล้างสไตล์/ข้อความที่เคยใส่ไว้
         input.css("border", "");
         lastRow.find('.error-required').remove();
     }
+     var clone = lastRow.clone();
+          clone.find(".line-name").val("");
+          clone.find(".line-phone").val("");
+          clone.find(".line-email").val("");
+          clone.attr("data-var", "");
+          clone.find('.rec-id').val("0");
+          lastRow.after(clone);
     
-    var clone = lastRow.clone();
-    clone.find(".line-name").val("");
-    clone.find(".line-phone").val("");
-    clone.find(".line-email").val("");
-    clone.attr("data-var", "");
-    clone.find('.rec-id').val("0");
-    lastRow.after(clone);
 }
-
 function removeLine(e){
     var id = e.closest("tr").find(".rec-id").val();
     if(id){
         removelist.push(id);
-        $(".removelist").val(removelist.join(","));
-    }
-    
-    if($("#table-list tbody tr").length == 1){
-        $("#table-list tbody tr").find(".line-name").val("");
-        $("#table-list tbody tr").find(".line-phone").val("");
-        $("#table-list tbody tr").find(".line-email").val("");
-        $("#table-list tbody tr").attr("data-var", "");
-        $("#table-list tbody tr").find(".rec-id").val("0");
+        $(".removelist").val(removelist);
+        if($("#table-list tbody tr").length == 1){
+           $("#table-list tbody tr").find(".line-name").val("");
+           $("#table-list tbody tr").find(".line-phone").val("");
+           $("#table-list tbody tr").find(".line-email").val("");
+           $("#table-list tbody tr").attr("data-var", "");
+           $("#table-list tbody tr").find(".rec-id").val("0");
+        }else{
+           e.parent().parent().remove(); 
+        }
     }else{
-        e.parent().parent().remove(); 
+       if($("#table-list tbody tr").length == 1){
+           $("#table-list tbody tr").find(".line-name").val("");
+           $("#table-list tbody tr").find(".line-phone").val("");
+           $("#table-list tbody tr").find(".line-email").val("");
+           $("#table-list tbody tr").attr("data-var", "");
+           $("#table-list tbody tr").find(".rec-id").val("0");
+        }else{
+           e.parent().parent().remove(); 
+        }
     }
 }
+JS;
+$this->registerJs($js, static::POS_END);
+?>
 
-// ฟังก์ชันสำหรับ Expense
-function addExpenseLine(){
-    var lastRow = $("#expense-table tbody tr:last");
-    var rowCount = $("#expense-table tbody tr").length;
-    
-    var clone = lastRow.clone();
-    clone.find(".expense-date").val("");
-    clone.find(".expense-desc").val("");
-    clone.find(".expense-amount").val("");
-    clone.find(".expense-file").val("");
-    clone.find(".file-info").remove();
-    clone.attr("data-val", "");
-    clone.find('.expense-id').val("");
-    clone.find('input[readonly]').val(rowCount + 1);
-    
-    lastRow.after(clone);
-    calculateTotal();
+<?php
+// เพิ่มต่อจาก JavaScript เดิมของคุณ
+$js .= <<<JS
+var removeExpenseList = [];
+// Dynamic form expense handlers
+$(".dynamicform_wrapper").on("beforeInsert", function(e, item) {
+    console.log("before insert");
+});
+
+$(".dynamicform_wrapper").on("afterInsert", function(e, item) {
+    console.log("after insert");
+    // Update row numbers
+    updateExpenseRowNumbers();
+    calculateExpenseTotal();
+});
+
+$(".dynamicform_wrapper").on("beforeDelete", function(e, item) {
+    if (! confirm("ต้องการลบรายการนี้หรือไม่?")) {
+        return false;
+    }
+    return true;
+});
+
+$(".dynamicform_wrapper").on("afterDelete", function(e) {
+    console.log("after delete");
+    updateExpenseRowNumbers();
+    calculateExpenseTotal();
+});
+
+// คำนวณยอดรวม
+$(document).on('change keyup', '.expense-amount', function() {
+    calculateExpenseTotal();
+});
+
+function calculateExpenseTotal() {
+    var total = 0;
+    $('.expense-amount').each(function() {
+        var val = parseFloat($(this).val()) || 0;
+        total += val;
+    });
+    $('#total-expense').text(total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ","));
+}
+
+function updateExpenseRowNumbers() {
+    $('.container-items tr.item').each(function(index) {
+        $(this).find('.item-number').text(index + 1);
+    });
 }
 
 function removeExpenseLine(e){
     var id = e.closest("tr").find(".expense-id").val();
-    if(id && id != ""){
+    if(id && id > 0){
         removeExpenseList.push(id);
-        $(".expense_removelist").val(removeExpenseList.join(","));
+        $(".expense_removelist").val(removeExpenseList.join(",")); // ใช้ join แทน
     }
     
     if($("#expense-table tbody tr").length == 1){
@@ -547,30 +618,16 @@ function removeExpenseLine(e){
         $("#expense-table tbody tr").find(".expense-desc").val("");
         $("#expense-table tbody tr").find(".expense-amount").val("");
         $("#expense-table tbody tr").find(".expense-file").val("");
-        $("#expense-table tbody tr").find(".expense-id").val("");
+        $("#expense-table tbody tr").find(".expense-id").val("0");
         $("#expense-table tbody tr").find(".file-info").remove();
-        $("#expense-table tbody tr").attr("data-val", "");
     }else{
         e.parent().parent().remove();
         updateExpenseNumbers();
     }
-    calculateTotal();
+    calculateExpenseTotal();
 }
-
-function updateExpenseNumbers(){
-    $("#expense-table tbody tr").each(function(index){
-        $(this).find("input[readonly]").val(index + 1);
-    });
-}
-
-function calculateTotal(){
-    var total = 0;
-    $(".expense-amount").each(function(){
-        var val = parseFloat($(this).val()) || 0;
-        total += val;
-    });
-    $("#total-expense").text(total.toFixed(2).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ","));
-}
+// คำนวณครั้งแรกเมื่อโหลดหน้า
+calculateExpenseTotal();
 
 JS;
 $this->registerJs($js, static::POS_END);

@@ -369,4 +369,9 @@ class Job extends \common\models\Job
 
         return $count > 0;
     }
+
+    public function getJobExpenses()
+    {
+        return $this->hasMany(\backend\models\JobExpense::className(), ['job_id' => 'id']);
+    }
 }
