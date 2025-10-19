@@ -5,6 +5,11 @@ use backend\assets\AppAsset;
 
 AppAsset::register($this);
 
+\hail812\adminlte3\assets\FontAwesomeAsset::register($this);
+\hail812\adminlte3\assets\AdminLteAsset::register($this);
+
+$assetDir = Yii::$app->assetManager->getPublishedUrl('@vendor/almasaeed2010/adminlte/dist');
+
 $cururl = Yii::$app->controller->id;
 ?>
 <?php $this->beginPage()?>

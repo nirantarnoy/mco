@@ -78,6 +78,8 @@ class QuotationSearch extends Quotation
             'updated_by' => $this->updated_by,
         ]);
 
+        $query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
+
         $query->andFilterWhere(['like', 'quotation_no', $this->quotation_no])
             ->andFilterWhere(['like', 'customer_name', $this->customer_name])
             ->andFilterWhere(['like', 'total_amount_text', $this->total_amount_text])

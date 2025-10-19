@@ -134,6 +134,10 @@ class SiteController extends Controller
                 }
             }
         //    return $this->redirect(['site/index']);
+            // เก็บบริษัทไว้ใน session หลังจาก login สำเร็จ
+            $com_name = \backend\models\Company::findName(\Yii::$app->request->post('login_company'));
+            Yii::$app->session->set('company_id', \Yii::$app->request->post('login_company'));
+            Yii::$app->session->set('company_name', $com_name);
             return $this->redirect(['search/index']);
         }
 

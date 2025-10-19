@@ -285,4 +285,9 @@ class CreditNote extends \yii\db\ActiveRecord
 
         return isset($colors[$this->status]) ? $colors[$this->status] : 'default';
     }
+
+    public function beforeSave($insert){
+        $this->company_id = \Yii::$app->session->get('company_id');
+        return true;
+    }
 }

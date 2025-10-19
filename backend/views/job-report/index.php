@@ -8,6 +8,7 @@ use kartik\date\DatePicker;
 use kartik\select2\Select2;
 use yii\helpers\Url;
 use backend\models\Job;
+use yii\web\View;
 
 /* @var $this yii\web\View */
 /* @var $searchModel JobReportSearch */
@@ -20,7 +21,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="job-report-index">
 
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-lg-12">
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">
@@ -34,54 +35,89 @@ $this->params['breadcrumbs'][] = $this->title;
                     <div class="search-form">
                         <?php $form = ActiveForm::begin([
                             'method' => 'get',
-                            'options' => ['class' => 'form-inline mb-3'],
+                            'options' => ['class' => 'search-form-wrapper'],
                         ]); ?>
 
                         <div class="row">
-                            <div class="col-md-3">
-                                <?= $form->field($searchModel, 'job_no')->textInput([
-                                    'placeholder' => 'เลขใบงาน',
-                                    'class' => 'form-control'
-                                ])->label(false) ?>
-                            </div>
-
-                            <div class="col-md-2">
-                                <?= $form->field($searchModel, 'status')->widget(Select2::class, [
-                                    'data' => ['' => 'ทุกสถานะ'] + Job::getStatusOptions(),
-                                    'options' => ['placeholder' => 'เลือกสถานะ'],
+                            <!-- บริษัท -->
+                            <div class="col-lg-2 col-md-6 col-sm-6 mb-3">
+                                <?= $form->field($searchModel, 'company_id')->widget(Select2::class, [
+                                    'data' => ['0' => 'ทุกบริษัท'] + \yii\helpers\ArrayHelper::map(\backend\models\Company::find()->all(), 'id', 'name'),
+                                    'options' => [
+                                        'placeholder' => 'เลือกบริษัท',
+                                        'class' => 'form-control'
+                                    ],
                                     'pluginOptions' => [
-                                        'allowClear' => true
+                                        'allowClear' => true,
+                                        'multiple' => true,
+                                        'width' => '100%'
                                     ],
                                 ])->label(false) ?>
                             </div>
 
-                            <div class="col-md-2">
+                            <!-- เลขใบงาน -->
+                            <div class="col-lg-2 col-md-6 col-sm-6 mb-3">
+                                <?= $form->field($searchModel, 'job_no')->textInput([
+                                    'placeholder' => 'เลขใบงาน',
+                                    'class' => 'form-control w-100'
+                                ])->label(false) ?>
+                            </div>
+
+                            <!-- สถานะ -->
+                            <div class="col-lg-2 col-md-6 col-sm-6 mb-3">
+                                <?= $form->field($searchModel, 'status')->widget(Select2::class, [
+                                    'data' => ['' => 'ทุกสถานะ'] + Job::getStatusOptions(),
+                                    'options' => [
+                                        'placeholder' => 'เลือกสถานะ',
+                                        'class' => 'form-control'
+                                    ],
+                                    'pluginOptions' => [
+                                        'allowClear' => true,
+                                        'width' => '100%'
+                                    ],
+                                ])->label(false) ?>
+                            </div>
+
+                            <!-- วันที่เริ่ม -->
+                            <div class="col-lg-2 col-md-6 col-sm-6 mb-3">
                                 <?= $form->field($searchModel, 'start_date_from')->widget(DatePicker::class, [
-                                    'options' => ['placeholder' => 'วันที่เริ่ม'],
+                                    'options' => [
+                                        'placeholder' => 'วันที่เริ่ม',
+                                        'class' => 'form-control'
+                                    ],
                                     'pluginOptions' => [
                                         'autoclose' => true,
-                                        'format' => 'yyyy-mm-dd'
-                                    ]
+                                        'format' => 'yyyy-mm-dd',
+                                        'todayHighlight' => true
+                                    ],
+                                    'removeButton' => false
                                 ])->label(false) ?>
                             </div>
 
-                            <div class="col-md-2">
+                            <!-- ถึงวันที่ -->
+                            <div class="col-lg-2 col-md-6 col-sm-6 mb-3">
                                 <?= $form->field($searchModel, 'start_date_to')->widget(DatePicker::class, [
-                                    'options' => ['placeholder' => 'ถึงวันที่'],
+                                    'options' => [
+                                        'placeholder' => 'ถึงวันที่',
+                                        'class' => 'form-control'
+                                    ],
                                     'pluginOptions' => [
                                         'autoclose' => true,
-                                        'format' => 'yyyy-mm-dd'
-                                    ]
+                                        'format' => 'yyyy-mm-dd',
+                                        'todayHighlight' => true
+                                    ],
+                                    'removeButton' => false
                                 ])->label(false) ?>
                             </div>
 
-                            <div class="col-md-3">
-                                <div class="form-group">
+                            <!-- ปุ่มค้นหาและล้าง -->
+                            <div class="col-lg-2 col-md-12 col-sm-12 mb-3">
+                                <div class="btn-group-actions">
                                     <?= Html::submitButton('<i class="fas fa-search"></i> ค้นหา', [
-                                        'class' => 'btn btn-primary'
+                                        'class' => 'btn btn-primary flex-fill'
                                     ]) ?>
                                     <?= Html::a('<i class="fas fa-redo"></i> ล้าง', ['index'], [
-                                        'class' => 'btn btn-secondary'
+                                        'class' => 'btn btn-secondary flex-fill'
                                     ]) ?>
                                 </div>
                             </div>
@@ -245,12 +281,14 @@ $this->params['breadcrumbs'][] = $this->title;
                             ],
 
                             [
-                                'label' => 'มูลค่าเบิกของ',
+                                'label' => 'เบิก/ค่าใช้จ่าย/รถ',
                                 'format' => 'raw',
                                 'value' => function ($model) {
                                     $totalWithdraw = $model->getTotalWithdrawAmount();
+                                    $totalJobExpense = $model->getJobExpenseAll();
+                                    $totalVehicleEx = $model->getVehicleExpenseAll();
                                     return '<div style="text-align: right;">' .
-                                        number_format($totalWithdraw, 2) .
+                                        number_format(($totalWithdraw + $totalJobExpense + $totalVehicleEx), 2) .
                                         '</div>';
                                 },
                                 'contentOptions' => ['style' => 'width: 120px;'],
@@ -319,13 +357,17 @@ $this->params['breadcrumbs'][] = $this->title;
                     $models = $dataProvider->getModels();
                     $totalJobAmount = 0;
                     $totalWithdrawAmount = 0;
+                    $totalJobExpense = 0;
                     $totalProfitLoss = 0;
+                    $totalVehicleExpense = 0;
 
                     foreach ($models as $model) {
                         $totalJobAmount += $model->job_amount;
                         $totalWithdrawAmount += $model->getTotalWithdrawAmount();
+                        $totalJobExpense += $model->getJobExpenseAll();
+                        $totalVehicleExpense += $model->getVehicleExpenseAll();
                     }
-                    $totalProfitLoss = $totalJobAmount - $totalWithdrawAmount;
+                    $totalProfitLoss = $totalJobAmount - $totalWithdrawAmount - $totalJobExpense - $totalVehicleExpense;
                     $totalPercentage = $totalJobAmount > 0 ? ($totalProfitLoss / $totalJobAmount) * 100 : 0;
                     ?>
 
@@ -350,8 +392,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                     </div>
                                     <div class="col-md-3">
                                         <div class="text-center">
-                                            <h6 class="text-muted">มูลค่าเบิกของรวม</h6>
-                                            <h4 class="text-warning"><?= number_format($totalWithdrawAmount, 2) ?> บาท</h4>
+                                            <h6 class="text-muted">รายจ่ายรวม</h6>
+                                            <h4 class="text-warning"><?= number_format($totalWithdrawAmount + $totalJobExpense + $totalVehicleExpense , 2) ?> บาท</h4>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
@@ -368,6 +410,166 @@ $this->params['breadcrumbs'][] = $this->title;
                         </div>
                     </div>
 
+                    <?php
+                    // สรุปข้อมูลแยกตามบริษัท
+                    $companySummary = [];
+                    foreach ($models as $model) {
+                        $companyId = $model->company_id;
+                        $companyName = $model->company ? $model->company->name : 'ทั้งหมด';
+
+                        if (!isset($companySummary[$companyId])) {
+                            $companySummary[$companyId] = [
+                                'name' => $companyName,
+                                'job_count' => 0,
+                                'total_job_amount' => 0,
+                                'total_withdraw_amount' => 0,
+                                'total_profit_loss' => 0
+                            ];
+                        }
+
+                        $companySummary[$companyId]['job_count']++;
+                        $companySummary[$companyId]['total_job_amount'] += $model->job_amount;
+                        $companySummary[$companyId]['total_withdraw_amount'] += ($model->getTotalWithdrawAmount() + $model->getJobExpenseAll() + $model->getVehicleExpenseAll());
+                    }
+
+                    // คำนวณกำไรขาดทุนและเปอร์เซ็นต์สำหรับแต่ละบริษัท
+                    foreach ($companySummary as $companyId => &$summary) {
+                        $summary['total_profit_loss'] = $summary['total_job_amount'] - $summary['total_withdraw_amount'];
+                        $summary['percentage'] = $summary['total_job_amount'] > 0
+                            ? ($summary['total_profit_loss'] / $summary['total_job_amount']) * 100
+                            : 0;
+                    }
+
+                    // เรียงลำดับตามชื่อบริษัท
+                    uasort($companySummary, function($a, $b) {
+                        return strcmp($a['name'], $b['name']);
+                    });
+                    ?>
+
+                    <!-- สรุปข้อมูลแยกตามบริษัท -->
+                    <div class="company-summary-section mt-4">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-building"></i> สรุปข้อมูลแยกตามบริษัท
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <?php if (!empty($companySummary)): ?>
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover">
+                                            <thead class="thead-light">
+                                            <tr>
+                                                <th class="text-center" width="5%">#</th>
+                                                <th>บริษัท</th>
+                                                <th class="text-center" width="12%">จำนวนใบงาน</th>
+                                                <th class="text-right" width="15%">มูลค่างานรวม</th>
+                                                <th class="text-right" width="15%">มูลค่ารายจ่าย</th>
+                                                <th class="text-right" width="15%">กำไร/ขาดทุน</th>
+                                                <th class="text-center" width="10%">เปอร์เซ็นต์</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <?php
+                                            $rowNumber = 1;
+                                            $grandTotalJobs = 0;
+                                            $grandTotalJobAmount = 0;
+                                            $grandTotalWithdraw = 0;
+                                            $grandTotalProfitLoss = 0;
+
+                                            foreach ($companySummary as $companyId => $summary):
+                                                $grandTotalJobs += $summary['job_count'];
+                                                $grandTotalJobAmount += $summary['total_job_amount'];
+                                                $grandTotalWithdraw += $summary['total_withdraw_amount'];
+                                                $grandTotalProfitLoss += $summary['total_profit_loss'];
+                                                ?>
+                                                <tr>
+                                                    <td class="text-center"><?= $rowNumber++ ?></td>
+                                                    <td>
+                                                        <strong><?= Html::encode($summary['name']) ?></strong>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <span class="badge badge-info"><?= number_format($summary['job_count']) ?> ใบ</span>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span class="text-primary"><?= number_format($summary['total_job_amount'], 2) ?></span>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        <span class="text-warning"><?= number_format($summary['total_withdraw_amount'], 2) ?></span>
+                                                    </td>
+                                                    <td class="text-right">
+                                        <span class="<?= $summary['total_profit_loss'] >= 0 ? 'text-success' : 'text-danger' ?> font-weight-bold">
+                                            <?= number_format($summary['total_profit_loss'], 2) ?>
+                                        </span>
+                                                    </td>
+                                                    <td class="text-center">
+                                        <span class="badge badge-<?= $summary['percentage'] >= 0 ? 'success' : 'danger' ?>">
+                                            <?= number_format($summary['percentage'], 2) ?>%
+                                        </span>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                            </tbody>
+                                            <tfoot>
+                                            <tr class="table-secondary font-weight-bold">
+                                                <td colspan="2" class="text-right">รวมทั้งหมด</td>
+                                                <td class="text-center">
+                                                    <span class="badge badge-dark"><?= number_format($grandTotalJobs) ?> ใบ</span>
+                                                </td>
+                                                <td class="text-right text-primary"><?= number_format($grandTotalJobAmount, 2) ?></td>
+                                                <td class="text-right text-warning"><?= number_format($grandTotalWithdraw, 2) ?></td>
+                                                <td class="text-right <?= $grandTotalProfitLoss >= 0 ? 'text-success' : 'text-danger' ?>">
+                                                    <?= number_format($grandTotalProfitLoss, 2) ?>
+                                                </td>
+                                                <td class="text-center">
+                                                    <?php
+                                                    $grandPercentage = $grandTotalJobAmount > 0
+                                                        ? ($grandTotalProfitLoss / $grandTotalJobAmount) * 100
+                                                        : 0;
+                                                    ?>
+                                                    <span class="badge badge-<?= $grandPercentage >= 0 ? 'success' : 'danger' ?>">
+                                        <?= number_format($grandPercentage, 2) ?>%
+                                    </span>
+                                                </td>
+                                            </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+
+                                    <!-- กราฟแสดงสัดส่วน (Optional) -->
+<!--                                    <div class="row mt-4">-->
+<!--                                        <div class="col-md-6">-->
+<!--                                            <div class="chart-container">-->
+<!--                                                <h6 class="text-center text-muted">สัดส่วนมูลค่างานแต่ละบริษัท</h6>-->
+<!--                                                <canvas id="companyJobValueChart"></canvas>-->
+<!--                                            </div>-->
+<!--                                        </div>-->
+<!--                                        <div class="col-md-6">-->
+<!--                                            <div class="chart-container">-->
+<!--                                                <h6 class="text-center text-muted">เปรียบเทียบกำไร/ขาดทุน</h6>-->
+<!--                                                <canvas id="companyProfitChart"></canvas>-->
+<!--                                            </div>-->
+<!--                                        </div>-->
+<!--                                    </div>-->
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div id="companyJobValueChart" style="height:400px;"></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div id="companyProfitChart" style="height:400px;"></div>
+                                        </div>
+                                    </div>
+
+
+                                <?php else: ?>
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> ไม่พบข้อมูลสำหรับแสดงผล
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -377,10 +579,57 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <style>
     .search-form {
-        background-color: #f8f9fa;
         padding: 15px;
+        background-color: #f8f9fa;
         border-radius: 5px;
         margin-bottom: 20px;
+    }
+
+    /* ปรับความกว้างของ form-group และ input */
+    .search-form .form-group {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .search-form .form-control,
+    .search-form .select2-container {
+        width: 100% !important;
+    }
+
+    /* จัดการ DatePicker ให้แสดงผลถูกต้อง */
+    .search-form .krajee-datepicker {
+        width: 100% !important;
+    }
+
+    .search-form .input-group {
+        width: 100%;
+        display: flex;
+        flex-wrap: nowrap; /* ป้องกันการขึ้นบรรทัดใหม่ */
+    }
+
+    .search-form .input-group .form-control {
+        flex: 1;
+        min-width: 0; /* ให้ input ยืดหยุ่นได้ */
+    }
+
+    .search-form .input-group-append,
+    .search-form .input-group-btn {
+        flex: 0 0 auto;
+    }
+
+    /* ปรับขนาด icon ใน DatePicker */
+    .search-form .input-group-addon,
+    .search-form .input-group-text {
+        padding: 0.375rem 0.75rem;
+        white-space: nowrap;
+    }
+
+    /* ปุ่มค้นหาและล้าง */
+    .search-form .btn-group-actions {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+        height: 100%;
     }
 
     .action-buttons {
@@ -540,20 +789,147 @@ $this->params['breadcrumbs'][] = $this->title;
     }
 </style>
 
-<script>
-    $(document).ready(function() {
+<!--<script>-->
+<?php
 
-        // เปิดใช้งาน tooltip
-        $('[data-toggle="tooltip"]').tooltip({
-            html: true,
-            boundary: 'window'
-        });
-        // เพิ่ม tooltip สำหรับปุ่มต่างๆ
-        $('[title]').tooltip();
+$highchartsScripts = [
+    'https://code.highcharts.com/highcharts.js',
+    'https://code.highcharts.com/modules/exporting.js',
+    'https://code.highcharts.com/modules/accessibility.js',
+];
 
-        // Auto submit form เมื่อเปลี่ยนสถานะ
-        $('#jobreportsearch-status').on('change', function() {
-            $(this).closest('form').submit();
-        });
+foreach ($highchartsScripts as $script) {
+    $this->registerJsFile($script, [
+        'depends' => [\yii\web\JqueryAsset::class],
+        'position' => View::POS_HEAD,
+    ]);
+}
+
+
+$companySummaryJson = json_encode($companySummary, JSON_UNESCAPED_UNICODE | JSON_NUMERIC_CHECK);
+
+$js = <<<JS
+$(document).ready(function() {
+
+    // เปิดใช้งาน tooltip
+    $('[data-toggle="tooltip"]').tooltip({
+        html: true,
+        boundary: 'window'
     });
-</script>
+    $('[title]').tooltip();
+
+    // Auto submit form เมื่อเปลี่ยนสถานะ
+    $('#jobreportsearch-status').on('change', function() {
+        $(this).closest('form').submit();
+    });
+
+    // ================================
+    //  แปลงข้อมูลจาก PHP → JS
+    // ================================
+    var companySummary = $companySummaryJson;
+
+    if (companySummary && companySummary.length > 0) {
+
+        var companyNames = companySummary.map(item => item.name);
+        var jobAmounts   = companySummary.map(item => item.total_job_amount);
+        var profitLoss   = companySummary.map(item => item.total_profit_loss);
+        
+        console.log(jobAmounts[0]);
+        
+        // ================================
+        //  กราฟ 1: สัดส่วนมูลค่างาน (Pie)
+        // ================================
+        Highcharts.chart('companyJobValueChart', {
+            chart: {
+                type: 'pie',
+                backgroundColor: 'transparent'
+            },
+            title: {
+                text: 'สัดส่วนมูลค่างานตามบริษัท'
+            },
+            tooltip: {
+                pointFormat: '<b>{point.y:,.2f} บาท</b> ({point.percentage:.2f}%)'
+            },
+            accessibility: {
+                point: { valueSuffix: '%' }
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '{point.name}: {point.percentage:.1f} %'
+                    }
+                }
+            },
+            series: [{
+                name: 'มูลค่างาน',
+                colorByPoint: true,
+                data: companyNames.map((name, i) => ({
+                    name: name,
+                    y: jobAmounts[i]
+                }))
+            }]
+        });
+
+        // ================================
+        //  กราฟ 2: กำไร/ขาดทุน (Column)
+        // ================================
+        Highcharts.chart('companyProfitChart', {
+            chart: {
+                type: 'column',
+                backgroundColor: 'transparent'
+            },
+            title: {
+                text: 'เปรียบเทียบกำไร/ขาดทุน'
+            },
+            xAxis: {
+                categories: companyNames,
+                crosshair: true
+            },
+            yAxis: {
+                min: 0,
+                title: { text: 'จำนวนเงิน (บาท)' },
+                labels: {
+                    formatter: function() {
+                        return '฿' + Highcharts.numberFormat(this.value, 0);
+                    }
+                }
+            },
+            tooltip: {
+                headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                pointFormat:
+                    '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                    '<td style="padding:0"><b>฿{point.y:,.2f}</b></td></tr>',
+                footerFormat: '</table>',
+                shared: true,
+                useHTML: true
+            },
+            plotOptions: {
+                column: {
+                    borderWidth: 0,
+                    colors: profitLoss.map(v => v >= 0 ? '#28a745' : '#dc3545'),
+                    colorByPoint: true
+                }
+            },
+            series: [{
+                name: 'กำไร/ขาดทุน',
+                data: profitLoss
+            }]
+        });
+
+    } else {
+        console.log('ไม่มีข้อมูล companySummary');
+    }
+
+});
+JS;
+
+//echo '<pre>';
+//print_r($companySummary);
+//echo '</pre>';
+
+$this->registerJs($js, static::POS_END);
+?>
+<!--</script>-->

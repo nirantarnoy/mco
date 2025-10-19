@@ -81,6 +81,8 @@ class PurchReqSearch extends PurchReq
             'pr.updated_by' => $this->updated_by,
         ]);
 
+        $query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
+
         // Handle purch_id filter for converted status
         if (isset($params['PurchReqSearch']['purch_id'])) {
             if ($params['PurchReqSearch']['purch_id'] == '1') {

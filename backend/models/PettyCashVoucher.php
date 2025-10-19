@@ -149,6 +149,8 @@ class PettyCashVoucher extends ActiveRecord
             }
             return true;
         }
+
+        $this->company_id = \Yii::$app->session->get('company_id');
         return false;
     }
 
@@ -172,4 +174,9 @@ class PettyCashVoucher extends ActiveRecord
         $this->amount = $this->calculateTotalAmount();
         return $this->save(false);
     }
+
+//    public function beforeSave($insert){
+//        $this->company_id = \Yii::$app->session->get('company_id');
+//        return true;
+//    }
 }

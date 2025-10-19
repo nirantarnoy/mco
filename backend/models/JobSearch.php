@@ -73,6 +73,8 @@ class JobSearch extends Job
             'updated_by' => $this->updated_by,
         ]);
 
+        $query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
+
         if($this->globalSearch != ''){
             $query->orFilterWhere(['like', 'job_no', $this->globalSearch]);
         }

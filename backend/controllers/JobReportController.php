@@ -126,13 +126,14 @@ class JobReportController extends Controller
 
 class JobReportSearch extends Job
 {
+    public $company_id;
     public $start_date_from;
     public $start_date_to;
 
     public function rules()
     {
         return [
-            [['job_no', 'status'], 'safe'],
+            [['job_no', 'status','company_id'], 'safe'],
             [['start_date_from', 'start_date_to'], 'date', 'format' => 'php:Y-m-d'],
         ];
     }
@@ -158,6 +159,21 @@ class JobReportSearch extends Job
 
         if (!$this->validate()) {
             return $dataProvider;
+        }
+
+        // กรองตามบริษัท (Multiple Selection)
+        if (!empty($this->company_id)) {
+            // แปลงเป็น array ถ้ายังไม่ใช่
+            $companyIds = is_array($this->company_id) ? $this->company_id : [$this->company_id];
+
+            // ตรวจสอบว่ามีค่า "0" (ทั้งหมด) หรือไม่
+            if (in_array("0", $companyIds) || in_array(0, $companyIds)) {
+                // ถ้าเลือกทั้งหมด ไม่ต้อง filter
+                // Query จะดึงข้อมูลทุกบริษัท
+            } else {
+                // กรองเฉพาะบริษัทที่เลือก
+                $query->andFilterWhere(['IN', 'company_id', $companyIds]);
+            }
         }
 
         // กรองตามเลขใบงาน

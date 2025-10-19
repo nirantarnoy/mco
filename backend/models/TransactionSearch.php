@@ -70,6 +70,8 @@ class TransactionSearch extends JournalTrans
             'qty' => $this->qty,
         ]);
 
+        $query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
+
         $query->andFilterWhere(['like', 'journal_no', $this->journal_no])
             ->andFilterWhere(['like', 'customer_name', $this->customer_name])
             ->andFilterWhere(['like', 'remark', $this->remark]);

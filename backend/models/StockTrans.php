@@ -129,4 +129,9 @@ class StockTrans extends ActiveRecord
     {
         return $this->hasOne(Product::class, ['id' => 'product_id']);
     }
+
+    public function beforeSave($insert){
+        $this->company_id = \Yii::$app->session->get('company_id');
+        return true;
+    }
 }

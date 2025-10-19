@@ -26,7 +26,7 @@ use yii\web\Session;
     <ul class="navbar-nav ml-auto">
         <li class="nav-item dropdown">
             <a class="nav-link" data-toggle="dropdown" href="#">
-                <span><i class="fa fa-user-circle"></i>  <?= \backend\models\User::findName(\Yii::$app->user->id)?></span>
+                <span><i class="fa fa-user-circle"></i>  <?= \backend\models\User::findName(\Yii::$app->user->id)?> <span style="color: red;"> | <?= \Yii::$app->session->get('company_name')?></span></span>
                 <?php //echo $_SESSION['user_group_id']?>
                 <!--                    <span class="badge badge-danger navbar-badge">3</span>-->
             </a>

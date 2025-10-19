@@ -109,4 +109,9 @@ class PettyCashAdvance extends ActiveRecord
     {
         return static::getCurrentBalance() <= static::MIN_AMOUNT;
     }
+
+    public function beforeSave($insert){
+        $this->company_id = \Yii::$app->session->get('company_id');
+        return true;
+    }
 }

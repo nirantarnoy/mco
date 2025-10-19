@@ -192,6 +192,7 @@ class Quotation extends ActiveRecord
 
             return true;
         }
+        $this->company_id = \Yii::$app->session->get('company_id');
         return false;
     }
 

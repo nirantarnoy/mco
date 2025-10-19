@@ -273,6 +273,7 @@ class Purch extends ActiveRecord
             }
             return true;
         }
+        $this->company_id = \Yii::$app->session->get('company_id');
         return false;
     }
 
@@ -411,4 +412,9 @@ class Purch extends ActiveRecord
         $model = \backend\models\PurchReq::find()->where(['purch_id'=>$purch_id])->one();
         return $model !=null?$model->created_by:0;
     }
+
+//    public function beforeSave($insert){
+//        $this->company_id = \Yii::$app->session->get('company_id');
+//        return true;
+//    }
 }

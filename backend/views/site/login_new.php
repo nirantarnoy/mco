@@ -3,6 +3,7 @@
 use yii\widgets\ActiveForm;
 use yii\captcha\Captcha;
 use yii\helpers\Html;
+use kartik\select2\Select2;
 
 ?>
 
@@ -32,7 +33,9 @@ use yii\helpers\Html;
 <!--        }-->
 <!--    </style>-->
 
-
+<?php
+$companies = \backend\models\Company::find()->all();
+?>
 <div class="hold-transition login-page">
     <div class="login-box" style="margin-top: 10px">
 
@@ -62,6 +65,18 @@ use yii\helpers\Html;
                         <?= $form->field($model, 'password')->passwordInput(['class' => 'form-control', 'placeholder' => 'Password']) ?>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <label for="">Company</label>
+                        <select name="login_company" id="" class="form-control" required>
+                            <option value="">เลือกบริษัท</option>
+                            <?php foreach ($companies as $company): ?>
+                                <option value="<?= $company->id ?>"><?= $company->name ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <br />
                 <div class="row">
                     <div class="col-8">
                         <div class="icheck-primary">

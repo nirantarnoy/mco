@@ -179,7 +179,7 @@ class Job extends \common\models\Job
      */
     public function getProfitLoss()
     {
-        return $this->job_amount - $this->getTotalWithdrawAmount();
+        return $this->job_amount - ($this->getTotalWithdrawAmount() + $this->getJobexpenseAll() + $this->getVehicleExpenseAll());
     }
 
     /**
@@ -250,6 +250,8 @@ class Job extends \common\models\Job
             return 'secondary'; // เท่ากัน - สีเทา
         }
     }
+
+
 
     /**
      * ตรวจสอบว่ามีใบขอซื้อหรือไม่
@@ -373,5 +375,26 @@ class Job extends \common\models\Job
     public function getJobExpenses()
     {
         return $this->hasMany(\backend\models\JobExpense::className(), ['job_id' => 'id']);
+    }
+
+    public function getCompany(){
+        return $this->hasOne(\backend\models\Company::className(),['id'=>'company_id']);
+    }
+
+    public function getJobexpenseAll(){
+        $total = 0;
+        foreach($this->jobExpenses as $value){
+            $total = $total + ($value->line_amount);
+        }
+        return $total;
+    }
+
+    public function getVehicleExpenseAll(){
+        return \backend\models\VehicleExpense::find()->where(['job_no'=>$this->job_no])->sum('total_wage');
+    }
+
+    public function beforeSave($insert){
+        $this->company_id = \Yii::$app->session->get('company_id');
+        return true;
     }
 }

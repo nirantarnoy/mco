@@ -65,6 +65,8 @@ class StocksumSearch extends StockSum
             'qty' => $this->qty
         ]);
 
+        $query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
+
         return $dataProvider;
     }
 }
