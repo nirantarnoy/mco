@@ -354,14 +354,20 @@ $this->params['breadcrumbs'][] = $this->title;
 
                     <!-- สรุปข้อมูล -->
                     <?php
-                    $models = $dataProvider->getModels();
+                   // $models = $dataProvider->getModels();
+                    // ดึง query หลักจาก dataProvider
+                    $query = clone $dataProvider->query;
+
+                    // เอา pagination ออก เพื่อดึงข้อมูลทั้งหมด
+                    $allModels = $query->all();
+
                     $totalJobAmount = 0;
                     $totalWithdrawAmount = 0;
                     $totalJobExpense = 0;
                     $totalProfitLoss = 0;
                     $totalVehicleExpense = 0;
 
-                    foreach ($models as $model) {
+                    foreach ($allModels as $model) {
                         $totalJobAmount += $model->job_amount;
                         $totalWithdrawAmount += $model->getTotalWithdrawAmount();
                         $totalJobExpense += $model->getJobExpenseAll();
@@ -381,7 +387,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <div class="col-md-3">
                                         <div class="text-center">
                                             <h6 class="text-muted">จำนวนใบงาน</h6>
-                                            <h4 class="text-primary"><?= number_format(count($models)) ?> ใบ</h4>
+                                            <h4 class="text-primary"><?= number_format(count($allModels)) ?> ใบ</h4>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
@@ -413,7 +419,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php
                     // สรุปข้อมูลแยกตามบริษัท
                     $companySummary = [];
-                    foreach ($models as $model) {
+                    foreach ($allModels as $model) {
                         $companyId = $model->company_id;
                         $companyName = $model->company ? $model->company->name : 'ทั้งหมด';
 
