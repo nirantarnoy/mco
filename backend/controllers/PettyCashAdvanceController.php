@@ -40,6 +40,7 @@ class PettyCashAdvanceController extends Controller
                 'pageSize' => 20,
             ],
         ]);
+        $dataProvider->query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
 
         $currentBalance = PettyCashAdvance::getCurrentBalance();
         $needsRefill = PettyCashAdvance::needsRefill();

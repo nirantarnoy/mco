@@ -46,6 +46,8 @@ class PettyCashVoucherController extends Controller
             'query' => PettyCashVoucher::find()->where(['status' => 1])->orderBy(['id' => SORT_DESC]),
         ]);
 
+        $dataProvider->query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
+
         return $this->render('index', [
             'dataProvider' => $dataProvider,
         ]);
