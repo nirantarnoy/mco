@@ -46,6 +46,7 @@ class BillingInvoiceSearch extends BillingInvoice
             'total_amount' => $this->total_amount,
             'status' => $this->status,
         ]);
+        $query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
 
         $query->andFilterWhere(['like', 'billing_number', $this->billing_number]);
 
