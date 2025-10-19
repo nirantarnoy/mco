@@ -53,6 +53,8 @@ class InvoiceController extends Controller
             ],
         ]);
 
+        $dataProvider->query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
+
         return $this->render('index', [
             'dataProvider' => $dataProvider,
         ]);
