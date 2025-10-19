@@ -78,7 +78,7 @@ class PurchSearch extends Purch
             'p.updated_by' => $this->updated_by,
         ]);
 
-        $query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
+        $query->andFilterWhere(['p.company_id'=> \Yii::$app->session->get('company_id')]);
 
         $query->andFilterWhere(['like', 'p.purch_no', $this->purch_no])
             //->andFilterWhere(['like', 'vendor_name', $this->vendor_name])
