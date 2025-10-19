@@ -174,6 +174,8 @@ class JobReportSearch extends Job
                 // กรองเฉพาะบริษัทที่เลือก
                 $query->andFilterWhere(['IN', 'company_id', $companyIds]);
             }
+        }else{
+            $query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
         }
 
         // กรองตามเลขใบงาน
