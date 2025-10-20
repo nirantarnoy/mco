@@ -113,4 +113,10 @@ class Vendor extends \common\models\Vendor
         return $data;
     }
 
+    public function beforeSave($insert)
+    {
+        $this->company_id = \Yii::$app->session->get('company_id');
+        return false;
+    }
+
 }

@@ -114,5 +114,10 @@ class Customer extends \common\models\Customer
         return $customer_code;
     }
 
+    public function beforeSave($insert)
+    {
+        $this->company_id = \Yii::$app->session->get('company_id');
+        return false;
+    }
 
 }
