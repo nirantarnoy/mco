@@ -189,10 +189,10 @@ class Quotation extends ActiveRecord
             if (!empty($this->total_amount)) {
                 $this->total_amount_text = $this->convertAmountToThaiText($this->total_amount);
             }
-
+            $this->company_id = \Yii::$app->session->get('company_id');
             return true;
         }
-        $this->company_id = \Yii::$app->session->get('company_id');
+
         return false;
     }
 
