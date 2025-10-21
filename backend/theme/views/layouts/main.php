@@ -7,6 +7,11 @@ use yii\web\Session;
 
 $session = \Yii::$app->session;
 
+if (!Yii::$app->session->get('company_id')) {
+    \Yii::$app->user->logout();
+    return $this->redirect(['site/login']);
+}
+
 AppAsset::register($this);
 
 \hail812\adminlte3\assets\FontAwesomeAsset::register($this);
