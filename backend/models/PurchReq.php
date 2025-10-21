@@ -223,7 +223,7 @@ class PurchReq extends ActiveRecord
             if (!empty($this->net_amount)) {
                 $this->total_text = $this->convertAmountToThaiText($this->net_amount);
             }
-            $this->company_id = \Yii::$app->session->get('company_id');
+            $this->company_id = \Yii::$app->session->get('company_id') == null ? 1 : \Yii::$app->session->get('company_id');
             return true;
         }
 
