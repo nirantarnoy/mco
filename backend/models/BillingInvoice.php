@@ -92,6 +92,7 @@ class BillingInvoice extends ActiveRecord
             if ($this->credit_terms && $this->billing_date) {
                 $this->payment_due_date = date('Y-m-d', strtotime($this->billing_date . ' +' . $this->credit_terms . ' days'));
             }
+            $this->company_id = \Yii::$app->session->get('company_id');
             return true;
         }
         return false;
