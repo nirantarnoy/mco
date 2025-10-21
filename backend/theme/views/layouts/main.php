@@ -9,7 +9,7 @@ $session = \Yii::$app->session;
 
 if (!Yii::$app->session->get('company_id')) {
     \Yii::$app->user->logout();
-    return $this->redirect(['site/login']);
+   // return $this->redirect(['site/login']);
 }
 
 AppAsset::register($this);
