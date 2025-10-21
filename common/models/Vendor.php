@@ -76,5 +76,9 @@ class Vendor extends \yii\db\ActiveRecord
             'updated_by' => 'Updated By',
         ];
     }
-
+    public function beforeSave($insert)
+    {
+        $this->company_id = \Yii::$app->session->get('company_id');
+        return true;
+    }
 }

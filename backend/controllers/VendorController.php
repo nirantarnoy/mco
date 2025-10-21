@@ -110,8 +110,11 @@ class VendorController extends Controller
                             $model_address->save(false);
 
                     }
+                    return $this->redirect(['view', 'id' => $model->id]);
+                }else{
+                    \Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . json_encode($model->getErrors()));
                 }
-                return $this->redirect(['view', 'id' => $model->id]);
+
             }
         } else {
             $model->loadDefaultValues();
