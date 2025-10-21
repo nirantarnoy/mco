@@ -74,7 +74,7 @@ return [
             'identityClass' => 'common\models\User',
             'enableAutoLogin' => true,
             'authTimeout' => 60 * 60 * 24 * 30, // อยู่ได้ 30 วัน
-            'identityCookie' => ['name' => '_identity-backend', 'httpOnly' => true,'lifetime' => 60 * 60 * 24 * 30,],
+            'identityCookie' => ['name' => '_identity-backend', 'httpOnly' => true],
         ],
         'session' => [
             // this is the name of the session cookie used for login on the backend
