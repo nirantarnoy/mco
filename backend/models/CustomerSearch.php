@@ -70,7 +70,7 @@ class CustomerSearch extends Customer
             'updated_by' => $this->updated_by,
         ]);
 
-        $query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
+       // $query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
 
         if($this->globalSearch != '') {
             $query->orFilterWhere(['like', 'name', $this->globalSearch])
