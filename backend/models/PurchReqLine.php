@@ -99,7 +99,7 @@ class PurchReqLine extends ActiveRecord
     {
         if (parent::beforeSave($insert)) {
             // Calculate line total
-            $this->line_total = $this->qty * $this->line_price;
+            $this->line_total = (double)$this->qty * (double)$this->line_price;
             return true;
         }
         return false;
