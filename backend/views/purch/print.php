@@ -490,7 +490,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
             <div class="column">
                 <div class="info-row">
                     <span class="info-label">CURRENCY :</span>
-                    <span class="info-value">BAHT</span>
+                    <span class="info-value"><?=\backend\models\Currency::findName($purchase->currency_id);?></span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">REF. NO. :</span>

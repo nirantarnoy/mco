@@ -60,6 +60,11 @@ class Currency extends \yii\db\ActiveRecord
         ];
     }
 
+    public static function findName($id){
+        $model = Currency::findOne($id);
+        return $model!=null?$model->name:'';
+    }
+
     public static function findCode($id){
         $model = Currency::findOne($id);
         return $model!=null?$model->code:'';
