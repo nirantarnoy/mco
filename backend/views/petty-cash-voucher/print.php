@@ -410,6 +410,7 @@ window.onload = function() {
 
         <div class="signature-box">
             <div class="signature-label">APPROVED BY</div>
+            <div style="height: 10px;"></div>
             <div class="signature-name">
                 <?php
                 $approve_signature = \backend\models\User::findEmployeeSignature(trim($model->approved_by));
