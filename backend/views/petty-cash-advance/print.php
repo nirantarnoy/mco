@@ -282,16 +282,14 @@ $monthName = $thaiMonths[(int)$dateMonth];
 
 <div class="print-container">
     <!-- Header -->
-    <div class="row">
-        <div class="col-lg-2">
-            <div class="logo-section">
-                <div class="logo">
-                    <img src="../../backend/web/uploads/logo/mco_logo_2.png" class="logo-img" alt="">
-                </div>
-            </div>
-        </div>
+
         <div class="col-lg-8">
             <div class="header">
+                <div class="logo-section">
+                    <div class="logo">
+                        <img src="../../backend/web/uploads/logo/mco_logo_2.png" class="logo-img" alt="">
+                    </div>
+                </div>
                 <div class="company-name">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
                 <div class="form-title">ใบสรุปการเบิกชดเชยเงินสดย่อย</div>
                 <div class="form-period">
@@ -300,7 +298,7 @@ $monthName = $thaiMonths[(int)$dateMonth];
 
             </div>
         </div>
-    </div>
+
 
 
     <!-- Info Section -->
