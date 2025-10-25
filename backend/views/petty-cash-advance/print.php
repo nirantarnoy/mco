@@ -444,7 +444,7 @@ $monthName = $thaiMonths[(int)$dateMonth];
             <?php
             $requestor_signature = \backend\models\User::findEmployeeSignature($model->created_by);
             if(!empty($requestor_signature)): ?>
-                <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" alt="Request By Signature">
+                <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" style="max-width: 140px;max-height: 55px;" alt="Request By Signature">
             <?php endif; ?>
             <div>ผู้รักษาเงินสดย่อย</div>
         </div>
