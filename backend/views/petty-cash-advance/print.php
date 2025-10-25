@@ -307,13 +307,13 @@ $monthName = $thaiMonths[(int)$dateMonth];
                     <img src="../../backend/web/uploads/logo/mco_logo_2.png" class="logo-img" alt="">
                 </div>
             </div>
-<!--            <div style="text-align: center;">-->
+            <div style="text-align: left;">
                 <div class="company-name">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
                 <div class="form-title">ใบสรุปการเบิกชดเชยเงินสดย่อย</div>
                 <div class="form-period">
                     ประจำวันที่ <?= $dateFrom ?> ถึง <?= $dateTo ?>
                 </div>
-<!--            </div>-->
+            </div>
 
         </div>
 
