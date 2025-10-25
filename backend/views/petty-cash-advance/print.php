@@ -1,4 +1,5 @@
 <?php
+
 use yii\helpers\Html;
 use backend\models\PettyCashAdvance;
 
@@ -13,7 +14,8 @@ use backend\models\PettyCashAdvance;
 $this->title = 'ใบสรุปการเบิกชดเชยเงินสดย่อย';
 
 // ฟังก์ชันแปลงวันที่เป็นรูปแบบไทย
-function thaiDate($date) {
+function thaiDate($date)
+{
     if (!$date) return '';
     $thaiMonths = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
         'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
@@ -25,7 +27,8 @@ function thaiDate($date) {
 }
 
 // ฟังก์ชันแปลงวันที่เป็น ว.ด.ป.
-function shortThaiDate($date) {
+function shortThaiDate($date)
+{
     if (!$date) return '';
     $timestamp = is_numeric($date) ? $date : strtotime($date);
     $day = date('d', $timestamp);
@@ -39,7 +42,7 @@ $totalAmount = 0;
 $overAdvance = 0;
 
 if (isset($advances) && is_array($advances)) {
-    $totalAmount = array_sum(array_map(function($adv) {
+    $totalAmount = array_sum(array_map(function ($adv) {
         return $adv->amount ?? 0;
     }, $advances));
 }
@@ -72,6 +75,7 @@ $monthName = $thaiMonths[(int)$dateMonth];
             .no-print {
                 display: none !important;
             }
+
             body {
                 margin: 0;
                 padding: 10mm;
@@ -264,9 +268,17 @@ $monthName = $thaiMonths[(int)$dateMonth];
             margin-right: 10px;
         }
 
-        .logo .m { color: #FFA500; }
-        .logo .c { color: #000080; }
-        .logo .o { color: #008000; }
+        .logo .m {
+            color: #FFA500;
+        }
+
+        .logo .c {
+            color: #000080;
+        }
+
+        .logo .o {
+            color: #008000;
+        }
 
         .logo-img {
             max-width: 180px;
@@ -283,22 +295,23 @@ $monthName = $thaiMonths[(int)$dateMonth];
 <div class="print-container">
     <!-- Header -->
 
-        <div class="col-lg-8">
-            <div class="header">
-                <div class="logo-section">
-                    <div class="logo">
-                        <img src="../../backend/web/uploads/logo/mco_logo_2.png" class="logo-img" alt="">
-                    </div>
+    <div class="col-lg-8">
+        <div class="header">
+            <div class="logo-section">
+                <div class="logo">
+                    <img src="../../backend/web/uploads/logo/mco_logo_2.png" class="logo-img" alt="">
                 </div>
+            </div>
+            <div style="text-align: right;">
                 <div class="company-name">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
                 <div class="form-title">ใบสรุปการเบิกชดเชยเงินสดย่อย</div>
                 <div class="form-period">
                     ประจำวันที่ <?= $dateFrom ?> ถึง <?= $dateTo ?>
                 </div>
-
             </div>
-        </div>
 
+        </div>
+    </div>
 
 
     <!-- Info Section -->
