@@ -174,37 +174,7 @@ $this->title = 'รายงานเงินสดย่อย M.C.O.CO.,LTD';
         </tr>
         </thead>
         <tbody>
-        <?php foreach ($reportData['transactions'] as $transaction): ?>
-            <tr>
-                <td class="text-center"><?= date('d/m/Y', strtotime($transaction['date'])) ?></td>
-                <td><?= Html::encode($transaction['description']) ?></td>
-                <td class="text-right">
-                    <?= $transaction['income'] > 0 ? number_format($transaction['income'], 2) : '-' ?>
-                </td>
-                <td class="text-right">
-                    <?= $transaction['expense_detail']['amount'] > 0 ? number_format($transaction['expense_detail']['amount'], 2) : '-' ?>
-                </td>
-                <td class="text-right">
-                    <?= $transaction['expense_detail']['vat'] > 0 ? number_format($transaction['expense_detail']['vat'], 2) : '-' ?>
-                </td>
-                <td class="text-right">
-                    <?= $transaction['expense_detail']['vat_amount'] > 0 ? number_format($transaction['expense_detail']['vat_amount'], 2) : '-' ?>
-                </td>
-                <td class="text-right">
-                    <?= $transaction['expense_detail']['wht'] > 0 ? number_format($transaction['expense_detail']['wht'], 2) : '-' ?>
-                </td>
-                <td class="text-right">
-                    <?= $transaction['expense_detail']['other'] > 0 ? number_format($transaction['expense_detail']['other'], 2) : '-' ?>
-                </td>
-                <td class="text-right">
-                    <?= $transaction['expense_detail']['total'] > 0 ? number_format($transaction['expense_detail']['total'], 2) : '-' ?>
-                </td>
-                <td class="text-right font-weight-bold">
-                    <?= number_format($transaction['balance'], 2) ?>
-                </td>
-                <td class="text-center"><?= Html::encode($transaction['doc_no']) ?></td>
-            </tr>
-        <?php endforeach; ?>
+
 
         <?php if (empty($reportData['transactions'])): ?>
             <tr>
@@ -212,6 +182,38 @@ $this->title = 'รายงานเงินสดย่อย M.C.O.CO.,LTD';
                     ไม่มีรายการในช่วงเวลาที่เลือก
                 </td>
             </tr>
+        <?php else:?>
+            <?php foreach ($reportData['transactions'] as $transaction): ?>
+                <tr>
+                    <td class="text-center"><?= date('d/m/Y', strtotime($transaction['date'])) ?></td>
+                    <td><?= Html::encode($transaction['description']) ?></td>
+                    <td class="text-right">
+                        <?= $transaction['income'] > 0 ? number_format($transaction['income'], 2) : '-' ?>
+                    </td>
+                    <td class="text-right">
+                        <?= $transaction['expense_detail']['amount'] > 0 ? number_format($transaction['expense_detail']['amount'], 2) : '-' ?>
+                    </td>
+                    <td class="text-right">
+                        <?= $transaction['expense_detail']['vat'] > 0 ? number_format($transaction['expense_detail']['vat'], 2) : '-' ?>
+                    </td>
+                    <td class="text-right">
+                        <?= $transaction['expense_detail']['vat_amount'] > 0 ? number_format($transaction['expense_detail']['vat_amount'], 2) : '-' ?>
+                    </td>
+                    <td class="text-right">
+                        <?= $transaction['expense_detail']['wht'] > 0 ? number_format($transaction['expense_detail']['wht'], 2) : '-' ?>
+                    </td>
+                    <td class="text-right">
+                        <?= $transaction['expense_detail']['other'] > 0 ? number_format($transaction['expense_detail']['other'], 2) : '-' ?>
+                    </td>
+                    <td class="text-right">
+                        <?= $transaction['expense_detail']['total'] > 0 ? number_format($transaction['expense_detail']['total'], 2) : '-' ?>
+                    </td>
+                    <td class="text-right font-weight-bold">
+                        <?= number_format($transaction['balance'], 2) ?>
+                    </td>
+                    <td class="text-center"><?= Html::encode($transaction['doc_no']) ?></td>
+                </tr>
+            <?php endforeach; ?>
         <?php endif; ?>
         </tbody>
 
