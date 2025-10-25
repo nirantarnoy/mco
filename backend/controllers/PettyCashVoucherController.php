@@ -105,6 +105,7 @@ class PettyCashVoucherController extends Controller
             }else {
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
+                    $model->created_by = \Yii::$app->user->id;
                     if ($model->save()) {
                         // Handle details
                         $detailsData = Yii::$app->request->post('PettyCashDetail', []);
@@ -203,6 +204,7 @@ class PettyCashVoucherController extends Controller
             } else {
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
+                    $model->updated_by = \Yii::$app->user->id;
                     if ($model->save()) {
                         // Delete existing details
                         PettyCashDetail::deleteAll(['voucher_id' => $model->id]);

@@ -198,8 +198,8 @@ $this->registerCss("
 }
 
 .signature-name img {
-            max-width: 120px !important;
-            max-height: 45px !important;
+            max-width: 130px !important;
+            max-height: 50px !important;
             object-fit: contain;
         }
 
@@ -391,7 +391,12 @@ window.onload = function() {
         <div class="signature-box">
             <div class="signature-label">ISSUED BY</div>
             <div class="signature-name">
-                <?= $model->issued_by ? Html::encode($model->issued_by) : '&nbsp;' ?>
+                <?php
+                $approve_signature = \backend\models\User::findEmployeeSignature(trim($model->created_by));
+                if(!empty($approve_signature)): ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" alt="Requestor Signature">
+                <?php endif; ?>
+<!--                --><?php //= $model->issued_by ? Html::encode($model->issued_by) : '&nbsp;' ?>
             </div>
             <div class="signature-date">
                 <span class="date-field">

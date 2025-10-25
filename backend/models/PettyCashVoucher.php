@@ -58,7 +58,7 @@ class PettyCashVoucher extends ActiveRecord
     {
         return [
             [['pcv_no', 'date', 'amount'], 'required'],
-            [['date', 'issued_date', 'approved_date'], 'safe'],
+            [['date', 'issued_date', 'approved_date','created_by','updated_by'], 'safe'],
             [['amount'], 'number', 'min' => 0],
             [['paid_for'], 'string'],
             [['status','quotation_id','customer_id','pay_for_emp_id','job_id','vendor_id','approve_status'], 'integer'],
