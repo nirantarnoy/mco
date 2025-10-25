@@ -345,13 +345,13 @@ window.onload = function() {
             ?>
             <tr>
                 <td class="text-center">
-                    <?= $detail ? Html::encode($detail->ac_code) : '&nbsp;' ?>
+                    <?php //echo $detail ? Html::encode($detail->ac_code) : '&nbsp;' ?>
                 </td>
                 <td class="text-center">
-                    <?= $detail && $detail->detail_date ? Yii::$app->formatter->asDate($detail->detail_date, 'dd/MM/yy') : '&nbsp;' ?>
+                    <?php //echo $detail && $detail->detail_date ? Yii::$app->formatter->asDate($detail->detail_date, 'dd/MM/yy') : '&nbsp;' ?>
                 </td>
                 <td class="detail-cell text-left">
-                    <?= $detail ? nl2br(Html::encode($detail->detail)) : '&nbsp;' ?>
+                    <?php //echo $detail ? nl2br(Html::encode($detail->detail)) : '&nbsp;' ?>
                 </td>
                 <td class="amount-cell">
                     <?= $detail && $detail->amount > 0 ? number_format($detail->amount, 2) : '&nbsp;' ?>
