@@ -302,18 +302,26 @@ $monthName = $thaiMonths[(int)$dateMonth];
     <!-- Header -->
 
         <div class="header">
-            <div class="logo-section">
-                <div class="logo">
-                    <img src="../../backend/web/uploads/logo/mco_logo_2.png" class="logo-img" alt="">
+            <div class="row">
+                <div class="col-lg-3">
+                    <div class="logo-section">
+                        <div class="logo">
+                            <img src="../../backend/web/uploads/logo/mco_logo_2.png" class="logo-img" alt="">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-9">
+                    <div style="text-align: center;">
+                        <div class="company-name">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
+                        <div class="form-title">ใบสรุปการเบิกชดเชยเงินสดย่อย</div>
+                        <div class="form-period">
+                            ประจำวันที่ <?= $dateFrom ?> ถึง <?= $dateTo ?>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div style="text-align: center;">
-                <div class="company-name">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
-                <div class="form-title">ใบสรุปการเบิกชดเชยเงินสดย่อย</div>
-                <div class="form-period">
-                    ประจำวันที่ <?= $dateFrom ?> ถึง <?= $dateTo ?>
-                </div>
-            </div>
+
+
 
         </div>
 
@@ -343,24 +351,20 @@ $monthName = $thaiMonths[(int)$dateMonth];
     <table class="data-table">
         <thead>
         <tr>
-            <th colspan="2" class="col-no">วันที่รายงาน<br/>เลขที่เบิก</th>
             <th rowspan="2" class="col-no">ลำดับ</th>
             <th rowspan="2" class="col-date">ว.ด.ป.</th>
             <th rowspan="2" class="col-description">รายการ</th>
             <th rowspan="2" class="col-amount">จำนวนเงิน</th>
             <th rowspan="2" class="col-remark">หมายเหตุ</th>
         </tr>
-        <tr>
-            <th colspan="2" style="border-top: none; font-size: 9pt; padding: 2px;">เลขที่บิล</th>
-        </tr>
+<!--        <tr>-->
+<!--            <th colspan="2" style="border-top: none; font-size: 9pt; padding: 2px;">เลขที่บิล</th>-->
+<!--        </tr>-->
         </thead>
         <tbody>
         <?php if (!empty($advances) && is_array($advances)): ?>
             <?php foreach ($advances as $index => $advance): ?>
                 <tr>
-                    <td class="col-report-date">
-                        <?= shortThaiDate($advance->created_at ? date('Y-m-d', $advance->created_at) : $advance->request_date) ?>
-                    </td>
                     <td class="col-advance-no">
                         <?= Html::encode($advance->advance_no) ?>
                     </td>
@@ -389,7 +393,6 @@ $monthName = $thaiMonths[(int)$dateMonth];
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
-                    <td>&nbsp;</td>
                 </tr>
             <?php endfor; ?>
         <?php else: ?>
@@ -402,14 +405,13 @@ $monthName = $thaiMonths[(int)$dateMonth];
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
-                    <td>&nbsp;</td>
                 </tr>
             <?php endfor; ?>
         <?php endif; ?>
 
         <!-- Total Row -->
         <tr class="total-row">
-            <td colspan="5" style="text-align: center;">รวม</td>
+            <td colspan="4" style="text-align: center;">รวม</td>
             <td class="col-amount"><?= number_format($totalAmount, 2) ?></td>
             <td>&nbsp;</td>
         </tr>
