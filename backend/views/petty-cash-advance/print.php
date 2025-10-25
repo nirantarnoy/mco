@@ -295,7 +295,6 @@ $monthName = $thaiMonths[(int)$dateMonth];
 <div class="print-container">
     <!-- Header -->
 
-    <div class="col-lg-8">
         <div class="header">
             <div class="logo-section">
                 <div class="logo">
@@ -311,7 +310,7 @@ $monthName = $thaiMonths[(int)$dateMonth];
             </div>
 
         </div>
-    </div>
+
 
 
     <!-- Info Section -->
