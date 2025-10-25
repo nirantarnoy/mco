@@ -252,6 +252,26 @@ $monthName = $thaiMonths[(int)$dateMonth];
         .btn-back:hover {
             background-color: #545b62;
         }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .logo .m { color: #FFA500; }
+        .logo .c { color: #000080; }
+        .logo .o { color: #008000; }
+
+        .logo-img {
+            max-width: 180px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -262,14 +282,26 @@ $monthName = $thaiMonths[(int)$dateMonth];
 
 <div class="print-container">
     <!-- Header -->
-    <div class="header">
-        <div class="company-name">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
-        <div class="form-title">ใบสรุปการเบิกชดเชยเงินสดย่อย</div>
-        <div class="form-period">
-            ประจำวันที่ <?= $dateFrom ?> ถึง <?= $dateTo ?> เดือน <?= $monthName ?> พ.ศ. <?= $dateYear ?>
+    <div class="row">
+        <div class="col-lg-2">
+            <div class="logo-section">
+                <div class="logo">
+                    <img src="../../backend/web/uploads/logo/mco_logo_2.png" class="logo-img" alt="">
+                </div>
+            </div>
         </div>
-        <div class="form-code">F-WP-FMA-004-002 Rev.N</div>
+        <div class="col-lg-8">
+            <div class="header">
+                <div class="company-name">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
+                <div class="form-title">ใบสรุปการเบิกชดเชยเงินสดย่อย</div>
+                <div class="form-period">
+                    ประจำวันที่ <?= $dateFrom ?> ถึง <?= $dateTo ?>
+                </div>
+
+            </div>
+        </div>
     </div>
+
 
     <!-- Info Section -->
     <table class="info-table">
@@ -379,6 +411,7 @@ $monthName = $thaiMonths[(int)$dateMonth];
             <div>ผู้อนุมัติ</div>
         </div>
     </div>
+    <div class="form-code">F-WP-FMA-004-002 Rev.N</div>
 </div>
 
 <script>
