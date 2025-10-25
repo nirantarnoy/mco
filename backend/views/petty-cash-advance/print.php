@@ -440,21 +440,21 @@ $monthName = $thaiMonths[(int)$dateMonth];
     <!-- Signature Section -->
     <div class="signature-section">
         <div class="signature-box">
-            <div class="signature-line"></div>
             <?php
             $requestor_signature = \backend\models\User::findEmployeeSignature($model->created_by);
             if(!empty($requestor_signature)): ?>
                 <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" style="max-width: 140px;max-height: 55px;" alt="Request By Signature">
             <?php endif; ?>
+            <div class="signature-line"></div>
             <div>ผู้รักษาเงินสดย่อย</div>
         </div>
         <div class="signature-box">
-            <div class="signature-line"></div>
             <?php
             $approval_signature = \backend\models\User::findEmployeeSignature($model->approved_by);
             if(!empty($approval_signature)): ?>
                 <img src="../../backend/web/uploads/employee_signature/<?=$approval_signature?>" alt="Request By Signature">
             <?php endif; ?>
+            <div class="signature-line"></div>
             <div>ผู้อนุมัติ</div>
         </div>
     </div>
