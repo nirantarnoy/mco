@@ -167,7 +167,7 @@ $this->registerCss("
     width: 50%;
     border: 1px solid #000;
     padding: 0;
-    height: 80px;
+    height: 120px;
     position: relative;
     vertical-align: top;
 }
