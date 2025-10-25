@@ -150,7 +150,7 @@ $this->title = 'รายงานเงินสดย่อย M.C.O.CO.,LTD';
 
     <!-- Opening Balance -->
     <div style="margin-bottom: 15px;">
-        <strong>ยอดยกมา: <?= number_format($reportData['opening_balance'], 2) ?> บาท</strong>
+        <strong>ยอดยกมา: <?= $reportData['opening_balance'] != null ? number_format($reportData['opening_balance'], 2):0 ?> บาท</strong>
     </div>
 
     <!-- Main Report Table -->
