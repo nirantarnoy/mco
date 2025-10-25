@@ -208,20 +208,34 @@ $monthName = $thaiMonths[(int)$dateMonth];
         }
 
         .signature-section {
-            margin-top: 30px;
             display: flex;
-            justify-content: space-between;
+            justify-content: space-around;
+            margin-top: 40px;
+            text-align: center;
         }
 
         .signature-box {
-            text-align: center;
-            width: 45%;
+            width: 30%;
         }
 
         .signature-line {
-            border-bottom: 1px dotted #000;
+            border-bottom: 1px solid #000;
+            margin: 40px 0 10px 0;
             min-height: 60px;
-            margin-bottom: 5px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            position: relative;
+        }
+
+        .signature-line img {
+            max-width: 140px;
+            max-height: 55px;
+            object-fit: contain;
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .no-print {
