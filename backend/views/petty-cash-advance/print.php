@@ -368,7 +368,6 @@ $monthName = $thaiMonths[(int)$dateMonth];
                     <td class="col-advance-no">
                         <?= Html::encode($advance->advance_no) ?>
                     </td>
-                    <td class="col-no"><?= $index + 1 ?></td>
                     <td class="col-date"><?= shortThaiDate($advance->request_date) ?></td>
                     <td class="col-description"><?= Html::encode($advance->purpose) ?></td>
                     <td class="col-amount"><?= number_format($advance->amount, 2) ?></td>
