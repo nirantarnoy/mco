@@ -232,8 +232,8 @@ $monthName = $thaiMonths[(int)$dateMonth];
         }
 
         .signature-line {
-            margin: 5px 0 5px 0 !important;
-            min-height: 10px !important;
+            margin: 1px 0 1px 0 !important;
+            min-height: 5px !important;
         }
 
         .signature-line img {
@@ -453,6 +453,8 @@ $monthName = $thaiMonths[(int)$dateMonth];
             $approval_signature = \backend\models\User::findEmployeeSignature($model->approved_by);
             if(!empty($approval_signature)): ?>
                 <img src="../../backend/web/uploads/employee_signature/<?=$approval_signature?>" alt="Request By Signature">
+            <?php else: ?>
+            <div style="height: 55px;"></div>
             <?php endif; ?>
             <div class="signature-line"></div>
             <div>ผู้อนุมัติ</div>
