@@ -224,7 +224,7 @@ class PettyCashAdvanceController extends Controller
         $currentBalance = PettyCashAdvance::getCurrentBalance();
         $pettyCashLimit = PettyCashAdvance::MAX_AMOUNT;
 
-        return $this->render('print', [
+        return $this->render('print-by-employee', [
             'model' => $model,
             'currentBalance' => $currentBalance,
             'pettyCashLimit' => $pettyCashLimit,
