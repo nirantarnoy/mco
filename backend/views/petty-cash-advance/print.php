@@ -150,7 +150,7 @@ $this->title = 'รายงานเงินสดย่อย M.C.O.CO.,LTD';
 
     <!-- Opening Balance -->
     <div style="margin-bottom: 15px;">
-        <strong>ยอดยกมา: <?= $reportData['opening_balance'] != null ? number_format($reportData['opening_balance'], 2):0 ?> บาท</strong>
+        <strong>ยอดยกมา: <?= isset($reportData['opening_balance']) ? number_format($reportData['opening_balance'], 2) : '0.00' ?> บาท</strong>
     </div>
 
     <!-- Main Report Table -->
@@ -239,7 +239,7 @@ $this->title = 'รายงานเงินสดย่อย M.C.O.CO.,LTD';
             <table style="width: 100%; border: none;">
                 <tr>
                     <td>ยอดยกมา:</td>
-                    <td class="text-right"><?= $reportData['opening_balance'] != null ? number_format($reportData['opening_balance'], 2):0 ?> บาท</td>
+                    <td class="text-right"><?= isset($reportData['opening_balance']) ? number_format($reportData['opening_balance'], 2) : '0.00' ?> บาท</td>
                 </tr>
                 <tr>
                     <td>รายรับรวม:</td>
