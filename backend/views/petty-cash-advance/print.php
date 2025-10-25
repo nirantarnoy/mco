@@ -408,7 +408,7 @@ $monthName = $thaiMonths[(int)$dateMonth];
 
         <!-- Total Row -->
         <tr class="total-row">
-            <td colspan="4" style="text-align: center;">รวม</td>
+            <td colspan="3" style="text-align: center;">รวม</td>
             <td class="col-amount"><?= number_format($totalAmount, 2) ?></td>
             <td>&nbsp;</td>
         </tr>
