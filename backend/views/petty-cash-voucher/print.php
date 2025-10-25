@@ -197,6 +197,12 @@ $this->registerCss("
     min-height: 16px;
 }
 
+.signature-name img {
+            max-width: 120px !important;
+            max-height: 45px !important;
+            object-fit: contain;
+        }
+
 .signature-date {
     position: absolute;
     bottom: 5px;
