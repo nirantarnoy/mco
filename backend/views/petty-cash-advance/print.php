@@ -231,6 +231,11 @@ $monthName = $thaiMonths[(int)$dateMonth];
             border-bottom: 1px solid #000 !important;
         }
 
+        .signature-line {
+            margin: 30px 0 8px 0 !important;
+            min-height: 50px !important;
+        }
+
         .signature-line img {
             max-width: 140px;
             max-height: 55px;
