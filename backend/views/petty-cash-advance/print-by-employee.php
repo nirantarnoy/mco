@@ -1,6 +1,8 @@
+
+<?php
 use yii\helpers\Html;
 
-$this->title = 'รายการเบิกเงินทดแทนของ ' . $employee->fname . ' ' . $employee->lname;
+$this->title = 'รายการเบิกเงินทดแทนของ ';
 ?>
 
 <!DOCTYPE html>
