@@ -391,14 +391,12 @@ $monthName = $thaiMonths[(int)$dateMonth];
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
-                    <td>&nbsp;</td>
                 </tr>
             <?php endfor; ?>
         <?php else: ?>
             <!-- ถ้าไม่มีข้อมูล แสดงแถวว่าง 15 แถว -->
             <?php for ($i = 0; $i < 15; $i++): ?>
                 <tr>
-                    <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
