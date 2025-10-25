@@ -99,8 +99,14 @@ $monthName = $thaiMonths[(int)$dateMonth];
         }
 
         .header {
-            text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px !important;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
 
         .company-logo {
