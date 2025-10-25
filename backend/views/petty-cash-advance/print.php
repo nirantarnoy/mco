@@ -1,7 +1,64 @@
 <?php
 use yii\helpers\Html;
+use backend\models\PettyCashAdvance;
 
-$this->title = 'รายงานเงินสดย่อย M.C.O.CO.,LTD';
+/* @var $this yii\web\View */
+/* @var $model backend\models\PettyCashAdvance */
+/* @var $currentBalance float */
+/* @var $pettyCashLimit float */
+/* @var $advances array */
+/* @var $from_date string */
+/* @var $to_date string */
+
+$this->title = 'ใบสรุปการเบิกชดเชยเงินสดย่อย';
+
+// ฟังก์ชันแปลงวันที่เป็นรูปแบบไทย
+function thaiDate($date) {
+    if (!$date) return '';
+    $thaiMonths = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+        'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+    $timestamp = is_numeric($date) ? $date : strtotime($date);
+    $day = date('d', $timestamp);
+    $month = $thaiMonths[(int)date('m', $timestamp)];
+    $year = date('Y', $timestamp) + 543;
+    return "$day $month พ.ศ. $year";
+}
+
+// ฟังก์ชันแปลงวันที่เป็น ว.ด.ป.
+function shortThaiDate($date) {
+    if (!$date) return '';
+    $timestamp = is_numeric($date) ? $date : strtotime($date);
+    $day = date('d', $timestamp);
+    $month = date('m', $timestamp);
+    $year = (date('Y', $timestamp) + 543) - 2500; // แสดงแค่ 2 หลัก
+    return "$day.$month.$year";
+}
+
+// คำนวณยอดรวม
+$totalAmount = 0;
+$overAdvance = 0;
+
+if (isset($advances) && is_array($advances)) {
+    $totalAmount = array_sum(array_map(function($adv) {
+        return $adv->amount ?? 0;
+    }, $advances));
+}
+
+// คำนวณเงินสดย่อยเบิกเกิน
+if ($currentBalance < 0) {
+    $overAdvance = abs($currentBalance);
+}
+
+// วันที่ช่วง
+$dateFrom = $from_date ? thaiDate($from_date) : thaiDate(date('Y-m-01'));
+$dateTo = $to_date ? thaiDate($to_date) : thaiDate(date('Y-m-t'));
+$dateMonth = $from_date ? date('m', strtotime($from_date)) : date('m');
+$dateYear = $from_date ? (date('Y', strtotime($from_date)) + 543) : (date('Y') + 543);
+
+// ข้อมูลเดือน
+$thaiMonths = ['', 'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+$monthName = $thaiMonths[(int)$dateMonth];
 ?>
 
 <!DOCTYPE html>
@@ -10,104 +67,134 @@ $this->title = 'รายงานเงินสดย่อย M.C.O.CO.,LTD';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= Html::encode($this->title) ?></title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <style>
         @media print {
-            body {
-                font-size: 12px;
-                font-family: 'Sarabun', sans-serif;
-            }
-
             .no-print {
                 display: none !important;
             }
-
-            .page-break {
-                page-break-before: always;
-            }
-
-            .mco-table {
-                font-size: 10px;
-            }
-
-            .mco-table th, .mco-table td {
-                padding: 2px !important;
-                border: 1px solid #000 !important;
-            }
-
-            @page {
-                margin: 1cm;
-                size: A4 landscape;
+            body {
+                margin: 0;
+                padding: 10mm;
             }
         }
 
         body {
-            font-family: 'Sarabun', sans-serif;
-            font-size: 14px;
+            font-family: 'Sarabun', 'THSarabunNew', 'Angsana New', sans-serif;
+            font-size: 14pt;
+            line-height: 1.4;
+            margin: 0;
+            padding: 20px;
         }
 
-        .mco-table {
-            width: 100%;
-            border-collapse: collapse;
+        .print-container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+            padding: 15mm;
+            box-sizing: border-box;
         }
 
-        .mco-table th {
-            background-color: #f8f9fa;
-            font-weight: bold;
+        .header {
             text-align: center;
-            vertical-align: middle;
-            padding: 8px 4px;
-            border: 1px solid #000;
+            margin-bottom: 15px;
         }
 
-        .mco-table td {
-            padding: 6px 4px;
-            border: 1px solid #000;
-            vertical-align: middle;
+        .company-logo {
+            width: 80px;
+            height: auto;
+            margin-bottom: 5px;
         }
 
-        .text-right {
+        .company-name {
+            font-size: 16pt;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .form-title {
+            font-size: 15pt;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .form-period {
+            font-size: 14pt;
+            margin: 5px 0;
+        }
+
+        .form-code {
+            font-size: 11pt;
+            text-align: right;
+            margin: 5px 0;
+        }
+
+        .info-table {
+            width: 100%;
+            border: 1px solid #000;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .info-table td {
+            border: 1px solid #000;
+            padding: 8px 10px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            width: 250px;
+        }
+
+        .data-table {
+            width: 100%;
+            border: 1px solid #000;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            text-align: center;
+        }
+
+        .data-table th {
+            font-weight: bold;
+            background-color: #f5f5f5;
+        }
+
+        .data-table .col-no {
+            width: 50px;
+        }
+
+        .data-table .col-date {
+            width: 80px;
+        }
+
+        .data-table .col-report-date {
+            width: 90px;
+        }
+
+        .data-table .col-advance-no {
+            width: 120px;
+        }
+
+        .data-table .col-description {
+            text-align: left;
+        }
+
+        .data-table .col-amount {
+            width: 100px;
             text-align: right;
         }
 
-        .text-center {
-            text-align: center;
+        .data-table .col-remark {
+            width: 120px;
         }
 
-        .font-weight-bold {
+        .data-table .total-row {
             font-weight: bold;
-        }
-
-        .report-header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .report-header h3 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-
-        .report-header h5 {
-            color: #34495e;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-
-        .summary-section {
-            margin-top: 20px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .summary-box {
-            width: 48%;
-            border: 1px solid #000;
-            padding: 10px;
         }
 
         .signature-section {
@@ -117,203 +204,186 @@ $this->title = 'รายงานเงินสดย่อย M.C.O.CO.,LTD';
         }
 
         .signature-box {
-            width: 45%;
             text-align: center;
+            width: 45%;
         }
 
         .signature-line {
-            border-bottom: 1px solid #000;
-            width: 200px;
-            height: 40px;
-            margin: 10px auto;
+            border-bottom: 1px dotted #000;
+            min-height: 60px;
+            margin-bottom: 5px;
+        }
+
+        .no-print {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .btn-print {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14pt;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .btn-print:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-back {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14pt;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-back:hover {
+            background-color: #545b62;
         }
     </style>
 </head>
 <body>
-<!-- Print Button -->
-<div class="no-print text-center mb-3">
-    <button onclick="window.print()" class="btn btn-primary">
-        <i class="fas fa-print"></i> พิมพ์รายงาน
-    </button>
-    <button onclick="window.close()" class="btn btn-secondary">
-        <i class="fas fa-times"></i> ปิด
-    </button>
+<div class="no-print">
+    <button onclick="window.print()" class="btn-print">🖨️ พิมพ์</button>
+    <a href="<?= \yii\helpers\Url::to(['index']) ?>" class="btn-back">← กลับ</a>
 </div>
 
-<!-- Report Content -->
-<div class="container-fluid">
-    <div class="report-header">
-        <h3><strong>รายงานเงินสดย่อย M.C.O.CO.,LTD</strong></h3>
-        <h5>ประจำวันที่ <?= date('d/m/Y', strtotime($from_date)) ?> ถึง <?= date('d/m/Y', strtotime($to_date)) ?></h5>
-        <p style="margin: 5px 0; color: #666;">F-WP-FMA-004-003 Rev.N</p>
+<div class="print-container">
+    <!-- Header -->
+    <div class="header">
+        <div class="company-name">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
+        <div class="form-title">ใบสรุปการเบิกชดเชยเงินสดย่อย</div>
+        <div class="form-period">
+            ประจำวันที่ <?= $dateFrom ?> ถึง <?= $dateTo ?> เดือน <?= $monthName ?> พ.ศ. <?= $dateYear ?>
+        </div>
+        <div class="form-code">F-WP-FMA-004-002 Rev.N</div>
     </div>
 
-    <!-- Opening Balance -->
-    <div style="margin-bottom: 15px;">
-        <strong>ยอดยกมา: <?= isset($reportData['opening_balance']) ? number_format($reportData['opening_balance'], 2) : '0.00' ?> บาท</strong>
-    </div>
-
-    <!-- Main Report Table -->
-    <table class="mco-table">
-        <thead>
+    <!-- Info Section -->
+    <table class="info-table">
         <tr>
-            <th rowspan="2" style="width: 8%;">วันที่</th>
-            <th rowspan="2" style="width: 25%;">รายการ</th>
-            <th rowspan="2" style="width: 10%;">รายรับ</th>
-            <th colspan="6">รายจ่าย</th>
-            <th rowspan="2" style="width: 10%;">คงเหลือ</th>
-            <th rowspan="2" style="width: 12%;">เลขที่เอกสาร</th>
+            <td class="info-label">วงเงินสดย่อย :</td>
+            <td><?= number_format($pettyCashLimit, 2) ?> บาท</td>
         </tr>
         <tr>
-            <th style="width: 8%;">ค่าใช้จ่าย</th>
-            <th style="width: 5%;">VAT</th>
-            <th style="width: 8%;">VAT จำนวน</th>
-            <th style="width: 6%;">W/H</th>
-            <th style="width: 6%;">อื่น ๆ</th>
-            <th style="width: 8%;">ทั้งหมด</th>
+            <td class="info-label">เงินสดย่อยคงเหลือ :</td>
+            <td><?= number_format($currentBalance, 2) ?> บาท</td>
+        </tr>
+        <tr>
+            <td class="info-label">เงินสดย่อยเบิกเกิน</td>
+            <td><?= $overAdvance > 0 ? number_format($overAdvance, 2) : '-' ?> <?= $overAdvance > 0 ? 'บาท' : '' ?></td>
+        </tr>
+        <tr>
+            <td class="info-label">เบิกชดเชยเงินสดย่อย:</td>
+            <td><?= number_format($totalAmount, 2) ?> บาท</td>
+        </tr>
+    </table>
+
+    <!-- Data Table -->
+    <table class="data-table">
+        <thead>
+        <tr>
+            <th colspan="2" class="col-no">วันที่รายงาน<br/>เลขที่เบิก</th>
+            <th rowspan="2" class="col-no">ลำดับ</th>
+            <th rowspan="2" class="col-date">ว.ด.ป.</th>
+            <th rowspan="2" class="col-description">รายการ</th>
+            <th rowspan="2" class="col-amount">จำนวนเงิน</th>
+            <th rowspan="2" class="col-remark">หมายเหตุ</th>
+        </tr>
+        <tr>
+            <th colspan="2" style="border-top: none; font-size: 9pt; padding: 2px;">เลขที่บิล</th>
         </tr>
         </thead>
         <tbody>
-
-
-        <?php if (empty($reportData['transactions'])): ?>
-            <tr>
-                <td colspan="11" class="text-center" style="padding: 20px; color: #666;">
-                    ไม่มีรายการในช่วงเวลาที่เลือก
-                </td>
-            </tr>
-        <?php else:?>
-            <?php foreach ($reportData['transactions'] as $transaction): ?>
+        <?php if (!empty($advances) && is_array($advances)): ?>
+            <?php foreach ($advances as $index => $advance): ?>
                 <tr>
-                    <td class="text-center"><?= date('d/m/Y', strtotime($transaction['date'])) ?></td>
-                    <td><?= Html::encode($transaction['description']) ?></td>
-                    <td class="text-right">
-                        <?= $transaction['income'] > 0 ? number_format($transaction['income'], 2) : '-' ?>
+                    <td class="col-report-date">
+                        <?= shortThaiDate($advance->created_at ? date('Y-m-d', $advance->created_at) : $advance->request_date) ?>
                     </td>
-                    <td class="text-right">
-                        <?= $transaction['expense_detail']['amount'] > 0 ? number_format($transaction['expense_detail']['amount'], 2) : '-' ?>
+                    <td class="col-advance-no">
+                        <?= Html::encode($advance->advance_no) ?>
                     </td>
-                    <td class="text-right">
-                        <?= $transaction['expense_detail']['vat'] > 0 ? number_format($transaction['expense_detail']['vat'], 2) : '-' ?>
+                    <td class="col-no"><?= $index + 1 ?></td>
+                    <td class="col-date"><?= shortThaiDate($advance->request_date) ?></td>
+                    <td class="col-description"><?= Html::encode($advance->purpose) ?></td>
+                    <td class="col-amount"><?= number_format($advance->amount, 2) ?></td>
+                    <td class="col-remark">
+                        <?php
+                        if ($advance->remarks) {
+                            echo Html::encode($advance->remarks);
+                        } else {
+                            echo '-';
+                        }
+                        ?>
                     </td>
-                    <td class="text-right">
-                        <?= $transaction['expense_detail']['vat_amount'] > 0 ? number_format($transaction['expense_detail']['vat_amount'], 2) : '-' ?>
-                    </td>
-                    <td class="text-right">
-                        <?= $transaction['expense_detail']['wht'] > 0 ? number_format($transaction['expense_detail']['wht'], 2) : '-' ?>
-                    </td>
-                    <td class="text-right">
-                        <?= $transaction['expense_detail']['other'] > 0 ? number_format($transaction['expense_detail']['other'], 2) : '-' ?>
-                    </td>
-                    <td class="text-right">
-                        <?= $transaction['expense_detail']['total'] > 0 ? number_format($transaction['expense_detail']['total'], 2) : '-' ?>
-                    </td>
-                    <td class="text-right font-weight-bold">
-                        <?= number_format($transaction['balance'], 2) ?>
-                    </td>
-                    <td class="text-center"><?= Html::encode($transaction['doc_no']) ?></td>
                 </tr>
             <?php endforeach; ?>
+
+            <!-- เติมแถวว่างถ้ามีข้อมูลน้อย -->
+            <?php for ($i = count($advances); $i < 15; $i++): ?>
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+            <?php endfor; ?>
+        <?php else: ?>
+            <!-- ถ้าไม่มีข้อมูล แสดงแถวว่าง 15 แถว -->
+            <?php for ($i = 0; $i < 15; $i++): ?>
+                <tr>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+            <?php endfor; ?>
         <?php endif; ?>
-        </tbody>
 
-        <!-- Summary Row -->
-        <tfoot>
-        <tr class="font-weight-bold" style="background-color: #f8f9fa;">
-            <td colspan="2" class="text-center">รวม</td>
-            <td class="text-right"><?= number_format($reportData['total_income'], 2) ?></td>
-            <td class="text-right"><?= number_format($reportData['expense_summary']['amount'], 2) ?></td>
-            <td class="text-right"><?= number_format($reportData['expense_summary']['vat'], 2) ?></td>
-            <td class="text-right"><?= number_format($reportData['expense_summary']['vat_amount'], 2) ?></td>
-            <td class="text-right"><?= number_format($reportData['expense_summary']['wht'], 2) ?></td>
-            <td class="text-right"><?= number_format($reportData['expense_summary']['other'], 2) ?></td>
-            <td class="text-right"><?= number_format($reportData['expense_summary']['total'], 2) ?></td>
-            <td class="text-right"><?= number_format($reportData['closing_balance'], 2) ?></td>
-            <td></td>
+        <!-- Total Row -->
+        <tr class="total-row">
+            <td colspan="5" style="text-align: center;">รวม</td>
+            <td class="col-amount"><?= number_format($totalAmount, 2) ?></td>
+            <td>&nbsp;</td>
         </tr>
-        </tfoot>
+        </tbody>
     </table>
-
-    <!-- Summary Section -->
-    <div class="summary-section">
-        <div class="summary-box">
-            <h6><strong>สรุปรายการ</strong></h6>
-            <table style="width: 100%; border: none;">
-                <tr>
-                    <td>ยอดยกมา:</td>
-                    <td class="text-right"><?= isset($reportData['opening_balance']) ? number_format($reportData['opening_balance'], 2) : '0.00' ?> บาท</td>
-                </tr>
-                <tr>
-                    <td>รายรับรวม:</td>
-                    <td class="text-right"><?= number_format($reportData['total_income'], 2) ?> บาท</td>
-                </tr>
-                <tr>
-                    <td>รายจ่ายรวม:</td>
-                    <td class="text-right"><?= number_format($reportData['total_expense'], 2) ?> บาท</td>
-                </tr>
-                <tr style="border-top: 1px solid #000;">
-                    <td class="font-weight-bold">ยอดคงเหลือ:</td>
-                    <td class="text-right font-weight-bold"><?= number_format($reportData['closing_balance'], 2) ?> บาท</td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="summary-box">
-            <h6><strong>รวมรายจ่าย</strong></h6>
-            <table style="width: 100%; border: none;">
-                <tr>
-                    <td>ค่าใช้จ่าย:</td>
-                    <td class="text-right"><?= number_format($reportData['expense_summary']['amount'], 2) ?></td>
-                </tr>
-                <tr>
-                    <td>VAT:</td>
-                    <td class="text-right"><?= number_format($reportData['expense_summary']['vat_amount'], 2) ?></td>
-                </tr>
-                <tr>
-                    <td>หัก ณ ที่จ่าย:</td>
-                    <td class="text-right"><?= number_format($reportData['expense_summary']['wht'], 2) ?></td>
-                </tr>
-                <tr>
-                    <td>อื่น ๆ:</td>
-                    <td class="text-right"><?= number_format($reportData['expense_summary']['other'], 2) ?></td>
-                </tr>
-                <tr style="border-top: 1px solid #000;">
-                    <td class="font-weight-bold">รวมจ่ายจริง:</td>
-                    <td class="text-right font-weight-bold"><?= number_format($reportData['expense_summary']['total'], 2) ?></td>
-                </tr>
-            </table>
-        </div>
-    </div>
 
     <!-- Signature Section -->
     <div class="signature-section">
         <div class="signature-box">
-            <p><strong>ผู้รักษาเงินสดย่อย</strong></p>
             <div class="signature-line"></div>
-            <p style="margin-top: 5px;">(...........................)</p>
+            <div>ผู้รักษาเงินสดย่อย</div>
         </div>
         <div class="signature-box">
-            <p><strong>ผู้อนุมัติ</strong></p>
             <div class="signature-line"></div>
-            <p style="margin-top: 5px;">(...........................)</p>
+            <div>ผู้อนุมัติ</div>
         </div>
-    </div>
-
-    <!-- Report Footer -->
-    <div class="text-center" style="margin-top: 30px; font-size: 12px; color: #666;">
-        รายงานสร้างเมื่อ: <?= date('d/m/Y H:i:s') ?> |
-        ระบบจัดการเงินสดย่อย M.C.O.CO.,LTD
     </div>
 </div>
 
 <script>
-    // Auto print when page loads (optional)
+    // Auto print on load (optional)
     // window.onload = function() { window.print(); }
-
-    // Auto close after print (optional)
-    window.onafterprint = function() {
-        // window.close();
-    }
 </script>
 </body>
 </html>
