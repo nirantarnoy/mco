@@ -429,7 +429,7 @@ $monthName = $thaiMonths[(int)$dateMonth];
         <div class="signature-box">
             <div class="signature-line"></div>
             <?php
-            $approval_signature = \backend\models\User::findEmployeeSignature($model->approve_by);
+            $approval_signature = \backend\models\User::findEmployeeSignature($model->approved_by);
             if(!empty($approval_signature)): ?>
                 <img src="../../backend/web/uploads/employee_signature/<?=$approval_signature?>" alt="Request By Signature">
             <?php endif; ?>
