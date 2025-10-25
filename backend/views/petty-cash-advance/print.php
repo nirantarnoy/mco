@@ -239,7 +239,7 @@ $this->title = 'รายงานเงินสดย่อย M.C.O.CO.,LTD';
             <table style="width: 100%; border: none;">
                 <tr>
                     <td>ยอดยกมา:</td>
-                    <td class="text-right"><?= number_format($reportData['opening_balance'], 2) ?> บาท</td>
+                    <td class="text-right"><?= $reportData['opening_balance'] != null ? number_format($reportData['opening_balance'], 2):0 ?> บาท</td>
                 </tr>
                 <tr>
                     <td>รายรับรวม:</td>
