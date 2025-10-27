@@ -211,10 +211,10 @@ function addItemRow(itemData = null) {
     // ถ้าพบแถวที่ว่าง ให้ใส่ข้อมูลลงในแถวที่ว่างนั้น
     if (emptyDescriptionRow.length > 0) {
         var description = itemData.item_description || '';
-        var quantity = itemData.quantity || '1.000';
+        var quantity = itemData.quantity || '1.00';
         var unit = itemData.unit || '';
-        var unitPrice = itemData.unit_price || '0.000';
-        var amount = itemData.amount || '0.000';
+        var unitPrice = itemData.unit_price || '0.00';
+        var amount = itemData.amount || '0.00';
         var productId = itemData.product_id || '';
 
         // ใส่ข้อมูลลงในแถวที่ว่าง
@@ -251,10 +251,10 @@ function addItemRow(itemData = null) {
     var rowIndex = $('#items-table tbody tr').length;
 
     var description = itemData ? itemData.item_description || '' : '';
-    var quantity = itemData ? itemData.quantity || '1.000' : '1.000';
+    var quantity = itemData ? itemData.quantity || '1.00' : '1.00';
     var unit = itemData ? itemData.unit || '' : '';
-    var unitPrice = itemData ? itemData.unit_price || '0.000' : '0.000';
-    var amount = itemData ? itemData.amount || '0.000' : '0.000';
+    var unitPrice = itemData ? itemData.unit_price || '0.00' : '0.00';
+    var amount = itemData ? itemData.amount || '0.00' : '0.00';
     var productId = itemData ? itemData.product_id || '' : '';
 
     var newRowHtml = `

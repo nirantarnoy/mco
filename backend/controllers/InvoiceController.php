@@ -430,11 +430,11 @@ class InvoiceController extends Controller
             $items = [];
             foreach ($jobItems as $jobItem) {
                 $items[] = [
-                    'item_description' => $jobItem->product->name,
-                    'quantity' => number_format($jobItem->qty, 2),
+                    'item_description' => $jobItem->product_name, // $jobItem->product->name,
+                    'quantity' => $jobItem->qty, // number_format($jobItem->qty, 2),
                     'unit' => $jobItem->product->unit->name ?: 'หน่วย',
-                    'unit_price' => number_format($jobItem->line_price,2),
-                    'amount' => number_format($jobItem->qty * $jobItem->line_price, 2),
+                    'unit_price' => $jobItem->line_price, //number_format($jobItem->line_price,2),
+                    'amount' => ($jobItem->qty * $jobItem->line_price),//number_format($jobItem->qty * $jobItem->line_price, 2),
                     // ข้อมูลเพิ่มเติมที่อาจจำเป็น
                     'product_id' => $jobItem->product_id,
                     'notes' => $jobItem->note,
