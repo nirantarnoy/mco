@@ -108,8 +108,9 @@ class CustomerController extends Controller
                             $model_address->save(false);
 
                     }
+                    return $this->redirect(['view', 'id' => $model->id]);
                 }
-                return $this->redirect(['view', 'id' => $model->id]);
+
             }
         } else {
             $model->loadDefaultValues();
