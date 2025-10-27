@@ -688,7 +688,7 @@ window.addEventListener('afterprint', function() {
             </div>
             <div class="field-group">
                 <span class="field-label">เงื่อนไข / กำหนดชำระ / Credit, Due:</span>
-                <span class="field-value"><?= Html::encode($model->paymentTerm->name ?: '') ?> <?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'd/M/yy') : '' ?></span>
+                <span class="field-value"><?= Html::encode($model->paymentTerm ? $model->paymentTerm->name: '') ?> <?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'd/M/yy') : '' ?></span>
             </div>
         </div>
     </div>
