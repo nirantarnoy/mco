@@ -495,4 +495,59 @@ class PettyCashVoucherController extends Controller
 
         return ['error' => 'Product not found'];
     }
+
+    public function actionPrintpcv($id = null, $from_date = null, $to_date = null)
+    {
+        // ถ้ามี id แสดงว่าต้องการพิมพ์เฉพาะใบนั้น
+        if ($id !== null) {
+            $model = $this->findModel($id);
+
+            // ใช้วันที่ของใบเบิกเป็นช่วงเวลา
+            $from_date = date('Y-m-d', strtotime($model->request_date . ' -7 days'));
+            $to_date = date('Y-m-d', strtotime($model->request_date . ' +7 days'));
+
+            // ดึงข้อมูลการเบิกในช่วงเวลาใกล้เคียง (สำหรับแสดงในรายงาน)
+            $advances = PettyCashAdvance::find()
+                ->where(['>=', 'request_date', $from_date])
+                ->andWhere(['<=', 'request_date', $to_date])
+                ->andWhere(['status' => [PettyCashAdvance::STATUS_APPROVED]])
+                ->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')])
+                ->orderBy(['request_date' => SORT_ASC, 'id' => SORT_ASC])
+                ->all();
+        } else {
+            // ถ้าไม่มี id ให้ใช้ช่วงเวลาที่กำหนด
+            if (!$from_date) $from_date = date('Y-m-01'); // วันแรกของเดือน
+            if (!$to_date) $to_date = date('Y-m-t'); // วันสุดท้ายของเดือน
+
+            // ดึงข้อมูลการเบิกในช่วงเวลาที่กำหนด
+            $advances = PettyCashAdvance::find()
+                ->where(['>=', 'request_date', $from_date])
+                ->andWhere(['<=', 'request_date', $to_date])
+                ->andWhere(['status' => [PettyCashAdvance::STATUS_APPROVED]])
+                ->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')])
+                ->orderBy(['request_date' => SORT_ASC, 'id' => SORT_ASC])
+                ->all();
+        }
+
+        // คำนวณยอดคงเหลือปัจจุบัน
+        $currentBalance = PettyCashAdvance::getCurrentBalance();
+
+        // วงเงินสดย่อย
+        $pettyCashLimit = PettyCashAdvance::MAX_AMOUNT;
+
+        // ปิด layout สำหรับการพิมพ์
+        $this->layout = false;
+
+        return $this->render('print', [
+            'model' => $id !== null ? $model : null,
+            'advances' => $advances,
+            'currentBalance' => $currentBalance,
+            'pettyCashLimit' => $pettyCashLimit,
+            'from_date' => $from_date,
+            'to_date' => $to_date,
+        ]);
+    }
+
+
+
 }

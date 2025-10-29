@@ -4,11 +4,15 @@ namespace backend\controllers;
 use backend\models\Employee;
 use backend\models\Invoice;
 use backend\models\PettyCashAdvance;
+use backend\models\PettyCashDetail;
+use backend\models\PettyCashVoucher;
+use Yii;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use yii\data\ActiveDataProvider;
+use yii\web\Response;
 
 class PettyCashAdvanceController extends Controller
 {
@@ -405,6 +409,262 @@ class PettyCashAdvanceController extends Controller
             ],
             'print_url' => \yii\helpers\Url::to(['print', 'id' => $id], true),
         ];
+    }
+
+    public function actionPrintPetty()
+    {
+        $request = Yii::$app->request;
+
+        // Get filter parameters
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+        $documentNo = $request->get('document_no');
+
+        // Query for advances (รายรับ)
+        $advanceQuery = PettyCashAdvance::find()
+            ->select([
+                'id',
+                'advance_no',
+                'request_date',
+                'amount',
+                'purpose',
+                'status'
+            ])
+            ->orderBy(['request_date' => SORT_ASC, 'id' => SORT_ASC]);
+
+        // Query for vouchers with details (รายจ่าย)
+        $voucherQuery = PettyCashVoucher::find()
+            ->alias('v')
+            ->select([
+                'v.id',
+                'v.pcv_no',
+                'v.date',
+                'v.name',
+                'v.status',
+                'd.amount',
+                'd.ac_code',
+                'd.detail',
+                'd.vat',
+                'd.vat_amount',
+                'd.wht',
+                'd.other'
+            ])
+            ->innerJoin(['d' => PettyCashDetail::tableName()], 'd.voucher_id = v.id')
+            ->orderBy(['v.date' => SORT_ASC, 'v.id' => SORT_ASC, 'd.id' => SORT_ASC]);
+
+        // Apply date filters
+        if (!empty($dateFrom)) {
+            $advanceQuery->andWhere(['>=', 'request_date', $dateFrom]);
+            $voucherQuery->andWhere(['>=', 'v.date', $dateFrom]);
+        }
+
+        if (!empty($dateTo)) {
+            $advanceQuery->andWhere(['<=', 'request_date', $dateTo]);
+            $voucherQuery->andWhere(['<=', 'v.date', $dateTo]);
+        }
+
+        // Apply document number filter
+        if (!empty($documentNo)) {
+            $advanceQuery->andWhere(['like', 'advance_no', $documentNo]);
+            $voucherQuery->andWhere(['like', 'v.pcv_no', $documentNo]);
+        }
+
+        // Get data
+        $advances = $advanceQuery->asArray()->all();
+        $vouchers = $voucherQuery->asArray()->all();
+
+        // Combine and sort all transactions by date
+        $allTransactions = [];
+
+        foreach ($advances as $advance) {
+            $allTransactions[] = [
+                'date' => $advance['request_date'],
+                'document_no' => $advance['advance_no'],
+                'description' => $advance['purpose'],
+                'type' => 'advance',
+                'income' => $advance['amount'],
+                'expense' => 0,
+                'vat' => 0,
+                'vat_amount' => 0,
+                'wht' => 0,
+                'other' => 0,
+                'total_expense' => 0,
+            ];
+        }
+
+        foreach ($vouchers as $voucher) {
+            $totalExpense = $voucher['amount'] + $voucher['vat_amount'] + $voucher['wht'] + $voucher['other'];
+
+            $allTransactions[] = [
+                'date' => $voucher['date'],
+                'document_no' => $voucher['pcv_no'],
+                'description' => $voucher['name'] . (!empty($voucher['detail']) ? ' - ' . $voucher['detail'] : ''),
+                'type' => 'voucher',
+                'income' => 0,
+                'expense' => $voucher['amount'],
+                'vat' => $voucher['vat'],
+                'vat_amount' => $voucher['vat_amount'],
+                'wht' => $voucher['wht'],
+                'other' => $voucher['other'],
+                'total_expense' => $totalExpense,
+            ];
+        }
+
+        // Sort by date
+        usort($allTransactions, function($a, $b) {
+            return strtotime($a['date']) - strtotime($b['date']);
+        });
+
+        // Calculate running balance
+        $balance = 0;
+        foreach ($allTransactions as &$transaction) {
+            $balance += $transaction['income'];
+            $balance -= $transaction['total_expense'];
+            $transaction['balance'] = $balance;
+        }
+
+        // Calculate totals
+        $totalIncome = array_sum(array_column($allTransactions, 'income'));
+        $totalExpense = array_sum(array_column($allTransactions, 'expense'));
+        $totalVat = array_sum(array_column($allTransactions, 'vat_amount'));
+        $totalWht = array_sum(array_column($allTransactions, 'wht'));
+        $totalOther = array_sum(array_column($allTransactions, 'other'));
+        $totalAllExpenses = array_sum(array_column($allTransactions, 'total_expense'));
+        $finalBalance = $balance;
+
+        // Check if export to Excel is requested
+        if ($request->get('export') === 'excel') {
+            return $this->exportToExcel($allTransactions, [
+                'totalIncome' => $totalIncome,
+                'totalExpense' => $totalExpense,
+                'totalVat' => $totalVat,
+                'totalWht' => $totalWht,
+                'totalOther' => $totalOther,
+                'totalAllExpenses' => $totalAllExpenses,
+                'finalBalance' => $finalBalance,
+                'dateFrom' => $dateFrom,
+                'dateTo' => $dateTo,
+            ]);
+        }
+
+        return $this->render('_print_petty', [
+            'transactions' => $allTransactions,
+            'totalIncome' => $totalIncome,
+            'totalExpense' => $totalExpense,
+            'totalVat' => $totalVat,
+            'totalWht' => $totalWht,
+            'totalOther' => $totalOther,
+            'totalAllExpenses' => $totalAllExpenses,
+            'finalBalance' => $finalBalance,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+            'documentNo' => $documentNo,
+        ]);
+    }
+
+    /**
+     * Export report to Excel
+     */
+    protected function exportToExcel($transactions, $totals)
+    {
+        Yii::$app->response->format = Response::FORMAT_RAW;
+
+        $filename = 'petty_cash_report_' . date('Y-m-d_His') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        // Create Excel file using PhpSpreadsheet
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Set headers
+        $sheet->setCellValue('A1', 'รายงานเงินสดย่อย M.C.O.CO.,LTD');
+        $sheet->mergeCells('A1:I1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        if (!empty($totals['dateFrom']) || !empty($totals['dateTo'])) {
+            $dateRange = 'ระหว่างวันที่ ';
+            if (!empty($totals['dateFrom'])) {
+                $dateRange .= date('d/m/Y', strtotime($totals['dateFrom']));
+            }
+            if (!empty($totals['dateTo'])) {
+                $dateRange .= ' ถึง ' . date('d/m/Y', strtotime($totals['dateTo']));
+            }
+            $sheet->setCellValue('A2', $dateRange);
+            $sheet->mergeCells('A2:I2');
+            $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $startRow = 4;
+        } else {
+            $startRow = 3;
+        }
+
+        // Column headers
+        $headers = ['วันที่', 'เลขที่เอกสาร', 'รายการ', 'รายรับ', 'คชจ.', 'VAT', 'VAT ต้องหาม', 'W/H', 'อื่นๆ', 'รวมรายจ่าย', 'คงเหลือ'];
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . $startRow, $header);
+            $sheet->getStyle($col . $startRow)->getFont()->setBold(true);
+            $sheet->getStyle($col . $startRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $col++;
+        }
+
+        // Data rows
+        $row = $startRow + 1;
+        foreach ($transactions as $transaction) {
+            $sheet->setCellValue('A' . $row, date('d/m/Y', strtotime($transaction['date'])));
+            $sheet->setCellValue('B' . $row, $transaction['document_no']);
+            $sheet->setCellValue('C' . $row, $transaction['description']);
+            $sheet->setCellValue('D' . $row, $transaction['income'] > 0 ? $transaction['income'] : '');
+            $sheet->setCellValue('E' . $row, $transaction['expense'] > 0 ? $transaction['expense'] : '');
+            $sheet->setCellValue('F' . $row, $transaction['vat_amount'] > 0 ? $transaction['vat_amount'] : '');
+            $sheet->setCellValue('G' . $row, ''); // VAT ต้องหาม - add logic if needed
+            $sheet->setCellValue('H' . $row, $transaction['wht'] > 0 ? $transaction['wht'] : '');
+            $sheet->setCellValue('I' . $row, $transaction['other'] > 0 ? $transaction['other'] : '');
+            $sheet->setCellValue('J' . $row, $transaction['total_expense'] > 0 ? $transaction['total_expense'] : '');
+            $sheet->setCellValue('K' . $row, $transaction['balance']);
+
+            // Number format
+            $sheet->getStyle('D' . $row . ':K' . $row)->getNumberFormat()
+                ->setFormatCode('#,##0.00');
+
+            $row++;
+        }
+
+        // Total row
+        $sheet->setCellValue('C' . $row, 'รวม');
+        $sheet->setCellValue('D' . $row, $totals['totalIncome']);
+        $sheet->setCellValue('E' . $row, $totals['totalExpense']);
+        $sheet->setCellValue('F' . $row, $totals['totalVat']);
+        $sheet->setCellValue('H' . $row, $totals['totalWht']);
+        $sheet->setCellValue('I' . $row, $totals['totalOther']);
+        $sheet->setCellValue('J' . $row, $totals['totalAllExpenses']);
+        $sheet->setCellValue('K' . $row, $totals['finalBalance']);
+
+        $sheet->getStyle('C' . $row . ':K' . $row)->getFont()->setBold(true);
+        $sheet->getStyle('D' . $row . ':K' . $row)->getNumberFormat()
+            ->setFormatCode('#,##0.00');
+
+        // Auto-size columns
+        foreach (range('A', 'K') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Borders
+        $styleArray = [
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+        ];
+        $sheet->getStyle('A' . $startRow . ':K' . $row)->applyFromArray($styleArray);
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
     }
 
 }

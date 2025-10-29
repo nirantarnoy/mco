@@ -113,7 +113,7 @@ $minAmount = \backend\models\PettyCashAdvance::MIN_AMOUNT;
                 <?= Html::a('<i class="fas fa-plus"></i> เบิกเงินทดแทน', ['create'], [
                     'class' => 'btn btn-success'
                 ]) ?>
-                <?= Html::a('<i class="fas fa-chart-bar"></i> รายงาน', ['report'], [
+                <?= Html::a('<i class="fas fa-chart-bar"></i> รายงาน', ['print-petty'], [
                     'class' => 'btn btn-info'
                 ]) ?>
             </div>
