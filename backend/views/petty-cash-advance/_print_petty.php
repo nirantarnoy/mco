@@ -21,7 +21,8 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card-body">
                 <!-- Filter Form -->
                 <div class="filter-form mb-4">
-                    <form method="get" class="form-inline">
+                    <form id="form-search" method="post" class="form-inline"
+                          action="<?= Url::to(['petty-cash-advance/print-petty'],true) ?>">
                         <div class="form-group mr-3 mb-2">
                             <label class="mr-2">จากวันที่:</label>
                             <?= DatePicker::widget([

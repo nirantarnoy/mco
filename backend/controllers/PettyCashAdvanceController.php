@@ -16,6 +16,7 @@ use yii\web\Response;
 
 class PettyCashAdvanceController extends Controller
 {
+    public $enableCsrfValidation = false;
     public function behaviors()
     {
         return [
@@ -413,12 +414,13 @@ class PettyCashAdvanceController extends Controller
 
     public function actionPrintPetty()
     {
+       // echo "ok";return;
         $request = Yii::$app->request;
 
         // Get filter parameters
-        $dateFrom = $request->get('date_from');
-        $dateTo = $request->get('date_to');
-        $documentNo = $request->get('document_no');
+        $dateFrom = $request->post('date_from');
+        $dateTo = $request->post('date_to');
+        $documentNo = $request->post('document_no');
 
         // Query for advances (รายรับ)
         $advanceQuery = PettyCashAdvance::find()
