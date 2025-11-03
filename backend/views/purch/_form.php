@@ -913,12 +913,68 @@ function enableVat(e){
     calculateGrandTotal2();
 }
 function calculateGrandTotal2() {
-    var subtotal = 0;
+  //   var subtotal = 0;
+  //   $('.line-total').each(function() {
+  //       subtotal += parseFloat($(this).val()) || 0;
+  //   });
+  //  
+  //  
+  //  
+  //   var purch_req_is_vat =  $("#purch-req-is-vat").val();
+  //  
+  //   var discount = 0;
+  //   var discount_per = parseFloat($('#purch-discount_per').val()) || 0;
+  //   var discount_amount = parseFloat($('#purch-discount_amount').val()) || 0;
+  //  
+  //   var tax_per = parseFloat($('#purch-tax_per').val()) || 0;
+  //  
+  //   $(".tax-text").text(tax_per + '%');
+  //  
+  // //  alert(discount_per);
+  //  
+  //   if(discount_per > 0){
+  //       discount = subtotal * (discount_per / 100);
+  //   }
+  //   discount = discount + discount_amount;
+  //  
+  //   var afterDiscount = subtotal - discount;
+  //   var tax_amount = 0;
+  //  
+  //   if(afterDiscount > 0){
+  //      tax_amount = afterDiscount * (tax_per / 100);
+  //   }
+  //  
+  //  
+  //   var after_save_vat_amount = parseFloat($("#after-save-vat-amount").val());
+  //   var vat = parseFloat($("#summary-vat-amount").val());
+  //   if(after_save_vat_amount !=null || after_save_vat_amount !=''){
+  //       vat = after_save_vat_amount;
+  //   }
+  //   // var vat = 0;
+  //   // if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){
+  //   //     vat = afterDiscount * 0.07; // 7% VAT
+  //   // }
+  //  
+  //   var netAmount = parseFloat(afterDiscount) + parseFloat(vat) - parseFloat(tax_amount);
+  //  
+  //   $('#purchreq-total_amount').val(subtotal.toFixed(2));
+  //   $('#purchreq-vat_amount').val(vat.toFixed(2));
+  //   $('#purchreq-net_amount').val(netAmount.toFixed(2));
+  //  
+  //   $('#purch-tax_amount').val(tax_amount.toFixed(2));
+  //  
+  //   // Update summary display
+  //   $('#summary-subtotal').text(subtotal.toFixed(2));
+  //   $('#summary-discount').text(discount.toFixed(2));
+  //   $('#summary-vat').text(vat.toFixed(2));
+  //   $('#summary-vat-amount').val(vat.toFixed(2));
+  //   $('#summary-tax').text(tax_amount.toFixed(2));
+  //   $('#summary-net').text(netAmount.toFixed(2));
+  
+   var subtotal = 0;
     $('.line-total').each(function() {
         subtotal += parseFloat($(this).val()) || 0;
     });
-    
-    
     
     var purch_req_is_vat =  $("#purch-req-is-vat").val();
     
@@ -938,38 +994,44 @@ function calculateGrandTotal2() {
     discount = discount + discount_amount;
     
     var afterDiscount = subtotal - discount;
-    var tax_amount = 0;
     
-    if(afterDiscount > 0){
-       tax_amount = afterDiscount * (tax_per / 100);
+    // var tax_amount = 0;
+    //
+    // if(afterDiscount > 0){
+    //    tax_amount = afterDiscount * (tax_per / 100);
+    // }
+    
+    var tax_amount = $("#summary-tax").val();
+    if(parseFloat(tax_amount) === 0 || tax_amount ==null){
+       tax_amount = 0;
     }
+   
     
-    
-    var after_save_vat_amount = parseFloat($("#after-save-vat-amount").val());
+    var after_save_vat_amount = $("#after-save-vat-amount").val();
     var vat = parseFloat($("#summary-vat-amount").val());
-    if(after_save_vat_amount !=null || after_save_vat_amount !=''){
-        vat = after_save_vat_amount;
-    }
-    // var vat = 0;
+   
+    // if(after_save_vat_amount !=null || after_save_vat_amount !=''){
+    //     vat = after_save_vat_amount;
+    // }
     // if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){
     //     vat = afterDiscount * 0.07; // 7% VAT
     // }
     
     var netAmount = parseFloat(afterDiscount) + parseFloat(vat) - parseFloat(tax_amount);
-    
+    // alert(netAmount);
     $('#purchreq-total_amount').val(subtotal.toFixed(2));
-    $('#purchreq-vat_amount').val(vat.toFixed(2));
+    $('#purchreq-vat_amount').val(parseFloat(vat).toFixed(2));
     $('#purchreq-net_amount').val(netAmount.toFixed(2));
     
-    $('#purch-tax_amount').val(tax_amount.toFixed(2));
+    $('#purch-tax_amount').val(parseFloat(tax_amount).toFixed(2));
     
     // Update summary display
     $('#summary-subtotal').text(subtotal.toFixed(2));
     $('#summary-discount').text(discount.toFixed(2));
-    $('#summary-vat').text(vat.toFixed(2));
-    $('#summary-vat-amount').val(vat.toFixed(2));
-    $('#summary-tax').text(tax_amount.toFixed(2));
-    $('#summary-net').text(netAmount.toFixed(2));
+    $('#summary-vat').text(parseFloat(vat).toFixed(2));
+    $('#summary-vat-amount').val(parseFloat(vat).toFixed(2));
+    $('#summary-tax').val(parseFloat(tax_amount).toFixed(2));
+    $('#summary-net').text(parseFloat(netAmount).toFixed(2));
 }
 function calculateGrandTotal3() {
     var subtotal = 0;
