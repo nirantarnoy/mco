@@ -436,7 +436,7 @@ $(document).ready(function() {
     
     updateAllDataIndexes();
     updateItemNumbers();
-    calculateGrandTotal();
+   // calculateGrandTotal();
 });
 JS;
 
