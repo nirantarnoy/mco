@@ -380,7 +380,7 @@ $(document).on('change keyup', '#purchreq-discount_amount', function() {
 });
 
 $(document).ready(function() {
-    calculateGrandTotal();
+   // calculateGrandTotal();
 });
 JS;
 
