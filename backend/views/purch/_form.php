@@ -724,13 +724,13 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <div class="row mb-2">
                                     <div class="col-8">ยอดรวม:</div>
                                     <div class="col-4 text-end">
-                                        <span id="summary-subtotal" class="fw-bold">0.00</span> บาท
+                                        <span id="summary-subtotal" class="fw-bold"><?=$model->total_amount?></span> บาท
                                     </div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-8">ส่วนลด:</div>
                                     <div class="col-4 text-end">
-                                        <span id="summary-discount" class="fw-bold">0.00</span> บาท
+                                        <span id="summary-discount" class="fw-bold"><?=$model->discount_amount?></span> บาท
                                     </div>
                                 </div>
                                 <div class="row mb-2">
