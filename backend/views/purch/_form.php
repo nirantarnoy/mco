@@ -763,7 +763,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <div class="row">
                                     <div class="col-8"><strong>ยอดรวมสุทธิ:</strong></div>
                                     <div class="col-4 text-end">
-                                        <span id="summary-net" class="fw-bold text-primary h5">0.00</span> บาท
+                                        <span id="summary-net" class="fw-bold text-primary h5"><?=$model->net_amount?></span> บาท
                                     </div>
                                 </div>
                             </div>
