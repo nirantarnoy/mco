@@ -36,6 +36,12 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             ],
             [
+                'label' => 'ลูกค้า',
+                'value' => function ($data) {
+                    return \backend\models\Quotation::findCustomerData2($data->quotation_id);
+                }
+            ],
+            [
                 'attribute' => 'job_date',
                 'value' => function ($data) {
                     return date('m/d/Y', strtotime($data->job_date));
