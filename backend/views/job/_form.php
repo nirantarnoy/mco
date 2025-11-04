@@ -10,6 +10,13 @@ use yii\widgets\ActiveForm;
 /** @var yii\widgets\ActiveForm $form */
 
 $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id])->all();
+$customer_name = '';
+if(!$model->isNewRecord){
+    $data = \backend\models\Quotation::findCustomerData($model->quotation_id);
+    if(!empty($data)){
+        $customer_name = $data['customer_name'];
+    }
+}
 ?>
 
     <!-- Flash Messages -->
@@ -52,7 +59,7 @@ $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id]
             </div>
             <div class="col-lg-3">
                 <label for="">ลูกค้า</label>
-                <input type="text" class="form-control customer-name" name="customer_name" readonly>
+                <input type="text" class="form-control customer-name" name="customer_name" value="<?=$customer_name?>" readonly>
             </div>
             <div class="col-lg-3">
                 <?php $model->job_date = $model->job_date ? date('m/d/Y', strtotime($model->job_date)) : ''; ?>
