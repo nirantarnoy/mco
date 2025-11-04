@@ -44,10 +44,12 @@ $hasCertificate = true;
 $hasManual = false;
 
 // Signatures
-$purchasingRep = \backend\models\User::findEmployeeNameByUserId($model->created_by);
+//$purchasingRep = \backend\models\User::findEmployeeNameByUserId($model->created_by);
+$purchasingRep = \backend\models\User::findEmployeeNameByUserId(3); // sililak
 $requestor = getEmpRequestor($model->id);
 $requestor_id = getEmpRequestorId($model->id);
-$requestorRep = 'นายสมศักดิ์ ขอสินค้า';
+
+$requestorRep = '';
 
 function getEmpRequestor($id){
     $name = '';
@@ -65,6 +67,7 @@ function getEmpRequestorId($id){
     }
     return $id;
 }
+
 ?>
 
 <style>
@@ -583,7 +586,8 @@ function getEmpRequestorId($id){
             <div>ลงชื่อ</div>
             <div class="signature-line">
                 <?php
-                $purchasing_signature = \backend\models\User::findEmployeeSignature($model->created_by);
+               // $purchasing_signature = \backend\models\User::findEmployeeSignature($model->created_by);
+                $purchasing_signature = \backend\models\User::findEmployeeSignature(3); // fix sililak
                 if(!empty($purchasing_signature)): ?>
                     <img src="../../backend/web/uploads/employee_signature/<?=$purchasing_signature?>" alt="Purchasing Signature">
                 <?php endif; ?>
