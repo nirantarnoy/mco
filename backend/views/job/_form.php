@@ -14,7 +14,7 @@ $customer_name = '';
 if(!$model->isNewRecord){
     $data = \backend\models\Quotation::findCustomerData2($model->quotation_id);
     if(!empty($data)){
-        $customer_name = $data['customer_name'];
+        $customer_name = $data[0]['customer_name'];
     }
 }
 ?>
