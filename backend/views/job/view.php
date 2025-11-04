@@ -35,12 +35,16 @@ $this->params['breadcrumbs'][] = $this->title;
                     return $data->quotation != null ? $data->quotation->quotation_no:'';
                 }
             ],
-//            [
-//                'label' => 'ลูกค้า',
-//                'value' => function ($data) {
-//                    return \backend\models\Quotation::findCustomerData2($data->quotation_id);
-//                }
-//            ],
+            [
+                'label' => 'ลูกค้า',
+                'value' => function ($data) {
+                    $cus_data = \backend\models\Quotation::findCustomerData2($data->quotation_id);
+                    if(!empty($cus_data)){
+                        return $cus_data[0]['customer_name'];
+                    }
+                   return '';
+                }
+            ],
             [
                 'attribute' => 'job_date',
                 'value' => function ($data) {
