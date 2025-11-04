@@ -605,7 +605,7 @@ function getEmpRequestorId($id){
                     <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" alt="Requestor Signature">
                 <?php endif; ?>
             </div>
-            <div>(<?= Html::encode($requestor) ?>)</div>
+            <div>(<?= Html::encode($requestor).' id == '.$requestor_id ?>)</div>
             <div>ตัวแทนผู้ขอซื้อ</div>
         </div>
 
