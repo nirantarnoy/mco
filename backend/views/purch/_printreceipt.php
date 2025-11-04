@@ -59,9 +59,9 @@ function getEmpRequestor($id){
     }
     return $name;
 }
-function getEmpRequestorId($id){
+function getEmpRequestorId($userid){
     $id =0;
-    $modelx = \backend\models\PurchReq::find()->where(['purch_id'=>$id])->one();
+    $modelx = \backend\models\PurchReq::find()->where(['purch_id'=>$userid])->one();
     if($modelx){
         $id = $modelx->created_by;
     }
@@ -605,7 +605,7 @@ function getEmpRequestorId($id){
                     <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" alt="Requestor Signature">
                 <?php endif; ?>
             </div>
-            <div>(<?= Html::encode($requestor).' id == '.$requestor_id ?>)</div>
+            <div>(<?= Html::encode($requestor) ?>)</div>
             <div>ตัวแทนผู้ขอซื้อ</div>
         </div>
 
