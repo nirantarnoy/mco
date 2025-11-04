@@ -317,6 +317,19 @@ class Quotation extends ActiveRecord
         }
         return $data;
     }
+    public static function findCustomerData2($quotation_id){
+        $data = [];
+        $quotation = Quotation::find()->where(['id' => $quotation_id])->one();
+        if($quotation){
+            $customer_data = \backend\models\Customer::find()->where(['id' => $quotation->customer_id])->one();
+            if($customer_data){
+                array_push($data, [
+                    'customer_name' => $customer_data->name,
+                ]);
+            }
+        }
+        return $data;
+    }
 
     public static function findNo($id){
         $quotation = Quotation::find()->where(['id' => $id])->one();

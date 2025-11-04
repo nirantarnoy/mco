@@ -12,7 +12,7 @@ use yii\widgets\ActiveForm;
 $model_purch_job = \backend\models\Purch::find()->where(['job_id' => $model->id])->all();
 $customer_name = '';
 if(!$model->isNewRecord){
-    $data = \backend\models\Quotation::findCustomerData($model->quotation_id);
+    $data = \backend\models\Quotation::findCustomerData2($model->quotation_id);
     if(!empty($data)){
         $customer_name = $data['customer_name'];
     }
