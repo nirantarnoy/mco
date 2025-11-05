@@ -443,7 +443,7 @@ class PettyCashVoucherController extends Controller
         if($id){
             $model = \backend\models\PettyCashVoucher::find()->where(['id'=>$id])->one();
             if($model){
-                $model->approved_by =  \backend\models\User::findName(\Yii::$app->user->id);
+                $model->approved_by =  \backend\models\User::findEmployeeNameByUserId(\Yii::$app->user->id);
                 $model->approve_status = 1;
                 $model->approved_date = date('Y-m-d H:i:s');
                 if($model->save(false)){
