@@ -15,7 +15,7 @@ $this->params['breadcrumbs'][] = Yii::t('app', 'Update');
 <div class="authitem-update">
 
 
-    <?= $this->render('__form', [
+    <?= $this->render('_form', [
         'model' => $model,
         'permissionsData' => $permissionsData,
       //  'modelchild'=> $modelchild,
