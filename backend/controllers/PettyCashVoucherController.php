@@ -465,8 +465,10 @@ class PettyCashVoucherController extends Controller
 
         // ถ้าขอข้อมูลสินค้าทั้งหมดสำหรับ autocomplete
         if ($request->get('action') === 'get-all-jobs') {
-            $jobs = \backend\models\Job::find()
-                ->where(['status' => 1]) // approved
+//            $jobs = \backend\models\Job::find()
+//                ->where(['status' => 1]) // approved
+//                ->all();
+            $jobs = \backend\models\Job::find()// approved
                 ->all();
 
             $result = [];
