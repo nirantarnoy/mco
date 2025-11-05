@@ -49,7 +49,7 @@ class PettyCashVoucherController extends Controller
 //        ]);
         $searchModel = new PettyCashVoucherSearch();
         $dataProvider = $searchModel->search(\Yii::$app->request->queryParams);
-        $dataProvider->query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
+      //  $dataProvider->query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
 
         return $this->render('index', [
             'dataProvider' => $dataProvider,
