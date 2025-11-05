@@ -75,4 +75,9 @@ class Paymentmethod extends \common\models\PaymentMethod
 //        return count($model)>0?$model->id:0;
 //    }
 
+    public function getPurchPaymentLines()
+    {
+        return $this->hasMany(PurchPaymentLine::class, ['payment_method_id' => 'id']);
+    }
+
 }

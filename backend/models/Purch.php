@@ -418,4 +418,19 @@ class Purch extends ActiveRecord
 //        $this->company_id = \Yii::$app->session->get('company_id');
 //        return true;
 //    }
+
+    public function getPurchPayments()
+    {
+        return $this->hasMany(PurchPayment::class, ['purch_id' => 'id']);
+    }
+
+    /**
+     * Get Purch display text
+     *
+     * @return string
+     */
+    public function getPurchDisplay()
+    {
+        return $this->purch_no . ' - ' . $this->vendor_name . ' (' . Yii::$app->formatter->asDecimal($this->net_amount, 2) . ' บาท)';
+    }
 }

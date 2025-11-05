@@ -1,0 +1,382 @@
+<?php
+
+use yii\helpers\Html;
+use yii\widgets\ActiveForm;
+use kartik\select2\Select2;
+use yii\helpers\ArrayHelper;
+use backend\models\Purch;
+use backend\models\PaymentMethod;
+use yii\helpers\Url;
+use kartik\date\DatePicker;
+
+/* @var $this yii\web\View */
+/* @var $model backend\models\PurchPayment */
+/* @var $paymentLines array */
+/* @var $form yii\widgets\ActiveForm */
+?>
+    <!-- Flash Messages -->
+<?php if (\Yii::$app->session->hasFlash('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <?= \Yii::$app->session->getFlash('success') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
+
+<?php if (\Yii::$app->session->hasFlash('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <?= \Yii::$app->session->getFlash('error') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
+    <div class="purch-payment-form">
+
+        <?php $form = ActiveForm::begin([
+            'id' => 'purch-payment-form',
+            'options' => ['enctype' => 'multipart/form-data']
+        ]); ?>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">ข้อมูลการจ่ายเงิน</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <?= $form->field($model, 'purch_id')->widget(Select2::classname(), [
+                            'data' => ArrayHelper::map(Purch::find()->orderBy(['id' => SORT_DESC])->all(), 'id', function($model) {
+                                return $model->purch_no . ' - ' . $model->vendor_name . ' (' . Yii::$app->formatter->asDecimal($model->net_amount, 2) . ' บาท)';
+                            }),
+                            'language' => 'th',
+                            'options' => [
+                                'placeholder' => 'เลือกใบสั่งซื้อ...',
+                                'id' => 'purch_id_select',
+                            ],
+                            'pluginOptions' => [
+                                'allowClear' => true,
+                            ],
+                        ])->label('เลือกใบสั่งซื้อ') ?>
+                    </div>
+
+                    <div class="col-md-3">
+                        <?= $form->field($model, 'trans_date')->widget(DatePicker::classname(), [
+                            'options' => ['placeholder' => 'เลือกวันที่...'],
+                            'pluginOptions' => [
+                                'autoclose' => true,
+                                'format' => 'yyyy-mm-dd',
+                                'todayHighlight' => true,
+                            ]
+                        ]) ?>
+                    </div>
+
+                    <div class="col-md-3">
+                        <?= $form->field($model, 'status')->textInput(['maxlength' => true, 'placeholder' => 'สถานะ']) ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- แสดงรายละเอียดใบสั่งซื้อ -->
+        <div class="card mt-3" id="purch-detail-card" style="display: none;">
+            <div class="card-header bg-info">
+                <h3 class="card-title">รายละเอียดใบสั่งซื้อ</h3>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <strong>เลขที่ใบสั่งซื้อ:</strong>
+                        <div id="purch-no">-</div>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>ชื่อผู้ขาย:</strong>
+                        <div id="vendor-name">-</div>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>วันที่สั่งซื้อ:</strong>
+                        <div id="purch-date">-</div>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>ยอดสุทธิ:</strong>
+                        <div id="net-amount" class="text-danger font-weight-bold">-</div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-sm">
+                        <thead class="thead-dark">
+                        <tr>
+                            <th width="5%">#</th>
+                            <th width="15%">รหัสสินค้า</th>
+                            <th width="25%">ชื่อสินค้า</th>
+                            <th width="15%">รายละเอียด</th>
+                            <th width="10%" class="text-center">จำนวน</th>
+                            <th width="10%" class="text-right">ราคา/หน่วย</th>
+                            <th width="10%" class="text-right">ราคารวม</th>
+                            <th width="10%">หมายเหตุ</th>
+                        </tr>
+                        </thead>
+                        <tbody id="purch-lines-tbody">
+                        <tr>
+                            <td colspan="8" class="text-center">กรุณาเลือกใบสั่งซื้อ</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- บันทึกรายการโอนเงิน -->
+        <div class="card mt-3">
+            <div class="card-header bg-success">
+                <h3 class="card-title">บันทึกรายการโอนเงิน</h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-primary btn-sm" id="add-payment-line">
+                        <i class="fas fa-plus"></i> เพิ่มรายการ
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="payment-lines-table">
+                        <thead class="thead-light">
+                        <tr>
+                            <th width="5%">#</th>
+                            <th width="15%">ธนาคาร</th>
+                            <th width="20%">ประเภทการโอน</th>
+                            <th width="15%">จำนวนเงิน</th>
+                            <th width="20%">อัพโหลดสลิป</th>
+                            <th width="20%">หมายเหตุ</th>
+                            <th width="5%"></th>
+                        </tr>
+                        </thead>
+                        <tbody id="payment-lines-tbody">
+                        <?php foreach ($paymentLines as $index => $line): ?>
+                            <tr class="payment-line-row">
+                                <td class="text-center line-number"><?= $index + 1 ?></td>
+                                <td>
+                                    <?= Html::activeTextInput($line, "[{$index}]bank_name", [
+                                        'class' => 'form-control form-control-sm',
+                                        'placeholder' => 'ชื่อธนาคาร'
+                                    ]) ?>
+                                </td>
+                                <td>
+                                    <?= Select2::widget([
+                                        'model' => $line,
+                                        'attribute' => "[{$index}]payment_method_id",
+                                        'data' => ArrayHelper::map(PaymentMethod::find()->where(['status' => 'active'])->all(), 'id', 'name'),
+                                        'options' => [
+                                            'placeholder' => 'เลือกประเภท...',
+                                            'class' => 'form-control-sm'
+                                        ],
+                                        'pluginOptions' => [
+                                            'allowClear' => true,
+                                        ],
+                                    ]) ?>
+                                </td>
+                                <td>
+                                    <?= Html::activeTextInput($line, "[{$index}]pay_amount", [
+                                        'class' => 'form-control form-control-sm text-right',
+                                        'placeholder' => '0.00',
+                                        'type' => 'number',
+                                        'step' => '0.01'
+                                    ]) ?>
+                                </td>
+                                <td>
+                                    <?php if (!$model->isNewRecord && !empty($line->doc)): ?>
+                                        <div class="mb-1">
+                                            <a href="<?= Yii::getAlias('@web/' . $line->doc) ?>" target="_blank" class="btn btn-info btn-xs">
+                                                <i class="fas fa-file"></i> ดูไฟล์
+                                            </a>
+                                            <?= Html::hiddenInput("PurchPaymentLine[{$index}][doc]", $line->doc) ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    <?= Html::fileInput("PurchPaymentLine[{$index}][doc_file]", null, [
+                                        'class' => 'form-control-file form-control-sm'
+                                    ]) ?>
+                                </td>
+                                <td>
+                                    <?= Html::activeTextInput($line, "[{$index}]nodet", [
+                                        'class' => 'form-control form-control-sm',
+                                        'placeholder' => 'หมายเหตุ'
+                                    ]) ?>
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-danger btn-sm remove-line" <?= count($paymentLines) <= 1 ? 'disabled' : '' ?>>
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-right"><strong>ยอดรวมที่โอน:</strong></td>
+                            <td class="text-right">
+                                <strong><span id="total-payment">0.00</span> บาท</strong>
+                            </td>
+                            <td colspan="3"></td>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group mt-3">
+            <?= Html::submitButton('<i class="fas fa-save"></i> บันทึก', ['class' => 'btn btn-success']) ?>
+            <?= Html::a('<i class="fas fa-times"></i> ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
+        </div>
+
+        <?php ActiveForm::end(); ?>
+
+    </div>
+
+<?php
+$getPurchLinesUrl = Url::to(['get-purch-lines']);
+$paymentMethodData = json_encode(ArrayHelper::map(PaymentMethod::find()->where(['status' => 'active'])->all(), 'id', 'name'));
+
+$this->registerJs("
+var lineIndex = " . count($paymentLines) . ";
+var paymentMethodOptions = $paymentMethodData;
+
+// เมื่อเลือกใบสั่งซื้อ
+$('#purch_id_select').on('change', function() {
+    var purchId = $(this).val();
+    
+    if (!purchId) {
+        $('#purch-detail-card').hide();
+        return;
+    }
+    
+    $.ajax({
+        url: '$getPurchLinesUrl',
+        type: 'POST',
+        data: {
+            purch_id: purchId,
+            _csrf: yii.getCsrfToken()
+        },
+        dataType: 'json',
+        success: function(response) {
+            if (response.success) {
+                $('#purch-no').text(response.purch.purch_no);
+                $('#vendor-name').text(response.purch.vendor_name);
+                $('#purch-date').text(response.purch.purch_date);
+                $('#net-amount').text(parseFloat(response.purch.net_amount).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' บาท');
+                
+                var tbody = $('#purch-lines-tbody');
+                tbody.empty();
+                
+                if (response.lines.length > 0) {
+                    $.each(response.lines, function(index, line) {
+                        var row = '<tr>' +
+                            '<td class=\"text-center\">' + (index + 1) + '</td>' +
+                            '<td>' + (line.product_id || '-') + '</td>' +
+                            '<td>' + (line.product_name || '-') + '</td>' +
+                            '<td>' + (line.product_description || '-') + '</td>' +
+                            '<td class=\"text-center\">' + (line.qty || 0) + '</td>' +
+                            '<td class=\"text-right\">' + parseFloat(line.line_price || 0).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
+                            '<td class=\"text-right\">' + parseFloat(line.line_total || 0).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</td>' +
+                            '<td>' + (line.note || '-') + '</td>' +
+                            '</tr>';
+                        tbody.append(row);
+                    });
+                } else {
+                    tbody.append('<tr><td colspan=\"8\" class=\"text-center\">ไม่พบรายการสินค้า</td></tr>');
+                }
+                
+                $('#purch-detail-card').show();
+            } else {
+                alert(response.message);
+            }
+        },
+        error: function() {
+            alert('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+        }
+    });
+});
+
+// เพิ่มรายการโอนเงิน
+$('#add-payment-line').on('click', function() {
+    var newRow = '<tr class=\"payment-line-row\">' +
+        '<td class=\"text-center line-number\"></td>' +
+        '<td>' +
+            '<input type=\"text\" name=\"PurchPaymentLine[' + lineIndex + '][bank_name]\" class=\"form-control form-control-sm\" placeholder=\"ชื่อธนาคาร\">' +
+        '</td>' +
+        '<td>' +
+            '<select name=\"PurchPaymentLine[' + lineIndex + '][payment_method_id]\" class=\"form-control form-control-sm\">' +
+                '<option value=\"\">เลือกประเภท...</option>';
+    
+    $.each(paymentMethodOptions, function(id, name) {
+        newRow += '<option value=\"' + id + '\">' + name + '</option>';
+    });
+    
+    newRow += '</select>' +
+        '</td>' +
+        '<td>' +
+            '<input type=\"number\" step=\"0.01\" name=\"PurchPaymentLine[' + lineIndex + '][pay_amount]\" class=\"form-control form-control-sm text-right pay-amount\" placeholder=\"0.00\">' +
+        '</td>' +
+        '<td>' +
+            '<input type=\"file\" name=\"PurchPaymentLine[' + lineIndex + '][doc_file]\" class=\"form-control-file form-control-sm\">' +
+        '</td>' +
+        '<td>' +
+            '<input type=\"text\" name=\"PurchPaymentLine[' + lineIndex + '][nodet]\" class=\"form-control form-control-sm\" placeholder=\"หมายเหตุ\">' +
+        '</td>' +
+        '<td class=\"text-center\">' +
+            '<button type=\"button\" class=\"btn btn-danger btn-sm remove-line\"><i class=\"fas fa-trash\"></i></button>' +
+        '</td>' +
+        '</tr>';
+    
+    $('#payment-lines-tbody').append(newRow);
+    lineIndex++;
+    updateLineNumbers();
+    updateTotal();
+});
+
+// ลบรายการ
+$(document).on('click', '.remove-line', function() {
+    if ($('.payment-line-row').length > 1) {
+        $(this).closest('tr').remove();
+        updateLineNumbers();
+        updateTotal();
+    }
+});
+
+// อัพเดตเลขที่แถว
+function updateLineNumbers() {
+    $('.payment-line-row').each(function(index) {
+        $(this).find('.line-number').text(index + 1);
+    });
+    
+    // Enable/Disable remove buttons
+    if ($('.payment-line-row').length <= 1) {
+        $('.remove-line').prop('disabled', true);
+    } else {
+        $('.remove-line').prop('disabled', false);
+    }
+}
+
+// คำนวณยอดรวม
+function updateTotal() {
+    var total = 0;
+    $('input[name*=\"[pay_amount]\"]').each(function() {
+        var value = parseFloat($(this).val()) || 0;
+        total += value;
+    });
+    $('#total-payment').text(total.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+}
+
+// อัพเดตยอดรวมเมื่อมีการเปลี่ยนแปลง
+$(document).on('input', 'input[name*=\"[pay_amount]\"]', function() {
+    updateTotal();
+});
+
+// เรียกใช้ครั้งแรก
+updateTotal();
+
+// Trigger change event ถ้ามีค่าเริ่มต้น (สำหรับ Update)
+if ($('#purch_id_select').val()) {
+    $('#purch_id_select').trigger('change');
+}
+");
+?>

@@ -105,4 +105,5 @@ class PurchLine extends ActiveRecord
         }
         return false;
     }
+
 }
