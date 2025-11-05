@@ -12,7 +12,7 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="authitem-create">
 
-    <?= $this->render('__form', [
+    <?= $this->render('_form', [
         'model' => $model,
     ]) ?>
 
