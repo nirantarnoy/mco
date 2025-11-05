@@ -4,6 +4,7 @@ namespace backend\controllers;
 
 use backend\models\PettyCashAdvance;
 use backend\models\PettyCashReportSearch;
+use backend\models\PositionSearch;
 use Yii;
 use backend\models\PettyCashVoucher;
 use backend\models\PettyCashDetail;
@@ -42,14 +43,16 @@ class PettyCashVoucherController extends Controller
      */
     public function actionIndex()
     {
-        $dataProvider = new ActiveDataProvider([
-            'query' => PettyCashVoucher::find()->where(['status' => 1])->orderBy(['id' => SORT_DESC]),
-        ]);
-
+//        $dataProvider = new ActiveDataProvider([
+//            'query' => PettyCashVoucher::find()->where(['status' => 1])->orderBy(['id' => SORT_DESC]),
+//        ]);
+        $searchModel = new PositionSearch();
+        $dataProvider = $searchModel->search(\Yii::$app->request->queryParams);
         $dataProvider->query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
 
         return $this->render('index', [
             'dataProvider' => $dataProvider,
+            'searchModel' => $searchModel,
         ]);
     }
 

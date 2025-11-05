@@ -26,7 +26,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="card-body">
             <?php Pjax::begin(); ?>
-
+            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
             <?= GridView::widget([
                 'dataProvider' => $dataProvider,
                 'tableOptions' => ['class' => 'table table-striped table-bordered'],
@@ -116,6 +116,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         ],
                     ],
                 ],
+                'pager'=>[
+                        'class'=> \yii\bootstrap4\LinkPager::className(),
+                ]
             ]); ?>
 
             <?php Pjax::end(); ?>
