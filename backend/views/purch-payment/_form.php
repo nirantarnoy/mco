@@ -5,7 +5,7 @@ use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
 use backend\models\Purch;
-use backend\models\PaymentMethod;
+use backend\models\Paymentmethod;
 use yii\helpers\Url;
 use kartik\date\DatePicker;
 
