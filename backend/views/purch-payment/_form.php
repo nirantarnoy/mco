@@ -150,7 +150,7 @@ use kartik\date\DatePicker;
                                     <?= Select2::widget([
                                         'model' => $line,
                                         'attribute' => "[{$index}]payment_method_id",
-                                        'data' => ArrayHelper::map(PaymentMethod::find()->where(['status' => 1])->all(), 'id', 'name'),
+                                        'data' => ArrayHelper::map(Paymentmethod::find()->where(['status' => 1])->all(), 'id', 'name'),
                                         'options' => [
                                             'placeholder' => 'เลือกประเภท...',
                                             'class' => 'form-control-sm'
