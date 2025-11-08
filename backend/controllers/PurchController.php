@@ -65,6 +65,7 @@ class PurchController extends Controller
     public function actionView($id)
     {
         $payment_date = '';
+        $paymentLines = null;
         $model_pay = \backend\models\PurchPayment::find()->where(['purch_id' => $id])->one();
         if($model_pay){
             $payment_date = $model_pay->trans_date;
