@@ -13,8 +13,6 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="purch-payment-view">
 
-    <h1><?= Html::encode($this->title) ?></h1>
-
     <p>
         <?= Html::a('<i class="fas fa-edit"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
         <?= Html::a('<i class="fas fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
@@ -36,7 +34,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'model' => $model,
                 'options' => ['class' => 'table table-bordered detail-view'],
                 'attributes' => [
-                    'id',
+                 //   'id',
                     [
                         'attribute' => 'purch_id',
                         'value' => function($model) {
@@ -63,7 +61,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     [
                         'attribute' => 'created_by',
                         'value' => function($model) {
-                            return $model->created_by ?: '-';
+                            return $model->created_by ? \backend\models\User::findEmployeeNameByUserId($model->created_by) : '-';
                         }
                     ],
                 ],

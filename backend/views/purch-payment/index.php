@@ -30,10 +30,10 @@ $this->params['breadcrumbs'][] = $this->title;
                         'class' => 'yii\grid\SerialColumn',
                         'headerOptions' => ['style' => 'width: 50px;'],
                     ],
-                    [
-                        'attribute' => 'id',
-                        'headerOptions' => ['style' => 'width: 80px;'],
-                    ],
+//                    [
+//                        'attribute' => 'id',
+//                        'headerOptions' => ['style' => 'width: 80px;'],
+//                    ],
                     [
                         'attribute' => 'purch_no',
                         'label' => 'เลขที่ใบสั่งซื้อ',

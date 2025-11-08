@@ -14,22 +14,7 @@ use kartik\date\DatePicker;
 /* @var $paymentLines array */
 /* @var $form yii\widgets\ActiveForm */
 ?>
-    <!-- Flash Messages -->
-<?php if (\Yii::$app->session->hasFlash('success')): ?>
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="fas fa-check-circle me-2"></i>
-        <?= \Yii::$app->session->getFlash('success') ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-<?php endif; ?>
 
-<?php if (\Yii::$app->session->hasFlash('error')): ?>
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-circle me-2"></i>
-        <?= \Yii::$app->session->getFlash('error') ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-<?php endif; ?>
     <div class="purch-payment-form">
 
         <?php $form = ActiveForm::begin([
@@ -99,6 +84,7 @@ use kartik\date\DatePicker;
                     <div class="col-md-3">
                         <strong>ยอดสุทธิ:</strong>
                         <div id="net-amount" class="text-danger font-weight-bold">-</div>
+                        <input type="hidden" id="purch-net-amount" value="0">
                     </div>
                 </div>
 
@@ -164,7 +150,7 @@ use kartik\date\DatePicker;
                                     <?= Select2::widget([
                                         'model' => $line,
                                         'attribute' => "[{$index}]payment_method_id",
-                                        'data' => ArrayHelper::map(PaymentMethod::find()->where(['status' => 'active'])->all(), 'id', 'name'),
+                                        'data' => ArrayHelper::map(PaymentMethod::find()->where(['status' => 1])->all(), 'id', 'name'),
                                         'options' => [
                                             'placeholder' => 'เลือกประเภท...',
                                             'class' => 'form-control-sm'
@@ -214,6 +200,9 @@ use kartik\date\DatePicker;
                             <td colspan="3" class="text-right"><strong>ยอดรวมที่โอน:</strong></td>
                             <td class="text-right">
                                 <strong><span id="total-payment">0.00</span> บาท</strong>
+                                <div id="payment-warning" class="text-warning small" style="display: none;">
+                                    <i class="fas fa-exclamation-triangle"></i> ยอดโอนเกินยอดสุทธิของใบสั่งซื้อ
+                                </div>
                             </td>
                             <td colspan="3"></td>
                         </tr>
@@ -224,12 +213,55 @@ use kartik\date\DatePicker;
         </div>
 
         <div class="form-group mt-3">
-            <?= Html::submitButton('<i class="fas fa-save"></i> บันทึก', ['class' => 'btn btn-success']) ?>
+            <?= Html::submitButton('<i class="fas fa-save"></i> บันทึก', ['class' => 'btn btn-success', 'id' => 'submit-btn']) ?>
             <?= Html::a('<i class="fas fa-times"></i> ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
         </div>
 
         <?php ActiveForm::end(); ?>
 
+    </div>
+
+    <!-- Modal แจ้งเตือน -->
+    <div class="modal fade" id="warningModal" tabindex="-1" role="dialog" aria-labelledby="warningModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="warningModalLabel">
+                        <i class="fas fa-exclamation-triangle"></i> แจ้งเตือน
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2"><strong>ยอดเงินที่โอนมากกว่าจำนวนเงินในใบสั่งซื้อ</strong></p>
+                    <div class="alert alert-info mb-0">
+                        <div class="row">
+                            <div class="col-6">ยอดสุทธิใบสั่งซื้อ:</div>
+                            <div class="col-6 text-right"><strong id="modal-net-amount">0.00</strong> บาท</div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-6">ยอดรวมที่โอน:</div>
+                            <div class="col-6 text-right text-danger"><strong id="modal-total-payment">0.00</strong> บาท</div>
+                        </div>
+                        <hr class="my-2">
+                        <div class="row">
+                            <div class="col-6">ส่วนต่าง:</div>
+                            <div class="col-6 text-right text-danger"><strong id="modal-difference">0.00</strong> บาท</div>
+                        </div>
+                    </div>
+                    <p class="mt-3 mb-0">คุณต้องการบันทึกข้อมูลต่อหรือไม่?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> ยกเลิก
+                    </button>
+                    <button type="button" class="btn btn-success" id="confirm-submit-btn">
+                        <i class="fas fa-check"></i> บันทึกต่อ
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
 <?php
@@ -264,6 +296,9 @@ $('#purch_id_select').on('change', function() {
                 $('#purch-date').text(response.purch.purch_date);
                 $('#net-amount').text(parseFloat(response.purch.net_amount).toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' บาท');
                 
+                // เก็บค่ายอดสุทธิไว้ใน hidden input
+                $('#purch-net-amount').val(response.purch.net_amount);
+                
                 var tbody = $('#purch-lines-tbody');
                 tbody.empty();
                 
@@ -286,6 +321,9 @@ $('#purch_id_select').on('change', function() {
                 }
                 
                 $('#purch-detail-card').show();
+                
+                // เช็คยอดโอนเมื่อเลือกใบสั่งซื้อใหม่
+                updateTotal();
             } else {
                 alert(response.message);
             }
@@ -364,6 +402,14 @@ function updateTotal() {
         total += value;
     });
     $('#total-payment').text(total.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+    
+    // ตรวจสอบว่ายอดโอนเกินยอดสุทธิหรือไม่
+    var netAmount = parseFloat($('#purch-net-amount').val()) || 0;
+    if (netAmount > 0 && total > netAmount) {
+        $('#payment-warning').show();
+    } else {
+        $('#payment-warning').hide();
+    }
 }
 
 // อัพเดตยอดรวมเมื่อมีการเปลี่ยนแปลง
@@ -378,5 +424,45 @@ updateTotal();
 if ($('#purch_id_select').val()) {
     $('#purch_id_select').trigger('change');
 }
+
+// ตรวจสอบก่อนกดปุ่มบันทึก
+var formSubmitted = false;
+$('#submit-btn').on('click', function(e) {
+    if (formSubmitted) {
+        return true; // ให้ submit ได้
+    }
+    
+    e.preventDefault();
+    
+    var netAmount = parseFloat($('#purch-net-amount').val()) || 0;
+    var total = 0;
+    $('input[name*=\"[pay_amount]\"]').each(function() {
+        var value = parseFloat($(this).val()) || 0;
+        total += value;
+    });
+    
+    // ตรวจสอบว่ายอดโอนเกินยอดสุทธิหรือไม่
+    if (netAmount > 0 && total > netAmount) {
+        // แสดงข้อมูลใน Modal
+        var difference = total - netAmount;
+        $('#modal-net-amount').text(netAmount.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+        $('#modal-total-payment').text(total.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+        $('#modal-difference').text(difference.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+        
+        // แสดง Modal
+        $('#warningModal').modal('show');
+    } else {
+        // ถ้ายอดไม่เกิน ให้ submit ได้เลย
+        formSubmitted = true;
+        $('#purch-payment-form').submit();
+    }
+});
+
+// เมื่อกดยืนยันใน Modal
+$('#confirm-submit-btn').on('click', function() {
+    formSubmitted = true;
+    $('#warningModal').modal('hide');
+    $('#purch-payment-form').submit();
+});
 ");
 ?>

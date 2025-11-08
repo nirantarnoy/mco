@@ -64,8 +64,38 @@ class PurchController extends Controller
      */
     public function actionView($id)
     {
+        $payment_date = '';
+        $model_pay = \backend\models\PurchPayment::find()->where(['purch_id' => $id])->one();
+        if($model_pay){
+            $payment_date = $model_pay->trans_date;
+            $paymentLines = \backend\models\PurchPaymentLine::find()
+                ->where(['purch_payment_id' => $model_pay->id])
+                ->orderBy(['id' => SORT_ASC])
+                ->all();
+        }
         return $this->render('view', [
             'model' => $this->findModel($id),
+            'paymentLines' => $paymentLines,
+            'payment_date' => $payment_date,
+        ]);
+    }
+
+    public function actionViewSlip($id)
+    {
+        $payment_date = '';
+        $model_pay = \backend\models\PurchPayment::find()->where(['purch_id' => $id])->one();
+        if($model_pay) {
+            $payment_date = $model_pay->trans_date;
+        }
+        $paymentLine = \backend\models\PurchPaymentLine::findOne($id);
+
+        if ($paymentLine === null) {
+            throw new \yii\web\NotFoundHttpException('ไม่พบข้อมูลการโอนเงิน');
+        }
+
+        return $this->renderAjax('_view_slip', [
+            'model' => $paymentLine,
+            'payment_date' => $payment_date,
         ]);
     }
 
@@ -195,6 +225,17 @@ class PurchController extends Controller
         if (empty($model->purchLines)) {
             $model->purchLines = [new PurchLine()];
         }
+
+        // ดึงข้อมูล Payment Lines ที่เกี่ยวข้องกับ Purch นี้
+        $paymentLines = null;
+//        $model_pay = \backend\models\PurchPayment::find()->where(['purch_id' => $id])->one();
+//        if($model_pay){
+//            $paymentLines = \backend\models\PurchPaymentLine::find()
+//                ->where(['purch_payment_id' => $model_pay->id])
+//                ->orderBy(['created_at' => SORT_DESC])
+//                ->all();
+//        }
+
 
         if ($model->load(Yii::$app->request->post())) {
             $custom_vat_amount = \Yii::$app->request->post('purch_vat_amount');
@@ -376,6 +417,7 @@ class PurchController extends Controller
 
         return $this->render('update', [
             'model' => $model,
+            'paymentLines' => $paymentLines,
         ]);
     }
 

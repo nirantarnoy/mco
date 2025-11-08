@@ -290,6 +290,14 @@
                                     </a>
                                 </li>
                             <?php endif; ?>
+                            <?php if (\Yii::$app->user->can('purch/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=purch-payment" class="nav-link purch-payment">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>โอนเงินคำสั่งซื้อ</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
 <!--                            --><?php //if (\Yii::$app->user->can('stocktrans/index')): ?>
 <!--                                <li class="nav-item">-->
 <!--                                    <a href="index.php?r=stocktrans" class="nav-link stocktrans">-->

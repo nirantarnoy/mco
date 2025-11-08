@@ -1,5 +1,6 @@
 <?php
 
+use yii\bootstrap4\Modal;
 use yii\helpers\Html;
 use yii\widgets\DetailView;
 use kartik\grid\GridView;
@@ -157,8 +158,8 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                 ],
                                 [
                                     'attribute' => 'currency_id',
-                                    'value'=>function($data){
-                                    return \backend\models\Currency::findCode($data->currency_id);
+                                    'value' => function ($data) {
+                                        return \backend\models\Currency::findCode($data->currency_id);
                                     }
                                 ],
                                 [
@@ -393,10 +394,10 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                 </tr>
                 </thead>
                 <tbody>
-                <?php $model_rec_doc = findDoc($model->id);?>
+                <?php $model_rec_doc = findDoc($model->id); ?>
                 <?php if ($model_rec_doc != null): ?>
 
-                    <?php for($i=0;$i<=count($model_rec_doc)-1;$i++): ?>
+                    <?php for ($i = 0; $i <= count($model_rec_doc) - 1; $i++): ?>
                         <tr>
                             <td style="width: 10px;text-align: center"><?= $i + 1 ?></td>
                             <td><?= $model_rec_doc[$i] ?></td>
@@ -418,6 +419,98 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
         </div>
     </div>
     <br/>
+    <div class="payment-history-section">
+        <h3 class="mb-3">
+            <i class="fas fa-history"></i> ประวัติการโอนเงิน
+        </h3>
+
+        <?php if (empty($paymentLines)): ?>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> ยังไม่มีประวัติการโอนเงินสำหรับคำสั่งซื้อนี้
+            </div>
+        <?php else: ?>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 15%;">วันที่โอน</th>
+                        <th style="width: 15%;">ธนาคาร</th>
+                        <th style="width: 20%;">ชื่อบัญชี</th>
+                        <th style="width: 15%;">วิธีการชำระ</th>
+                        <th style="width: 15%;" class="text-right">จำนวนเงิน</th>
+                        <th style="width: 10%;" class="text-center">Slip</th>
+                        <th style="width: 5%;" class="text-center">หมายเหตุ</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php $totalAmount = 0; ?>
+                    <?php foreach ($paymentLines as $index => $line): ?>
+                        <?php $totalAmount += $line->pay_amount; ?>
+                        <tr>
+                            <td><?= $index + 1 ?></td>
+                            <td>
+                                <?= date('d-m-Y',strtotime($payment_date))?>
+                            </td>
+                            <td>
+                                <strong><?= Html::encode($line->bank_id) ?></strong>
+                            </td>
+                            <td><?= Html::encode($line->bank_name) ?></td>
+                            <td>
+                                    <span class="badge badge-primary">
+                                        <?= Html::encode($line->payment_method_id) ?>
+                                    </span>
+                            </td>
+                            <td class="text-right">
+                                <strong class="text-success">
+                                    <?= Yii::$app->formatter->asDecimal($line->pay_amount, 2) ?>
+                                </strong> บาท
+                            </td>
+                            <td class="text-center">
+                                <?php if (!empty($line->doc)): ?>
+                                    <button type="button"
+                                            class="btn btn-sm btn-info btn-view-slip"
+                                            data-id="<?= $line->id ?>"
+                                            data-toggle="tooltip"
+                                            title="คลิกเพื่อดู Slip">
+                                        <i class="fas fa-receipt"></i> ดู Slip
+                                    </button>
+                                <?php else: ?>
+                                    <span class="text-muted">-</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-center">
+                                <?php if (!empty($line->note)): ?>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-secondary"
+                                            data-toggle="popover"
+                                            data-trigger="focus"
+                                            data-content="<?= Html::encode($line->note) ?>"
+                                            title="หมายเหตุ">
+                                        <i class="fas fa-sticky-note"></i>
+                                    </button>
+                                <?php else: ?>
+                                    <span class="text-muted">-</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                    <tfoot class="thead-light">
+                    <tr>
+                        <th colspan="5" class="text-right">รวมยอดโอนทั้งหมด:</th>
+                        <th class="text-right">
+                            <strong class="text-success" style="font-size: 1.1em;">
+                                <?= Yii::$app->formatter->asDecimal($totalAmount, 2) ?>
+                            </strong> บาท
+                        </th>
+                        <th colspan="2"></th>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
     <br/>
     <div class="row">
         <?php if ($model->approve_status == 1): ?>
@@ -431,6 +524,20 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
             </div>
         <?php endif; ?>
     </div>
+
+    <!-- Modal สำหรับแสดง Slip -->
+<?php
+    Modal::begin([
+        'id' => 'slip-modal',
+        'title' => '<h4><i class="fas fa-receipt"></i> รายละเอียด Slip การโอนเงิน</h4>',
+        'size' => Modal::SIZE_LARGE,
+        'options' => ['tabindex' => false],
+    ]);
+
+    echo '<div id="slip-modal-content"></div>';
+
+    Modal::end();
+?>
     <style>
         .card {
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
@@ -451,24 +558,85 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
             font-size: 12px;
             padding: 0.4em 0.8em;
         }
+
+        .payment-history-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .payment-history-section h3 {
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 10px;
+        }
+
+        .table thead th {
+            vertical-align: middle;
+        }
+
+        .btn-view-slip {
+            transition: all 0.3s ease;
+        }
+
+        .btn-view-slip:hover {
+            transform: scale(1.05);
+        }
     </style>
 
 <?php
-function findDoc($id){
+function findDoc($id)
+{
     $data = [];
-    if($id){
-        $model = \backend\models\PurchReceiveDoc::find()->where(['purch_id'=>$id])->all();
-        if($model){
-            foreach ($model as $value){
-                array_push($data,$value->doc_name);
+    if ($id) {
+        $model = \backend\models\PurchReceiveDoc::find()->where(['purch_id' => $id])->all();
+        if ($model) {
+            foreach ($model as $value) {
+                array_push($data, $value->doc_name);
             }
         }
     }
     return $data;
 }
+
 $this->registerJs("
     setTimeout(function() {
         $('.alert').fadeOut('slow');
     }, 5000);
         ");
+?>
+
+<?php
+// JavaScript สำหรับจัดการ Modal และ Tooltip
+$url_to_showslip = \yii\helpers\Url::to(['purch/view-slip'], true);
+$this->registerJs(<<<JS
+    // เปิด Modal แสดง Slip
+    $(document).on('click', '.btn-view-slip', function() {
+        var id = $(this).data('id');
+        var modal = $('#slip-modal');
+        
+        modal.find('#slip-modal-content').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-3x"></i><p class="mt-2">กำลังโหลด...</p></div>');
+        modal.modal('show');
+        
+        $.ajax({
+            url: '$url_to_showslip',
+            type: 'GET',
+            data: {id: id},
+            success: function(response) {
+                modal.find('#slip-modal-content').html(response);
+            },
+            error: function() {
+                modal.find('#slip-modal-content').html('<div class="alert alert-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>');
+            }
+        });
+    });
+    
+    // เปิดใช้งาน Tooltip
+    $('[data-toggle="tooltip"]').tooltip();
+    
+    // เปิดใช้งาน Popover
+    $('[data-toggle="popover"]').popover();
+JS
+);
 ?>

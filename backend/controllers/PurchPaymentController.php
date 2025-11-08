@@ -97,7 +97,7 @@ class PurchPaymentController extends Controller
                             }
                         }
 
-                        if (!$line->save()) {
+                        if (!$line->save(false)) {
                             $transaction->rollBack();
                             Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการบันทึกรายการโอนเงิน');
                             return $this->render('create', [
