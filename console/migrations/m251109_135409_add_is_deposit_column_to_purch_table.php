@@ -1,0 +1,25 @@
+<?php
+
+use yii\db\Migration;
+
+/**
+ * Handles adding columns to table `{{%purch}}`.
+ */
+class m251109_135409_add_is_deposit_column_to_purch_table extends Migration
+{
+    /**
+     * {@inheritdoc}
+     */
+    public function safeUp()
+    {
+        $this->addColumn('{{%purch}}', 'is_deposit', $this->integer());
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function safeDown()
+    {
+        $this->dropColumn('{{%purch}}', 'is_deposit');
+    }
+}

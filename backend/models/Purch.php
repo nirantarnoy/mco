@@ -104,7 +104,7 @@ class Purch extends ActiveRecord
             [['purch_no', 'vendor_name', 'note','delivery_note','payment_note','footer_delivery','footer_payment','ref_no'], 'string', 'max' => 255],
             [['purch_no'], 'unique'],
             [['approve_date','discount_amount'], 'safe'],
-            [['is_vat'],'integer'],
+            [['is_vat','is_deposit'],'integer'],
             [['special_note'],'string','max'=>500]
         ];
     }
@@ -145,7 +145,9 @@ class Purch extends ActiveRecord
             'discount_tatal_amount' => 'ยอดส่วนลดรวม',
             'currency_id' => 'สกุลเงิน',
             'currency_rate' => 'อัตราแลกเปลี่ยน',
-            'special_note' => 'บันทึกอื่นๆ'
+            'special_note' => 'บันทึกอื่นๆ',
+            'is_deposit' => 'มีค่ามัดจำ',
+
         ];
     }
 

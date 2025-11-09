@@ -19,6 +19,8 @@ $this->params['breadcrumbs'][] = 'แก้ไข';
     <?= $this->render('_form', [
         'model' => $model,
         'paymentLines' => $paymentLines,
+        'model_deposit_all' => $model_deposit_all,
+        'model_deposit_line_all' => $model_deposit_line_all,
     ]) ?>
 
 </div>

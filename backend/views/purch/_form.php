@@ -647,7 +647,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                     </div>
                                 </td>
                                 <td>
-                                    <?=$form->field($purchLine,"[{$index}]product_description")->textarea(['class'=>'form-control line-product-description'])->label(false);?>
+                                    <?= $form->field($purchLine, "[{$index}]product_description")->textarea(['class' => 'form-control line-product-description'])->label(false); ?>
                                 </td>
                                 <td>
                                     <?= $form->field($purchLine, "[{$index}]doc_ref_no")->label(false); ?>
@@ -724,13 +724,15 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <div class="row mb-2">
                                     <div class="col-8">ยอดรวม:</div>
                                     <div class="col-4 text-end">
-                                        <span id="summary-subtotal" class="fw-bold"><?=$model->total_amount?></span> บาท
+                                        <span id="summary-subtotal" class="fw-bold"><?= $model->total_amount ?></span>
+                                        บาท
                                     </div>
                                 </div>
                                 <div class="row mb-2">
                                     <div class="col-8">ส่วนลด:</div>
                                     <div class="col-4 text-end">
-                                        <span id="summary-discount" class="fw-bold"><?=$model->discount_amount?></span> บาท
+                                        <span id="summary-discount"
+                                              class="fw-bold"><?= $model->discount_amount ?></span> บาท
                                     </div>
                                 </div>
                                 <div class="row mb-2">
@@ -763,9 +765,115 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <div class="row">
                                     <div class="col-8"><strong>ยอดรวมสุทธิ:</strong></div>
                                     <div class="col-4 text-end">
-                                        <span id="summary-net" class="fw-bold text-primary h5"><?=$model->net_amount?></span> บาท
+                                        <span id="summary-net"
+                                              class="fw-bold text-primary h5"><?= $model->net_amount ?></span> บาท
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title">ค่ามัดจำ</h6>
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <?php echo $form->field($model, 'is_deposit')->widget(\toxor88\switchery\Switchery::className(), ['options' => ['label' => '', 'class' => 'form-control']])->label(false) ?>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <label for="">วันที่</label>
+                                <?php
+                                echo DatePicker::widget([
+                                    'name' => 'deposit_date',
+                                    'value' => $model_deposit_all != null ? date('Y-m-d', strtotime($model_deposit_all->trans_date)) : date('Y-m-d'),
+                                    'type' => DatePicker::TYPE_COMPONENT_PREPEND,
+                                    'options' => [''],
+                                    'pluginOptions' => [
+                                        'autoclose' => true,
+                                        'format' => 'yyyy-mm-dd',
+                                    ]
+                                ]);
+                                ?>
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">จำนวนเงินมัดจำ</label>
+                                <input type="number" class="form-control" name="deposit_amount" min="0"
+                                       value="<?= $model_deposit_line_all != null ? $model_deposit_line_all->deposit_amount : 0 ?>">
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">เอกสารแนบ</label>
+                                <input type="file" class="form-control" name="deposit_doc">
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">เอกสารที่แนบแล้ว</label><br />
+                                <?php
+                                $deposit_doc_show = '';
+                                if ($model_deposit_line_all != null) {
+                                    $deposit_doc_show = $model_deposit_line_all->deposit_doc;
+                                }
+                                ?>
+                                <?php if ($deposit_doc_show!=''): ?>
+                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $deposit_doc_show ?>"
+                                       target="_blank">
+                                        ดูเอกสาร
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <label for="">วันที่รับมัดจำคืน</label>
+                                <?php
+                                echo DatePicker::widget([
+                                    'name' => 'deposit_receive_date',
+                                    'value' => $model_deposit_line_all != null ? date('Y-m-d', strtotime($model_deposit_line_all->receive_date)) : date('Y-m-d'),
+                                    'type' => DatePicker::TYPE_COMPONENT_PREPEND,
+                                    'options' => [''],
+                                    'pluginOptions' => [
+                                        'autoclose' => true,
+                                        'format' => 'yyyy-mm-dd',
+                                    ]
+                                ]);
+                                ?>
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">จำนวนเงินมัดจำ</label>
+                                <?php
+                                $rec_amount = 0;
+                                if ($model_deposit_line_all != null) {
+                                    if ($model_deposit_line_all->receive_doc != null) {
+                                        $rec_amount = $model_deposit_line_all->deposit_amount;
+                                    }
+                                }
+                                ?>
+                                <input type="number" class="form-control" name="deposit_receive_amount" min="0"
+                                       value="<?= $rec_amount ?>">
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">เอกสารแนบ</label>
+                                <input type="file" class="form-control" name="deposit_receive_doc">
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">เอกสารที่แนบแล้ว</label><br />
+                                <?php
+                                $receive_doc_show = '';
+                                if ($model_deposit_line_all != null) {
+                                    $receive_doc_show = $model_deposit_line_all->receive_doc;
+                                }
+                                ?>
+                                <?php if ($receive_doc_show!=''): ?>
+                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $receive_doc_show ?>"
+                                       target="_blank">
+                                        ดูเอกสาร
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -808,6 +916,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                 </div>
             </div>
         </div>
+
         <div class="d-flex justify-content-between">
             <?php if ($model->status != 3 || $model->isNewRecord || Yii::$app->user->can('CanApprovePo')): ?>
                 <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
