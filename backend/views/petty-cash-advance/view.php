@@ -50,7 +50,7 @@ $status = $statusLabels[$model->status] ?? ['label' => $model->status, 'class' =
                 ]) ?>
             </div>
 
-            <?php //if ($model->status === 'pending' && \Yii::$app->user->can('approve-advance')): ?>
+            <?php if ($model->status !== 'approved' && \Yii::$app->user->can('approve-advance')): ?>
                 <div class="btn-group" role="group">
                     <?= Html::a('<i class="fas fa-check"></i> อนุมัติ', ['approve', 'id' => $model->id], [
                         'class' => 'btn btn-success',
@@ -59,6 +59,7 @@ $status = $statusLabels[$model->status] ?? ['label' => $model->status, 'class' =
                             'method' => 'post',
                         ],
                     ]) ?>
+
                     <?= Html::a('<i class="fas fa-times"></i> ปฏิเสธ', ['reject', 'id' => $model->id], [
                         'class' => 'btn btn-danger',
                         'data' => [
@@ -67,7 +68,7 @@ $status = $statusLabels[$model->status] ?? ['label' => $model->status, 'class' =
                         ],
                     ]) ?>
                 </div>
-            <?php //endif; ?>
+            <?php endif; ?>
         </div>
     </div>
 

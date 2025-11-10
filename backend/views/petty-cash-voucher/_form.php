@@ -327,28 +327,28 @@ $(document).ready(function() {
                             'readonly' => true,
                             'class' => 'form-control text-right'
                         ]) ?>
-                        <?= $form->field($model, 'quotation_id')->widget(\kartik\select2\Select2::className(), [
-                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Quotation::find()->all(), 'id', function ($data) {
-                                return $data->quotation_no;
-                            }),
-                            'options' => [
-                                'placeholder' => '--เลือกใบเสนอราคา--',
-                            ],
-                            'pluginOptions' => [
-                                'allowClear' => true,
-                            ],
-                        ]) ?>
-                        <?= $form->field($model, 'job_id')->widget(\kartik\select2\Select2::className(), [
-                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(), 'id', function ($data) {
-                                return $data->job_no;
-                            }),
-                            'options' => [
-                                'placeholder' => '--เลือกใบงาน--',
-                            ],
-                            'pluginOptions' => [
-                                'allowClear' => true,
-                            ],
-                        ]) ?>
+<!--                        --><?php //= $form->field($model, 'quotation_id')->widget(\kartik\select2\Select2::className(), [
+//                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Quotation::find()->all(), 'id', function ($data) {
+//                                return $data->quotation_no;
+//                            }),
+//                            'options' => [
+//                                'placeholder' => '--เลือกใบเสนอราคา--',
+//                            ],
+//                            'pluginOptions' => [
+//                                'allowClear' => true,
+//                            ],
+//                        ]) ?>
+<!--                        --><?php //= $form->field($model, 'job_id')->widget(\kartik\select2\Select2::className(), [
+//                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(), 'id', function ($data) {
+//                                return $data->job_no;
+//                            }),
+//                            'options' => [
+//                                'placeholder' => '--เลือกใบงาน--',
+//                            ],
+//                            'pluginOptions' => [
+//                                'allowClear' => true,
+//                            ],
+//                        ]) ?>
 
                         <?= $form->field($model, 'issued_by')->textInput(['maxlength' => true, 'placeholder' => 'ผู้จัดทำ', 'readonly' => 'readonly', 'value' => $model->isNewRecord ? \backend\models\User::findEmployeeNameByUserId(\Yii::$app->user->id) : $model->issued_by]) ?>
 
@@ -499,7 +499,7 @@ $(document).ready(function() {
                 <?= Html::submitButton($model->isNewRecord ? '<i class="fas fa-save"></i> บันทึก' : '<i class="fas fa-save"></i> แก้ไข', [
                     'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
                 ]) ?>
-                <?= Html::a('<i class="fas fa-times"></i> ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
+<!--                --><?php //= Html::a('<i class="fas fa-times"></i> ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
                 <?php if (!$model->isNewRecord): ?>
                     <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
                         'class' => 'btn btn-info',
