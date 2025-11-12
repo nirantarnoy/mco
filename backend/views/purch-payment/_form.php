@@ -266,7 +266,7 @@ use kartik\date\DatePicker;
 
 <?php
 $getPurchLinesUrl = Url::to(['get-purch-lines']);
-$paymentMethodData = json_encode(ArrayHelper::map(PaymentMethod::find()->where(['status' => 'active'])->all(), 'id', 'name'));
+$paymentMethodData = json_encode(ArrayHelper::map(Paymentmethod::find()->where(['status' => 'active'])->all(), 'id', 'name'));
 
 $this->registerJs("
 var lineIndex = " . count($paymentLines) . ";
