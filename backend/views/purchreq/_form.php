@@ -369,7 +369,7 @@ $(document).on('change keyup', '#purch-discount_amount', function() {
 });
 
 $(document).ready(function() {
-    calculateGrandTotal();
+  //  calculateGrandTotal();
 });
 JS;
 
