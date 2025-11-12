@@ -264,7 +264,7 @@ class PurchreqController extends Controller
 
                         // คำนวณส่วนลด (สมมติว่ามีฟิลด์ discount_percent ใน model)
                         if (isset($model->discount_percent) && $model->discount_percent > 0) {
-                            $discountAmount = ($totalAmount * $model->discount_percent) / 100;
+                            $discountAmount = ((double)$totalAmount * (double)$model->discount_percent) / 100;
                         } else if (isset($model->discount_amount) && $model->discount_amount > 0) {
                             $discountAmount = $model->discount_amount;
                         }
