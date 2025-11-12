@@ -298,6 +298,14 @@
                                     </a>
                                 </li>
                             <?php endif; ?>
+                            <?php if (\Yii::$app->user->can('purch/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=purchase" class="nav-link purchase">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>บันทึกข้อมูลซื้อ(None PR)</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
 <!--                            --><?php //if (\Yii::$app->user->can('stocktrans/index')): ?>
 <!--                                <li class="nav-item">-->
 <!--                                    <a href="index.php?r=stocktrans" class="nav-link stocktrans">-->
