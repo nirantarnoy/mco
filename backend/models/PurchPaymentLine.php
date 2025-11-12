@@ -4,6 +4,7 @@ namespace backend\models;
 
 use Yii;
 use yii\web\UploadedFile;
+use backend\models\Paymentmethod;
 
 /**
  * This is the model class for table "purch_payment_line".
@@ -83,6 +84,6 @@ class PurchPaymentLine extends \yii\db\ActiveRecord
      */
     public function getPaymentMethod()
     {
-        return $this->hasOne(PaymentMethod::class, ['id' => 'payment_method_id']);
+        return $this->hasOne(\backend\models\Paymentmethod::class, ['id' => 'payment_method_id']);
     }
 }
