@@ -81,7 +81,9 @@ $isUpdate = isset($isUpdate) ? $isUpdate : false;
                     </div>
                     <div class="col-md-3">
                         <?= $form->field($model, 'stkcod')->widget(\kartik\select2\Select2::className(),[
-                            'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Vendor::find()->all(),'id','name'),
+                            'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Product::find()->all(),'id',function($data){
+                                return $data->code.' '.$data->name;
+                            }),
                             'options'=>[
                                 'placeholder'=>'--เลือกรหัสสินค้า--'
                             ],
@@ -111,7 +113,7 @@ $isUpdate = isset($isUpdate) ? $isUpdate : false;
                     </div>
                     <div class="col-md-2">
                         <?= $form->field($model, 'payfrm')->widget(\kartik\select2\Select2::className(),[
-                            'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Vendor::find()->all(),'id','name'),
+                            'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Paymentmethod::find()->all(),'id','name'),
                             'options'=>[
                                 'placeholder'=>'--เลือกวิธีชำระ--'
                             ],
