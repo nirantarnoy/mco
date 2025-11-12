@@ -279,8 +279,8 @@ class PurchreqController extends Controller
                         }
 
                         // คำนวณยอดสุทธิ
-                       // $netAmount = (double)$afterDiscountAmount + (double)$vatAmount;
-                        $netAmount = (double)$afterDiscountAmount;
+                        $netAmount = (double)$afterDiscountAmount + (double)$vatAmount;
+                       // $netAmount = (double)$afterDiscountAmount;
 
                         // อัพเดทยอดรวมใน purch_req ถ้าจำเป็น
                         $model->total_amount = $totalAmount;
