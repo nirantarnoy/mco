@@ -279,15 +279,15 @@ class PurchreqController extends Controller
                         }
 
                         // คำนวณยอดสุทธิ
-                       // $netAmount = $afterDiscountAmount + (double)$vatAmount;
-                        $netAmount = (double)$vatAmount;
+                        $netAmount = (double)$afterDiscountAmount + (double)$vatAmount;
+                        //$netAmount = (double)$vatAmount;
 
                         // อัพเดทยอดรวมใน purch_req ถ้าจำเป็น
                         $model->total_amount = $totalAmount;
                         $model->discount_total_amount = $discountAmount;
                         $model->vat_amount = $vatAmount;
-                        $model->net_amount = $netAmount;
-                        $model->total_text = PurchReq::numtothai($netAmount);
+                        $model->net_amount = (double)$netAmount;
+                        $model->total_text = PurchReq::numtothai((double)$netAmount);
                         $model->save(false); // skip validation เพราะ validate แล้ว
 
 
