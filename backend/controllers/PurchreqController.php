@@ -262,33 +262,35 @@ class PurchreqController extends Controller
                             }
                         }
 
-                        // คำนวณส่วนลด (สมมติว่ามีฟิลด์ discount_percent ใน model)
-                        if (isset($model->discount_percent) && $model->discount_percent > 0) {
-                            $discountAmount = ((double)$totalAmount * (double)$model->discount_percent) / 100;
-                        } else if (isset($model->discount_amount) && $model->discount_amount > 0) {
-                            $discountAmount = $model->discount_amount;
+                        // คำนวณส่วนลด
+                        if (!empty($model->discount_percent)) {
+                            $discountAmount = round(($totalAmount * $model->discount_percent) / 100, 2);
+                        } elseif (!empty($model->discount_amount)) {
+                            $discountAmount = round($model->discount_amount, 2);
+                        } else {
+                            $discountAmount = 0;
                         }
 
-                        // คำนวณยอดหลังหักส่วนลด
-                        $afterDiscountAmount = (double)$totalAmount - (double)$discountAmount;
+// ยอดหลังหักส่วนลด
+                        $afterDiscountAmount = round($totalAmount - $discountAmount, 2);
 
-                        // คำนวณ VAT (สมมติว่ามีฟิลด์ vat_percent ใน model หรือใช้ VAT 7%)
+// VAT
                         $vatPercent = isset($model->vat_percent) ? $model->vat_percent : 7;
+                        $vatAmount = 0;
                         if ($vatPercent > 0 && $model->is_vat == 1) {
-                            $vatAmount = ($afterDiscountAmount * $vatPercent) / 100;
+                            $vatAmount = round(($afterDiscountAmount * $vatPercent) / 100, 2);
                         }
 
-                        // คำนวณยอดสุทธิ
-                        $netAmount = (double)$afterDiscountAmount + (double)$vatAmount;
-                       // $netAmount = (double)$afterDiscountAmount;
+// ยอดสุทธิ
+                        $netAmount = round($afterDiscountAmount + $vatAmount, 2);
 
-                        // อัพเดทยอดรวมใน purch_req ถ้าจำเป็น
+// บันทึก
                         $model->total_amount = $totalAmount;
                         $model->discount_total_amount = $discountAmount;
                         $model->vat_amount = $vatAmount;
-                        $model->net_amount = (double)$netAmount;
-                        $model->total_text = PurchReq::numtothai((double)$netAmount);
-                        $model->save(false); // skip validation เพราะ validate แล้ว
+                        $model->net_amount = $netAmount;
+                        $model->total_text = PurchReq::numtothai($netAmount);
+                        $model->save(false);
 
 
 
