@@ -270,7 +270,7 @@ class PurchreqController extends Controller
                         }
 
                         // คำนวณยอดหลังหักส่วนลด
-                        $afterDiscountAmount = $totalAmount - $discountAmount;
+                        $afterDiscountAmount = (double)$totalAmount - (double)$discountAmount;
 
                         // คำนวณ VAT (สมมติว่ามีฟิลด์ vat_percent ใน model หรือใช้ VAT 7%)
                         $vatPercent = isset($model->vat_percent) ? $model->vat_percent : 7;
@@ -279,7 +279,7 @@ class PurchreqController extends Controller
                         }
 
                         // คำนวณยอดสุทธิ
-                        $netAmount = $afterDiscountAmount + $vatAmount;
+                        $netAmount = $afterDiscountAmount + (double)$vatAmount;
 
                         // อัพเดทยอดรวมใน purch_req ถ้าจำเป็น
                         $model->total_amount = $totalAmount;
