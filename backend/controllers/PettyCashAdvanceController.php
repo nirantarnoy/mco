@@ -75,7 +75,7 @@ class PettyCashAdvanceController extends Controller
                     <br>ยอดคงเหลือปัจจุบัน: " . number_format($currentBalance, 2) . " บาท
                     <br>จำนวนที่เบิกได้สูงสุด: " . number_format($maxRequest, 2) . " บาท");
             } else {
-                $model->advance_no = PettyCashAdvance::generateAdvanceNo();
+                $model->advance_no = PettyCashAdvance::generateAdvanceNo($model->request_date);
 
                 if ($model->save()) {
                     \Yii::$app->session->setFlash('success', 'บันทึกใบเบิกเงินทดแทนเรียบร้อยแล้ว');

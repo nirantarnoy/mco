@@ -67,10 +67,10 @@ class PettyCashAdvance extends ActiveRecord
         return $this->hasOne(Employee::class, ['id' => 'approved_by']);
     }
 
-    public static function generateAdvanceNo()
+    public static function generateAdvanceNo($request_date)
     {
-        $year = date('Y');
-        $month = date('m');
+        $year = date('Y',strtotime($request_date));
+        $month = date('m',strtotime($request_date));
         $lastNo = static::find()
             ->where(['like', 'advance_no', "ADV-{$year}{$month}"])
             ->orderBy(['id' => SORT_DESC])
