@@ -171,7 +171,7 @@ use kartik\date\DatePicker;
                                 <td>
                                     <?php if (!$model->isNewRecord && !empty($line->doc)): ?>
                                         <div class="mb-1">
-                                            <a href="<?= Yii::getAlias('@web/' . $line->doc) ?>" target="_blank" class="btn btn-info btn-xs">
+                                            <a href="<?= Yii::getAlias('@web/uploads/payment_slips/' . $line->doc) ?>" target="_blank" class="btn btn-info btn-xs">
                                                 <i class="fas fa-file"></i> ดูไฟล์
                                             </a>
                                             <?= Html::hiddenInput("PurchPaymentLine[{$index}][doc]", $line->doc) ?>
