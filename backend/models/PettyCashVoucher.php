@@ -147,10 +147,11 @@ class PettyCashVoucher extends ActiveRecord
             if ($insert && empty($this->pcv_no)) {
                 $this->pcv_no = $this->generatePcvNo();
             }
+            $this->company_id = \Yii::$app->session->get('company_id');
             return true;
         }
+        $this->company_id = 1;
 
-        $this->company_id = \Yii::$app->session->get('company_id');
         return false;
     }
 
