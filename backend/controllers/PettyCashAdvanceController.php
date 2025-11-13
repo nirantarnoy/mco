@@ -101,7 +101,7 @@ class PettyCashAdvanceController extends Controller
     {
         $model = $this->findModel($id);
 
-        if ($model->status !== PettyCashAdvance::STATUS_PENDING) {
+        if ($model->status !== PettyCashAdvance::STATUS_PENDING && !\Yii::$app->user->can('CanEditAccount')) {
             \Yii::$app->session->setFlash('error', 'ไม่สามารถแก้ไขได้ เนื่องจากสถานะไม่อนุญาต');
             return $this->redirect(['view', 'id' => $model->id]);
         }
