@@ -161,7 +161,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <td class="text-right"><?= Yii::$app->formatter->asDecimal($line->pay_amount, 2) ?></td>
                                 <td>
                                     <?php if ($line->doc): ?>
-                                        <a href="<?= Yii::getAlias('@backend/web/uploads/payment_slips/' . $line->doc) ?>" target="_blank" class="btn btn-info btn-sm">
+                                        <a href="<?= Yii::getAlias('@web/uploads/payment_slips/' . $line->doc) ?>" target="_blank" class="btn btn-info btn-sm">
                                             <i class="fas fa-file"></i> ดูไฟล์
                                         </a>
                                     <?php else: ?>
