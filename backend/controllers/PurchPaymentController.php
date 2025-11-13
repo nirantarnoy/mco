@@ -158,7 +158,7 @@ class PurchPaymentController extends Controller
 
                             $fileName = time() . '_' . $index . '_' . $line->doc_file->baseName . '.' . $line->doc_file->extension;
                             if ($line->doc_file->saveAs($uploadPath . $fileName)) {
-                                $line->doc = 'uploads/payment_slips/' . $fileName;
+                                $line->doc = $fileName;
                             }
                         } elseif (!empty($lineData['doc'])) {
                             $line->doc = $lineData['doc'];
