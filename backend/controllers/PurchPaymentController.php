@@ -164,7 +164,7 @@ class PurchPaymentController extends Controller
                             $line->doc = $lineData['doc'];
                         }
 
-                        if (!$line->save()) {
+                        if (!$line->save(false)) {
                             $transaction->rollBack();
                             Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการบันทึกรายการโอนเงิน');
                             return $this->render('update', [
