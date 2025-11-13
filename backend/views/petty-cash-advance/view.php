@@ -38,7 +38,7 @@ $status = $statusLabels[$model->status] ?? ['label' => $model->status, 'class' =
                     'class' => 'btn btn-outline-secondary'
                 ]) ?>
 
-                <?php if ($model->status === 'pending'): ?>
+                <?php if ($model->status === 'pending' || \Yii::$app->user->can('CanEditAccount') || \Yii::$app->user->can('approve-advance')): ?>
                     <?= Html::a('<i class="fas fa-edit"></i> แก้ไข', ['update', 'id' => $model->id], [
                         'class' => 'btn btn-outline-primary'
                     ]) ?>
