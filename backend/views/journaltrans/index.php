@@ -23,7 +23,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="row">
         <div class="col-md-12">
             <?php Pjax::begin(); ?>
-
+            <?php echo $this->render('_search', ['model' => $searchModel,'viewstatus'=>null]); ?>
             <?= GridView::widget([
                 'dataProvider' => $dataProvider,
                 'columns' => [

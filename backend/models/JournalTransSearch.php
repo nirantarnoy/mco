@@ -11,6 +11,7 @@ use common\models\JournalTransX;
  */
 class JournalTransSearch extends JournalTransX
 {
+    public $globalSearch;
     /**
      * {@inheritdoc}
      */
@@ -18,7 +19,7 @@ class JournalTransSearch extends JournalTransX
     {
         return [
             [['id', 'trans_type_id', 'stock_type_id', 'customer_id', 'qty', 'created_at', 'created_by', 'updated_at', 'updated_by', 'party_id', 'party_type_id', 'warehouse_id', 'trans_ref_id'], 'integer'],
-            [['trans_date', 'journal_no', 'customer_name', 'remark', 'status'], 'safe'],
+            [['trans_date', 'journal_no', 'customer_name', 'remark', 'status','globalSearch'], 'safe'],
         ];
     }
 
@@ -82,9 +83,12 @@ class JournalTransSearch extends JournalTransX
 
         $query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
 
-        $query->andFilterWhere(['like', 'journal_no', $this->journal_no])
-            ->andFilterWhere(['like', 'customer_name', $this->customer_name])
-            ->andFilterWhere(['like', 'remark', $this->remark]);
+        if($this->globalSearch !=''){
+            $query->andFilterWhere(['like', 'journal_no', $this->globalSearch])
+                ->andFilterWhere(['like', 'customer_name', $this->globalSearch])
+                ->andFilterWhere(['like', 'remark', $this->globalSearch]);
+        }
+
 
         return $dataProvider;
     }
