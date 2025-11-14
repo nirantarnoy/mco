@@ -515,7 +515,7 @@ class PettyCashAdvanceController extends Controller
         }
 
         foreach ($vouchers as $voucher) {
-            $totalExpense = $voucher['amount'] + $voucher['vat_amount'] + $voucher['wht'] + $voucher['other'];
+            $totalExpense = (double)$voucher['amount'] + (double)$voucher['vat_amount'] + (double)$voucher['wht'] + (double)$voucher['other'];
 
             $allTransactions[] = [
                 'date' => $voucher['date'],
