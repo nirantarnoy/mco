@@ -3,6 +3,7 @@
 namespace backend\controllers;
 
 use app\behaviors\ActionLogBehavior;
+use backend\models\UnitSearch;
 use Yii;
 use backend\models\JournalTrans;
 use backend\models\JournalTransLine;
@@ -48,15 +49,19 @@ class JournaltransController extends Controller
      */
     public function actionIndex()
     {
-        $dataProvider = new ActiveDataProvider([
-            'query' => JournalTrans::find()->orderBy(['created_at' => SORT_DESC]),
-            'pagination' => [
-                'pageSize' => 20,
-            ],
-        ]);
+        $searchModel = new \backend\models\JournalTransSearch();
+        $dataProvider = $searchModel->search(\Yii::$app->request->queryParams);
+        $dataProvider->setSort(['defaultOrder' => ['id' => SORT_DESC]]);
+//        $dataProvider = new ActiveDataProvider([
+//            'query' => JournalTrans::find()->orderBy(['created_at' => SORT_DESC]),
+//            'pagination' => [
+//                'pageSize' => 20,
+//            ],
+//        ]);
 
         return $this->render('index', [
             'dataProvider' => $dataProvider,
+            'searchModel' => $searchModel,
         ]);
     }
 
