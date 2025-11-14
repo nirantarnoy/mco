@@ -38,9 +38,14 @@ $status = $statusLabels[$model->status] ?? ['label' => $model->status, 'class' =
                     'class' => 'btn btn-outline-secondary'
                 ]) ?>
 
-                <?php if ($model->status === 'pending' || \Yii::$app->user->can('CanEditAccount') || \Yii::$app->user->can('approve-advance')): ?>
+                <?php if ( $model->status != 'cancelled' && (\Yii::$app->user->can('CanEditAccount') || \Yii::$app->user->can('approve-advance'))): ?>
                     <?= Html::a('<i class="fas fa-edit"></i> แก้ไข', ['update', 'id' => $model->id], [
                         'class' => 'btn btn-outline-primary'
+                    ]) ?>
+                <?php endif; ?>
+                <?php if ($model->status != 'cancelled' && (\Yii::$app->user->can('CanEditAccount') || \Yii::$app->user->can('approve-advance'))): ?>
+                    <?= Html::a('<i class="fas fa-edit"></i> ยกเลิก', ['cancel', 'id' => $model->id], [
+                        'class' => 'btn btn-outline-warning'
                     ]) ?>
                 <?php endif; ?>
 
@@ -50,25 +55,25 @@ $status = $statusLabels[$model->status] ?? ['label' => $model->status, 'class' =
                 ]) ?>
             </div>
 
-            <?php if ($model->status !== 'approved' && \Yii::$app->user->can('approve-advance')): ?>
-                <div class="btn-group" role="group">
-                    <?= Html::a('<i class="fas fa-check"></i> อนุมัติ', ['approve', 'id' => $model->id], [
-                        'class' => 'btn btn-success',
-                        'data' => [
-                            'confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบเบิกนี้?',
-                            'method' => 'post',
-                        ],
-                    ]) ?>
-
-                    <?= Html::a('<i class="fas fa-times"></i> ปฏิเสธ', ['reject', 'id' => $model->id], [
-                        'class' => 'btn btn-danger',
-                        'data' => [
-                            'confirm' => 'คุณแน่ใจหรือไม่ที่จะปฏิเสธใบเบิกนี้?',
-                            'method' => 'post',
-                        ],
-                    ]) ?>
-                </div>
-            <?php endif; ?>
+<!--            --><?php //if ($model->status !== 'approved' && \Yii::$app->user->can('approve-advance')): ?>
+<!--                <div class="btn-group" role="group">-->
+<!--                    --><?php //= Html::a('<i class="fas fa-check"></i> อนุมัติ', ['approve', 'id' => $model->id], [
+//                        'class' => 'btn btn-success',
+//                        'data' => [
+//                            'confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบเบิกนี้?',
+//                            'method' => 'post',
+//                        ],
+//                    ]) ?>
+<!---->
+<!--                    --><?php //= Html::a('<i class="fas fa-times"></i> ปฏิเสธ', ['reject', 'id' => $model->id], [
+//                        'class' => 'btn btn-danger',
+//                        'data' => [
+//                            'confirm' => 'คุณแน่ใจหรือไม่ที่จะปฏิเสธใบเบิกนี้?',
+//                            'method' => 'post',
+//                        ],
+//                    ]) ?>
+<!--                </div>-->
+<!--            --><?php //endif; ?>
         </div>
     </div>
 

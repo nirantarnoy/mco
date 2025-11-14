@@ -135,6 +135,17 @@ class PettyCashAdvanceController extends Controller
         return $this->redirect(['view', 'id' => $model->id]);
     }
 
+    public function actionCancel($id){
+        if($id){
+            if(\backend\models\PettyCashAdvance::updateAll(['status'=>'cancelled'],['id'=>$id])){
+                \Yii::$app->session->setFlash('success','ยกเลิกรายการสำเร็จ');
+            }else{
+                \Yii::$app->session->setFlash('error','ทำรายการไม่สำเร็จ พบข้อผิลพลาด');
+            }
+        }
+        return $this->redirect(['view', 'id' => $id]);
+    }
+
     public function actionReject($id)
     {
         $model = $this->findModel($id);
