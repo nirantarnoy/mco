@@ -2,6 +2,7 @@
 namespace backend\models;
 
 use backend\models\PettyCashVoucher;
+use Yii;
 use yii\db\ActiveRecord;
 use yii\behaviors\TimestampBehavior;
 use yii\behaviors\BlameableBehavior;
@@ -111,6 +112,8 @@ class PettyCashAdvance extends ActiveRecord
     }
 
     public function beforeSave($insert){
+        $this->created_at = time();
+        $this->created_by = Yii::$app->user->id;
         $this->company_id = \Yii::$app->session->get('company_id');
         return true;
     }
