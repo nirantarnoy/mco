@@ -188,23 +188,23 @@ $minAmount = \backend\models\PettyCashAdvance::MIN_AMOUNT;
                     'headerOptions' => ['style' => 'width: 200px;']
                 ],
 
-                [
-                    'attribute' => 'status',
-                    'label' => 'สถานะ',
-                    'format' => 'raw',
-                    'value' => function ($model) {
-                        $statusLabels = [
-                            'pending' => ['label' => 'รอดำเนินการ', 'class' => 'warning'],
-                            'approved' => ['label' => 'อนุมัติแล้ว', 'class' => 'success'],
-                            'rejected' => ['label' => 'ปฏิเสธ', 'class' => 'danger'],
-                            'paid' => ['label' => 'จ่ายแล้ว', 'class' => 'info'],
-                        ];
-                        $status = $statusLabels[$model->status] ?? ['label' => $model->status, 'class' => 'secondary'];
-                        return '<span class="badge badge-' . $status['class'] . '">' . $status['label'] . '</span>';
-                    },
-                    'headerOptions' => ['style' => 'width: 100px; text-align: center;'],
-                    'contentOptions' => ['class' => 'text-center']
-                ],
+//                [
+//                    'attribute' => 'status',
+//                    'label' => 'สถานะ',
+//                    'format' => 'raw',
+//                    'value' => function ($model) {
+//                        $statusLabels = [
+//                            'pending' => ['label' => 'รอดำเนินการ', 'class' => 'warning'],
+//                            'approved' => ['label' => 'อนุมัติแล้ว', 'class' => 'success'],
+//                            'rejected' => ['label' => 'ปฏิเสธ', 'class' => 'danger'],
+//                            'paid' => ['label' => 'จ่ายแล้ว', 'class' => 'info'],
+//                        ];
+//                        $status = $statusLabels[$model->status] ?? ['label' => $model->status, 'class' => 'secondary'];
+//                        return '<span class="badge badge-' . $status['class'] . '">' . $status['label'] . '</span>';
+//                    },
+//                    'headerOptions' => ['style' => 'width: 100px; text-align: center;'],
+//                    'contentOptions' => ['class' => 'text-center']
+//                ],
 
                 [
                     'attribute' => 'created_at',
