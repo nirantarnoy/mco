@@ -206,12 +206,12 @@ $minAmount = \backend\models\PettyCashAdvance::MIN_AMOUNT;
 //                    'contentOptions' => ['class' => 'text-center']
 //                ],
 
-                [
-                    'attribute' => 'created_at',
-                    'label' => 'วันที่สร้าง',
-                    'format' => ['datetime', 'php:d/m/Y H:i'],
-                    'headerOptions' => ['style' => 'width: 120px;']
-                ],
+//                [
+//                    'attribute' => 'created_at',
+//                    'label' => 'วันที่สร้าง',
+//                    'format' => ['datetime', 'php:d/m/Y H:i'],
+//                    'headerOptions' => ['style' => 'width: 120px;']
+//                ],
 
 //                [
 //                        'attribute'=>'request_date',
