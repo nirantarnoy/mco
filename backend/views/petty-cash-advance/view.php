@@ -20,15 +20,15 @@ $status = $statusLabels[$model->status] ?? ['label' => $model->status, 'class' =
 
 <div class="petty-cash-advance-view">
 
-    <div class="row">
-        <div class="col-md-8">
-        </div>
-        <div class="col-md-4 text-right">
-            <span class="badge badge-<?= $status['class'] ?> badge-lg" style="font-size: 1.2em; padding: 8px 16px;">
-                <?= $status['label'] ?>
-            </span>
-        </div>
-    </div>
+<!--    <div class="row">-->
+<!--        <div class="col-md-8">-->
+<!--        </div>-->
+<!--        <div class="col-md-4 text-right">-->
+<!--            <span class="badge badge---><?php //= $status['class'] ?><!-- badge-lg" style="font-size: 1.2em; padding: 8px 16px;">-->
+<!--                --><?php //= $status['label'] ?>
+<!--            </span>-->
+<!--        </div>-->
+<!--    </div>-->
 
     <!-- ปุ่มจัดการ -->
     <div class="row mb-4">
