@@ -242,20 +242,20 @@ $(document).ready(function() {
             <?= Html::a('<i class="fas fa-times"></i> ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
 
             <?php if (!$model->isNewRecord && $model->status === 'pending' && \Yii::$app->user->can('approve-advance')): ?>
-                <?= Html::a('<i class="fas fa-check"></i> อนุมัติ', ['approve', 'id' => $model->id], [
-                    'class' => 'btn btn-success',
-                    'data' => [
-                        'confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบเบิกนี้?',
-                        'method' => 'post',
-                    ],
-                ]) ?>
-                <?= Html::a('<i class="fas fa-times"></i> ปฏิเสธ', ['reject', 'id' => $model->id], [
-                    'class' => 'btn btn-danger',
-                    'data' => [
-                        'confirm' => 'คุณแน่ใจหรือไม่ที่จะปฏิเสธใบเบิกนี้?',
-                        'method' => 'post',
-                    ],
-                ]) ?>
+<!--                --><?php //= Html::a('<i class="fas fa-check"></i> อนุมัติ', ['approve', 'id' => $model->id], [
+//                    'class' => 'btn btn-success',
+//                    'data' => [
+//                        'confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบเบิกนี้?',
+//                        'method' => 'post',
+//                    ],
+//                ]) ?>
+<!--                --><?php //= Html::a('<i class="fas fa-times"></i> ปฏิเสธ', ['reject', 'id' => $model->id], [
+//                    'class' => 'btn btn-danger',
+//                    'data' => [
+//                        'confirm' => 'คุณแน่ใจหรือไม่ที่จะปฏิเสธใบเบิกนี้?',
+//                        'method' => 'post',
+//                    ],
+//                ]) ?>
             <?php endif; ?>
 
             <?php if (!$model->isNewRecord): ?>
