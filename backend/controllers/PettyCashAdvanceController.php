@@ -146,6 +146,15 @@ class PettyCashAdvanceController extends Controller
         return $this->redirect(['view', 'id' => $id]);
     }
 
+    public function actionDelete($id){
+        if($id){
+            $model = $this->findModel($id);
+            $model->delete();
+        }
+
+        return $this->redirect(['index']);
+    }
+
     public function actionReject($id)
     {
         $model = $this->findModel($id);
