@@ -4,12 +4,12 @@ namespace backend\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use common\models\JournalTransX;
+use backend\models\JournalTrans;
 
 /**
  * JournalTransSearch represents the model behind the search form of `common\models\JournalTransX`.
  */
-class JournalTransSearch extends JournalTransX
+class JournalTransSearch extends JournalTrans
 {
     public $globalSearch;
     /**
@@ -41,7 +41,7 @@ class JournalTransSearch extends JournalTransX
      */
     public function search($params)
     {
-        $query = JournalTransX::find();
+        $query = JournalTrans::find();
 
         // add conditions that should always apply here
 
