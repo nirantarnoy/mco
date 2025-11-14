@@ -41,7 +41,7 @@ class PettyCashAdvanceController extends Controller
     public function actionIndex()
     {
         $dataProvider = new ActiveDataProvider([
-            'query' => PettyCashAdvance::find()->orderBy(['created_at' => SORT_DESC]),
+            'query' => PettyCashAdvance::find()->orderBy(['request_date' => SORT_DESC]),
             'pagination' => [
                 'pageSize' => 20,
             ],
