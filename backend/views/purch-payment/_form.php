@@ -13,6 +13,12 @@ use kartik\date\DatePicker;
 /* @var $model backend\models\PurchPayment */
 /* @var $paymentLines array */
 /* @var $form yii\widgets\ActiveForm */
+
+$paymentMethodList = ArrayHelper::map(
+    Paymentmethod::find()->where(['status' => 1])->all(),
+    'id',
+    'name'
+);
 ?>
 
     <div class="purch-payment-form">
@@ -335,6 +341,9 @@ $('#purch_id_select').on('change', function() {
 });
 
 // เพิ่มรายการโอนเงิน
+var lineIndex = " . count($paymentLines) . ";
+var paymentMethodOptions = " . json_encode($paymentMethodList) . ";
+
 $('#add-payment-line').on('click', function() {
     var newRow = '<tr class=\"payment-line-row\">' +
         '<td class=\"text-center line-number\"></td>' +
@@ -342,13 +351,13 @@ $('#add-payment-line').on('click', function() {
             '<input type=\"text\" name=\"PurchPaymentLine[' + lineIndex + '][bank_name]\" class=\"form-control form-control-sm\" placeholder=\"ชื่อธนาคาร\">' +
         '</td>' +
         '<td>' +
-            '<select name=\"PurchPaymentLine[' + lineIndex + '][payment_method_id]\" class=\"form-control form-control-sm\">' +
+            '<select id=\"payment_method_' + lineIndex + '\" name=\"PurchPaymentLine[' + lineIndex + '][payment_method_id]\" class=\"form-control form-control-sm payment-method\">' +
                 '<option value=\"\">เลือกประเภท...</option>';
-    
+                
     $.each(paymentMethodOptions, function(id, name) {
         newRow += '<option value=\"' + id + '\">' + name + '</option>';
     });
-    
+
     newRow += '</select>' +
         '</td>' +
         '<td>' +
@@ -364,14 +373,22 @@ $('#add-payment-line').on('click', function() {
             '<button type=\"button\" class=\"btn btn-danger btn-sm remove-line\"><i class=\"fas fa-trash\"></i></button>' +
         '</td>' +
         '</tr>';
-    
+
     $('#payment-lines-tbody').append(newRow);
+
+    // ⭐ init Select2 เฉพาะ dropdown ที่เพิ่มใหม่
+    $('#payment_method_' + lineIndex).select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'เลือกประเภท...'
+    });
+
     lineIndex++;
     updateLineNumbers();
     updateTotal();
 });
 
-// ลบรายการ
+// ลบแถว
 $(document).on('click', '.remove-line', function() {
     if ($('.payment-line-row').length > 1) {
         $(this).closest('tr').remove();
@@ -464,5 +481,7 @@ $('#confirm-submit-btn').on('click', function() {
     $('#warningModal').modal('hide');
     $('#purch-payment-form').submit();
 });
+
+
 ");
 ?>
