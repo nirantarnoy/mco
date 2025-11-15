@@ -7,11 +7,11 @@ use yii\web\Session;
 
 $session = \Yii::$app->session;
 
-if (!Yii::$app->session->get('company_id')) {
-    \Yii::$app->user->logout();
-    header("Location: " . Yii::$app->urlManager->createUrl('site/login'));
-   // return $this->redirect(['site/login']);
-}
+//if (!Yii::$app->session->get('company_id')) {
+//    \Yii::$app->user->logout();
+//    header("Location: " . Yii::$app->urlManager->createUrl('site/login'));
+//   // return $this->redirect(['site/login']);
+//}
 
 AppAsset::register($this);
 
