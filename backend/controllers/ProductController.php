@@ -590,6 +590,7 @@ class ProductController extends Controller
                         $modelx->sale_price = $rowData[6];
                         $modelx->stock_qty = $rowData[2];
                         $modelx->remark = '';
+                        $modelx->company_id = \Yii::$app->session->get('company_id');
                         //
                         if ($modelx->save(false)) {
                             $this->calStock($modelx->id,1,$new_warehouse,$rowData[2]);
