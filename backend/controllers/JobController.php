@@ -1621,6 +1621,15 @@ class JobController extends Controller
     }
 
 
+    public function actionUpdateDocStatus(){
+        $model = \backend\models\Job::find()->all();
+        if($model){
+            foreach ($model as $value){
+                \backend\models\JobDocComplete::checkActivityDoc($value->id);
+            }
+        }
+    }
+
 
 
 }
