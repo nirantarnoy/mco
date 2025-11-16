@@ -549,6 +549,9 @@ class ProductController extends Controller
                         continue;
                     }
 
+//                    print_r($rowData);
+//                    return;
+
                     $model_dup = \backend\models\Product::find()->where(['code' => trim($rowData[5])])->one();
                     if ($model_dup != null) {
                         $new_stock_qty = 0;
@@ -563,8 +566,8 @@ class ProductController extends Controller
                         $model_dup->description = '';// $rowData[1];
                         $model_dup->unit_id = $new_unit;
                         $model_dup->stock_qty = $new_stock_qty;
-                        $model_dup->cost_price = $rowData[6];
-                        $model_dup->sale_price = $rowData[6];
+                        $model_dup->cost_price = str_replace(",","",$rowData[6]);
+                        $model_dup->sale_price = str_replace(",","",$rowData[6]);
                      //   $model_dup->updated_at = date('Y-m-d H:i:s');
                         if($model_dup->save(false)){
                             $this->calStock($model_dup->id,1,$new_warehouse,$rowData[2]);
@@ -575,19 +578,20 @@ class ProductController extends Controller
 
                         $new_unit = $this->checkUnit(trim($rowData[3]));
                         $new_warehouse = $this->checkWarehouse(trim($rowData[4]));
+                        $new_brand = $this->checkBrand(trim($rowData[1]));
                     //    echo "must new";
                         $modelx = new \backend\models\Product();
                         $modelx->code = trim($rowData[5]);
                         $modelx->name = trim($rowData[1]);
-                        $modelx->description = ''; trim($rowData[1]);
+                        $modelx->description = trim($rowData[0]);
                         $modelx->product_group_id = 0; // watch or phone or etc
-                        $modelx->brand_id = 0;
+                        $modelx->brand_id = $new_brand;
                         $modelx->product_type_id = 1; // normal or custom
                         $modelx->type_id = 1; // 1 = new 2 = second used
                         $modelx->unit_id = $new_unit;
                         $modelx->status = 1;
-                        $modelx->cost_price = $rowData[6];
-                        $modelx->sale_price = $rowData[6];
+                        $modelx->cost_price = str_replace(",","",$rowData[6]);
+                        $modelx->sale_price = str_replace(",","",$rowData[6]);
                         $modelx->stock_qty = $rowData[2];
                         $modelx->remark = '';
                         $modelx->company_id = \Yii::$app->session->get('company_id');
@@ -625,6 +629,20 @@ class ProductController extends Controller
             return $model->id;
         }else{
             $model = new \common\models\Unit();
+            $model->name = $name;
+            $model->description = $name;
+            $model->status = 1;
+            if($model->save(false)){
+                return $model->id;
+            }
+        }
+    }
+    public function checkBrand($name){
+        $model = \common\models\ProductBrand::find()->where(['name'=>$name])->one();
+        if($model){
+            return $model->id;
+        }else{
+            $model = new \common\models\ProductBrand();
             $model->name = $name;
             $model->description = $name;
             $model->status = 1;
