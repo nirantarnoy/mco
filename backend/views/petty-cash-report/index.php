@@ -32,7 +32,7 @@ $this->title = 'รายงานเงินสดย่อย';
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4><?= number_format($totalAdvanced, 2) ?></h4>
+                            <h4><?= number_format($totalAdvanced + $pendingAdvance, 2) ?></h4>
                             <p class="mb-0">เบิกทดแทนทั้งหมด</p>
                         </div>
                         <div class="align-self-center">
@@ -59,21 +59,21 @@ $this->title = 'รายงานเงินสดย่อย';
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6">
-            <div class="card bg-<?= $needsRefill ? 'warning' : 'secondary' ?> text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4><?= number_format($pendingAdvance, 2) ?></h4>
-                            <p class="mb-0">รออนุมัติ</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-clock fa-2x"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!--        <div class="col-lg-3 col-md-6">-->
+<!--            <div class="card bg---><?php //= $needsRefill ? 'warning' : 'secondary' ?><!-- text-white">-->
+<!--                <div class="card-body">-->
+<!--                    <div class="d-flex justify-content-between">-->
+<!--                        <div>-->
+<!--                            <h4>--><?php //= number_format($pendingAdvance, 2) ?><!--</h4>-->
+<!--                            <p class="mb-0">รออนุมัติ</p>-->
+<!--                        </div>-->
+<!--                        <div class="align-self-center">-->
+<!--                            <i class="fas fa-clock fa-2x"></i>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
     </div>
 
     <!-- Charts -->
@@ -284,7 +284,7 @@ $this->title = 'รายงานเงินสดย่อย';
     const usageCtx = document.getElementById('usageChart').getContext('2d');
     const currentBalance = <?= $currentBalance ?>;
     const totalUsed = <?= $totalUsed ?>;
-    const totalAdvanced = <?= $totalAdvanced ?>;
+    const totalAdvanced = <?= $totalAdvanced + $pendingAdvance ?>;
 
     new Chart(usageCtx, {
         type: 'doughnut',

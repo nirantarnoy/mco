@@ -91,7 +91,7 @@ class PettyCashAdvance extends ActiveRecord
     {
         // คำนวณยอดคงเหลือปัจจุบัน
         $totalAdvance = static::find()
-            ->where(['status' => ['approved', 'paid']])
+            ->where(['status' => ['approved', 'paid','pending']])
             ->sum('amount') ?? 0;
 
         $totalUsed = PettyCashVoucher::find()
