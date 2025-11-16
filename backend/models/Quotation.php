@@ -66,7 +66,7 @@ class Quotation extends ActiveRecord
     {
         return [
             [['customer_id'],'required'],
-            [['quotation_date'], 'safe'],
+            [['quotation_date','currency_id','customer_tax_id'], 'safe'],
             [['customer_id', 'status', 'approve_status', 'approve_by', 'created_at', 'created_by', 'updated_at', 'updated_by','payment_term_id','payment_method_id','sale_emp_id'], 'integer'],
             [['total_amount','discount_amount','discount_percent','total_discount_amount','vat_percent','vat_total_amount'], 'number'],
             [['quotation_no', 'customer_name', 'total_amount_text', 'note','delivery_day_text'], 'string', 'max' => 255],
@@ -104,6 +104,8 @@ class Quotation extends ActiveRecord
             'total_discount_amount' => 'รวมส่วนลด',
             'vat_percent' => 'VAT %',
             'vat_total_amount' => 'รวม VAT',
+            'currency_id' => 'สกุลเงิน',
+            'customer_tax_id' => 'เลขประจำตัวผู้เสียภาษี'
         ];
     }
 

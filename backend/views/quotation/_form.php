@@ -468,6 +468,15 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                             ]
                         ]) ?>
 
+                        <?= $form->field($model, 'currency_id')->widget(Select2::className(), [
+                            'data' => ArrayHelper::map(\backend\models\Currency::find()->all(), 'id', 'name'),
+                            'options' => ['placeholder' => 'เลือกสกุลเงิน'],
+                            'pluginOptions' => [
+                                'allowClear' => true
+                            ]
+                        ]) ?>
+
+
                         <?= $form->field($model, 'status')->dropDownList([
                             Quotation::STATUS_DRAFT => 'ร่าง',
                             Quotation::STATUS_ACTIVE => 'ใช้งาน',
@@ -487,6 +496,8 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                             'readonly' => true,
                             'style' => 'background-color: #f8f9fa;',
                         ]) ?>
+                        <?= $form->field($model,'customer_tax_id')->textInput()->label() ?>
+
 
                         <?= $form->field($model, 'note')->textarea([
                             'rows' => 4,

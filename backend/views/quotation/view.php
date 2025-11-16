@@ -109,6 +109,15 @@ foreach ($modelline as $line) {
                             ],
                             'customer_name:text:ชื่อลูกค้า',
                             [
+                                'attribute' => 'customer_tax_id',
+                            ],
+                            [
+                                'attribute' => 'currency_id',
+                                'value' => function($data){
+                                    return \backend\models\Currency::findName($data->currency_id);
+                                }
+                            ],
+                            [
                                 'attribute' => 'status',
                                 'label' => 'สถานะเอกสาร',
                                 'value' => $model->getStatusLabel(),
