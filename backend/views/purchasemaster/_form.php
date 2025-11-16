@@ -260,7 +260,15 @@ $(document).ready(function() {
                             ]) ?>
                         </div>
                         <div class="col-md-6">
-                            <?= $form->field($model, 'job_no')->textInput(['maxlength' => true]) ?>
+                            <?= $form->field($model, 'job_no')->widget(\kartik\select2\Select2::className(),[
+                                'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(),'id','job_no'),
+                                'options'=>[
+                                    'placeholder'=>'เลือก job'
+                                ],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                ]
+                            ]) ?>
                         </div>
                     </div>
 

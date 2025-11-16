@@ -337,7 +337,7 @@ class PurchasemasterController extends Controller
         // สมมติว่ามีตาราง product อยู่แล้ว
         // ถ้ายังไม่มี ให้แก้ไขตามชื่อตารางที่มีจริง
         $query = \backend\models\Product::find()
-            ->select(['code as value', 'name as label', 'code', 'name', 'price'])
+            ->select(['code as value', 'name as label', 'code', 'name', 'cost_price as price'])
             ->where(['like', 'code', $q])
             ->orWhere(['like', 'name', $q])
             ->limit(20);

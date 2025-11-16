@@ -37,11 +37,36 @@ $this->params['breadcrumbs'][] = $this->title;
                         'model' => $model,
                         'attributes' => [
                             'docnum',
-                            'docdat:date:วันที่เอกสาร',
-                            'supcod',
-                            'supnam',
-                            'job_no',
-                            'paytrm',
+                            [
+                                'attribute' => 'docdat',
+                                'value' => function ($model) {
+                                    return date('m/d/Y', strtotime($model->docdat));
+                                }
+                            ],
+                            [
+                                'attribute' => 'supcod',
+                                'value' => function ($model) {
+                                    return \backend\models\Vendor::findCode($model->supcod);
+                                }
+                            ],
+                            [
+                                'attribute' => 'supnam',
+                                'value' => function ($model) {
+                                    return \backend\models\Vendor::findName($model->supcod);
+                                }
+                            ],
+                            [
+                                'attribute' => 'job_no',
+                                'value' => function ($model) {
+                                    return \backend\models\Job::findJobNo($model->job_no);
+                                }
+                            ],
+                            [
+                                'attribute' => 'paytrm',
+                                'value' => function ($model) {
+                                    return \backend\models\Paymentterm::findName($model->paytrm);
+                                }
+                            ],
                             'duedat:date:วันครบกำหนด',
                             'taxid',
                             'discod',
@@ -115,19 +140,27 @@ $this->params['breadcrumbs'][] = $this->title;
                             <table class="table table-sm mb-0">
                                 <tr>
                                     <td class="text-right" width="60%"><strong>มูลค่าสินค้า:</strong></td>
-                                    <td class="text-right" width="40%"><?= Yii::$app->formatter->asDecimal($model->vatpr0, 2) ?> บาท</td>
+                                    <td class="text-right"
+                                        width="40%"><?= Yii::$app->formatter->asDecimal($model->vatpr0, 2) ?> บาท
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td class="text-right"><strong>VAT (<?= $model->vat_percent ?>%):</strong></td>
-                                    <td class="text-right"><?= Yii::$app->formatter->asDecimal($model->vat_amount, 2) ?> บาท</td>
+                                    <td class="text-right"><?= Yii::$app->formatter->asDecimal($model->vat_amount, 2) ?>
+                                        บาท
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td class="text-right"><strong>TAX (<?= $model->tax_percent ?>%):</strong></td>
-                                    <td class="text-right"><?= Yii::$app->formatter->asDecimal($model->tax_amount, 2) ?> บาท</td>
+                                    <td class="text-right"><?= Yii::$app->formatter->asDecimal($model->tax_amount, 2) ?>
+                                        บาท
+                                    </td>
                                 </tr>
                                 <tr class="table-active">
                                     <td class="text-right"><h5><strong>รวมทั้งสิ้น:</strong></h5></td>
-                                    <td class="text-right"><h5><strong><?= Yii::$app->formatter->asDecimal($model->total_amount, 2) ?> บาท</strong></h5></td>
+                                    <td class="text-right"><h5>
+                                            <strong><?= Yii::$app->formatter->asDecimal($model->total_amount, 2) ?>
+                                                บาท</strong></h5></td>
                                 </tr>
                             </table>
                         </div>

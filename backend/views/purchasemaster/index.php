@@ -72,14 +72,23 @@ $this->params['breadcrumbs'][] = $this->title;
                     ['class' => 'yii\grid\SerialColumn'],
 
                     'docnum',
-                    'docdat:date:วันที่เอกสาร',
+                    [
+                        'attribute' => 'docdat',
+                        'value' => function ($model) {
+                            return date('m/d/Y', strtotime($model->docdat));
+                        }
+                    ],
                     [
                         'attribute' => 'supcod',
-                        'label' => 'รหัสผู้จำหน่าย',
+                        'value' => function ($model) {
+                            return \backend\models\Vendor::findCode($model->supcod);
+                        }
                     ],
                     [
                         'attribute' => 'supnam',
-                        'label' => 'ชื่อผู้จำหน่าย',
+                        'value' => function ($model) {
+                            return \backend\models\Vendor::findName($model->supcod);
+                        }
                     ],
                     [
                         'attribute' => 'total_amount',
