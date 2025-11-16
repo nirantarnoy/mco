@@ -249,18 +249,34 @@ $(document).ready(function() {
 
                     <div class="row">
                         <div class="col-md-6">
-                            <?= $form->field($model, 'supcod')->textInput(['maxlength' => true]) ?>
+                            <?= $form->field($model, 'supcod')->widget(\kartik\select2\Select2::className(),[
+                                    'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Vendor::find()->all(),'id','code'),
+                                'options'=>[
+                                        'placeholder'=>'เลือกผู้ขาย'
+                                ],
+                                'pluginOptions' => [
+                                        'allowClear' => true,
+                                ]
+                            ]) ?>
                         </div>
                         <div class="col-md-6">
                             <?= $form->field($model, 'job_no')->textInput(['maxlength' => true]) ?>
                         </div>
                     </div>
 
-                    <?= $form->field($model, 'supnam')->textInput(['maxlength' => true]) ?>
+                    <?= $form->field($model, 'supnam')->textInput(['maxlength' => true,'readonly'=>'readonly']) ?>
 
                     <div class="row">
                         <div class="col-md-6">
-                            <?= $form->field($model, 'paytrm')->textInput(['maxlength' => true]) ?>
+                            <?= $form->field($model, 'paytrm')->widget(\kartik\select2\Select2::className(),[
+                                    'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Paymentterm::find()->all(),'id','name'),
+                                'options'=>[
+                                    'placeholder'=>'เลือกเครดิต'
+                                ],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                ]
+                            ]) ?>
                         </div>
                         <div class="col-md-6">
                             <?= $form->field($model, 'duedat')->input('date') ?>
