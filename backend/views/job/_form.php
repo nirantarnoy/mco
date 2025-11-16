@@ -130,6 +130,32 @@ if(!$model->isNewRecord){
                 <?= $form->field($model, 'job_amount')->textInput() ?>
             </div>
             <div class="col-lg-3">
+                <?= $form->field($model, 'cus_po_doc')->fileInput() ?>
+                <?php if ($model->cus_po_doc): ?>
+                    <div class="alert alert-info">
+                        <strong>ไฟล์ปัจจุบัน:</strong><br>
+                        <?php
+                        $fileUrl = Yii::getAlias('@web/uploads/job/' . $model->cus_po_doc);
+                        ?>
+                        <?= Html::a('📂 เปิดไฟล์', $fileUrl, [
+                            'class' => 'btn btn-sm btn-outline-primary mt-2',
+                            'target' => '_blank',
+                            'data-pjax' => '0'
+                        ]) ?>
+                        <?= Html::a('🗑️ ลบไฟล์', ['delete-file', 'id' => $model->id], [
+                            'class' => 'btn btn-sm btn-outline-danger mt-2',
+                            'data' => [
+                                'confirm' => 'คุณแน่ใจหรือไม่ว่าต้องการลบไฟล์นี้?',
+                                'method' => 'post',
+                            ],
+                        ]) ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+        </div>
+        <div class="row">
+            <div class="col-lg-3">
                 <?= $form->field($model, 'jsa_doc')->fileInput() ?>
                 <?php if ($model->jsa_doc): ?>
                     <div class="alert alert-info">

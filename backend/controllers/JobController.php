@@ -556,6 +556,19 @@ class JobController extends Controller
                         $loop++;
                     }
                 }
+                // จัดการไฟล์ cus_po_doc (โค้ดเดิม)
+                $uploaded = UploadedFile::getInstances($model, 'cus_po_doc');
+                if (!empty($uploaded)) {
+                    $loop = 0;
+                    foreach ($uploaded as $file) {
+                        $upfiles = "cus_po_" . time()."_".$loop . "." . $file->getExtension();
+                        if ($file->saveAs('uploads/job/' . $upfiles)) {
+                            $model->cus_po_doc = $upfiles;
+                            $model->save(false);
+                        }
+                        $loop++;
+                    }
+                }
 
                 return $this->redirect(['view', 'id' => $model->id]);
             }
@@ -1595,6 +1608,18 @@ class JobController extends Controller
             }
 
             $model->jsa_doc = null;
+            $model->save(false); // อัปเดตข้อมูล
+
+            Yii::$app->session->setFlash('success', 'ลบไฟล์เรียบร้อยแล้ว');
+        }
+        if ($model && $model->cus_po_doc != '') {
+            $filePath = Yii::getAlias('@webroot/uploads/่job/' . $model->cus_po_doc);
+
+            if (file_exists($filePath)) {
+                @unlink($filePath); // ลบไฟล์จริง
+            }
+
+            $model->cus_po_doc = null;
             $model->save(false); // อัปเดตข้อมูล
 
             Yii::$app->session->setFlash('success', 'ลบไฟล์เรียบร้อยแล้ว');
