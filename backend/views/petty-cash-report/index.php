@@ -115,7 +115,7 @@ $this->title = 'รายงานเงินสดย่อย';
                             <tr>
                                 <th>วันที่</th>
                                 <th>จำนวน</th>
-                                <th>สถานะ</th>
+<!--                                <th>สถานะ</th>-->
                             </tr>
                             </thead>
                             <tbody>
@@ -123,18 +123,18 @@ $this->title = 'รายงานเงินสดย่อย';
                                 <tr>
                                     <td><?= date('d/m/Y', strtotime($advance->request_date)) ?></td>
                                     <td class="text-right"><?= number_format($advance->amount, 2) ?></td>
-                                    <td>
-                                        <?php
-                                        $statusLabels = [
-                                            'pending' => ['label' => 'รอ', 'class' => 'warning'],
-                                            'approved' => ['label' => 'อนุมัติ', 'class' => 'success'],
-                                            'rejected' => ['label' => 'ปฏิเสธ', 'class' => 'danger'],
-                                            'paid' => ['label' => 'จ่ายแล้ว', 'class' => 'info'],
-                                        ];
-                                        $status = $statusLabels[$advance->status] ?? ['label' => $advance->status, 'class' => 'secondary'];
-                                        ?>
-                                        <span class="badge badge-<?= $status['class'] ?>"><?= $status['label'] ?></span>
-                                    </td>
+<!--                                    <td>-->
+<!--                                        --><?php
+//                                        $statusLabels = [
+//                                            'pending' => ['label' => 'รอ', 'class' => 'warning'],
+//                                            'approved' => ['label' => 'อนุมัติ', 'class' => 'success'],
+//                                            'rejected' => ['label' => 'ปฏิเสธ', 'class' => 'danger'],
+//                                            'paid' => ['label' => 'จ่ายแล้ว', 'class' => 'info'],
+//                                        ];
+//                                        $status = $statusLabels[$advance->status] ?? ['label' => $advance->status, 'class' => 'secondary'];
+//                                        ?>
+<!--                                        <span class="badge badge---><?php //= $status['class'] ?><!--">--><?php //= $status['label'] ?><!--</span>-->
+<!--                                    </td>-->
                                 </tr>
                             <?php endforeach; ?>
                             </tbody>

@@ -86,7 +86,7 @@ $this->title = 'รายงานสรุปเงินสดย่อย';
                                 <th>วันที่</th>
                                 <th>เลขที่</th>
                                 <th>จำนวน</th>
-                                <th>สถานะ</th>
+<!--                                <th>สถานะ</th>-->
                             </tr>
                             </thead>
                             <tbody>
@@ -95,21 +95,21 @@ $this->title = 'รายงานสรุปเงินสดย่อย';
                                     <td><?= date('d/m/Y', strtotime($advance->request_date)) ?></td>
                                     <td><?= Html::encode($advance->advance_no) ?></td>
                                     <td class="text-right"><?= number_format($advance->amount, 2) ?></td>
-                                    <td>
-                                        <?php
-                                        $statusLabels = [
-                                            'approved' => ['label' => 'อนุมัติ', 'class' => 'success'],
-                                            'paid' => ['label' => 'จ่ายแล้ว', 'class' => 'info'],
-                                        ];
-                                        $status = $statusLabels[$advance->status] ?? ['label' => $advance->status, 'class' => 'secondary'];
-                                        ?>
-                                        <span class="badge badge-<?= $status['class'] ?>"><?= $status['label'] ?></span>
-                                    </td>
+<!--                                    <td>-->
+<!--                                        --><?php
+//                                        $statusLabels = [
+//                                            'approved' => ['label' => 'อนุมัติ', 'class' => 'success'],
+//                                            'paid' => ['label' => 'จ่ายแล้ว', 'class' => 'info'],
+//                                        ];
+//                                        $status = $statusLabels[$advance->status] ?? ['label' => $advance->status, 'class' => 'secondary'];
+//                                        ?>
+<!--                                        <span class="badge badge---><?php //= $status['class'] ?><!--">--><?php //= $status['label'] ?><!--</span>-->
+<!--                                    </td>-->
                                 </tr>
                             <?php endforeach; ?>
                             <?php if (empty($summary['advances'])): ?>
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted">ไม่มีรายการ</td>
+                                    <td colspan="3" class="text-center text-muted">ไม่มีรายการ</td>
                                 </tr>
                             <?php endif; ?>
                             </tbody>
