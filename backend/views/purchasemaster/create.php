@@ -18,6 +18,8 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card-body">
             <?= $this->render('_form', [
                 'model' => $model,
+                'model_deposit_all'=> null,
+                'model_deposit_line_all'=> null,
             ]) ?>
         </div>
     </div>

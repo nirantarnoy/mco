@@ -19,9 +19,26 @@ $paymentMethodList = ArrayHelper::map(
     'id',
     'name'
 );
+
 ?>
 
     <div class="purch-payment-form">
+        <!-- Flash Messages -->
+        <?php if (\Yii::$app->session->hasFlash('success')): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                <?= \Yii::$app->session->getFlash('success') ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+
+        <?php if (\Yii::$app->session->hasFlash('error')): ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <?= \Yii::$app->session->getFlash('error') ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
 
         <?php $form = ActiveForm::begin([
             'id' => 'purch-payment-form',
@@ -215,6 +232,48 @@ $paymentMethodList = ArrayHelper::map(
                         </tfoot>
                     </table>
                 </div>
+            </div>
+        </div>
+        <br/>
+        <div class="label">
+            <h4>เอกสารแนบ</h4>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <table class="table table-bordered table-striped" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th style="width: 5%;text-align: center">#</th>
+                        <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
+                        <th style="width: 50%;text-align: center">ประเภทเอกสาร</th>
+                        <th style="width: 10%;text-align: center">ดูเอกสาร</th>
+                        <th style="width: 5%;text-align: center">-</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if ($model_doc != null): ?>
+
+                        <?php foreach ($model_doc as $key => $value): ?>
+                            <tr>
+                                <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
+                                <td><?= $value->doc_name ?></td>
+                                <td><?= \backend\helpers\PurchDocType::getTypeById($value->doc_type_id) ?></td>
+                                <td style="text-align: center">
+                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $value->doc_name ?>"
+                                       target="_blank">
+                                        ดูเอกสาร
+                                    </a>
+                                </td>
+                                <td style="text-align: center">
+                                    <div class="btn btn-danger" data-var="<?= trim($value->doc_name) ?>"
+                                         onclick="delete_doc($(this))">ลบ
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
 

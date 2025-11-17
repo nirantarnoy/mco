@@ -16,12 +16,14 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use yii\web\UploadedFile;
 
 /**
  * PurchaseMasterController implements the CRUD actions for PurchaseMaster model.
  */
 class PurchasemasterController extends Controller
 {
+    public $enableCsrfValidation = false;
     /**
      * @inheritDoc
      */
@@ -159,11 +161,20 @@ class PurchasemasterController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $model_deposit_all = \backend\models\PurchNonePrDeposit::find()->where(['purchase_master_id'=>$id])->one();
+        $model_deposit_line_all = null;
+        if($model_deposit_all){
+            $model_deposit_line_all = \backend\models\PurchNonePrDepositLine::find()->where(['purch_none_pr_deposit_id'=>$model_deposit_all->id])->one();
+        }
 
         if ($this->request->isPost) {
             $transaction = Yii::$app->db->beginTransaction();
             try {
                 if ($model->load($this->request->post())) {
+                    $deposit_date = \Yii::$app->request->post('deposit_date');
+                    $receive_date = \Yii::$app->request->post('deposit_receive_date');
+                    $deposit_amount = \Yii::$app->request->post('deposit_amount');
+                    $deposit_doc = UploadedFile::getInstanceByName('deposit_doc');
 
                     // บันทึก Master
                     if ($model->save()) {
@@ -201,6 +212,104 @@ class PurchasemasterController extends Controller
                         $model->calculateTotals();
                         $model->save(false);
 
+                        // upload
+
+                        $uploaded = UploadedFile::getInstancesByName('file_acknowledge_doc');
+                        $uploaded1 = UploadedFile::getInstancesByName('file_invoice_doc');
+                        $uploaded2 = UploadedFile::getInstancesByName('file_slip_doc');
+                        if (!empty($uploaded)) {
+                            $loop = 0;
+                            foreach ($uploaded as $file) {
+                                $upfiles = "purch_none_pr_" . time()."_".$loop . "." . $file->getExtension();
+                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
+                                    $model_doc = new \common\models\PurchNonePrDoc();
+                                    $model_doc->purchase_master_id = $id;
+                                    $model_doc->doc_name = $upfiles;
+                                    $model_doc->doc_type_id = 1;
+                                    $model_doc->created_by = \Yii::$app->user->id;
+                                    $model_doc->created_at = time();
+                                    $model_doc->save(false);
+                                }
+                                $loop++;
+                            }
+                        }
+                        if (!empty($uploaded1)) {
+                            $loop = 0;
+                            foreach ($uploaded1 as $file) {
+                                $upfiles = "purch_none_pr" . time()."_".$loop . "." . $file->getExtension();
+                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
+                                    $model_doc = new \common\models\PurchNonePrDoc();
+                                    $model_doc->purchase_master_id = $id;
+                                    $model_doc->doc_name = $upfiles;
+                                    $model_doc->doc_type_id = 2;
+                                    $model_doc->created_by = \Yii::$app->user->id;
+                                    $model_doc->created_at = time();
+                                    $model_doc->save(false);
+                                }
+                                $loop++;
+                            }
+                        }
+                        if (!empty($uploaded2)) {
+                            $loop = 0;
+                            foreach ($uploaded2 as $file) {
+                                $upfiles = "purch_none_pr_" . time()."_".$loop . "." . $file->getExtension();
+                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
+                                    $model_doc = new \common\models\PurchNonePrDoc();
+                                    $model_doc->purchase_master_id = $id;
+                                    $model_doc->doc_name = $upfiles;
+                                    $model_doc->doc_type_id = 3;
+                                    $model_doc->created_by = \Yii::$app->user->id;
+                                    $model_doc->created_at = time();
+                                    $model_doc->save(false);
+                                }
+                                $loop++;
+                            }
+                        }
+
+                        if($model->is_deposit ==1){ // มีมัดจำ
+                            if($deposit_amount > 0){
+                                $ch = \backend\models\PurchNonePrDeposit::find()->where(['purchase_master_id'=>$model->id])->one();
+                                if($ch){
+                                    \backend\models\PurchNonePrDepositLine::deleteAll(['purch_none_pr_deposit_id'=>$ch->id]);
+                                    $ch->delete();
+                                }
+
+                                $model_purch_deposit = new \backend\models\PurchNonePrDeposit();
+                                $model_purch_deposit->trans_date = date('Y-m-d H:i:s',strtotime($deposit_date));
+                                $model_purch_deposit->purchase_master_id = $model->id;
+                                $model_purch_deposit->status = 0;
+                                $model_purch_deposit->created_by = \Yii::$app->user->id;
+                                $model_purch_deposit->created_at = time();
+                                if($model_purch_deposit->save(false)){
+                                    if(!empty($deposit_doc)){
+                                        $file = 'purch_none_pr_deposit_'.time().'_'.($deposit_doc->getExtension());
+                                        $deposit_doc->saveAs('uploads/purch_doc/' .$file);
+
+                                        $model_purch_deposit_line = new \backend\models\PurchNonePrDepositLine();
+                                        $model_purch_deposit_line->purch_none_pr_deposit_id = $model_purch_deposit->id;
+                                        $model_purch_deposit_line->deposit_date = date('Y-m-d H:i:s',strtotime($deposit_date));
+                                        $model_purch_deposit_line->deposit_amount = (double)$deposit_amount;
+                                        $model_purch_deposit_line->deposit_doc = $file;
+                                        $model_purch_deposit_line->save(false);
+                                    }
+                                }
+                            }
+                        }else{ // ไม่มีมัดจำให้เคลียร์
+                            $model_deposit = \backend\models\PurchNonePrDeposit::find()->where(['purchase_master_id'=>$id])->one();
+                            if($model_deposit){
+                                $model_deposit_line = \backend\models\PurchNonePrDepositLine::find()->where(['purch_none_pr_deposit_id'=>$model_deposit->id])->all();
+                                if(!empty($model_deposit_line)){
+                                    foreach($model_deposit_line as $model_deposit_line){
+                                        if(file_exists('uploads/purch_doc/'.$model_deposit_line->deposit_doc)){
+                                            unlink('uploads/purch_doc/'.$model_deposit_line->deposit_doc);
+                                        }
+                                        $model_deposit_line->delete();
+                                    }
+                                }
+                                $model_deposit->delete();
+                            }
+                        }
+
                         $transaction->commit();
 
                         Yii::$app->session->setFlash('success', 'แก้ไขข้อมูลเรียบร้อยแล้ว');
@@ -215,6 +324,8 @@ class PurchasemasterController extends Controller
 
         return $this->render('update', [
             'model' => $model,
+            'model_deposit_all'=> $model_deposit_all,
+            'model_deposit_line_all'=> $model_deposit_line_all,
         ]);
     }
 
@@ -361,5 +472,17 @@ class PurchasemasterController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionDeleteDoc(){
+        $id = Yii::$app->request->post('id');
+        $photo_name = Yii::$app->request->post('doc_name');
+        if($id && $photo_name!=''){
+            if(file_exists('uploads/purch_doc/'.$photo_name)){
+                unlink('uploads/purch_doc/'.$photo_name);
+            }
+            \common\models\PurchNonePrDoc::deleteAll(['id' => $id]);
+        }
+        echo "OK";
     }
 }

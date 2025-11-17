@@ -76,7 +76,7 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             [['docdat', 'duedat', 'vatdat'], 'safe'],
             [['vatpr0', 'amount', 'unitpr', 'vat_percent', 'vat_amount', 'tax_percent', 'tax_amount', 'total_amount'], 'number'],
             [['remark'], 'string'],
-            [['status', 'created_at', 'updated_at', 'created_by', 'updated_by'], 'integer'],
+            [['status', 'created_at', 'updated_at', 'created_by', 'updated_by','is_deposit'], 'integer'],
             [['docnum', 'job_no', 'discod', 'orgnum', 'refnum', 'disc'], 'string', 'max' => 50],
             [['supcod', 'taxid'], 'string', 'max' => 20],
             [['supnam', 'addr01', 'addr02', 'addr03'], 'string', 'max' => 255],

@@ -1,5 +1,6 @@
 <?php
 
+use kartik\date\DatePicker;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 use yii\helpers\Url;
@@ -32,7 +33,7 @@ $this->registerCss("
     background: #e8e8e8;
 }
 ");
-
+$model_doc = \common\models\PurchNonePrDoc::find()->where(['purchase_master_id' => $model->id])->all();
 $this->registerJs("
 var detailRowIndex = 0;
 
@@ -225,10 +226,25 @@ $(document).ready(function() {
 ?>
 
 <div class="purchase-master-form">
+    <!-- Flash Messages -->
+    <?php if (\Yii::$app->session->hasFlash('success')): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <?= \Yii::$app->session->getFlash('success') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
 
+    <?php if (\Yii::$app->session->hasFlash('error')): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <?= \Yii::$app->session->getFlash('error') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
     <?php $form = ActiveForm::begin([
         'id' => 'purchase-form',
-        'options' => ['class' => 'form-horizontal'],
+        'options' => ['class' => 'form-horizontal','enctype' => 'multipart/form-data'],
     ]); ?>
 
     <div class="row">
@@ -477,6 +493,191 @@ $(document).ready(function() {
         </div>
     </div>
 
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="card-title">ค่ามัดจำ</h6>
+                    <div class="row">
+                        <div class="col-lg-3">
+                            <?php echo $form->field($model, 'is_deposit')->widget(\toxor88\switchery\Switchery::className(), ['options' => ['label' => '', 'class' => 'form-control']])->label(false) ?>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-3">
+                            <label for="">วันที่</label>
+                            <?php
+                            echo DatePicker::widget([
+                                'name' => 'deposit_date',
+                                'value' => $model_deposit_all != null ? date('Y-m-d', strtotime($model_deposit_all->trans_date)) : date('Y-m-d'),
+                                'type' => DatePicker::TYPE_COMPONENT_PREPEND,
+                                'options' => [''],
+                                'pluginOptions' => [
+                                    'autoclose' => true,
+                                    'format' => 'yyyy-mm-dd',
+                                ]
+                            ]);
+                            ?>
+                        </div>
+                        <div class="col-lg-3">
+                            <label for="">จำนวนเงินมัดจำ</label>
+                            <input type="number" class="form-control" name="deposit_amount" min="0"
+                                   value="<?= $model_deposit_line_all != null ? $model_deposit_line_all->deposit_amount : 0 ?>">
+                        </div>
+                        <div class="col-lg-3">
+                            <label for="">เอกสารแนบ</label>
+                            <input type="file" class="form-control" name="deposit_doc">
+                        </div>
+                        <div class="col-lg-3">
+                            <label for="">เอกสารที่แนบแล้ว</label><br />
+                            <?php
+                            $deposit_doc_show = '';
+                            if ($model_deposit_line_all != null) {
+                                $deposit_doc_show = $model_deposit_line_all->deposit_doc;
+                            }
+                            ?>
+                            <?php if ($deposit_doc_show!=''): ?>
+                                <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $deposit_doc_show ?>"
+                                   target="_blank">
+                                    ดูเอกสาร
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-lg-3">
+                            <label for="">วันที่รับมัดจำคืน</label>
+                            <?php
+                            echo DatePicker::widget([
+                                'name' => 'deposit_receive_date',
+                                'value' => $model_deposit_line_all != null ? date('Y-m-d', strtotime($model_deposit_line_all->receive_date)) : date('Y-m-d'),
+                                'type' => DatePicker::TYPE_COMPONENT_PREPEND,
+                                'options' => [''],
+                                'pluginOptions' => [
+                                    'autoclose' => true,
+                                    'format' => 'yyyy-mm-dd',
+                                ]
+                            ]);
+                            ?>
+                        </div>
+                        <div class="col-lg-3">
+                            <label for="">จำนวนเงินมัดจำ</label>
+                            <?php
+                            $rec_amount = 0;
+                            if ($model_deposit_line_all != null) {
+                                if ($model_deposit_line_all->receive_doc != null) {
+                                    $rec_amount = $model_deposit_line_all->deposit_amount;
+                                }
+                            }
+                            ?>
+                            <input type="number" class="form-control" name="deposit_receive_amount" min="0"
+                                   value="<?= $rec_amount ?>">
+                        </div>
+                        <div class="col-lg-3">
+                            <label for="">เอกสารแนบ</label>
+                            <input type="file" class="form-control" name="deposit_receive_doc">
+                        </div>
+                        <div class="col-lg-3">
+                            <label for="">เอกสารที่แนบแล้ว</label><br />
+                            <?php
+                            $receive_doc_show = '';
+                            if ($model_deposit_line_all != null) {
+                                $receive_doc_show = $model_deposit_line_all->receive_doc;
+                            }
+                            ?>
+                            <?php if ($receive_doc_show!=''): ?>
+                                <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $receive_doc_show ?>"
+                                   target="_blank">
+                                    ดูเอกสาร
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group mt-3">
+        <br/>
+        <div class="row">
+            <div class="col-lg-4">
+                <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <label for="">เอกสารแนบ PO Acknowledge</label>
+                            <input type="file" name="file_acknowledge_doc" multiple>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <label for="">เอกสารแนบ ใบกำกับภาษี</label>
+                            <input type="file" name="file_invoice_doc" multiple>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <label for="">เอกสารแนบ เอกสารจ่ายเงิน</label>
+                            <input type="file" name="file_slip_doc" multiple>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <br/>
+    <div class="label">
+        <h4>เอกสารแนบ</h4>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <table class="table table-bordered table-striped" style="width: 100%">
+                <thead>
+                <tr>
+                    <th style="width: 5%;text-align: center">#</th>
+                    <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
+                    <th style="width: 50%;text-align: center">ประเภทเอกสาร</th>
+                    <th style="width: 10%;text-align: center">ดูเอกสาร</th>
+                    <th style="width: 5%;text-align: center">-</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php if ($model_doc != null): ?>
+
+                    <?php foreach ($model_doc as $key => $value): ?>
+                        <tr>
+                            <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
+                            <td><?= $value->doc_name ?></td>
+                            <td><?= \backend\helpers\PurchDocType::getTypeById($value->doc_type_id) ?></td>
+                            <td style="text-align: center">
+                                <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $value->doc_name ?>"
+                                   target="_blank">
+                                    ดูเอกสาร
+                                </a>
+                            </td>
+                            <td style="text-align: center">
+                                <div class="btn btn-danger" data-value="<?=$value->id;?>" data-var="<?= trim($value->doc_name) ?>"
+                                     onclick="delete_doc($(this))">ลบ
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <div class="form-group mt-3">
         <?= Html::submitButton('<i class="fas fa-save"></i> บันทึก', ['class' => 'btn btn-success']) ?>
         <?= Html::a('<i class="fas fa-times"></i> ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
@@ -485,3 +686,35 @@ $(document).ready(function() {
     <?php ActiveForm::end(); ?>
 
 </div>
+
+<?php
+$url_to_delete_doc = Url::to(['purchasemaster/delete-doc'],true);
+$js=<<<JS
+$(function(){
+    
+});
+function delete_doc(e){
+    var id = e.attr("data-value");
+    var doc_name = e.attr("data-var");
+    if(id){
+        if(confirm('ต้องการลบไฟล์ใช่หรือไม่?')){
+            $.ajax({
+                 url:'$url_to_delete_doc',
+                 type:'POST',
+                 dataType:'html',
+                 data:{id:id,doc_name:doc_name},
+                 success:function(data){
+                   //  alert();
+                     console.log(data);
+                     location.reload();
+                 },
+                 error:function(jqXHR, textStatus, errorThrown){
+                     console.log(jqXHR, textStatus, errorThrown);
+                 }
+            });
+        }
+    }
+}
+JS;
+$this->registerJs($js,static::POS_END);
+?>
