@@ -19,6 +19,7 @@ $this->params['breadcrumbs'][] = $this->title;
         'model' => $model,
         'model_deposit_all' => null,
         'model_deposit_line_all' => null,
+        'model_purch_vendor_bill' => null,
     ]) ?>
 
 </div>

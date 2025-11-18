@@ -346,7 +346,7 @@ class QuotationController extends Controller
 
             $model_job = new Job();
             $model_job->quotation_id = $model->id;
-            $model_job->job_no = Job::generateJobNo();
+            $model_job->job_no = $model->quotation_no; //Job::generateJobNo();
             $model_job->job_date = date('Y-m-d');
             $model_job->status = Job::JOB_STATUS_OPEN;
             $model_job->job_amount = $model->total_amount;

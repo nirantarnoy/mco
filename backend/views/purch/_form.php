@@ -811,14 +811,14 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <input type="file" class="form-control" name="deposit_doc">
                             </div>
                             <div class="col-lg-3">
-                                <label for="">เอกสารที่แนบแล้ว</label><br />
+                                <label for="">เอกสารที่แนบแล้ว</label><br/>
                                 <?php
                                 $deposit_doc_show = '';
                                 if ($model_deposit_line_all != null) {
                                     $deposit_doc_show = $model_deposit_line_all->deposit_doc;
                                 }
                                 ?>
-                                <?php if ($deposit_doc_show!=''): ?>
+                                <?php if ($deposit_doc_show != ''): ?>
                                     <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $deposit_doc_show ?>"
                                        target="_blank">
                                         ดูเอกสาร
@@ -861,14 +861,14 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <input type="file" class="form-control" name="deposit_receive_doc">
                             </div>
                             <div class="col-lg-3">
-                                <label for="">เอกสารที่แนบแล้ว</label><br />
+                                <label for="">เอกสารที่แนบแล้ว</label><br/>
                                 <?php
                                 $receive_doc_show = '';
                                 if ($model_deposit_line_all != null) {
                                     $receive_doc_show = $model_deposit_line_all->receive_doc;
                                 }
                                 ?>
-                                <?php if ($receive_doc_show!=''): ?>
+                                <?php if ($receive_doc_show != ''): ?>
                                     <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $receive_doc_show ?>"
                                        target="_blank">
                                         ดูเอกสาร
@@ -876,6 +876,64 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <?php endif; ?>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title">วางบิล Vendor</h6>
+                        <br />
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <label for="">วันที่วางบิล</label>
+                                <?php
+                                echo DatePicker::widget([
+                                    'name' => 'purch_bill_date',
+                                    'value' => $model_purch_vendor_bill != null ? date('m-d-Y', strtotime($model_purch_vendor_bill->bill_date)) : date('Y-m-d'),
+                                    'type' => DatePicker::TYPE_COMPONENT_PREPEND,
+                                    'options' => [''],
+                                    'pluginOptions' => [
+                                        'autoclose' => true,
+                                        'format' => 'yyyy-mm-dd',
+                                    ]
+                                ]);
+                                ?>
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">วันนัดรับเช็ค</label>
+                                <?php
+                                echo DatePicker::widget([
+                                    'name' => 'purch_vendor_bill_date',
+                                    'value' => $model_purch_vendor_bill != null ? date('m-d-Y', strtotime($model_purch_vendor_bill->appoinment_date)) : date('Y-m-d'),
+                                    'type' => DatePicker::TYPE_COMPONENT_PREPEND,
+                                    'options' => [''],
+                                    'pluginOptions' => [
+                                        'autoclose' => true,
+                                        'format' => 'yyyy-mm-dd',
+                                    ]
+                                ]);
+                                ?>
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">แนบเอกสารใบวางบิล</label>
+                                <input type="file" class="form-control" name="purch_vendor_bill_doc">
+                            </div>
+                            <div class="col-lg-3">
+                                <?php if ($model_purch_vendor_bill != null): ?>
+                                    <label for="">เอกสารที่แนบแล้ว</label><br/>
+                                    <?php if ($model_purch_vendor_bill->bill_doc != ''): ?>
+                                        <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $model_purch_vendor_bill->bill_doc ?>"
+                                           target="_blank">
+                                            ดูเอกสาร
+                                        </a>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>

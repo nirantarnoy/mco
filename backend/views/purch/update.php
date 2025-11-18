@@ -21,6 +21,7 @@ $this->params['breadcrumbs'][] = 'แก้ไข';
         'paymentLines' => $paymentLines,
         'model_deposit_all' => $model_deposit_all,
         'model_deposit_line_all' => $model_deposit_line_all,
+        'model_purch_vendor_bill' => $model_purch_vendor_bill
     ]) ?>
 
 </div>

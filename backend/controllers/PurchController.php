@@ -271,6 +271,8 @@ class PurchController extends Controller
             $model_deposit_line_all = \backend\models\PurchDepositLine::find()->where(['purch_deposit_id'=>$model_deposit_all->id])->one();
         }
 
+        $model_purch_vendor_bill = \common\models\PurchVendorBill::find()->where(['purch_id'=>$id])->one();
+
         // ดึงข้อมูล Payment Lines ที่เกี่ยวข้องกับ Purch นี้
         $paymentLines = null;
 //        $model_pay = \backend\models\PurchPayment::find()->where(['purch_id' => $id])->one();
@@ -289,6 +291,10 @@ class PurchController extends Controller
             $receive_date = \Yii::$app->request->post('deposit_receive_date');
             $deposit_amount = \Yii::$app->request->post('deposit_amount');
             $deposit_doc = UploadedFile::getInstanceByName('deposit_doc');
+
+            $purch_vendor_bill_date = \Yii::$app->request->post('purch_vendor_bill_date');
+            $purch_bill_date = \Yii::$app->request->post('purch_bill_date');
+            $purch_vendor_bill_doc = UploadedFile::getInstanceByName('purch_vendor_bill_doc');
 
             $purchLines = [];
             $valid = $model->validate();
@@ -496,6 +502,33 @@ class PurchController extends Controller
                             }
                         }
 
+                        if($purch_bill_date !=null && $purch_vendor_bill_date !=null){
+                           if(!empty($purch_vendor_bill_doc)){
+                               if(!empty($purch_vendor_bill_doc)){
+                                   $file = 'purch_vendor_bill_'.time().'_'.($purch_vendor_bill_doc->getExtension());
+                                   $purch_vendor_bill_doc->saveAs('uploads/purch_doc/' .$file);
+
+                                   $model_vendor_bill = \common\models\PurchVendorBill::find()->where(['purch_id'=>$id])->one();
+                                   if($model_vendor_bill){
+                                       if(file_exists('uploads/purch_doc/'.$model_vendor_bill->vendor_bill_doc)){
+                                           unlink('uploads/purch_doc/'.$model_vendor_bill->vendor_bill_doc);
+                                       }
+                                       $model_vendor_bill->bill_date = date('Y-m-d',strtotime($purch_bill_date));
+                                       $model_vendor_bill->appoinment_date = date('Y-m-d',strtotime($purch_vendor_bill_date));
+                                       $model_vendor_bill->bill_doc = $file;
+                                       $model_vendor_bill->save(false);
+                                   }else{
+                                       $model_vendor_bill = new \common\models\PurchVendorBill();
+                                       $model_vendor_bill->purch_id = $id;
+                                       $model_vendor_bill->bill_date = date('Y-m-d',strtotime($purch_bill_date));
+                                       $model_vendor_bill->appoinment_date = date('Y-m-d',strtotime($purch_vendor_bill_date));
+                                       $model_vendor_bill->bill_doc = $file;
+                                       $model_vendor_bill->save(false);
+                                   }
+                               }
+                           }
+                        }
+
 
                         $transaction->commit();
                         Yii::$app->session->setFlash('success', 'แก้ไขข้อมูลเรียบร้อยแล้ว');
@@ -515,6 +548,7 @@ class PurchController extends Controller
             'paymentLines' => $paymentLines,
             'model_deposit_all'=> $model_deposit_all,
             'model_deposit_line_all'=> $model_deposit_line_all,
+            'model_purch_vendor_bill' => $model_purch_vendor_bill
         ]);
     }
 

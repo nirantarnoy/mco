@@ -441,7 +441,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                 <div>เลขประจำตัวผู้เสียภาษี  0215543000985  </div>
                 <div>Tel : (038) 875258-9,0946984555</div>
                 <div>e-mail : info@thai-mco.com</div>
-                <div><strong>SUPPLIER : <?= Html::encode($purchase->vendor->name ?? '') ?></strong><br /><?= Html::encode($vendor_address) ?></div>
+                <div><strong>SUPPLIER : <?= Html::encode($purchase->vendor->name ?? '') ?></strong><br /><?= Html::encode($vendor_address) ?><br />TaxID : <?=$purchase->vendor->taxid?></div>
             </div>
         </div>
         <div style="flex: 1;">
