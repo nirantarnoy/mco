@@ -20,6 +20,8 @@ $paymentMethodList = ArrayHelper::map(
     'name'
 );
 
+//$model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])->all();
+
 ?>
 
     <div class="purch-payment-form">
@@ -234,48 +236,48 @@ $paymentMethodList = ArrayHelper::map(
                 </div>
             </div>
         </div>
-        <br/>
-        <div class="label">
-            <h4>เอกสารแนบ</h4>
-        </div>
-        <div class="row">
-            <div class="col-lg-12">
-                <table class="table table-bordered table-striped" style="width: 100%">
-                    <thead>
-                    <tr>
-                        <th style="width: 5%;text-align: center">#</th>
-                        <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
-                        <th style="width: 50%;text-align: center">ประเภทเอกสาร</th>
-                        <th style="width: 10%;text-align: center">ดูเอกสาร</th>
-                        <th style="width: 5%;text-align: center">-</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <?php if ($model_doc != null): ?>
-
-                        <?php foreach ($model_doc as $key => $value): ?>
-                            <tr>
-                                <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
-                                <td><?= $value->doc_name ?></td>
-                                <td><?= \backend\helpers\PurchDocType::getTypeById($value->doc_type_id) ?></td>
-                                <td style="text-align: center">
-                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $value->doc_name ?>"
-                                       target="_blank">
-                                        ดูเอกสาร
-                                    </a>
-                                </td>
-                                <td style="text-align: center">
-                                    <div class="btn btn-danger" data-var="<?= trim($value->doc_name) ?>"
-                                         onclick="delete_doc($(this))">ลบ
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+<!--        <br/>-->
+<!--        <div class="label">-->
+<!--            <h4>เอกสารแนบ</h4>-->
+<!--        </div>-->
+<!--        <div class="row">-->
+<!--            <div class="col-lg-12">-->
+<!--                <table class="table table-bordered table-striped" style="width: 100%">-->
+<!--                    <thead>-->
+<!--                    <tr>-->
+<!--                        <th style="width: 5%;text-align: center">#</th>-->
+<!--                        <th style="width: 50%;text-align: center">ชื่อไฟล์</th>-->
+<!--                        <th style="width: 50%;text-align: center">ประเภทเอกสาร</th>-->
+<!--                        <th style="width: 10%;text-align: center">ดูเอกสาร</th>-->
+<!--                        <th style="width: 5%;text-align: center">-</th>-->
+<!--                    </tr>-->
+<!--                    </thead>-->
+<!--                    <tbody>-->
+<!--                    --><?php //if ($model_doc != null): ?>
+<!---->
+<!--                        --><?php //foreach ($model_doc as $key => $value): ?>
+<!--                            <tr>-->
+<!--                                <td style="width: 10px;text-align: center">--><?php //= $key + 1 ?><!--</td>-->
+<!--                                <td>--><?php //= $value->doc_name ?><!--</td>-->
+<!--                                <td>--><?php //= \backend\helpers\PurchDocType::getTypeById($value->doc_type_id) ?><!--</td>-->
+<!--                                <td style="text-align: center">-->
+<!--                                    <a href="--><?php //= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $value->doc_name ?><!--"-->
+<!--                                       target="_blank">-->
+<!--                                        ดูเอกสาร-->
+<!--                                    </a>-->
+<!--                                </td>-->
+<!--                                <td style="text-align: center">-->
+<!--                                    <div class="btn btn-danger" data-var="--><?php //= trim($value->doc_name) ?><!--"-->
+<!--                                         onclick="delete_doc($(this))">ลบ-->
+<!--                                    </div>-->
+<!--                                </td>-->
+<!--                            </tr>-->
+<!--                        --><?php //endforeach; ?>
+<!--                    --><?php //endif; ?>
+<!--                    </tbody>-->
+<!--                </table>-->
+<!--            </div>-->
+<!--        </div>-->
 
         <div class="form-group mt-3">
             <?= Html::submitButton('<i class="fas fa-save"></i> บันทึก', ['class' => 'btn btn-success', 'id' => 'submit-btn']) ?>
