@@ -1,4 +1,5 @@
 <?php
+
 namespace backend\controllers;
 
 use app\behaviors\ActionLogBehavior;
@@ -22,6 +23,7 @@ use yii\web\UploadedFile;
 class PurchController extends Controller
 {
     public $enableCsrfValidation = false;
+
     /**
      * {@inheritdoc}
      */
@@ -36,7 +38,7 @@ class PurchController extends Controller
             ],
             'actionLog' => [
                 'class' => ActionLogBehavior::class,
-                'actions' => ['create', 'update', 'delete', 'approve','reject','receive','cancel-receive','view','print'], // Log เฉพาะ actions เหล่านี้
+                'actions' => ['create', 'update', 'delete', 'approve', 'reject', 'receive', 'cancel-receive', 'view', 'print'], // Log เฉพาะ actions เหล่านี้
             ],
         ];
     }
@@ -76,7 +78,7 @@ class PurchController extends Controller
         $payment_date = '';
         $paymentLines = null;
         $model_pay = \backend\models\PurchPayment::find()->where(['purch_id' => $id])->one();
-        if($model_pay){
+        if ($model_pay) {
             $payment_date = $model_pay->trans_date;
             $paymentLines = \backend\models\PurchPaymentLine::find()
                 ->where(['purch_payment_id' => $model_pay->id])
@@ -94,7 +96,7 @@ class PurchController extends Controller
     {
         $payment_date = '';
         $model_pay = \backend\models\PurchPayment::find()->where(['purch_id' => $id])->one();
-        if($model_pay) {
+        if ($model_pay) {
             $payment_date = $model_pay->trans_date;
         }
         $paymentLine = \backend\models\PurchPaymentLine::findOne($id);
@@ -162,7 +164,7 @@ class PurchController extends Controller
                         if (!empty($uploaded)) {
                             $loop = 0;
                             foreach ($uploaded as $file) {
-                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
+                                $upfiles = "purch_" . time() . "_" . $loop . "." . $file->getExtension();
                                 if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
                                     $model_doc = new \common\models\PurchReqDoc();
                                     $model_doc->purch_req_id = $id;
@@ -178,7 +180,7 @@ class PurchController extends Controller
                         if (!empty($uploaded1)) {
                             $loop = 0;
                             foreach ($uploaded1 as $file) {
-                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
+                                $upfiles = "purch_" . time() . "_" . $loop . "." . $file->getExtension();
                                 if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
                                     $model_doc = new \common\models\PurchReqDoc();
                                     $model_doc->purch_req_id = $id;
@@ -194,7 +196,7 @@ class PurchController extends Controller
                         if (!empty($uploaded2)) {
                             $loop = 0;
                             foreach ($uploaded2 as $file) {
-                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
+                                $upfiles = "purch_" . time() . "_" . $loop . "." . $file->getExtension();
                                 if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
                                     $model_doc = new \common\models\PurchReqDoc();
                                     $model_doc->purch_req_id = $id;
@@ -208,21 +210,21 @@ class PurchController extends Controller
                             }
                         }
 
-                        if($model->is_deposit ==1){
-                            if($deposit_amount > 0){
+                        if ($model->is_deposit == 1) {
+                            if ($deposit_amount > 0) {
                                 $model_purch_deposit = new \backend\models\PurchDeposit();
                                 $model_purch_deposit->purch_id = $model->id;
                                 $model_purch_deposit->status = 0;
                                 $model_purch_deposit->created_by = \Yii::$app->user->id;
                                 $model_purch_deposit->created_at = time();
-                                if($model_purch_deposit->save(false)){
-                                    if(!empty($deposit_doc)){
-                                        $file = 'purch_deposit_'.time().'_'.($deposit_doc->getExtension());
-                                       $deposit_doc->saveAs('uploads/purch_doc/' .$file);
+                                if ($model_purch_deposit->save(false)) {
+                                    if (!empty($deposit_doc)) {
+                                        $file = 'purch_deposit_' . time() . '_' . ($deposit_doc->getExtension());
+                                        $deposit_doc->saveAs('uploads/purch_doc/' . $file);
 
                                         $model_purch_deposit_line = new \backend\models\PurchDepositLine();
                                         $model_purch_deposit_line->purch_deposit_id = $model_purch_deposit->id;
-                                        $model_purch_deposit_line->deposit_date = date('Y-m-d H:i:s',strtotime($deposit_date));
+                                        $model_purch_deposit_line->deposit_date = date('Y-m-d H:i:s', strtotime($deposit_date));
                                         $model_purch_deposit_line->deposit_amount = (double)$deposit_amount;
                                         $model_purch_deposit_line->deposit_doc = $file;
                                         $model_purch_deposit_line->save(false);
@@ -265,13 +267,13 @@ class PurchController extends Controller
             $model->purchLines = [new PurchLine()];
         }
 
-        $model_deposit_all = \backend\models\PurchDeposit::find()->where(['purch_id'=>$id])->one();
+        $model_deposit_all = \backend\models\PurchDeposit::find()->where(['purch_id' => $id])->one();
         $model_deposit_line_all = null;
-        if($model_deposit_all){
-            $model_deposit_line_all = \backend\models\PurchDepositLine::find()->where(['purch_deposit_id'=>$model_deposit_all->id])->one();
+        if ($model_deposit_all) {
+            $model_deposit_line_all = \backend\models\PurchDepositLine::find()->where(['purch_deposit_id' => $model_deposit_all->id])->one();
         }
 
-        $model_purch_vendor_bill = \common\models\PurchVendorBill::find()->where(['purch_id'=>$id])->one();
+        $model_purch_vendor_bill = \common\models\PurchVendorBill::find()->where(['purch_id' => $id])->one();
 
         // ดึงข้อมูล Payment Lines ที่เกี่ยวข้องกับ Purch นี้
         $paymentLines = null;
@@ -365,9 +367,9 @@ class PurchController extends Controller
 
                         $vatPercent = isset($model->vat_percent) ? $model->vat_percent : 7;
                         if ($vatPercent > 0 && $model->is_vat == 1) {
-                            if($custom_vat_amount !=null){
+                            if ($custom_vat_amount != null) {
                                 $vatAmount = $custom_vat_amount;
-                            }else{
+                            } else {
                                 $vatAmount = ($afterDiscountAmount * $vatPercent) / 100;
                             }
 
@@ -375,15 +377,15 @@ class PurchController extends Controller
 
                         // คำนวน WHT
 
-                        if($model->whd_tax_per > 0){
-                            if($customer_tax_amount !=null){
+                        if ($model->whd_tax_per > 0) {
+                            if ($customer_tax_amount != null) {
                                 $tax_amount = $customer_tax_amount;
-                            }else{
+                            } else {
                                 $tax_amount = ($afterDiscountAmount * $model->whd_tax_per) / 100;
                             }
 
-                        }else{
-                            if($customer_tax_amount !=null){
+                        } else {
+                            if ($customer_tax_amount != null) {
                                 $tax_amount = $customer_tax_amount;
                             }
                         }
@@ -403,82 +405,82 @@ class PurchController extends Controller
                         }
 
 
-                        // upload
+//                        // upload
+//
+//                        $uploaded = UploadedFile::getInstancesByName('file_acknowledge_doc');
+//                        $uploaded1 = UploadedFile::getInstancesByName('file_invoice_doc');
+//                        $uploaded2 = UploadedFile::getInstancesByName('file_slip_doc');
+//                        if (!empty($uploaded)) {
+//                            $loop = 0;
+//                            foreach ($uploaded as $file) {
+//                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
+//                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
+//                                    $model_doc = new \common\models\PurchDoc();
+//                                    $model_doc->purch_id = $id;
+//                                    $model_doc->doc_name = $upfiles;
+//                                    $model_doc->doc_type_id = 1;
+//                                    $model_doc->created_by = \Yii::$app->user->id;
+//                                    $model_doc->created_at = time();
+//                                    $model_doc->save(false);
+//                                }
+//                                $loop++;
+//                            }
+//                        }
+//                        if (!empty($uploaded1)) {
+//                            $loop = 0;
+//                            foreach ($uploaded1 as $file) {
+//                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
+//                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
+//                                    $model_doc = new \common\models\PurchDoc();
+//                                    $model_doc->purch_id = $id;
+//                                    $model_doc->doc_name = $upfiles;
+//                                    $model_doc->doc_type_id = 2;
+//                                    $model_doc->created_by = \Yii::$app->user->id;
+//                                    $model_doc->created_at = time();
+//                                    $model_doc->save(false);
+//                                }
+//                                $loop++;
+//                            }
+//                        }
+//                        if (!empty($uploaded2)) {
+//                            $loop = 0;
+//                            foreach ($uploaded2 as $file) {
+//                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
+//                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
+//                                    $model_doc = new \common\models\PurchDoc();
+//                                    $model_doc->purch_id = $id;
+//                                    $model_doc->doc_name = $upfiles;
+//                                    $model_doc->doc_type_id = 3;
+//                                    $model_doc->created_by = \Yii::$app->user->id;
+//                                    $model_doc->created_at = time();
+//                                    $model_doc->save(false);
+//                                }
+//                                $loop++;
+//                            }
+//                        }
 
-                        $uploaded = UploadedFile::getInstancesByName('file_acknowledge_doc');
-                        $uploaded1 = UploadedFile::getInstancesByName('file_invoice_doc');
-                        $uploaded2 = UploadedFile::getInstancesByName('file_slip_doc');
-                        if (!empty($uploaded)) {
-                            $loop = 0;
-                            foreach ($uploaded as $file) {
-                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
-                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
-                                    $model_doc = new \common\models\PurchDoc();
-                                    $model_doc->purch_id = $id;
-                                    $model_doc->doc_name = $upfiles;
-                                    $model_doc->doc_type_id = 1;
-                                    $model_doc->created_by = \Yii::$app->user->id;
-                                    $model_doc->created_at = time();
-                                    $model_doc->save(false);
-                                }
-                                $loop++;
-                            }
-                        }
-                        if (!empty($uploaded1)) {
-                            $loop = 0;
-                            foreach ($uploaded1 as $file) {
-                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
-                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
-                                    $model_doc = new \common\models\PurchDoc();
-                                    $model_doc->purch_id = $id;
-                                    $model_doc->doc_name = $upfiles;
-                                    $model_doc->doc_type_id = 2;
-                                    $model_doc->created_by = \Yii::$app->user->id;
-                                    $model_doc->created_at = time();
-                                    $model_doc->save(false);
-                                }
-                                $loop++;
-                            }
-                        }
-                        if (!empty($uploaded2)) {
-                            $loop = 0;
-                            foreach ($uploaded2 as $file) {
-                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
-                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
-                                    $model_doc = new \common\models\PurchDoc();
-                                    $model_doc->purch_id = $id;
-                                    $model_doc->doc_name = $upfiles;
-                                    $model_doc->doc_type_id = 3;
-                                    $model_doc->created_by = \Yii::$app->user->id;
-                                    $model_doc->created_at = time();
-                                    $model_doc->save(false);
-                                }
-                                $loop++;
-                            }
-                        }
-
-                        if($model->is_deposit ==1){ // มีมัดจำ
-                            if($deposit_amount > 0){
-                                $ch = \backend\models\PurchDeposit::find()->where(['purch_id'=>$model->id])->one();
-                                if($ch){
-                                    \backend\models\PurchDepositLine::deleteAll(['purch_deposit_id'=>$ch->id]);
+                        if ($model->is_deposit == 1) { // มีมัดจำ
+                            if ($deposit_amount > 0) {
+                                $ch = \backend\models\PurchDeposit::find()->where(['purch_id' => $model->id])->one();
+                                if ($ch) {
+                                    \backend\models\PurchDepositLine::deleteAll(['purch_deposit_id' => $ch->id]);
                                     $ch->delete();
                                 }
 
                                 $model_purch_deposit = new \backend\models\PurchDeposit();
-                                $model_purch_deposit->trans_date = date('Y-m-d H:i:s',strtotime($deposit_date));
+                                $model_purch_deposit->trans_date = date('Y-m-d H:i:s', strtotime($deposit_date));
                                 $model_purch_deposit->purch_id = $model->id;
                                 $model_purch_deposit->status = 0;
                                 $model_purch_deposit->created_by = \Yii::$app->user->id;
                                 $model_purch_deposit->created_at = time();
-                                if($model_purch_deposit->save(false)){
-                                    if(!empty($deposit_doc)){
-                                        $file = 'purch_deposit_'.time().'_'.($deposit_doc->getExtension());
-                                        $deposit_doc->saveAs('uploads/purch_doc/' .$file);
+                                if ($model_purch_deposit->save(false)) {
+                                    if (!empty($deposit_doc)) {
+                                        $file = 'purch_deposit_' . time() . '_' . ($deposit_doc->getExtension());
+                                        $deposit_doc->saveAs('uploads/purch_doc/' . $file);
 
                                         $model_purch_deposit_line = new \backend\models\PurchDepositLine();
                                         $model_purch_deposit_line->purch_deposit_id = $model_purch_deposit->id;
-                                        $model_purch_deposit_line->deposit_date = date('Y-m-d H:i:s',strtotime($deposit_date));
+                                        $model_purch_deposit_line->deposit_date = date('Y-m-d H:i:s', strtotime($deposit_date));
                                         $model_purch_deposit_line->deposit_amount = (double)$deposit_amount;
                                         $model_purch_deposit_line->deposit_doc = $file;
                                         $model_purch_deposit_line->save(false);
@@ -486,14 +488,14 @@ class PurchController extends Controller
 
                                 }
                             }
-                        }else{ // ไม่มีมัดจำให้เคลียร์
-                            $model_deposit = \backend\models\PurchDeposit::find()->where(['purch_id'=>$id])->one();
-                            if($model_deposit){
-                                $model_deposit_line = \backend\models\PurchDepositLine::find()->where(['purch_deposit_id'=>$model_deposit->id])->all();
-                                if(!empty($model_deposit_line)){
-                                    foreach($model_deposit_line as $model_deposit_line){
-                                        if(file_exists('uploads/purch_doc/'.$model_deposit_line->deposit_doc)){
-                                            unlink('uploads/purch_doc/'.$model_deposit_line->deposit_doc);
+                        } else { // ไม่มีมัดจำให้เคลียร์
+                            $model_deposit = \backend\models\PurchDeposit::find()->where(['purch_id' => $id])->one();
+                            if ($model_deposit) {
+                                $model_deposit_line = \backend\models\PurchDepositLine::find()->where(['purch_deposit_id' => $model_deposit->id])->all();
+                                if (!empty($model_deposit_line)) {
+                                    foreach ($model_deposit_line as $model_deposit_line) {
+                                        if (file_exists('uploads/purch_doc/' . $model_deposit_line->deposit_doc)) {
+                                            unlink('uploads/purch_doc/' . $model_deposit_line->deposit_doc);
                                         }
                                         $model_deposit_line->delete();
                                     }
@@ -502,31 +504,31 @@ class PurchController extends Controller
                             }
                         }
 
-                        if($purch_bill_date !=null && $purch_vendor_bill_date !=null){
-                           if(!empty($purch_vendor_bill_doc)){
-                               if(!empty($purch_vendor_bill_doc)){
-                                   $file = 'purch_vendor_bill_'.time().'_'.($purch_vendor_bill_doc->getExtension());
-                                   $purch_vendor_bill_doc->saveAs('uploads/purch_doc/' .$file);
+                        if ($purch_bill_date != null && $purch_vendor_bill_date != null) {
+                            if (!empty($purch_vendor_bill_doc)) {
+                                if (!empty($purch_vendor_bill_doc)) {
+                                    $file = 'purch_vendor_bill_' . time() . '_' . ($purch_vendor_bill_doc->getExtension());
+                                    $purch_vendor_bill_doc->saveAs('uploads/purch_doc/' . $file);
 
-                                   $model_vendor_bill = \common\models\PurchVendorBill::find()->where(['purch_id'=>$id])->one();
-                                   if($model_vendor_bill){
-                                       if(file_exists('uploads/purch_doc/'.$model_vendor_bill->vendor_bill_doc)){
-                                           unlink('uploads/purch_doc/'.$model_vendor_bill->vendor_bill_doc);
-                                       }
-                                       $model_vendor_bill->bill_date = date('Y-m-d',strtotime($purch_bill_date));
-                                       $model_vendor_bill->appoinment_date = date('Y-m-d',strtotime($purch_vendor_bill_date));
-                                       $model_vendor_bill->bill_doc = $file;
-                                       $model_vendor_bill->save(false);
-                                   }else{
-                                       $model_vendor_bill = new \common\models\PurchVendorBill();
-                                       $model_vendor_bill->purch_id = $id;
-                                       $model_vendor_bill->bill_date = date('Y-m-d',strtotime($purch_bill_date));
-                                       $model_vendor_bill->appoinment_date = date('Y-m-d',strtotime($purch_vendor_bill_date));
-                                       $model_vendor_bill->bill_doc = $file;
-                                       $model_vendor_bill->save(false);
-                                   }
-                               }
-                           }
+                                    $model_vendor_bill = \common\models\PurchVendorBill::find()->where(['purch_id' => $id])->one();
+                                    if ($model_vendor_bill) {
+                                        if (file_exists('uploads/purch_doc/' . $model_vendor_bill->vendor_bill_doc)) {
+                                            unlink('uploads/purch_doc/' . $model_vendor_bill->vendor_bill_doc);
+                                        }
+                                        $model_vendor_bill->bill_date = date('Y-m-d', strtotime($purch_bill_date));
+                                        $model_vendor_bill->appoinment_date = date('Y-m-d', strtotime($purch_vendor_bill_date));
+                                        $model_vendor_bill->bill_doc = $file;
+                                        $model_vendor_bill->save(false);
+                                    } else {
+                                        $model_vendor_bill = new \common\models\PurchVendorBill();
+                                        $model_vendor_bill->purch_id = $id;
+                                        $model_vendor_bill->bill_date = date('Y-m-d', strtotime($purch_bill_date));
+                                        $model_vendor_bill->appoinment_date = date('Y-m-d', strtotime($purch_vendor_bill_date));
+                                        $model_vendor_bill->bill_doc = $file;
+                                        $model_vendor_bill->save(false);
+                                    }
+                                }
+                            }
                         }
 
 
@@ -538,21 +540,21 @@ class PurchController extends Controller
                     $transaction->rollBack();
                     Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
                 }
-            }else{
-                Yii::$app->session->setFlash('error','เกิดข้อผิดพลาด');
+            } else {
+                Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด');
             }
         }
 
         return $this->render('update', [
             'model' => $model,
             'paymentLines' => $paymentLines,
-            'model_deposit_all'=> $model_deposit_all,
-            'model_deposit_line_all'=> $model_deposit_line_all,
+            'model_deposit_all' => $model_deposit_all,
+            'model_deposit_line_all' => $model_deposit_line_all,
             'model_purch_vendor_bill' => $model_purch_vendor_bill
         ]);
     }
 
-    public function calculateTotalAmount($id,$lines)
+    public function calculateTotalAmount($id, $lines)
     {
         $total = 0;
         $discount = 0;
@@ -564,13 +566,13 @@ class PurchController extends Controller
             $total += $line->line_total;
         }
 
-        if($model->discount_per >0){
+        if ($model->discount_per > 0) {
             $discount = $total * ($model->discount_per / 100);
         }
-        if($model->discount_amount >0){
+        if ($model->discount_amount > 0) {
             $discount += $model->discount_amount;
         }
-        if($model->is_vat == 1){
+        if ($model->is_vat == 1) {
             $vat_amount = $total * 0.07;
         }
 
@@ -579,7 +581,9 @@ class PurchController extends Controller
 
         return $total;
     }
-    public function calculateTotalAmount2($lines){
+
+    public function calculateTotalAmount2($lines)
+    {
         $total = 0;
         foreach ($lines as $line) {
             $total += $line->line_total;
@@ -736,7 +740,7 @@ class PurchController extends Controller
                     if (!empty($uploaded)) {
                         $loop = 0;
                         foreach ($uploaded as $file) {
-                            $upfiles = "purch_receive_" . time()."_".$loop . "." . $file->getExtension();
+                            $upfiles = "purch_receive_" . time() . "_" . $loop . "." . $file->getExtension();
                             if ($file->saveAs('uploads/purch_receive_doc/' . $upfiles)) {
                                 $model_doc = new \backend\models\PurchReceiveDoc();
                                 $model_doc->purch_id = $id;
@@ -828,6 +832,7 @@ class PurchController extends Controller
             ':lineStatus' => \backend\models\PurchLine::STATUS_ACTIVE,
         ])->queryAll();
     }
+
     private function processReceive($purchModel, $receiveData, $warehouseId, $remark)
     {
         $transaction = \Yii::$app->db->beginTransaction();
@@ -835,7 +840,6 @@ class PurchController extends Controller
             // Validate receive data
             $validItems = [];
             $totalQty = 0;
-
 
 
             foreach ($receiveData as $productId => $qty) {
@@ -941,7 +945,7 @@ class PurchController extends Controller
             // Cancel Journal Transaction
             $journalTrans->status = \backend\models\JournalTrans::STATUS_CANCELLED;
             if (!$journalTrans->save()) {
-                throw new \Exception('ไม่สามารถยกเลิก Journal Transaction ได้'. implode(', ', $journalTrans->getFirstErrors()));
+                throw new \Exception('ไม่สามารถยกเลิก Journal Transaction ได้' . implode(', ', $journalTrans->getFirstErrors()));
             }
 
             // Cancel all related Stock Transactions
@@ -951,7 +955,7 @@ class PurchController extends Controller
             );
 
             // Reverse stock quantities
-           // $journalTransLines = $journalTrans->journalTransLines;
+            // $journalTransLines = $journalTrans->journalTransLines;
             $journalTransLines = \backend\models\JournalTransLine::find()
                 ->where(['journal_trans_id' => $journalTrans->id])->all();
             foreach ($journalTransLines as $line) {
@@ -1104,10 +1108,9 @@ class PurchController extends Controller
     }
 
 
-
     public function actionPrintReceiveBill($id)
     {
-       $model = \backend\models\JournalTrans::findOne($id);
+        $model = \backend\models\JournalTrans::findOne($id);
         if (!$model) {
             throw new \yii\web\NotFoundHttpException('The requested page does not exist.');
 
@@ -1156,29 +1159,31 @@ class PurchController extends Controller
 
         exit;
     }
+
     public function actionPrintreceipt($id = null)
     {
         //$this->layout = 'print'; // Use a minimal print layout
         $model = \backend\models\Purch::findOne($id);
         $model_line = \backend\models\PurchLine::find()->where(['purch_id' => $model->id])->all();
         $this->layout = 'main_print';
-        return $this->render('_printreceipt',[
+        return $this->render('_printreceipt', [
             'model' => $model,
             'model_line' => $model_line,
         ]);
     }
+
     // In your controller
     public function actionPrintTags()
     {
         $id = \Yii::$app->request->post('purch_id');
-        if($id){
+        if ($id) {
             $model = \backend\models\PurchLine::find()->where(['purch_id' => $id])->all();
             $selectedProducts = [];
 
             foreach ($model as $product) {
-               // if (in_array($product['id'], $selectedIds)) {
-                    $selectedProducts[] = $product;
-               // }
+                // if (in_array($product['id'], $selectedIds)) {
+                $selectedProducts[] = $product;
+                // }
             }
 
             return $this->render('_print-tag', [
@@ -1206,8 +1211,8 @@ class PurchController extends Controller
         $printData = [];
 
         $id = \Yii::$app->request->post('purch_id');
-       // $purch_no = \backend\models\Purch::findNo($id);
-        $line_ref_po =  \Yii::$app->request->post('line_ref_po');
+        // $purch_no = \backend\models\Purch::findNo($id);
+        $line_ref_po = \Yii::$app->request->post('line_ref_po');
         $line_description = \Yii::$app->request->post('line_description');
         $line_model = \Yii::$app->request->post('line_model');
         $line_brand = \Yii::$app->request->post('line_brand');
@@ -1238,7 +1243,7 @@ class PurchController extends Controller
 //            $printData = $productData;
         }
 
-      // print_r($printData);return;
+        // print_r($printData);return;
 
         $format = Yii::$app->request->get('format', 'html');
 
@@ -1266,6 +1271,7 @@ class PurchController extends Controller
             return $this->renderPartial('_print-preview', ['printData' => $printData]);
         }
     }
+
     public function actionPrintDeliveryNote($id = null)
     {
         $this->layout = 'main_print'; // Use minimal print layout
@@ -1308,14 +1314,15 @@ class PurchController extends Controller
         Yii::$app->end();
     }
 
-    public function actionAddDocFile(){
+    public function actionAddDocFile()
+    {
         $id = \Yii::$app->request->post('id');
-        if($id){
+        if ($id) {
             $uploaded = UploadedFile::getInstancesByName('file_doc');
             if (!empty($uploaded)) {
                 $loop = 0;
                 foreach ($uploaded as $file) {
-                    $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
+                    $upfiles = "purch_" . time() . "_" . $loop . "." . $file->getExtension();
                     if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
                         $model_doc = new \common\models\PurchDoc();
                         $model_doc->purch_id = $id;
@@ -1331,20 +1338,84 @@ class PurchController extends Controller
         }
         return $this->redirect(['update', 'id' => $id]);
     }
-    public function actionDeleteDocFile(){
+
+    public function actionDeleteDocFile()
+    {
         $id = \Yii::$app->request->post('id');
         $doc_delete_list = trim(\Yii::$app->request->post('doc_delete_list'));
-        if($id){
-            $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $id,'doc_name' => $doc_delete_list])->one();
-            if($model_doc){
-                if($model_doc->delete()){
-                    if(file_exists('uploads/purch_doc/'.$model_doc->doc_name)){
-                        unlink('uploads/purch_doc/'.$model_doc->doc_name);
+        if ($id) {
+            $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $id, 'doc_name' => $doc_delete_list])->one();
+            if ($model_doc) {
+                if ($model_doc->delete()) {
+                    if (file_exists('uploads/purch_doc/' . $model_doc->doc_name)) {
+                        unlink('uploads/purch_doc/' . $model_doc->doc_name);
                     }
                 }
             }
         }
         return $this->redirect(['update', 'id' => $id]);
     }
+
+    public function actionAddDocFileNew()
+    {
+        // upload
+        $id = \Yii::$app->request->post('id');
+        $uploaded = UploadedFile::getInstancesByName('file_acknowledge_doc');
+        $uploaded1 = UploadedFile::getInstancesByName('file_invoice_doc');
+        $uploaded2 = UploadedFile::getInstancesByName('file_slip_doc');
+        if($id){
+            if (!empty($uploaded)) {
+                $loop = 0;
+                foreach ($uploaded as $file) {
+                    $upfiles = "purch_" . time() . "_" . $loop . "." . $file->getExtension();
+                    if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
+                        $model_doc = new \common\models\PurchDoc();
+                        $model_doc->purch_id = $id;
+                        $model_doc->doc_name = $upfiles;
+                        $model_doc->doc_type_id = 1;
+                        $model_doc->created_by = \Yii::$app->user->id;
+                        $model_doc->created_at = time();
+                        $model_doc->save(false);
+                    }
+                    $loop++;
+                }
+            }
+            if (!empty($uploaded1)) {
+                $loop = 0;
+                foreach ($uploaded1 as $file) {
+                    $upfiles = "purch_" . time() . "_" . $loop . "." . $file->getExtension();
+                    if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
+                        $model_doc = new \common\models\PurchDoc();
+                        $model_doc->purch_id = $id;
+                        $model_doc->doc_name = $upfiles;
+                        $model_doc->doc_type_id = 2;
+                        $model_doc->created_by = \Yii::$app->user->id;
+                        $model_doc->created_at = time();
+                        $model_doc->save(false);
+                    }
+                    $loop++;
+                }
+            }
+            if (!empty($uploaded2)) {
+                $loop = 0;
+                foreach ($uploaded2 as $file) {
+                    $upfiles = "purch_" . time() . "_" . $loop . "." . $file->getExtension();
+                    if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
+                        $model_doc = new \common\models\PurchDoc();
+                        $model_doc->purch_id = $id;
+                        $model_doc->doc_name = $upfiles;
+                        $model_doc->doc_type_id = 3;
+                        $model_doc->created_by = \Yii::$app->user->id;
+                        $model_doc->created_at = time();
+                        $model_doc->save(false);
+                    }
+                    $loop++;
+                }
+            }
+        }
+        return $this->redirect(['update', 'id' => $id]);
+
+    }
+
 
 }

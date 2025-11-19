@@ -885,7 +885,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                 <div class="card bg-light">
                     <div class="card-body">
                         <h6 class="card-title">วางบิล Vendor</h6>
-                        <br />
+                        <br/>
                         <div class="row">
                             <div class="col-lg-3">
                                 <label for="">วันที่วางบิล</label>
@@ -939,41 +939,6 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
             </div>
         </div>
 
-        <div class="form-group mt-3">
-            <br/>
-            <div class="row">
-                <div class="col-lg-4">
-                    <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <label for="">เอกสารแนบ PO Acknowledge</label>
-                                <input type="file" name="file_acknowledge_doc" multiple>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <label for="">เอกสารแนบ ใบกำกับภาษี</label>
-                                <input type="file" name="file_invoice_doc" multiple>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <label for="">เอกสารแนบ เอกสารจ่ายเงิน</label>
-                                <input type="file" name="file_slip_doc" multiple>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <div class="d-flex justify-content-between">
             <?php if ($model->status != 3 || $model->isNewRecord || Yii::$app->user->can('CanApprovePo')): ?>
@@ -989,6 +954,74 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 
         <hr>
         <br/>
+        <div class="form-group mt-3">
+            <div class="row">
+                <div class="col-lg-4">
+                    <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <form action="<?= Url::to(['purch/add-doc-file-new'], true) ?>" method="post"
+                                      enctype="multipart/form-data">
+                                    <input type="hidden" name="id" value="<?= $model->id ?>">
+                                    <label for="">เอกสารแนบ PO Acknowledge</label>
+                                    <input type="file" name="file_acknowledge_doc" multiple>
+                                    <div style="height: 10px;"></div>
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <button class="btn btn-info">
+                                                <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <form action="<?= Url::to(['purch/add-doc-file-new'], true) ?>" method="post"
+                                      enctype="multipart/form-data">
+                                    <input type="hidden" name="id" value="<?= $model->id ?>">
+                                    <label for="">เอกสารแนบ ใบกำกับภาษี</label>
+                                    <input type="file" name="file_invoice_doc" multiple>
+                                    <div style="height: 10px;"></div>
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <button class="btn btn-info">
+                                                <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ
+                                            </button>
+                                        </div>
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <form action="<?= Url::to(['purch/add-doc-file-new'], true) ?>" method="post"
+                                      enctype="multipart/form-data">
+                                    <input type="hidden" name="id" value="<?= $model->id ?>">
+                                    <label for="">เอกสารแนบ เอกสารจ่ายเงิน</label>
+                                    <input type="file" name="file_slip_doc" multiple>
+                                    <div style="height: 10px;"></div>
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <button class="btn btn-info">
+                                                <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ
+                                            </button>
+                                        </div>
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="label">
             <h4>เอกสารแนบ</h4>
         </div>
