@@ -473,20 +473,13 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
             </div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <?= $form->field($model, 'purch_no')->textInput([
                             'maxlength' => true,
                             'placeholder' => 'ระบบจะสร้างอัตโนมัติหากไม่ระบุ'
                         ]) ?>
 
-                        <?= $form->field($model, 'purch_date')->widget(DatePicker::class, [
-                            'options' => ['placeholder' => 'เลือกวันที่'],
-                            'pluginOptions' => [
-                                'autoclose' => true,
-                                'format' => 'yyyy-mm-dd',
-                                'todayHighlight' => true,
-                            ]
-                        ]) ?>
+
 
                         <?= $form->field($model, 'vendor_id')->widget(Select2::className(), [
                             'data' => ArrayHelper::map(\backend\models\Vendor::find()->all(), 'id', 'name'),
@@ -509,6 +502,32 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                             'onchange' => 'calculateGrandTotal2();',
 
                         ]) ?>
+
+                        <?= $form->field($model, 'status')->dropDownList([
+                            Purch::STATUS_DRAFT => 'ร่าง',
+                            Purch::STATUS_ACTIVE => 'ใช้งาน',
+                            Purch::STATUS_CANCELLED => 'ยกเลิก',
+                        ], ['prompt' => 'เลือกสถานะ']) ?>
+                    </div>
+                    <div class="col-md-4">
+                        <?= $form->field($model, 'purch_date')->widget(DatePicker::class, [
+                            'options' => ['placeholder' => 'เลือกวันที่'],
+                            'pluginOptions' => [
+                                'autoclose' => true,
+                                'format' => 'yyyy-mm-dd',
+                                'todayHighlight' => true,
+                            ]
+                        ]) ?>
+                        <?= $form->field($model, 'ref_no')->textInput([
+                            'maxlength' => true,
+                            'placeholder' => 'REF NO'
+                        ]) ?>
+                        <?= $form->field($model, 'exchange_rate')->textInput([
+                            'maxlength' => true,
+                            'type'=>'number',
+                            'min' => 0,
+                            'step' => 0.01,
+                        ])->label('อัตราแลกเปลี่ยน') ?>
                         <?= $form->field($model, 'discount_amount')->textInput([
                             'type' => 'number',
                             'min' => 0,
@@ -517,23 +536,19 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                             'onchange' => 'calculateGrandTotal2();'
 
                         ]) ?>
-                        <?= $form->field($model, 'status')->dropDownList([
-                            Purch::STATUS_DRAFT => 'ร่าง',
-                            Purch::STATUS_ACTIVE => 'ใช้งาน',
-                            Purch::STATUS_CANCELLED => 'ยกเลิก',
-                        ], ['prompt' => 'เลือกสถานะ']) ?>
+                        <?= $form->field($model, 'note')->textarea([
+                            'rows' => 4,
+                            'placeholder' => 'หมายเหตุ'
+                        ]) ?>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <?= $form->field($model, 'approve_status')->dropDownList([
                             Purch::APPROVE_STATUS_PENDING => 'รอพิจารณา',
                             Purch::APPROVE_STATUS_APPROVED => 'อนุมัติ',
                             Purch::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
                         ], ['prompt' => 'เลือกสถานะอนุมัติ']) ?>
 
-                        <?= $form->field($model, 'ref_no')->textInput([
-                            'maxlength' => true,
-                            'placeholder' => 'REF NO'
-                        ]) ?>
+
                         <?= $form->field($model, 'is_vat')->dropDownList([
                             '1' => 'VAT',
                             '2' => 'NO VAT',
@@ -553,10 +568,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                             'readOnly' => true,
                             'id' => 'purch-tax_amount',
                         ])->label() ?>
-                        <?= $form->field($model, 'note')->textarea([
-                            'rows' => 4,
-                            'placeholder' => 'หมายเหตุ'
-                        ]) ?>
+
                     </div>
                 </div>
                 <div class="row">

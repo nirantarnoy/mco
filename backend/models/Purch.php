@@ -103,7 +103,7 @@ class Purch extends ActiveRecord
             [['total_amount', 'vat_amount', 'net_amount','vat_percent','discount_per','whd_tax_per','whd_tax_amount','discount_total_amount','currency_rate'], 'number'],
             [['purch_no', 'vendor_name', 'note','delivery_note','payment_note','footer_delivery','footer_payment','ref_no'], 'string', 'max' => 255],
             [['purch_no'], 'unique'],
-            [['approve_date','discount_amount'], 'safe'],
+            [['approve_date','discount_amount','fee_amount','exchange_rate'], 'safe'],
             [['is_vat','is_deposit'],'integer'],
             [['special_note'],'string','max'=>500]
         ];
