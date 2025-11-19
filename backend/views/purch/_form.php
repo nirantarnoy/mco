@@ -495,6 +495,13 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 'allowClear' => true
                             ]
                         ]) ?>
+                        <?= $form->field($model, 'whd_tax_per')->textInput([
+                            'type' => 'number',
+                            'min' => 0,
+                            'id' => 'purch-tax_per',
+                            'value' => $model->isNewRecord ? 0 : $model->whd_tax_per ?? 0,
+                            'onChange' => 'calculateGrandTotal2();',
+                        ])->label() ?>
                         <?= $form->field($model, 'discount_per')->textInput([
                             'type' => 'number',
                             'min' => 0,
@@ -557,13 +564,12 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 'onchange' => 'enableVat($(this))',
                                 'prompt' => 'เลือกคำนวน VAT'
                             ],) ?>
-                        <?= $form->field($model, 'whd_tax_per')->textInput([
+                        <?= $form->field($model, 'fee_amount')->textInput([
                             'type' => 'number',
                             'min' => 0,
-                            'id' => 'purch-tax_per',
-                            'value' => $model->isNewRecord ? 0 : $model->whd_tax_per ?? 0,
-                            'onChange' => 'calculateGrandTotal2();',
-                        ])->label() ?>
+                            'step' => '0.01',
+
+                        ])->label('ค่าธรรมเนียม') ?>
                         <?= $form->field($model, 'whd_tax_amount')->textInput([
                             'readOnly' => true,
                             'id' => 'purch-tax_amount',
