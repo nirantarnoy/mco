@@ -43,7 +43,7 @@ class PettyCashDetail extends ActiveRecord
             [['voucher_id', 'sort_order'], 'integer'],
             [['detail_date','job_ref_id','other'], 'safe'],
             [['detail'], 'string'],
-            [['amount', 'vat', 'vat_amount', 'wht', 'total'], 'number', 'min' => 0],
+            [['amount', 'vat', 'vat_amount', 'wht', 'total'], 'number'],
             [['ac_code'], 'string', 'max' => 50],
             [['voucher_id'], 'exist', 'skipOnError' => true, 'targetClass' => PettyCashVoucher::class, 'targetAttribute' => ['voucher_id' => 'id']],
         ];
