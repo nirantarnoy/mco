@@ -53,12 +53,10 @@ class PettyCashVoucherController extends Controller
      */
     public function actionIndex()
     {
-//        $dataProvider = new ActiveDataProvider([
-//            'query' => PettyCashVoucher::find()->where(['status' => 1])->orderBy(['id' => SORT_DESC]),
-//        ]);
         $searchModel = new PettyCashVoucherSearch();
         $dataProvider = $searchModel->search(\Yii::$app->request->queryParams);
         $dataProvider->query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
+        $dataProvider->setSort(['defaultOrder' => ['approve_status'=>SORT_ASC,'id' => SORT_DESC]]);
 
         return $this->render('index', [
             'dataProvider' => $dataProvider,
