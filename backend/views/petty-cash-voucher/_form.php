@@ -157,7 +157,7 @@ function calculateGrandTotal() {
 //            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][wht]\" class=\"form-control form-control-sm wht-input text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
 //        </td>
 //        <td>
-//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][other]\" class=\"form-control form-control-sm other-input text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
+//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][other]\" class=\"form-control form-control-sm other-input text-right\" step=\"0.01\" min=\"\" placeholder=\"0.00\" value=\"0.00\">
 //        </td>
 //        <td>
 //            <input type=\"text\" name=\"PettyCashDetail[` + rowIndex + `][total]\" class=\"form-control form-control-sm total-input text-right\" readonly style=\"background-color: #f8f9fa;\" value=\"0.00\">
@@ -718,7 +718,7 @@ function addDetailRow() {
             <input type="number" name="PettyCashDetail[` + rowIndex + `][wht]" class="form-control form-control-sm wht-input text-right" step="0.01" min="0" placeholder="0.00" value="0.00">
         </td>
         <td>
-            <input type="number" name="PettyCashDetail[` + rowIndex + `][other]" class="form-control form-control-sm other-input text-right" step="0.01" min="0" placeholder="0.00" value="0.00">
+            <input type="number" name="PettyCashDetail[` + rowIndex + `][other]" class="form-control form-control-sm other-input text-right" step="0.01" min="" placeholder="0.00" value="0.00">
         </td>
         <td>
             <input type="text" name="PettyCashDetail[` + rowIndex + `][total]" class="form-control form-control-sm total-input text-right" readonly style="background-color: #f8f9fa;" value="0.00">
