@@ -145,16 +145,16 @@ function calculateGrandTotal() {
 //            <textarea name=\"PettyCashDetail[` + rowIndex + `][detail]\" class=\"form-control form-control-sm\" rows=\"2\" placeholder=\"รายละเอียดการจ่าย\"></textarea>
 //        </td>
 //        <td>
-//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][amount]\" class=\"form-control form-control-sm amount-input text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
+//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][amount]\" class=\"form-control form-control-sm amount-input text-right\" step=\"0.01\"  placeholder=\"0.00\" value=\"0.00\">
 //        </td>
 //        <td>
-//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][vat]\" class=\"form-control form-control-sm text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
+//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][vat]\" class=\"form-control form-control-sm text-right\" step=\"0.01\" min=\"\" placeholder=\"0.00\" value=\"0.00\">
 //        </td>
 //        <td>
-//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][vat_amount]\" class=\"form-control form-control-sm vat-amount-input text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
+//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][vat_amount]\" class=\"form-control form-control-sm vat-amount-input text-right\" step=\"0.01\" min=\"\" placeholder=\"0.00\" value=\"0.00\">
 //        </td>
 //        <td>
-//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][wht]\" class=\"form-control form-control-sm wht-input text-right\" step=\"0.01\" min=\"0\" placeholder=\"0.00\" value=\"0.00\">
+//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][wht]\" class=\"form-control form-control-sm wht-input text-right\" step=\"0.01\" min=\"\" placeholder=\"0.00\" value=\"0.00\">
 //        </td>
 //        <td>
 //            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][other]\" class=\"form-control form-control-sm other-input text-right\" step=\"0.01\" min=\"\" placeholder=\"0.00\" value=\"0.00\">
@@ -706,16 +706,16 @@ function addDetailRow() {
             </div>
         </td>
         <td>
-            <input type="number" name="PettyCashDetail[` + rowIndex + `][amount]" class="form-control form-control-sm amount-input text-right" step="0.01" min="0" placeholder="0.00" value="0.00">
+            <input type="number" name="PettyCashDetail[` + rowIndex + `][amount]" class="form-control form-control-sm amount-input text-right" step="0.01" min="" placeholder="0.00" value="0.00">
         </td>
         <td>
-            <input type="number" name="PettyCashDetail[` + rowIndex + `][vat]" class="form-control form-control-sm text-right" step="0.01" min="0" placeholder="0.00" value="0.00">
+            <input type="number" name="PettyCashDetail[` + rowIndex + `][vat]" class="form-control form-control-sm text-right" step="0.01" min="" placeholder="0.00" value="0.00">
         </td>
         <td>
-            <input type="number" name="PettyCashDetail[` + rowIndex + `][vat_amount]" class="form-control form-control-sm vat-amount-input text-right" step="0.01" min="0" placeholder="0.00" value="0.00">
+            <input type="number" name="PettyCashDetail[` + rowIndex + `][vat_amount]" class="form-control form-control-sm vat-amount-input text-right" step="0.01" min="" placeholder="0.00" value="0.00">
         </td>
         <td>
-            <input type="number" name="PettyCashDetail[` + rowIndex + `][wht]" class="form-control form-control-sm wht-input text-right" step="0.01" min="0" placeholder="0.00" value="0.00">
+            <input type="number" name="PettyCashDetail[` + rowIndex + `][wht]" class="form-control form-control-sm wht-input text-right" step="0.01" min="" placeholder="0.00" value="0.00">
         </td>
         <td>
             <input type="number" name="PettyCashDetail[` + rowIndex + `][other]" class="form-control form-control-sm other-input text-right" step="0.01" min="" placeholder="0.00" value="0.00">
