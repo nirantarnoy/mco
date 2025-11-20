@@ -57,8 +57,8 @@ class PettyCashVoucher extends ActiveRecord
     public function rules()
     {
         return [
-            [['pcv_no', 'date', 'amount'], 'required'],
-            [['date', 'issued_date', 'approved_date','created_by','updated_by'], 'safe'],
+            [['date', 'amount'], 'required'],
+            [['pcv_no','date', 'issued_date', 'approved_date','created_by','updated_by'], 'safe'],
             [['amount'], 'number', 'min' => 0],
             [['paid_for'], 'string'],
             [['status','quotation_id','customer_id','pay_for_emp_id','job_id','vendor_id','approve_status'], 'integer'],
@@ -111,31 +111,49 @@ class PettyCashVoucher extends ActiveRecord
     /**
      * Generate PCV Number
      */
+//    public function generatePcvNo()
+//    {
+//        $year = date('Y');
+//        $sequence = Yii::$app->db->createCommand()
+//            ->select(['last_number'])
+//            ->from('petty_cash_sequence')
+//            ->where(['year' => $year])
+//            ->queryOne();
+//
+//        if (!$sequence) {
+//            // Insert new year
+//            Yii::$app->db->createCommand()
+//                ->insert('petty_cash_sequence', ['year' => $year, 'last_number' => 1])
+//                ->execute();
+//            $nextNumber = 1;
+//        } else {
+//            $nextNumber = $sequence['last_number'] + 1;
+//            Yii::$app->db->createCommand()
+//                ->update('petty_cash_sequence',
+//                    ['last_number' => $nextNumber],
+//                    ['year' => $year])
+//                ->execute();
+//        }
+//
+//        return 'PCV' . $year . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+//    }
+
     public function generatePcvNo()
     {
-        $year = date('Y');
-        $sequence = Yii::$app->db->createCommand()
-            ->select(['last_number'])
-            ->from('petty_cash_sequence')
-            ->where(['year' => $year])
-            ->queryOne();
+        $prefix = 'PCV' . date('y') . str_pad(date('m'), 2, '0', STR_PAD_LEFT);
+        $lastRecord = self::find()
+            ->where(['like', 'pcv_no', $prefix])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
 
-        if (!$sequence) {
-            // Insert new year
-            Yii::$app->db->createCommand()
-                ->insert('petty_cash_sequence', ['year' => $year, 'last_number' => 1])
-                ->execute();
-            $nextNumber = 1;
+        if ($lastRecord) {
+            $lastNumber = intval(substr($lastRecord->pcv_no, -3));
+            $newNumber = $lastNumber + 1;
         } else {
-            $nextNumber = $sequence['last_number'] + 1;
-            Yii::$app->db->createCommand()
-                ->update('petty_cash_sequence',
-                    ['last_number' => $nextNumber],
-                    ['year' => $year])
-                ->execute();
+            $newNumber = 1;
         }
 
-        return 'PCV' . $year . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        return $prefix . sprintf('%03d', $newNumber);
     }
 
     /**
