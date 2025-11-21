@@ -11,7 +11,7 @@ use backend\models\JournalTrans;
 $this->title = 'Stock Transactions';
 $this->params['breadcrumbs'][] = $this->title;
 
-echo \Yii::$app->user->id;
+echo \Yii::$app->session->get('company_id');
 ?>
 <div class="journal-trans-index">
     <p>
