@@ -5,6 +5,7 @@ namespace backend\helpers;
 class TransType
 {
     private static $data = [
+        '1' => 'ปรับยอด',
         '3' => 'เบิก',
         '4' => 'คืนเบิก',
         '5' => 'ยืมสินค้า',
@@ -12,6 +13,7 @@ class TransType
     ];
 
     private static $dataobj = [
+        ['id'=>'1','name' => 'ปรับยอด'],
         ['id'=>'3','name' => 'เบิก'],
         ['id'=>'4','name' => 'คืนเบิก'],
         ['id'=>'5','name' => 'ยืมสินค้า'],

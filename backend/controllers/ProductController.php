@@ -171,6 +171,7 @@ class ProductController extends Controller
                                 $model_trans->trans_date = date('Y-m-d H:i:s');
                                 $model_trans->trans_type_id = 1; // 1 ปรับสต๊อก 2 รับเข้า 3 จ่ายออก
                                 $model_trans->qty = $line_qty[$i];
+                                $model_trans->stock_type_id = 1;
                                 $model_trans->status = 1;
                                 if($model_trans->save(false)){
                                     $model_sum = \backend\models\StockSum::find()->where(['product_id'=>$model->id,'warehouse_id'=>$line_warehouse[$i]])->one();
