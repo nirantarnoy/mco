@@ -10,6 +10,8 @@ use backend\models\JournalTrans;
 
 $this->title = 'Stock Transactions';
 $this->params['breadcrumbs'][] = $this->title;
+
+echo \Yii::$app->user->id;
 ?>
 <div class="journal-trans-index">
     <p>
