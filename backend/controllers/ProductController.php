@@ -4,6 +4,7 @@ namespace backend\controllers;
 
 use backend\models\Product;
 use backend\models\ProductSearch;
+use backend\models\StockTrans;
 use backend\models\WarehouseSearch;
 use common\models\JournalTrans;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -61,6 +62,26 @@ class ProductController extends Controller
 //                ],
             ]
         );
+    }
+
+    public function beforeAction($action)
+    {
+        if (!$this->isSessionValid()) {
+            Yii::$app->user->logout();
+            return $this->redirect(['site/login']);
+        }
+        return parent::beforeAction($action);
+    }
+
+    /**
+     * Checks if the current session is valid.
+     *
+     * @return bool
+     */
+    private function isSessionValid(): bool
+    {
+        $session = Yii::$app->session;
+        return !empty($session->get('company_id')) && !empty(Yii::$app->user->id);
     }
 
     /**
@@ -270,9 +291,9 @@ class ProductController extends Controller
                     $model_journal_trans->trans_date = date('Y-m-d H:i:s');
                     $model_journal_trans->journal_no = '';
                     $model_journal_trans->remark = '';
-                    $model_journal_trans->trans_type_id = 2;
+                    $model_journal_trans->trans_type_id = 8;
                     $model_journal_trans->status = 3; // 3 complete
-                    $model_journal_trans->stock_type_id = 0;
+                    $model_journal_trans->stock_type_id = 1;
                     $model_journal_trans->warehouse_id = 0;
 
                     if($model_journal_trans->save(false)){
@@ -296,6 +317,22 @@ class ProductController extends Controller
                             $model_trans->qty = $line_qty[$i];
                             $model_trans->status = 1;
                             if($model_trans->save(false)){
+
+                                $model_stock_trans = new StockTrans();
+                                $model_stock_trans->trans_date = date('Y-m-d H:i:s'); // Datetime
+                                $model_stock_trans->journal_trans_id = $model_journal_trans->id; // Integer
+                                $model_stock_trans->product_id = $model->id; // Integer
+                                $model_stock_trans->warehouse_id = $line_warehouse[$i]; // Integer
+                                $model_stock_trans->qty = (float)$line_qty[$i]; // Float
+                                $model_stock_trans->trans_type_id = 8; // Integer
+                                $model_stock_trans->created_at = date('Y-m-d H:i:s'); // Datetime
+                                $model_stock_trans->created_by = Yii::$app->user->id; // Integer
+                                $model_stock_trans->updated_at = date('Y-m-d H:i:s'); // Datetime
+                                //   $model->updated_by = Yii::$app->user->id; // Integer
+                                $model_stock_trans->stock_type_id = 1;
+                                $model_stock_trans->save(false);
+
+
                                 $model_sum = \backend\models\StockSum::find()->where(['product_id'=>$model->id,'warehouse_id'=>$line_warehouse[$i]])->one();
                                 if($model_sum){
                                     $model_sum->qty = $line_qty[$i];

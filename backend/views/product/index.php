@@ -19,6 +19,7 @@ use yii\bootstrap4\LinkPager;
 
 $this->title = 'สินค้า';
 $this->params['breadcrumbs'][] = $this->title;
+
 ?>
 
     <div id="loading"

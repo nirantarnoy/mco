@@ -35,6 +35,7 @@ use yii\behaviors\TimestampBehavior;
 class JournalTrans extends ActiveRecord
 {
     // Transaction Types
+
     const TRANS_TYPE_PO_RECEIVE = 1;
     const TRANS_TYPE_CANCEL_PO_RECEIVE = 2;
     const TRANS_TYPE_ISSUE_STOCK = 3;
@@ -43,6 +44,8 @@ class JournalTrans extends ActiveRecord
     const TRANS_TYPE_RETURN_BORROW = 6;
 
     const TRANS_TYPE_ARICAT_NEW = 7;
+
+    const TRANS_TYPE_ADJUST_STOCK = 8;
 
     // Stock Types
     const STOCK_TYPE_IN = 1;
@@ -65,7 +68,7 @@ class JournalTrans extends ActiveRecord
 
     public $journalTransLinesaricat = [];
 
-  //  public $journalTransLines;
+    //  public $journalTransLines;
 
     /**
      * {@inheritdoc}
@@ -97,15 +100,15 @@ class JournalTrans extends ActiveRecord
     {
         return [
             [['trans_date', 'trans_type_id', 'stock_type_id'], 'required'],
-            [['trans_date', 'created_at', 'updated_at','approve_date'], 'safe'],
-            [['trans_type_id', 'stock_type_id','job_id', 'customer_id', 'party_id', 'party_type_id', 'warehouse_id','return_for_trans_id','trans_ref_id','status','created_by', 'updated_by','po_rec_status'], 'integer'],
+            [['trans_date', 'created_at', 'updated_at', 'approve_date'], 'safe'],
+            [['trans_type_id', 'stock_type_id', 'job_id', 'customer_id', 'party_id', 'party_type_id', 'warehouse_id', 'return_for_trans_id', 'trans_ref_id', 'status', 'created_by', 'updated_by', 'po_rec_status'], 'integer'],
             [['qty',], 'number'],
             [['remark'], 'string'],
-            [['journal_no', 'customer_name', ], 'string', 'max' => 255],
-         //   [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_CANCELLED, self::STATUS_ACTIVE, self::STATUS_INACTIVE]],
-          //  [['status'], 'in', 'range' => [self::STATUS_ACTIVE]],
+            [['journal_no', 'customer_name',], 'string', 'max' => 255],
+            //   [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_CANCELLED, self::STATUS_ACTIVE, self::STATUS_INACTIVE]],
+            //  [['status'], 'in', 'range' => [self::STATUS_ACTIVE]],
             [['trans_ref_id'], 'validateRefTransaction'],
-            [['agency_id','employer_id','emp_trans_id','approve_by'], 'integer'],
+            [['agency_id', 'employer_id', 'emp_trans_id', 'approve_by'], 'integer'],
         ];
     }
 
@@ -246,6 +249,8 @@ class JournalTrans extends ActiveRecord
             self::TRANS_TYPE_RETURN_ISSUE => 'Return Issue',
             self::TRANS_TYPE_ISSUE_BORROW => 'Issue Borrow',
             self::TRANS_TYPE_RETURN_BORROW => 'Return Borrow',
+            self::TRANS_TYPE_ARICAT_NEW => 'Aricat',
+            self::TRANS_TYPE_ADJUST_STOCK => 'Adjust Stock',
         ];
     }
 
@@ -260,7 +265,8 @@ class JournalTrans extends ActiveRecord
         ];
     }
 
-    public static function getIssueTransStatus(){
+    public static function getIssueTransStatus()
+    {
         return [
             self::STATUS_DRAFT => 'Draft',
             self::STATUS_PENDING => 'Pending',
@@ -294,6 +300,8 @@ class JournalTrans extends ActiveRecord
             self::TRANS_TYPE_RETURN_ISSUE => 'RIS',
             self::TRANS_TYPE_ISSUE_BORROW => 'IBR',
             self::TRANS_TYPE_RETURN_BORROW => 'RBR',
+            self::TRANS_TYPE_ARICAT_NEW => 'ARC',
+            self::TRANS_TYPE_ADJUST_STOCK => 'AIN',
         ];
 
         $prefix = $transTypes[$this->trans_type_id] ?? 'TRN';
@@ -327,7 +335,8 @@ class JournalTrans extends ActiveRecord
         return $this->hasMany(JournalTransLine::class, ['journal_trans_id' => 'id']);
     }
 
-    public function getJournalTransAricat(){
+    public function getJournalTransAricat()
+    {
         return $this->hasMany(JournalTransAricat::class, ['journal_trans_id' => 'id']);
     }
 
@@ -342,7 +351,6 @@ class JournalTrans extends ActiveRecord
         }
         return $total;
     }
-
 
 
     /**
@@ -361,16 +369,17 @@ class JournalTrans extends ActiveRecord
         if (parent::beforeSave($insert)) {
             if ($insert) {
                 $this->generateRunningNumber();
-                $this->created_by = Yii::$app->user->id ;// Yii::$app->user->identity->username ?? 'system';
-                $this->emp_trans_id = Yii::$app->user->id ;
+                $this->created_by = Yii::$app->user->id;// Yii::$app->user->identity->username ?? 'system';
+                $this->emp_trans_id = Yii::$app->user->id;
                 $this->status = self::STATUS_DRAFT;
             }
-            $this->updated_by =  Yii::$app->user->id;
+            $this->updated_by = Yii::$app->user->id;
             $this->emp_trans_id = Yii::$app->user->id;
+            $this->company_id = \Yii::$app->session->get('company_id');
             return true;
         }
 
-        $this->company_id = \Yii::$app->session->get('company_id');
+
         return false;
     }
 
