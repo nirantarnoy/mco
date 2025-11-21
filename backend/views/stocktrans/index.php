@@ -42,19 +42,29 @@ $this->params['breadcrumbs'][] = $this->title;
                 'contentOptions' => ['style' => 'text-align: center'],
             ],
 
+//            [
+//                'attribute' => 'journal_no',
+//                'label' => 'เลขที่เอกสาร',
+//                'value' => function ($data) {
+//                    // return \backend\models\JournalTransX::($data->journal_trans_id);
+//                    return '';
+//                }
+//            ],
             [
-                'attribute' => 'journal_no',
-                'label' => 'เลขที่เอกสาร',
+                'attribute' => 'trans_type_id',
+                'label' => 'ประเภทกิจกรรม',
                 'value' => function ($data) {
-                   // return \backend\models\JournalTransX::($data->journal_trans_id);
-                    return '';
+                     return \backend\helpers\TransType::getTypeById($data->trans_type_id);
+                  //  return '';
                 }
             ],
             'trans_date',
             [
                 'attribute' => 'product_id',
+                'format' => 'raw',
                 'value' => function ($data) {
-                    return \backend\models\Product::findName($data->product_id);
+                  //  return \backend\models\Product::findName($data->product_id);
+                    return '<a href="' . Url::to(['product/view', 'id' => $data->product_id]) . '">' . \backend\models\Product::findName($data->product_id) . '</a>';
                 }
             ],
             [

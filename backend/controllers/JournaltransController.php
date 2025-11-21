@@ -3,6 +3,7 @@
 namespace backend\controllers;
 
 use app\behaviors\ActionLogBehavior;
+use backend\models\StockTrans;
 use backend\models\UnitSearch;
 use Yii;
 use backend\models\JournalTrans;
@@ -23,6 +24,7 @@ use yii\web\UploadedFile;
 class JournaltransController extends Controller
 {
     public $enableCsrfValidation = false;
+
     /**
      * {@inheritdoc}
      */
@@ -38,10 +40,11 @@ class JournaltransController extends Controller
             ],
             'actionLog' => [
                 'class' => ActionLogBehavior::class,
-                'actions' => ['create', 'update', 'delete','view','print', 'approve','createorigin'], // Log เฉพาะ actions เหล่านี้
+                'actions' => ['create', 'update', 'delete', 'view', 'print', 'approve', 'createorigin'], // Log เฉพาะ actions เหล่านี้
             ],
         ];
     }
+
     public function beforeAction($action)
     {
         if (!Yii::$app->session->get('company_id')) {
@@ -50,6 +53,7 @@ class JournaltransController extends Controller
         }
         return parent::beforeAction($action);
     }
+
     /**
      * Lists all JournalTransX models.
      * @return mixed
@@ -120,20 +124,21 @@ class JournaltransController extends Controller
 //                }
             }
 
-            if($valid) {
+            if ($valid) {
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
                     if ($model->save()) {
                         foreach ($journalTransLines as $journalTransLine) {
                             $journalTransLine->journal_trans_id = $model->id;
                             $journalTransLine->status = 0;
-                            if($journalTransLine->save(false)){
+                            if ($journalTransLine->save(false)) {
                                 $trans_type_id = 3;
-                                 $this->calStock($journalTransLine->product_id,$journalTransLine->qty,$journalTransLine->warehouse_id,$trans_type_id);
-                            }else{
+                                $this->calStock($journalTransLine->product_id, $journalTransLine->qty, $journalTransLine->warehouse_id, $trans_type_id);
+                            } else {
                                 throw new \Exception('Failed to save journal trans line');
                             }
                         }
+                        $this->createStocktrans($journalTransLines,$trans_type_id,2);
                         $transaction->commit();
                         Yii::$app->session->setFlash('success', 'บันทึกข้อมูลเรียบร้อยแล้ว');
                         return $this->redirect(['view', 'id' => $model->id]);
@@ -142,7 +147,7 @@ class JournaltransController extends Controller
                     $transaction->rollBack();
                     Yii::$app->session->setFlash('error', 'ไม่สามารถบันทึกข้อมูลได้: ' . $e->getMessage());
                 }
-            }else{
+            } else {
                 Yii::$app->session->setFlash('error', 'ไม่สามารถบันทึกข้อมูลได้: ' . json_encode($model->errors));
             }
 
@@ -566,7 +571,7 @@ class JournaltransController extends Controller
         }
 
         $transaction = JournalTrans::find()
-           ->with(['journalTransLines.product.unit', 'journalTransLines.warehouse'])
+            ->with(['journalTransLines.product.unit', 'journalTransLines.warehouse'])
             ->where(['id' => $transactionId])
             ->andWhere(['status' => 'approved'])
             ->one();
@@ -809,7 +814,7 @@ class JournaltransController extends Controller
             $valid = $model->validate();
 
             if (isset($_POST['JournalTransLine'])) {
-               // print_r($_POST['JournalTransLine']);return;
+                // print_r($_POST['JournalTransLine']);return;
                 foreach ($_POST['JournalTransLine'] as $index => $journalTransLineData) {
                     $journalTransLine = new JournalTransLine();
                     $journalTransLine->load($journalTransLineData, '');
@@ -833,7 +838,7 @@ class JournaltransController extends Controller
                 }
             }
 
-            if($valid) {
+            if ($valid) {
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
                     $model->created_at = date('Y-m-d H:i:s');
@@ -842,13 +847,17 @@ class JournaltransController extends Controller
                         foreach ($journalTransLines as $journalTransLine) {
                             $journalTransLine->journal_trans_id = $model->id;
                             $journalTransLine->status = 0;
-                            if($journalTransLine->save(false)){
+                            if ($journalTransLine->save(false)) {
                                 $trans_type_id = 4;
-                               $this->calStock($journalTransLine->product_id,$journalTransLine->qty,$journalTransLine->warehouse_id,$trans_type_id);
-                            }else{
+                                $this->calStock($journalTransLine->product_id, $journalTransLine->qty, $journalTransLine->warehouse_id, $trans_type_id);
+                            } else {
                                 throw new \Exception('Failed to save journal trans line');
                             }
                         }
+
+                        $this->createStocktrans($journalTransLines,$trans_type_id,1);
+
+
                         $transaction->commit();
                         Yii::$app->session->setFlash('success', 'บันทึกข้อมูลเรียบร้อยแล้ว');
                         return $this->redirect(['view', 'id' => $model->id]);
@@ -888,7 +897,32 @@ class JournaltransController extends Controller
         ]);
     }
 
-    public function calStock($product_id, $qty, $warehouse_id, $trans_type_id) {
+    public function createStocktrans($journalTransLines,$stock_trans_type,$stock_type_id)
+    {
+        if (empty($journalTransLines) || $journalTransLines == null) {
+            return; // Optionally, log or handle this scenario.
+        }
+
+        foreach ($journalTransLines as $journalTransLine) {
+            $model = new StockTrans();
+            $model->trans_date = date('Y-m-d H:i:s'); // Datetime
+            $model->journal_trans_id = (int)$journalTransLine->journal_trans_id; // Integer
+            $model->product_id = (int)$journalTransLine->product_id; // Integer
+            $model->warehouse_id = (int)$journalTransLine->warehouse_id; // Integer
+            $model->qty = (float)$journalTransLine->qty; // Float
+            $model->trans_type_id = $stock_trans_type; // Integer
+            $model->created_at = date('Y-m-d H:i:s'); // Datetime
+            $model->created_by = Yii::$app->user->id; // Integer
+            $model->updated_at = date('Y-m-d H:i:s'); // Datetime
+         //   $model->updated_by = Yii::$app->user->id; // Integer
+            $model->stock_type_id = $stock_type_id;
+            $model->save(false);
+        }
+        return true;
+    }
+
+    public function calStock($product_id, $qty, $warehouse_id, $trans_type_id)
+    {
         $res = 0;
         if ($product_id && $qty && $warehouse_id) {
             $stock_sum = \backend\models\StockSum::find()
@@ -932,7 +966,8 @@ class JournaltransController extends Controller
         return $res;
     }
 
-    function updateProductStock($product_id) {
+    function updateProductStock($product_id)
+    {
         if ($product_id) {
             $total_stock = \backend\models\StockSum::find()
                 ->where(['product_id' => $product_id])
@@ -945,36 +980,40 @@ class JournaltransController extends Controller
         }
     }
 
-    public function actionPrint($id){
-        if($id){
+    public function actionPrint($id)
+    {
+        if ($id) {
             $model = JournalTrans::findOne($id);
-            $model_line = JournalTransLine::find()->where(['journal_trans_id'=>$id])->all();
-            return $this->render('_printissue',[
+            $model_line = JournalTransLine::find()->where(['journal_trans_id' => $id])->all();
+            return $this->render('_printissue', [
                 'model' => $model,
                 'model_line' => $model_line
             ]);
         }
     }
+
     // In your controller
     public function actionPrintIssue($id = null)
     {
         //$this->layout = 'print'; // Use minimal print layout
         return $this->render('_printissue');
     }
+
     public function actionPrintPickupOut($id = null)
     {
-      //  $this->layout = 'print'; // Use minimal print layout
+        //  $this->layout = 'print'; // Use minimal print layout
         return $this->render('_printpickupout');
     }
 
-    public function actionAddDocFile(){
+    public function actionAddDocFile()
+    {
         $id = \Yii::$app->request->post('id');
-        if($id){
+        if ($id) {
             $uploaded = UploadedFile::getInstancesByName('file_doc');
             if (!empty($uploaded)) {
                 $loop = 0;
                 foreach ($uploaded as $file) {
-                    $upfiles = "worker_" . time()."_".$loop . "." . $file->getExtension();
+                    $upfiles = "worker_" . time() . "_" . $loop . "." . $file->getExtension();
                     if ($file->saveAs('uploads/journal_trans_doc/' . $upfiles)) {
                         $model_doc = new \common\models\JournalTransDoc();
                         $model_doc->journal_trans_id = $id;
@@ -990,15 +1029,17 @@ class JournaltransController extends Controller
         }
         return $this->redirect(['update', 'id' => $id]);
     }
-    public function actionDeleteDocFile(){
+
+    public function actionDeleteDocFile()
+    {
         $id = \Yii::$app->request->post('id');
         $doc_delete_list = trim(\Yii::$app->request->post('doc_delete_list'));
-        if($id){
-            $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' => $id,'doc_name' => $doc_delete_list])->one();
-            if($model_doc){
-                if($model_doc->delete()){
-                    if(file_exists('uploads/journal_trans_doc/'.$model_doc->doc_name)){
-                        unlink('uploads/journal_trans_doc/'.$model_doc->doc_name);
+        if ($id) {
+            $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' => $id, 'doc_name' => $doc_delete_list])->one();
+            if ($model_doc) {
+                if ($model_doc->delete()) {
+                    if (file_exists('uploads/journal_trans_doc/' . $model_doc->doc_name)) {
+                        unlink('uploads/journal_trans_doc/' . $model_doc->doc_name);
                     }
                 }
             }
