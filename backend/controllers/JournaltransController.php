@@ -47,12 +47,32 @@ class JournaltransController extends Controller
 
     public function beforeAction($action)
     {
-        if (!Yii::$app->session->get('company_id')) {
+        if (!$this->isSessionValid()) {
             Yii::$app->user->logout();
             return $this->redirect(['site/login']);
         }
         return parent::beforeAction($action);
     }
+
+    /**
+     * Checks if the current session is valid.
+     *
+     * @return bool
+     */
+    private function isSessionValid(): bool
+    {
+        $session = Yii::$app->session;
+        return !empty($session->get('company_id')) && !empty(Yii::$app->user->id);
+    }
+
+//    public function beforeAction($action)
+//    {
+//        if (!Yii::$app->session->get('company_id') || empty(Yii::$app->session->get('company_id')) || empty(Yii::$app->user->id)) {
+//            Yii::$app->user->logout();
+//            return $this->redirect(['site/login']);
+//        }
+//        return parent::beforeAction($action);
+//    }
 
     /**
      * Lists all JournalTransX models.
