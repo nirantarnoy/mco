@@ -1344,7 +1344,7 @@ class PurchController extends Controller
         $id = \Yii::$app->request->post('id');
         $doc_delete_list = trim(\Yii::$app->request->post('doc_delete_list'));
         if ($id) {
-            $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $id, 'doc_name' => $doc_delete_list])->one();
+            $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $id, 'doc_name' => trim($doc_delete_list)])->one();
             if ($model_doc) {
                 if ($model_doc->delete()) {
                     if (file_exists('uploads/purch_doc/' . $model_doc->doc_name)) {
