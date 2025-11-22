@@ -459,6 +459,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 <?php endif; ?>
+<?php \yii\widgets\Pjax::begin();?>
     <div class="purch-form">
         <input type="hidden" id="purch-req-is-vat" value="<?= $model->isNewRecord ? '' : $model->is_vat ?>">
         <input type="hidden" id="after-save-vat-amount" value="<?= $model->vat_amount ?>">
@@ -1070,7 +1071,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                     </a>
                                 </td>
                                 <td style="text-align: center">
-                                    <div class="btn btn-danger" data-var="<?= trim($value->doc_name) ?>"
+                                    <div class="btn btn-danger" data-value="<?=$model->id?>" data-var="<?= trim($value->doc_name) ?>"
                                          onclick="delete_doc($(this))">ลบ
                                     </div>
                                 </td>
@@ -1103,21 +1104,38 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
             <!--                </div>-->
             <!--            </form>-->
         <?php endif; ?>
-        <form id="form-delete-doc-file" action="<?= Url::to(['purch/delete-doc-file'], true) ?>" method="post">
-            <input type="hidden" name="id" value="<?= $model->id ?>">
-            <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
-        </form>
+
 
     </div>
-
+    <form id="form-delete-doc-file" action="<?= Url::to(['purch/delete-doc-file'], true) ?>" method="post">
+        <input type="hidden" name="id" value="<?= $model->id ?>">
+        <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
+    </form>
+<?php \yii\widgets\Pjax::end();?>
 <?php
+$url_to_delele_file = Url::to(['purch/delete-doc-file'], true);
 $script = <<< JS
 function delete_doc(e){
     var file_name = e.attr('data-var');
-    if(file_name != null && confirm('ต้องการลบไฟล์แนบใช่หรือไม่?')){
-       // alert(file_name);
-        $(".delete-doc-list").val(file_name);
-        $("#form-delete-doc-file").submit();
+    var id = e.attr('data-value');
+    if(id > 0 && file_name != null && confirm('ต้องการลบไฟล์แนบใช่หรือไม่?')){
+       // // alert(file_name);
+       //  $(".delete-doc-list").val(file_name);
+       //  $("#form-delete-doc-file")[0].submit();
+       $.ajax({
+         type: "POST",
+         dataType: "html",
+         url: "$url_to_delele_file",
+         data: {id: id, doc_delete_list: file_name},
+         success: function (data) {
+             //alert(data)
+             console.log(data);
+             location.reload();
+         },
+         error: function (data) {
+             console.log(data);
+         }
+       })
     }
 }
 
