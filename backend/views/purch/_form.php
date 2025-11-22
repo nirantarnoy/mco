@@ -1113,8 +1113,9 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 <?php
 $script = <<< JS
 function delete_doc(e){
+    alert();
     var file_name = e.attr('data-var');
-    if(file_name != null){
+    if(file_name != null && confirm('ต้องการลบไฟล์แนบใช่หรือไม่?')){
         $(".delete-doc-list").val(file_name);
         $("#form-delete-doc-file").submit();
     }
