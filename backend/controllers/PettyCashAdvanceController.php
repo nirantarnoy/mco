@@ -461,7 +461,7 @@ class PettyCashAdvanceController extends Controller
             ])
             ->orderBy(['request_date' => SORT_ASC, 'id' => SORT_ASC]);
 
-        // Query for vouchers with details (รายจ่าย)
+        // Query for vouchers with details (รายจ่าย) - ใช้ createCommand แทน
         $voucherQuery = PettyCashVoucher::find()
             ->alias('v')
             ->select([
@@ -480,7 +480,6 @@ class PettyCashAdvanceController extends Controller
                 'd.other'
             ])
             ->innerJoin(['d' => PettyCashDetail::tableName()], 'd.voucher_id = v.id')
-            ->indexBy(null)  // เพิ่มบรรทัดนี้เพื่อไม่ให้ index ด้วย primary key
             ->orderBy(['v.date' => SORT_ASC, 'v.id' => SORT_ASC, 'd.id' => SORT_ASC]);
 
         // Apply date filters
@@ -502,7 +501,16 @@ class PettyCashAdvanceController extends Controller
 
         // Get data
         $advances = $advanceQuery->asArray()->all();
-        $vouchers = $voucherQuery->asArray()->all();
+
+        // ใช้ createCommand()->queryAll() แทน asArray()->all()
+        $vouchers = $voucherQuery->createCommand()->queryAll();
+
+        // Debug
+        echo "จำนวน vouchers: " . count($vouchers) . "<br>";
+        echo "<pre>";
+        print_r($vouchers);
+        echo "</pre>";
+        die();
 
         // Combine and sort all transactions by date
         $allTransactions = [];
