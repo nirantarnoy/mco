@@ -505,12 +505,12 @@ class PettyCashAdvanceController extends Controller
         // ใช้ createCommand()->queryAll() แทน asArray()->all()
         $vouchers = $voucherQuery->createCommand()->queryAll();
 
-        // Debug
-        echo "จำนวน vouchers: " . count($vouchers) . "<br>";
-        echo "<pre>";
-        print_r($vouchers);
-        echo "</pre>";
-        die();
+//        // Debug
+//        echo "จำนวน vouchers: " . count($vouchers) . "<br>";
+//        echo "<pre>";
+//        print_r($vouchers);
+//        echo "</pre>";
+//        die();
 
         // Combine and sort all transactions by date
         $allTransactions = [];
