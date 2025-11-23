@@ -503,8 +503,6 @@ class PettyCashAdvanceController extends Controller
         $advances = $advanceQuery->asArray()->all();
         $vouchers = $voucherQuery->asArray()->all();
 
-        print_r($vouchers);return;
-
         // Combine and sort all transactions by date
         $allTransactions = [];
 
