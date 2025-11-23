@@ -223,6 +223,7 @@ class PettyCashVoucherController extends Controller
 
                         // Handle new details
                         $detailsData = Yii::$app->request->post('PettyCashDetail', []);
+                       // print_r($detailsData);return;
                         $this->saveDetails($model, $detailsData);
 
                         $transaction->commit();

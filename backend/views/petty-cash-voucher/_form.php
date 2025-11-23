@@ -700,25 +700,24 @@ function addDetailRow() {
             <textarea name="PettyCashDetail[` + rowIndex + `][detail]" class="form-control form-control-sm" rows="2" placeholder="รายละเอียดการจ่าย"></textarea>
         </td>
         <td>
-            <div class="product-field-container">
-                <input type="text" name="PettyCashDetail[` + rowIndex + `][job_ref_id]" class="form-control form-control-sm job-autocomplete" data-index="` + rowIndex + `" placeholder="ใบงาน">
-                <div class="autocomplete-dropdown" data-index="` + rowIndex + `"></div>
-            </div>
+            <input type="text" name="PettyCashDetail[` + rowIndex + `][job_ref_detail]" class="form-control form-control-sm job-autocomplete" placeholder="ใบงาน" data-index="` + rowIndex + `" autocomplete="off">
+            <input type="hidden" name="PettyCashDetail[` + rowIndex + `][job_ref_id]" class="job-id-hidden" data-index="` + rowIndex + `" value="">
+            <div class="autocomplete-dropdown" data-index="` + rowIndex + `"></div>
         </td>
         <td>
-            <input type="number" name="PettyCashDetail[` + rowIndex + `][amount]" class="form-control form-control-sm amount-input text-right" step="0.01" min="" placeholder="0.00" value="0.00">
+            <input type="number" name="PettyCashDetail[` + rowIndex + `][amount]" class="form-control form-control-sm amount-input text-right" step="0.01" placeholder="0.00" value="0.00">
         </td>
         <td>
-            <input type="number" name="PettyCashDetail[` + rowIndex + `][vat]" class="form-control form-control-sm text-right" step="0.01" min="" placeholder="0.00" value="0.00">
+            <input type="number" name="PettyCashDetail[` + rowIndex + `][vat]" class="form-control form-control-sm text-right" step="0.01" placeholder="0.00" value="0.00">
         </td>
         <td>
-            <input type="number" name="PettyCashDetail[` + rowIndex + `][vat_amount]" class="form-control form-control-sm vat-amount-input text-right" step="0.01" min="" placeholder="0.00" value="0.00">
+            <input type="number" name="PettyCashDetail[` + rowIndex + `][vat_amount]" class="form-control form-control-sm vat-amount-input text-right" step="0.01" placeholder="0.00" value="0.00">
         </td>
         <td>
-            <input type="number" name="PettyCashDetail[` + rowIndex + `][wht]" class="form-control form-control-sm wht-input text-right" step="0.01" min="" placeholder="0.00" value="0.00">
+            <input type="number" name="PettyCashDetail[` + rowIndex + `][wht]" class="form-control form-control-sm wht-input text-right" step="0.01" placeholder="0.00" value="0.00">
         </td>
         <td>
-            <input type="number" name="PettyCashDetail[` + rowIndex + `][other]" class="form-control form-control-sm other-input text-right" step="0.01" min="" placeholder="0.00" value="0.00">
+            <input type="number" name="PettyCashDetail[` + rowIndex + `][other]" class="form-control form-control-sm other-input text-right" step="0.01" placeholder="0.00" value="0.00">
         </td>
         <td>
             <input type="text" name="PettyCashDetail[` + rowIndex + `][total]" class="form-control form-control-sm total-input text-right" readonly style="background-color: #f8f9fa;" value="0.00">
