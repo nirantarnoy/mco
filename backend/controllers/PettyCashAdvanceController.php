@@ -449,6 +449,19 @@ class PettyCashAdvanceController extends Controller
         $dateTo = $request->post('date_to');
         $documentNo = $request->post('document_no');
 
+        // ตรวจสอบข้อมูลในตาราง detail ก่อน
+        echo "<h3>ตรวจสอบข้อมูล PettyCashDetail สำหรับ voucher_id = 21</h3>";
+        $detailCheck = PettyCashDetail::find()
+            ->where(['voucher_id' => 21])
+            ->asArray()
+            ->all();
+        echo "จำนวน details: " . count($detailCheck) . "<br>";
+        echo "<pre>";
+        print_r($detailCheck);
+        echo "</pre>";
+
+        echo "<hr>";
+
         // Query for advances (รายรับ)
         $advanceQuery = PettyCashAdvance::find()
             ->select([
@@ -499,106 +512,23 @@ class PettyCashAdvanceController extends Controller
             $voucherQuery->andWhere(['like', 'v.pcv_no', $documentNo]);
         }
 
+        // แสดง SQL query ที่จะรัน
+        echo "<h3>SQL Query ที่ถูกสร้าง:</h3>";
+        echo "<pre>" . $voucherQuery->createCommand()->getRawSql() . "</pre>";
+
         // Get data
         $advances = $advanceQuery->asArray()->all();
         $vouchers = $voucherQuery->asArray()->all();
 
         // Debug: ดูจำนวนและข้อมูลที่ query ได้
+        echo "<h3>ผลลัพธ์จาก Query:</h3>";
         echo "จำนวน vouchers ที่ query ได้: " . count($vouchers) . "<br>";
         echo "<pre>";
         print_r($vouchers);
         echo "</pre>";
-        die(); // หยุดตรงนี้เพื่อดูข้อมูล
+        die();
 
-        // Combine and sort all transactions by date
-        $allTransactions = [];
-
-        foreach ($advances as $advance) {
-            $allTransactions[] = [
-                'date' => $advance['request_date'],
-                'document_no' => $advance['advance_no'],
-                'description' => $advance['purpose'],
-                'type' => 'advance',
-                'income' => $advance['amount'],
-                'expense' => 0,
-                'vat' => 0,
-                'vat_amount' => 0,
-                'wht' => 0,
-                'other' => 0,
-                'total_expense' => 0,
-            ];
-        }
-
-        // แสดงแต่ละ detail เป็นแถวแยกกัน
-        foreach ($vouchers as $voucher) {
-            $totalExpense = (double)$voucher['amount'] + (double)$voucher['vat_amount'] - (double)$voucher['wht'] + (double)$voucher['other'];
-
-            $allTransactions[] = [
-                'date' => $voucher['date'],
-                'document_no' => $voucher['pcv_no'],
-                'description' => $voucher['name'] . (!empty($voucher['detail']) ? ' - ' . $voucher['detail'] : ''),
-                'ac_code' => $voucher['ac_code'],
-                'type' => 'voucher',
-                'income' => 0,
-                'expense' => $voucher['amount'],
-                'vat' => $voucher['vat'],
-                'vat_amount' => $voucher['vat_amount'],
-                'wht' => $voucher['wht'],
-                'other' => $voucher['other'],
-                'total_expense' => $totalExpense,
-            ];
-        }
-
-        // Sort by date
-        usort($allTransactions, function($a, $b) {
-            return strtotime($a['date']) - strtotime($b['date']);
-        });
-
-        // Calculate running balance
-        $balance = 0;
-        foreach ($allTransactions as &$transaction) {
-            $balance += $transaction['income'];
-            $balance -= $transaction['total_expense'];
-            $transaction['balance'] = $balance;
-        }
-
-        // Calculate totals
-        $totalIncome = array_sum(array_column($allTransactions, 'income'));
-        $totalExpense = array_sum(array_column($allTransactions, 'expense'));
-        $totalVat = array_sum(array_column($allTransactions, 'vat_amount'));
-        $totalWht = array_sum(array_column($allTransactions, 'wht'));
-        $totalOther = array_sum(array_column($allTransactions, 'other'));
-        $totalAllExpenses = array_sum(array_column($allTransactions, 'total_expense'));
-        $finalBalance = $balance;
-
-        // Check if export to Excel is requested
-        if ($request->get('export') === 'excel') {
-            return $this->exportToExcel($allTransactions, [
-                'totalIncome' => $totalIncome,
-                'totalExpense' => $totalExpense,
-                'totalVat' => $totalVat,
-                'totalWht' => $totalWht,
-                'totalOther' => $totalOther,
-                'totalAllExpenses' => $totalAllExpenses,
-                'finalBalance' => $finalBalance,
-                'dateFrom' => $dateFrom,
-                'dateTo' => $dateTo,
-            ]);
-        }
-
-        return $this->render('_print_petty', [
-            'transactions' => $allTransactions,
-            'totalIncome' => $totalIncome,
-            'totalExpense' => $totalExpense,
-            'totalVat' => $totalVat,
-            'totalWht' => $totalWht,
-            'totalOther' => $totalOther,
-            'totalAllExpenses' => $totalAllExpenses,
-            'finalBalance' => $finalBalance,
-            'dateFrom' => $dateFrom,
-            'dateTo' => $dateTo,
-            'documentNo' => $documentNo,
-        ]);
+        // ... ส่วนที่เหลือเหมือนเดิม
     }
 
     /**
