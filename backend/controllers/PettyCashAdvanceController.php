@@ -439,6 +439,170 @@ class PettyCashAdvanceController extends Controller
         ];
     }
 
+//    public function actionPrintPetty()
+//    {
+//        // echo "ok";return;
+//        $request = Yii::$app->request;
+//
+//        // Get filter parameters
+//        $dateFrom = $request->post('date_from');
+//        $dateTo = $request->post('date_to');
+//        $documentNo = $request->post('document_no');
+//
+//        // Query for advances (รายรับ)
+//        $advanceQuery = PettyCashAdvance::find()
+//            ->select([
+//                'id',
+//                'advance_no',
+//                'request_date',
+//                'amount',
+//                'purpose',
+//                'status'
+//            ])
+//            ->orderBy(['request_date' => SORT_ASC, 'id' => SORT_ASC]);
+//
+//        // Query for vouchers with details (รายจ่าย) - ใช้ createCommand แทน
+//        $voucherQuery = PettyCashVoucher::find()
+//            ->alias('v')
+//            ->select([
+//                'v.id',
+//                'v.pcv_no',
+//                'v.date',
+//                'v.name',
+//                'v.status',
+//                'd.id as detail_id',
+//                'd.amount',
+//                'd.ac_code',
+//                'd.detail',
+//                'd.vat',
+//                'd.vat_amount',
+//                'd.wht',
+//                'd.other'
+//            ])
+//            ->innerJoin(['d' => PettyCashDetail::tableName()], 'd.voucher_id = v.id')
+//            ->orderBy(['v.date' => SORT_ASC, 'v.id' => SORT_ASC, 'd.id' => SORT_ASC]);
+//
+//        // Apply date filters
+//        if (!empty($dateFrom)) {
+//            $advanceQuery->andWhere(['>=', 'request_date', $dateFrom]);
+//            $voucherQuery->andWhere(['>=', 'v.date', $dateFrom]);
+//        }
+//
+//        if (!empty($dateTo)) {
+//            $advanceQuery->andWhere(['<=', 'request_date', $dateTo]);
+//            $voucherQuery->andWhere(['<=', 'v.date', $dateTo]);
+//        }
+//
+//        // Apply document number filter
+//        if (!empty($documentNo)) {
+//            $advanceQuery->andWhere(['like', 'advance_no', $documentNo]);
+//            $voucherQuery->andWhere(['like', 'v.pcv_no', $documentNo]);
+//        }
+//
+//        // Get data
+//        $advances = $advanceQuery->asArray()->all();
+//
+//        // ใช้ createCommand()->queryAll() แทน asArray()->all()
+//        $vouchers = $voucherQuery->createCommand()->queryAll();
+//
+////        // Debug
+////        echo "จำนวน vouchers: " . count($vouchers) . "<br>";
+////        echo "<pre>";
+////        print_r($vouchers);
+////        echo "</pre>";
+////        die();
+//
+//        // Combine and sort all transactions by date
+//        $allTransactions = [];
+//
+//        foreach ($advances as $advance) {
+//            $allTransactions[] = [
+//                'date' => $advance['request_date'],
+//                'document_no' => $advance['advance_no'],
+//                'description' => $advance['purpose'],
+//                'type' => 'advance',
+//                'income' => $advance['amount'],
+//                'expense' => 0,
+//                'vat' => 0,
+//                'vat_amount' => 0,
+//                'wht' => 0,
+//                'other' => 0,
+//                'total_expense' => 0,
+//            ];
+//        }
+//
+//        // แสดงแต่ละ detail เป็นแถวแยกกัน
+//        foreach ($vouchers as $voucher) {
+//            $totalExpense = (double)$voucher['amount'] + (double)$voucher['vat_amount'] - (double)$voucher['wht'] + (double)$voucher['other'];
+//
+//            $allTransactions[] = [
+//                'date' => $voucher['date'],
+//                'document_no' => $voucher['pcv_no'],
+//                'description' => $voucher['name'] . (!empty($voucher['detail']) ? ' - ' . $voucher['detail'] : ''),
+//                'ac_code' => $voucher['ac_code'],
+//                'type' => 'voucher',
+//                'income' => 0,
+//                'expense' => $voucher['amount'],
+//                'vat' => $voucher['vat'],
+//                'vat_amount' => $voucher['vat_amount'],
+//                'wht' => $voucher['wht'],
+//                'other' => $voucher['other'],
+//                'total_expense' => $totalExpense,
+//            ];
+//        }
+//
+//        // Sort by date
+//        usort($allTransactions, function($a, $b) {
+//            return strtotime($a['date']) - strtotime($b['date']);
+//        });
+//
+//        // Calculate running balance
+//        $balance = 0;
+//        foreach ($allTransactions as &$transaction) {
+//            $balance += $transaction['income'];
+//            $balance -= $transaction['total_expense'];
+//            $transaction['balance'] = $balance;
+//        }
+//
+//        // Calculate totals
+//        $totalIncome = array_sum(array_column($allTransactions, 'income'));
+//        $totalExpense = array_sum(array_column($allTransactions, 'expense'));
+//        $totalVat = array_sum(array_column($allTransactions, 'vat_amount'));
+//        $totalWht = array_sum(array_column($allTransactions, 'wht'));
+//        $totalOther = array_sum(array_column($allTransactions, 'other'));
+//        $totalAllExpenses = array_sum(array_column($allTransactions, 'total_expense'));
+//        $finalBalance = $balance;
+//
+//        // Check if export to Excel is requested
+//        if ($request->get('export') === 'excel') {
+//            return $this->exportToExcel($allTransactions, [
+//                'totalIncome' => $totalIncome,
+//                'totalExpense' => $totalExpense,
+//                'totalVat' => $totalVat,
+//                'totalWht' => $totalWht,
+//                'totalOther' => $totalOther,
+//                'totalAllExpenses' => $totalAllExpenses,
+//                'finalBalance' => $finalBalance,
+//                'dateFrom' => $dateFrom,
+//                'dateTo' => $dateTo,
+//            ]);
+//        }
+//
+//        return $this->render('_print_petty', [
+//            'transactions' => $allTransactions,
+//            'totalIncome' => $totalIncome,
+//            'totalExpense' => $totalExpense,
+//            'totalVat' => $totalVat,
+//            'totalWht' => $totalWht,
+//            'totalOther' => $totalOther,
+//            'totalAllExpenses' => $totalAllExpenses,
+//            'finalBalance' => $finalBalance,
+//            'dateFrom' => $dateFrom,
+//            'dateTo' => $dateTo,
+//            'documentNo' => $documentNo,
+//        ]);
+//    }
+
     public function actionPrintPetty()
     {
         // echo "ok";return;
@@ -448,6 +612,28 @@ class PettyCashAdvanceController extends Controller
         $dateFrom = $request->post('date_from');
         $dateTo = $request->post('date_to');
         $documentNo = $request->post('document_no');
+
+        // คำนวณยอดยกมา (ถ้ามีการเลือกวันที่เริ่มต้น)
+        $openingBalance = 0;
+        if (!empty($dateFrom)) {
+            // Query รายรับก่อนวันที่เริ่มต้น
+            $previousAdvances = PettyCashAdvance::find()
+                ->select(['SUM(amount) as total'])
+                ->where(['<', 'request_date', $dateFrom])
+                ->scalar();
+
+            // Query รายจ่าย (voucher details) ก่อนวันที่เริ่มต้น
+            $previousVouchers = (new \yii\db\Query())
+                ->select([
+                    'SUM(d.amount + d.vat_amount - d.wht + d.other) as total'
+                ])
+                ->from(['v' => PettyCashVoucher::tableName()])
+                ->innerJoin(['d' => PettyCashDetail::tableName()], 'd.voucher_id = v.id')
+                ->where(['<', 'v.date', $dateFrom])
+                ->scalar();
+
+            $openingBalance = (double)$previousAdvances - (double)$previousVouchers;
+        }
 
         // Query for advances (รายรับ)
         $advanceQuery = PettyCashAdvance::find()
@@ -461,7 +647,7 @@ class PettyCashAdvanceController extends Controller
             ])
             ->orderBy(['request_date' => SORT_ASC, 'id' => SORT_ASC]);
 
-        // Query for vouchers with details (รายจ่าย) - ใช้ createCommand แทน
+        // Query for vouchers with details (รายจ่าย)
         $voucherQuery = PettyCashVoucher::find()
             ->alias('v')
             ->select([
@@ -501,19 +687,28 @@ class PettyCashAdvanceController extends Controller
 
         // Get data
         $advances = $advanceQuery->asArray()->all();
-
-        // ใช้ createCommand()->queryAll() แทน asArray()->all()
         $vouchers = $voucherQuery->createCommand()->queryAll();
-
-//        // Debug
-//        echo "จำนวน vouchers: " . count($vouchers) . "<br>";
-//        echo "<pre>";
-//        print_r($vouchers);
-//        echo "</pre>";
-//        die();
 
         // Combine and sort all transactions by date
         $allTransactions = [];
+
+        // เพิ่มแถวยอดยกมาถ้ามีการเลือกวันที่
+        if (!empty($dateFrom) && $openingBalance != 0) {
+            $allTransactions[] = [
+                'date' => $dateFrom,
+                'document_no' => '-',
+                'description' => 'ยอดยกมา',
+                'type' => 'opening',
+                'income' => 0,
+                'expense' => 0,
+                'vat' => 0,
+                'vat_amount' => 0,
+                'wht' => 0,
+                'other' => 0,
+                'total_expense' => 0,
+                'balance' => $openingBalance,
+            ];
+        }
 
         foreach ($advances as $advance) {
             $allTransactions[] = [
@@ -556,9 +751,14 @@ class PettyCashAdvanceController extends Controller
             return strtotime($a['date']) - strtotime($b['date']);
         });
 
-        // Calculate running balance
-        $balance = 0;
+        // Calculate running balance (เริ่มจากยอดยกมา)
+        $balance = $openingBalance;
         foreach ($allTransactions as &$transaction) {
+            // ถ้าเป็นแถวยอดยกมา ไม่ต้องคำนวณซ้ำ
+            if ($transaction['type'] == 'opening') {
+                continue;
+            }
+
             $balance += $transaction['income'];
             $balance -= $transaction['total_expense'];
             $transaction['balance'] = $balance;
@@ -576,6 +776,7 @@ class PettyCashAdvanceController extends Controller
         // Check if export to Excel is requested
         if ($request->get('export') === 'excel') {
             return $this->exportToExcel($allTransactions, [
+                'openingBalance' => $openingBalance,
                 'totalIncome' => $totalIncome,
                 'totalExpense' => $totalExpense,
                 'totalVat' => $totalVat,
@@ -590,6 +791,7 @@ class PettyCashAdvanceController extends Controller
 
         return $this->render('_print_petty', [
             'transactions' => $allTransactions,
+            'openingBalance' => $openingBalance,
             'totalIncome' => $totalIncome,
             'totalExpense' => $totalExpense,
             'totalVat' => $totalVat,
