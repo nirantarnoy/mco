@@ -503,6 +503,13 @@ class PettyCashAdvanceController extends Controller
         $advances = $advanceQuery->asArray()->all();
         $vouchers = $voucherQuery->asArray()->all();
 
+        // Debug: ดูจำนวนและข้อมูลที่ query ได้
+        echo "จำนวน vouchers ที่ query ได้: " . count($vouchers) . "<br>";
+        echo "<pre>";
+        print_r($vouchers);
+        echo "</pre>";
+        die(); // หยุดตรงนี้เพื่อดูข้อมูล
+
         // Combine and sort all transactions by date
         $allTransactions = [];
 
@@ -530,7 +537,7 @@ class PettyCashAdvanceController extends Controller
                 'date' => $voucher['date'],
                 'document_no' => $voucher['pcv_no'],
                 'description' => $voucher['name'] . (!empty($voucher['detail']) ? ' - ' . $voucher['detail'] : ''),
-                'ac_code' => $voucher['ac_code'], // เพิ่มรหัสบัญชี
+                'ac_code' => $voucher['ac_code'],
                 'type' => 'voucher',
                 'income' => 0,
                 'expense' => $voucher['amount'],
