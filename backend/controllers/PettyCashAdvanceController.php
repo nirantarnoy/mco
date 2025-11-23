@@ -441,7 +441,7 @@ class PettyCashAdvanceController extends Controller
 
     public function actionPrintPetty()
     {
-       // echo "ok";return;
+        // echo "ok";return;
         $request = Yii::$app->request;
 
         // Get filter parameters
@@ -470,9 +470,9 @@ class PettyCashAdvanceController extends Controller
                 'v.date',
                 'v.name',
                 'v.status',
+                'd.id as detail_id',
                 'd.amount',
                 'd.ac_code',
-                'd.id as detail_id',
                 'd.detail',
                 'd.vat',
                 'd.vat_amount',
@@ -522,6 +522,7 @@ class PettyCashAdvanceController extends Controller
             ];
         }
 
+        // แสดงแต่ละ detail เป็นแถวแยกกัน
         foreach ($vouchers as $voucher) {
             $totalExpense = (double)$voucher['amount'] + (double)$voucher['vat_amount'] - (double)$voucher['wht'] + (double)$voucher['other'];
 
@@ -529,6 +530,7 @@ class PettyCashAdvanceController extends Controller
                 'date' => $voucher['date'],
                 'document_no' => $voucher['pcv_no'],
                 'description' => $voucher['name'] . (!empty($voucher['detail']) ? ' - ' . $voucher['detail'] : ''),
+                'ac_code' => $voucher['ac_code'], // เพิ่มรหัสบัญชี
                 'type' => 'voucher',
                 'income' => 0,
                 'expense' => $voucher['amount'],
