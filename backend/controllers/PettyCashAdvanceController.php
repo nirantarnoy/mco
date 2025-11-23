@@ -472,6 +472,7 @@ class PettyCashAdvanceController extends Controller
                 'v.status',
                 'd.amount',
                 'd.ac_code',
+                'd.id as detail_id',
                 'd.detail',
                 'd.vat',
                 'd.vat_amount',
