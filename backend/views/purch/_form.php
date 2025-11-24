@@ -1065,8 +1065,13 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <td><?= $value->doc_name ?></td>
                                 <td><?= \backend\helpers\PurchDocType::getTypeById($value->doc_type_id) ?></td>
                                 <td style="text-align: center">
-                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $value->doc_name ?>"
-                                       target="_blank">
+                                    <?php
+                                    // สร้าง URL ที่ถูกต้องสำหรับดาวน์โหลดไฟล์
+                                    $fileUrl = \Yii::$app->getUrlManager()->baseUrl.'/uploads/purch_doc/' . $value->doc_name;
+                                    ?>
+                                    <a href="<?= $fileUrl ?>"
+                                       target="_blank"
+                                       class="btn btn-sm btn-info">
                                         ดูเอกสาร
                                     </a>
                                 </td>
