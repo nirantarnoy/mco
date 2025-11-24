@@ -343,29 +343,42 @@ class Job extends \common\models\Job
 
         // นับใบสั่งซื้อทั้งหมด
         $total = $db->createCommand("
-        SELECT COUNT(*) FROM purch WHERE job_id = :jobId
+        SELECT COUNT(*) 
+        FROM purch 
+        WHERE job_id = :jobId
     ")
             ->bindValue(':jobId', $jobId)
             ->queryScalar();
 
+        // ถ้าไม่มีใบสั่งซื้อเลย
         if ($total == 0) {
             return 0;
         }
 
-        // นับเฉพาะใบที่มีไฟล์แนบ
+        // นับใบสั่งซื้อที่มีไฟล์แนบ
         $complete = $db->createCommand("
-        SELECT COUNT(DISTINCT p.id)
-        FROM purch p
-        LEFT JOIN purch_doc pd ON pd.purch_id = p.id
-        WHERE p.job_id = :jobId
-        GROUP BY p.id
-        HAVING COUNT(pd.id) > 0
+        SELECT COUNT(*) 
+        FROM (
+            SELECT p.id, COUNT(pd.id) AS doc_count
+            FROM purch p
+            LEFT JOIN purch_doc pd ON pd.purch_id = p.id
+            WHERE p.job_id = :jobId
+            GROUP BY p.id
+        ) AS t
+        WHERE t.doc_count > 0
     ")
             ->bindValue(':jobId', $jobId)
             ->queryScalar();
 
-        return ($complete == $total) ? 1 : 0;
+        // ✔ ทุกใบมีไฟล์แนบครบ
+        if ($complete == $total) {
+            return 100;
+        }
+
+        // ❗ มีใบสั่งซื้อแต่ไฟล์แนบยังไม่ครบ
+        return 1;
     }
+
 
 
     /**
