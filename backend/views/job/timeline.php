@@ -826,7 +826,7 @@ if($today > $end){
                                 </table>
                             </div>
                         <?php else: ?>
-                            <div class="alert alert-success mb-0">
+                            <div class="alert alert-primary mb-0">
                                 <i class="fas fa-info-circle"></i>
                                 ไม่มีข้อมูลใบกำกับภาษี/ใบเสร็จสำหรับใบงานนี้
                             </div>
@@ -1132,7 +1132,7 @@ if($today > $end){
                                 </table>
                             </div>
                         <?php else: ?>
-                            <div class="alert alert-info mb-0">
+                            <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
                                 ไม่มีข้อมูลใบเสร็จรับเงินสำหรับใบงานนี้
                             </div>
