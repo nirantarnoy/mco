@@ -177,9 +177,39 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'label' => 'สถานะ',
                                 'format' => 'raw',
                                 'value' => function ($model) {
-                                    return Html::tag('span', $model->getStatusText(), [
-                                        'class' => 'badge badge-' . $model->getStatusColor()
-                                    ]);
+//                                    return Html::tag('span', $model->getStatusText(), [
+//                                        'class' => 'badge badge-' . $model->getStatusColor()
+//                                    ]);
+
+                                    $activities = [
+                                        'ขอซื้อ' => $model->hasPurchaseRequest,
+                                        'สั่งซื้อ' => $model->hasPurchaseOrder,
+                                        'รับสินค้า' => $model->hasReceiveTransaction,
+                                        'เบิกสินค้า' => $model->hasWithdrawTransaction($model->id),
+                                        'แจ้งหนี้' => $model->hasDebtNotification($model->id),
+                                        'กำกับภาษี' => $model->hasTaxInvoice,
+                                        'ใบเสร็จ' => $model->hasReceipt,
+                                        'วางบิล' => $model->hasBilling,
+                                        'ชำระเงิน' => $model->hasPayment,
+                                    ];
+                                    $output = '<div class="activity-status-container">';
+                                    $is_not_completed = 0;
+                                    foreach ($activities as $activityName => $hasActivity) {
+                                       if($hasActivity == 0)
+                                       {
+                                           $is_not_completed+=1;
+                                       }
+                                    }
+                                    if($is_not_completed == 0){
+                                        $output .= '<span class="activity-badge activity-completed">' .
+                                            'completed' . '</span>';
+                                    }else{
+                                        $output .= '<span class="activity-badge activity-open">' .
+                                            'processing' . '</span>';
+                                    }
+                                    $output .= '</div>';
+
+                                    return $output;
                                 },
                                 'contentOptions' => ['style' => 'width: 120px; text-align: center;'],
                             ],
