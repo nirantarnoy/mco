@@ -693,7 +693,7 @@ $this->params['breadcrumbs'][] = $this->title;
     }
 
     .activity-completed {
-        background-color: #28a745;
+        background-color: #fa952e;
         color: white;
         box-shadow: 0 1px 3px rgba(40, 167, 69, 0.3);
     }
