@@ -190,7 +190,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'value' => function ($model) {
                                     // ตรวจสอบสถานะของแต่ละกิจกรรม
                                     $activities = [
-                                        'ขอซื้อ' => $model->hasPurchaseRequest($model->id),
+                                        'ขอซื้อ' => $model->hasPurchaseReques,
                                         'สั่งซื้อ' => $model->hasPurchaseOrder($model->id),
                                         'รับสินค้า' => $model->hasReceiveTransaction($model->id),
                                         'เบิกสินค้า' => $model->hasWithdrawTransaction($model->id),

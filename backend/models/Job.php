@@ -10,6 +10,7 @@ date_default_timezone_set('Asia/Bangkok');
 
 class Job extends \common\models\Job
 {
+    private $_activityCache = [];
     const JOB_STATUS_OPEN = 1;
     const JOB_STATUS_CLOSED = 2;
     const JOB_STATUS_CANCELLED = 3;
@@ -253,6 +254,13 @@ class Job extends \common\models\Job
     }
 
 
+    ///// get new
+    public function getHasPurchaseRequest()
+    {
+        return $this->hasPurchaseRequest($this->id);
+    }
+
+
 
     /**
      * ตรวจสอบว่ามีใบขอซื้อหรือไม่
@@ -266,16 +274,15 @@ class Job extends \common\models\Job
 //        return $count > 0;
 //    }
 
-    public function hasPurchaseRequest($jobId)
+    public function hasPurchaseRequest($id)
     {
-        $db = Yii::$app->db;
-
-        $isComplete = $db->createCommand("
-            SELECT 
-                CASE 
-                    WHEN COUNT(*) = SUM(CASE WHEN doc_count > 0 THEN 1 ELSE 0 END)
-                    THEN 1 ELSE 0 
-                END AS is_complete
+        return $this->cacheActivity('purchase_request', function () use ($id) {
+            // ใส่ SQL เวอร์ชันใหม่ที่คุณใช้
+            $db = Yii::$app->db;
+            $count = $db->createCommand("
+            SELECT CASE 
+                WHEN COUNT(*) = SUM(CASE WHEN doc_count > 0 THEN 1 ELSE 0 END) 
+                THEN 1 ELSE 0 END
             FROM (
                 SELECT pr.id, COUNT(prd.id) AS doc_count
                 FROM purch_req pr
@@ -283,10 +290,12 @@ class Job extends \common\models\Job
                 WHERE pr.job_id = :jobId
                 GROUP BY pr.id
             ) t
-        ")->bindValue(':jobId', $jobId)->queryScalar();
+        ")->bindValue(':jobId', $id)->queryScalar();
 
-        return (int)$isComplete;
+            return (int)$count;
+        });
     }
+
 
 
     /**
@@ -457,4 +466,13 @@ class Job extends \common\models\Job
         $this->company_id = \Yii::$app->session->get('company_id');
         return true;
     }
+
+    private function cacheActivity($key, $callback)
+    {
+        if (!array_key_exists($key, $this->_activityCache)) {
+            $this->_activityCache[$key] = call_user_func($callback);
+        }
+        return $this->_activityCache[$key];
+    }
+
 }
