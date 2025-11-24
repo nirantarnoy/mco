@@ -281,24 +281,47 @@ class Job extends \common\models\Job
     public function hasPurchaseRequest($id)
     {
         return $this->cacheActivity('purchase_request', function () use ($id) {
-            // ใส่ SQL เวอร์ชันใหม่ที่คุณใช้
             $db = Yii::$app->db;
-            $count = $db->createCommand("
-            SELECT CASE 
-                WHEN COUNT(*) = SUM(CASE WHEN doc_count > 0 THEN 1 ELSE 0 END) 
-                THEN 1 ELSE 0 END
+
+            // ดึงจำนวนใบขอซื้อทั้งหมด
+            $total = $db->createCommand("
+            SELECT COUNT(*) 
+            FROM purch_req 
+            WHERE job_id = :jobId
+        ")
+                ->bindValue(':jobId', $id)
+                ->queryScalar();
+
+            // ถ้าไม่มีใบขอซื้อเลย
+            if ($total == 0) {
+                return 0;
+            }
+
+            // ดึงจำนวนใบที่มีไฟล์แนบ
+            $complete = $db->createCommand("
+            SELECT COUNT(*) 
             FROM (
-                SELECT pr.id, COUNT(prd.id) AS doc_count
+                SELECT pr.id
                 FROM purch_req pr
                 LEFT JOIN purch_req_doc prd ON prd.purch_req_id = pr.id
                 WHERE pr.job_id = :jobId
                 GROUP BY pr.id
+                HAVING COUNT(prd.id) > 0
             ) t
-        ")->bindValue(':jobId', $id)->queryScalar();
+        ")
+                ->bindValue(':jobId', $id)
+                ->queryScalar();
 
-            return (int)$count;
+            // ถ้าครบทุกใบ
+            if ($complete == $total) {
+                return 100;
+            }
+
+            // มีใบขอซื้อ แต่ยังไม่ครบทุกใบ
+            return 1;
         });
     }
+
 
 
 

@@ -203,7 +203,14 @@ $this->params['breadcrumbs'][] = $this->title;
 
                                     $output = '<div class="activity-status-container">';
                                     foreach ($activities as $activityName => $hasActivity) {
-                                        $statusClass = $hasActivity ? 'activity-completed' : 'activity-pending';
+                                        $statusClass = ''; // $hasActivity ? 'activity-completed' : 'activity-pending';
+                                        if($hasActivity == 0) {
+                                            $statusClass = 'activity-pending';
+                                        }else if($hasActivity == 1) {
+                                            $statusClass = 'activity-open';
+                                        }else if($hasActivity == 2) {
+                                            $statusClass = 'activity-completed';
+                                        }
                                         $output .= '<span class="activity-badge ' . $statusClass . '" title="' . $activityName . '">' .
                                             $activityName . '</span>';
                                     }
@@ -692,8 +699,13 @@ $this->params['breadcrumbs'][] = $this->title;
         line-height: 1.2;
     }
 
-    .activity-completed {
+    .activity-open {
         background-color: #fa952e;
+        color: white;
+        box-shadow: 0 1px 3px rgba(40, 167, 69, 0.3);
+    }
+    .activity-completed {
+        background-color: #6bdd1f;
         color: white;
         box-shadow: 0 1px 3px rgba(40, 167, 69, 0.3);
     }
