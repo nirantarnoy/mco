@@ -257,13 +257,36 @@ class Job extends \common\models\Job
      * ตรวจสอบว่ามีใบขอซื้อหรือไม่
      * @return bool
      */
-    public function hasPurchaseRequest($id)
+//    public function hasPurchaseRequest($id)
+//    {
+//        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch_req pr INNER JOIN purch_req_doc prd ON prd.purch_req_id = pr.id WHERE pr.job_id = :jobId')
+//            ->bindParam(':jobId', $id)
+//            ->queryScalar();
+//        return $count > 0;
+//    }
+
+    public function hasPurchaseRequest($jobId)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch_req pr INNER JOIN purch_req_doc prd ON prd.purch_req_id = pr.id WHERE pr.job_id = :jobId')
-            ->bindParam(':jobId', $id)
-            ->queryScalar();
-        return $count > 0;
+        $db = Yii::$app->db;
+
+        $isComplete = $db->createCommand("
+            SELECT 
+                CASE 
+                    WHEN COUNT(*) = SUM(CASE WHEN doc_count > 0 THEN 1 ELSE 0 END)
+                    THEN 1 ELSE 0 
+                END AS is_complete
+            FROM (
+                SELECT pr.id, COUNT(prd.id) AS doc_count
+                FROM purch_req pr
+                LEFT JOIN purch_req_doc prd ON prd.purch_req_id = pr.id
+                WHERE pr.job_id = :jobId
+                GROUP BY pr.id
+            ) t
+        ")->bindValue(':jobId', $jobId)->queryScalar();
+
+        return (int)$isComplete;
     }
+
 
     /**
      * ตรวจสอบว่ามีใบสั่งซื้อหรือไม่
