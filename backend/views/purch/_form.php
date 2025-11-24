@@ -459,7 +459,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 <?php endif; ?>
-<?php \yii\widgets\Pjax::begin();?>
+<?php \yii\widgets\Pjax::begin(); ?>
     <div class="purch-form">
         <input type="hidden" id="purch-req-is-vat" value="<?= $model->isNewRecord ? '' : $model->is_vat ?>">
         <input type="hidden" id="after-save-vat-amount" value="<?= $model->vat_amount ?>">
@@ -532,7 +532,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                         ]) ?>
                         <?= $form->field($model, 'exchange_rate')->textInput([
                             'maxlength' => true,
-                            'type'=>'number',
+                            'type' => 'number',
                             'min' => 0,
                             'step' => 0.01,
                         ])->label('อัตราแลกเปลี่ยน') ?>
@@ -1066,17 +1066,20 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <td><?= \backend\helpers\PurchDocType::getTypeById($value->doc_type_id) ?></td>
                                 <td style="text-align: center">
                                     <?php
-                                    // สร้าง URL ที่ถูกต้องสำหรับดาวน์โหลดไฟล์
-                                    $fileUrl = \Yii::$app->getUrlManager()->baseUrl.'/uploads/purch_doc/' . $value->doc_name;
+                                    $url = Yii::$app->request->hostInfo . Yii::$app->request->baseUrl . '/uploads/purch_doc/' . $value->doc_name;
+                                    echo Html::a(
+                                        'ดูเอกสาร',
+                                        $url,
+                                        [
+                                            'target' => '_blank',
+                                            'data-pjax' => '0',
+                                        ]
+                                    );
                                     ?>
-                                    <a href="<?= $fileUrl ?>"
-                                       target="_blank"
-                                       class="btn btn-sm btn-info">
-                                        ดูเอกสาร
-                                    </a>
                                 </td>
                                 <td style="text-align: center">
-                                    <div class="btn btn-danger" data-value="<?=$model->id?>" data-var="<?= trim($value->doc_name) ?>"
+                                    <div class="btn btn-danger" data-value="<?= $model->id ?>"
+                                         data-var="<?= trim($value->doc_name) ?>"
                                          onclick="delete_doc($(this))">ลบ
                                     </div>
                                 </td>
@@ -1116,7 +1119,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
         <input type="hidden" name="id" value="<?= $model->id ?>">
         <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
     </form>
-<?php \yii\widgets\Pjax::end();?>
+<?php \yii\widgets\Pjax::end(); ?>
 <?php
 $url_to_delele_file = Url::to(['purch/delete-doc-file'], true);
 $script = <<< JS

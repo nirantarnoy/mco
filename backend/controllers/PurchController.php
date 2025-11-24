@@ -45,6 +45,9 @@ class PurchController extends Controller
 
     public function beforeAction($action)
     {
+        if ($action->id == 'showdoc') {
+            $this->enableCsrfValidation = false;
+        }
         if (!Yii::$app->session->get('company_id')) {
             Yii::$app->user->logout();
             return $this->redirect(['site/login']);
@@ -1418,6 +1421,33 @@ class PurchController extends Controller
         return $this->redirect(['update', 'id' => $id]);
 
     }
+    public function actionShowdoc($filename){
+        $filePath = Yii::getAlias('@backend/web/uploads/purch_doc/') . $filename;
 
+        // Debug ดูว่า path ถูกไหม
+        // echo $filePath; exit;
+
+        if (file_exists($filePath)) {
+            $extension = pathinfo($filePath, PATHINFO_EXTENSION);
+
+            // กำหนด MIME type
+            $mimeTypes = [
+                'pdf' => 'application/pdf',
+                'png' => 'image/png',
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'gif' => 'image/gif',
+            ];
+
+            $mimeType = isset($mimeTypes[$extension]) ? $mimeTypes[$extension] : mime_content_type($filePath);
+
+            return Yii::$app->response->sendFile($filePath, $filename, [
+                'inline' => true,
+                'mimeType' => $mimeType
+            ]);
+        } else {
+            throw new \yii\web\NotFoundHttpException('ไม่พบไฟล์: ' . $filename);
+        }
+    }
 
 }
