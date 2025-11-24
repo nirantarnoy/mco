@@ -506,13 +506,49 @@ class Job extends \common\models\Job
      * ตรวจสอบว่ามีใบเสร็จหรือไม่
      * @return bool
      */
-    public function hasReceipt($id)
+    public function hasReceipt($jobId)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices i LEFT JOIN quotation q ON q.id =i.quotation_id LEFT JOIN job j ON j.quotation_id = q.id LEFT JOIN invoice_doc ivd ON ivd.invoice_id = i.id WHERE j.id = :jobId AND i.invoice_type = \'receipt\'')
-            ->bindParam(':jobId', $id)
+        $db = Yii::$app->db;
+
+        // นับใบเสร็จทั้งหมดของ Job
+        $total = $db->createCommand("
+        SELECT COUNT(*)
+        FROM invoices i
+        LEFT JOIN quotation q ON q.id = i.quotation_id
+        LEFT JOIN job j ON j.quotation_id = q.id
+        WHERE j.id = :jobId AND i.invoice_type = 'receipt'
+    ")
+            ->bindValue(':jobId', $jobId)
             ->queryScalar();
-        return $count > 0;
+
+        if ($total == 0) {
+            return 0; // ไม่มีใบเสร็จ
+        }
+
+        // นับใบเสร็จที่มีไฟล์แนบ
+        $complete = $db->createCommand("
+        SELECT COUNT(*) 
+        FROM (
+            SELECT i.id, COUNT(ivd.id) AS doc_count
+            FROM invoices i
+            LEFT JOIN quotation q ON q.id = i.quotation_id
+            LEFT JOIN job j ON j.quotation_id = q.id
+            LEFT JOIN invoice_doc ivd ON ivd.invoice_id = i.id
+            WHERE j.id = :jobId AND i.invoice_type = 'receipt'
+            GROUP BY i.id
+        ) AS t
+        WHERE t.doc_count > 0
+    ")
+            ->bindValue(':jobId', $jobId)
+            ->queryScalar();
+
+        if ($complete == $total) {
+            return 100; // ครบทุกใบ
+        }
+
+        return 1; // มีใบเสร็จแต่ไฟล์ยังไม่ครบ
     }
+
 
     public function hasPayment($id)
     {
