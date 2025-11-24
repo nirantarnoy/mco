@@ -403,7 +403,7 @@ if($today > $end){
                                 </table>
                             </div>
                         <?php else: ?>
-                            <div class="alert alert-info mb-0">
+                            <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
                                 ไม่มีข้อมูลใบขอซื้อสำหรับใบงานนี้
                             </div>
@@ -473,7 +473,7 @@ if($today > $end){
                                 </table>
                             </div>
                         <?php else: ?>
-                            <div class="alert alert-warning mb-0">
+                            <div class="alert alert-teal mb-0">
                                 <i class="fas fa-exclamation-triangle"></i>
                                 ไม่มีข้อมูลใบสั่งซื้อสำหรับใบงานนี้
                             </div>
@@ -520,7 +520,7 @@ if($today > $end){
                                 </table>
                             </div>
                         <?php else: ?>
-                            <div class="alert alert-warning-light mb-0">
+                            <div class="alert alert-teal mb-0">
                                 <i class="fas fa-exclamation-triangle"></i>
                                 ไม่มีข้อมูลใบสั่งซื้อสำหรับใบงานนี้
                             </div>
@@ -592,7 +592,7 @@ if($today > $end){
                                 </table>
                             </div>
                         <?php else: ?>
-                            <div class="alert alert-secondary mb-0">
+                            <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
                                 ไม่มีข้อมูลรายการรับ-เบิกของสำหรับใบงานนี้
                             </div>
@@ -714,7 +714,7 @@ if($today > $end){
                                 </table>
                             </div>
                         <?php else: ?>
-                            <div class="alert alert-secondary mb-0">
+                            <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
                                 ไม่มีข้อมูลใบเบิกเงินสดย่อยสำหรับใบงานนี้
                             </div>
@@ -762,7 +762,7 @@ if($today > $end){
                                 </table>
                             </div>
                         <?php else: ?>
-                            <div class="alert alert-danger mb-0">
+                            <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
                                 ไม่มีข้อมูลรายการรับ-เบิกของสำหรับใบงานนี้
                             </div>
@@ -826,7 +826,7 @@ if($today > $end){
                                 </table>
                             </div>
                         <?php else: ?>
-                            <div class="alert alert-primary mb-0">
+                            <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
                                 ไม่มีข้อมูลใบกำกับภาษี/ใบเสร็จสำหรับใบงานนี้
                             </div>
@@ -964,7 +964,7 @@ if($today > $end){
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="alert alert-success mb-0">
+                            <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
                                 ไม่มีข้อมูลใบวางบิลสำหรับใบงานนี้
                             </div>
