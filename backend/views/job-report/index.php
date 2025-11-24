@@ -208,7 +208,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                             $statusClass = 'activity-pending';
                                         }else if($hasActivity == 1) {
                                             $statusClass = 'activity-open';
-                                        }else if($hasActivity == 2) {
+                                        }else if($hasActivity == 100) {
                                             $statusClass = 'activity-completed';
                                         }
                                         $output .= '<span class="activity-badge ' . $statusClass . '" title="' . $activityName . '">' .
