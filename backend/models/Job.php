@@ -259,12 +259,35 @@ class Job extends \common\models\Job
     {
         return $this->hasPurchaseRequest($this->id);
     }
+
     public function getHasPurchaseOrder()
     {
         return $this->hasPurchaseOrder($this->id);
     }
-    public function getHasReceiveTransaction(){
+
+    public function getHasReceiveTransaction()
+    {
         return $this->hasReceiveTransaction($this->id);
+    }
+
+    public function getHasTaxInvoice()
+    {
+        return $this->hasTaxInvoice($this->id);
+    }
+
+    public function getHasReceipt()
+    {
+        return $this->hasReceipt($this->id);
+    }
+
+    public function getHasBilling()
+    {
+       return $this->hasBilling($this->id);
+    }
+
+    public function getHasasPayment()
+    {
+        return $this->hasPayment($this->id);
     }
 
 
@@ -381,7 +404,6 @@ class Job extends \common\models\Job
         // ❗ มีใบสั่งซื้อแต่ไฟล์แนบยังไม่ครบ
         return 1;
     }
-
 
 
     /**

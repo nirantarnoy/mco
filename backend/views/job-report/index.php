@@ -195,10 +195,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                         'รับสินค้า' => $model->hasReceiveTransaction,
                                         'เบิกสินค้า' => $model->hasWithdrawTransaction($model->id),
                                         'แจ้งหนี้' => $model->hasDebtNotification($model->id),
-                                        'กำกับภาษี' => $model->hasTaxInvoice($model->id),
-                                        'ใบเสร็จ' => $model->hasReceipt($model->id),
-                                        'วางบิล' => $model->hasBilling($model->id),
-                                        'ชำระเงิน' => $model->hasPayment($model->id),
+                                        'กำกับภาษี' => $model->hasTaxInvoice,
+                                        'ใบเสร็จ' => $model->hasReceipt,
+                                        'วางบิล' => $model->hasBilling,
+                                        'ชำระเงิน' => $model->hasPayment,
                                     ];
 
                                     $output = '<div class="activity-status-container">';
@@ -232,10 +232,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                         'เบิกสินค้า' => $model->hasWithdrawTransaction($model->id),
                                         'เงินสดย่อย' => $model->hasPettyCash($model->id), // เพิ่มเงินสดย่อย
                                         'แจ้งหนี้' => $model->hasDebtNotification($model->id),
-                                        'กำกับภาษี' => $model->hasTaxInvoice($model->id),
-                                        'ใบเสร็จ' => $model->hasReceipt($model->id),
-                                        'วางบิล' => $model->hasBilling($model->id),
-                                        'ชำระเงิน' => $model->hasPayment($model->id),
+                                        'กำกับภาษี' => $model->hasTaxInvoice,
+                                        'ใบเสร็จ' => $model->hasReceipt,
+                                        'วางบิล' => $model->hasBilling,
+                                        'ชำระเงิน' => $model->hasPayment,
                                     ];
 
                                     // คำนวณเปอร์เซ็นต์ความคืบหน้า
