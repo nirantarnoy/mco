@@ -285,7 +285,7 @@ class Job extends \common\models\Job
        return $this->hasBilling($this->id);
     }
 
-    public function getHasasPayment()
+    public function getHasPayment()
     {
         return $this->hasPayment($this->id);
     }
