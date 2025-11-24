@@ -191,7 +191,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     // ตรวจสอบสถานะของแต่ละกิจกรรม
                                     $activities = [
                                         'ขอซื้อ' => $model->hasPurchaseRequest,
-                                        'สั่งซื้อ' => $model->hasPurchaseOrder($model->id),
+                                        'สั่งซื้อ' => $model->hasPurchaseOrder,
                                         'รับสินค้า' => $model->hasReceiveTransaction($model->id),
                                         'เบิกสินค้า' => $model->hasWithdrawTransaction($model->id),
                                         'แจ้งหนี้' => $model->hasDebtNotification($model->id),
@@ -219,8 +219,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'value' => function ($model) {
                                     // ตรวจสอบสถานะของแต่ละกิจกรรม
                                     $activities = [
-                                        'ขอซื้อ' => $model->hasPurchaseRequest($model->id),
-                                        'สั่งซื้อ' => $model->hasPurchaseOrder($model->id),
+                                        'ขอซื้อ' => $model->hasPurchaseRequest,
+                                        'สั่งซื้อ' => $model->hasPurchaseOrder,
                                         'รับสินค้า' => $model->hasReceiveTransaction($model->id),
                                         'เบิกสินค้า' => $model->hasWithdrawTransaction($model->id),
                                         'เงินสดย่อย' => $model->hasPettyCash($model->id), // เพิ่มเงินสดย่อย

@@ -259,6 +259,10 @@ class Job extends \common\models\Job
     {
         return $this->hasPurchaseRequest($this->id);
     }
+    public function getHasPurchaseOrder()
+    {
+        return $this->hasPurchaseOrder($this->id);
+    }
 
 
 
