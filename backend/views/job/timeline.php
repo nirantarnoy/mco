@@ -1177,22 +1177,22 @@ if($today > $end){
                             </div>
 
                             <div class="col-md-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center" style="color: black;">
+                                        <h5>รายได้รับชำระ</h5>
+                                        <h3><?= number_format($totalRevenue, 2) ?></h3>
+                                        <small>จากใบเสร็จ: <?= count($paymentReceipts) ?> ใบ</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
                                 <div class="card bg-danger text-black">
                                     <div class="card-body text-center" style="color: black;">
                                         <h5>ค่าใช้จ่ายรวม</h5>
                                         <h3><?= number_format($totalExpenses, 2) ?></h3>
                                         <small>ซื้อ: <?= number_format($totalPurchaseAmount, 2) ?><br>
                                             เงินสดย่อย: <?= number_format($totalPettyCashAmount, 2) ?></small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-3">
-                                <div class="card bg-success text-white">
-                                    <div class="card-body text-center" style="color: black;">
-                                        <h5>รายได้รับชำระ</h5>
-                                        <h3><?= number_format($totalRevenue, 2) ?></h3>
-                                        <small>จากใบเสร็จ: <?= count($paymentReceipts) ?> ใบ</small>
                                     </div>
                                 </div>
                             </div>
