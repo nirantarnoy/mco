@@ -481,26 +481,97 @@ class Job extends \common\models\Job
      * ตรวจสอบว่ามีการวางบิลหรือไม่
      * @return bool
      */
-    public function hasBilling($id)
+    public function hasBilling($jobId)
     {
-        // สมมติว่าใช้จาก invoices ที่มีสถานะ pending หรือ sent
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices i LEFT JOIN billing_invoice_items b ON b.invoice_id = i.id LEFT JOIN quotation q ON q.id =i.quotation_id LEFT JOIN job j ON j.quotation_id = q.id LEFT JOIN invoice_doc ivd ON ivd.invoice_id = i.id  WHERE j.id = :jobId AND i.is_billed=1')
-            ->bindParam(':jobId', $id)
+        $db = Yii::$app->db;
+
+        // นับใบวางบิลทั้งหมดของ Job
+        $total = $db->createCommand("
+        SELECT COUNT(*)
+        FROM invoices i
+        LEFT JOIN quotation q ON q.id = i.quotation_id
+        LEFT JOIN job j ON j.quotation_id = q.id
+        WHERE j.id = :jobId AND i.is_billed = 1
+    ")
+            ->bindValue(':jobId', $jobId)
             ->queryScalar();
-        return $count > 0;
+
+        if ($total == 0) {
+            return 0; // ไม่มีใบวางบิล
+        }
+
+        // นับใบวางบิลที่มีไฟล์แนบ
+        $complete = $db->createCommand("
+        SELECT COUNT(*) 
+        FROM (
+            SELECT i.id, COUNT(ivd.id) AS doc_count
+            FROM invoices i
+            LEFT JOIN quotation q ON q.id = i.quotation_id
+            LEFT JOIN job j ON j.quotation_id = q.id
+            LEFT JOIN invoice_doc ivd ON ivd.invoice_id = i.id
+            WHERE j.id = :jobId AND i.is_billed = 1
+            GROUP BY i.id
+        ) AS t
+        WHERE t.doc_count > 0
+    ")
+            ->bindValue(':jobId', $jobId)
+            ->queryScalar();
+
+        if ($complete == $total) {
+            return 100; // ครบทุกใบ
+        }
+
+        return 1; // มีใบวางบิลแต่ไฟล์ยังไม่ครบ
     }
+
 
     /**
      * ตรวจสอบว่ามีใบกำกับภาษีหรือไม่
      * @return bool
      */
-    public function hasTaxInvoice($id)
+    public function hasTaxInvoice($jobId)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices i LEFT JOIN quotation q ON q.id =i.quotation_id LEFT JOIN job j ON j.quotation_id = q.id LEFT JOIN invoice_doc ivd ON ivd.invoice_id = i.id WHERE j.id = :jobId AND i.invoice_type = \'tax_invoice\'')
-            ->bindParam(':jobId', $id)
+        $db = Yii::$app->db;
+
+        // นับใบกำกับภาษีทั้งหมดของ Job
+        $total = $db->createCommand("
+        SELECT COUNT(*)
+        FROM invoices i
+        LEFT JOIN quotation q ON q.id = i.quotation_id
+        LEFT JOIN job j ON j.quotation_id = q.id
+        WHERE j.id = :jobId AND i.invoice_type = 'tax_invoice'
+    ")
+            ->bindValue(':jobId', $jobId)
             ->queryScalar();
-        return $count > 0;
+
+        if ($total == 0) {
+            return 0; // ไม่มีใบกำกับภาษี
+        }
+
+        // นับใบกำกับภาษีที่มีไฟล์แนบ
+        $complete = $db->createCommand("
+        SELECT COUNT(*) 
+        FROM (
+            SELECT i.id, COUNT(ivd.id) AS doc_count
+            FROM invoices i
+            LEFT JOIN quotation q ON q.id = i.quotation_id
+            LEFT JOIN job j ON j.quotation_id = q.id
+            LEFT JOIN invoice_doc ivd ON ivd.invoice_id = i.id
+            WHERE j.id = :jobId AND i.invoice_type = 'tax_invoice'
+            GROUP BY i.id
+        ) AS t
+        WHERE t.doc_count > 0
+    ")
+            ->bindValue(':jobId', $jobId)
+            ->queryScalar();
+
+        if ($complete == $total) {
+            return 100; // ครบทุกใบ
+        }
+
+        return 1; // มีใบแต่ไฟล์ยังไม่ครบ
     }
+
 
     /**
      * ตรวจสอบว่ามีใบเสร็จหรือไม่
