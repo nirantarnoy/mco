@@ -895,13 +895,13 @@ class JobController extends Controller
             SELECT 
                 p.id,
                 p.docnum as purch_no,
-                p.docdate as purch_date,
+                p.docdat as purch_date,
                 p.supcod as vendor_id,
                 p.total_amount,
                 vd.name as vendor_name
-            FROM purch_master p INNER JOIN vendor as vd ON vd.id = p.supcod
+            FROM purchase_master p INNER JOIN vendor as vd ON vd.id = p.supcod
             WHERE p.job_no = :jobId
-            ORDER BY p.docdate DESC
+            ORDER BY p.docdat DESC
         ";
 
         $command = Yii::$app->db->createCommand($query);
