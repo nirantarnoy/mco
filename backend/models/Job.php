@@ -263,6 +263,9 @@ class Job extends \common\models\Job
     {
         return $this->hasPurchaseOrder($this->id);
     }
+    public function getHasReceiveTransaction(){
+        return $this->hasReceiveTransaction($this->id);
+    }
 
 
 
@@ -385,13 +388,47 @@ class Job extends \common\models\Job
      * ตรวจสอบว่ามีรายการรับสินค้าหรือไม่
      * @return bool
      */
-    public function hasReceiveTransaction($id)
+    public function hasReceiveTransaction($jobId)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM journal_trans jt LEFT JOIN purch p ON p.id=jt.trans_ref_id LEFT JOIN job j ON j.id=p.job_id WHERE j.id = :jobId AND jt.trans_type_id = 1 AND jt.po_rec_status=1')
-            ->bindParam(':jobId', $id)
+        $db = Yii::$app->db;
+
+        // นับรายการรับสินค้าทั้งหมด
+        $total = $db->createCommand("
+        SELECT COUNT(*) 
+        FROM journal_trans jt
+        LEFT JOIN purch p ON p.id = jt.trans_ref_id
+        WHERE jt.trans_type_id = 1 AND jt.job_id = :jobId
+    ")
+            ->bindValue(':jobId', $jobId)
             ->queryScalar();
-        return $count > 0;
+
+        if ($total == 0) {
+            return 0;
+        }
+
+        // นับรายการที่มีไฟล์แนบใน purch_receive_doc
+        $complete = $db->createCommand("
+        SELECT COUNT(*) 
+        FROM (
+            SELECT jt.id, COUNT(prd.id) AS doc_count
+            FROM journal_trans jt
+            LEFT JOIN purch p ON p.id = jt.trans_ref_id
+            LEFT JOIN purch_receive_doc prd ON prd.purch_id = p.id
+            WHERE jt.trans_type_id = 1 AND jt.job_id = :jobId
+            GROUP BY jt.id
+        ) AS t
+        WHERE t.doc_count > 0
+    ")
+            ->bindValue(':jobId', $jobId)
+            ->queryScalar();
+
+        if ($complete == $total) {
+            return 100;
+        }
+
+        return 1; // มีรายการแต่ไฟล์ยังไม่ครบ
     }
+
 
     /**
      * ตรวจสอบว่ามีรายการเบิกสินค้าหรือไม่
