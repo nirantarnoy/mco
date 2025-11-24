@@ -474,6 +474,53 @@ if($today > $end){
                 </div>
             </div>
 
+            <!-- Purchase Order Section -->
+            <div class="timeline-section">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shopping-cart"></i>
+                            ใบสั่งซื้อ (Purchase None PR)
+                            <span class="badge badge-dark ml-2"><?= count($purchasesnonepr) ?> รายการ</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($purchasesnonepr)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-sm">
+                                    <thead class="thead-light">
+                                    <tr>
+                                        <th>เลขใบสั่งซื้อ</th>
+                                        <th>วันที่</th>
+                                        <th>ผู้จำหน่าย</th>
+                                        <th style="text-align: right;">มูลค่า</th>
+                                        <th>เอกสาร</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php foreach ($purchases as $purchase): ?>
+
+                                        <tr>
+                                            <td style="text-align: center;"><?= Html::encode($purchase['purch_no']) ?></td>
+                                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($purchase['purch_date'])) ?></td>
+                                            <td style="text-align: center;"><?= Html::encode($purchase['vendor_name']) ?></td>
+                                            <td class="text-right"><?= number_format($purchase['total_amount'], 2) ?></td>
+                                            <td style="text-align: center;"><a class="badge badge-info" href="<?=Url::to(['job/documents','id'=>$model->id,'type'=>'purch','activityId'=>$purchase['id']],true)?>"><i class="fa fa-eye"></i></a></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-warning mb-0">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                ไม่มีข้อมูลใบสั่งซื้อสำหรับใบงานนี้
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
             <!-- Journal Transaction Section -->
             <div class="timeline-section">
                 <div class="card border-secondary">

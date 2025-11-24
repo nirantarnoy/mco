@@ -715,6 +715,9 @@ class JobController extends Controller
         // ดึงข้อมูล Purchase Order ที่เกี่ยวข้องกับใบงาน
         $purchases = $this->getPurchaseOrders($model->id);
 
+        // ดึงข้อมูล Purchase Order ที่เกี่ยวข้องกับใบงาน
+        $purchasesnonepr = $this->getPurchaseOrdersNonePr($model->id);
+
         // ดึงข้อมูล Journal Transaction ที่เกี่ยวข้องกับใบงาน
         $journalTrans = $this->getJournalTransactions($model->id);
 
@@ -741,6 +744,7 @@ class JobController extends Controller
             'pettyCashVouchers' => $pettyCashVouchers,
             'paymentReceipts' => $paymentReceipts,
             'vehicleExpense' => $vehicleExpense,
+            'purchasesnonepr'=>$purchasesnonepr
         ]);
     }
 
@@ -877,6 +881,27 @@ class JobController extends Controller
             FROM purch p INNER JOIN vendor as vd ON vd.id = p.vendor_id
             WHERE p.job_id = :jobId
             ORDER BY p.purch_date DESC
+        ";
+
+        $command = Yii::$app->db->createCommand($query);
+        $command->bindParam(':jobId', $jobId);
+
+        return $command->queryAll();
+    }
+
+    protected function getPurchaseOrdersNonePr($jobId)
+    {
+        $query = "
+            SELECT 
+                p.id,
+                p.docnum as purch_no,
+                p.docdate as purch_date,
+                p.supcod as vendor_id,
+                p.total_amount,
+                vd.name as vendor_name
+            FROM purch_master p INNER JOIN vendor as vd ON vd.id = p.supcod
+            WHERE p.job_no = :jobId
+            ORDER BY p.docdate DESC
         ";
 
         $command = Yii::$app->db->createCommand($query);

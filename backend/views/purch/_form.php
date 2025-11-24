@@ -1069,7 +1069,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                     $url = Yii::$app->request->hostInfo . Yii::$app->request->baseUrl . '/uploads/purch_doc/' . $value->doc_name;
                                     echo Html::a(
                                         'ดูเอกสาร',
-                                        $url,
+                                        ['purch/showdoc', 'filename' => $value->doc_name],
                                         [
                                             'target' => '_blank',
                                             'data-pjax' => '0',
