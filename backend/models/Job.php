@@ -91,7 +91,8 @@ class Job extends \common\models\Job
         return $this->hasOne(Quotation::className(), ['id' => 'quotation_id']);
     }
 
-    public function getJobLines(){
+    public function getJobLines()
+    {
         return $this->hasMany(JobLine::className(), ['job_id' => 'id']);
     }
 
@@ -292,13 +293,44 @@ class Job extends \common\models\Job
      * ตรวจสอบว่ามีใบสั่งซื้อหรือไม่
      * @return bool
      */
-    public function hasPurchaseOrder($id)
+//    public function hasPurchaseOrder($id)
+//    {
+//        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch p INNER JOIN purch_doc pd ON pd.purch_id = p.id WHERE p.job_id = :jobId')
+//            ->bindParam(':jobId', $id)
+//            ->queryScalar();
+//        return $count > 0;
+//    }
+
+    public function hasPurchaseOrder($jobId)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch p INNER JOIN purch_doc pd ON pd.purch_id = p.id WHERE p.job_id = :jobId')
-            ->bindParam(':jobId', $id)
+        $db = Yii::$app->db;
+
+        // นับใบสั่งซื้อทั้งหมด
+        $total = $db->createCommand("
+        SELECT COUNT(*) FROM purch WHERE job_id = :jobId
+    ")
+            ->bindValue(':jobId', $jobId)
             ->queryScalar();
-        return $count > 0;
+
+        if ($total == 0) {
+            return 0;
+        }
+
+        // นับเฉพาะใบที่มีไฟล์แนบ
+        $complete = $db->createCommand("
+        SELECT COUNT(DISTINCT p.id)
+        FROM purch p
+        LEFT JOIN purch_doc pd ON pd.purch_id = p.id
+        WHERE p.job_id = :jobId
+        GROUP BY p.id
+        HAVING COUNT(pd.id) > 0
+    ")
+            ->bindValue(':jobId', $jobId)
+            ->queryScalar();
+
+        return ($complete == $total) ? 1 : 0;
     }
+
 
     /**
      * ตรวจสอบว่ามีรายการรับสินค้าหรือไม่
@@ -374,9 +406,10 @@ class Job extends \common\models\Job
         return $count > 0;
     }
 
-    public function hasPayment($id){
+    public function hasPayment($id)
+    {
         $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM payment_receipts WHERE job_id=:jobId')
-        ->bindParam(':jobId',$id)->queryScalar();
+            ->bindParam(':jobId', $id)->queryScalar();
         return $count > 0;
     }
 
@@ -400,23 +433,27 @@ class Job extends \common\models\Job
         return $this->hasMany(\backend\models\JobExpense::className(), ['job_id' => 'id']);
     }
 
-    public function getCompany(){
-        return $this->hasOne(\backend\models\Company::className(),['id'=>'company_id']);
+    public function getCompany()
+    {
+        return $this->hasOne(\backend\models\Company::className(), ['id' => 'company_id']);
     }
 
-    public function getJobexpenseAll(){
+    public function getJobexpenseAll()
+    {
         $total = 0;
-        foreach($this->jobExpenses as $value){
+        foreach ($this->jobExpenses as $value) {
             $total = $total + ($value->line_amount);
         }
         return $total;
     }
 
-    public function getVehicleExpenseAll(){
-        return \backend\models\VehicleExpense::find()->where(['job_no'=>$this->job_no])->sum('total_wage');
+    public function getVehicleExpenseAll()
+    {
+        return \backend\models\VehicleExpense::find()->where(['job_no' => $this->job_no])->sum('total_wage');
     }
 
-    public function beforeSave($insert){
+    public function beforeSave($insert)
+    {
         $this->company_id = \Yii::$app->session->get('company_id');
         return true;
     }
