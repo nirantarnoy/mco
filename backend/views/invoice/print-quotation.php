@@ -11,8 +11,25 @@ $this->title = 'พิมพ์ใบแจ้งหนี้ - ' . $model->invo
 $this->registerCss("
 @page {
     size: A4;
-    margin: 1.5cm;
+    margin: 8mm;
 }
+    @font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK.ttf') format('truetype');
+        font-weight: normal;
+    }
+
+    @font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Bold.ttf') format('truetype');
+        font-weight: bold;
+    }
+
+    @font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Italic.ttf') format('truetype');
+        font-style: italic;
+    }
 
 @media print {
     .no-print { display: none !important; }
@@ -20,14 +37,18 @@ $this->registerCss("
     body { 
         margin: 0; 
         padding: 0; 
-        font-family: 'Sarabun', 'TH SarabunPSK', Arial, sans-serif; 
+        font-family: 'THSarabunPSK', sans-serif !important;
         font-size: 13px;
         color: #000;
     }
     .print-container { 
+        font-family: 'THSarabunPSK', sans-serif !important;
         max-width: 0 auto; 
         width: 100%;
         page-break-after: always;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
     }
     .print-container:last-child {
         page-break-after: auto;
@@ -38,6 +59,7 @@ $this->registerCss("
 }
 
 .print-container {
+    font-family: 'THSarabunPSK', sans-serif !important;
     max-width: 0 auto;
     margin: 0 auto;
     background: white;
@@ -67,8 +89,8 @@ $this->registerCss("
 }
 
 .logo {
-    width: 70px;
-    height: 70px;
+    width: 300px;
+    height: 100px;
     border-radius: 6px;
     display: flex;
     align-items: center;
@@ -81,23 +103,25 @@ $this->registerCss("
 .company-info {
     flex: 1;
     margin-left: 12px;
+    text-align: center;
 }
 
 .company-name-thai {
-    font-size: 16px;
+    font-size: 20px;
     font-weight: bold;
     margin-bottom: 2px;
 }
 
 .company-name-eng {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: bold;
     margin-bottom: 3px;
+    margin-left: -156px
 }
 
 .company-address {
-    font-size: 11px;
-    line-height: 1.2;
+    font-size: 9px;
+    line-height: 2.5;
     margin-bottom: 2px;
 }
 
@@ -107,7 +131,7 @@ $this->registerCss("
 }
 
 .invoice-title {
-    font-size: 16px;
+    font-size: 20px;
     font-weight: bold;
     margin-bottom: 5px;
     position: relative;
@@ -159,6 +183,7 @@ $this->registerCss("
     justify-content: space-between;
     margin: 15px 0;
     gap: 20px;
+    font-size: 15px !important;
 }
 
 .customer-left, .customer-right {
@@ -174,15 +199,12 @@ $this->registerCss("
 .field-label {
     min-width: 100px;
     font-weight: bold;
-    font-size: 12px;
 }
 
 .field-value {
-    border-bottom: 1px solid #000;
     flex: 1;
     padding: 2px 5px;
     min-height: 18px;
-    font-size: 12px;
     line-height: 1.3;
 }
 
@@ -191,34 +213,72 @@ $this->registerCss("
     margin: 20px 0;
 }
 
+// .items-table {
+//     width: 100%;
+//     border-collapse: collapse;
+//     border: 2px solid #000;
+//     font-size: 12px;
+// }
+
+// .items-table th,
+// .items-table td {
+//     border: 1px solid #000;
+//     padding: 8px 4px;
+//     text-align: center;
+//     vertical-align: middle;
+// }
+
+// .items-table th {
+//     background-color: #f8f9fa;
+//     font-weight: bold;
+//     height: 35px;
+//     font-size: 11px;
+// }
+
+// .items-table td {
+//     height: 30px;
+// }
+
+// .items-table .text-left { text-align: left; padding-left: 8px; }
+// .items-table .text-right { text-align: right; padding-right: 8px; }
+
 .items-table {
     width: 100%;
     border-collapse: collapse;
-    border: 2px solid #000;
     font-size: 12px;
 }
 
+/* เส้นรอบนอก */
 .items-table th,
-.items-table td {
+.items-table tfoot td {
     border: 1px solid #000;
-    padding: 8px 4px;
-    text-align: center;
-    vertical-align: middle;
 }
 
-.items-table th {
+/* Header */
+.items-table thead th {
+    border-bottom: 1px solid #000;
     background-color: #f8f9fa;
-    font-weight: bold;
-    height: 35px;
-    font-size: 11px;
+    padding: 6px;
 }
 
-.items-table td {
-    height: 30px;
+/* เนื้อหาแถว ไม่ต้องมีเส้นขอบ */
+.items-table tbody td {
+    border: none !important;
+    padding: 6px;
 }
 
-.items-table .text-left { text-align: left; padding-left: 8px; }
-.items-table .text-right { text-align: right; padding-right: 8px; }
+/* ให้มีแค่เส้นระหว่าง head → tbody */
+.items-table thead tr {
+    border-bottom: 1px solid #000;
+}
+
+/* Footer (summary) */
+.items-table tfoot td {
+    padding: 6px;
+}
+
+
+
 
 /* Empty rows */
 .empty-row {
@@ -297,7 +357,7 @@ $this->registerCss("
     border: 1px solid #000;
     padding: 10px;
     text-align: center;
-    height: 100px;
+    height: 150px;
     position: relative;
 }
 
@@ -395,6 +455,50 @@ $this->registerCss("
     font-weight: bold;
     color: #333;
 }
+
+.header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+}
+
+/* ช่องเว้นระหว่างคอลัมน์ */
+.header-flex > div {
+    flex: 1;
+}
+
+/* กล่องโลโก้ */
+.logo-box {
+    max-width: 22%;
+    margin-top: -3px;
+}
+
+/* กล่องข้อมูลบริษัท */
+.company-info-box {
+    text-align: center;
+    max-width: 56%;
+    text-size: 6px;
+}
+
+/* กล่อง TAXID */
+.taxid-box {
+    text-align: right;
+    max-width: 22%;
+    margin-top: 33px;
+    font-size: 12px;
+}
+
+/* ป้องกันภาพดัน layout */
+.logo-box img {
+    max-width: 180px;
+    height: auto;
+}
+
+.field-label-group {
+    width: 80px; /* กำหนดความกว้าง label ทั้งก้อน */
+}
+
 
 /* Utilities */
 .text-center { text-align: center; }
@@ -598,24 +702,33 @@ window.addEventListener('afterprint', function() {
 
 <div class="print-container original">
     <!-- Header -->
-    <div class="header">
-        <div class="company-logo">
-            <div class="logo">
-                <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png',['style' => 'max-width: 120px;']) ?>
+    <div class="header-flex">
+
+        <div class="logo-box">
+            <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png', [
+                'style' => 'max-width:180px;'
+            ]) ?>
+        </div>
+
+        <div class="company-info-box">
+            <div class="company-name-thai">บริษัท เอ็ม. ซี. โอ. จำกัด (สำนักงานใหญ่)</div>
+            <div class="company-name-eng">M.C.O. COMPANY LIMITED</div>
+
+            <div class="company-address" style="margin-left: 28px">
+                8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์66-(0)-3861-9559
             </div>
-            <div class="company-info">
-                <div class="company-name-thai">บริษัท เอ็ม. ซี. โอ. จำกัด (สำนักงานใหญ่)</div>
-                <div class="company-name-eng">M.C.O. COMPANY LIMITED</div>
-                <div style="font-weight: bold; margin: 3px 0;">TAXID: 0215543000985</div>
-                <div class="company-address">
-                    8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์66-(0)-3861-9559
-                </div>
-                <div class="company-address">
-                    8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559
-                </div>
+            <div class="company-address" style="margin-left: 53px">
+                8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559
             </div>
         </div>
+
+        <div class="taxid-box">
+            <div style="font-weight: bold; margin: 3px 0;">TAXID: 0215543000985</div>
+        </div>
+
     </div>
+
+    <br>
     <div class="row">
         <div class="col-lg-12" style="text-align: center">
             <div class="invoice-title-section">
@@ -635,23 +748,29 @@ window.addEventListener('afterprint', function() {
     <div class="customer-section">
         <div class="customer-left">
             <div class="field-group">
-                <span class="field-label">รหัสลูกค้า / Code:</span>
-                <span class="field-value"><?= Html::encode($model->quotation->customer->code ?: '') ?></span>
+                <div class="field-label-group">
+                    <div class="field-label">รหัสลูกค้า :</div>
+                    <div class="field-label">Code</div>
+                </div>
+                <span class="field-value">
+                    <?= Html::encode($model->quotation->customer->code ?: '') ?>
+                </span>
             </div>
             <div class="field-group">
-                <span class="field-label">ขายให้ / Sold To:</span>
-                <span class="field-value"><?= Html::encode($model->quotation->customer->name ?: '') ?></span>
-            </div>
-            <div class="field-group">
-                <span class="field-label"></span>
-                <span class="field-value"><?= Html::encode($model->customer_address ?: '') ?></span>
-            </div>
-            <div class="field-group">
-                <span class="field-label">เลขประจำตัวผู้เสียภาษี:</span>
-                <span class="field-value"><?= Html::encode($model->customer_tax_id ?: '') ?></span>
+                <div class="field-label-group">
+                    <div class="field-label">ขายให้ :</div>
+                    <div class="field-label">Sold To</div>
+                </div>
+
+                <span class="field-value">
+                    <?= Html::encode($model->quotation->customer->name ?: '') ?> <br>
+                    <?= Html::encode($model->customer_address ?: '') ?><br>
+                    เลขประจำตัวผู้เสียภาษี
+                    <?= Html::encode($model->customer_tax_id ?: '') ?>
+                </span>
             </div>
         </div>
-        <div class="customer-right">
+        <div class="customer-right" style="margin-left: 85px;">
             <div class="field-group">
                 <span class="field-label">วันที่ / Date:</span>
                 <span class="field-value"><?= Yii::$app->formatter->asDate($model->invoice_date, '') ?></span>
@@ -679,85 +798,85 @@ window.addEventListener('afterprint', function() {
     <div class="items-section">
         <table class="items-table">
             <thead>
-            <tr>
-                <th style="width: 8%;">ลำดับ<br>Item</th>
-                <th style="width: 40%;">รายการ<br>Description</th>
-                <th style="width: 12%;">จำนวน<br>Quantity</th>
-                <th style="width: 15%;">ราคาต่อหน่วย<br>Unit/Price</th>
-                <th style="width: 15%;">จำนวนเงินรวม<br>Amount</th>
-            </tr>
+                <tr style="text-align: center;">
+                    <th style="width: 8%;">ลำดับ<br>Item</th>
+                    <th style="width: 40%;">รายการ<br>Description</th>
+                    <th style="width: 12%;">จำนวน<br>Quantity</th>
+                    <th style="width: 15%;">ราคาต่อหน่วย<br>Unit/Price</th>
+                    <th style="width: 15%;">จำนวนเงินรวม<br>Amount</th>
+                </tr>
             </thead>
             <tbody>
-            <?php
-            $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
-            ?>
-            <?php if (!empty($model_line)): ?>
-                <?php foreach ($model_line as $index => $item): ?>
+                <?php
+                $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
+                ?>
+                <?php if (!empty($model_line)): ?>
+                    <?php foreach ($model_line as $index => $item): ?>
+                        <tr>
+                            <td style="padding:8px;text-align: center"><?= $index + 1 ?></td>
+                            <td class="text-left" style="padding:8px;"><?= nl2br(Html::encode($item->item_description)) ?></td>
+                            <td style="padding:8px;text-align: center"><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
+                            <td class="text-right" style="padding:8px;"><?= number_format($item->unit_price, 2) ?></td>
+                            <td class="text-right" style="padding:8px;"><?= number_format($item->amount, 2) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <!-- Default sample data -->
                     <tr>
-                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= $index + 1 ?></td>
-                        <td class="text-left" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= nl2br(Html::encode($item->item_description)) ?></td>
-                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
-                        <td class="text-right" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= number_format($item->unit_price, 2) ?></td>
-                        <td class="text-right" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= number_format($item->amount, 2) ?></td>
+                        <td style="padding:8px;"></td>
+                        <td class="text-left" style="padding:8px;"></td>
+                        <td style="padding:8px;"></td>
+                        <td class="text-right" style="padding:8px;"></td>
+                        <td class="text-right" style="padding:8px;"></td>
                     </tr>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <!-- Default sample data -->
-                <tr>
-                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"></td>
-                    <td class="text-left" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"></td>
-                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"></td>
-                    <td class="text-right" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"></td>
-                    <td class="text-right" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"></td>
-                </tr>
-            <?php endif; ?>
+                <?php endif; ?>
 
-            <!-- Empty rows for spacing -->
-            <?php for ($i = count($model_line); $i < 16; $i++): ?>
-                <tr>
-                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
-                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
-                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
-                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
-                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
-                </tr>
-            <?php endfor; ?>
+                <!-- Empty rows for spacing -->
+                <?php for ($i = count($model_line); $i < 16; $i++): ?>
+                    <tr>
+                        <td style="padding:8px;">&nbsp;</td>
+                        <td style="padding:8px;">&nbsp;</td>
+                        <td style="padding:8px;">&nbsp;</td>
+                        <td style="padding:8px;">&nbsp;</td>
+                        <td style="padding:8px;">&nbsp;</td>
+                    </tr>
+                <?php endfor; ?>
             </tbody>
             <tfoot>
-            <tr>
-                <td colspan="3" rowspan="3" style="padding: 8px;text-align: left;">
-                    <div class="summary-left">
-                        <div class="amount-text">(ตัวอักษร)</div>
-                        <div style="font-size: 14px; font-weight: bold;text-align: center;">
-                            <?= $model->total_amount_text ?: '' ?>
-                        </div>
+                <tr>
+                    <td colspan="3" rowspan="3" style="padding: 8px;text-align: left;">
+                        <div class="summary-left">
+                            <div class="amount-text">(ตัวอักษร)</div>
+                            <div style="font-size: 14px; font-weight: bold;text-align: center;">
+                                <?= $model->total_amount_text ?: '' ?>
+                            </div>
 
-                        <div style="margin-top: 20px; font-size: 12px; text-align: center;">
-                            <strong>ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง</strong>
+                            <br>
+                            <br>
+
                         </div>
-                    </div>
-                </td>
-                <td><span>รวมเงิน / Total</span></td>
-                <td><span><?= number_format($model->subtotal, 2) ?></span></td>
-            </tr>
-            <tr>
-<!--                <td colspan="3" style="padding: 8px;"></td>-->
-                <td>
-                    <span>ภาษีมูลค่าเพิ่ม / Vat <?= $model->vat_percent ?>%</span>
-                </td>
-                <td>
-                    <span><?= number_format($model->vat_amount, 2) ?></span>
-                </td>
-            </tr>
-            <tr>
-<!--                <td colspan="3" style="padding: 8px;"></td>-->
-                <td>
-                    <span>รวมเงินทั้งสิ้น / Grand Total</span>
-                </td>
-                <td>
-                    <span><?= number_format($model->total_amount, 2) ?></span>
-                </td>
-            </tr>
+                    </td>
+                    <td><span>รวมเงิน / Total</span></td>
+                    <td class="text-right"><span><?= number_format($model->subtotal, 2) ?></span></td>
+                </tr>
+                <tr>
+                    <!--                <td colspan="3" style="padding: 8px;"></td>-->
+                    <td>
+                        <span>ภาษีมูลค่าเพิ่ม / Vat <?= $model->vat_percent ?>%</span>
+                    </td>
+                    <td class="text-right">
+                        <span><?= number_format($model->vat_amount, 2) ?></span>
+                    </td>
+                </tr>
+                <tr>
+                    <!--                <td colspan="3" style="padding: 8px;"></td>-->
+                    <td>
+                        <span>รวมเงินทั้งสิ้น / Grand Total</span>
+                    </td>
+                    <td class="text-right">
+                        <span><?= number_format($model->total_amount, 2) ?></span>
+                    </td>
+                </tr>
             </tfoot>
         </table>
     </div>
@@ -765,27 +884,35 @@ window.addEventListener('afterprint', function() {
 
     <!-- Notes Section -->
     <div class="notes-section">
-        <div class="notes-title">หมายเหตุ :</div>
-        <div class="note-item">1. ตามรายการข้างต้น แม้จะได้ส่งมอบสินค้าแก่ผู้ซื้อแล้วก็ยังเป็นทรัพย์สินของผู้ขายจนกว่าผู้ซื้อจะได้รับชำระเงิน</div>
-        <div class="note-item">2. สินค้าที่ซื้อไปเกินกว่า 7 วัน ทางบริษัทฯใคร่ขอสงวนสิทธิ์ไม่รับคืนสินค้าและคิดดอกเบี้ยร้อยละ1.5 ต่อเดือน</div>
-        <div class="note-item">3. สามารถชำระผ่านช่องทางธนาคารกรุงเทพจำกัด (มหาชน) สาขาระยอง ชื่อบัญชีบจ.เอ็ม.ซี.โอ. เลขบัญชี277-3-02318-5 บัญชีกระแสรายวัน</div>
+        <div class="notes-title">หมายเหตุ : 
+            <span style="line-height: 2;">&nbsp;&nbsp;1. ตามรายการข้างต้น แม้จะได้ส่งมอบสินค้าแก่ผู้ซื้อแล้วก็ยังเป็นทรัพย์สินของผู้ขายจนกว่าผู้ซื้อจะได้รับชำระเงิน</span><br>
+            <span style="line-height: 2;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. สินค้าที่ซื้อไปเกินกว่า 7 วัน ทางบริษัทฯใคร่ขอสงวนสิทธิ์ไม่รับคืนสินค้าและคิดดอกเบี้ยร้อยละ1.5 ต่อเดือน</span><br>
+            <span style="line-height: 2;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. สามารถชำระผ่านช่องทางธนาคารกรุงเทพจำกัด (มหาชน) สาขาระยอง ชื่อบัญชีบจ.เอ็ม.ซี.โอ. เลขบัญชี277-3-02318-5 บัญชีกระแสรายวัน</span>
+        </div>
     </div>
 
     <!-- Signature Section -->
     <div class="signature-section">
         <div class="signature-box">
-            <div class="signature-title">ผู้รับสินค้า / Received By</div>
+            <strong style="font-size: 12px;">ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง</strong>
+            <br>
+            <br>
             <div class="signature-line"></div>
+            <div class="signature-title">ผู้รับสินค้า / Received By</div>
             <div style="text-align: center;">วันที่ / Date______/_____/_____</div>
         </div>
         <div class="signature-box">
-            <div class="signature-title">ผู้ส่งสินค้า / Send By</div>
+            <br>
+            <br>
             <div class="signature-line"></div>
-            <div  style="text-align: center;">วันที่ / Date______/_____/_____</div>
+            <div class="signature-title">ผู้ส่งสินค้า / Send By</div>
+            <div style="text-align: center;">วันที่ / Date______/_____/_____</div>
         </div>
         <div class="signature-box">
-            <div class="signature-title">ผู้มีอำนาจลงนาม / Authorized Signature</div>
+            <br>
+            <br>
             <div class="signature-line"></div>
+            <div class="signature-title">ผู้มีอำนาจลงนาม / Authorized Signature</div>
             <div style="text-align: center;">วันที่ / Date______/_____/_____</div>
         </div>
     </div>

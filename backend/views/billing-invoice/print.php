@@ -8,8 +8,25 @@ $this->title = 'พิมพ์ใบวางบิล - ' . $model->billing_nu
 $this->registerCss("
 @page {
     size: A4 portrait;
-    margin: 1.5cm;
+    margin: 8mm;
 }
+     @font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK.ttf') format('truetype');
+        font-weight: normal;
+    }
+
+    @font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Bold.ttf') format('truetype');
+        font-weight: bold;
+    }
+
+    @font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Italic.ttf') format('truetype');
+        font-style: italic;
+    }
 
 @media print {
     .no-print { display: none !important; }
@@ -22,11 +39,12 @@ $this->registerCss("
     body { 
         margin: 0 !important; 
         padding: 0 !important; 
-        font-family: 'Sarabun', 'THSarabunNew', Arial, sans-serif !important; 
+        font-family: 'THSarabunPSK' !important;
         font-size: 16px !important;
         color: #000 !important;
     }
     .print-container { 
+        font-family: 'THSarabunPSK' !important;
         max-width: none !important; 
         box-shadow: none !important; 
         border: none !important; 
@@ -47,7 +65,6 @@ $this->registerCss("
 }
 
 body {
-    font-family: 'Sarabun', 'THSarabunNew', Arial, sans-serif;
     font-size: 16px;
     line-height: 1.4;
     margin: 0;
@@ -57,6 +74,7 @@ body {
 }
 
 .print-container {
+    font-family: 'THSarabunPSK' !important;
     max-width: 210mm;
     margin: 0 auto;
     background: white;
@@ -76,7 +94,6 @@ body {
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 25px;
-    border-bottom: 1px solid #ccc;
     padding-bottom: 15px;
 }
 
@@ -86,20 +103,22 @@ body {
     color: #333;
     font-family: 'Arial Black', Arial, sans-serif;
     letter-spacing: 2px;
+    max-width: 30%;
 }
 
 .company-details {
+    margin-top: 8px;
     text-align: right;
     font-size: 14px;
-    line-height: 1.3;
+    line-height: 1;
 }
 
-.company-details h1 {
-    font-size: 16px;
-    margin: 0 0 8px 0;
-    font-weight: bold;
-    color: #333;
-}
+// .company-details h1 {
+//     font-size: 16px;
+//     margin: 0 0 8px 0;
+//     font-weight: bold;
+//     color: #333;
+// }
 
 .invoice-title-section {
     text-align: center;
@@ -138,15 +157,17 @@ body {
 .billing-info {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 25px;
+    margin-bottom: 15px;
 }
 
 .customer-details {
-    width: 65%;
+    width: 55%;
 }
 
 .billing-numbers {
-    width: 30%;
+    width: 40%;
+    font-size: 14px;
+    line-height: 2.7;
 }
 
 .customer-details table {
@@ -240,13 +261,12 @@ body {
 }
 
 .total-box {
-    display: inline-block;
-    border-top: 2px solid #333;
-    border-bottom: 2px solid #333;
     padding: 12px 20px;
     font-size: 16px;
     font-weight: bold;
     min-width: 200px;
+    text-align: right;
+    border-bottom: 3px double #000;
 }
 .total-box2 {
     display: inline-block;
@@ -258,9 +278,10 @@ body {
 }
 
 .signature-section {
-    display: flex;
+    // display: flex;
     justify-content: space-between;
-    margin-top: 60px;
+    margin-top: 50px;
+    line-height: 3.5;
 }
 
 .signature-block {
@@ -359,6 +380,12 @@ body {
     font-weight: bold;
     color: #333;
 }
+    .company-details p {
+    margin: 0;
+    padding: 0;
+    line-height: 1.5; /* หรือ 1.2 แล้วแต่ Tob อยากชิดแค่ไหน */
+}
+
 
 /* Responsive adjustments */
 @media screen and (max-width: 768px) {
@@ -541,11 +568,11 @@ window.addEventListener('afterprint', function() {
 <div class="print-container original">
     <div class="header-section">
         <div class="mco-logo">
-            <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png', ['style' => 'max-width: 120px;']) ?>
+            <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png', ['style' => 'max-width: 180px;']) ?>
         </div>
         <div class="company-details">
-            <h1>บริษัท เอ็ม.ซี.โอ. จำกัด</h1>
-            <p>8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000</p>
+            <p style="font-size: 24px;font-family: 'THSarabunPSK' !important;font-weight: bold;">บริษัท เอ็ม.ซี.โอ. จำกัด</p>
+            <p style="margin-top: -1px;">8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000</p>
             <p><strong>Tel :</strong> (038) 875258-9, &nbsp; <strong>Fax :</strong> (038) 619559</p>
         </div>
     </div>
@@ -558,13 +585,15 @@ window.addEventListener('afterprint', function() {
         <div class="customer-details">
             <table>
                 <tr>
-                    <td><strong>ชื่อลูกค้า</strong></td>
+                    <td>
+                        <strong style="border-bottom: 1px solid #000;">ชื่อลูกค้า</strong>
+                    </td>
                     <td>
                         <strong><?= Html::encode($model->customer->name ?? 'บริษัท ส.สิริเสถ จำกัด (สำนักงานใหญ่)') ?></strong>
                     </td>
                 </tr>
                 <tr>
-                    <td><strong>ที่อยู่</strong></td>
+                    <td><strong style="border-bottom: 1px solid #000;">ที่อยู่</strong></td>
                     <td>
                         <?= Html::encode($model->customer->address ?? '140 ถ.วิภาวดีรังสิต แขวงดินแดง เขตดินแดง') ?><br>
                         <?= Html::encode($model->customer->tax_id ?? 'กรุงเทพมหานคร 10400 TAXID 0105520017611') ?>
@@ -574,164 +603,151 @@ window.addEventListener('afterprint', function() {
         </div>
 
         <div class="billing-numbers">
-            <div class="number-box">
-                <div class="label">เลขที่ใบวางบิล</div>
-                <div class="value"><?= Html::encode($model->billing_number) ?></div>
+            <div>
+                <div class="label"><span style="font-weight: bold;border-bottom: 1px solid #000;">เลขที่ใบวางบิล</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?= Html::encode($model->billing_number) ?></div>
             </div>
-            <div class="number-box">
-                <div class="label">วันที่ใบวางบิล</div>
-                <div class="value"><?= Yii::$app->formatter->asDate($model->billing_date, 'php:j/n/y') ?></div>
+            <div>
+                <div class="label"><span style="font-weight: bold;border-bottom: 1px solid #000;">วันที่ใบวางบิล</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?= Yii::$app->formatter->asDate($model->billing_date, 'php:j/n/y') ?></div>
             </div>
         </div>
     </div>
-    <p>ดังรายการต่อไปนี้</p>
+    <p style="font-size: 14px;">ดังรายการต่อไปนี้</p>
     <table class="items-table">
         <thead>
-        <tr>
-            <th style="width: 8%;">ลำดับที่</th>
-            <th style="width: 18%;">หมายเลขใบสั่งซื้อ</th>
-            <th style="width: 18%;">เลขที่เอกสารตั้งหนี้</th>
-            <th style="width: 12%;">ลงวันที่</th>
-            <th style="width: 12%;">วันที่ครบกำหนดชำระ</th>
-            <th style="width: 15%;">จำนวนเงิน</th>
-        </tr>
+            <tr>
+                <th style="width: 8%;"><strong style="bold;border-bottom: 1px solid #000;">ลำดับที่</strong></th>
+                <th style="width: 18%;"><strong style="bold;border-bottom: 1px solid #000;">หมายเลขใบสั่งซื้อ</strong></th>
+                <th style="width: 18%;"><strong style="bold;border-bottom: 1px solid #000;">เลขที่เอกสารตั้งหนี้</strong></th>
+                <th style="width: 12%;"><strong style="bold;border-bottom: 1px solid #000;">ลงวันที่</strong></th>
+                <th style="width: 12%;"><strong style="bold;border-bottom: 1px solid #000;">นัดชําระเงินวันที่</strong></th>
+                <th style="width: 15%;"><strong style="bold;border-bottom: 1px solid #000;">จำนวนเงิน</strong></th>
+            </tr>
         </thead>
         <tbody>
-        <?php
-        $totalAmount = 0;
-        $itemCount = 0;
+            <?php
+            $totalAmount = 0;
+            $itemCount = 0;
 
-        // แสดงรายการจริงจากฐานข้อมูล
-        foreach ($model->billingInvoiceItems as $index => $item):
-            $itemCount++;
-            $totalAmount += $item->amount;
-            $invoice = $item->invoice; // ดึงข้อมูล invoice ที่เกี่ยวข้อง
-            $quotation_no = \backend\models\Invoice::getQuotationNo($invoice->id);
+            // แสดงรายการจริงจากฐานข้อมูล
+            foreach ($model->billingInvoiceItems as $index => $item):
+                $itemCount++;
+                $totalAmount += $item->amount;
+                $invoice = $item->invoice; // ดึงข้อมูล invoice ที่เกี่ยวข้อง
+                $quotation_no = \backend\models\Invoice::getQuotationNo($invoice->id);
             ?>
-            <tr>
-                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= $itemCount ?></td>
-                <td class="text-left"
-                    style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= Html::encode($quotation_no ?? '-') ?></td>
-                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= Html::encode($invoice->invoice_number ?? '-') ?></td>
-                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= Yii::$app->formatter->asDate($invoice->invoice_date ?? $model->billing_date, 'php:j/n/y') ?></td>
-                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= Yii::$app->formatter->asDate($invoice->payment_due_date ?? $model->payment_due_date ?? date('Y-m-d', strtotime($model->billing_date . ' +30 days')), 'php:j/n/y') ?></td>
-                <td class="text-right"
-                    style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= number_format($item->amount, 2) ?></td>
-            </tr>
-        <?php endforeach; ?>
+                <tr>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= $itemCount ?></td>
+                    <td class="text-left"
+                        style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= Html::encode($quotation_no ?? '-') ?></td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= Html::encode($invoice->invoice_number ?? '-') ?></td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= Yii::$app->formatter->asDate($invoice->invoice_date ?? $model->billing_date, 'php:j/n/y') ?></td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= Yii::$app->formatter->asDate($invoice->payment_due_date ?? $model->payment_due_date ?? date('Y-m-d', strtotime($model->billing_date . ' +30 days')), 'php:j/n/y') ?></td>
+                    <td class="text-right"
+                        style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= number_format($item->amount, 2) ?></td>
+                </tr>
+            <?php endforeach; ?>
 
-        <?php
-        // ถ้าไม่มีข้อมูลให้แสดงข้อความว่าง
-        if ($itemCount == 0):
-            $totalAmount = $model->total_amount;
+            <?php
+            // ถ้าไม่มีข้อมูลให้แสดงข้อความว่าง
+            if ($itemCount == 0):
+                $totalAmount = $model->total_amount;
             ?>
-            <tr>
-                <td colspan="6" style="text-align: center; padding: 20px; color: #999; font-style: italic;">
-                    ไม่มีรายการใบกำกับภาษี
-                </td>
-            </tr>
-        <?php endif; ?>
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 20px; color: #999; font-style: italic;">
+                        ไม่มีรายการใบกำกับภาษี
+                    </td>
+                </tr>
+            <?php endif; ?>
 
-        <?php
-        // เติมแถวว่าง
-        $emptyRows = 22 - $itemCount;
-        if ($itemCount == 0) $emptyRows = 14;
+            <?php
+            // เติมแถวว่าง
+            $emptyRows = 22 - $itemCount;
+            if ($itemCount == 0) $emptyRows = 14;
 
-        for ($i = 0; $i < $emptyRows; $i++):
+            for ($i = 0; $i < $emptyRows; $i++):
             ?>
-            <?php if ($i<$emptyRows-1): ?>
-            <tr style="height: 35px;">
-                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
-                    &nbsp;
-                </td>
-                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
-                    &nbsp;
-                </td>
-                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
-                    &nbsp;
-                </td>
-                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
-                    &nbsp;
-                </td>
-                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
-                    &nbsp;
-                </td>
-                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
-                    &nbsp;
-                </td>
-            </tr>
-        <?php else: ?>
-            <tr style="height: 35px;">
-                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; padding:8px;">
-                    &nbsp;
-                </td>
-                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; padding:8px;">
-                    &nbsp;
-                </td>
-                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; padding:8px;">
-                    &nbsp;
-                </td>
-                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; padding:8px;">
-                    &nbsp;
-                </td>
-                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000;  padding:8px;">
-                    &nbsp;
-                </td>
-                <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; padding:8px;">
-                    &nbsp;
-                </td>
-            </tr>
-        <?php endif; ?>
-        <?php endfor; ?>
+                <?php if ($i < $emptyRows - 1): ?>
+                    <tr style="height: 35px;">
+                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
+                            &nbsp;
+                        </td>
+                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
+                            &nbsp;
+                        </td>
+                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
+                            &nbsp;
+                        </td>
+                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
+                            &nbsp;
+                        </td>
+                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
+                            &nbsp;
+                        </td>
+                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
+                            &nbsp;
+                        </td>
+                    </tr>
+                <?php else: ?>
+                    <tr style="height: 35px;">
+                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; padding:8px;">
+                            &nbsp;
+                        </td>
+                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; padding:8px;">
+                            &nbsp;
+                        </td>
+                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; padding:8px;">
+                            &nbsp;
+                        </td>
+                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; padding:8px;">
+                            &nbsp;
+                        </td>
+                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000;  padding:8px;">
+                            &nbsp;
+                        </td>
+                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; padding:8px;">
+                            &nbsp;
+                        </td>
+                    </tr>
+                <?php endif; ?>
+            <?php endfor; ?>
         </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="6" style="font-weight: bold; font-size: 16px; padding: 10px;">
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div>
+                            <u style="border-bottom: 1px solid #000;font-weight: normal">รวมเงินทั้งสิ้น</u>&nbsp;&nbsp;
+                            <span style="font-weight: normal;"><?= \backend\models\PurchReq::numtothai($model->total_amount) ?></span>
+                        </div>
+                        <div class="total-box">
+                            <?= number_format($totalAmount > 0 ? $totalAmount : $model->total_amount, 2) ?>
+                        </div>
+
+                    </div>
+                </td>
+
+            </tr>
+        </tfoot>
     </table>
 
-    <div class="total-section">
-        <table style="width: 100%">
-            <tr>
-                <td style="text-align: left;font-weight: bold;font-size: 16px">
-                    <u>รวมเงินทั้งสิ้น</u><span> <?= \backend\models\PurchReq::numtothai($model->total_amount) ?></span>
-                </td>
-                <td style="text-align: right">
-                    <div class="total-box">
-                        <?= number_format($totalAmount > 0 ? $totalAmount : $model->total_amount, 2) ?>
-                    </div>
-                    <div style="height: 5px;"></div>
-                    <div class="total-box2" style="top: 15px;"></div>
-                </td>
-            </tr>
-        </table>
-    </div>
+
 
     <div class="signature-section">
-        <table style="width: 100%">
+        <table style="width: 100%;padding: 10px">
             <tr>
-                <td style="width: 50%">
-                    <table style="width: 100%">
-                        <tr>
-                            <td style="width: 80%;font-size: 14px;padding:10px;text-align: left">
-                                <u>ผู้รับวางบิล</u> <span> ..................................................................</span>
-                            </td>
-                            <td style="text-align: left;"></td>
-                        </tr>
-                        <tr>
-                            <td style="width: 80%;font-size: 14px;text-align: left">
-                                <u>วันนัดรับเช็ค</u> <span> ..................................................................</span>
-                            </td>
-                            <td style="text-align: left"></td>
-                        </tr>
-                    </table>
+                <td style="width: 50%;font-size: 14px;text-align: left;padding-left: 40px">
+                    <u>ผู้รับวางบิล</u> <span> ...................................................................</span>
                 </td>
-                <td style="width: 50%">
-                    <table style="width: 100%">
-                        <tr>
-                            <td style="width: 80%;font-size: 14px">
-                                <u>ผู้วางบิล</u> <span> ..................................................................</span>
-                            </td>
-                            <td style="text-align: left"></td>
-                        </tr>
-                    </table>
+                <td style="width: 50%;font-size: 14px;text-align: right;padding-right: 40px">
+                    <u>วันนัดรับเช็ค</u> <span> ..................................................................</span>
                 </td>
+            </tr>
+            <tr>
+                <td style="width: 50%;font-size: 14px;padding-left: 40px"">
+                    <u>ผู้วางบิล</u> <span> .....................................................................</span>
+                </td>
+                <td style="text-align: left"></td>
             </tr>
         </table>
     </div>
