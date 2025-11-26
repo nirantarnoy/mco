@@ -95,7 +95,7 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             [
                 'attribute' => 'required_date',
-                'label' => 'วันที่',
+                'label' => 'วันที่ต้องการใช้',
                 'headerOptions' => ['style' => 'width: 120px;'],
                 'format' => ['date', 'php:m/d/Y'],
                 'filter' => kartik\date\DatePicker::widget([

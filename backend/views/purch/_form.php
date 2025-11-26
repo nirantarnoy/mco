@@ -943,12 +943,24 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                             <div class="col-lg-3">
                                 <?php if ($model_purch_vendor_bill != null): ?>
                                     <label for="">เอกสารที่แนบแล้ว</label><br/>
-                                    <?php if ($model_purch_vendor_bill->bill_doc != ''): ?>
-                                        <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $model_purch_vendor_bill->bill_doc ?>"
-                                           target="_blank">
-                                            ดูเอกสาร
-                                        </a>
-                                    <?php endif; ?>
+<!--                                    --><?php //if ($model_purch_vendor_bill->bill_doc != ''): ?>
+<!--                                        <a href="--><?php //= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $model_purch_vendor_bill->bill_doc ?><!--"-->
+<!--                                           target="_blank">-->
+<!--                                            ดูเอกสาร-->
+<!--                                        </a>-->
+<!--                                    -->
+<!--                                    --><?php //endif; ?>
+                                    <?php
+                                   // $url = Yii::$app->request->hostInfo . Yii::$app->request->baseUrl . '/uploads/purch_doc/' . $model_purch_vendor_bill->bill_doc;
+                                    echo Html::a(
+                                        'ดูเอกสาร',
+                                        ['purch/showdoc', 'filename' => $model_purch_vendor_bill->bill_doc],
+                                        [
+                                            'target' => '_blank',
+                                            'data-pjax' => '0',
+                                        ]
+                                    );
+                                    ?>
                                 <?php endif; ?>
                             </div>
                         </div>
