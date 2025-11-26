@@ -11,8 +11,25 @@ $this->title = 'พิมพ์ใบกำกับภาษี - ' . $model->i
 $this->registerCss("
 @page {
     size: A4;
-    margin: 1.5cm;
+    margin: 8mm;
 }
+    @font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK.ttf') format('truetype');
+        font-weight: normal;
+    }
+
+    @font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Bold.ttf') format('truetype');
+        font-weight: bold;
+    }
+
+    @font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Italic.ttf') format('truetype');
+        font-style: italic;
+    }
 
 @media print {
     .no-print { display: none !important; }
@@ -25,11 +42,12 @@ $this->registerCss("
     body { 
         margin: 0 !important; 
         padding: 0 !important; 
-        font-family: 'Sarabun', 'TH SarabunPSK', Arial, sans-serif !important; 
+        font-family: 'THSarabunPSK', sans-serif !important;
         font-size: 16px !important;
         color: #000 !important;
     }
     .print-container { 
+        font-family: 'THSarabunPSK', sans-serif !important;
         max-width: none !important; 
         box-shadow: none !important; 
         border: none !important; 
@@ -64,6 +82,7 @@ body {
 }
 
 .print-container {
+    font-family: 'THSarabunPSK', sans-serif !important;
     max-width: 0 auto;
     margin: 0 auto;
     background: white;
@@ -108,23 +127,26 @@ body {
 
 .company-info {
     flex: 1;
-    margin-left: 12px;
+    // margin-left: 12px;
 }
 
 .company-name-thai {
-    font-size: 16px;
+    text-align: center;
+    font-size: 24px;
     font-weight: bold;
     margin-bottom: 2px;
+    margin-left: -36px
 }
 
 .company-name-eng {
-    font-size: 16px;
+    font-size: 20px;
     font-weight: bold;
     margin-bottom: 3px;
+    margin-left: 80px
 }
 
 .company-address {
-    font-size: 16px;
+    font-size: 12px;
     line-height: 1.2;
     margin-bottom: 2px;
 }
@@ -135,7 +157,7 @@ body {
 }
 
 .invoice-title {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: bold;
     margin-bottom: 5px;
     position: relative;
@@ -184,27 +206,28 @@ body {
 
 .customer-left, .customer-right {
     flex: 1;
+    line-height: 1.7;
 }
 
 .field-group {
-    margin-bottom: 6px;
     display: flex;
-    align-items: center;
-}
-
-.field-label {
-    min-width: 120px;
-    font-weight: bold;
-    font-size: 12px;
+    align-items: flex-start; /* ให้กลุ่มอยู่บน */
 }
 
 .field-value {
-    border-bottom: 1px solid #000;
-    flex: 1;
-    padding: 2px 5px;
-    min-height: 18px;
-    font-size: 16px;
+    display: block; 
+    margin-top: 0; 
+    padding-top: 0;
+    margin-left: 10px;
 }
+
+
+
+.field-label {
+    min-width: 100px;
+    font-weight: bold;
+}
+
 
 /* Items Table */
 .items-section {
@@ -214,28 +237,43 @@ body {
 .items-table {
     width: 100%;
     border-collapse: collapse;
-    border: 1px solid #000;
     font-size: 16px;
+    // border: 1px solid #000; /* เส้นรอบนอกเท่านั้น */
 }
 
-.items-table th,
-.items-table td {
-    border: 1px solid #000;
-    padding: 6px 4px;
-    text-align: center;
-    vertical-align: middle;
-}
+/* Header: ให้มีเฉพาะเส้นบนและเส้นล่าง */
+.items-table thead th {
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
 
-.items-table th {
+    /* ❗ สำคัญ: ห้ามมี border-left/right มิฉะนั้นจะซ้อนกับ tbody */
+    border-left: none !important;
+    border-right: none !important;
+
     background-color: #f8f9fa;
     font-weight: bold;
-    height: 35px;
-    font-size: 16px;
+    padding: 6px 4px;
 }
 
-.items-table td {
-    height: 30px;
+/* ป้องกัน tr ของ thead สร้างเส้นเอง */
+.items-table thead tr {
+    border: none !important;
 }
+
+/* Tbody: ไม่มีเส้นแนวนอนเลย */
+.items-table tbody td {
+    padding: 4px 6px;
+
+    border-top: none !important;
+    border-bottom: none !important;
+
+}
+
+/* ❗ แถวสุดท้ายก่อน footer ยังไม่ต้องมีเส้นล่าง */
+.items-table tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
 
 .items-table .text-left { text-align: left; padding-left: 8px; }
 .items-table .text-right { text-align: right; padding-right: 8px; }
@@ -256,12 +294,13 @@ body {
 .summary-left {
     flex: 1;
     border: 1px solid #000;
-    padding: 10px;
+    padding: 12px;
     height: fit-content;
 }
 
 .summary-right {
     width: 300px;
+    height: fit-content;
     border: 1px solid #000;
     padding: 0;
 }
@@ -270,7 +309,7 @@ body {
     display: flex;
     justify-content: space-between;
     padding: 6px 10px;
-    border-bottom: 1px solid #000;
+    // border-bottom: 1px solid #000;
     font-size: 16px;
 }
 
@@ -402,6 +441,9 @@ body {
     margin-top: 10px;
     font-weight: bold;
     color: #333;
+}
+    .field-label-group {
+    width: 80px; /* กำหนดความกว้าง label ทั้งก้อน */
 }
 
 /* Utilities */
@@ -604,21 +646,18 @@ window.addEventListener('afterprint', function() {
     <div class="header">
         <div class="company-logo">
             <div class="logox">
-                <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png',['style' => 'max-width: 120px;']) ?>
+                <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png', ['style' => 'max-width: 180px;']) ?>
             </div>
             <div class="company-info">
                 <div class="company-name-thai">บริษัท เอ็ม. ซี. โอ. จำกัด (สำนักงานใหญ่)</div>
                 <div class="company-name-eng">M. C. O. COMPANY LIMITED</div>
-                <div class="company-address">
+                <div class="company-address" style="margin-left:80px;">
                     8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์ 66-(0)-3861-9559
                 </div>
-                <div class="company-address">
+                <div class="company-address" style="margin-left: 80px;">
                     8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559
                 </div>
             </div>
-        </div>
-        <div class="invoice-info">
-
         </div>
     </div>
     <div class="row">
@@ -636,9 +675,8 @@ window.addEventListener('afterprint', function() {
     $po_date  = null;
     $job_id = 0;
     $quotation_data = \backend\models\Quotation::find()->where(['id' => $model->quotation_id])->one();
-    if($quotation_data != null){
+    if ($quotation_data != null) {
         $customer_code = \backend\models\Customer::findCode($quotation_data->customer_id);
-
     }
 
     $po_no = $model->po_number;
@@ -653,42 +691,46 @@ window.addEventListener('afterprint', function() {
                 <span class="field-value">0215543000985</span>
             </div>
             <div class="field-group">
-                <span class="field-label">รหัสลูกค้า / Code:</span>
-                <span class="field-value"><?= $customer_code ?></span>
+                <div class="field-label-group">
+                    <div class="field-label">รหัสลูกค้า :</div>
+                    <div class="field-label">Code</div>
+                </div>
+                <span class="field-value">
+                    <?= $customer_code ?>
+                </span>
             </div>
             <div class="field-group">
-                <span class="field-label">ขายให้ / Sold To:</span>
-                <span class="field-value"><?= Html::encode($model->customer_name ?: '') ?></span>
-            </div>
-            <div class="field-group">
-                <span class="field-label"></span>
-                <span class="field-value"><?= Html::encode($model->customer_address ?: '') ?></span>
-            </div>
-            <div class="field-group">
-                <span class="field-label">TAX ID:</span>
-                <span class="field-value"><?= Html::encode($model->customer_tax_id ?: '') ?></span>
+                <div class="field-label-group">
+                    <div class="field-label">ขายให้ :</div>
+                    <div class="field-label">Sold To</div>
+                </div>
+                <span class="field-value">
+                    <?= Html::encode($model->customer_name ?: '') ?><br>
+                    <?= Html::encode($model->customer_address ?: '') ?><br>
+                    TAX ID: <?= Html::encode($model->customer_tax_id ?: '') ?>
+                </span>
             </div>
         </div>
-        <div class="customer-right">
+        <div class="customer-right" style="margin-left: 80px;">
             <div class="field-group">
-                <span class="field-label">วันที่ / Date:</span>
-                <span class="field-value"><?= Yii::$app->formatter->asDate($model->invoice_date, 'MM/dd/yyyy') ?></span>
+                <span class="field-label">วันที่ / Date:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <span class="field-value-right"><?= Yii::$app->formatter->asDate($model->invoice_date, 'MM/dd/yyyy') ?></span>
             </div>
             <div class="field-group">
-                <span class="field-label">เลขที่ / Inv.No.:</span>
-                <span class="field-value"><?= Html::encode($model->invoice_number) ?></span>
+                <span class="field-label">เลขที่ / Inv.No.:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <span class="field-value-right"><?= Html::encode($model->invoice_number) ?></span>
             </div>
             <div class="field-group">
-                <span class="field-label">ใบสั่งซื้อเลขที่ / P/O No.:</span>
-                <span class="field-value"><?= Html::encode($po_no ?: '') ?></span>
+                <span class="field-label">ใบสั่งซื้อเลขที่ / P/O No.:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <span class="field-value-right"><?= Html::encode($po_no ?: '') ?></span>
             </div>
             <div class="field-group">
-                <span class="field-label">วันที่สั่งซื้อ / P/O Date:</span>
-                <span class="field-value"><?= $po_date ? Yii::$app->formatter->asDate($po_date, 'MM/dd/yyyy') : '' ?></span>
+                <span class="field-label">วันที่สั่งซื้อ / P/O Date:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <span class="field-value-right"><?= $po_date ? Yii::$app->formatter->asDate($po_date, 'MM/dd/yyyy') : '' ?></span>
             </div>
             <div class="field-group">
-                <span class="field-label">เงื่อนไข / กำหนดชำระ / Credit, Due:</span>
-                <span class="field-value"><?= Html::encode($model->paymentTerm ? $model->paymentTerm->name: '') ?> <?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'd/M/yy') : '' ?></span>
+                <span class="field-label">เงื่อนไข / กำหนดชำระ / Credit, Due:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <span class="field-value-right"><?= Html::encode($model->paymentTerm ? $model->paymentTerm->name : '') ?> <?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'd/M/yy') : '' ?></span>
             </div>
         </div>
     </div>
@@ -697,43 +739,43 @@ window.addEventListener('afterprint', function() {
     <div class="items-section">
         <table class="items-table">
             <thead>
-            <tr>
-                <th style="width: 8%;">ลำดับ<br>Item</th>
-                <th style="width: 40%;">รายการ<br>Description</th>
-                <th style="width: 12%;">จำนวน<br>Quantity</th>
-                <th style="width: 15%;">ราคาต่อหน่วย<br>Unit/Price</th>
-                <th style="width: 15%;">จำนวนเงินรวม<br>Amount</th>
-            </tr>
+                <tr>
+                    <th style="width: 8%;border-left: 1px solid #000;text-align:center"">ลำดับ<br>Item</th>
+                    <th style=" width: 40%;text-align:center"">รายการ<br>Description</th>
+                    <th style="width: 12%;text-align:center"">จำนวน<br>Quantity</th>
+                    <th style=" width: 15%;text-align:center"">ราคาต่อหน่วย<br>Unit/Price</th>
+                    <th style="width: 15%;border-right: 1px solid #000;text-align:center"">จำนวนเงินรวม<br>Amount</th>
+                </tr>
             </thead>
             <tbody>
-            <?php
-            $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
-            ?>
-            <?php if (!empty($model_line)): ?>
-                <?php foreach ($model_line as $index => $item): ?>
-                    <tr>
-                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= $index + 1 ?></td>
-                        <td class="text-left" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= Html::encode($item->item_description) ?></td>
-                        <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= number_format($item->quantity, 0) ?> <?= Html::encode(\backend\models\Unit::findName($item->unit_id)) ?></td>
-                        <td class="text-right" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= number_format($item->unit_price, 3) ?></td>
-                        <td class="text-right" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;"><?= number_format($item->amount, 3) ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            <?php else: ?>
-
-            <?php endif; ?>
-
-            <!-- Empty rows for spacing -->
-            <?php for ($i = count($model_line); $i < 12; $i++): ?>
-                <tr class="empty-row">
-                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
-                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
-                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
-                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
-                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">&nbsp;</td>
+                <?php
+                $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
+                ?>
+                <?php if (!empty($model_line)): ?>
+                    <?php foreach ($model_line as $index => $item): ?>
+                        <tr>
+                            <td style=" padding:8px;text-align:center"><?= $index + 1 ?></td>
+                    <td class="text-left" style=" padding:8px;"><?= Html::encode($item->item_description) ?></td>
+                    <td style="padding:8px;text-align:center""><?= number_format($item->quantity, 0) ?> <?= Html::encode(\backend\models\Unit::findName($item->unit_id)) ?></td>
+                            <td class=" text-right" style="padding:8px;"><?= number_format($item->unit_price, 3) ?></td>
+                    <td class="text-right" style="padding:8px;"><?= number_format($item->amount, 3) ?></td>
                 </tr>
-            <?php endfor; ?>
-            </tbody>
+            <?php endforeach; ?>
+        <?php else: ?>
+
+        <?php endif; ?>
+
+        <!-- Empty rows for spacing -->
+        <?php for ($i = count($model_line); $i < 12; $i++): ?>
+            <tr class="empty-row">
+                <td style="padding:8px;">&nbsp;</td>
+                <td style="padding:8px;">&nbsp;</td>
+                <td style="padding:8px;">&nbsp;</td>
+                <td style="padding:8px;">&nbsp;</td>
+                <td style="padding:8px;">&nbsp;</td>
+            </tr>
+        <?php endfor; ?>
+        </tbody>
         </table>
     </div>
 
@@ -741,29 +783,34 @@ window.addEventListener('afterprint', function() {
     <div class="summary-section">
         <div class="summary-left" style="border: 1px solid gray;">
             <div class="font-bold">ตัวอักษร</div>
-            <div class="amount-text" style="text-align:center;"><h6><?= $model->total_amount_text ?: '' ?></h6></div>
-
-            <div style="margin-top: 30px; font-size: 14px; text-align: center;">
-                <strong>ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง</strong>
-            </div>
-        </div>
-        <div class="summary-right">
-            <div class="summary-row">
-                <span>ส่วนลด / Discount</span>
+            <div style="display:flex; justify-content:flex-end; gap:10px; text-align:right;">
+                <span style="margin-right: 15px;">Discount</span>
                 <span><?= number_format($model->discount_amount, 2) ?></span>
             </div>
+            <br>
+            <div class="amount-text" style="text-align:left;">
+                <h6><?= $model->total_amount_text ?: '' ?></h6>
+            </div>
+            <br>
+            <br>
+        </div>
+        <div class="summary-right">
+
             <div class="summary-row">
-                <span>รวมเงิน / Total</span>
+                <span>รวมเงิน<br>Total</span>
                 <span><?= number_format($model->subtotal, 2) ?></span>
             </div>
+
             <div class="summary-row">
-                <span>ภาษีมูลค่าเพิ่ม / VAT <?= $model->vat_percent ?>%</span>
+                <span>ภาษีมูลค่าเพิ่ม<br>VAT <?= $model->vat_percent ?>%</span>
                 <span><?= number_format($model->vat_amount, 2) ?></span>
             </div>
+
             <div class="summary-row total">
-                <span>รวมเงินทั้งสิ้น / TOTAL</span>
+                <span>รวมเงินทั้งสิ้น<br>TOTAL</span>
                 <span><?= number_format($model->total_amount, 2) ?></span>
             </div>
+
         </div>
     </div>
 

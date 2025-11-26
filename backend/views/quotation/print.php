@@ -1,4 +1,5 @@
 <?php
+
 use yii\helpers\Html;
 
 $this->title = 'Quotation - ' . $quotation->quotation_no;
@@ -24,18 +25,37 @@ $grandTotal = $quotation->total_amount == null ? 0 : $quotation->total_amount;
 
 $customer_info = \backend\models\Customer::findCustomerInfo($quotation->customer_id);
 //print_r($customer_info);return;
-$customer_name = $customer_info !== null && count($customer_info)>0 ? $customer_info['name'] : '';
-$customer_address = $customer_info !== null && count($customer_info)>0 ? $customer_info['home_number'].' '.$customer_info['street'].' '.$customer_info['aisle'].', '.$customer_info['district_name'].', '.$customer_info['city_name'].', '.$customer_info['province_name'].', '.$customer_info['zipcode'] : '';
-$phone = $customer_info !== null && count($customer_info)>0 ? $customer_info['phone'] : '';
-$email = $customer_info !== null && count($customer_info)>0 ? $customer_info['email'] : '';
-$customer_taxid = $customer_info !== null && count($customer_info)>0 ? $customer_info['taxid'] : '';
+$customer_name = $customer_info !== null && count($customer_info) > 0 ? $customer_info['name'] : '';
+$customer_address = $customer_info !== null && count($customer_info) > 0 ? $customer_info['home_number'] . ' ' . $customer_info['street'] . ' ' . $customer_info['aisle'] . ', ' . $customer_info['district_name'] . ', ' . $customer_info['city_name'] . ', ' . $customer_info['province_name'] . ', ' . $customer_info['zipcode'] : '';
+$phone = $customer_info !== null && count($customer_info) > 0 ? $customer_info['phone'] : '';
+$email = $customer_info !== null && count($customer_info) > 0 ? $customer_info['email'] : '';
+$customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $customer_info['taxid'] : '';
 ?>
 
 <style>
+    @font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK.ttf') format('truetype');
+        font-weight: normal;
+    }
+
+    @font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Bold.ttf') format('truetype');
+        font-weight: bold;
+    }
+
+    @font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Italic.ttf') format('truetype');
+        font-style: italic;
+    }
+
     .quotation-container {
-        max-width: 210mm;
+        font-family: 'THSarabunPSK', sans-serif !important;
+        max-width: 260mm;
         margin: 0 auto;
-        padding: 20px;
+        padding: 5px;
         background: white;
     }
 
@@ -48,18 +68,27 @@ $customer_taxid = $customer_info !== null && count($customer_info)>0 ? $customer
     .logo-section {
         display: flex;
         align-items: center;
+        margin-bottom: -15px;
     }
 
     .logo {
-        font-size: 36px;
+        font-size: 25px;
         font-weight: bold;
         color: #FF0000;
         margin-right: 10px;
     }
 
-    .logo .m { color: #FFA500; }
-    .logo .c { color: #000080; }
-    .logo .o { color: #008000; }
+    .logo .m {
+        color: #FFA500;
+    }
+
+    .logo .c {
+        color: #000080;
+    }
+
+    .logo .o {
+        color: #008000;
+    }
 
     .th-flag {
         background: linear-gradient(to bottom, #FF0000 33%, #FFFFFF 33% 66%, #000080 66%);
@@ -70,8 +99,10 @@ $customer_taxid = $customer_info !== null && count($customer_info)>0 ? $customer
     }
 
     .quotation-title {
-        font-size: 24px;
-        font-weight: bold;
+        font-size: 30px;
+        /* font-weight: bold; */
+        font-weight: 900;
+        color: #203764;
     }
 
     .info-section {
@@ -169,10 +200,59 @@ $customer_taxid = $customer_info !== null && count($customer_info)>0 ? $customer
         width: 30%;
     }
 
-    .signature-line {
-        border-bottom: 1px solid #000;
-        margin: 50px 0 10px 0;
+
+    .row-color {
+        background-color: #8ea9db;
     }
+
+    .label-font {
+        font-size: 18px;
+        /* font-weight: 900; */
+    }
+
+    .label-left {
+        text-align: left;
+        margin-left: 110px;
+    }
+
+    .text-infomation {
+        margin-top: -5px;
+    }
+
+    .text-detail {
+        font-size: 13px;
+    }
+
+    .signature-section {
+        display: flex;
+        justify-content: space-between;
+        text-align: center;
+        margin-top: 40px;
+        border: 1px solid #000;
+        /* กรอบรอบทั้งหมด */
+    }
+
+    .signature-box {
+        width: 33.33%;
+        padding: 10px 5px;
+        border-right: 1px solid #000;
+        /* เส้นแบ่งช่อง */
+    }
+
+    .signature-box:last-child {
+        border-right: none;
+        /* ช่องสุดท้ายไม่ต้องมีเส้นขวา */
+    }
+
+    .signature-line {
+        border-bottom: none;
+        /* ลบเฉพาะเส้นแนวนอนนี้ */
+        height: 40px;
+        /* คงช่องว่างไว้สำหรับลายเซ็น */
+        margin-bottom: 10px;
+    }
+
+
 
     @media print {
         .quotation-container {
@@ -186,15 +266,15 @@ $customer_taxid = $customer_info !== null && count($customer_info)>0 ? $customer
     <div class="header">
         <table style="width: 100%;border: none;">
             <tr>
-                <td style="width: 60%;border: none;text-align: left;">
+                <td style="width: 50%;border: none;text-align: left;">
                     <div class="logo-section">
                         <div class="logo">
-                            <img src="../../backend/web/uploads/logo/mco_logo_2.png" width="50%" alt="">
+                            <img src="../../backend/web/uploads/logo/mco_logo.png" width="40%" alt="">
                         </div>
 
                     </div>
                 </td>
-                <td style="width: 40%;border: none;text-align: center;">
+                <td style="width: 50%;border: none;text-align: center;">
                     <div class="quotation-title">Quotation</div>
                 </td>
             </tr>
@@ -204,98 +284,104 @@ $customer_taxid = $customer_info !== null && count($customer_info)>0 ? $customer
     </div>
     <table style="width: 100%;border: none;">
         <tr>
-            <td style="width: 60%;border: none;text-align: left;">
-                <div class="info-section">
+            <td style="width: 50%;border: none;text-align: left;">
+                <div>
+                    <div class="row-color">
+                        <span class="info-label label-font" style="font-weight: bold;">&nbsp;Company Name :</span>
+                    </div>
                     <div>
-                        <span class="info-label">Company Name :</span>
+                        <span class="label-font" style="font-weight: bold;">&nbsp;M.C.O. COMPANY LIMITED</span>
                     </div>
-                    <div class="info-row">
-                        <span>M.C.O. COMPANY LIMITED</span>
+                    <div class="text-infomation">
+                        <span class="label-font" style="font-weight: bold;">&nbsp;8/18 Koh-kloy Road,</span>
                     </div>
-                    <div class="info-row">
-                        <span>8/18 Koh-kloy Road,</span>
+                    <div class="text-infomation">
+                        <span class="label-font" style="font-weight: bold;">&nbsp;Tambon Cherngnern,</span>
                     </div>
-                    <div class="info-row">
-                        <span>Tambon Cherngnern,</span>
+                    <div class="text-infomation">
+                        <span class="label-font" style="font-weight: bold;">&nbsp;Amphur Muang ,</span>
                     </div>
-                    <div class="info-row">
-                        <span>Amphur Muang ,</span>
+                    <div class="text-infomation">
+                        <span class="label-font" style="font-weight: bold;">&nbsp;Rayong 21000 Thailand.</span>
                     </div>
-                    <div class="info-row">
-                        <span>Rayong 21000 Thailand.</span>
-                    </div>
-                    <div class="info-row">
-                        <span>info@thai-mco.com</span>
+                    <div class="text-infomation">
+                        <span class="label-font" style="font-weight: bold;">&nbsp;info@thai-mco.com</span>
                     </div>
                 </div>
             </td>
-            <td style="width: 40%;border: none;text-align: right;vertical-align: top">
-                <div>
-                    <div class="info-row">
-                        <span class="info-label">Date</span>
-                        <span>: <?= Yii::$app->formatter->asDate($quotation->quotation_date, 'php:m/d/Y') ?></span>
+            <td style="width: 50%;border: none;text-align: right;vertical-align: top;">
+                <div style="margin-top: 5px">
+                    <div class="info-row" style="margin-bottom: 5px;">
+                        <span class="info-label label-font label-left">Date</span>
+                        <span class="label-font">: <?= Yii::$app->formatter->asDate($quotation->quotation_date, 'php:m/d/Y') ?></span>
+                    </div>
+                    <div class="info-row" style="margin-bottom: 5px;">
+                        <span class="info-label label-font label-left">OUR REF.</span>
+                        <span class="label-font">: <?= Html::encode($quotation->quotation_no) ?></span>
+                    </div>
+                    <div class="info-row" style="margin-bottom: 5px;">
+                        <span class="info-label label-font label-left">FROM</span>
+                        <span class="label-font">: <?= Html::encode(\backend\models\Employee::findFullName($quotation->sale_emp_id) ?? '') ?></span>
+                    </div>
+                    <div class="info-row" style="margin-bottom: 5px;">
+                        <span class="info-label label-font label-left">FAX</span>
+                        <span class="label-font">: 66-38-619559</span>
+                    </div>
+                    <div class="info-row" style="margin-bottom: 5px;">
+                        <span class="info-label label-font label-left">TEL</span>
+                        <span class="label-font">: 038-875258 875259</span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">OUR REF.</span>
-                        <span>: <?= Html::encode($quotation->quotation_no) ?></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">FROM</span>
-                        <span>: <?= Html::encode(\backend\models\Employee::findFullName($quotation->sale_emp_id) ?? '') ?></span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">FAX</span>
-                        <span>: 66-38-619559</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">TEL</span>
-                        <span>: 038-875258 875259</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">YOUR REF</span>
-                        <span>: </span>
+                        <span class="info-label label-font label-left">YOUR REF</span>
+                        <span class="label-font">: </span>
                     </div>
                 </div>
             </td>
         </tr>
         <tr>
-            <td style="width: 60%;border: none;text-align: left;">
+            <td style="width: 50%;border: none;text-align: left;padding : 0px">
                 <table style="width: 100%;border: none;">
                     <tr>
-                        <td style="width: 100%;border: none;text-align: left;">
-                            <div class="address-header">Customer :</div>
+                        <td style="width: 100%;border: none;text-align: left;padding : 8px !important;">
+                            <div class="row-color">
+                                <span class="info-label label-font">&nbsp;Customer :</span>
+                            </div>
                         </td>
                     </tr>
                     <tr>
-                        <td style="width: 100%;border: none;text-align: left;">
-                            <?= Html::encode($customer_name).'<br />'.Html::encode($customer_address).'<br />'.'tax id :'.Html::encode($customer_taxid) ?>
+                        <td style="width:100%; border:none; text-align:left; font-weight:bold;">
+                            <div style="margin-left: 3px;margin-top: -9px;" class="label-font">
+                                <?= Html::encode($customer_name) ?><br>
+                                <?= Html::encode($customer_address) ?><br>
+                                tax id : <?= Html::encode($customer_taxid) ?>
+                            </div>
                         </td>
                     </tr>
                     <tr>
                         <td style="width: 100%;border: none;text-align: left;">
                             <div class="address-section">
-                                    <div>
-                                        <div class="info-row">
-                                            <span class="info-label">Tel : <?= Html::encode($phone) ?></span>
-                                            <span></span>
-                                        </div>
-                                        <div class="info-row">
-                                            <span class="info-label">Fax :</span>
-                                            <span></span>
-                                        </div>
-                                        <div class="info-row">
-                                            <span class="info-label">To :</span>
-                                            <span><?= Html::encode($quotation->customer_name ?? 'Purchaser') ?></span>
-                                        </div>
-                                        <div class="info-row">
-                                            <span class="info-label">Purchaser</span>
-                                            <span></span>
-                                        </div>
-                                        <div class="info-row">
-                                            <span class="info-label">Project Name :</span>
-                                            <span></span>
-                                        </div>
+                                <div>
+                                    <div class="info-row">
+                                        <span class="info-label label-font">&nbsp;Tel : <?= Html::encode($phone) ?></span>
+                                        <span></span>
                                     </div>
+                                    <div class="info-row">
+                                        <span class="info-label label-font">&nbsp;Fax :</span>
+                                        <span></span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label label-font">&nbsp;To :</span>
+                                        <span><?= Html::encode($quotation->customer_name ?? '') ?></span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label label-font">&nbsp;Purchaser</span>
+                                        <span></span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label label-font">&nbsp;Project Name :</span>
+                                        <span></span>
+                                    </div>
+                                </div>
 
                             </div>
                         </td>
@@ -303,8 +389,13 @@ $customer_taxid = $customer_info !== null && count($customer_info)>0 ? $customer
                 </table>
 
             </td>
-            <td style="width: 40%;border: none;text-align: left;">
-
+            <td style="width: 50%;border: none;text-align: left;">
+                <div style="margin-left: 90px">
+                    <img style="margin-left: 2px;" src="../../backend/web/uploads/logo/verity.jpg" width="50%" alt=""> <br>
+                    <span style="margin-left: 12px;font-size: 14px" class="label-font"><strong>Certified ISO 9001:2015</strong></span> <br>
+                    <span style="margin-left: 12px;font-size: 14px" class="label-font"><strong>Certificate No: TH020629</strong></span> <br>
+                    <span style="margin-left: 12px; font-size: 14px" class="label-font"><strong>Issued by Bureau Veritas Certification (Thailand) Ltd.</strong></span>
+                </div>
             </td>
         </tr>
 
@@ -326,61 +417,66 @@ $customer_taxid = $customer_info !== null && count($customer_info)>0 ? $customer
     <!-- Items Table -->
     <table>
         <thead>
-        <tr>
-            <th style="width: 5%;">ITEM</th>
-            <th style="width: 40%;">DESCRIPTION</th>
-            <th style="width: 5%;">QTY</th>
-            <th style="width: 10%;">UNIT</th>
-            <th colspan="2" style="width: 20%;">
-                MATERIAL<br>
-                <span style="font-size: 11px;">UNIT PRICE &nbsp;&nbsp;&nbsp; TOTAL</span>
-            </th>
-            <th colspan="2" style="width: 20%;">
-                LABOUR<br>
-                <span style="font-size: 11px;">UNIT PRICE &nbsp;&nbsp;&nbsp; TOTAL</span>
-            </th>
-            <th style="width: 10%;">TOTAL</th>
-        </tr>
-        </thead>
-        <tbody>
-        <?php if ($quotationLines): ?>
-            <?php $itemNo = 1; ?>
-            <?php foreach ($quotationLines as $line): ?>
-                <?php
-                    $is_labour_price = 0;
-                     if(substr($line->product_name,0,3) == 'SER'){
-                         $is_labour_price = 1;
-                     }
-                ?>
-                <tr>
-                    <td><?= $itemNo++ ?></td>
-                    <td class="description-cell"><?= Html::encode($line->product_name ?? '') ?></td>
-                    <td><?= number_format($line->qty, 1) ?></td>
-                    <td><?= Html::encode(\backend\models\Unit::findName($line->product->unit_id) ?? '') ?></td>
-                    <td class="number-cell"><?= $is_labour_price == 0?number_format($line->line_price, 2):'-' ?></td>
-                    <td class="number-cell"><?= $is_labour_price == 0?number_format($line->line_total, 2):'-' ?></td>
-                    <td class="number-cell"><?= $is_labour_price == 1?number_format($line->line_price, 2):'-' ?></td>
-                    <td class="number-cell"><?= $is_labour_price == 1?number_format($line->line_total, 2):'-' ?></td>
-                    <td class="number-cell"><?= number_format($line->line_total, 2) ?></td>
-                </tr>
-            <?php endforeach; ?>
-        <?php endif; ?>
-
-        <!-- Empty rows -->
-
-        <?php for ($i = count($quotationLines); $i < 8; $i++): ?>
-            <tr>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
-                <td>&nbsp;</td>
+            <tr style="background: #8ea9db;">
+                <th class="label-font" style="width: 5%;">ITEM</th>
+                <th class="label-font" style="width: 40%;">DESCRIPTION</th>
+                <th class="label-font" style="width: 5%;">QTY</th>
+                <th class="label-font" style="width: 10%;">UNIT</th>
+                <th class="label-font" colspan="2" style="width: 20%;">
+                    MATERIAL<br>
+                    <span style="font-size: 11px;text-align: left;margin-left: -20px">UNIT PRICE &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TOTAL</span>
+                </th>
+                <th class="label-font" colspan="2" style="width: 20%;">
+                    LABOUR<br>
+                    <span style="font-size: 11px;">UNIT PRICE &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TOTAL</span>
+                </th>
+                <th class="label-font" style="width: 10%;">TOTAL</th>
             </tr>
-        <?php endfor; ?>
+        </thead>
+        <style>
+            .striped-row {
+                background-color: #d9e1f2;
+            }
+        </style>
+        <tbody class="label-font">
+            <?php if ($quotationLines): ?>
+                <?php $itemNo = 1; ?>
+                <?php foreach ($quotationLines as $line): ?>
+                    <?php
+                    $is_labour_price = 0;
+                    if (substr($line->product_name, 0, 3) == 'SER') {
+                        $is_labour_price = 1;
+                    }
+                    ?>
+                    <tr class="<?= ($itemNo % 2 == 0) ? 'striped-row' : '' ?>">
+                        <td class="text-detail"><?= $itemNo++ ?></td>
+                        <td class="description-cell text-detail"><?= Html::encode($line->product_name ?? '') ?></td>
+                        <td class="text-detail"><?= number_format($line->qty, 1) ?></td>
+                        <td class="text-detail"><?= Html::encode(\backend\models\Unit::findName($line->product->unit_id) ?? '') ?></td>
+                        <td class="number-cell text-detail"><?= $is_labour_price == 0 ? number_format($line->line_price, 2) : '-' ?></td>
+                        <td class="number-cell text-detail"><?= $is_labour_price == 0 ? number_format($line->line_total, 2) : '-' ?></td>
+                        <td class="number-cell text-detail"><?= $is_labour_price == 1 ? number_format($line->line_price, 2) : '-' ?></td>
+                        <td class="number-cell text-detail"><?= $is_labour_price == 1 ? number_format($line->line_total, 2) : '-' ?></td>
+                        <td class="number-cell text-detail"><?= number_format($line->line_total, 2) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
+
+            <!-- Empty rows -->
+
+            <?php for ($i = count($quotationLines); $i < 8; $i++): ?>
+                <tr class="<?= (($i + 1) % 2 == 0) ? 'striped-row' : '' ?>">
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                </tr>
+            <?php endfor; ?>
         </tbody>
     </table>
 
@@ -388,32 +484,32 @@ $customer_taxid = $customer_info !== null && count($customer_info)>0 ? $customer
     <div class="summary-section">
         <div style="width: 70%;">
             <div class="terms-section">
-                <div><strong>EXCLUDES VAT AND SEPARATED PURCHASING IS NOT ALLOWED.</strong></div>
-                <div><strong>CURRENCY :</strong> Baht</div>
-                <div><strong>DELIVERY :</strong></div>
-                <div><strong>PAYMENT :</strong> <?=\backend\models\Paymentterm::findName($quotation->payment_term_id)?></div>
-                <div><strong>VALIDITY :</strong> 7 day after today.</div>
-                <div><strong>REMARK</strong></div>
+                <div class="label-font"><strong>EXCLUDES VAT AND SEPARATED PURCHASING IS NOT ALLOWED.</strong></div>
+                <div class="label-font"><strong>CURRENCY :</strong> Baht</div>
+                <div class="label-font"><strong>DELIVERY :</strong></div>
+                <div class="label-font"><strong>PAYMENT :</strong> <?= \backend\models\Paymentterm::findName($quotation->payment_term_id) ?></div>
+                <div class="label-font"><strong>VALIDITY :</strong> 7 day after today.</div>
+                <div class="label-font"><strong>REMARK</strong></div>
             </div>
         </div>
 
-        <div style="width: 25%;">
+        <div style="width: 25%;" class="label-font">
             <table style="margin-bottom: 0;">
                 <tr>
                     <td style="text-align: right; border: none; padding: 5px;"><strong>Total</strong></td>
-                    <td style="text-align: right; border: 1px solid #ccc; padding: 5px;"><?= number_format($subtotal, 2) ?></td>
+                    <td style="text-align: right; border: 1px solid #ccc; padding: 5px; background: #fff2cc;"><?= number_format($subtotal, 2) ?></td>
                 </tr>
                 <tr>
                     <td style="text-align: right; border: none; padding: 5px;"><strong>Discount</strong></td>
-                    <td style="text-align: right; border: 1px solid #ccc; padding: 5px;"><?= number_format($discount, 2) ?></td>
+                    <td style="text-align: right; border: 1px solid #ccc; padding: 5px; background: #fff2cc;"><?= number_format($discount, 2) ?></td>
                 </tr>
                 <tr>
                     <td style="text-align: right; border: none; padding: 5px;"><strong>Vat 7%</strong></td>
-                    <td style="text-align: right; border: 1px solid #ccc; padding: 5px;"><?= number_format($vat, 2) ?></td>
+                    <td style="text-align: right; border: 1px solid #ccc; padding: 5px; background: #fff2cc;"><?= number_format($vat, 2) ?></td>
                 </tr>
                 <tr>
                     <td style="text-align: right; border: none; padding: 5px;"><strong>Grand Total</strong></td>
-                    <td style="text-align: right; border: 1px solid #ccc; padding: 5px; background: #E6F2FF;">
+                    <td style="text-align: right; border: 1px solid #ccc; padding: 5px; background: #fff2cc;">
                         <strong><?= number_format($grandTotal, 2) ?></strong>
                     </td>
                 </tr>
@@ -421,12 +517,13 @@ $customer_taxid = $customer_info !== null && count($customer_info)>0 ? $customer
         </div>
     </div>
 
+    <br>
 
     <!-- Signatures -->
-    <div class="signature-section">
+    <div class="signature-section label-font">
         <div class="signature-box">
             <div class="signature-line"></div>
-            <div>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</div>
+            <div>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</div>
             <div><strong>ACCEPT ABOVE QUOTATION</strong></div>
             <div>Purchaser</div>
         </div>
@@ -435,11 +532,11 @@ $customer_taxid = $customer_info !== null && count($customer_info)>0 ? $customer
             <div class="signature-line">
                 <?php
                 $requestor_signature = \backend\models\User::findEmployeeSignature($quotation->created_by);
-                if(!empty($requestor_signature)): ?>
-                    <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" alt="Requestor Signature">
+                if (!empty($requestor_signature)): ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?= $requestor_signature ?>" alt="Requestor Signature">
                 <?php endif; ?>
             </div>
-            <div>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</div>
+            <div>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</div>
             <div><strong>QUOTED BY</strong></div>
         </div>
 
@@ -447,11 +544,11 @@ $customer_taxid = $customer_info !== null && count($customer_info)>0 ? $customer
             <div class="signature-line">
                 <?php
                 $approve_signature = \backend\models\User::findEmployeeSignature($quotation->approve_by);
-                if(!empty($approve_signature)): ?>
-                    <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" alt="Requestor Signature">
+                if (!empty($approve_signature)): ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?= $approve_signature ?>" alt="Requestor Signature">
                 <?php endif; ?>
             </div>
-            <div>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</div>
+            <div>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</div>
             <div><strong>AUTHORIZED SIGNATURE</strong></div>
         </div>
     </div>
@@ -463,7 +560,7 @@ $customer_taxid = $customer_info !== null && count($customer_info)>0 ? $customer
         <i class="glyphicon glyphicon-print"></i> Print
     </button>
     <a href="<?= \yii\helpers\Url::to(['print', 'id' => $quotation->id, 'format' => 'pdf']) ?>"
-       class="btn btn-danger" target="_blank">
+        class="btn btn-danger" target="_blank">
         <i class="glyphicon glyphicon-file"></i> Download PDF
     </a>
     <button onclick="window.close()" class="btn btn-default">Close</button>

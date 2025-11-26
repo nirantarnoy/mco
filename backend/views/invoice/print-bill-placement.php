@@ -13,14 +13,30 @@ $this->registerCss("
     size: A4;
     margin: 0.4in 0.5in;
 }
+@font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK.ttf') format('truetype');
+        font-weight: normal;
+    }
 
+    @font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Bold.ttf') format('truetype');
+        font-weight: bold;
+    }
+
+    @font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Italic.ttf') format('truetype');
+        font-style: italic;
+    }
 @media print {
     .no-print { display: none !important; }
     .main-footer { display: none !important; }
     body { 
         margin: 0; 
         padding: 0; 
-        font-family: 'Sarabun', 'TH SarabunPSK', Arial, sans-serif; 
+        font-family: 'TH SarabunPSK', Arial, sans-serif; 
         font-size: 13px;
         color: #000;
         line-height: 1.2;
@@ -518,7 +534,7 @@ window.addEventListener('afterprint', function() {
 <div class="print-controls no-print">
     <div class="btn-group">
         <button onclick="window.printMultipleCopies()" class="btn btn-primary btn-print">
-            <i class="fas fa-print"></i> พิมพ์ 3 ใบ (ต้นฉบับ + สำเนา 2 ใบ)
+            <i class="fas fa-print"></i> พิมพ์ 3 ใบ (ต้นฉบับ + สำเนา 2 222ใบ)
         </button>
         <button onclick="window.close()" class="btn btn-secondary">
             <i class="fas fa-times"></i> ปิด
