@@ -93,6 +93,21 @@ $this->params['breadcrumbs'][] = $this->title;
                     ]
                 ]),
             ],
+            [
+                'attribute' => 'required_date',
+                'label' => 'วันที่',
+                'headerOptions' => ['style' => 'width: 120px;'],
+                'format' => ['date', 'php:m/d/Y'],
+                'filter' => kartik\date\DatePicker::widget([
+                    'model' => $searchModel,
+                    'attribute' => 'required_date',
+                    'options' => ['placeholder' => 'เลือกวันที่'],
+                    'pluginOptions' => [
+                        'autoclose' => true,
+                        'format' => 'yyyy-mm-dd',
+                    ]
+                ]),
+            ],
 //            [
 //                'attribute' => 'vendor_id',
 //                'label' => 'ผู้ขาย',
