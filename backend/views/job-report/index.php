@@ -177,9 +177,39 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'label' => 'สถานะ',
                                 'format' => 'raw',
                                 'value' => function ($model) {
-                                    return Html::tag('span', $model->getStatusText(), [
-                                        'class' => 'badge badge-' . $model->getStatusColor()
-                                    ]);
+//                                    return Html::tag('span', $model->getStatusText(), [
+//                                        'class' => 'badge badge-' . $model->getStatusColor()
+//                                    ]);
+
+                                    $activities = [
+                                        'ขอซื้อ' => $model->hasPurchaseRequest,
+                                        'สั่งซื้อ' => $model->hasPurchaseOrder,
+                                        'รับสินค้า' => $model->hasReceiveTransaction,
+                                        'เบิกสินค้า' => $model->hasWithdrawTransaction($model->id),
+                                        'แจ้งหนี้' => $model->hasDebtNotification($model->id),
+                                        'กำกับภาษี' => $model->hasTaxInvoice,
+                                        'ใบเสร็จ' => $model->hasReceipt,
+                                        'วางบิล' => $model->hasBilling,
+                                        'ชำระเงิน' => $model->hasPayment,
+                                    ];
+                                    $output = '<div class="activity-status-container">';
+                                    $is_not_completed = 0;
+                                    foreach ($activities as $activityName => $hasActivity) {
+                                       if($hasActivity == 0)
+                                       {
+                                           $is_not_completed+=1;
+                                       }
+                                    }
+                                    if($is_not_completed == 0){
+                                        $output .= '<span class="activity-badge activity-completed">' .
+                                            'completed' . '</span>';
+                                    }else{
+                                        $output .= '<span class="activity-badge activity-open">' .
+                                            'processing' . '</span>';
+                                    }
+                                    $output .= '</div>';
+
+                                    return $output;
                                 },
                                 'contentOptions' => ['style' => 'width: 120px; text-align: center;'],
                             ],
@@ -190,20 +220,27 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'value' => function ($model) {
                                     // ตรวจสอบสถานะของแต่ละกิจกรรม
                                     $activities = [
-                                        'ขอซื้อ' => $model->hasPurchaseRequest($model->id),
-                                        'สั่งซื้อ' => $model->hasPurchaseOrder($model->id),
-                                        'รับสินค้า' => $model->hasReceiveTransaction($model->id),
+                                        'ขอซื้อ' => $model->hasPurchaseRequest,
+                                        'สั่งซื้อ' => $model->hasPurchaseOrder,
+                                        'รับสินค้า' => $model->hasReceiveTransaction,
                                         'เบิกสินค้า' => $model->hasWithdrawTransaction($model->id),
                                         'แจ้งหนี้' => $model->hasDebtNotification($model->id),
-                                        'กำกับภาษี' => $model->hasTaxInvoice($model->id),
-                                        'ใบเสร็จ' => $model->hasReceipt($model->id),
-                                        'วางบิล' => $model->hasBilling($model->id),
-                                        'ชำระเงิน' => $model->hasPayment($model->id),
+                                        'กำกับภาษี' => $model->hasTaxInvoice,
+                                        'ใบเสร็จ' => $model->hasReceipt,
+                                        'วางบิล' => $model->hasBilling,
+                                        'ชำระเงิน' => $model->hasPayment,
                                     ];
 
                                     $output = '<div class="activity-status-container">';
                                     foreach ($activities as $activityName => $hasActivity) {
-                                        $statusClass = $hasActivity ? 'activity-completed' : 'activity-pending';
+                                        $statusClass = ''; // $hasActivity ? 'activity-completed' : 'activity-pending';
+                                        if($hasActivity == 0) {
+                                            $statusClass = 'activity-pending';
+                                        }else if($hasActivity == 1) {
+                                            $statusClass = 'activity-open';
+                                        }else if($hasActivity == 100) {
+                                            $statusClass = 'activity-completed';
+                                        }
                                         $output .= '<span class="activity-badge ' . $statusClass . '" title="' . $activityName . '">' .
                                             $activityName . '</span>';
                                     }
@@ -219,16 +256,16 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'value' => function ($model) {
                                     // ตรวจสอบสถานะของแต่ละกิจกรรม
                                     $activities = [
-                                        'ขอซื้อ' => $model->hasPurchaseRequest($model->id),
-                                        'สั่งซื้อ' => $model->hasPurchaseOrder($model->id),
-                                        'รับสินค้า' => $model->hasReceiveTransaction($model->id),
+                                        'ขอซื้อ' => $model->hasPurchaseRequest,
+                                        'สั่งซื้อ' => $model->hasPurchaseOrder,
+                                        'รับสินค้า' => $model->hasReceiveTransaction,
                                         'เบิกสินค้า' => $model->hasWithdrawTransaction($model->id),
                                         'เงินสดย่อย' => $model->hasPettyCash($model->id), // เพิ่มเงินสดย่อย
                                         'แจ้งหนี้' => $model->hasDebtNotification($model->id),
-                                        'กำกับภาษี' => $model->hasTaxInvoice($model->id),
-                                        'ใบเสร็จ' => $model->hasReceipt($model->id),
-                                        'วางบิล' => $model->hasBilling($model->id),
-                                        'ชำระเงิน' => $model->hasPayment($model->id),
+                                        'กำกับภาษี' => $model->hasTaxInvoice,
+                                        'ใบเสร็จ' => $model->hasReceipt,
+                                        'วางบิล' => $model->hasBilling,
+                                        'ชำระเงิน' => $model->hasPayment,
                                     ];
 
                                     // คำนวณเปอร์เซ็นต์ความคืบหน้า
@@ -692,8 +729,13 @@ $this->params['breadcrumbs'][] = $this->title;
         line-height: 1.2;
     }
 
+    .activity-open {
+        background-color: #fa952e;
+        color: white;
+        box-shadow: 0 1px 3px rgba(40, 167, 69, 0.3);
+    }
     .activity-completed {
-        background-color: #28a745;
+        background-color: #4a911b;
         color: white;
         box-shadow: 0 1px 3px rgba(40, 167, 69, 0.3);
     }

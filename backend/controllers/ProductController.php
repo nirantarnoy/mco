@@ -1183,4 +1183,5 @@ class ProductController extends Controller
 
         return $product_code;
     }
+
 }

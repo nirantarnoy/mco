@@ -210,6 +210,14 @@ $this->registerCss('
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
+.bg-warning-light {
+    background-color: rgba(255, 193, 7, 0.4) !important; /* 0.4 = โปร่งใส 40% */
+}
+
+.alert-warning-light{
+ background-color: rgba(255, 193, 7, 0.4) !important; /* 0.4 = โปร่งใส 40% */
+}
+
 @media (max-width: 768px) {
     .timeline-container {
         padding-left: 25px;
@@ -395,7 +403,7 @@ if($today > $end){
                                 </table>
                             </div>
                         <?php else: ?>
-                            <div class="alert alert-info mb-0">
+                            <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
                                 ไม่มีข้อมูลใบขอซื้อสำหรับใบงานนี้
                             </div>
@@ -465,7 +473,54 @@ if($today > $end){
                                 </table>
                             </div>
                         <?php else: ?>
-                            <div class="alert alert-warning mb-0">
+                            <div class="alert alert-teal mb-0">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                ไม่มีข้อมูลใบสั่งซื้อสำหรับใบงานนี้
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Purchase Order Section -->
+            <div class="timeline-section">
+                <div class="card border-warning-light">
+                    <div class="card-header bg-warning-light text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shopping-cart"></i>
+                            ใบสั่งซื้อ (Purchase None PR)
+                            <span class="badge badge-dark ml-2"><?= count($purchasesnonepr) ?> รายการ</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($purchasesnonepr)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-sm">
+                                    <thead class="thead-light">
+                                    <tr>
+                                        <th>เลขใบสั่งซื้อ</th>
+                                        <th>วันที่</th>
+                                        <th>ผู้จำหน่าย</th>
+                                        <th style="text-align: right;">มูลค่า</th>
+                                        <th>เอกสาร</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php foreach ($purchases as $purchase): ?>
+
+                                        <tr>
+                                            <td style="text-align: center;"><?= Html::encode($purchase['purch_no']) ?></td>
+                                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($purchase['purch_date'])) ?></td>
+                                            <td style="text-align: center;"><?= Html::encode($purchase['vendor_name']) ?></td>
+                                            <td class="text-right"><?= number_format($purchase['total_amount'], 2) ?></td>
+                                            <td style="text-align: center;"><a class="badge badge-info" href="<?=Url::to(['job/documents','id'=>$model->id,'type'=>'purch','activityId'=>$purchase['id']],true)?>"><i class="fa fa-eye"></i></a></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-teal mb-0">
                                 <i class="fas fa-exclamation-triangle"></i>
                                 ไม่มีข้อมูลใบสั่งซื้อสำหรับใบงานนี้
                             </div>
@@ -537,7 +592,7 @@ if($today > $end){
                                 </table>
                             </div>
                         <?php else: ?>
-                            <div class="alert alert-secondary mb-0">
+                            <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
                                 ไม่มีข้อมูลรายการรับ-เบิกของสำหรับใบงานนี้
                             </div>
@@ -659,7 +714,7 @@ if($today > $end){
                                 </table>
                             </div>
                         <?php else: ?>
-                            <div class="alert alert-secondary mb-0">
+                            <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
                                 ไม่มีข้อมูลใบเบิกเงินสดย่อยสำหรับใบงานนี้
                             </div>
@@ -707,7 +762,7 @@ if($today > $end){
                                 </table>
                             </div>
                         <?php else: ?>
-                            <div class="alert alert-danger mb-0">
+                            <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
                                 ไม่มีข้อมูลรายการรับ-เบิกของสำหรับใบงานนี้
                             </div>
@@ -771,7 +826,7 @@ if($today > $end){
                                 </table>
                             </div>
                         <?php else: ?>
-                            <div class="alert alert-success mb-0">
+                            <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
                                 ไม่มีข้อมูลใบกำกับภาษี/ใบเสร็จสำหรับใบงานนี้
                             </div>
@@ -909,7 +964,7 @@ if($today > $end){
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="alert alert-success mb-0">
+                            <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
                                 ไม่มีข้อมูลใบวางบิลสำหรับใบงานนี้
                             </div>
@@ -1077,7 +1132,7 @@ if($today > $end){
                                 </table>
                             </div>
                         <?php else: ?>
-                            <div class="alert alert-info mb-0">
+                            <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
                                 ไม่มีข้อมูลใบเสร็จรับเงินสำหรับใบงานนี้
                             </div>
@@ -1099,11 +1154,12 @@ if($today > $end){
                         <?php
                         // คำนวณสรุปทางการเงิน
                         $totalPurchaseAmount = array_sum(array_column($purchases, 'net_amount'));
+                        $totalPurchaseNonePrAmount = array_sum(array_column($purchasesnonepr, 'total_amount'));
                         $totalPettyCashAmount = array_sum(array_column($pettyCashVouchers, 'amount'));
                         $totalPaymentReceived = array_sum(array_column($paymentReceipts, 'net_amount')); // เพิ่มยอดรับชำระ
                         $totalInvoiceAmount = array_sum(array_column($invoices, 'total_amount'));
                         $totalVehicleExpenseAmount = array_sum(array_column($vehicleExpense,'total_wage'));
-                        $totalExpenses = $totalPurchaseAmount + $totalPettyCashAmount + $totalVehicleExpenseAmount;
+                        $totalExpenses = $totalPurchaseAmount + $totalPurchaseNonePrAmount + $totalPettyCashAmount + $totalVehicleExpenseAmount;
                         $totalRevenue = $totalPaymentReceived; // รายได้จากการรับชำระ
                         $profitLoss = $totalRevenue - $totalExpenses; // คำนวณกำไรขาดทุนจากรายได้ - ค่าใช้จ่าย
                         $profitLossPercentage = $model->job_amount > 0 ? ($profitLoss / $model->job_amount) * 100 : 0;
@@ -1121,22 +1177,22 @@ if($today > $end){
                             </div>
 
                             <div class="col-md-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center" style="color: black;">
+                                        <h5>รายได้รับชำระ</h5>
+                                        <h3><?= number_format($totalRevenue, 2) ?></h3>
+                                        <small>จากใบเสร็จ: <?= count($paymentReceipts) ?> ใบ</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
                                 <div class="card bg-danger text-black">
                                     <div class="card-body text-center" style="color: black;">
                                         <h5>ค่าใช้จ่ายรวม</h5>
                                         <h3><?= number_format($totalExpenses, 2) ?></h3>
                                         <small>ซื้อ: <?= number_format($totalPurchaseAmount, 2) ?><br>
                                             เงินสดย่อย: <?= number_format($totalPettyCashAmount, 2) ?></small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-3">
-                                <div class="card bg-success text-white">
-                                    <div class="card-body text-center" style="color: black;">
-                                        <h5>รายได้รับชำระ</h5>
-                                        <h3><?= number_format($totalRevenue, 2) ?></h3>
-                                        <small>จากใบเสร็จ: <?= count($paymentReceipts) ?> ใบ</small>
                                     </div>
                                 </div>
                             </div>

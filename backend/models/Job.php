@@ -10,6 +10,7 @@ date_default_timezone_set('Asia/Bangkok');
 
 class Job extends \common\models\Job
 {
+    private $_activityCache = [];
     const JOB_STATUS_OPEN = 1;
     const JOB_STATUS_CLOSED = 2;
     const JOB_STATUS_CANCELLED = 3;
@@ -91,7 +92,8 @@ class Job extends \common\models\Job
         return $this->hasOne(Quotation::className(), ['id' => 'quotation_id']);
     }
 
-    public function getJobLines(){
+    public function getJobLines()
+    {
         return $this->hasMany(JobLine::className(), ['job_id' => 'id']);
     }
 
@@ -252,42 +254,203 @@ class Job extends \common\models\Job
     }
 
 
+    ///// get new
+    public function getHasPurchaseRequest()
+    {
+        return $this->hasPurchaseRequest($this->id);
+    }
+
+    public function getHasPurchaseOrder()
+    {
+        return $this->hasPurchaseOrder($this->id);
+    }
+
+    public function getHasReceiveTransaction()
+    {
+        return $this->hasReceiveTransaction($this->id);
+    }
+
+    public function getHasTaxInvoice()
+    {
+        return $this->hasTaxInvoice($this->id);
+    }
+
+    public function getHasReceipt()
+    {
+        return $this->hasReceipt($this->id);
+    }
+
+    public function getHasBilling()
+    {
+       return $this->hasBilling($this->id);
+    }
+
+    public function getHasPayment()
+    {
+        return $this->hasPayment($this->id);
+    }
+
+
 
     /**
      * ตรวจสอบว่ามีใบขอซื้อหรือไม่
      * @return bool
      */
+//    public function hasPurchaseRequest($id)
+//    {
+//        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch_req pr INNER JOIN purch_req_doc prd ON prd.purch_req_id = pr.id WHERE pr.job_id = :jobId')
+//            ->bindParam(':jobId', $id)
+//            ->queryScalar();
+//        return $count > 0;
+//    }
+
     public function hasPurchaseRequest($id)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch_req pr INNER JOIN purch_req_doc prd ON prd.purch_req_id = pr.id WHERE pr.job_id = :jobId')
-            ->bindParam(':jobId', $id)
-            ->queryScalar();
-        return $count > 0;
+        return $this->cacheActivity('purchase_request', function () use ($id) {
+            $db = Yii::$app->db;
+
+            // ดึงจำนวนใบขอซื้อทั้งหมด
+            $total = $db->createCommand("
+            SELECT COUNT(*) 
+            FROM purch_req 
+            WHERE job_id = :jobId
+        ")
+                ->bindValue(':jobId', $id)
+                ->queryScalar();
+
+            // ถ้าไม่มีใบขอซื้อเลย
+            if ($total == 0) {
+                return 0;
+            }
+
+            // ดึงจำนวนใบที่มีไฟล์แนบ
+            $complete = $db->createCommand("
+            SELECT COUNT(*) 
+            FROM (
+                SELECT pr.id
+                FROM purch_req pr
+                LEFT JOIN purch_req_doc prd ON prd.purch_req_id = pr.id
+                WHERE pr.job_id = :jobId
+                GROUP BY pr.id
+                HAVING COUNT(prd.id) > 0
+            ) t
+        ")
+                ->bindValue(':jobId', $id)
+                ->queryScalar();
+
+            // ถ้าครบทุกใบ
+            if ($complete == $total) {
+                return 100;
+            }
+
+            // มีใบขอซื้อ แต่ยังไม่ครบทุกใบ
+            return 1;
+        });
     }
+
+
+
 
     /**
      * ตรวจสอบว่ามีใบสั่งซื้อหรือไม่
      * @return bool
      */
-    public function hasPurchaseOrder($id)
+//    public function hasPurchaseOrder($id)
+//    {
+//        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch p INNER JOIN purch_doc pd ON pd.purch_id = p.id WHERE p.job_id = :jobId')
+//            ->bindParam(':jobId', $id)
+//            ->queryScalar();
+//        return $count > 0;
+//    }
+
+    public function hasPurchaseOrder($jobId)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch p INNER JOIN purch_doc pd ON pd.purch_id = p.id WHERE p.job_id = :jobId')
-            ->bindParam(':jobId', $id)
+        $db = Yii::$app->db;
+
+        // นับใบสั่งซื้อทั้งหมด
+        $total = $db->createCommand("
+        SELECT COUNT(*) 
+        FROM purch 
+        WHERE job_id = :jobId
+    ")
+            ->bindValue(':jobId', $jobId)
             ->queryScalar();
-        return $count > 0;
+
+        // ถ้าไม่มีใบสั่งซื้อเลย
+        if ($total == 0) {
+            return 0;
+        }
+
+        // นับใบสั่งซื้อที่มีไฟล์แนบ
+        $complete = $db->createCommand("
+        SELECT COUNT(*) 
+        FROM (
+            SELECT p.id, COUNT(pd.id) AS doc_count
+            FROM purch p
+            LEFT JOIN purch_doc pd ON pd.purch_id = p.id
+            WHERE p.job_id = :jobId
+            GROUP BY p.id
+        ) AS t
+        WHERE t.doc_count > 0
+    ")
+            ->bindValue(':jobId', $jobId)
+            ->queryScalar();
+
+        // ✔ ทุกใบมีไฟล์แนบครบ
+        if ($complete == $total) {
+            return 100;
+        }
+
+        // ❗ มีใบสั่งซื้อแต่ไฟล์แนบยังไม่ครบ
+        return 1;
     }
+
 
     /**
      * ตรวจสอบว่ามีรายการรับสินค้าหรือไม่
      * @return bool
      */
-    public function hasReceiveTransaction($id)
+    public function hasReceiveTransaction($jobId)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM journal_trans jt LEFT JOIN purch p ON p.id=jt.trans_ref_id LEFT JOIN job j ON j.id=p.job_id WHERE j.id = :jobId AND jt.trans_type_id = 1 AND jt.po_rec_status=1')
-            ->bindParam(':jobId', $id)
+        $db = Yii::$app->db;
+
+        // นับรายการรับสินค้าทั้งหมด
+        $total = $db->createCommand("
+        SELECT COUNT(*) 
+        FROM journal_trans jt
+        LEFT JOIN purch p ON p.id = jt.trans_ref_id
+        WHERE jt.trans_type_id = 1 AND jt.job_id = :jobId
+    ")
+            ->bindValue(':jobId', $jobId)
             ->queryScalar();
-        return $count > 0;
+
+        if ($total == 0) {
+            return 0;
+        }
+
+        // นับรายการที่มีไฟล์แนบใน purch_receive_doc
+        $complete = $db->createCommand("
+        SELECT COUNT(*) 
+        FROM (
+            SELECT jt.id, COUNT(prd.id) AS doc_count
+            FROM journal_trans jt
+            LEFT JOIN purch p ON p.id = jt.trans_ref_id
+            LEFT JOIN purch_receive_doc prd ON prd.purch_id = p.id
+            WHERE jt.trans_type_id = 1 AND jt.job_id = :jobId
+            GROUP BY jt.id
+        ) AS t
+        WHERE t.doc_count > 0
+    ")
+            ->bindValue(':jobId', $jobId)
+            ->queryScalar();
+
+        if ($complete == $total) {
+            return 100;
+        }
+
+        return 1; // มีรายการแต่ไฟล์ยังไม่ครบ
     }
+
 
     /**
      * ตรวจสอบว่ามีรายการเบิกสินค้าหรือไม่
@@ -318,42 +481,150 @@ class Job extends \common\models\Job
      * ตรวจสอบว่ามีการวางบิลหรือไม่
      * @return bool
      */
-    public function hasBilling($id)
+    public function hasBilling($jobId)
     {
-        // สมมติว่าใช้จาก invoices ที่มีสถานะ pending หรือ sent
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices i LEFT JOIN billing_invoice_items b ON b.invoice_id = i.id LEFT JOIN quotation q ON q.id =i.quotation_id LEFT JOIN job j ON j.quotation_id = q.id LEFT JOIN invoice_doc ivd ON ivd.invoice_id = i.id  WHERE j.id = :jobId AND i.is_billed=1')
-            ->bindParam(':jobId', $id)
+        $db = Yii::$app->db;
+
+        // นับใบวางบิลทั้งหมดของ Job
+        $total = $db->createCommand("
+        SELECT COUNT(*)
+        FROM invoices i
+        LEFT JOIN quotation q ON q.id = i.quotation_id
+        LEFT JOIN job j ON j.quotation_id = q.id
+        WHERE j.id = :jobId AND i.is_billed = 1
+    ")
+            ->bindValue(':jobId', $jobId)
             ->queryScalar();
-        return $count > 0;
+
+        if ($total == 0) {
+            return 0; // ไม่มีใบวางบิล
+        }
+
+        // นับใบวางบิลที่มีไฟล์แนบ
+        $complete = $db->createCommand("
+        SELECT COUNT(*) 
+        FROM (
+            SELECT i.id, COUNT(ivd.id) AS doc_count
+            FROM invoices i
+            LEFT JOIN quotation q ON q.id = i.quotation_id
+            LEFT JOIN job j ON j.quotation_id = q.id
+            LEFT JOIN invoice_doc ivd ON ivd.invoice_id = i.id
+            WHERE j.id = :jobId AND i.is_billed = 1
+            GROUP BY i.id
+        ) AS t
+        WHERE t.doc_count > 0
+    ")
+            ->bindValue(':jobId', $jobId)
+            ->queryScalar();
+
+        if ($complete == $total) {
+            return 100; // ครบทุกใบ
+        }
+
+        return 1; // มีใบวางบิลแต่ไฟล์ยังไม่ครบ
     }
+
 
     /**
      * ตรวจสอบว่ามีใบกำกับภาษีหรือไม่
      * @return bool
      */
-    public function hasTaxInvoice($id)
+    public function hasTaxInvoice($jobId)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices i LEFT JOIN quotation q ON q.id =i.quotation_id LEFT JOIN job j ON j.quotation_id = q.id LEFT JOIN invoice_doc ivd ON ivd.invoice_id = i.id WHERE j.id = :jobId AND i.invoice_type = \'tax_invoice\'')
-            ->bindParam(':jobId', $id)
+        $db = Yii::$app->db;
+
+        // นับใบกำกับภาษีทั้งหมดของ Job
+        $total = $db->createCommand("
+        SELECT COUNT(*)
+        FROM invoices i
+        LEFT JOIN quotation q ON q.id = i.quotation_id
+        LEFT JOIN job j ON j.quotation_id = q.id
+        WHERE j.id = :jobId AND i.invoice_type = 'tax_invoice'
+    ")
+            ->bindValue(':jobId', $jobId)
             ->queryScalar();
-        return $count > 0;
+
+        if ($total == 0) {
+            return 0; // ไม่มีใบกำกับภาษี
+        }
+
+        // นับใบกำกับภาษีที่มีไฟล์แนบ
+        $complete = $db->createCommand("
+        SELECT COUNT(*) 
+        FROM (
+            SELECT i.id, COUNT(ivd.id) AS doc_count
+            FROM invoices i
+            LEFT JOIN quotation q ON q.id = i.quotation_id
+            LEFT JOIN job j ON j.quotation_id = q.id
+            LEFT JOIN invoice_doc ivd ON ivd.invoice_id = i.id
+            WHERE j.id = :jobId AND i.invoice_type = 'tax_invoice'
+            GROUP BY i.id
+        ) AS t
+        WHERE t.doc_count > 0
+    ")
+            ->bindValue(':jobId', $jobId)
+            ->queryScalar();
+
+        if ($complete == $total) {
+            return 100; // ครบทุกใบ
+        }
+
+        return 1; // มีใบแต่ไฟล์ยังไม่ครบ
     }
+
 
     /**
      * ตรวจสอบว่ามีใบเสร็จหรือไม่
      * @return bool
      */
-    public function hasReceipt($id)
+    public function hasReceipt($jobId)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices i LEFT JOIN quotation q ON q.id =i.quotation_id LEFT JOIN job j ON j.quotation_id = q.id LEFT JOIN invoice_doc ivd ON ivd.invoice_id = i.id WHERE j.id = :jobId AND i.invoice_type = \'receipt\'')
-            ->bindParam(':jobId', $id)
+        $db = Yii::$app->db;
+
+        // นับใบเสร็จทั้งหมดของ Job
+        $total = $db->createCommand("
+        SELECT COUNT(*)
+        FROM invoices i
+        LEFT JOIN quotation q ON q.id = i.quotation_id
+        LEFT JOIN job j ON j.quotation_id = q.id
+        WHERE j.id = :jobId AND i.invoice_type = 'receipt'
+    ")
+            ->bindValue(':jobId', $jobId)
             ->queryScalar();
-        return $count > 0;
+
+        if ($total == 0) {
+            return 0; // ไม่มีใบเสร็จ
+        }
+
+        // นับใบเสร็จที่มีไฟล์แนบ
+        $complete = $db->createCommand("
+        SELECT COUNT(*) 
+        FROM (
+            SELECT i.id, COUNT(ivd.id) AS doc_count
+            FROM invoices i
+            LEFT JOIN quotation q ON q.id = i.quotation_id
+            LEFT JOIN job j ON j.quotation_id = q.id
+            LEFT JOIN invoice_doc ivd ON ivd.invoice_id = i.id
+            WHERE j.id = :jobId AND i.invoice_type = 'receipt'
+            GROUP BY i.id
+        ) AS t
+        WHERE t.doc_count > 0
+    ")
+            ->bindValue(':jobId', $jobId)
+            ->queryScalar();
+
+        if ($complete == $total) {
+            return 100; // ครบทุกใบ
+        }
+
+        return 1; // มีใบเสร็จแต่ไฟล์ยังไม่ครบ
     }
 
-    public function hasPayment($id){
+
+    public function hasPayment($id)
+    {
         $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM payment_receipts WHERE job_id=:jobId')
-        ->bindParam(':jobId',$id)->queryScalar();
+            ->bindParam(':jobId', $id)->queryScalar();
         return $count > 0;
     }
 
@@ -377,24 +648,37 @@ class Job extends \common\models\Job
         return $this->hasMany(\backend\models\JobExpense::className(), ['job_id' => 'id']);
     }
 
-    public function getCompany(){
-        return $this->hasOne(\backend\models\Company::className(),['id'=>'company_id']);
+    public function getCompany()
+    {
+        return $this->hasOne(\backend\models\Company::className(), ['id' => 'company_id']);
     }
 
-    public function getJobexpenseAll(){
+    public function getJobexpenseAll()
+    {
         $total = 0;
-        foreach($this->jobExpenses as $value){
+        foreach ($this->jobExpenses as $value) {
             $total = $total + ($value->line_amount);
         }
         return $total;
     }
 
-    public function getVehicleExpenseAll(){
-        return \backend\models\VehicleExpense::find()->where(['job_no'=>$this->job_no])->sum('total_wage');
+    public function getVehicleExpenseAll()
+    {
+        return \backend\models\VehicleExpense::find()->where(['job_no' => $this->job_no])->sum('total_wage');
     }
 
-    public function beforeSave($insert){
+    public function beforeSave($insert)
+    {
         $this->company_id = \Yii::$app->session->get('company_id');
         return true;
     }
+
+    private function cacheActivity($key, $callback)
+    {
+        if (!array_key_exists($key, $this->_activityCache)) {
+            $this->_activityCache[$key] = call_user_func($callback);
+        }
+        return $this->_activityCache[$key];
+    }
+
 }
