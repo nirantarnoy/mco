@@ -37,12 +37,12 @@ $this->registerCss("
     body { 
         margin: 0; 
         padding: 0; 
-        font-family: 'THSarabunPSK', sans-serif !important;
+        font-family: 'THSarabunPSK' !important;
         font-size: 13px;
         color: #000;
     }
     .print-container { 
-        font-family: 'THSarabunPSK', sans-serif !important;
+        font-family: 'THSarabunPSK' !important;
         max-width: 0 auto; 
         width: 100%;
         page-break-after: always;
@@ -59,7 +59,7 @@ $this->registerCss("
 }
 
 .print-container {
-    font-family: 'THSarabunPSK', sans-serif !important;
+    font-family: 'THSarabunPSK' !important;
     max-width: 0 auto;
     margin: 0 auto;
     background: white;

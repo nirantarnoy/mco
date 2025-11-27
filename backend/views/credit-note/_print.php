@@ -6,12 +6,13 @@ use backend\models\Company;
 /* @var $this yii\web\View */
 /* @var $model backend\models\CreditNote */
 
-$company = '';// Company::findOne(1); // Get company info
+$company = ''; // Company::findOne(1); // Get company info
 $formatter = Yii::$app->formatter;
 ?>
 
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>ใบลดหนี้ <?= $model->document_no ?></title>
@@ -19,7 +20,73 @@ $formatter = Yii::$app->formatter;
     <style>
         @page {
             size: A4;
-            margin: 10mm;
+            margin: 8mm;
+        }
+
+        @font-face {
+            font-family: 'THSarabunPSK';
+            src: url('../../backend/web/fonts/thsarabun/THSarabunPSK.ttf') format('truetype');
+            font-weight: normal;
+        }
+
+        @font-face {
+            font-family: 'THSarabunPSK';
+            src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Bold.ttf') format('truetype');
+            font-weight: bold;
+        }
+
+        @font-face {
+            font-family: 'THSarabunPSK';
+            src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Italic.ttf') format('truetype');
+            font-style: italic;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            .main-footer {
+                display: none !important;
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: 'THSarabunPSK' !important;
+                font-size: 13px;
+                color: #000;
+            }
+
+            .print-container {
+                font-family: 'THSarabunPSK' !important;
+                max-width: 0 auto;
+                width: 100%;
+                page-break-after: always;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+            }
+
+            .print-container:last-child {
+                page-break-after: auto;
+            }
+
+            .copy-watermark {
+                display: none !important;
+            }
+        }
+
+        .print-container {
+            font-family: 'THSarabunPSK' !important;
+            max-width: 0 auto;
+            margin: 0 auto;
+            background: white;
+            padding: 15mm;
+            border: 1px solid #ddd;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            position: relative;
         }
 
         body {
@@ -30,22 +97,24 @@ $formatter = Yii::$app->formatter;
         }
 
         .container {
+            font-family: 'THSarabunPSK' !important;
             width: 100%;
             max-width: 210mm;
             margin: 0 auto;
         }
 
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+            /* display: block; */
+            /* justify-content: space-between; */
+            /* align-items: flex-start; */
             margin-bottom: 20px;
-            border-bottom: 2px solid #000;
+            /* border-bottom: 2px solid #000; */
             padding-bottom: 10px;
         }
 
         .company-info {
-            flex: 1;
+            /* flex: 1; */
+            display: block;
         }
 
         .company-logo {
@@ -55,19 +124,27 @@ $formatter = Yii::$app->formatter;
         }
 
         .company-name {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 600;
             margin-bottom: 5px;
+            color: #0000ff;
         }
 
         .company-details {
-            font-size: 12px;
+            font-size: 14px;
             line-height: 1.6;
         }
 
         .document-info {
-            text-align: right;
-            margin-top: 20px;
+            text-align: center;
+        }
+
+        .title-row {
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .document-title {
@@ -78,22 +155,23 @@ $formatter = Yii::$app->formatter;
 
         .document-title-en {
             font-size: 16px;
-            font-weight: 400;
+            font-weight: 700;
             margin-bottom: 15px;
         }
 
         .document-copy {
-            font-size: 14px;
-            font-weight: 500;
-            color: #666;
-            margin-bottom: 5px;
+            position: absolute;
+            right: 0;
+            font-weight: bold;
+            margin-bottom: 15px;
+            margin-right: 30px;
         }
 
         .customer-section {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            margin: 0px 0;
+            padding: 0px;
+            /* border: 1px solid #ddd; */
+            /* border-radius: 5px; */
         }
 
         .section-row {
@@ -102,8 +180,14 @@ $formatter = Yii::$app->formatter;
         }
 
         .label {
-            font-weight: 500;
+            font-weight: 700;
             width: 150px;
+            flex-shrink: 0;
+        }
+
+        .label-right {
+            font-weight: 700;
+            width: 100px;
             flex-shrink: 0;
         }
 
@@ -126,7 +210,9 @@ $formatter = Yii::$app->formatter;
         }
 
         .items-table td {
-            border: 1px solid #000;
+            /* border: 1px solid #000; */
+            border-left: 1px solid #000;
+            border-right: 1px solid #000;
             padding: 8px;
         }
 
@@ -174,6 +260,7 @@ $formatter = Yii::$app->formatter;
         }
 
         .amount-text {
+            display: block;
             text-align: center;
             font-size: 16px;
             font-weight: 500;
@@ -224,172 +311,357 @@ $formatter = Yii::$app->formatter;
         }
     </style>
 </head>
+
+
 <body>
-<div class="container">
-    <!-- Header -->
-    <div class="header">
-        <div class="company-info">
-            <?= Html::img('../../backend/web/uploads/logo/mco_logo.png',['style' => 'max-width: 150px;']) ?>
-            <div class="company-name">
-                บริษัท เอ็ม.ซี.โอ. จำกัด
+    <div class="no-print text-center mb-4">
+        <div class="print-controls">
+            <div class="btn-group">
+                <button onclick="window.printMultipleCopies()" class="btn btn-primary btn-print">
+                    <i class="fas fa-print"></i> พิมพ์
+                </button>
+                <button onclick="window.close()" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> ปิด
+                </button>
+                <a href="<?= \yii\helpers\Url::to(['view', 'id' => $model->id]) ?>" class="btn btn-info">
+                    <i class="fas fa-eye"></i> ดูรายละเอียด
+                </a>
             </div>
-            <div class="company-name" style="font-size: 14px;">
-                M.C.O. CO.,LTD.
+
+            <!-- Progress Bar -->
+            <!-- <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+                <div class="progress-text">เตรียมพิมพ์...</div>
+            </div> -->
+        </div>
+    </div>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="company-info">
+                <table style="width: 100%;">
+                    <td>
+                        <div class="logo" style="margin-left: -4px;margin-top: -12px;">
+                            <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png', ['style' => 'max-width: 180px;']) ?>
+                        </div>
+                        <div class="company-details">
+                            Tel : (038) 875258-9 Fax : (038) 619559<br>
+                            e-mail: info@thai-mco.com www.thai-mco.com<br>
+                        </div>
+                    </td>
+                    <td class="text-right">
+                        <div class="company-name" style="margin-top: 25px;">
+                            บริษัท เอ็ม.ซี.โอ. จำกัด
+                        </div>
+                        <div class="company-name" style="font-size: 20px;">
+                            M.C.O. CO.,LTD.
+                        </div>
+                        <div class="company-details">
+                            8/18 Koh-Kloy Rd., Tambon Cherngnoen, Amphur Muang, Rayong 21000<br>
+                            8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000
+                        </div>
+                    </td>
+                </table>
             </div>
-            <div class="company-details">
-                Tel : (038) 875258-9 Fax : (038) 619559<br>
-                8/18 Koh-Kloy Rd., Tambon Cherngnoen, Amphur Muang, Rayong 21000<br>
-                e-mail: info@thai-mco.com www.thai-mco.com<br>
-                8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000
-            </div>
+
+
         </div>
 
         <div class="document-info">
+
             <div class="document-title">ใบลดหนี้ / ใบกำกับภาษี</div>
-            <div class="document-title-en">CREDIT NOTE / TAX INVOICE</div>
-            <div class="document-copy">Copy</div>
-        </div>
-    </div>
 
-    <!-- Customer Section -->
-    <div class="customer-section">
-        <div class="section-row">
-            <div class="label">เลขประจำตัวผู้เสียภาษี</div>
-            <div class="value"><?= $company ? $company->tax_id : '0215543000985' ?></div>
-            <div class="label" style="margin-left: 50px;">เลขที่</div>
-            <div class="value"><?= Html::encode($model->document_no) ?></div>
-        </div>
-        <div class="section-row">
-            <div class="label">รหัสลูกค้า</div>
-            <div class="value"><?= $model->customer_id!=null ? Html::encode(\backend\models\Customer::findCode($model->customer_id)) : Html::encode(\backend\models\Vendor::findCode($model->vendor_id)) ?></div>
-            <div class="label" style="margin-left: 50px;">วันที่</div>
-            <div class="value"><?= $formatter->asDate($model->document_date, 'php:m/d/Y') ?></div>
-        </div>
-        <div class="section-row">
-            <div class="label">ชื่อลูกค้า</div>
-            <div class="value"><?= $model->customer_id != null ? Html::encode(\backend\models\Customer::findName($model->customer_id)): Html::encode(\backend\models\Vendor::findName($model->vendor_id)) ?></div>
-        </div>
-        <div class="section-row">
-            <div class="label">ที่อยู่</div>
-            <div class="value"><?= $model->customer_id !=null ? Html::encode(Html::encode(\backend\models\Customer::findFullAddress($model->customer_id))) : Html::encode(Html::encode(\backend\models\Vendor::findFullAddress($model->vendor_id))) ?></div>
-        </div>
-        <?php if($model->customer_id !=null):?>
-        <?php if ($model->customer->taxid): ?>
-            <div class="section-row">
-                <div class="label">เลขประจำตัวผู้เสียภาษี</div>
-                <div class="value"><?= Html::encode($model->customer->taxid) ?></div>
+            <div class="title-row">
+                <div class="document-title-en">CREDIT NOTE / TAX INVOICE</div>
+                <div class="document-copy">Copy</div>
             </div>
-        <?php endif; ?>
-        <?php else:?>
-            <?php if ($model->vendor->taxid): ?>
-                <div class="section-row">
-                    <div class="label">เลขประจำตัวผู้เสียภาษี</div>
-                    <div class="value"><?= Html::encode($model->vendor->taxid) ?></div>
-                </div>
-            <?php endif; ?>
-        <?php endif; ?>
-    </div>
 
-    <!-- Items Table -->
-    <table class="items-table">
-        <thead>
-        <tr>
-            <th style="width: 60px;">ลำดับ</th>
-            <th>รายการ</th>
-            <th style="width: 100px;">จำนวน</th>
-            <th style="width: 100px;">ราคา</th>
-            <th style="width: 120px;">ราคารวม</th>
-        </tr>
-        </thead>
-        <tbody>
-        <?php
-        $totalDiscount = 0;
-        foreach ($model->creditNoteItems as $index => $item):
-            $totalDiscount += $item->discount_amount;
-            ?>
-            <tr>
-                <td class="text-center"><?= $index + 1 ?></td>
-                <td><?= nl2br(Html::encode($item->description)) ?></td>
-                <td class="text-center">
-                    <?= $formatter->asDecimal($item->quantity, 0) ?>
-                    <?= Html::encode($item->unit) ?>
+        </div>
+
+
+        <!-- Customer Section -->
+        <div class="customer-section">
+            <table>
+                <td style="width: 50%;">
+                    <div class="section-row">
+                        <div class="label">เลขประจำตัวผู้เสียภาษี</div>
+                        <div class="value"><?= $company ? $company->tax_id : '0215543000985' ?></div>
+                    </div>
+                    <div class="section-row">
+                        <div class="label">รหัสลูกค้า</div>
+                        <div class="value"><?= $model->customer_id != null ? Html::encode(\backend\models\Customer::findCode($model->customer_id)) : Html::encode(\backend\models\Vendor::findCode($model->vendor_id)) ?></div>
+                    </div>
+                    <div class="section-row">
+                        <div class="label">ชื่อลูกค้า</div>
+                        <div class="value"><?= $model->customer_id != null ? Html::encode(\backend\models\Customer::findName($model->customer_id)) : Html::encode(\backend\models\Vendor::findName($model->vendor_id)) ?></div>
+                    </div>
+                    <div class="section-row">
+                        <div class="label">ที่อยู่</div>
+                        <div class="value"><?= $model->customer_id != null ? Html::encode(Html::encode(\backend\models\Customer::findFullAddress($model->customer_id))) : Html::encode(Html::encode(\backend\models\Vendor::findFullAddress($model->vendor_id))) ?><br>
+                            <?php if ($model->customer_id != null): ?>
+                                <?php if ($model->customer->taxid): ?>
+                                    <div class="section-row">
+                                        <div class="value">เลขประจำตัวผู้เสียภาษี <?= Html::encode($model->customer->taxid) ?></div>
+                                    </div>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <?php if ($model->vendor->taxid): ?>
+                                    <div class="section-row">
+                                        <div class="value">เลขประจำตัวผู้เสียภาษี <?= Html::encode($model->vendor->taxid) ?></div>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                 </td>
-                <td class="text-right"><?= $formatter->asDecimal($item->unit_price, 2) ?></td>
-                <td class="text-right"><?= $formatter->asDecimal($item->quantity * $item->unit_price, 2) ?></td>
-            </tr>
-        <?php endforeach; ?>
-        <?php if ($totalDiscount > 0): ?>
-            <tr>
-                <td colspan="4" class="text-right">Discount</td>
-                <td class="text-right"><?= $formatter->asDecimal(-$totalDiscount, 2) ?></td>
-            </tr>
-        <?php endif; ?>
-        </tbody>
-    </table>
+                <td style="width: 50%;">
+                    <div class="content-right" style="margin-top: -50px">
+                        <div class="section-row">
+                            <div class="label-right" style="margin-left: 150px;">เลขที่</div>
+                            <div class="value"><?= Html::encode($model->document_no) ?></div>
+                        </div>
+                        <div class="section-row">
+                            <div class="label-right" style="margin-left: 150px;">วันที่</div>
+                            <div class="value"><?= $formatter->asDate($model->document_date, 'php:m/d/Y') ?></div>
+                        </div>
+                    </div>
+                </td>
+            </table>
 
-    <!-- Original Invoice Info -->
-    <div class="original-invoice-info">
-        <div class="section-row">
-            <div class="label">ใบกำกับภาษีเดิมเลขที่</div>
-            <div class="value"><?= Html::encode($model->original_invoice_no) ?></div>
-            <div class="label" style="margin-left: 30px;">ลงวันที่</div>
-            <div class="value"><?= $model->original_invoice_date ? $formatter->asDate($model->original_invoice_date, 'php:d/m/Y') : '' ?></div>
-            <div class="label" style="margin-left: 30px;">มูลค่าสินค้าตามใบกำกับฯเดิม</div>
-            <div class="value"><?= $formatter->asDecimal($model->original_amount, 2) ?></div>
+
         </div>
-        <?php if ($model->actual_amount): ?>
-            <div class="section-row">
-                <div class="label">มูลค่าสินค้าตามจริง</div>
-                <div class="value"><?= $formatter->asDecimal($model->actual_amount, 2) ?></div>
-            </div>
-        <?php endif; ?>
-    </div>
 
-    <!-- Reason -->
-    <div class="reason-box">
-        <div style="font-weight: 500; margin-bottom: 5px;">เหตุผลที่ต้องลดหนี้:</div>
-        <?= nl2br(Html::encode($model->reason)) ?>
-    </div>
+        <!-- Items Table -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 60px;">ลำดับ</th>
+                    <th>รายการ</th>
+                    <th style="width: 100px;">จำนวน</th>
+                    <th style="width: 100px;">ราคา</th>
+                    <th style="width: 120px;">ราคารวม</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                $totalDiscount = 0;
+                foreach ($model->creditNoteItems as $index => $item):
+                    $totalDiscount += $item->discount_amount;
+                ?>
+                    <tr>
+                        <td class="text-center"><?= $index + 1 ?></td>
+                        <td><?= nl2br(Html::encode($item->description)) ?></td>
+                        <td class="text-center">
+                            <?= $formatter->asDecimal($item->quantity, 0) ?>
+                            <?= Html::encode($item->unit) ?>
+                        </td>
+                        <td class="text-right"><?= $formatter->asDecimal($item->unit_price, 2) ?></td>
+                        <td class="text-right"><?= $formatter->asDecimal($item->quantity * $item->unit_price, 2) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                <?php if ($totalDiscount > 0): ?>
+                    <tr>
+                        <td colspan="4" class="text-right">Discount</td>
+                        <td class="text-right"><?= $formatter->asDecimal(-$totalDiscount, 2) ?></td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+            <tfoot>
+                <tr>
 
-    <!-- Final Summary -->
-    <div class="summary-box">
-        <table class="summary-table">
+                    <!-- ช่องซ้าย -->
+                    <td colspan="2" style="border:1px solid #000; padding:8px; vertical-align: top;">
+
+                        <!-- แถวบน (2 คอลัมน์) -->
+                        <div style="display: flex; justify-content: space-between;">
+
+                            <!-- คอลัมน์ซ้าย -->
+                            <div>
+                                <div class="label">ใบกำกับภาษีเดิมเลขที่</div>
+                                <div><?= Html::encode($model->original_invoice_no) ?></div>
+                            </div>
+
+                            <!-- คอลัมน์ขวา -->
+                            <div>
+                                <div class="label">ลงวันที่</div>
+                                <div><?= $model->original_invoice_date ? $formatter->asDate($model->original_invoice_date, 'php:d/m/Y') : '' ?></div>
+                            </div>
+
+                        </div>
+
+                        <!-- เว้นบรรทัดเล็กน้อย -->
+                        <div style="height: 6px;"></div>
+
+                        <!-- เหตุผล -->
+                        <div>
+                            <div style="font-weight: 500; margin-bottom: 5px;">เหตุผลที่ต้องลดหนี้:</div>
+                            <?= nl2br(Html::encode($model->reason)) ?>
+                        </div>
+
+                    </td>
+
+
+                    <!-- ช่องกลาง -->
+                    <td colspan="2" style="border:1px solid #000; vertical-align: top; height:130px;padding:0;">
+                        <table style="width:100%; border-collapse: collapse; font-size:14px;">
+                            <tr>
+                                <td style="border:1px solid #000;">มูลค่าสินค้าตามใบกำกับฯเดิม</td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000;">มูลค่าสินค้าตามจริง</td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000;">รวมมูลค่าสินค้า</td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000;">ภาษีมูลค่าเพิ่ม <?= $formatter->asDecimal($model->vat_percent, 0) ?>%</td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000; font-weight:bold;">รวมเป็นเงินทั้งสิ้น</td>
+                            </tr>
+                        </table>
+                    </td>
+
+                    <!-- ช่องสรุปยอด -->
+                    <td style="padding:0; border:1px solid #000;">
+
+                        <table style="width:100%; border-collapse: collapse; font-size:14px;">
+                            <tr>
+                                <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->original_amount, 2) ?></td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->actual_amount, 2) ?></td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->adjust_amount, 2) ?></td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->vat_amount, 2) ?></td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #000; font-weight:bold; text-align:right;"><?= $formatter->asDecimal($model->total_amount, 2) ?></td>
+                            </tr>
+                        </table>
+
+                    </td>
+                </tr>
+            </tfoot>
+
+
+
+        </table>
+
+
+        <!-- Amount in Text -->
+        <table width="100%">
             <tr>
-                <td class="label">รวมมูลค่าลดหนี้</td>
-                <td class="value"><?= $formatter->asDecimal($model->adjust_amount, 2) ?></td>
-            </tr>
-            <tr>
-                <td class="label">ภาษีมูลค่าเพิ่ม <?= $formatter->asDecimal($model->vat_percent, 0) ?>%</td>
-                <td class="value"><?= $formatter->asDecimal($model->vat_amount, 2) ?></td>
-            </tr>
-            <tr class="total-row">
-                <td class="label">รวมเป็นเงินทั้งสิ้น</td>
-                <td class="value"><?= $formatter->asDecimal($model->total_amount, 2) ?></td>
+                <td width="20%">
+                    (ตัวอักษร)
+                </td>
+                <td width="80%" >
+                    <div class="amount-text">
+                        <?= nl2br(Html::encode($model->amount_text)) ?>
+                    </div>
+                </td>
             </tr>
         </table>
-    </div>
 
-    <!-- Amount in Text -->
-    <div class="amount-text">
-        (ตัวอักษร) <?= Html::encode($model->amount_text) ?>
-    </div>
+        <!-- Signature Section -->
+        <div class="signature-section">
+            <div class="signature-box">
+                <div>บริษัท เอ็ม.ซี.โอ. จำกัด</div>
+                <div class="signature-line"></div>
+                <div>ผู้มีอำนาจลงนาม / ผู้รับมอบอำนาจ</div>
+                <div style="margin-top: 10px;">_____/_____/_____</div>
+            </div>
 
-    <!-- Signature Section -->
-    <div class="signature-section">
-        <div class="signature-box">
-            <div>บริษัท เอ็ม.ซี.โอ. จำกัด</div>
-            <div class="signature-line"></div>
-            <div>ผู้มีอำนาจลงนาม / ผู้รับมอบอำนาจ</div>
-            <div style="margin-top: 10px;">_____/_____/_____</div>
-        </div>
-
-        <div class="signature-box">
-            <div>&nbsp;</div>
-            <div class="signature-line"></div>
-            <div>ลายเซ็นผู้รับเอกสาร</div>
-            <div style="margin-top: 10px;">_____/_____/_____</div>
+            <div class="signature-box">
+                <div>&nbsp;</div>
+                <div class="signature-line"></div>
+                <div>ลายเซ็นผู้รับเอกสาร</div>
+                <div style="margin-top: 10px;">_____/_____/_____</div>
+            </div>
         </div>
     </div>
-</div>
 </body>
+
 </html>
+
+<?php
+$js = <<<JS
+// Global variables
+let printInProgress = false;
+let currentCopy = 0;
+const totalCopies = 1; // พิมพ์แค่ใบเดียว
+
+window.updateProgress = function(current, total) {
+    const progressContainer = document.querySelector('.progress-container');
+    const progressFill = document.querySelector('.progress-fill');
+    const progressText = document.querySelector('.progress-text');
+
+    if (!progressContainer) return;
+
+    progressContainer.style.display = 'block';
+    const percentage = (current / total) * 100;
+    progressFill.style.width = percentage + '%';
+    progressFill.textContent = percentage.toFixed(0) + '%';
+
+    if (current === 0) {
+        progressText.textContent = 'กำลังเตรียมพิมพ์...';
+    } else if (current === total) {
+        progressText.textContent = 'พิมพ์เสร็จสิ้น!';
+        setTimeout(() => {
+            progressContainer.style.display = 'none';
+            progressFill.style.width = '0%';
+        }, 2000);
+    } else {
+        progressText.textContent = 'กำลังพิมพ์...';
+    }
+};
+
+window.createPrintCopies = function() {
+    // ไม่ต้องสร้างสำเนา (ใบเดียว)
+};
+
+window.printMultipleCopies = function() {
+    if (printInProgress) return;
+
+    printInProgress = true;
+    currentCopy = 0;
+
+    const printBtn = document.querySelector('.btn-print');
+    if (printBtn) {
+        printBtn.disabled = true;
+        printBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังพิมพ์...';
+    }
+
+    window.updateProgress(0, totalCopies);
+
+    setTimeout(() => {
+        window.print();
+    }, 500);
+};
+
+window.addEventListener('beforeprint', function() {
+    document.body.style.zoom = '1';
+    window.updateProgress(1, totalCopies);
+});
+
+window.addEventListener('afterprint', function() {
+    currentCopy++;
+    window.updateProgress(totalCopies, totalCopies);
+
+    const printBtn = document.querySelector('.btn-print');
+    if (printBtn) {
+        printBtn.disabled = false;
+        printBtn.innerHTML = '<i class="fas fa-print"></i> พิมพ์';
+    }
+
+    printInProgress = false;
+});
+JS;
+
+$this->registerJs($js);
+?>
