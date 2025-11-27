@@ -685,54 +685,61 @@ window.addEventListener('afterprint', function() {
 
     <!-- Customer Information -->
     <div class="customer-section">
-        <div class="customer-left">
-            <div class="field-group">
-                <span class="field-label">เลขประจำตัวผู้เสียภาษี:</span>
-                <span class="field-value">0215543000985</span>
-            </div>
-            <div class="field-group">
-                <div class="field-label-group">
-                    <div class="field-label">รหัสลูกค้า :</div>
-                    <div class="field-label">Code</div>
+        <table>
+            <td>
+                <div class="customer-left">
+                    <div class="field-group">
+                        <span class="field-label">เลขประจำตัวผู้เสียภาษี:</span>
+                        <span class="field-value">0215543000985</span>
+                    </div>
+                    <div class="field-group">
+                        <div class="field-label-group">
+                            <div class="field-label">รหัสลูกค้า :</div>
+                            <div class="field-label">Code</div>
+                        </div>
+                        <span class="field-value">
+                            <?= $customer_code ?>
+                        </span>
+                    </div>
+                    <div class="field-group">
+                        <div class="field-label-group">
+                            <div class="field-label">ขายให้ :</div>
+                            <div class="field-label">Sold To</div>
+                        </div>
+                        <span class="field-value">
+                            <?= Html::encode($model->customer_name ?: '') ?><br>
+                            <?= Html::encode($model->customer_address ?: '') ?><br>
+                            TAX ID: <?= Html::encode($model->customer_tax_id ?: '') ?>
+                        </span>
+                    </div>
                 </div>
-                <span class="field-value">
-                    <?= $customer_code ?>
-                </span>
-            </div>
-            <div class="field-group">
-                <div class="field-label-group">
-                    <div class="field-label">ขายให้ :</div>
-                    <div class="field-label">Sold To</div>
+            </td>
+            <td>
+                <div class="customer-right" style="margin-left: 80px;">
+                    <div class="field-group">
+                        <span class="field-label">วันที่ / Date:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <span class="field-value-right"><?= Yii::$app->formatter->asDate($model->invoice_date, 'MM/dd/yyyy') ?></span>
+                    </div>
+                    <div class="field-group">
+                        <span class="field-label">เลขที่ / Inv.No.:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <span class="field-value-right"><?= Html::encode($model->invoice_number) ?></span>
+                    </div>
+                    <div class="field-group">
+                        <span class="field-label">ใบสั่งซื้อเลขที่ / P/O No.:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <span class="field-value-right"><?= Html::encode($po_no ?: '') ?></span>
+                    </div>
+                    <div class="field-group">
+                        <span class="field-label">วันที่สั่งซื้อ / P/O Date:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <span class="field-value-right"><?= $po_date ? Yii::$app->formatter->asDate($po_date, 'MM/dd/yyyy') : '' ?></span>
+                    </div>
+                    <div class="field-group">
+                        <span class="field-label">เงื่อนไข / กำหนดชำระ / Credit, Due:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                        <span class="field-value-right"><?= Html::encode($model->paymentTerm ? $model->paymentTerm->name : '') ?> <?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'd/M/yy') : '' ?></span>
+                    </div>
                 </div>
-                <span class="field-value">
-                    <?= Html::encode($model->customer_name ?: '') ?><br>
-                    <?= Html::encode($model->customer_address ?: '') ?><br>
-                    TAX ID: <?= Html::encode($model->customer_tax_id ?: '') ?>
-                </span>
-            </div>
-        </div>
-        <div class="customer-right" style="margin-left: 80px;">
-            <div class="field-group">
-                <span class="field-label">วันที่ / Date:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                <span class="field-value-right"><?= Yii::$app->formatter->asDate($model->invoice_date, 'MM/dd/yyyy') ?></span>
-            </div>
-            <div class="field-group">
-                <span class="field-label">เลขที่ / Inv.No.:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                <span class="field-value-right"><?= Html::encode($model->invoice_number) ?></span>
-            </div>
-            <div class="field-group">
-                <span class="field-label">ใบสั่งซื้อเลขที่ / P/O No.:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                <span class="field-value-right"><?= Html::encode($po_no ?: '') ?></span>
-            </div>
-            <div class="field-group">
-                <span class="field-label">วันที่สั่งซื้อ / P/O Date:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                <span class="field-value-right"><?= $po_date ? Yii::$app->formatter->asDate($po_date, 'MM/dd/yyyy') : '' ?></span>
-            </div>
-            <div class="field-group">
-                <span class="field-label">เงื่อนไข / กำหนดชำระ / Credit, Due:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                <span class="field-value-right"><?= Html::encode($model->paymentTerm ? $model->paymentTerm->name : '') ?> <?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'd/M/yy') : '' ?></span>
-            </div>
-        </div>
+            </td>
+        </table>
+
     </div>
 
     <!-- Items Table -->
