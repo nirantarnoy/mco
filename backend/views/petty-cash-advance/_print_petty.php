@@ -130,27 +130,35 @@ $this->params['breadcrumbs'][] = $this->title;
                                     </td>
                                     <td><?= Html::encode($transaction['document_no']) ?></td>
                                     <td><?= Html::encode($transaction['description']) ?></td>
+
                                     <td class="text-right">
-                                        <?= $transaction['income'] > 0 ? number_format($transaction['income'], 2) : '-' ?>
+                                        <?= formatValue($transaction['income']) ?>
                                     </td>
+
                                     <td class="text-right">
-                                        <?= $transaction['expense'] > 0 ? number_format($transaction['expense'], 2) : '-' ?>
+                                        <?= formatValue($transaction['expense']) ?>
                                     </td>
+
                                     <td class="text-right">
-                                        <?= $transaction['vat_amount'] > 0 ? number_format($transaction['vat_amount'], 2) : '-' ?>
+                                        <?= formatValue($transaction['vat_amount']) ?>
                                     </td>
+
                                     <td class="text-right">-</td>
+
                                     <td class="text-right">
-                                        <?= $transaction['wht'] > 0 ? number_format($transaction['wht'], 2) : '-' ?>
+                                        <?= formatValue($transaction['wht']) ?>
                                     </td>
+
                                     <td class="text-right">
-                                        <?= $transaction['other'] > 0 ? number_format($transaction['other'], 2) : '-' ?>
+                                        <?= formatValue($transaction['other']) ?>
                                     </td>
+
                                     <td class="text-right">
-                                        <?= $transaction['total_expense'] > 0 ? number_format($transaction['total_expense'], 2) : '-' ?>
+                                        <?= formatValue($transaction['total_expense']) ?>
                                     </td>
+
                                     <td class="text-right font-weight-bold">
-                                        <?= number_format($transaction['balance'], 2) ?>
+                                        <?= formatValue($transaction['balance']) ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -378,7 +386,17 @@ $this->params['breadcrumbs'][] = $this->title;
             margin-top: 1.5rem;
         }
     </style>
-
+<?php
+function formatValue($value) {
+    if (is_null($value)) {
+        return '-';
+    }
+    if ($value < 0) {
+        return '(' . number_format(abs($value), 2) . ')';
+    }
+    return number_format($value, 2);
+}
+?>
 <?php
 // Register print button handler
 $this->registerJs("

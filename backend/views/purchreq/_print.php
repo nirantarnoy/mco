@@ -5,7 +5,8 @@
 
 use yii\helpers\Html;
 
-$emp_info  = \backend\models\Employee::findEmpInfo(\Yii::$app->user->id);
+//$emp_info  = \backend\models\Employee::findEmpInfo(\Yii::$app->user->id);
+$emp_info  = \backend\models\Employee::findEmpInfo($model->created_by);
 //print_r($emp_info);
 // Mock data
 $prNumber = $model->purch_req_no;
