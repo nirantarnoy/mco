@@ -134,21 +134,26 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                                     'format' => 'raw',
                                     'value' => function ($model) {
                                         $class = '';
+                                        $status_name = '';
                                         switch ($model->status) {
                                             case JournalTrans::STATUS_DRAFT:
                                                 $class = 'label-default';
+                                                $status_name = 'Draft';
                                                 break;
                                             case JournalTrans::STATUS_PENDING:
                                                 $class = 'label-warning';
+                                                $status_name = 'Pending';
                                                 break;
                                             case JournalTrans::STATUS_APPROVED:
                                                 $class = 'label-success';
+                                                $status_name = 'Approved';
                                                 break;
                                             case JournalTrans::STATUS_CANCELLED:
                                                 $class = 'label-danger';
+                                                $status_name = 'Cancelled';
                                                 break;
                                         }
-                                        return '<span class="label ' . $class . '">' . ucfirst($model->status) . '</span>';
+                                        return '<span class="label ' . $class . '">' . ucfirst($status_name) . '</span>';
                                     },
                                 ],
                                 [
