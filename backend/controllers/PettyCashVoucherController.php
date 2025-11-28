@@ -315,6 +315,7 @@ class PettyCashVoucherController extends Controller
     private function saveDetails($model, $detailsData)
     {
         $sortOrder = 1;
+        $all_total = 0;
         foreach ($detailsData as $detailData) {
             // Skip empty rows - check if any significant data exists
             $hasData = !empty($detailData['detail']) ||
@@ -342,6 +343,7 @@ class PettyCashVoucherController extends Controller
                 'other' => !empty($detailData['other']) ? (float)$detailData['other'] : 0.00,
             ];
 
+            $all_total += (float)$detailData['amount'];
             // Load the cleaned data
             $detail->attributes = $cleanData;
 
@@ -349,10 +351,13 @@ class PettyCashVoucherController extends Controller
                 // Log validation errors for debugging
                 Yii::error('Failed to save detail: ' . json_encode($detail->errors), __METHOD__);
             }
+
         }
 
+        $model->amount = $all_total;
+        $model->save(false);
         // Update total amount
-        $model->updateAmountFromDetails();
+        //$model->updateAmountFromDetails();
     }
 
     /**
