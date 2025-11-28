@@ -938,6 +938,202 @@ class PurchController extends Controller
 //        }
 //    }
 
+//    public function actionReceive($id)
+//    {
+//        $purchModel = $this->findModel($id);
+//
+//        // Check if PO is approved
+//        if ($purchModel->approve_status != Purch::APPROVE_STATUS_APPROVED) {
+//            \Yii::$app->session->setFlash('error', 'ไม่สามารถรับสินค้าได้ กรุณาอนุมัติใบสั่งซื้อก่อน');
+//            return $this->redirect(['view', 'id' => $purchModel->id]);
+//        }
+//
+//        // Get PO lines with remaining quantities
+//        $poLines = $this->getPOLinesWithRemaining($purchModel->id);
+//
+//        if (empty($poLines)) {
+//            \Yii::$app->session->setFlash('warning', 'สินค้าทั้งหมดได้รับเข้าครบแล้ว');
+//            return $this->redirect(['view', 'id' => $purchModel->id]);
+//        }
+//
+//        if (\Yii::$app->request->isPost) {
+//            $receiveData = \Yii::$app->request->post('receive', []);
+//            $warehouseId = \Yii::$app->request->post('line_warehouse_id');
+//            $remark = \Yii::$app->request->post('remark', '');
+//            $checklistData = \Yii::$app->request->post('checklist', []);
+//            $uploaded = UploadedFile::getInstancesByName('file_doc');
+//
+//            if (empty($warehouseId)) {
+//                \Yii::$app->session->setFlash('error', 'กรุณาเลือกคลังสินค้า');
+//            } else {
+//                // Process receive with checklist
+//                $result = $this->processReceiveWithChecklist($purchModel, $receiveData, $warehouseId, $remark, $checklistData);
+//
+//                if ($result['success']) {
+//                    // Upload documents if any
+//                    if (!empty($uploaded)) {
+//                        $loop = 0;
+//                        foreach ($uploaded as $file) {
+//                            $upfiles = "purch_receive_" . time() . "_" . $loop . "." . $file->getExtension();
+//                            if ($file->saveAs('uploads/purch_receive_doc/' . $upfiles)) {
+//                                $model_doc = new \backend\models\PurchReceiveDoc();
+//                                $model_doc->purch_id = $id;
+//                                $model_doc->doc_name = $upfiles;
+//                                $model_doc->created_by = \Yii::$app->user->id;
+//                                $model_doc->created_at = time();
+//                                $model_doc->save(false);
+//                            }
+//                            $loop++;
+//                        }
+//                    }
+//
+//                    \Yii::$app->session->setFlash('success', $result['message']);
+//                    return $this->redirect(['view', 'id' => $purchModel->id]);
+//                } else {
+//                    \Yii::$app->session->setFlash('error', $result['message']);
+//                }
+//            }
+//        }
+//
+//        return $this->render('receive', [
+//            'purchModel' => $purchModel,
+//            'poLines' => $poLines,
+//            'warehouses' => \backend\models\Warehouse::getWarehouseList(),
+//        ]);
+//    }
+//
+//    /**
+//     * Process receive with checklist
+//     */
+//    private function processReceiveWithChecklist($purchModel, $receiveData, $warehouseId, $remark, $checklistData)
+//    {
+//        $transaction = \Yii::$app->db->beginTransaction();
+//        try {
+//            // Validate receive data
+//            $validItems = [];
+//            $totalQty = 0;
+//
+//            foreach ($receiveData as $productId => $qty) {
+//                $qty = floatval($qty);
+//                if ($qty > 0) {
+//                    $validItems[$productId] = $qty;
+//                    $totalQty += $qty;
+//                }
+//            }
+//
+//            if (empty($validItems)) {
+//                return ['success' => false, 'message' => 'กรุณาระบุจำนวนสินค้าที่ต้องการรับเข้า'];
+//            }
+//
+//            // Create Journal Transaction
+//            $journalTrans = new \backend\models\JournalTrans();
+//            $journalTrans->trans_date = date('Y-m-d H:i:s');
+//            $journalTrans->trans_type_id = \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE;
+//            $journalTrans->stock_type_id = \backend\models\JournalTrans::STOCK_TYPE_IN;
+//            $journalTrans->trans_ref_id = $purchModel->id;
+//            $journalTrans->warehouse_id = 0;
+//            $journalTrans->customer_name = $purchModel->vendor_name;
+//            $journalTrans->status = 0;
+//            $journalTrans->po_rec_status = 1;
+//            $journalTrans->qty = $totalQty;
+//            $journalTrans->remark = $remark;
+//
+//            if (!$journalTrans->save()) {
+//                throw new \Exception('ไม่สามารถสร้าง Journal Transaction ได้: ' . implode(', ', $journalTrans->getFirstErrors()));
+//            }
+//
+//            $loop_index = 0;
+//            // Process each item
+//            foreach ($validItems as $productId => $qty) {
+//                $line_warehouse_id = $warehouseId[$loop_index];
+//                $loop_index++;
+//
+//                // Get product and PO line info
+//                $poLine = \backend\models\PurchLine::find()
+//                    ->where(['purch_id' => $purchModel->id, 'product_id' => $productId])
+//                    ->one();
+//
+//                if (!$poLine) {
+//                    throw new \Exception("ไม่พบสินค้า ID: $productId ในใบสั่งซื้อ");
+//                }
+//
+//                // Create Journal Transaction Line
+//                $journalTransLine = new \backend\models\JournalTransLine();
+//                $journalTransLine->journal_trans_id = $journalTrans->id;
+//                $journalTransLine->product_id = $productId;
+//                $journalTransLine->warehouse_id = $line_warehouse_id;
+//                $journalTransLine->qty = $qty;
+//                $journalTransLine->remark = "รับสินค้าจาก PO: " . $purchModel->purch_no;
+//
+//                if (!$journalTransLine->save()) {
+//                    throw new \Exception('ไม่สามารถสร้าง Journal Transaction Line ได้: ' . implode(', ', $journalTransLine->getFirstErrors()));
+//                }
+//
+//                // Create Stock Transaction
+//                $stockTrans = new \backend\models\StockTrans();
+//                $stockTrans->journal_trans_id = $journalTrans->id;
+//                $stockTrans->trans_date = $journalTrans->trans_date;
+//                $stockTrans->product_id = $productId;
+//                $stockTrans->warehouse_id = $line_warehouse_id;
+//                $stockTrans->trans_type_id = \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE;
+//                $stockTrans->stock_type_id = \backend\models\JournalTrans::STOCK_TYPE_IN;
+//                $stockTrans->qty = $qty;
+//                $stockTrans->line_price = $poLine->line_price;
+//                $stockTrans->status = 1;
+//                $stockTrans->remark = "รับสินค้าจาก PO: " . $purchModel->purch_no;
+//
+//                if (!$stockTrans->save()) {
+//                    throw new \Exception('ไม่สามารถสร้าง Stock Transaction ได้: ' . implode(', ', $stockTrans->getFirstErrors()));
+//                }
+//
+//                // Update Stock Summary
+//                if (!\backend\models\StockSum::updateStockIn($productId, $line_warehouse_id, $qty, 1)) {
+//                    throw new \Exception("ไม่สามารถอัพเดทสต๊อกสินค้า ID: $productId ได้");
+//                }
+//            }
+//
+//            // Save Checklist if data provided
+//            if (!empty($checklistData['checker_name']) || !empty($checklistData['check_date'])) {
+//                $checklist = new \backend\models\ReceivingChecklist();
+//                $checklist->purch_id = $purchModel->id;
+//                $checklist->journal_trans_id = $journalTrans->id; // เชื่อมโยงกับ Journal Transaction
+//                $checklist->check_date = $checklistData['check_date'] ?? date('Y-m-d');
+//                $checklist->checker_name = $checklistData['checker_name'] ?? '';
+//
+//                // General condition (15 items)
+//                $generalCondition = isset($checklistData['general_condition']) ? $checklistData['general_condition'] : [];
+//                $checklist->setGeneralConditionArray($generalCondition);
+//
+//                // Section 2: Correct items
+//                $checklist->correct_items = isset($checklistData['correct_items']) ? 1 : 0;
+//                $checklist->correct_quantity = isset($checklistData['correct_quantity']) ? 1 : 0;
+//                $checklist->correct_spec = isset($checklistData['correct_spec']) ? 1 : 0;
+//
+//                // Section 3: Documents
+//                $checklist->has_certificate = isset($checklistData['has_certificate']) ? 1 : 0;
+//                $checklist->has_manual = isset($checklistData['has_manual']) ? 1 : 0;
+//
+//                // Notes
+//                $checklist->notes = $checklistData['notes'] ?? '';
+//
+//                if (!$checklist->save()) {
+//                    // Log error but don't fail the transaction
+//                    \Yii::error('ไม่สามารถบันทึก Checklist: ' . implode(', ', $checklist->getFirstErrors()));
+//                }
+//            }
+//
+//            $transaction->commit();
+//            return [
+//                'success' => true,
+//                'message' => 'รับสินค้าเข้าคลังเรียบร้อยแล้ว เลขที่เอกสาร: ' . $journalTrans->journal_no
+//            ];
+//
+//        } catch (\Exception $e) {
+//            $transaction->rollBack();
+//            return ['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()];
+//        }
+//    }
+
     public function actionReceive($id)
     {
         $purchModel = $this->findModel($id);
@@ -1003,7 +1199,7 @@ class PurchController extends Controller
     }
 
     /**
-     * Process receive with checklist
+     * Process receive with dynamic checklist
      */
     private function processReceiveWithChecklist($purchModel, $receiveData, $warehouseId, $remark, $checklistData)
     {
@@ -1092,26 +1288,21 @@ class PurchController extends Controller
                 }
             }
 
-            // Save Checklist if data provided
+            // Save Dynamic Checklist if data provided
             if (!empty($checklistData['checker_name']) || !empty($checklistData['check_date'])) {
                 $checklist = new \backend\models\ReceivingChecklist();
                 $checklist->purch_id = $purchModel->id;
-                $checklist->journal_trans_id = $journalTrans->id; // เชื่อมโยงกับ Journal Transaction
+                $checklist->journal_trans_id = $journalTrans->id;
                 $checklist->check_date = $checklistData['check_date'] ?? date('Y-m-d');
                 $checklist->checker_name = $checklistData['checker_name'] ?? '';
 
-                // General condition (15 items)
-                $generalCondition = isset($checklistData['general_condition']) ? $checklistData['general_condition'] : [];
-                $checklist->setGeneralConditionArray($generalCondition);
-
-                // Section 2: Correct items
-                $checklist->correct_items = isset($checklistData['correct_items']) ? 1 : 0;
-                $checklist->correct_quantity = isset($checklistData['correct_quantity']) ? 1 : 0;
-                $checklist->correct_spec = isset($checklistData['correct_spec']) ? 1 : 0;
-
-                // Section 3: Documents
-                $checklist->has_certificate = isset($checklistData['has_certificate']) ? 1 : 0;
-                $checklist->has_manual = isset($checklistData['has_manual']) ? 1 : 0;
+                // Save all checklist arrays
+                $checklist->setGeneralConditionArray($checklistData['general_condition'] ?? []);
+                $checklist->setCorrectItemsArray($checklistData['correct_items'] ?? []);
+                $checklist->setCorrectQuantityArray($checklistData['correct_quantity'] ?? []);
+                $checklist->setCorrectSpecArray($checklistData['correct_spec'] ?? []);
+                $checklist->setHasCertificateArray($checklistData['has_certificate'] ?? []);
+                $checklist->setHasManualArray($checklistData['has_manual'] ?? []);
 
                 // Notes
                 $checklist->notes = $checklistData['notes'] ?? '';
