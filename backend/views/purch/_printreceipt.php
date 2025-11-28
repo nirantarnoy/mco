@@ -27,6 +27,13 @@ foreach($model_line as $line){
 
 // จำนวนสินค้าจริง
 $itemCount = count($items);
+$checklist = null;
+if (!isset($checklist)) {
+    $checklist = \backend\models\ReceivingChecklist::find()
+        ->where(['purch_id' => $model->id])
+        ->orderBy(['id' => SORT_DESC])
+        ->one();
+}
 
 // Inspection details - array of booleans for each item (15 items x 15 checkpoints)
 $inspectionMatrix = [];
@@ -45,6 +52,21 @@ $hasCorrectSize = true;
 $hasCorrectQty = true;
 $hasCertificate = true;
 $hasManual = false;
+
+// ถ้ามีข้อมูล Checklist ให้ดึงมาแสดง
+if ($checklist) {
+    $generalCondition = $checklist->getGeneralConditionArray();
+    $correctItems = $checklist->getCorrectItemsArray();
+    $correctQuantity = $checklist->getCorrectQuantityArray();
+    $correctSpec = $checklist->getCorrectSpecArray();
+    $hasCertificate = $checklist->getHasCertificateArray();
+    $hasManual = $checklist->getHasManualArray();
+
+    // กำหนด overall result
+    if ($checklist->isComplete()) {
+        $overallResult = 'accept_all';
+    }
+}
 
 // Signatures
 //$purchasingRep = \backend\models\User::findEmployeeNameByUserId($model->created_by);

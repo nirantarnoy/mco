@@ -1555,10 +1555,15 @@ class PurchController extends Controller
         //$this->layout = 'print'; // Use a minimal print layout
         $model = \backend\models\Purch::findOne($id);
         $model_line = \backend\models\PurchLine::find()->where(['purch_id' => $model->id])->all();
+//        $checklist = \backend\models\ReceivingChecklist::find()
+//            ->where(['purch_id' => $id])
+//            ->orderBy(['id' => SORT_DESC])
+//            ->one();
         $this->layout = 'main_print';
         return $this->render('_printreceipt', [
             'model' => $model,
             'model_line' => $model_line,
+          //  'checklist' => $checklist,
         ]);
     }
 
