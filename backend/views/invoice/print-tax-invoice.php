@@ -43,7 +43,7 @@ $this->registerCss("
         margin: 0 !important; 
         padding: 0 !important; 
         font-family: 'THSarabunPSK', sans-serif !important;
-        font-size: 16px !important;
+        font-size: 20px !important;
         color: #000 !important;
     }
     .print-container { 
@@ -75,7 +75,7 @@ $this->registerCss("
 
 body {
     font-family: 'Sarabun', 'TH SarabunPSK', Arial, sans-serif;
-    font-size: 16px;
+    font-size: 20px;
     line-height: 1.3;
     color: #000;
     background: #fff;
