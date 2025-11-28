@@ -25,6 +25,9 @@ foreach($model_line as $line){
     $items[] = $item;
 }
 
+// จำนวนสินค้าจริง
+$itemCount = count($items);
+
 // Inspection details - array of booleans for each item (15 items x 15 checkpoints)
 $inspectionMatrix = [];
 for ($i = 0; $i < 11; $i++) {
@@ -504,9 +507,16 @@ function getEmpRequestorId($userid){
             <td style="width: 70px;">บันทึก</td>
         </tr>
         <tr>
-            <td class="row-header">1. สภาพทั่วไปของสินค้า/</td>
-            <?php for ($j = 0; $j < 15; $j++): ?>
-                <td class="check-cell"><?= isset($inspectionMatrix[0][$j]) && $inspectionMatrix[0][$j] ? '✓' : '' ?></td>
+            <td class="row-header">1. สภาพทั่วไปของสินค้า</td>
+            <?php for ($j = 1; $j <= 15; $j++): ?>
+                <td class="check-cell">
+                    <?php
+                    // แสดง ✓ เฉพาะช่องที่มีข้อมูลและถูก check
+                    if ($j <= $itemCount && isset($generalCondition[$j]) && $generalCondition[$j]) {
+                        echo '✓';
+                    }
+                    ?>
+                </td>
             <?php endfor; ?>
             <td>&nbsp;</td>
         </tr>
@@ -519,22 +529,40 @@ function getEmpRequestorId($userid){
         </tr>
         <tr>
             <td class="row-header" style="padding-left: 15px;">2.1 ยี่ห้อและรุ่น</td>
-            <?php for ($j = 0; $j < 15; $j++): ?>
-                <td class="check-cell"><?= $hasCorrectBrand && $j < count($items) ? '✓' : '' ?></td>
+            <?php for ($j = 1; $j <= 15; $j++): ?>
+                <td class="check-cell">
+                    <?php
+                    if ($j <= $itemCount && isset($correctItems[$j]) && $correctItems[$j]) {
+                        echo '✓';
+                    }
+                    ?>
+                </td>
             <?php endfor; ?>
             <td>&nbsp;</td>
         </tr>
         <tr>
             <td class="row-header" style="padding-left: 15px;">2.2 รูปร่างและขนาด</td>
-            <?php for ($j = 0; $j < 15; $j++): ?>
-                <td class="check-cell"><?= $hasCorrectSize && $j < count($items) ? '✓' : '' ?></td>
+            <?php for ($j = 1; $j <= 15; $j++): ?>
+                <td class="check-cell">
+                    <?php
+                    if ($j <= $itemCount && isset($correctQuantity[$j]) && $correctQuantity[$j]) {
+                        echo '✓';
+                    }
+                    ?>
+                </td>
             <?php endfor; ?>
             <td>&nbsp;</td>
         </tr>
         <tr>
             <td class="row-header" style="padding-left: 15px;">2.3 จำนวนที่ส่ง</td>
-            <?php for ($j = 0; $j < 15; $j++): ?>
-                <td class="check-cell"><?= $hasCorrectQty && $j < count($items) ? '✓' : '' ?></td>
+            <?php for ($j = 1; $j <= 15; $j++): ?>
+                <td class="check-cell">
+                    <?php
+                    if ($j <= $itemCount && isset($correctSpec[$j]) && $correctSpec[$j]) {
+                        echo '✓';
+                    }
+                    ?>
+                </td>
             <?php endfor; ?>
             <td>&nbsp;</td>
         </tr>
@@ -547,20 +575,31 @@ function getEmpRequestorId($userid){
         </tr>
         <tr>
             <td class="row-header" style="padding-left: 15px;">3.1 ใบ certificate</td>
-            <?php for ($j = 0; $j < 15; $j++): ?>
-                <td class="check-cell"><?= $hasCertificate && $j < 3 ? '✓' : '' ?></td>
+            <?php for ($j = 1; $j <= 15; $j++): ?>
+                <td class="check-cell">
+                    <?php
+                    if ($j <= $itemCount && isset($hasCertificate[$j]) && $hasCertificate[$j]) {
+                        echo '✓';
+                    }
+                    ?>
+                </td>
             <?php endfor; ?>
             <td>&nbsp;</td>
         </tr>
         <tr>
             <td class="row-header" style="padding-left: 15px;">3.2 คู่มือการใช้งาน</td>
-            <?php for ($j = 0; $j < 15; $j++): ?>
-                <td class="check-cell"><?= $hasManual && $j < 2 ? '✓' : '' ?></td>
+            <?php for ($j = 1; $j <= 15; $j++): ?>
+                <td class="check-cell">
+                    <?php
+                    if ($j <= $itemCount && isset($hasManual[$j]) && $hasManual[$j]) {
+                        echo '✓';
+                    }
+                    ?>
+                </td>
             <?php endfor; ?>
             <td>&nbsp;</td>
         </tr>
     </table>
-
     <!-- Inspection Result -->
     <div class="result-section">
         <h4>ผลการตรวจรับสินค้า</h4>
