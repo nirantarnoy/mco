@@ -350,6 +350,18 @@ class Purch extends ActiveRecord
         }
         return $name;
     }
+    public static function findVendorNameFromPurchId($purch_id){
+        $name = '';
+        $modelx=\backend\models\Purch::find()->where(["id"=>$purch_id])->one();
+        if($modelx){
+            $model = \backend\models\Vendor::findOne($modelx->vendor_id);
+            if($model){
+                $name = $model->name;
+            }
+        }
+
+        return $name;
+    }
     public static function findVendorTaxID($vendor_id){
         $name = '';
         $model = \backend\models\Vendor::findOne($vendor_id);

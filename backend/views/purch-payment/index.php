@@ -45,7 +45,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'attribute' => 'vendor_name',
                         'label' => 'ชื่อผู้ขาย',
                         'value' => function($model) {
-                            return $model->purch ? $model->purch->vendor_name : '-';
+                            return \backend\models\Purch::findVendorNameFromPurchId($model->purch_id);
                         }
                     ],
                     [
