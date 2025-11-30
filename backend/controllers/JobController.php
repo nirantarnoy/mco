@@ -1458,7 +1458,7 @@ class JobController extends Controller
         $tableName = $this->getDocumentTableName($type);
         $foreignKey = $this->getDocumentForeignKey($type);
 
-        $doc_name = 'doc_name';
+        $doc_name = 'doc';
         if($tableName =='purch_req_doc'){
             $doc_name = 'doc_name';
         }
