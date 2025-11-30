@@ -1519,7 +1519,7 @@ class JobController extends Controller
     {
         $tableMap = [
             'purch_req' => 'purch_req_doc',
-            'purchase' => 'purch_doc',
+            'purch' => 'purch_doc',
             'journal_trans' => 'journal_trans_doc',
             'invoice' => 'invoice_doc',
             'billing' => 'invoice_doc', // ใช้ตารางเดียวกับ invoice
