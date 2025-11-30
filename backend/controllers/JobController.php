@@ -1459,7 +1459,7 @@ class JobController extends Controller
         $foreignKey = $this->getDocumentForeignKey($type);
 
         $doc_name = 'doc';
-        if($tableName =='purch_req_doc'){
+        if($tableName =='purch_req_doc' || $tableName == 'purch_doc'){
             $doc_name = 'doc_name';
         }
 
@@ -1581,6 +1581,13 @@ class JobController extends Controller
      */
     protected function getDocumentPath($type, $filename)
     {
+        if ($type == 'purch_req') {
+            return Yii::getAlias('@webroot/uploads/purch_req_doc/' . $filename);
+        }
+        if ($type == 'purchase') {
+            return Yii::getAlias('@webroot/uploads/purch_doc/' . $filename);
+        }
+
         $basePath = Yii::getAlias('@webroot/uploads/documents');
         return $basePath . '/' . $type . '/' . $filename;
     }
