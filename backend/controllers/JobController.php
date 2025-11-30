@@ -1556,7 +1556,7 @@ class JobController extends Controller
     {
         $queries = [
             'purch_req' => "SELECT CONCAT('ใบขอซื้อ: ', purch_req_no) FROM purch_req WHERE id = :id",
-            'purchase' => "SELECT CONCAT('ใบสั่งซื้อ: ', purch_no) FROM purch WHERE id = :id",
+            'purch' => "SELECT CONCAT('ใบสั่งซื้อ: ', purch_no) FROM purch WHERE id = :id",
             'journal_trans' => "SELECT CONCAT('รายการ: ', journal_no) FROM journal_trans WHERE id = :id",
             'invoice' => "SELECT CONCAT('ใบกำกับ: ', invoice_number) FROM invoices WHERE id = :id",
             'billing' => "SELECT CONCAT('ใบวางบิล: ', billing_number) FROM billing_invoices WHERE id = :id",
