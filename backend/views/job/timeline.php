@@ -435,6 +435,91 @@ if($today > $end){
                                         <th style="text-align: right;">มูลค่า</th>
                                         <th style="text-align: right;">ส่วนลด</th>
                                         <th style="text-align: right;">VAT</th>
+                                        <th style="text-align: right;">สุทธิ</th>
+                                        <th>เอกสาร</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php foreach ($purchases as $purchase): ?>
+                                        <?php
+                                        $line_status = '';
+                                        if ($req['approve_status'] == 0) {
+                                            $line_status = 'รอพิจารณา';
+                                        } else if ($req['approve_status'] == 1) {
+                                            $line_status = 'อนุมัติ';
+                                        } else if ($req['approve_status'] == 2) {
+                                            $line_status = 'ไม่อนุมัติ';
+                                        } else if ($req['approve_status'] == 3) {
+                                            $line_status = 'ยกเลิก';
+                                        }
+                                        ?>
+                                        <tr>
+                                            <td style="text-align: center;"><?= Html::encode($purchase['purch_no']) ?></td>
+                                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($purchase['purch_date'])) ?></td>
+                                            <td style="text-align: center;"><?= Html::encode($purchase['vendor_name']) ?></td>
+                                            <td style="text-align: center;">
+                                                <?= Html::tag('span', $line_status, [
+                                                    'class' => 'badge badge-' . ($line_status == 'อนุมัติ' ? 'success' : 'warning')
+                                                ]) ?>
+                                            </td>
+                                            <td class="text-right"><?= number_format($purchase['total_amount'], 2) ?></td>
+                                            <td class="text-right"><?= number_format($purchase['discount_amount'], 2) ?></td>
+                                            <td class="text-right"><?= number_format($purchase['vat_amount'], 2) ?></td>
+                                            <td class="text-right font-weight-bold"><?= number_format($purchase['net_amount'], 2) ?></td>
+                                            <td style="text-align: center;"><a class="badge badge-info" href="<?=Url::to(['job/documents','id'=>$model->id,'type'=>'purch','activityId'=>$purchase['id']],true)?>"><i class="fa fa-eye"></i></a></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-teal mb-0">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                ไม่มีข้อมูลใบสั่งซื้อสำหรับใบงานนี้
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Purchase Order Section -->
+            <div class="timeline-section">
+                <div class="card border-warning-light">
+                    <div class="card-header bg-warning-light text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shopping-cart"></i>
+                            ใบสั่งซื้อ (Purchase None PR)
+                            <span class="badge badge-dark ml-2"><?= count($purchasesnonepr) ?> รายการ</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($purchasesnonepr)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-sm">
+                                    <thead class="thead-light">
+                                    <tr>
+                                        <th>เลขใบสั่งซื้อ</th>
+                                        <th>วันที่</th>
+                                        <th>ผู้จำหน่าย</th>
+                                        <th style="text-align: right;">มูลค่า</th>
+                                        <th>เอกสาร</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php foreach ($purchases as $purchase): ?>
+
+                                        <tr>
+                                            <td style="text-align: center;"><?= Html::encode($purchase['purch_no']) ?></td>
+                                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($purchase['purch_date'])) ?></td>
+                                            <td style="text-align: center;"><?= Html::encode($purchase['vendor_name']) ?></td>
+                                            <td class="text-right"><?= number_format($purchase['total_amount'], 2) ?></td>
+                                            <td style="text-align: center;"><a class="badge badge-info" href="<?=Url::to(['job/documents','id'=>$model->id,'type'=>'purch','activityId'=>$purchase['id']],true)?>"><i class="fa fa-eye"></i></a></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
                             <div class="alert alert-teal mb-0">
                                 <i class="fas fa-exclamation-triangle"></i>
                                 ไม่มีข้อมูลใบสั่งซื้อสำหรับใบงานนี้
@@ -638,7 +723,7 @@ if($today > $end){
                 </div>
             </div>
 
-            <!-- Vehicle Expense Section -->
+            <!-- Journal Transaction Section -->
             <div class="timeline-section">
                 <div class="card border-danger">
                     <div class="card-header bg-danger text-white">
@@ -679,59 +764,7 @@ if($today > $end){
                         <?php else: ?>
                             <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
-                                ไม่มีข้อมูลค่าใช้จ่ายรถสำหรับใบงานนี้
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Job Expense Section -->
-            <div class="timeline-section">
-                <div class="card border-secondary">
-                    <div class="card-header bg-secondary text-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-money-bill-wave"></i>
-                            ค่าใช้จ่ายอื่นๆ (Job Expenses)
-                            <span class="badge badge-light text-dark ml-2"><?= count($jobExpenses) ?> รายการ</span>
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <?php if (!empty($jobExpenses)): ?>
-                            <div class="table-responsive">
-                                <table class="table table-striped table-sm">
-                                    <thead class="thead-light">
-                                    <tr>
-                                        <th style="text-align: center;">วันที่</th>
-                                        <th>รายละเอียด</th>
-                                        <th style="text-align: right;">จำนวนเงิน</th>
-                                        <th style="text-align: center;">เอกสาร</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <?php foreach ($jobExpenses as $expense): ?>
-                                        <tr>
-                                            <td style="text-align: center;"><?= $expense->trans_date ? date('d/m/Y', strtotime($expense->trans_date)) : '-' ?></td>
-                                            <td><?= Html::encode($expense->description) ?></td>
-                                            <td style="text-align: right;"><?= number_format($expense->line_amount, 2) ?></td>
-                                            <td style="text-align: center;">
-                                                <?php if ($expense->line_doc): ?>
-                                                    <a class="badge badge-info" href="<?= Url::to('@web/uploads/expense/' . $expense->line_doc) ?>" target="_blank">
-                                                        <i class="fa fa-eye"></i>
-                                                    </a>
-                                                <?php else: ?>
-                                                    -
-                                                <?php endif; ?>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        <?php else: ?>
-                            <div class="alert alert-teal mb-0">
-                                <i class="fas fa-info-circle"></i>
-                                ไม่มีข้อมูลค่าใช้จ่ายอื่นๆ สำหรับใบงานนี้
+                                ไม่มีข้อมูลรายการรับ-เบิกของสำหรับใบงานนี้
                             </div>
                         <?php endif; ?>
                     </div>
@@ -1126,15 +1159,7 @@ if($today > $end){
                         $totalPaymentReceived = array_sum(array_column($paymentReceipts, 'net_amount')); // เพิ่มยอดรับชำระ
                         $totalInvoiceAmount = array_sum(array_column($invoices, 'total_amount'));
                         $totalVehicleExpenseAmount = array_sum(array_column($vehicleExpense,'total_wage'));
-                        
-                        $totalJobExpenseAmount = 0;
-                        if(!empty($jobExpenses)){
-                             foreach ($jobExpenses as $je) {
-                                $totalJobExpenseAmount += $je->line_amount;
-                            }
-                        }
-
-                        $totalExpenses = $totalPurchaseAmount + $totalPurchaseNonePrAmount + $totalPettyCashAmount + $totalVehicleExpenseAmount + $totalJobExpenseAmount;
+                        $totalExpenses = $totalPurchaseAmount + $totalPurchaseNonePrAmount + $totalPettyCashAmount + $totalVehicleExpenseAmount;
                         $totalRevenue = $totalPaymentReceived; // รายได้จากการรับชำระ
                         $profitLoss = $totalRevenue - $totalExpenses; // คำนวณกำไรขาดทุนจากรายได้ - ค่าใช้จ่าย
                         $profitLossPercentage = $model->job_amount > 0 ? ($profitLoss / $model->job_amount) * 100 : 0;
@@ -1167,9 +1192,7 @@ if($today > $end){
                                         <h5>ค่าใช้จ่ายรวม</h5>
                                         <h3><?= number_format($totalExpenses, 2) ?></h3>
                                         <small>ซื้อ: <?= number_format($totalPurchaseAmount, 2) ?><br>
-                                            เงินสดย่อย: <?= number_format($totalPettyCashAmount, 2) ?><br>
-                                            ค่าใช้จ่ายอื่นๆ: <?= number_format($totalJobExpenseAmount, 2) ?>
-                                        </small>
+                                            เงินสดย่อย: <?= number_format($totalPettyCashAmount, 2) ?></small>
                                     </div>
                                 </div>
                             </div>
@@ -1196,9 +1219,8 @@ if($today > $end){
                                             'ใบขอซื้อ' => !empty($purchReqs),
                                             'ใบสั่งซื้อ' => !empty($purchases),
                                             'รับ-เบิกของ' => !empty($journalTrans),
-                                            'เงินสดย่อย' => !empty($pettyCashVouchers),
+                                            'เงินสดย่อย' => !empty($voucher),
                                             'ค่าใช้จ่ายรถ' => !empty($vehicleExpense),
-                                            'ค่าใช้จ่ายอื่นๆ' => !empty($jobExpenses),
                                             'ใบกำกับ/ใบเสร็จ' => !empty($invoices),
                                             'วางบิล' => !empty($billingInvoices),
                                             'รับชำระเงิน' => !empty($paymentReceipts)
@@ -1207,6 +1229,62 @@ if($today > $end){
                                         $totalSteps = count($steps);
                                         $progressPercentage = ($completedSteps / $totalSteps) * 100;
                                         ?>
+                                        <div class="progress-bar <?= $progressPercentage == 100 ? 'bg-success' : 'bg-warning' ?>"
+                                             role="progressbar"
+                                             style="width: <?= $progressPercentage ?>%"
+                                             aria-valuenow="<?= $progressPercentage ?>"
+                                             aria-valuemin="0"
+                                             aria-valuemax="100">
+                                            <?= number_format($progressPercentage, 1) ?>% เสร็จสิ้น
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <?php foreach ($steps as $stepName => $isCompleted): ?>
+                                            <div class="col-md-1">
+                                                <div class="text-center">
+                                                    <i class="fas <?= $isCompleted ? 'fa-check-circle text-success' : 'fa-clock text-muted' ?> fa-2x"></i>
+                                                    <br>
+                                                    <small class="<?= $isCompleted ? 'text-success font-weight-bold' : 'text-muted' ?>">
+                                                        <?= $stepName ?>
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+<?php
+// Register Simple JavaScript
+$this->registerJs('
+$(document).ready(function() {
+    console.log("Timeline loaded successfully - no animations");
+    
+    // Basic hover effects only
+    $(".table tbody tr").hover(
+        function() {
+            $(this).css("background-color", "#e3f2fd");
+        },
+        function() {
+            $(this).css("background-color", "");
+        }
+    );
+    
+    // Simple tooltips if available
+    if (typeof $.fn.tooltip !== "undefined") {
+        $("[title]").tooltip();
+    }
+});
+');
+?>
                                         <div class="progress-bar <?= $progressPercentage == 100 ? 'bg-success' : 'bg-warning' ?>"
                                              role="progressbar"
                                              style="width: <?= $progressPercentage ?>%"
