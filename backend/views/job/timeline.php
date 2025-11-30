@@ -723,7 +723,7 @@ if($today > $end){
                 </div>
             </div>
 
-            <!-- Journal Transaction Section -->
+            <!-- Vehicle Expense Section -->
             <div class="timeline-section">
                 <div class="card border-danger">
                     <div class="card-header bg-danger text-white">
@@ -764,7 +764,59 @@ if($today > $end){
                         <?php else: ?>
                             <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
-                                ไม่มีข้อมูลรายการรับ-เบิกของสำหรับใบงานนี้
+                                ไม่มีข้อมูลค่าใช้จ่ายรถสำหรับใบงานนี้
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Expense Section -->
+            <div class="timeline-section">
+                <div class="card border-secondary">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-money-bill-wave"></i>
+                            ค่าใช้จ่ายอื่นๆ (Job Expenses)
+                            <span class="badge badge-light text-dark ml-2"><?= count($jobExpenses) ?> รายการ</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($jobExpenses)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-sm">
+                                    <thead class="thead-light">
+                                    <tr>
+                                        <th style="text-align: center;">วันที่</th>
+                                        <th>รายละเอียด</th>
+                                        <th style="text-align: right;">จำนวนเงิน</th>
+                                        <th style="text-align: center;">เอกสาร</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php foreach ($jobExpenses as $expense): ?>
+                                        <tr>
+                                            <td style="text-align: center;"><?= $expense->trans_date ? date('d/m/Y', strtotime($expense->trans_date)) : '-' ?></td>
+                                            <td><?= Html::encode($expense->description) ?></td>
+                                            <td style="text-align: right;"><?= number_format($expense->line_amount, 2) ?></td>
+                                            <td style="text-align: center;">
+                                                <?php if ($expense->line_doc): ?>
+                                                    <a class="badge badge-info" href="<?= Url::to('@web/uploads/expense/' . $expense->line_doc) ?>" target="_blank">
+                                                        <i class="fa fa-eye"></i>
+                                                    </a>
+                                                <?php else: ?>
+                                                    -
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-teal mb-0">
+                                <i class="fas fa-info-circle"></i>
+                                ไม่มีข้อมูลค่าใช้จ่ายอื่นๆ สำหรับใบงานนี้
                             </div>
                         <?php endif; ?>
                     </div>

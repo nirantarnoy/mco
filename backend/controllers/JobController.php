@@ -734,6 +734,9 @@ class JobController extends Controller
 
         $vehicleExpense = $this->getJobVehicleExpense($model->job_no);
 
+        // ดึงข้อมูล Job Expense (ค่าใช้จ่ายอื่นๆ)
+        $jobExpenses = JobExpense::find()->where(['job_id' => $model->id])->all();
+
         return $this->render('timeline', [
             'model' => $model,
             'purchReqs' => $purchReqs,
@@ -744,7 +747,8 @@ class JobController extends Controller
             'pettyCashVouchers' => $pettyCashVouchers,
             'paymentReceipts' => $paymentReceipts,
             'vehicleExpense' => $vehicleExpense,
-            'purchasesnonepr'=>$purchasesnonepr
+            'purchasesnonepr'=>$purchasesnonepr,
+            'jobExpenses' => $jobExpenses, // ส่งข้อมูลไปที่ view
         ]);
     }
 
