@@ -1537,7 +1537,7 @@ class JobController extends Controller
     {
         $keyMap = [
             'purch_req' => 'purch_req_id',
-            'purchase' => 'purch_id',
+            'purch' => 'purch_id',
             'journal_trans' => 'journal_trans_id',
             'invoice' => 'invoice_id',
             'billing' => 'invoice_id',
