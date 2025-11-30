@@ -96,6 +96,13 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                     <?= Html::a('<i class="fas fa-download"></i> รับสินค้าเข้าคลัง', ['receive', 'id' => $model->id], [
                         'class' => 'btn btn-success'
                     ]) ?>
+                    <?php if ($model->status != Purch::STATUS_COMPLETED): ?>
+                        <?= Html::a('<i class="fas fa-check-circle"></i> ยืนยันรับบริการ/ปิดจบ', ['confirm-service-receive', 'id' => $model->id], [
+                            'class' => 'btn btn-primary',
+                            'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะยืนยันการรับบริการ/ปิดจบใบสั่งซื้อนี้? สถานะจะถูกปรับเป็น Completed โดยไม่มีการบันทึกสต็อก',
+                            'data-method' => 'post',
+                        ]) ?>
+                    <?php endif; ?>
                     <?= Html::a('<i class="fas fa-history"></i> ประวัติการรับสินค้า', ['receive-history', 'id' => $model->id], [
                         'class' => 'btn btn-info'
                     ]) ?>
