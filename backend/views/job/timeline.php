@@ -466,7 +466,7 @@ if($today > $end){
                                             <td class="text-right"><?= number_format($purchase['discount_amount'], 2) ?></td>
                                             <td class="text-right"><?= number_format($purchase['vat_amount'], 2) ?></td>
                                             <td class="text-right font-weight-bold"><?= number_format($purchase['net_amount'], 2) ?></td>
-                                            <td style="text-align: center;"><a class="badge badge-info" href="<?=Url::to(['job/documents','id'=>$model->id,'type'=>'purchase','activityId'=>$purchase['id']],true)?>"><i class="fa fa-eye"></i></a></td>
+                                            <td style="text-align: center;"><a class="badge badge-info" href="<?=Url::to(['job/documents','id'=>$model->id,'type'=>'purch','activityId'=>$purchase['id']],true)?>"><i class="fa fa-eye"></i></a></td>
                                         </tr>
                                     <?php endforeach; ?>
                                     </tbody>
@@ -488,6 +488,47 @@ if($today > $end){
                     <div class="card-header bg-warning-light text-dark">
                         <h5 class="mb-0">
                             <i class="fas fa-shopping-cart"></i>
+                            ใบสั่งซื้อ (Purchase None PR)
+                            <span class="badge badge-dark ml-2"><?= count($purchasesnonepr) ?> รายการ</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($purchasesnonepr)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-sm">
+                                    <thead class="thead-light">
+                                    <tr>
+                                        <th>เลขใบสั่งซื้อ</th>
+                                        <th>วันที่</th>
+                                        <th>ผู้จำหน่าย</th>
+                                        <th style="text-align: right;">มูลค่า</th>
+                                        <th>เอกสาร</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php foreach ($purchases as $purchase): ?>
+
+                                        <tr>
+                                            <td style="text-align: center;"><?= Html::encode($purchase['purch_no']) ?></td>
+                                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($purchase['purch_date'])) ?></td>
+                                            <td style="text-align: center;"><?= Html::encode($purchase['vendor_name']) ?></td>
+                                            <td class="text-right"><?= number_format($purchase['total_amount'], 2) ?></td>
+                                            <td style="text-align: center;"><a class="badge badge-info" href="<?=Url::to(['job/documents','id'=>$model->id,'type'=>'purch','activityId'=>$purchase['id']],true)?>"><i class="fa fa-eye"></i></a></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-teal mb-0">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                ไม่มีข้อมูลใบสั่งซื้อสำหรับใบงานนี้
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
             <!-- Journal Transaction Section -->
             <div class="timeline-section">
                 <div class="card border-secondary">
@@ -688,6 +729,48 @@ if($today > $end){
                     <div class="card-header bg-danger text-white">
                         <h5 class="mb-0">
                             <i class="fas fa-truck"></i>
+                            ค่าใช้จ่ายรถ
+                            <span class="badge badge-light text-dark ml-2"><?= count($vehicleExpense) ?> รายการ</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($vehicleExpense)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-sm">
+                                    <thead class="thead-light">
+                                    <tr>
+                                        <th style="text-align: center;">ทะเบียนรถ</th>
+                                        <th style="text-align: center;">วันที่</th>
+                                        <th style="text-align: right;">ระยะทาง</th>
+                                        <th style="text-align: right;">ค่าใช้จ่ายรถ</th>
+                                        <th style="text-align: right;">จำนวนคน</th>
+                                        <th style="text-align: right;">ค่าจ้างรวม</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php foreach ($vehicleExpense as $expanse): ?>
+                                        <tr>
+                                            <td style="text-align: center;"><?= Html::encode($expanse['vehicle_no']) ?></td>
+                                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($expanse['expense_date'])) ?></td>
+                                            <td style="text-align: right;"><?= number_format($expanse['total_distance'],0) ?></td>
+                                            <td style="text-align: right;"><?= number_format($expanse['vehicle_cost'], 0) ?></td>
+                                            <td style="text-align: right;"><?= number_format($expanse['passenger_count'], 0) ?></td>
+                                            <td style="text-align: right;"><?= number_format($expanse['total_wage'], 0) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-teal mb-0">
+                                <i class="fas fa-info-circle"></i>
+                                ไม่มีข้อมูลรายการรับ-เบิกของสำหรับใบงานนี้
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
             <!-- Invoice Section -->
             <div class="timeline-section">
                 <div class="card border-primary">
