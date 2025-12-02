@@ -77,7 +77,19 @@ $this->params['breadcrumbs'][] = $this->title;
             'phone',
             'branch_name',
             'email',
-            'status',
+            [
+                'attribute' => 'status',
+                'format' => 'raw',
+                'headerOptions' => ['style' => 'text-align: center'],
+                'contentOptions' => ['style' => 'text-align: center'],
+                'value' => function ($data) {
+                    if ($data->status == 1) {
+                        return '<div class="badge badge-success">Active</div>';
+                    } else {
+                        return '<div class="badge badge-secondary">Inactive</div>';
+                    }
+                }
+            ],
             //'created_at',
             //'created_by',
             //'updated_at',
