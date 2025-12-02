@@ -897,10 +897,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                         </div>
                     </div>
                 </div>
-                                if ($model_deposit_line_all != null) {
-                                    $deposit_doc_show = $model_deposit_line_all->deposit_doc;
-                                }
-                                ?>
+                            
                                 <?php if ($deposit_doc_show != ''): ?>
                                     <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $deposit_doc_show ?>"
                                        target="_blank">
