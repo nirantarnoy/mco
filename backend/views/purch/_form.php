@@ -782,6 +782,212 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 </div>
                                 <hr>
                                 <div class="row">
+                                    <div class="col-8"><strong>ยอดรวมสุทธิ:</strong></div>
+                                    <div class="col-4 text-end">
+                                        <span id="summary-net"
+                                              class="fw-bold text-primary h5"><?= $model->net_amount ?></span> บาท
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title">ค่ามัดจำ</h6>
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <?php echo $form->field($model, 'is_deposit')->widget(\toxor88\switchery\Switchery::className(), ['options' => ['label' => '', 'class' => 'form-control']])->label(false) ?>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <label for="">วันที่</label>
+                                <?php
+                                echo DatePicker::widget([
+                                    'name' => 'deposit_date',
+                                    'value' => $model_deposit_all != null ? date('Y-m-d', strtotime($model_deposit_all->trans_date)) : date('Y-m-d'),
+                                    'type' => DatePicker::TYPE_COMPONENT_PREPEND,
+                                    'options' => [''],
+                                    'pluginOptions' => [
+                                        'autoclose' => true,
+                                        'format' => 'yyyy-mm-dd',
+                                    ]
+                                ]);
+                                ?>
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">จำนวนเงินมัดจำ</label>
+                                <input type="number" class="form-control" name="deposit_amount" min="0"
+                                       value="<?= $model_deposit_line_all != null ? $model_deposit_line_all->deposit_amount : 0 ?>">
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">เอกสารแนบ</label>
+                                <input type="file" class="form-control" name="deposit_doc">
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">เอกสารที่แนบแล้ว</label><br/>
+                                <?php
+                                $deposit_doc_show = '';
+                                if ($model_deposit_line_all != null) {
+                                    $deposit_doc_show = $model_deposit_line_all->deposit_doc;
+                                }
+                                ?>
+                                <?php if ($deposit_doc_show != ''): ?>
+                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $deposit_doc_show ?>"
+                                       target="_blank">
+                                        ดูเอกสาร
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <label for="">วันที่รับมัดจำคืน</label>
+                                <?php
+                                echo DatePicker::widget([
+                                    'name' => 'deposit_receive_date',
+                                    'value' => $model_deposit_line_all != null ? date('Y-m-d', strtotime($model_deposit_line_all->receive_date)) : date('Y-m-d'),
+                                    'type' => DatePicker::TYPE_COMPONENT_PREPEND,
+                                    'options' => [''],
+                                    'pluginOptions' => [
+                                        'autoclose' => true,
+                                        'format' => 'yyyy-mm-dd',
+                                    ]
+                                ]);
+                                ?>
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">จำนวนเงินมัดจำ</label>
+                                <?php
+                                $rec_amount = 0;
+                                if ($model_deposit_line_all != null) {
+                                    if ($model_deposit_line_all->receive_doc != null) {
+                                        $rec_amount = $model_deposit_line_all->deposit_amount;
+                                    }
+                                }
+                                ?>
+                                <input type="number" class="form-control" name="deposit_receive_amount" min="0"
+                                       value="<?= $rec_amount ?>">
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">เอกสารแนบ</label>
+                                <input type="file" class="form-control" name="deposit_receive_doc">
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">เอกสารที่แนบแล้ว</label><br/>
+                                <?php
+                                $receive_doc_show = '';
+                                if ($model_deposit_line_all != null) {
+                                    $receive_doc_show = $model_deposit_line_all->receive_doc;
+                                }
+                                ?>
+                                <?php if ($receive_doc_show != ''): ?>
+                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $receive_doc_show ?>"
+                                       target="_blank">
+                                        ดูเอกสาร
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                                if ($model_deposit_line_all != null) {
+                                    $deposit_doc_show = $model_deposit_line_all->deposit_doc;
+                                }
+                                ?>
+                                <?php if ($deposit_doc_show != ''): ?>
+                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $deposit_doc_show ?>"
+                                       target="_blank">
+                                        ดูเอกสาร
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <label for="">วันที่รับมัดจำคืน</label>
+                                <?php
+                                echo DatePicker::widget([
+                                    'name' => 'deposit_receive_date',
+                                    'value' => $model_deposit_line_all != null ? date('Y-m-d', strtotime($model_deposit_line_all->receive_date)) : date('Y-m-d'),
+                                    'type' => DatePicker::TYPE_COMPONENT_PREPEND,
+                                    'options' => [''],
+                                    'pluginOptions' => [
+                                        'autoclose' => true,
+                                        'format' => 'yyyy-mm-dd',
+                                    ]
+                                ]);
+                                ?>
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">จำนวนเงินมัดจำ</label>
+                                <?php
+                                $rec_amount = 0;
+                                if ($model_deposit_line_all != null) {
+                                    if ($model_deposit_line_all->receive_doc != null) {
+                                        $rec_amount = $model_deposit_line_all->deposit_amount;
+                                    }
+                                }
+                                ?>
+                                <input type="number" class="form-control" name="deposit_receive_amount" min="0"
+                                       value="<?= $rec_amount ?>">
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">เอกสารแนบ</label>
+                                <input type="file" class="form-control" name="deposit_receive_doc">
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">เอกสารที่แนบแล้ว</label><br/>
+                                <?php
+                                $receive_doc_show = '';
+                                if ($model_deposit_line_all != null) {
+                                    $receive_doc_show = $model_deposit_line_all->receive_doc;
+                                }
+                                ?>
+                                <?php if ($receive_doc_show != ''): ?>
+                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $receive_doc_show ?>"
+                                       target="_blank">
+                                        ดูเอกสาร
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title">วางบิล Vendor</h6>
+                        <br/>
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <label for="">วันที่วางบิล</label>
+                                <?php
+                                echo DatePicker::widget([
+                                    'name' => 'purch_bill_date',
+                                    'value' => $model_purch_vendor_bill != null ? date('m-d-Y', strtotime($model_purch_vendor_bill->bill_date)) : date('Y-m-d'),
+                                    'type' => DatePicker::TYPE_COMPONENT_PREPEND,
+                                    'options' => [''],
+                                    'pluginOptions' => [
+                                        'autoclose' => true,
+                                        'format' => 'yyyy-mm-dd',
+                                    ]
+                                ]);
+                                ?>
+                            </div>
+                            <div class="col-lg-3">
+                                <label for="">วันนัดรับเช็ค</label>
+                                <?php
                                 echo DatePicker::widget([
                                     'name' => 'purch_vendor_bill_date',
                                     'value' => $model_purch_vendor_bill != null ? date('m-d-Y', strtotime($model_purch_vendor_bill->appoinment_date)) : date('Y-m-d'),
