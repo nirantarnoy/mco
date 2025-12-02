@@ -17,6 +17,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="product-view">
 
     <p>
+        <?= Html::a('Back', ['index'], ['class' => 'btn btn-secondary']) ?>
         <?= Html::a('Update', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
         <?= Html::a('Delete', ['delete', 'id' => $model->id], [
             'class' => 'btn btn-danger',
