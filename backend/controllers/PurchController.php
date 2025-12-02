@@ -407,88 +407,48 @@ class PurchController extends Controller
                             throw new \Exception('Failed to update total amount');
                         }
 
-
-//                        // upload
-//
-//                        $uploaded = UploadedFile::getInstancesByName('file_acknowledge_doc');
-//                        $uploaded1 = UploadedFile::getInstancesByName('file_invoice_doc');
-//                        $uploaded2 = UploadedFile::getInstancesByName('file_slip_doc');
-//                        if (!empty($uploaded)) {
-//                            $loop = 0;
-//                            foreach ($uploaded as $file) {
-//                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
-//                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
-//                                    $model_doc = new \common\models\PurchDoc();
-//                                    $model_doc->purch_id = $id;
-//                                    $model_doc->doc_name = $upfiles;
-//                                    $model_doc->doc_type_id = 1;
-//                                    $model_doc->created_by = \Yii::$app->user->id;
-//                                    $model_doc->created_at = time();
-//                                    $model_doc->save(false);
-//                                }
-//                                $loop++;
-//                            }
-//                        }
-//                        if (!empty($uploaded1)) {
-//                            $loop = 0;
-//                            foreach ($uploaded1 as $file) {
-//                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
-//                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
-//                                    $model_doc = new \common\models\PurchDoc();
-//                                    $model_doc->purch_id = $id;
-//                                    $model_doc->doc_name = $upfiles;
-//                                    $model_doc->doc_type_id = 2;
-//                                    $model_doc->created_by = \Yii::$app->user->id;
-//                                    $model_doc->created_at = time();
-//                                    $model_doc->save(false);
-//                                }
-//                                $loop++;
-//                            }
-//                        }
-//                        if (!empty($uploaded2)) {
-//                            $loop = 0;
-//                            foreach ($uploaded2 as $file) {
-//                                $upfiles = "purch_" . time()."_".$loop . "." . $file->getExtension();
-//                                if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
-//                                    $model_doc = new \common\models\PurchDoc();
-//                                    $model_doc->purch_id = $id;
-//                                    $model_doc->doc_name = $upfiles;
-//                                    $model_doc->doc_type_id = 3;
-//                                    $model_doc->created_by = \Yii::$app->user->id;
-//                                    $model_doc->created_at = time();
-//                                    $model_doc->save(false);
-//                                }
-//                                $loop++;
-//                            }
-//                        }
-
                         if ($model->is_deposit == 1) { // มีมัดจำ
                             if ($deposit_amount > 0) {
-                                $ch = \backend\models\PurchDeposit::find()->where(['purch_id' => $model->id])->one();
-                                if ($ch) {
-                                    \backend\models\PurchDepositLine::deleteAll(['purch_deposit_id' => $ch->id]);
-                                    $ch->delete();
+                                $model_purch_deposit = \backend\models\PurchDeposit::find()->where(['purch_id' => $model->id])->one();
+                                if (!$model_purch_deposit) {
+                                    $model_purch_deposit = new \backend\models\PurchDeposit();
+                                    $model_purch_deposit->purch_id = $model->id;
+                                    $model_purch_deposit->created_by = \Yii::$app->user->id;
+                                    $model_purch_deposit->created_at = time();
                                 }
-
-                                $model_purch_deposit = new \backend\models\PurchDeposit();
                                 $model_purch_deposit->trans_date = date('Y-m-d H:i:s', strtotime($deposit_date));
-                                $model_purch_deposit->purch_id = $model->id;
                                 $model_purch_deposit->status = 0;
-                                $model_purch_deposit->created_by = \Yii::$app->user->id;
-                                $model_purch_deposit->created_at = time();
-                                if ($model_purch_deposit->save(false)) {
-                                    if (!empty($deposit_doc)) {
-                                        $file = 'purch_deposit_' . time() . '_' . ($deposit_doc->getExtension());
-                                        $deposit_doc->saveAs('uploads/purch_doc/' . $file);
 
+                                if ($model_purch_deposit->save(false)) {
+                                    $model_purch_deposit_line = \backend\models\PurchDepositLine::find()->where(['purch_deposit_id' => $model_purch_deposit->id])->one();
+                                    if (!$model_purch_deposit_line) {
                                         $model_purch_deposit_line = new \backend\models\PurchDepositLine();
                                         $model_purch_deposit_line->purch_deposit_id = $model_purch_deposit->id;
-                                        $model_purch_deposit_line->deposit_date = date('Y-m-d H:i:s', strtotime($deposit_date));
-                                        $model_purch_deposit_line->deposit_amount = (double)$deposit_amount;
-                                        $model_purch_deposit_line->deposit_doc = $file;
-                                        $model_purch_deposit_line->save(false);
+                                    }
+                                    
+                                    $model_purch_deposit_line->deposit_date = date('Y-m-d H:i:s', strtotime($deposit_date));
+                                    $model_purch_deposit_line->deposit_amount = (double)$deposit_amount;
+
+                                    if (!empty($deposit_doc)) {
+                                        $file = 'purch_deposit_' . time() . '_' . ($deposit_doc->getExtension());
+                                        if ($deposit_doc->saveAs('uploads/purch_doc/' . $file)) {
+                                            $model_purch_deposit_line->deposit_doc = $file;
+                                        }
                                     }
 
+                                    if ($receive_date) {
+                                        $model_purch_deposit_line->receive_date = date('Y-m-d H:i:s', strtotime($receive_date));
+                                    }
+
+                                    $deposit_receive_doc = UploadedFile::getInstanceByName('deposit_receive_doc');
+                                    if (!empty($deposit_receive_doc)) {
+                                        $file_receive = 'purch_deposit_return_' . time() . '_' . ($deposit_receive_doc->getExtension());
+                                        if ($deposit_receive_doc->saveAs('uploads/purch_doc/' . $file_receive)) {
+                                            $model_purch_deposit_line->receive_doc = $file_receive;
+                                        }
+                                    }
+
+                                    $model_purch_deposit_line->save(false);
                                 }
                             }
                         } else { // ไม่มีมัดจำให้เคลียร์
@@ -533,7 +493,6 @@ class PurchController extends Controller
                                 }
                             }
                         }
-
 
                         $transaction->commit();
                         Yii::$app->session->setFlash('success', 'แก้ไขข้อมูลเรียบร้อยแล้ว');

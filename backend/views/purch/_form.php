@@ -838,10 +838,15 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 }
                                 ?>
                                 <?php if ($deposit_doc_show != ''): ?>
-                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $deposit_doc_show ?>"
-                                       target="_blank">
-                                        ดูเอกสาร
-                                    </a>
+                                    <?php echo Html::a(
+                                        'ดูเอกสาร',
+                                        ['purch/showdoc', 'filename' => $deposit_doc_show],
+                                        [
+                                            'target' => '_blank',
+                                            'data-pjax' => '0',
+                                        ]
+                                    );
+                                    ?>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -888,68 +893,6 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 }
                                 ?>
                                 <?php if ($receive_doc_show != ''): ?>
-                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $receive_doc_show ?>"
-                                       target="_blank">
-                                        ดูเอกสาร
-                                    </a>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                            
-                                <?php if ($deposit_doc_show != ''): ?>
-                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $deposit_doc_show ?>"
-                                       target="_blank">
-                                        ดูเอกสาร
-                                    </a>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <hr>
-                        <div class="row">
-                            <div class="col-lg-3">
-                                <label for="">วันที่รับมัดจำคืน</label>
-                                <?php
-                                echo DatePicker::widget([
-                                    'name' => 'deposit_receive_date',
-                                    'value' => $model_deposit_line_all != null ? date('Y-m-d', strtotime($model_deposit_line_all->receive_date)) : date('Y-m-d'),
-                                    'type' => DatePicker::TYPE_COMPONENT_PREPEND,
-                                    'options' => [''],
-                                    'pluginOptions' => [
-                                        'autoclose' => true,
-                                        'format' => 'yyyy-mm-dd',
-                                    ]
-                                ]);
-                                ?>
-                            </div>
-                            <div class="col-lg-3">
-                                <label for="">จำนวนเงินมัดจำ</label>
-                                <?php
-                                $rec_amount = 0;
-                                if ($model_deposit_line_all != null) {
-                                    if ($model_deposit_line_all->receive_doc != null) {
-                                        $rec_amount = $model_deposit_line_all->deposit_amount;
-                                    }
-                                }
-                                ?>
-                                <input type="number" class="form-control" name="deposit_receive_amount" min="0"
-                                       value="<?= $rec_amount ?>">
-                            </div>
-                            <div class="col-lg-3">
-                                <label for="">เอกสารแนบ</label>
-                                <input type="file" class="form-control" name="deposit_receive_doc">
-                            </div>
-                            <div class="col-lg-3">
-                                <label for="">เอกสารที่แนบแล้ว</label><br/>
-                                <?php
-                                $receive_doc_show = '';
-                                if ($model_deposit_line_all != null) {
-                                    $receive_doc_show = $model_deposit_line_all->receive_doc;
-                                }
-                                ?>
-                                <?php if ($receive_doc_show != ''): ?>
-                                
                                     <?php echo Html::a(
                                         'ดูเอกสาร',
                                         ['purch/showdoc', 'filename' => $receive_doc_show],
@@ -962,6 +905,12 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <?php endif; ?>
                             </div>
                         </div>
+                    </div>
+                </div>
+                            
+            
+                        <hr>
+                        
                     </div>
                 </div>
             </div>

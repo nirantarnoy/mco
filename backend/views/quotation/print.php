@@ -486,7 +486,7 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
             <div class="terms-section">
                 <div class="label-font"><strong>EXCLUDES VAT AND SEPARATED PURCHASING IS NOT ALLOWED.</strong></div>
                 <div class="label-font"><strong>CURRENCY :</strong> Baht</div>
-                <div class="label-font"><strong>DELIVERY :</strong></div>
+                <div class="label-font"><strong>DELIVERY : <?= $quotation->delivery_day_text ?></strong></div>
                 <div class="label-font"><strong>PAYMENT :</strong> <?= \backend\models\Paymentterm::findName($quotation->payment_term_id) ?></div>
                 <div class="label-font"><strong>VALIDITY :</strong> 7 day after today.</div>
                 <div class="label-font"><strong>REMARK</strong></div>
