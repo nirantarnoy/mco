@@ -197,33 +197,35 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
     .text-infomation {
         margin-top: -5px;
     }
-        height: 40px;
-        /* คงช่องว่างไว้สำหรับลายเซ็น */
-        margin-bottom: 10px;
-    } */
-     .signature-line {
+
+    .signature-section {
+        display: flex !important;
+        justify-content: space-between;
+        margin-top: 50px;
+        text-align: center;
+        width: 100%;
+    }
+
+    .signature-box {
+        width: 33%;
+        position: relative;
+    }
+
+    .signature-line {
         border-bottom: 1px solid #000;
-        margin: 35px 20px 5px 20px;
-        min-height: 65px;
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
+        margin: 0 10px 10px 10px;
+        height: 60px;
         position: relative;
     }
 
     .signature-line img {
-        max-width: 150px;
-        max-height: 60px;
-        object-fit: contain;
-        width: auto;
-        height: auto;
+        max-width: 100px;
+        max-height: 50px;
         position: absolute;
-        bottom: 5px;
+        bottom: 2px;
         left: 50%;
         transform: translateX(-50%);
     }
-
-
 
     @media print {
         .quotation-container {
