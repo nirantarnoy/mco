@@ -952,10 +952,19 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 }
                                 ?>
                                 <?php if ($receive_doc_show != ''): ?>
-                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $receive_doc_show ?>"
+                                    <!-- <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $receive_doc_show ?>"
                                        target="_blank">
                                         ดูเอกสาร
-                                    </a>
+                                    </a> -->
+                                    <?php echo Html::a(
+                                        'ดูเอกสาร',
+                                        ['purch/showdoc', 'filename' => receive_doc_show],
+                                        [
+                                            'target' => '_blank',
+                                            'data-pjax' => '0',
+                                        ]
+                                    );
+                                    ?>
                                 <?php endif; ?>
                             </div>
                         </div>
