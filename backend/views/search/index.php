@@ -60,6 +60,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?= ListView::widget([
                                 'dataProvider' => $dataProvider,
                                 'itemView' => '_search_item',
+                                'viewParams' => ['searchQuery' => $searchQuery],
                                 'layout' => "{items}\n<div class='d-flex justify-content-center'>{pager}</div>",
                                 'itemOptions' => ['class' => 'mb-3'],
                             ]); ?>

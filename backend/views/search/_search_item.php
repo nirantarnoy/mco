@@ -4,6 +4,25 @@ use yii\helpers\Url;
 use yii\helpers\StringHelper;
 
 /* @var $model backend\models\Job */
+/* @var $searchQuery string */
+
+$highlight = function ($text) use ($searchQuery) {
+    if (empty($searchQuery) || empty($text)) {
+        return Html::encode($text);
+    }
+    
+    $keywords = array_unique(array_filter(array_map('trim', explode(',', $searchQuery))));
+    $text = Html::encode($text);
+    
+    foreach ($keywords as $keyword) {
+        if (empty($keyword)) continue;
+        // Escape special regex characters in the keyword
+        $pattern = '/' . preg_quote($keyword, '/') . '/iu';
+        // Highlight match
+        $text = preg_replace($pattern, '<span style="background-color: yellow; color: black;">$0</span>', $text);
+    }
+    return $text;
+};
 ?>
 
 <div class="card search-result-item">
@@ -12,11 +31,11 @@ use yii\helpers\StringHelper;
             <div class="col-md-8">
                 <h5 class="card-title mb-2">
                     <a href="<?= Url::to(['job/timeline', 'id' => $model->id]) ?>" class="text-primary font-weight-bold">
-                        <i class="fas fa-briefcase"></i> <?= Html::encode($model->job_no) ?>
+                        <i class="fas fa-briefcase"></i> <?= $highlight($model->job_no) ?>
                     </a>
                     <?php if ($model->status): ?>
                         <span class="badge badge-<?= $model->status == 'completed' ? 'success' : ($model->status == 'in_progress' ? 'warning' : 'secondary') ?>">
-                            <?= Html::encode($model->status) ?>
+                            <?= $highlight($model->status) ?>
                         </span>
                     <?php endif; ?>
                 </h5>
@@ -24,7 +43,7 @@ use yii\helpers\StringHelper;
                 <?php if ($model->quotation_id): ?>
                     <p class="text-muted mb-1">
                         <i class="fas fa-file-invoice"></i>
-                        <strong>เลขที่ใบเสนอราคา:</strong> <?= Html::encode(\backend\models\Quotation::findNo($model->quotation_id)) ?>
+                        <strong>เลขที่ใบเสนอราคา:</strong> <?= $highlight(\backend\models\Quotation::findNo($model->quotation_id)) ?>
                     </p>
                 <?php endif; ?>
 
@@ -37,7 +56,6 @@ use yii\helpers\StringHelper;
 
                 <?php if ($model->job_amount): ?>
                     <p class="text-muted mb-1">
-<!--                        <i class="fas fa-dollar-sign"></i>-->
                         <strong>มูลค่างาน:</strong> <?= Yii::$app->formatter->asDecimal($model->job_amount, 2) ?>
                     </p>
                 <?php endif; ?>
@@ -45,7 +63,7 @@ use yii\helpers\StringHelper;
                 <?php if ($model->summary_note): ?>
                     <p class="mb-2">
                         <i class="fas fa-sticky-note"></i>
-                        <?= Html::encode(StringHelper::truncate($model->summary_note, 150)) ?>
+                        <?= $highlight(StringHelper::truncate($model->summary_note, 150)) ?>
                     </p>
                 <?php endif; ?>
 
@@ -62,8 +80,8 @@ use yii\helpers\StringHelper;
                                 ?>
                                 <span class="badge badge-light border mr-1 mb-1">
                                 <?php if ($jobLine->product): ?>
-                                    <?= Html::encode($jobLine->product->code) ?> -
-                                    <?= Html::encode(StringHelper::truncate($jobLine->product->name, 30)) ?>
+                                    <?= $highlight($jobLine->product->code) ?> -
+                                    <?= $highlight(StringHelper::truncate($jobLine->product->name, 30)) ?>
                                     <small class="text-muted">(Qty: <?= $jobLine->qty ?>)</small>
                                 <?php else: ?>
                                     สินค้า: <?= $jobLine->product_id ?>
