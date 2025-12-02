@@ -244,12 +244,33 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
         /* ช่องสุดท้ายไม่ต้องมีเส้นขวา */
     }
 
-    .signature-line {
+    /* .signature-line {
         border-bottom: none;
         /* ลบเฉพาะเส้นแนวนอนนี้ */
         height: 40px;
         /* คงช่องว่างไว้สำหรับลายเซ็น */
         margin-bottom: 10px;
+    } */
+     .signature-line {
+        border-bottom: 1px solid #000;
+        margin: 35px 20px 5px 20px;
+        min-height: 65px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        position: relative;
+    }
+
+    .signature-line img {
+        max-width: 150px;
+        max-height: 60px;
+        object-fit: contain;
+        width: auto;
+        height: auto;
+        position: absolute;
+        bottom: 5px;
+        left: 50%;
+        transform: translateX(-50%);
     }
 
 
