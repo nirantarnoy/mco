@@ -184,27 +184,6 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
         margin-right: 10px;
     }
 
-    .terms-section {
-        margin-top: 20px;
-        font-size: 16px;
-    }
-
-    .signature-section {
-        display: flex;
-        justify-content: space-around;
-        margin-top: 50px;
-        text-align: center;
-    }
-
-    .signature-box {
-        width: 30%;
-    }
-
-
-    .row-color {
-        background-color: #8ea9db;
-    }
-
     .label-font {
         font-size: 18px;
         /* font-weight: 900; */
@@ -218,35 +197,6 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
     .text-infomation {
         margin-top: -5px;
     }
-
-    .text-detail {
-        font-size: 13px;
-    }
-
-    .signature-section {
-        display: flex;
-        justify-content: space-between;
-        text-align: center;
-        margin-top: 40px;
-        border: 1px solid #000;
-        /* กรอบรอบทั้งหมด */
-    }
-
-    .signature-box {
-        width: 33.33%;
-        padding: 10px 5px;
-        border-right: 1px solid #000;
-        /* เส้นแบ่งช่อง */
-    }
-
-    .signature-box:last-child {
-        border-right: none;
-        /* ช่องสุดท้ายไม่ต้องมีเส้นขวา */
-    }
-
-    /* .signature-line {
-        border-bottom: none;
-        /* ลบเฉพาะเส้นแนวนอนนี้ */
         height: 40px;
         /* คงช่องว่างไว้สำหรับลายเซ็น */
         margin-bottom: 10px;
