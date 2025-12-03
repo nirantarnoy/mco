@@ -661,7 +661,8 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                 <tr>
                     <td><?= $itemNo++ ?></td>
                     <td><?= Html::encode($line->product->code ?? '') ?></td>
-                    <td class="description-cell"><?= Html::encode($line->product->name ?? $line->product_name) ?></td>
+                    <!-- <td class="description-cell"><?php //echo Html::encode($line->product->name ?? $line->product_name) ?></td> -->
+                    <td class="description-cell"><?= Html::encode($line->product_name) ?></td>
                     <td></td>
                     <td><?= number_format($line->qty, 0) ?></td>
                     <td><?= Html::encode(\backend\models\Unit::findName($line->unit_id)) ?></td>
