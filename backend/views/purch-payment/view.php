@@ -141,11 +141,12 @@ $this->params['breadcrumbs'][] = $this->title;
                         <thead class="thead-light">
                         <tr>
                             <th width="5%">#</th>
+                            <th width="15%">วันที่โอน</th>
                             <th width="15%">ธนาคาร</th>
                             <th width="15%">ประเภทการโอน</th>
                             <th width="15%" class="text-right">จำนวนเงิน</th>
-                            <th width="20%">เอกสารแนบ</th>
-                            <th width="30%">หมายเหตุ</th>
+                            <th width="15%">เอกสารแนบ</th>
+                            <th width="20%">หมายเหตุ</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -156,6 +157,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             ?>
                             <tr>
                                 <td class="text-center"><?= $index + 1 ?></td>
+                                <td><?= $line->trans_date ? Yii::$app->formatter->asDate($line->trans_date, 'php:d/m/Y') : '-' ?></td>
                                 <td><?= $line->bank_name ?: '-' ?></td>
                                 <td><?= $line->paymentMethod ? $line->paymentMethod->name : '-' ?></td>
                                 <td class="text-right"><?= Yii::$app->formatter->asDecimal($line->pay_amount, 2) ?></td>
@@ -174,7 +176,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         </tbody>
                         <tfoot>
                         <tr>
-                            <td colspan="3" class="text-right"><strong>ยอดรวมที่โอน:</strong></td>
+                            <td colspan="4" class="text-right"><strong>ยอดรวมที่โอน:</strong></td>
                             <td class="text-right">
                                 <strong class="text-success"><?= Yii::$app->formatter->asDecimal($total, 2) ?> บาท</strong>
                             </td>
