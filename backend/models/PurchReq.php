@@ -425,6 +425,6 @@ class PurchReq extends ActiveRecord
             return 1;
         }
         
-        return 0;
+        echo "ok";
     }
 }
