@@ -753,7 +753,8 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
             <div>AUTHORIZED SINGNATURE</div>
         </div>
     </div>
-
+    <br />
+    <br />
     <div class="reference-code">F-WP-FMA-002-005 R.1</div>
 </div>
 
