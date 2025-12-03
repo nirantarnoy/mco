@@ -365,8 +365,6 @@ $formatter = Yii::$app->formatter;
                     </td>
                 </table>
             </div>
-
-
         </div>
 
         <div class="document-info">
