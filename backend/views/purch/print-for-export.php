@@ -290,6 +290,14 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
             font-size: 10px !important;
             line-height: 1.3 !important;
         }
+
+        .reference-code {
+            position: fixed;
+            bottom: 5mm;
+            right: 8mm;
+            font-size: 10px !important;
+            text-align: right;
+        }
     }
 
     .po-container {
