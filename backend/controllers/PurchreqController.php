@@ -945,7 +945,7 @@ class PurchreqController extends Controller
                 $prLine->note = $poLine->note;
                 $prLine->status = 1; // Active
 
-                if (!$prLine->save()) {
+                if (!$prLine->save(false)) {
                     echo "Error saving PR line: " . print_r($prLine->errors, true) . "\n";
                     throw new \Exception("Failed to save line");
                 }
@@ -981,7 +981,7 @@ class PurchreqController extends Controller
             $pr->vat_amount = $vatVal;
             $pr->net_amount = $afterDiscount + $vatVal;
             
-            if (!$pr->save()) {
+            if (!$pr->save(false)) {
                  echo "Error updating PR header: " . print_r($pr->errors, true) . "\n";
                  throw new \Exception("Failed to update PR header");
             }
