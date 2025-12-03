@@ -928,7 +928,7 @@ class PurchreqController extends Controller
             return 1;
         }
 
-        print_r($po);
+        print_r($po->purchLine);
 
         echo "Copying lines...\n";
         $transaction = Yii::$app->db->beginTransaction();
