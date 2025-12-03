@@ -928,12 +928,12 @@ class PurchreqController extends Controller
             return 1;
         }
 
-        print_r($po->purchLine);
+        $po_line = \backend\models\PurchLine::find()->where(['purch_id' => $po->id])->all();
 
         echo "Copying lines...\n";
         $transaction = Yii::$app->db->beginTransaction();
         try {
-            foreach ($po->purchLines as $poLine) {
+            foreach ($po_line as $poLine) {
                 $prLine = new \backend\models\PurchReqLine();
                 $prLine->purch_req_id = $pr->id;
                 $prLine->product_id = $poLine->product_id;
