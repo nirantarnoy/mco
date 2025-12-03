@@ -16,6 +16,9 @@ $this->params['breadcrumbs'][] = 'รับสินค้าเข้าคล�
 
 $warehouse_data = \backend\models\Warehouse::find()->where(['status' => 1])->all();
 
+// นับจำนวนสินค้า
+$itemCount = count($poLines);
+
 // Register JS for calculations
 $this->registerJs("
 function calculateTotal() {
@@ -55,7 +58,7 @@ $(document).ready(function() {
 // Toggle checklist section
 $('#toggle-checklist').click(function() {
     $('#checklist-section').slideToggle();
-    var icon = $(this).find('i');
+    var icon = $(this).find('i.fa-chevron-down, i.fa-chevron-up');
     if (icon.hasClass('fa-chevron-down')) {
         icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
     } else {
@@ -64,7 +67,22 @@ $('#toggle-checklist').click(function() {
 });
 ");
 ?>
+<!-- Flash Messages -->
+<?php if (\Yii::$app->session->hasFlash('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <?= \Yii::$app->session->getFlash('success') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
 
+<?php if (\Yii::$app->session->hasFlash('error')): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <?= \Yii::$app->session->getFlash('error') ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
 <div class="purch-receive">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -74,23 +92,6 @@ $('#toggle-checklist').click(function() {
             <?= Html::a('กลับ', ['view', 'id' => $purchModel->id], ['class' => 'btn btn-secondary']) ?>
         </div>
     </div>
-
-    <!-- Flash Messages -->
-    <?php if (\Yii::$app->session->hasFlash('success')): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle me-2"></i>
-            <?= \Yii::$app->session->getFlash('success') ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    <?php endif; ?>
-
-    <?php if (\Yii::$app->session->hasFlash('error')): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            <?= \Yii::$app->session->getFlash('error') ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    <?php endif; ?>
 
     <!-- PO Information -->
     <div class="card mb-4">
@@ -231,6 +232,7 @@ $('#toggle-checklist').click(function() {
         <div class="card-header" style="cursor: pointer;" id="toggle-checklist">
             <h5 class="card-title mb-0">
                 <i class="fas fa-clipboard-check"></i> Checklist การตรวจรับสินค้า
+                <span class="badge badge-info ml-2"><?= $itemCount ?> รายการ</span>
                 <i class="fas fa-chevron-down float-right"></i>
             </h5>
         </div>
@@ -262,42 +264,31 @@ $('#toggle-checklist').click(function() {
                     <table class="table table-bordered table-sm">
                         <thead class="table-light">
                         <tr>
-                            <th width="50%">รายการ</th>
-                            <?php for($x=1;$x<=count($poLines);$x++): ?>
-                            <th width="5%" class="text-center"><?=$x?></th>
-                            <?php endfor; ?>
-<!--                            <th width="5%" class="text-center">2</th>-->
-<!--                            <th width="5%" class="text-center">3</th>-->
-<!--                            <th width="5%" class="text-center">4</th>-->
-<!--                            <th width="5%" class="text-center">5</th>-->
-<!--                            <th width="5%" class="text-center">6</th>-->
-<!--                            <th width="5%" class="text-center">7</th>-->
-<!--                            <th width="5%" class="text-center">8</th>-->
-<!--                            <th width="5%" class="text-center">9</th>-->
-<!--                            <th width="5%" class="text-center">10</th>-->
-<!--                            <th width="5%" class="text-center">11</th>-->
-<!--                            <th width="5%" class="text-center">12</th>-->
-<!--                            <th width="5%" class="text-center">13</th>-->
-<!--                            <th width="5%" class="text-center">14</th>-->
-<!--                            <th width="5%" class="text-center">15</th>-->
+                            <th width="30%">รายการ</th>
+                            <?php foreach ($poLines as $index => $line): ?>
+                                <th class="text-center" style="width: <?= (70 / $itemCount) ?>%;">
+                                    <?= ($index + 1) ?>
+                                </th>
+                            <?php endforeach; ?>
                         </tr>
                         </thead>
                         <tbody>
                         <tr>
-                            <td><strong>สภาพทั่วไปของสินค้า</strong></td>
-                            <?php for ($i = 1; $i <= count($poLines); $i++): ?>
+                            <td><strong>1. สภาพทั่วไปของสินค้า</strong></td>
+                            <?php foreach ($poLines as $index => $line): ?>
                                 <td class="text-center">
-                                    <?= Html::checkbox("checklist[general_condition][{$i}]", false, [
+                                    <?= Html::checkbox("checklist[general_condition][" . ($index + 1) . "]", false, [
                                         'value' => 1,
                                         'class' => 'form-check-input',
                                         'style' => 'transform: scale(1.3); cursor: pointer;'
                                     ]) ?>
                                 </td>
-                            <?php endfor; ?>
+                            <?php endforeach; ?>
                         </tr>
                         </tbody>
                     </table>
                 </div>
+                <small class="text-muted">หมายเหตุ: ตรวจสอบสภาพสินค้าแต่ละรายการ (ไม่มีความเสียหาย, ครบถ้วน, สภาพดี)</small>
             </div>
 
             <!-- 2. สิ่งที่ถูกต้องตามใบสั่งซื้อ -->
@@ -307,44 +298,55 @@ $('#toggle-checklist').click(function() {
                     <table class="table table-bordered table-sm">
                         <thead class="table-light">
                         <tr>
-                            <th width="80%">รายการ</th>
-                            <th width="20%" class="text-center">ตรวจสอบ</th>
+                            <th width="30%">รายการ</th>
+                            <?php foreach ($poLines as $index => $line): ?>
+                                <th class="text-center" style="width: <?= (70 / $itemCount) ?>%;">
+                                    <?= ($index + 1) ?>
+                                </th>
+                            <?php endforeach; ?>
                         </tr>
                         </thead>
                         <tbody>
                         <tr>
                             <td>2.1 สินค้าตรงตาม</td>
-                            <td class="text-center">
-                                <?= Html::checkbox('checklist[correct_items]', false, [
-                                    'value' => 1,
-                                    'class' => 'form-check-input',
-                                    'style' => 'transform: scale(1.3); cursor: pointer;'
-                                ]) ?>
-                            </td>
+                            <?php foreach ($poLines as $index => $line): ?>
+                                <td class="text-center">
+                                    <?= Html::checkbox("checklist[correct_items][" . ($index + 1) . "]", false, [
+                                        'value' => 1,
+                                        'class' => 'form-check-input',
+                                        'style' => 'transform: scale(1.3); cursor: pointer;'
+                                    ]) ?>
+                                </td>
+                            <?php endforeach; ?>
                         </tr>
                         <tr>
                             <td>2.2 จำนวนและขนาด</td>
-                            <td class="text-center">
-                                <?= Html::checkbox('checklist[correct_quantity]', false, [
-                                    'value' => 1,
-                                    'class' => 'form-check-input',
-                                    'style' => 'transform: scale(1.3); cursor: pointer;'
-                                ]) ?>
-                            </td>
+                            <?php foreach ($poLines as $index => $line): ?>
+                                <td class="text-center">
+                                    <?= Html::checkbox("checklist[correct_quantity][" . ($index + 1) . "]", false, [
+                                        'value' => 1,
+                                        'class' => 'form-check-input',
+                                        'style' => 'transform: scale(1.3); cursor: pointer;'
+                                    ]) ?>
+                                </td>
+                            <?php endforeach; ?>
                         </tr>
                         <tr>
                             <td>2.3 จำนวนที่สั่ง</td>
-                            <td class="text-center">
-                                <?= Html::checkbox('checklist[correct_spec]', false, [
-                                    'value' => 1,
-                                    'class' => 'form-check-input',
-                                    'style' => 'transform: scale(1.3); cursor: pointer;'
-                                ]) ?>
-                            </td>
+                            <?php foreach ($poLines as $index => $line): ?>
+                                <td class="text-center">
+                                    <?= Html::checkbox("checklist[correct_spec][" . ($index + 1) . "]", false, [
+                                        'value' => 1,
+                                        'class' => 'form-check-input',
+                                        'style' => 'transform: scale(1.3); cursor: pointer;'
+                                    ]) ?>
+                                </td>
+                            <?php endforeach; ?>
                         </tr>
                         </tbody>
                     </table>
                 </div>
+                <small class="text-muted">หมายเหตุ: ตรวจสอบความถูกต้องของสินค้าแต่ละรายการตามใบสั่งซื้อ</small>
             </div>
 
             <!-- 3. เอกสารที่จัดส่งมาพร้อม -->
@@ -354,34 +356,53 @@ $('#toggle-checklist').click(function() {
                     <table class="table table-bordered table-sm">
                         <thead class="table-light">
                         <tr>
-                            <th width="80%">รายการ</th>
-                            <th width="20%" class="text-center">มี/ไม่มี</th>
+                            <th width="30%">รายการ</th>
+                            <?php foreach ($poLines as $index => $line): ?>
+                                <th class="text-center" style="width: <?= (70 / $itemCount) ?>%;">
+                                    <?= ($index + 1) ?>
+                                </th>
+                            <?php endforeach; ?>
                         </tr>
                         </thead>
                         <tbody>
                         <tr>
                             <td>3.1 ใบ certificate</td>
-                            <td class="text-center">
-                                <?= Html::checkbox('checklist[has_certificate]', false, [
-                                    'value' => 1,
-                                    'class' => 'form-check-input',
-                                    'style' => 'transform: scale(1.3); cursor: pointer;'
-                                ]) ?>
-                            </td>
+                            <?php foreach ($poLines as $index => $line): ?>
+                                <td class="text-center">
+                                    <?= Html::checkbox("checklist[has_certificate][" . ($index + 1) . "]", false, [
+                                        'value' => 1,
+                                        'class' => 'form-check-input',
+                                        'style' => 'transform: scale(1.3); cursor: pointer;'
+                                    ]) ?>
+                                </td>
+                            <?php endforeach; ?>
                         </tr>
                         <tr>
                             <td>3.2 คู่มือการใช้งาน</td>
-                            <td class="text-center">
-                                <?= Html::checkbox('checklist[has_manual]', false, [
-                                    'value' => 1,
-                                    'class' => 'form-check-input',
-                                    'style' => 'transform: scale(1.3); cursor: pointer;'
-                                ]) ?>
-                            </td>
+                            <?php foreach ($poLines as $index => $line): ?>
+                                <td class="text-center">
+                                    <?= Html::checkbox("checklist[has_manual][" . ($index + 1) . "]", false, [
+                                        'value' => 1,
+                                        'class' => 'form-check-input',
+                                        'style' => 'transform: scale(1.3); cursor: pointer;'
+                                    ]) ?>
+                                </td>
+                            <?php endforeach; ?>
                         </tr>
                         </tbody>
                     </table>
                 </div>
+                <small class="text-muted">หมายเหตุ: ตรวจสอบเอกสารที่มาพร้อมกับสินค้าแต่ละรายการ</small>
+            </div>
+
+            <!-- Product List Reference -->
+            <div class="alert alert-info">
+                <strong><i class="fas fa-info-circle"></i> รายการสินค้าอ้างอิง:</strong>
+                <ol class="mb-0 mt-2">
+                    <?php foreach ($poLines as $index => $line): ?>
+                        <li><?= Html::encode($line['product_name']) ?></li>
+                    <?php endforeach; ?>
+                </ol>
             </div>
 
             <!-- Checklist Notes -->
@@ -459,5 +480,10 @@ $('#toggle-checklist').click(function() {
 
     #toggle-checklist:hover {
         background-color: #e9ecef;
+    }
+
+    .table-sm td, .table-sm th {
+        padding: 0.5rem;
+        vertical-align: middle;
     }
 </style>

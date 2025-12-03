@@ -224,6 +224,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         'สั่งซื้อ' => $model->hasPurchaseOrder,
                                         'รับสินค้า' => $model->hasReceiveTransaction,
                                         'เบิกสินค้า' => $model->hasWithdrawTransaction($model->id),
+                                        'เงินสดย่อย' => $model->hasPettyCash($model->id),
                                         'แจ้งหนี้' => $model->hasDebtNotification($model->id),
                                         'กำกับภาษี' => $model->hasTaxInvoice,
                                         'ใบเสร็จ' => $model->hasReceipt,

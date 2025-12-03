@@ -43,7 +43,7 @@ $this->registerCss("
         margin: 0 !important; 
         padding: 0 !important; 
         font-family: 'THSarabunPSK', sans-serif !important;
-        font-size: 16px !important;
+        font-size: 20px !important;
         color: #000 !important;
     }
     .print-container { 
@@ -75,7 +75,7 @@ $this->registerCss("
 
 body {
     font-family: 'Sarabun', 'TH SarabunPSK', Arial, sans-serif;
-    font-size: 16px;
+    font-size: 20px;
     line-height: 1.3;
     color: #000;
     background: #fff;
@@ -164,7 +164,7 @@ body {
 }
 
 .invoice-subtitle {
-    font-size: 16px;
+    font-size: 20px;
     margin-bottom: 10px;
 }
 
@@ -180,7 +180,7 @@ body {
     right: 0;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 16px;
+    font-size: 20px;
     font-weight: bold;
     padding: 4px 8px;
     background-color: rgba(255, 255, 255, 0.9);
@@ -237,7 +237,7 @@ body {
 .items-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 16px;
+    font-size: 20px;
     // border: 1px solid #000; /* เส้นรอบนอกเท่านั้น */
 }
 
@@ -310,7 +310,7 @@ body {
     justify-content: space-between;
     padding: 6px 10px;
     // border-bottom: 1px solid #000;
-    font-size: 16px;
+    font-size: 20px;
 }
 
 .summary-row:last-child {
@@ -324,13 +324,13 @@ body {
 
 .amount-text {
     margin-top: 5px;
-    font-size: 16px;
+    font-size: 20px;
 }
 
 /* Notes Section */
 .notes-section {
     margin: 15px 0;
-    font-size: 16px;
+    font-size: 20px;
     line-height: 1.4;
 }
 

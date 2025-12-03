@@ -838,10 +838,15 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 }
                                 ?>
                                 <?php if ($deposit_doc_show != ''): ?>
-                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $deposit_doc_show ?>"
-                                       target="_blank">
-                                        ดูเอกสาร
-                                    </a>
+                                    <?php echo Html::a(
+                                        'ดูเอกสาร',
+                                        ['purch/showdoc', 'filename' => $deposit_doc_show],
+                                        [
+                                            'target' => '_blank',
+                                            'data-pjax' => '0',
+                                        ]
+                                    );
+                                    ?>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -888,13 +893,24 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 }
                                 ?>
                                 <?php if ($receive_doc_show != ''): ?>
-                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $receive_doc_show ?>"
-                                       target="_blank">
-                                        ดูเอกสาร
-                                    </a>
+                                    <?php echo Html::a(
+                                        'ดูเอกสาร',
+                                        ['purch/showdoc', 'filename' => $receive_doc_show],
+                                        [
+                                            'target' => '_blank',
+                                            'data-pjax' => '0',
+                                        ]
+                                    );
+                                    ?>
                                 <?php endif; ?>
                             </div>
                         </div>
+                    </div>
+                </div>
+                            
+            
+                        <hr>
+                        
                     </div>
                 </div>
             </div>

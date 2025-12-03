@@ -458,10 +458,37 @@ class Job extends \common\models\Job
      */
     public function hasWithdrawTransaction($id)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM journal_trans WHERE job_id = :jobId AND trans_type_id in(3,5)')
-            ->bindParam(':jobId', $id)
+        $db = Yii::$app->db;
+
+        // Count all withdraw transactions (type 3, 5)
+        $total = $db->createCommand('SELECT COUNT(*) FROM journal_trans WHERE job_id = :jobId AND trans_type_id IN (3,5)')
+            ->bindValue(':jobId', $id)
             ->queryScalar();
-        return $count > 0;
+
+        if ($total == 0) {
+            return 0;
+        }
+
+        // Count withdraw transactions with documents
+        $complete = $db->createCommand("
+            SELECT COUNT(*) 
+            FROM (
+                SELECT jt.id, COUNT(jtd.id) AS doc_count
+                FROM journal_trans jt
+                LEFT JOIN journal_trans_doc jtd ON jtd.journal_trans_id = jt.id
+                WHERE jt.job_id = :jobId AND jt.trans_type_id IN (3,5)
+                GROUP BY jt.id
+            ) AS t
+            WHERE t.doc_count > 0
+        ")
+            ->bindValue(':jobId', $id)
+            ->queryScalar();
+
+        if ($complete == $total) {
+            return 100;
+        }
+
+        return 1;
     }
 
     /**
@@ -470,11 +497,37 @@ class Job extends \common\models\Job
      */
     public function hasDebtNotification($id)
     {
-        // สมมติว่ามีตาราง debt_notification หรือใช้จาก invoices ที่เป็น draft
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM invoices WHERE job_id = :jobId AND status = 1')
-            ->bindParam(':jobId', $id)
+        $db = Yii::$app->db;
+
+        // Count all debt notifications (invoices with status 1)
+        $total = $db->createCommand('SELECT COUNT(*) FROM invoices WHERE job_id = :jobId AND status = 1')
+            ->bindValue(':jobId', $id)
             ->queryScalar();
-        return $count > 0;
+
+        if ($total == 0) {
+            return 0;
+        }
+
+        // Count debt notifications with documents
+        $complete = $db->createCommand("
+            SELECT COUNT(*) 
+            FROM (
+                SELECT i.id, COUNT(id.id) AS doc_count
+                FROM invoices i
+                LEFT JOIN invoice_doc id ON id.invoice_id = i.id
+                WHERE i.job_id = :jobId AND i.status = 1
+                GROUP BY i.id
+            ) AS t
+            WHERE t.doc_count > 0
+        ")
+            ->bindValue(':jobId', $id)
+            ->queryScalar();
+
+        if ($complete == $total) {
+            return 100;
+        }
+
+        return 1;
     }
 
     /**
@@ -623,9 +676,38 @@ class Job extends \common\models\Job
 
     public function hasPayment($id)
     {
-        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM payment_receipts WHERE job_id=:jobId')
-            ->bindParam(':jobId', $id)->queryScalar();
-        return $count > 0;
+        $db = Yii::$app->db;
+
+        // Count all payment receipts
+        $total = $db->createCommand('SELECT COUNT(*) FROM payment_receipts WHERE job_id=:jobId')
+            ->bindValue(':jobId', $id)
+            ->queryScalar();
+
+        if ($total == 0) {
+            return 0;
+        }
+
+        // Count payment receipts with documents (attachment_path or payment_attachments)
+        $complete = $db->createCommand("
+            SELECT COUNT(*) 
+            FROM (
+                SELECT pr.id, 
+                       (CASE WHEN pr.attachment_path IS NOT NULL AND pr.attachment_path != '' THEN 1 ELSE 0 END) + COUNT(pa.id) AS doc_count
+                FROM payment_receipts pr
+                LEFT JOIN payment_attachments pa ON pa.payment_receipt_id = pr.id
+                WHERE pr.job_id = :jobId
+                GROUP BY pr.id
+            ) AS t
+            WHERE t.doc_count > 0
+        ")
+            ->bindValue(':jobId', $id)
+            ->queryScalar();
+
+        if ($complete == $total) {
+            return 100;
+        }
+
+        return 1;
     }
 
     /**
@@ -635,12 +717,38 @@ class Job extends \common\models\Job
      */
     public function hasPettyCash($jobId)
     {
-        $sql = "SELECT COUNT(*) FROM petty_cash_voucher pcv LEFT JOIN petty_cash_voucher_doc_bill pcvd ON pcvd.petty_cash_voucher_id = pcv.id WHERE job_id = :jobId AND approve_status = 1";
-        $count = Yii::$app->db->createCommand($sql)
-            ->bindParam(':jobId', $jobId)
+        $db = Yii::$app->db;
+
+        // Count all approved petty cash vouchers
+        $total = $db->createCommand("SELECT COUNT(*) FROM petty_cash_voucher WHERE job_id = :jobId AND approve_status = 1")
+            ->bindValue(':jobId', $jobId)
             ->queryScalar();
 
-        return $count > 0;
+        if ($total == 0) {
+            return 0;
+        }
+
+        // Count vouchers with documents (bill or slip)
+        $complete = $db->createCommand("
+            SELECT COUNT(*) 
+            FROM (
+                SELECT pcv.id, (COUNT(pcvd.id) + COUNT(pcvs.id)) AS doc_count
+                FROM petty_cash_voucher pcv
+                LEFT JOIN petty_cash_voucher_doc_bill pcvd ON pcvd.petty_cash_voucher_id = pcv.id
+                LEFT JOIN petty_cash_voucher_doc_slip pcvs ON pcvs.petty_cash_voucher_id = pcv.id
+                WHERE pcv.job_id = :jobId AND pcv.approve_status = 1
+                GROUP BY pcv.id
+            ) AS t
+            WHERE t.doc_count > 0
+        ")
+            ->bindValue(':jobId', $jobId)
+            ->queryScalar();
+
+        if ($complete == $total) {
+            return 100;
+        }
+
+        return 1;
     }
 
     public function getJobExpenses()

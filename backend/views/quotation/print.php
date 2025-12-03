@@ -184,27 +184,6 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
         margin-right: 10px;
     }
 
-    .terms-section {
-        margin-top: 20px;
-        font-size: 16px;
-    }
-
-    .signature-section {
-        display: flex;
-        justify-content: space-around;
-        margin-top: 50px;
-        text-align: center;
-    }
-
-    .signature-box {
-        width: 30%;
-    }
-
-
-    .row-color {
-        background-color: #8ea9db;
-    }
-
     .label-font {
         font-size: 18px;
         /* font-weight: 900; */
@@ -219,40 +198,34 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
         margin-top: -5px;
     }
 
-    .text-detail {
-        font-size: 13px;
-    }
-
     .signature-section {
-        display: flex;
+        display: flex !important;
         justify-content: space-between;
+        margin-top: 50px;
         text-align: center;
-        margin-top: 40px;
-        border: 1px solid #000;
-        /* กรอบรอบทั้งหมด */
+        width: 100%;
     }
 
     .signature-box {
-        width: 33.33%;
-        padding: 10px 5px;
-        border-right: 1px solid #000;
-        /* เส้นแบ่งช่อง */
-    }
-
-    .signature-box:last-child {
-        border-right: none;
-        /* ช่องสุดท้ายไม่ต้องมีเส้นขวา */
+        width: 33%;
+        position: relative;
     }
 
     .signature-line {
-        border-bottom: none;
-        /* ลบเฉพาะเส้นแนวนอนนี้ */
-        height: 40px;
-        /* คงช่องว่างไว้สำหรับลายเซ็น */
-        margin-bottom: 10px;
+        border-bottom: 1px solid #000;
+        margin: 0 10px 10px 10px;
+        height: 60px;
+        position: relative;
     }
 
-
+    .signature-line img {
+        max-width: 100px;
+        max-height: 50px;
+        position: absolute;
+        bottom: 2px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
 
     @media print {
         .quotation-container {
@@ -486,7 +459,7 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
             <div class="terms-section">
                 <div class="label-font"><strong>EXCLUDES VAT AND SEPARATED PURCHASING IS NOT ALLOWED.</strong></div>
                 <div class="label-font"><strong>CURRENCY :</strong> Baht</div>
-                <div class="label-font"><strong>DELIVERY :</strong></div>
+                <div class="label-font"><strong>DELIVERY : <?= $quotation->delivery_day_text ?></strong></div>
                 <div class="label-font"><strong>PAYMENT :</strong> <?= \backend\models\Paymentterm::findName($quotation->payment_term_id) ?></div>
                 <div class="label-font"><strong>VALIDITY :</strong> 7 day after today.</div>
                 <div class="label-font"><strong>REMARK</strong></div>

@@ -134,21 +134,26 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                                     'format' => 'raw',
                                     'value' => function ($model) {
                                         $class = '';
+                                        $status_name = '';
                                         switch ($model->status) {
                                             case JournalTrans::STATUS_DRAFT:
                                                 $class = 'label-default';
+                                                $status_name = 'Draft';
                                                 break;
                                             case JournalTrans::STATUS_PENDING:
                                                 $class = 'label-warning';
+                                                $status_name = 'Pending';
                                                 break;
                                             case JournalTrans::STATUS_APPROVED:
                                                 $class = 'label-success';
+                                                $status_name = 'Approved';
                                                 break;
                                             case JournalTrans::STATUS_CANCELLED:
                                                 $class = 'label-danger';
+                                                $status_name = 'Cancelled';
                                                 break;
                                         }
-                                        return '<span class="label ' . $class . '">' . ucfirst($model->status) . '</span>';
+                                        return '<span class="label ' . $class . '">' . ucfirst($status_name) . '</span>';
                                     },
                                 ],
                                 [
@@ -539,7 +544,7 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                         <div class="timeline-content">
                             <h4>Transaction Created</h4>
                             <p>
-                                Created by: <strong><?= Html::encode($model->created_by) ?></strong><br>
+                                Created by: <strong><?= \backend\models\User::findEmployeeNameByUserId($model->emp_trans_id) ?></strong><br>
                                 Date: <?= date('m-d-Y H:i:s', strtotime($model->created_at)) ?>
                             </p>
                         </div>
