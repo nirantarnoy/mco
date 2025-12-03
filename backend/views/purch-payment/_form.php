@@ -172,7 +172,8 @@ $paymentMethodList = ArrayHelper::map(
                                 <td>
                                     <?= Html::activeInput('date', $line, "[{$index}]trans_date", [
                                         'class' => 'form-control form-control-sm',
-                                        'placeholder' => 'วันที่โอน'
+                                        'placeholder' => 'วันที่โอน',
+                                        'value' => $line->trans_date ? date('Y-m-d', strtotime($line->trans_date)) : ''
                                     ]) ?>
                                 </td>
                                 <td>
