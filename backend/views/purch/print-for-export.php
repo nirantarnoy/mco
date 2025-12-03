@@ -250,15 +250,12 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
         }
 
         .acknowledgment {
-            /*margin: 8px 0 !important;*/
-            /*font-size: 12px !important;*/
-            /*bottom: 20px !important;*/
             text-align: center;
             margin: 15px 0;
             font-weight: bold;
             font-size: 12px;
             border-bottom: 1px solid #000;
-            padding-bottom: 30px;
+            padding-bottom: 80px !important;
         }
 
         .signature-section {
@@ -273,11 +270,13 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
             width: 33.33% !important;
             text-align: center !important;
             vertical-align: top !important;
+            padding: 0 15px !important;
         }
 
         .signature-line {
             margin: 25px 0 8px 0 !important;
             min-height: 40px !important;
+            border-bottom: 1px solid #000 !important;
         }
 
         .signature-line img {
@@ -626,7 +625,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                     </div>
                     <div class="info-row">
                         <span class="info-label">CURRENCY :</span>
-                        <span class="info-value">BAHT</span>
+                        <span class="info-value">USD</span>
                     </div>
                 </div>
             </div>
@@ -686,7 +685,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
     <!-- Summary -->
     <div class="summary-section">
         <div class="summary-left">
-            <div class="acknowledgment">ACKNOWLEDGMENT BY : <div style="height: 30px;"></div> </div>
+            <div class="acknowledgment">ACKNOWLEDGMENT BY : <div style="height: 50px;"></div> </div>
         </div>
         <div class="summary-right">
             <table class="summary-table">
