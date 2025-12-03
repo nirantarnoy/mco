@@ -78,9 +78,9 @@ $paymentMethodList = ArrayHelper::map(
                                 'todayHighlight' => true,
                             ]
                         ]) ?>
-                        <button type="button" class="btn btn-info btn-sm mt-2" id="btn-update-date">
+                        <!-- <button type="button" class="btn btn-info btn-sm mt-2" id="btn-update-date">
                             <i class="fas fa-sync"></i> อัพเดทวันที่ทุกแถว
-                        </button>
+                        </button> -->
                     </div>
 
                     <div class="col-md-3">
