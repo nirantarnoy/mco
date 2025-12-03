@@ -78,6 +78,9 @@ $paymentMethodList = ArrayHelper::map(
                                 'todayHighlight' => true,
                             ]
                         ]) ?>
+                        <button type="button" class="btn btn-info btn-sm mt-2" id="btn-update-date">
+                            <i class="fas fa-sync"></i> อัพเดทวันที่ทุกแถว
+                        </button>
                     </div>
 
                     <div class="col-md-3">
@@ -550,6 +553,16 @@ $('#confirm-submit-btn').on('click', function() {
     formSubmitted = true;
     $('#warningModal').modal('hide');
     $('#purch-payment-form').submit();
+});
+
+// อัพเดทวันที่ทุกแถว
+$('#btn-update-date').on('click', function() {
+    var mainDate = $('#purchpayment-trans_date').val();
+    if (mainDate) {
+        $('.payment-line-row input[type=\"date\"]').val(mainDate);
+    } else {
+        alert('กรุณาเลือกวันที่ก่อน');
+    }
 });
 
 
