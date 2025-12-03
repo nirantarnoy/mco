@@ -153,11 +153,12 @@ $paymentMethodList = ArrayHelper::map(
                         <thead class="thead-light">
                         <tr>
                             <th width="5%">#</th>
+                            <th width="15%">วันที่โอน</th>
                             <th width="15%">ธนาคาร</th>
-                            <th width="20%">ประเภทการโอน</th>
+                            <th width="15%">ประเภทการโอน</th>
                             <th width="15%">จำนวนเงิน</th>
-                            <th width="20%">อัพโหลดสลิป</th>
-                            <th width="20%">หมายเหตุ</th>
+                            <th width="15%">อัพโหลดสลิป</th>
+                            <th width="15%">หมายเหตุ</th>
                             <th width="5%"></th>
                         </tr>
                         </thead>
@@ -165,6 +166,12 @@ $paymentMethodList = ArrayHelper::map(
                         <?php foreach ($paymentLines as $index => $line): ?>
                             <tr class="payment-line-row">
                                 <td class="text-center line-number"><?= $index + 1 ?></td>
+                                <td>
+                                    <?= Html::activeInput('date', $line, "[{$index}]trans_date", [
+                                        'class' => 'form-control form-control-sm',
+                                        'placeholder' => 'วันที่โอน'
+                                    ]) ?>
+                                </td>
                                 <td>
                                     <?= Html::activeTextInput($line, "[{$index}]bank_name", [
                                         'class' => 'form-control form-control-sm',
@@ -222,7 +229,7 @@ $paymentMethodList = ArrayHelper::map(
                         </tbody>
                         <tfoot>
                         <tr>
-                            <td colspan="3" class="text-right"><strong>ยอดรวมที่โอน:</strong></td>
+                            <td colspan="4" class="text-right"><strong>ยอดรวมที่โอน:</strong></td>
                             <td class="text-right">
                                 <strong><span id="total-payment">0.00</span> บาท</strong>
                                 <div id="payment-warning" class="text-warning small" style="display: none;">
@@ -254,7 +261,6 @@ $paymentMethodList = ArrayHelper::map(
 <!--                    </thead>-->
 <!--                    <tbody>-->
 <!--                    --><?php //if ($model_doc != null): ?>
-<!---->
 <!--                        --><?php //foreach ($model_doc as $key => $value): ?>
 <!--                            <tr>-->
 <!--                                <td style="width: 10px;text-align: center">--><?php //= $key + 1 ?><!--</td>-->
@@ -408,6 +414,9 @@ var paymentMethodOptions = " . json_encode($paymentMethodList) . ";
 $('#add-payment-line').on('click', function() {
     var newRow = '<tr class=\"payment-line-row\">' +
         '<td class=\"text-center line-number\"></td>' +
+        '<td>' +
+            '<input type=\"date\" name=\"PurchPaymentLine[' + lineIndex + '][trans_date]\" class=\"form-control form-control-sm\" placeholder=\"วันที่โอน\">' +
+        '</td>' +
         '<td>' +
             '<input type=\"text\" name=\"PurchPaymentLine[' + lineIndex + '][bank_name]\" class=\"form-control form-control-sm\" placeholder=\"ชื่อธนาคาร\">' +
         '</td>' +
