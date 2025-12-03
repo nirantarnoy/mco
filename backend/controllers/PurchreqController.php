@@ -915,14 +915,14 @@ class PurchreqController extends Controller
         $prNo = 'PR-00424-QT25-000073.23';
 
         echo "Finding PO: $poNo\n";
-        $po = Purch::find()->where(['purch_no' => $poNo])->one();
+        $po = \backend\models\Purch::find()->where(['purch_no' => $poNo])->one();
         if (!$po) {
             echo "Error: PO not found.\n";
             return 1;
         }
 
         echo "Finding PR: $prNo\n";
-        $pr = PurchReq::find()->where(['purch_req_no' => $prNo])->one();
+        $pr = \backend\models\PurchReq::find()->where(['purch_req_no' => $prNo])->one();
         if (!$pr) {
             echo "Error: PR not found.\n";
             return 1;
@@ -932,7 +932,7 @@ class PurchreqController extends Controller
         $transaction = Yii::$app->db->beginTransaction();
         try {
             foreach ($po->purchLines as $poLine) {
-                $prLine = new PurchReqLine();
+                $prLine = new \backend\models\PurchReqLine();
                 $prLine->purch_req_id = $pr->id;
                 $prLine->product_id = $poLine->product_id;
                 $prLine->product_name = $poLine->product_name;
@@ -955,7 +955,7 @@ class PurchreqController extends Controller
             // Update PR totals
             $total = 0;
             // Re-query lines to be sure
-            $lines = PurchReqLine::find()->where(['purch_req_id' => $pr->id])->all();
+            $lines = \backend\models\PurchReqLine::find()->where(['purch_req_id' => $pr->id])->all();
             foreach ($lines as $line) {
                 $total += $line->line_total;
             }
