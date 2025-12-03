@@ -942,7 +942,7 @@ class PurchreqController extends Controller
                 $prLine->product_type = $poLine->product_type;
                 $prLine->qty = $poLine->qty;
                 $prLine->line_price = $poLine->line_price;
-                $prLine->unit_id = $poLine->unit; // Mapping unit string to unit_id
+                $prLine->unit_id = $poLine->unit_id; // Mapping unit string to unit_id
                 $prLine->line_total = $poLine->line_total;
                 $prLine->note = $poLine->note;
                 $prLine->status = 1; // Active
