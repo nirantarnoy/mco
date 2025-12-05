@@ -91,7 +91,7 @@ $formatter = Yii::$app->formatter;
 
         body {
             font-family: 'Prompt', sans-serif;
-            font-size: 14px;
+            font-size: 18px;
             line-height: 1.4;
             color: #000;
         }
@@ -124,15 +124,18 @@ $formatter = Yii::$app->formatter;
         }
 
         .company-name {
-            font-size: 20px;
-            font-weight: 600;
+            font-size: 28px;
+            font-weight: 900;
             margin-bottom: 5px;
             color: #0000ff;
+            -webkit-text-stroke: 0.5px black;
         }
 
         .company-details {
-            font-size: 14px;
+            font-size: 16px;
             line-height: 1.6;
+            font-weight: 800;
+            -webkit-text-stroke: 0.25px black;
         }
 
         .document-info {
@@ -148,15 +151,17 @@ $formatter = Yii::$app->formatter;
         }
 
         .document-title {
-            font-size: 24px;
-            font-weight: 700;
+            font-size: 32px;
+            font-weight: 900;
             margin-bottom: 10px;
+            -webkit-text-stroke: 0.5px black;
         }
 
         .document-title-en {
-            font-size: 16px;
-            font-weight: 700;
+            font-size: 24px;
+            font-weight: 900;
             margin-bottom: 15px;
+            -webkit-text-stroke: 0.3px black;
         }
 
         .document-copy {
@@ -180,15 +185,17 @@ $formatter = Yii::$app->formatter;
         }
 
         .label {
-            font-weight: 700;
+            font-weight: 800;
             width: 150px;
             flex-shrink: 0;
+            -webkit-text-stroke: 0.25px black;
         }
 
         .label-right {
-            font-weight: 700;
+            font-weight: 800;
             width: 100px;
             flex-shrink: 0;
+            -webkit-text-stroke: 0.25px black;
         }
 
         .value {
@@ -206,7 +213,9 @@ $formatter = Yii::$app->formatter;
             border: 1px solid #000;
             padding: 8px;
             text-align: center;
-            font-weight: 600;
+            font-weight: 800;
+            font-size: 18px;
+            -webkit-text-stroke: 0.25px black;
         }
 
         .items-table td {
@@ -214,6 +223,7 @@ $formatter = Yii::$app->formatter;
             border-left: 1px solid #000;
             border-right: 1px solid #000;
             padding: 8px;
+            font-size: 16px;
         }
 
         .items-table .text-center {
@@ -253,20 +263,22 @@ $formatter = Yii::$app->formatter;
         }
 
         .total-row {
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: 800;
             border-top: 2px solid #000;
             padding-top: 10px;
+            -webkit-text-stroke: 0.25px black;
         }
 
         .amount-text {
             display: block;
             text-align: center;
-            font-size: 16px;
-            font-weight: 500;
+            font-size: 18px;
+            font-weight: 800;
             margin: 20px 0;
             padding: 10px;
             background-color: #f9f9f9;
+            -webkit-text-stroke: 0.25px black;
         }
 
         .signature-section {
@@ -335,7 +347,7 @@ $formatter = Yii::$app->formatter;
                         <div class="logo" style="margin-left: -4px;margin-top: -12px;">
                             <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png', ['style' => 'max-width: 180px;']) ?>
                         </div>
-                        <div class="company-details">
+                        <div class="company-details" style="margin-top: 12px;">
                             Tel : (038) 875258-9 Fax : (038) 619559<br>
                             e-mail: info@thai-mco.com www.thai-mco.com<br>
                         </div>
@@ -484,28 +496,28 @@ $formatter = Yii::$app->formatter;
                     </td>
 
                     <!-- แถวที่ 1 -->
-                    <td colspan="2" style="border:1px solid #000;">มูลค่าสินค้าตามใบกำกับฯเดิม</td>
-                    <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->original_amount, 2) ?></td>
+                    <td colspan="2" style="border:1px solid #000; font-weight: 800; -webkit-text-stroke: 0.25px black;">มูลค่าสินค้าตามใบกำกับฯเดิม</td>
+                    <td style="border:1px solid #000; text-align:right; font-weight: 800;"><?= $formatter->asDecimal($model->original_amount, 2) ?></td>
                 </tr>
                 <tr>
                     <!-- แถวที่ 2 -->
-                    <td colspan="2" style="border:1px solid #000;">มูลค่าสินค้าตามจริง</td>
-                    <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->actual_amount, 2) ?></td>
+                    <td colspan="2" style="border:1px solid #000; font-weight: 800; -webkit-text-stroke: 0.25px black;">มูลค่าสินค้าตามจริง</td>
+                    <td style="border:1px solid #000; text-align:right; font-weight: 800;"><?= $formatter->asDecimal($model->actual_amount, 2) ?></td>
                 </tr>
                 <tr>
                     <!-- แถวที่ 3 -->
-                    <td colspan="2" style="border:1px solid #000;">รวมมูลค่าสินค้า</td>
-                    <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->adjust_amount, 2) ?></td>
+                    <td colspan="2" style="border:1px solid #000; font-weight: 800; -webkit-text-stroke: 0.25px black;">รวมมูลค่าสินค้า</td>
+                    <td style="border:1px solid #000; text-align:right; font-weight: 800;"><?= $formatter->asDecimal($model->adjust_amount, 2) ?></td>
                 </tr>
                 <tr>
                     <!-- แถวที่ 4 -->
-                    <td colspan="2" style="border:1px solid #000;">ภาษีมูลค่าเพิ่ม <?= $formatter->asDecimal($model->vat_percent, 0) ?>%</td>
-                    <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->vat_amount, 2) ?></td>
+                    <td colspan="2" style="border:1px solid #000; font-weight: 800; -webkit-text-stroke: 0.25px black;">ภาษีมูลค่าเพิ่ม <?= $formatter->asDecimal($model->vat_percent, 0) ?>%</td>
+                    <td style="border:1px solid #000; text-align:right; font-weight: 800;"><?= $formatter->asDecimal($model->vat_amount, 2) ?></td>
                 </tr>
                 <tr>
                     <!-- แถวที่ 5 -->
-                    <td colspan="2" style="border:1px solid #000; font-weight:bold;">รวมเป็นเงินทั้งสิ้น</td>
-                    <td style="border:1px solid #000; font-weight:bold; text-align:right;"><?= $formatter->asDecimal($model->total_amount, 2) ?></td>
+                    <td colspan="2" style="border:1px solid #000; font-weight: 800; -webkit-text-stroke: 0.25px black;">รวมเป็นเงินทั้งสิ้น</td>
+                    <td style="border:1px solid #000; font-weight: 800; text-align:right; -webkit-text-stroke: 0.25px black;"><?= $formatter->asDecimal($model->total_amount, 2) ?></td>
                 </tr>
             </tfoot>
         </table>
@@ -517,7 +529,7 @@ $formatter = Yii::$app->formatter;
                 <td width="20%">
                     (ตัวอักษร)
                 </td>
-                <td width="80%" >
+                <td width="80%">
                     <div class="amount-text">
                         <?= nl2br(Html::encode($model->amount_text)) ?>
                     </div>
@@ -528,17 +540,17 @@ $formatter = Yii::$app->formatter;
         <!-- Signature Section -->
         <div class="signature-section">
             <div class="signature-box">
-                <div>บริษัท เอ็ม.ซี.โอ. จำกัด</div>
+                <div style="font-weight: 800; -webkit-text-stroke: 0.25px black;">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
                 <div class="signature-line"></div>
-                <div>ผู้มีอำนาจลงนาม / ผู้รับมอบอำนาจ</div>
-                <div style="margin-top: 10px;">_____/_____/_____</div>
+                <div style="font-weight: 800; -webkit-text-stroke: 0.25px black;">ผู้มีอำนาจลงนาม / ผู้รับมอบอำนาจ</div>
+                <div style="margin-top: 10px; font-weight: 800;">_____/_____/_____</div>
             </div>
 
             <div class="signature-box">
                 <div>&nbsp;</div>
                 <div class="signature-line"></div>
-                <div>ลายเซ็นผู้รับเอกสาร</div>
-                <div style="margin-top: 10px;">_____/_____/_____</div>
+                <div style="font-weight: 800; -webkit-text-stroke: 0.25px black;">ลายเซ็นผู้รับเอกสาร</div>
+                <div style="margin-top: 10px; font-weight: 800;">_____/_____/_____</div>
             </div>
         </div>
     </div>

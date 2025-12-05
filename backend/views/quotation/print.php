@@ -99,10 +99,11 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
     }
 
     .quotation-title {
-        font-size: 30px;
-        /* font-weight: bold; */
+        font-size: 60px;
         font-weight: 900;
         color: #203764;
+        -webkit-text-stroke: 2px #203764;
+        letter-spacing: 2px;
     }
 
     .info-section {
@@ -121,6 +122,8 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
         font-weight: bold;
         margin-right: 10px;
         min-width: 100px;
+        font-weight: 900;
+        font-size: 20px;
     }
 
     .address-section {
@@ -186,16 +189,27 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
 
     .label-font {
         font-size: 18px;
-        /* font-weight: 900; */
+        font-weight: 900;
     }
 
     .label-left {
         text-align: left;
         margin-left: 110px;
+        font-size: 20px;
+        font-weight: 900;
+        -webkit-text-stroke: 0.5px black;
     }
 
     .text-infomation {
-        margin-top: -5px;
+        margin-top: -15px;
+        font-size: 30px;
+    }
+
+    .signature-section {
+        display: flex !important;
+        justify-content: space-between;
+        font-size: 18px;
+        /* font-weight: 900; */
     }
 
     .signature-section {
@@ -242,7 +256,7 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
                 <td style="width: 50%;border: none;text-align: left;">
                     <div class="logo-section">
                         <div class="logo">
-                            <img src="../../backend/web/uploads/logo/mco_logo.png" width="40%" alt="">
+                            <img src="../../backend/web/uploads/logo/mco_logo.png" width="50%" alt="">
                         </div>
 
                     </div>
@@ -252,15 +266,13 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
                 </td>
             </tr>
         </table>
-
-
     </div>
     <table style="width: 100%;border: none;">
         <tr>
             <td style="width: 50%;border: none;text-align: left;">
                 <div>
-                    <div class="row-color">
-                        <span class="info-label label-font" style="font-weight: bold;">&nbsp;Company Name :</span>
+                    <div class="row-color" style="background-color: #8ea9db;">
+                        <span class="info-label" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;Company Name :</span>
                     </div>
                     <div>
                         <span class="label-font" style="font-weight: bold;">&nbsp;M.C.O. COMPANY LIMITED</span>
@@ -283,30 +295,30 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
                 </div>
             </td>
             <td style="width: 50%;border: none;text-align: right;vertical-align: top;">
-                <div style="margin-top: 5px">
+                <div style="margin-top: -2px">
                     <div class="info-row" style="margin-bottom: 5px;">
-                        <span class="info-label label-font label-left">Date</span>
-                        <span class="label-font">: <?= Yii::$app->formatter->asDate($quotation->quotation_date, 'php:m/d/Y') ?></span>
+                        <span class="label-font label-left">Date</span>
+                        <span class="label-font" style="margin-top: 2px">: <?= Yii::$app->formatter->asDate($quotation->quotation_date, 'php:m/d/Y') ?></span>
                     </div>
                     <div class="info-row" style="margin-bottom: 5px;">
-                        <span class="info-label label-font label-left">OUR REF.</span>
-                        <span class="label-font">: <?= Html::encode($quotation->quotation_no) ?></span>
+                        <span class="label-font label-left">OUR REF</span>
+                        <span class="label-font" style="margin-top: 2px">: <?= Html::encode($quotation->quotation_no) ?></span>
                     </div>
                     <div class="info-row" style="margin-bottom: 5px;">
-                        <span class="info-label label-font label-left">FROM</span>
-                        <span class="label-font">: <?= Html::encode(\backend\models\Employee::findFullName($quotation->sale_emp_id) ?? '') ?></span>
+                        <span class="label-font label-left">FROM</span>
+                        <span class="label-font" style="margin-top: 2px">: <?= Html::encode(\backend\models\Employee::findFullName($quotation->sale_emp_id) ?? '') ?></span>
                     </div>
                     <div class="info-row" style="margin-bottom: 5px;">
-                        <span class="info-label label-font label-left">FAX</span>
-                        <span class="label-font">: 66-38-619559</span>
+                        <span class="label-font label-left">FAX</span>
+                        <span class="label-font" style="margin-top: 2px">: 66-38-619559</span>
                     </div>
                     <div class="info-row" style="margin-bottom: 5px;">
-                        <span class="info-label label-font label-left">TEL</span>
-                        <span class="label-font">: 038-875258 875259</span>
+                        <span class="label-font label-left">TEL</span>
+                        <span class="label-font" style="margin-top: 2px">: 038-875258 875259</span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label label-font label-left">YOUR REF</span>
-                        <span class="label-font">: </span>
+                        <span class="label-font label-left">YOUR REF</span>
+                        <span class="label-font" style="margin-top: 2px">: </span>
                     </div>
                 </div>
             </td>
@@ -316,8 +328,8 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
                 <table style="width: 100%;border: none;">
                     <tr>
                         <td style="width: 100%;border: none;text-align: left;padding : 8px !important;">
-                            <div class="row-color">
-                                <span class="info-label label-font">&nbsp;Customer :</span>
+                            <div class="row-color" style="background-color: #8ea9db;">
+                                <span class="info-label" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;Customer :</span>
                             </div>
                         </td>
                     </tr>
@@ -331,28 +343,28 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
                         </td>
                     </tr>
                     <tr>
-                        <td style="width: 100%;border: none;text-align: left;">
+                        <td style="width: 100%;border: none;text-align: left;margin-top: -25px;padding-top: 0px;">
                             <div class="address-section">
                                 <div>
                                     <div class="info-row">
-                                        <span class="info-label label-font">&nbsp;Tel : <?= Html::encode($phone) ?></span>
-                                        <span></span>
+                                        <span class="info-label" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;Tel : <?= Html::encode($phone) ?></span>
+                                        <span class="label-font"></span>
                                     </div>
                                     <div class="info-row">
-                                        <span class="info-label label-font">&nbsp;Fax :</span>
-                                        <span></span>
+                                        <span class="info-label" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;Fax :</span>
+                                        <span class="label-font"></span>
                                     </div>
                                     <div class="info-row">
-                                        <span class="info-label label-font">&nbsp;To :</span>
-                                        <span><?= Html::encode($quotation->customer_name ?? '') ?></span>
+                                        <span class="info-label" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;To :</span>
+                                        <span class="label-font"><?= Html::encode($quotation->customer_name ?? '') ?></span>
                                     </div>
                                     <div class="info-row">
-                                        <span class="info-label label-font">&nbsp;Purchaser</span>
-                                        <span></span>
+                                        <span class="info-label" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;Purchaser</span>
+                                        <span class="label-font"></span>
                                     </div>
                                     <div class="info-row">
-                                        <span class="info-label label-font">&nbsp;Project Name :</span>
-                                        <span></span>
+                                        <span class="info-label" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;Project Name :</span>
+                                        <span class="label-font"></span>
                                     </div>
                                 </div>
 
@@ -362,12 +374,12 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
                 </table>
 
             </td>
-            <td style="width: 50%;border: none;text-align: left;">
-                <div style="margin-left: 90px">
+            <td style="width: 50%;border: none;text-align: left;vertical-align: top;">
+                <div style="margin-left: 90px;margin-top: 90px;">
                     <img style="margin-left: 2px;" src="../../backend/web/uploads/logo/verity.jpg" width="50%" alt=""> <br>
-                    <span style="margin-left: 12px;font-size: 14px" class="label-font"><strong>Certified ISO 9001:2015</strong></span> <br>
-                    <span style="margin-left: 12px;font-size: 14px" class="label-font"><strong>Certificate No: TH020629</strong></span> <br>
-                    <span style="margin-left: 12px; font-size: 14px" class="label-font"><strong>Issued by Bureau Veritas Certification (Thailand) Ltd.</strong></span>
+                    <span style="margin-left: 12px;font-size: 20px; font-weight: 900; -webkit-text-stroke: 0.5px black;" class="label-font">Certified ISO 9001:2015</span> <br>
+                    <span style="margin-left: 12px;font-size: 20px; font-weight: 900; -webkit-text-stroke: 0.5px black;" class="label-font">Certificate No: TH020629</span> <br>
+                    <span style="margin-left: 12px; font-size: 20px; font-weight: 900; -webkit-text-stroke: 0.5px black;" class="label-font">Issued by Bureau Veritas Certification (Thailand) Ltd.</span>
                 </div>
             </td>
         </tr>
@@ -390,20 +402,20 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
     <!-- Items Table -->
     <table>
         <thead>
-            <tr style="background: #8ea9db;">
-                <th class="label-font" style="width: 5%;">ITEM</th>
-                <th class="label-font" style="width: 40%;">DESCRIPTION</th>
-                <th class="label-font" style="width: 5%;">QTY</th>
-                <th class="label-font" style="width: 10%;">UNIT</th>
-                <th class="label-font" colspan="2" style="width: 20%;">
+            <tr style="background: #6d9de4ff !important;">
+                <th class="label-font" style="width: 5%; background: #8aafe6ff !important; font-weight: 900; -webkit-text-stroke: 0.5px black;">ITEM</th>
+                <th class="label-font" style="width: 40%; background: #8aafe6ff !important; font-weight: 900; -webkit-text-stroke: 0.5px black;">DESCRIPTION</th>
+                <th class="label-font" style="width: 5%; background: #8aafe6ff !important; font-weight: 900; -webkit-text-stroke: 0.5px black;">QTY</th>
+                <th class="label-font" style="width: 10%; background: #8aafe6ff !important; font-weight: 900; -webkit-text-stroke: 0.5px black;">UNIT</th>
+                <th class="label-font" colspan="2" style="width: 20%; background: #8aafe6ff !important; font-weight: 900; -webkit-text-stroke: 0.5px black;">
                     MATERIAL<br>
-                    <span style="font-size: 11px;text-align: left;margin-left: -20px">UNIT PRICE &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TOTAL</span>
+                    <span style="font-size: 15px;text-align: left;margin-left: -20px">UNIT PRICE &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TOTAL</span>
                 </th>
-                <th class="label-font" colspan="2" style="width: 20%;">
+                <th class="label-font" colspan="2" style="width: 20%; background: #8aafe6ff !important; font-weight: 900; -webkit-text-stroke: 0.5px black;">
                     LABOUR<br>
-                    <span style="font-size: 11px;">UNIT PRICE &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TOTAL</span>
+                    <span style="font-size: 15px;">UNIT PRICE &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TOTAL</span>
                 </th>
-                <th class="label-font" style="width: 10%;">TOTAL</th>
+                <th class="label-font" style="width: 10%; background: #8aafe6ff !important; font-weight: 900; -webkit-text-stroke: 0.5px black;">TOTAL</th>
             </tr>
         </thead>
         <style>
@@ -457,48 +469,46 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
     <div class="summary-section">
         <div style="width: 70%;">
             <div class="terms-section">
-                <div class="label-font"><strong>EXCLUDES VAT AND SEPARATED PURCHASING IS NOT ALLOWED.</strong></div>
-                <div class="label-font"><strong>CURRENCY :</strong> Baht</div>
-                <div class="label-font"><strong>DELIVERY : <?= $quotation->delivery_day_text ?></strong></div>
-                <div class="label-font"><strong>PAYMENT :</strong> <?= \backend\models\Paymentterm::findName($quotation->payment_term_id) ?></div>
-                <div class="label-font"><strong>VALIDITY :</strong> 7 day after today.</div>
-                <div class="label-font"><strong>REMARK</strong></div>
+                <div class="label-font" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">EXCLUDES VAT AND SEPARATED PURCHASING IS NOT ALLOWED.</div>
+                <div class="label-font"><span style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">CURRENCY :</span> Baht</div>
+                <div class="label-font"><span style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">DELIVERY : <?= $quotation->delivery_day_text ?></span></div>
+                <div class="label-font"><span style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">PAYMENT :</span> <?= \backend\models\Paymentterm::findName($quotation->payment_term_id) ?></div>
+                <div class="label-font"><span style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">VALIDITY :</span> 7 day after today.</div>
+                <div class="label-font" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">REMARK</div>
             </div>
         </div>
 
         <div style="width: 25%;" class="label-font">
             <table style="margin-bottom: 0;">
                 <tr>
-                    <td style="text-align: right; border: none; padding: 5px;"><strong>Total</strong></td>
-                    <td style="text-align: right; border: 1px solid #ccc; padding: 5px; background: #fff2cc;"><?= number_format($subtotal, 2) ?></td>
+                    <td style="text-align: right; border: none; padding: 5px; font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">Total</td>
+                    <td style="text-align: right; border: 1px solid #ccc; padding: 5px; background: #fff2cc; font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;"><?= number_format($subtotal, 2) ?></td>
                 </tr>
                 <tr>
-                    <td style="text-align: right; border: none; padding: 5px;"><strong>Discount</strong></td>
-                    <td style="text-align: right; border: 1px solid #ccc; padding: 5px; background: #fff2cc;"><?= number_format($discount, 2) ?></td>
+                    <td style="text-align: right; border: none; padding: 5px; font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">Discount</td>
+                    <td style="text-align: right; border: 1px solid #ccc; padding: 5px; background: #fff2cc; font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;"><?= number_format($discount, 2) ?></td>
                 </tr>
                 <tr>
-                    <td style="text-align: right; border: none; padding: 5px;"><strong>Vat 7%</strong></td>
-                    <td style="text-align: right; border: 1px solid #ccc; padding: 5px; background: #fff2cc;"><?= number_format($vat, 2) ?></td>
+                    <td style="text-align: right; border: none; padding: 5px; font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">Vat 7%</td>
+                    <td style="text-align: right; border: 1px solid #ccc; padding: 5px; background: #fff2cc; font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;"><?= number_format($vat, 2) ?></td>
                 </tr>
                 <tr>
-                    <td style="text-align: right; border: none; padding: 5px;"><strong>Grand Total</strong></td>
-                    <td style="text-align: right; border: 1px solid #ccc; padding: 5px; background: #fff2cc;">
-                        <strong><?= number_format($grandTotal, 2) ?></strong>
+                    <td style="text-align: right; border: none; padding: 5px; font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">Grand Total</td>
+                    <td style="text-align: right; border: 1px solid #ccc; padding: 5px; background: #fff2cc; font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">
+                        <?= number_format($grandTotal, 2) ?>
                     </td>
                 </tr>
             </table>
         </div>
     </div>
 
-    <br>
-
     <!-- Signatures -->
     <div class="signature-section label-font">
         <div class="signature-box">
             <div class="signature-line"></div>
             <div>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</div>
-            <div><strong>ACCEPT ABOVE QUOTATION</strong></div>
-            <div>Purchaser</div>
+            <div style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">ACCEPT ABOVE QUOTATION</div>
+            <div style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">Purchaser</div>
         </div>
 
         <div class="signature-box">
@@ -510,7 +520,7 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
                 <?php endif; ?>
             </div>
             <div>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</div>
-            <div><strong>QUOTED BY</strong></div>
+            <div style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">QUOTED BY</div>
         </div>
 
         <div class="signature-box">
@@ -522,7 +532,7 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
                 <?php endif; ?>
             </div>
             <div>( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</div>
-            <div><strong>AUTHORIZED SIGNATURE</strong></div>
+            <div style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">AUTHORIZED SIGNATURE</div>
         </div>
     </div>
 </div>

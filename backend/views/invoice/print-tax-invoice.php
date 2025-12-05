@@ -102,8 +102,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
+    margin-bottom: 5px;
+    padding-bottom: 5px;
 }
 
 .company-logo {
@@ -132,23 +132,28 @@ body {
 
 .company-name-thai {
     text-align: center;
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 2px;
-    margin-left: -36px
+    font-size: 32px;
+    font-weight: 900;
+    margin-bottom: 0px;
+
+    -webkit-text-stroke: 0.5px black;
 }
 
 .company-name-eng {
-    font-size: 20px;
-    font-weight: bold;
+    font-size: 28px;
+    font-weight: 900;
     margin-bottom: 3px;
-    margin-left: 80px
+    margin-left: 80px;
+    margin-top: -5px;
+    -webkit-text-stroke: 0.5px black;
 }
 
 .company-address {
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.2;
-    margin-bottom: 2px;
+    margin-bottom: 0px;
+    font-weight: 800;
+    -webkit-text-stroke: 0.25px black;
 }
 
 .invoice-info {
@@ -157,22 +162,25 @@ body {
 }
 
 .invoice-title {
-    font-size: 20px;
-    font-weight: bold;
+    font-size: 30px;
+    font-weight: 900;
     margin-bottom: 5px;
     position: relative;
+    -webkit-text-stroke: 0.3px black;
 }
 
 .invoice-subtitle {
-    font-size: 20px;
+    font-size: 24px;
     margin-bottom: 10px;
+    font-weight: 800;
+    -webkit-text-stroke: 0.25px black;
 }
 
 /* Copy Label Styles */
 .invoice-title-section {
     text-align: center;
     position: relative;
-    margin: 8px 0;
+    margin: 5px 0;
 }
 
 .copy-label {
@@ -200,13 +208,13 @@ body {
 .customer-section {
     display: flex;
     justify-content: space-between;
-    margin: 15px 0;
+    margin: 10px 0;
     gap: 20px;
 }
 
 .customer-left, .customer-right {
     flex: 1;
-    line-height: 1.7;
+    line-height: 1.4;
 }
 
 .field-group {
@@ -225,19 +233,20 @@ body {
 
 .field-label {
     min-width: 100px;
-    font-weight: bold;
+    font-weight: 800;
+    -webkit-text-stroke: 0.25px black;
 }
 
 
 /* Items Table */
 .items-section {
-    margin: 20px 0;
+    margin: 10px 0;
 }
 
 .items-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 20px;
+    font-size: 18px;
     // border: 1px solid #000; /* เส้นรอบนอกเท่านั้น */
 }
 
@@ -251,8 +260,9 @@ body {
     border-right: none !important;
 
     background-color: #f8f9fa;
-    font-weight: bold;
-    padding: 6px 4px;
+    font-weight: 800;
+    padding: 4px 4px;
+    -webkit-text-stroke: 0.25px black;
 }
 
 /* ป้องกัน tr ของ thead สร้างเส้นเอง */
@@ -262,7 +272,7 @@ body {
 
 /* Tbody: ไม่มีเส้นแนวนอนเลย */
 .items-table tbody td {
-    padding: 4px 6px;
+    padding: 3px 6px;
 
     border-top: none !important;
     border-bottom: none !important;
@@ -280,12 +290,12 @@ body {
 
 /* Empty rows */
 .empty-row {
-    height: 40px;
+    height: 30px;
 }
 
 /* Summary Section */
 .summary-section {
-    margin-top: 20px;
+    margin-top: 10px;
     display: flex;
     justify-content: space-between;
     gap: 20px;
@@ -310,7 +320,9 @@ body {
     justify-content: space-between;
     padding: 6px 10px;
     // border-bottom: 1px solid #000;
-    font-size: 20px;
+    font-size: 18px;
+    font-weight: 800;
+    -webkit-text-stroke: 0.25px black;
 }
 
 .summary-row:last-child {
@@ -324,19 +336,24 @@ body {
 
 .amount-text {
     margin-top: 5px;
-    font-size: 20px;
+    font-size: 18px;
+    font-weight: 800;
+    -webkit-text-stroke: 0.25px black;
 }
 
 /* Notes Section */
 .notes-section {
-    margin: 15px 0;
-    font-size: 20px;
-    line-height: 1.4;
+    margin: 10px 0;
+    font-size: 16px;
+    line-height: 1.3;
+    font-weight: 800;
+    -webkit-text-stroke: 0.2px black;
 }
 
 .notes-title {
-    font-weight: bold;
+    font-weight: 800;
     margin-bottom: 5px;
+    -webkit-text-stroke: 0.3px black;
 }
 
 .note-item {
@@ -346,7 +363,7 @@ body {
 
 /* Signature Section */
 .signature-section {
-    margin-top: 20px;
+    margin-top: 10px;
     display: flex;
     justify-content: space-between;
     gap: 15px;
@@ -355,30 +372,29 @@ body {
 .signature-box {
     flex: 1;
     border: 1px solid #000;
-    padding: 15px 10px;
+    padding: 10px 8px;
     text-align: center;
-    height: 120px;
+    height: 115px;
     position: relative;
 }
 
 .signature-title {
-    font-weight: bold;
+    font-weight: 800;
     margin-bottom: 10px;
-    font-size: 12px;
+    font-size: 14px;
+    -webkit-text-stroke: 0.25px black;
 }
 
 .signature-line {
     border-bottom: 1px solid #000;
-    margin: 40px 10px 10px;
+    margin: 30px 10px 8px;
 }
 
 .signature-date {
-    font-size: 12px;
-    position: absolute;
-    bottom: 2px;
-    padding-top: 25px;
-    left: 50%;
-    transform: translateX(-50%);
+    font-size: 14px;
+    text-align: center;
+    margin-top: 5px;
+    font-weight: 800;
 }
 
 /* Print controls */
@@ -685,59 +701,53 @@ window.addEventListener('afterprint', function() {
 
     <!-- Customer Information -->
     <div class="customer-section">
-        <table>
-            <td>
-                <div class="customer-left">
-                    <div class="field-group">
-                        <span class="field-label">เลขประจำตัวผู้เสียภาษี:</span>
-                        <span class="field-value">0215543000985</span>
-                    </div>
-                    <div class="field-group">
-                        <div class="field-label-group">
-                            <div class="field-label">รหัสลูกค้า :</div>
-                            <div class="field-label">Code</div>
-                        </div>
-                        <span class="field-value">
-                            <?= $customer_code ?>
-                        </span>
-                    </div>
-                    <div class="field-group">
-                        <div class="field-label-group">
-                            <div class="field-label">ขายให้ :</div>
-                            <div class="field-label">Sold To</div>
-                        </div>
-                        <span class="field-value">
-                            <?= Html::encode($model->customer_name ?: '') ?><br>
-                            <?= Html::encode($model->customer_address ?: '') ?><br>
-                            TAX ID: <?= Html::encode($model->customer_tax_id ?: '') ?>
-                        </span>
-                    </div>
-                </div>
-            </td>
-            <td>
-                <div class="customer-right" style="margin-left: 80px;">
-                    <div class="field-group">
-                        <span class="field-label">วันที่ / Date:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                        <span class="field-value-right"><?= Yii::$app->formatter->asDate($model->invoice_date, 'MM/dd/yyyy') ?></span>
-                    </div>
-                    <div class="field-group">
-                        <span class="field-label">เลขที่ / Inv.No.:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                        <span class="field-value-right"><?= Html::encode($model->invoice_number) ?></span>
-                    </div>
-                    <div class="field-group">
-                        <span class="field-label">ใบสั่งซื้อเลขที่ / P/O No.:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                        <span class="field-value-right"><?= Html::encode($po_no ?: '') ?></span>
-                    </div>
-                    <div class="field-group">
-                        <span class="field-label">วันที่สั่งซื้อ / P/O Date:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                        <span class="field-value-right"><?= $po_date ? Yii::$app->formatter->asDate($po_date, 'MM/dd/yyyy') : '' ?></span>
-                    </div>
-                    <div class="field-group">
-                        <span class="field-label">เงื่อนไข / กำหนดชำระ / Credit, Due:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                        <span class="field-value-right"><?= Html::encode($model->paymentTerm ? $model->paymentTerm->name : '') ?> <?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'd/M/yy') : '' ?></span>
-                    </div>
-                </div>
-            </td>
+        <table style="width: 100%;">
+            <tr>
+                <td style="width: 50%; vertical-align: top;">
+                    <table style="width: 100%;">
+                        <tr>
+                            <td class="field-label" style="width: 180px; vertical-align: top;">เลขประจำตัวผู้เสียภาษี:</td>
+                            <td class="field-value">0215543000985</td>
+                        </tr>
+                        <tr>
+                            <td class="field-label" style="vertical-align: top;">รหัสลูกค้า :<br>Code</td>
+                            <td class="field-value"><?= $customer_code ?></td>
+                        </tr>
+                        <tr>
+                            <td class="field-label" style="vertical-align: top;">ขายให้ :<br>Sold To</td>
+                            <td class="field-value">
+                                <?= Html::encode($model->customer_name ?: '') ?><br>
+                                <?= Html::encode($model->customer_address ?: '') ?><br>
+                                TAX ID: <?= Html::encode($model->customer_tax_id ?: '') ?>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="width: 50%; vertical-align: top; padding-left: 60px;">
+                    <table style="width: 100%;">
+                        <tr>
+                            <td class="field-label" style="width: 250px;">วันที่ / Date:</td>
+                            <td class="field-value-right"><?= Yii::$app->formatter->asDate($model->invoice_date, 'MM/dd/yyyy') ?></td>
+                        </tr>
+                        <tr>
+                            <td class="field-label">เลขที่ / Inv.No.:</td>
+                            <td class="field-value-right"><?= Html::encode($model->invoice_number) ?></td>
+                        </tr>
+                        <tr>
+                            <td class="field-label">ใบสั่งซื้อเลขที่ / P/O No.:</td>
+                            <td class="field-value-right"><?= Html::encode($po_no ?: '') ?></td>
+                        </tr>
+                        <tr>
+                            <td class="field-label">วันที่สั่งซื้อ / P/O Date:</td>
+                            <td class="field-value-right"><?= $po_date ? Yii::$app->formatter->asDate($po_date, 'MM/dd/yyyy') : '' ?></td>
+                        </tr>
+                        <tr>
+                            <td class="field-label">เงื่อนไข / กำหนดชำระ / Credit, Due:</td>
+                            <td class="field-value-right"><?= Html::encode($model->paymentTerm ? $model->paymentTerm->name : '') ?> <?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'd/M/yy') : '' ?></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
         </table>
 
     </div>
@@ -788,36 +798,29 @@ window.addEventListener('afterprint', function() {
 
     <!-- Summary Section -->
     <div class="summary-section">
-        <div class="summary-left" style="border: 1px solid gray;">
-            <div class="font-bold">ตัวอักษร</div>
-            <div style="display:flex; justify-content:flex-end; gap:10px; text-align:right;">
-                <span style="margin-right: 15px;">Discount</span>
-                <span><?= number_format($model->discount_amount, 2) ?></span>
+        <div class="summary-left" style="border: 1px solid #000; padding: 10px;">
+            <div style="font-weight: 800; margin-bottom: 8px; -webkit-text-stroke: 0.25px black;">ตัวอักษร</div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="font-weight: 800;">Discount</span>
+                <span style="font-weight: 800;"><?= number_format($model->discount_amount, 2) ?></span>
             </div>
-            <br>
-            <div class="amount-text" style="text-align:left;">
-                <h6><?= $model->total_amount_text ?: '' ?></h6>
+            <div class="amount-text" style="text-align: left; margin-top: 10px;">
+                <?= $model->total_amount_text ?: '' ?>
             </div>
-            <br>
-            <br>
         </div>
-        <div class="summary-right">
-
-            <div class="summary-row">
+        <div class="summary-right" style="border: 1px solid #000;">
+            <div class="summary-row" style="border-bottom: 1px solid #000;">
                 <span>รวมเงิน<br>Total</span>
                 <span><?= number_format($model->subtotal, 2) ?></span>
             </div>
-
-            <div class="summary-row">
+            <div class="summary-row" style="border-bottom: 1px solid #000;">
                 <span>ภาษีมูลค่าเพิ่ม<br>VAT <?= $model->vat_percent ?>%</span>
                 <span><?= number_format($model->vat_amount, 2) ?></span>
             </div>
-
-            <div class="summary-row total">
+            <div class="summary-row total" style="background-color: #f0f0f0;">
                 <span>รวมเงินทั้งสิ้น<br>TOTAL</span>
                 <span><?= number_format($model->total_amount, 2) ?></span>
             </div>
-
         </div>
     </div>
 
@@ -846,7 +849,7 @@ window.addEventListener('afterprint', function() {
         <div class="signature-box">
             <div class="signature-title">&nbsp;</div>
             <div class="signature-line"></div>
-            <div class="signature-title">ผู้มีอำนาจลงนาม / Authorized Signature</div><br />
+            <div class="signature-title">ผู้มีอำนาจลงนาม / Authorized Signature</div>
             <div class="signature-date">วันที่/Date ____/_____/_____</div>
         </div>
     </div>

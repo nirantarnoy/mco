@@ -107,22 +107,25 @@ $this->registerCss("
 }
 
 .company-name-thai {
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 2px;
+    font-size: 32px;
+    font-weight: 900;
+    -webkit-text-stroke: 0.5px black;
 }
 
 .company-name-eng {
-    font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 3px;
-    margin-left: -156px
+    font-size: 28px;
+    font-weight: 900;
+    margin-left: -135px;
+    margin-top: -10px;
+    -webkit-text-stroke: 0.5px black;
 }
 
 .company-address {
-    font-size: 9px;
-    line-height: 2.5;
+    font-size: 14px;
+    line-height: 1.5;
     margin-bottom: 2px;
+    font-weight: 900;
+    -webkit-text-stroke: 0.3px black;
 }
 
 .invoice-info {
@@ -131,10 +134,11 @@ $this->registerCss("
 }
 
 .invoice-title {
-    font-size: 20px;
-    font-weight: bold;
+    font-size: 30px;
+    font-weight: 900;
     margin-bottom: 5px;
     position: relative;
+    -webkit-text-stroke: 0.3px black;
 }
 
 .invoice-subtitle {
@@ -181,9 +185,9 @@ $this->registerCss("
 .customer-section {
     display: flex;
     justify-content: space-between;
-    margin: 15px 0;
+    margin: 10px 0;
     gap: 20px;
-    font-size: 15px !important;
+    font-size: 16px !important;
 }
 
 .customer-left, .customer-right {
@@ -191,14 +195,15 @@ $this->registerCss("
 }
 
 .field-group {
-    margin-bottom: 6px;
+    margin-bottom: 3px;
     display: flex;
     align-items: flex-start;
 }
 
 .field-label {
     min-width: 100px;
-    font-weight: bold;
+    font-weight: 800;
+    -webkit-text-stroke: 0.25px black;
 }
 
 .field-value {
@@ -245,7 +250,7 @@ $this->registerCss("
 .items-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 /* เส้นรอบนอก */
@@ -258,13 +263,15 @@ $this->registerCss("
 .items-table thead th {
     border-bottom: 1px solid #000;
     background-color: #f8f9fa;
-    padding: 6px;
+    padding: 4px;
+    font-weight: 800;
+    -webkit-text-stroke: 0.25px black;
 }
 
 /* เนื้อหาแถว ไม่ต้องมีเส้นขอบ */
 .items-table tbody td {
     border: none !important;
-    padding: 6px;
+    padding: 3px;
 }
 
 /* ให้มีแค่เส้นระหว่าง head → tbody */
@@ -274,7 +281,7 @@ $this->registerCss("
 
 /* Footer (summary) */
 .items-table tfoot td {
-    padding: 6px;
+    padding: 4px;
 }
 
 
@@ -287,7 +294,7 @@ $this->registerCss("
 
 /* Summary Section */
 .summary-section {
-    margin-top: 15px;
+    margin-top: 10px;
     display: flex;
     justify-content: space-between;
     gap: 20px;
@@ -307,9 +314,11 @@ $this->registerCss("
 .summary-row {
     display: flex;
     justify-content: space-between;
-    padding: 8px 10px;
+    padding: 6px 8px;
     border-bottom: 1px solid #000;
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: 800;
+    -webkit-text-stroke: 0.25px black;
 }
 
 .summary-row:last-child {
@@ -322,21 +331,25 @@ $this->registerCss("
 }
 
 .amount-text {
-    font-size: 12px;
-    margin-bottom: 10px;
-    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 5px;
+    font-weight: 800;
+    -webkit-text-stroke: 0.25px black;
 }
 
 /* Notes Section */
 .notes-section {
-    margin: 15px 0;
-    font-size: 11px;
-    line-height: 1.4;
+    margin: 10px 0;
+    font-size: 12px;
+    line-height: 1.3;
+    font-weight: 800;
+    -webkit-text-stroke: 0.15px black;
 }
 
 .notes-title {
-    font-weight: bold;
+    font-weight: 800;
     margin-bottom: 5px;
+    -webkit-text-stroke: 0.25px black;
 }
 
 .note-item {
@@ -346,7 +359,7 @@ $this->registerCss("
 
 /* Signature Section */
 .signature-section {
-    margin-top: 20px;
+    margin-top: 10px;
     display: flex;
     justify-content: space-between;
     gap: 10px;
@@ -355,21 +368,22 @@ $this->registerCss("
 .signature-box {
     flex: 1;
     border: 1px solid #000;
-    padding: 10px;
+    padding: 8px;
     text-align: center;
-    height: 150px;
+    height: 120px;
     position: relative;
 }
 
 .signature-title {
-    font-weight: bold;
-    margin-bottom: 5px;
-    font-size: 11px;
+    font-weight: 800;
+    margin-bottom: 3px;
+    font-size: 12px;
+    -webkit-text-stroke: 0.25px black;
 }
 
 .signature-line {
     border-bottom: 1px solid #000;
-    margin: 25px 5px 10px;
+    margin: 20px 5px 8px;
 }
 
 .signature-date {
@@ -486,7 +500,9 @@ $this->registerCss("
     text-align: right;
     max-width: 22%;
     margin-top: 33px;
-    font-size: 12px;
+    font-size: 20px;
+    font-weight: 900;
+    -webkit-text-stroke: 0.5px black;
 }
 
 /* ป้องกันภาพดัน layout */
@@ -713,11 +729,10 @@ window.addEventListener('afterprint', function() {
         <div class="company-info-box">
             <div class="company-name-thai">บริษัท เอ็ม. ซี. โอ. จำกัด (สำนักงานใหญ่)</div>
             <div class="company-name-eng">M.C.O. COMPANY LIMITED</div>
-
-            <div class="company-address" style="margin-left: 28px">
+            <div class="company-address" style="margin-left: 48px">
                 8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์66-(0)-3861-9559
             </div>
-            <div class="company-address" style="margin-left: 53px">
+            <div class="company-address" style="margin-left: 82px">
                 8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559
             </div>
         </div>
@@ -847,7 +862,7 @@ window.addEventListener('afterprint', function() {
                     <td colspan="3" rowspan="3" style="padding: 8px;text-align: left;">
                         <div class="summary-left">
                             <div class="amount-text">(ตัวอักษร)</div>
-                            <div style="font-size: 14px; font-weight: bold;text-align: center;">
+                            <div style="font-size: 14px; font-weight: 800; text-align: center; -webkit-text-stroke: 0.25px black;">
                                 <?= $model->total_amount_text ?: '' ?>
                             </div>
 
@@ -856,25 +871,25 @@ window.addEventListener('afterprint', function() {
 
                         </div>
                     </td>
-                    <td><span>รวมเงิน / Total</span></td>
-                    <td class="text-right"><span><?= number_format($model->subtotal, 2) ?></span></td>
+                    <td><span style="font-weight: 800; -webkit-text-stroke: 0.25px black;">รวมเงิน / Total</span></td>
+                    <td class="text-right"><span style="font-weight: 800; -webkit-text-stroke: 0.25px black;"><?= number_format($model->subtotal, 2) ?></span></td>
                 </tr>
                 <tr>
                     <!--                <td colspan="3" style="padding: 8px;"></td>-->
                     <td>
-                        <span>ภาษีมูลค่าเพิ่ม / Vat <?= $model->vat_percent ?>%</span>
+                        <span style="font-weight: 800; -webkit-text-stroke: 0.25px black;">ภาษีมูลค่าเพิ่ม / Vat <?= $model->vat_percent ?>%</span>
                     </td>
                     <td class="text-right">
-                        <span><?= number_format($model->vat_amount, 2) ?></span>
+                        <span style="font-weight: 800; -webkit-text-stroke: 0.25px black;"><?= number_format($model->vat_amount, 2) ?></span>
                     </td>
                 </tr>
                 <tr>
                     <!--                <td colspan="3" style="padding: 8px;"></td>-->
                     <td>
-                        <span>รวมเงินทั้งสิ้น / Grand Total</span>
+                        <span style="font-weight: 800; -webkit-text-stroke: 0.25px black;">รวมเงินทั้งสิ้น / Grand Total</span>
                     </td>
                     <td class="text-right">
-                        <span><?= number_format($model->total_amount, 2) ?></span>
+                        <span style="font-weight: 800; -webkit-text-stroke: 0.25px black;"><?= number_format($model->total_amount, 2) ?></span>
                     </td>
                 </tr>
             </tfoot>
@@ -884,8 +899,8 @@ window.addEventListener('afterprint', function() {
 
     <!-- Notes Section -->
     <div class="notes-section">
-        <div class="notes-title">หมายเหตุ : 
-            <span style="line-height: 2;">&nbsp;&nbsp;1. ตามรายการข้างต้น แม้จะได้ส่งมอบสินค้าแก่ผู้ซื้อแล้วก็ยังเป็นทรัพย์สินของผู้ขายจนกว่าผู้ซื้อจะได้รับชำระเงิน</span><br>
+        <div class="notes-title">หมายเหตุ :
+            <span style="line-height: 2;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. ตามรายการข้างต้น แม้จะได้ส่งมอบสินค้าแก่ผู้ซื้อแล้วก็ยังเป็นทรัพย์สินของผู้ขายจนกว่าผู้ซื้อจะได้รับชำระเงิน</span><br>
             <span style="line-height: 2;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. สินค้าที่ซื้อไปเกินกว่า 7 วัน ทางบริษัทฯใคร่ขอสงวนสิทธิ์ไม่รับคืนสินค้าและคิดดอกเบี้ยร้อยละ1.5 ต่อเดือน</span><br>
             <span style="line-height: 2;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. สามารถชำระผ่านช่องทางธนาคารกรุงเทพจำกัด (มหาชน) สาขาระยอง ชื่อบัญชีบจ.เอ็ม.ซี.โอ. เลขบัญชี277-3-02318-5 บัญชีกระแสรายวัน</span>
         </div>
@@ -894,26 +909,22 @@ window.addEventListener('afterprint', function() {
     <!-- Signature Section -->
     <div class="signature-section">
         <div class="signature-box">
-            <strong style="font-size: 12px;">ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง</strong>
-            <br>
-            <br>
-            <div class="signature-line"></div>
+            <div style="font-size: 12px; font-weight: 900; margin-bottom: 10px;">ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง</div>
+            <div class="signature-line" style="margin-top: 30px;"></div>
             <div class="signature-title">ผู้รับสินค้า / Received By</div>
-            <div style="text-align: center;">วันที่ / Date______/_____/_____</div>
+            <div style="text-align: center; font-size: 12px; font-weight: 900;">วันที่ / Date______/_____/_____</div>
         </div>
         <div class="signature-box">
-            <br>
-            <br>
-            <div class="signature-line"></div>
+            <div style="height: 22px;"></div>
+            <div class="signature-line" style="margin-top: 30px;"></div>
             <div class="signature-title">ผู้ส่งสินค้า / Send By</div>
-            <div style="text-align: center;">วันที่ / Date______/_____/_____</div>
+            <div style="text-align: center; font-size: 12px; font-weight: 900;">วันที่ / Date______/_____/_____</div>
         </div>
         <div class="signature-box">
-            <br>
-            <br>
-            <div class="signature-line"></div>
+            <div style="height: 22px;"></div>
+            <div class="signature-line" style="margin-top: 30px;"></div>
             <div class="signature-title">ผู้มีอำนาจลงนาม / Authorized Signature</div>
-            <div style="text-align: center;">วันที่ / Date______/_____/_____</div>
+            <div style="text-align: center; font-size: 12px; font-weight: 900;">วันที่ / Date______/_____/_____</div>
         </div>
     </div>
 </div>

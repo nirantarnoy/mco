@@ -65,7 +65,7 @@ $this->registerCss("
 }
 
 body {
-    font-size: 16px;
+    font-size: 18px;
     line-height: 1.4;
     margin: 0;
     padding: 0;
@@ -93,8 +93,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 25px;
-    padding-bottom: 15px;
+    margin-bottom: 5px;
 }
 
 .mco-logo {
@@ -121,15 +120,13 @@ body {
 // }
 
 .invoice-title-section {
+    font-size: 30px;
     text-align: center;
     position: relative;
-    margin: 25px 0;
-}
-
-.invoice-title {
-    font-size: 24px;
     font-weight: bold;
     color: #333;
+    -webkit-text-stroke: 0.3px black;
+    margin-bottom: 5px;
 }
 
 /* Copy Label Styles - เหมือนกับใบกำกับภาษี */
@@ -157,7 +154,7 @@ body {
 .billing-info {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .customer-details {
@@ -165,24 +162,30 @@ body {
 }
 
 .billing-numbers {
+    margin-left: 30px;
     width: 40%;
-    font-size: 14px;
-    line-height: 2.7;
+    font-size: 18px;
+    line-height: 2.5;
+    font-weight: 800;
+    -webkit-text-stroke: 0.25px black;
 }
 
 .customer-details table {
     width: 100%;
-    font-size: 14px;
+    font-size: 18px;
+    font-weight: 800;
+    -webkit-text-stroke: 0.25px black;
 }
 
 .customer-details td {
-    padding: 3px 0;
+    padding: 2px 0;
     vertical-align: top;
 }
 
 .customer-details td:first-child {
     width: 80px;
-    font-weight: bold;
+    font-weight: 800;
+    -webkit-text-stroke: 0.25px black;
 }
 
 .number-box {
@@ -219,25 +222,29 @@ body {
 .items-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px;
+    font-size: 18px;
     margin-bottom: 20px;
 }
 
 .items-table th {
     background-color: #e8e8e8;
     border: 1px solid #333;
-    padding: 8px 4px;
+    padding: 6px 4px;
     text-align: center;
-    font-weight: bold;
-    font-size: 14px;
+    font-weight: 800;
+    font-size: 18px;
     line-height: 1.2;
+    -webkit-text-stroke: 0.25px black;
 }
 
 .items-table td {
     border: 1px solid #333;
-    padding: 8px 4px;
+    padding: 5px 4px;
     text-align: center;
     vertical-align: middle;
+    font-size: 18px;
+    font-weight: 800;
+    -webkit-text-stroke: 0.2px black;
 }
 
 .items-table .text-left {
@@ -262,26 +269,28 @@ body {
 
 .total-box {
     padding: 12px 20px;
-    font-size: 16px;
-    font-weight: bold;
+    font-size: 18px;
+    font-weight: 800;
     min-width: 200px;
     text-align: right;
     border-bottom: 3px double #000;
+    -webkit-text-stroke: 0.25px black;
 }
 .total-box2 {
     display: inline-block;
     border-top: 2px solid #333;
     padding: 12px 20px;
-    font-size: 16px;
-    font-weight: bold;
+    font-size: 18px;
+    font-weight: 800;
     min-width: 200px;
+    -webkit-text-stroke: 0.25px black;
 }
 
 .signature-section {
     // display: flex;
     justify-content: space-between;
-    margin-top: 50px;
-    line-height: 3.5;
+    margin-top: 15px;
+    line-height: 2.5;
 }
 
 .signature-block {
@@ -611,7 +620,7 @@ window.addEventListener('afterprint', function() {
             </div>
         </div>
     </div>
-    <p style="font-size: 14px;">ดังรายการต่อไปนี้</p>
+    <p style="font-size: 14px;"><span style="border-bottom: 1px solid #000; font-weight: 800; -webkit-text-stroke: 0.25px black;">ดังรายการต่อไปนี้</span></p>
     <table class="items-table">
         <thead>
             <tr>
@@ -661,13 +670,13 @@ window.addEventListener('afterprint', function() {
 
             <?php
             // เติมแถวว่าง
-            $emptyRows = 22 - $itemCount;
-            if ($itemCount == 0) $emptyRows = 14;
+            $emptyRows = 20 - $itemCount;
+            if ($itemCount == 0) $emptyRows = 13;
 
             for ($i = 0; $i < $emptyRows; $i++):
             ?>
                 <?php if ($i < $emptyRows - 1): ?>
-                    <tr style="height: 35px;">
+                    <tr style="height: 25px;">
                         <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;">
                             &nbsp;
                         </td>
@@ -688,7 +697,7 @@ window.addEventListener('afterprint', function() {
                         </td>
                     </tr>
                 <?php else: ?>
-                    <tr style="height: 35px;">
+                    <tr style="height: 25px;">
                         <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; padding:8px;">
                             &nbsp;
                         </td>
@@ -713,12 +722,12 @@ window.addEventListener('afterprint', function() {
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="6" style="font-weight: bold; font-size: 16px; padding: 10px;">
+                <td colspan="6" style="font-weight: 800; font-size: 18px; padding: 10px; -webkit-text-stroke: 0.25px black;">
 
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <div>
-                            <u style="border-bottom: 1px solid #000;font-weight: normal">รวมเงินทั้งสิ้น</u>&nbsp;&nbsp;
-                            <span style="font-weight: normal;"><?= \backend\models\PurchReq::numtothai($model->total_amount) ?></span>
+                            <u style="border-bottom: 1px solid #000;font-weight: 800;">รวมเงินทั้งสิ้น</u>&nbsp;&nbsp;
+                            <span style="font-weight: 800;"><?= \backend\models\PurchReq::numtothai($model->total_amount) ?></span>
                         </div>
                         <div class="total-box">
                             <?= number_format($totalAmount > 0 ? $totalAmount : $model->total_amount, 2) ?>
@@ -731,20 +740,20 @@ window.addEventListener('afterprint', function() {
         </tfoot>
     </table>
 
-
+    <br>
 
     <div class="signature-section">
         <table style="width: 100%;padding: 10px">
             <tr>
-                <td style="width: 50%;font-size: 14px;text-align: left;padding-left: 40px">
+                <td style="width: 50%;font-size: 18px;text-align: left;padding-left: 40px;font-weight: 800;-webkit-text-stroke: 0.25px black;">
                     <u>ผู้รับวางบิล</u> <span> ...................................................................</span>
                 </td>
-                <td style="width: 50%;font-size: 14px;text-align: right;padding-right: 40px">
+                <td style="width: 50%;font-size: 18px;text-align: right;padding-right: 40px;font-weight: 800;-webkit-text-stroke: 0.25px black;">
                     <u>วันนัดรับเช็ค</u> <span> ..................................................................</span>
                 </td>
             </tr>
             <tr>
-                <td style="width: 50%;font-size: 14px;padding-left: 40px"">
+                <td style="width: 50%;font-size: 18px;padding-left: 40px;font-weight: 800;-webkit-text-stroke: 0.25px black;">
                     <u>ผู้วางบิล</u> <span> .....................................................................</span>
                 </td>
                 <td style="text-align: left"></td>
