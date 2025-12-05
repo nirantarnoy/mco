@@ -298,17 +298,6 @@ $formatter = Yii::$app->formatter;
             margin: 15px 0;
             min-height: 60px;
         }
-
-        @media print {
-            body {
-                margin: 0;
-            }
-
-            .container {
-                width: 100%;
-                max-width: none;
-            }
-        }
     </style>
 </head>
 
@@ -468,25 +457,20 @@ $formatter = Yii::$app->formatter;
             </tbody>
             <tfoot>
                 <tr>
-
-                    <!-- ช่องซ้าย -->
-                    <td colspan="2" style="border:1px solid #000; padding:8px; vertical-align: top;">
-
+                    <!-- ช่องซ้าย (รวม 5 แถว) -->
+                    <td colspan="2" rowspan="5" style="border:1px solid #000; padding:8px; vertical-align: top;">
                         <!-- แถวบน (2 คอลัมน์) -->
                         <div style="display: flex; justify-content: space-between;">
-
                             <!-- คอลัมน์ซ้าย -->
                             <div>
                                 <div class="label">ใบกำกับภาษีเดิมเลขที่</div>
                                 <div><?= Html::encode($model->original_invoice_no) ?></div>
                             </div>
-
                             <!-- คอลัมน์ขวา -->
                             <div>
                                 <div class="label">ลงวันที่</div>
                                 <div><?= $model->original_invoice_date ? $formatter->asDate($model->original_invoice_date, 'php:d/m/Y') : '' ?></div>
                             </div>
-
                         </div>
 
                         <!-- เว้นบรรทัดเล็กน้อย -->
@@ -497,58 +481,33 @@ $formatter = Yii::$app->formatter;
                             <div style="font-weight: 500; margin-bottom: 5px;">เหตุผลที่ต้องลดหนี้:</div>
                             <?= nl2br(Html::encode($model->reason)) ?>
                         </div>
-
                     </td>
 
-
-                    <!-- ช่องกลาง -->
-                    <td colspan="2" style="border:1px solid #000; vertical-align: top; height:130px;padding:0;">
-                        <table style="width:100%; border-collapse: collapse; font-size:14px;">
-                            <tr>
-                                <td style="border:1px solid #000;">มูลค่าสินค้าตามใบกำกับฯเดิม</td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000;">มูลค่าสินค้าตามจริง</td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000;">รวมมูลค่าสินค้า</td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000;">ภาษีมูลค่าเพิ่ม <?= $formatter->asDecimal($model->vat_percent, 0) ?>%</td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000; font-weight:bold;">รวมเป็นเงินทั้งสิ้น</td>
-                            </tr>
-                        </table>
-                    </td>
-
-                    <!-- ช่องสรุปยอด -->
-                    <td style="padding:0; border:1px solid #000;">
-
-                        <table style="width:100%; border-collapse: collapse; font-size:14px;">
-                            <tr>
-                                <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->original_amount, 2) ?></td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->actual_amount, 2) ?></td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->adjust_amount, 2) ?></td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->vat_amount, 2) ?></td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000; font-weight:bold; text-align:right;"><?= $formatter->asDecimal($model->total_amount, 2) ?></td>
-                            </tr>
-                        </table>
-
-                    </td>
+                    <!-- แถวที่ 1 -->
+                    <td colspan="2" style="border:1px solid #000;">มูลค่าสินค้าตามใบกำกับฯเดิม</td>
+                    <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->original_amount, 2) ?></td>
+                </tr>
+                <tr>
+                    <!-- แถวที่ 2 -->
+                    <td colspan="2" style="border:1px solid #000;">มูลค่าสินค้าตามจริง</td>
+                    <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->actual_amount, 2) ?></td>
+                </tr>
+                <tr>
+                    <!-- แถวที่ 3 -->
+                    <td colspan="2" style="border:1px solid #000;">รวมมูลค่าสินค้า</td>
+                    <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->adjust_amount, 2) ?></td>
+                </tr>
+                <tr>
+                    <!-- แถวที่ 4 -->
+                    <td colspan="2" style="border:1px solid #000;">ภาษีมูลค่าเพิ่ม <?= $formatter->asDecimal($model->vat_percent, 0) ?>%</td>
+                    <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->vat_amount, 2) ?></td>
+                </tr>
+                <tr>
+                    <!-- แถวที่ 5 -->
+                    <td colspan="2" style="border:1px solid #000; font-weight:bold;">รวมเป็นเงินทั้งสิ้น</td>
+                    <td style="border:1px solid #000; font-weight:bold; text-align:right;"><?= $formatter->asDecimal($model->total_amount, 2) ?></td>
                 </tr>
             </tfoot>
-
-
-
         </table>
 
 

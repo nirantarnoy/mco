@@ -17,9 +17,13 @@ $formatter = Yii::$app->formatter;
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         @page {
             size: A4;
-            margin: 8mm;
+            margin: 5mm;
         }
 
         @font-face {
@@ -50,7 +54,7 @@ $formatter = Yii::$app->formatter;
             body {
                 margin: 0;
                 padding: 0;
-                font-family: 'THSarabunPSK' !important;
+                /* font-family: 'THSarabunPSK' !important; */
                 font-size: 13px;
             }
 
@@ -63,7 +67,7 @@ $formatter = Yii::$app->formatter;
         }
 
         body {
-            font-family: 'promt', sans-serif !important;
+            font-family: 'promt', 'sans-serif' !important;
             font-size: 14px;
             color: #000;
         }
@@ -84,15 +88,15 @@ $formatter = Yii::$app->formatter;
         }
 
         .company-name {
-            font-size: 30px;
+            font-size: 35px;
             font-weight: 600;
             color: #0000ff;
-            line-height: 0.7;
+            line-height: 1;
         }
 
         .company-details {
             font-size: 20px;
-            line-height: 0.7;
+            line-height: 1.1;
         }
 
         .document-info {
@@ -210,6 +214,10 @@ $formatter = Yii::$app->formatter;
             border-bottom: 1px dotted #000;
             margin: 50px 20px 10px;
         }
+
+        .letter-text {
+            font-size: 22px;
+        }
     </style>
 </head>
 
@@ -230,28 +238,30 @@ $formatter = Yii::$app->formatter;
         <!-- HEADER -->
         <div class="header">
             <div class="company-info">
-                <table style="width: 100%;">
-                    <td>
-                        <div class="logo" style="margin-left: -4px;margin-top: -12px;">
-                            <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png', ['style' => 'max-width: 180px;']) ?>
-                        </div>
-                        <div class="company-details">
-                            Tel : (038) 875258-9 Fax : (038) 619559<br>
-                            e-mail: info@thai-mco.com www.thai-mco.com<br>
-                        </div>
-                    </td>
-                    <td class="text-right">
-                        <div class="company-name" style="margin-top: 25px;">
-                            บริษัท เอ็ม.ซี.โอ. จำกัด
-                        </div>
-                        <div class="company-name">
-                            M.C.O. CO.,LTD.
-                        </div>
-                        <div class="company-details" style="margin-top: 20px;">
-                            8/18 Koh-Kloy Rd., Tambon Cherngnoen, Amphur Muang, Rayong 21000<br>
-                            8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000
-                        </div>
-                    </td>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 40%; vertical-align: top;">
+                            <div class="logo" style="margin-bottom: 10px;">
+                                <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png', ['style' => 'max-width: 200px;']) ?>
+                            </div>
+                            <div class="company-details">
+                                Tel : (038) 875258-9 Fax : (038) 619559<br>
+                                e-mail: info@thai-mco.com www.thai-mco.com
+                            </div>
+                        </td>
+                        <td style="width: 60%; vertical-align: top; text-align: right; padding-top: 50px;">
+                            <div class="company-name">
+                                บริษัท เอ็ม.ซี.โอ. จำกัด
+                            </div>
+                            <div class="company-name">
+                                M.C.O. CO.,LTD.
+                            </div>
+                            <div class="company-details" style="margin-top: 5px;">
+                                8/18 Koh-Kloy Rd., Tambon Cherngnoen, Amphur Muang, Rayong 21000<br>
+                                8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000
+                            </div>
+                        </td>
+                    </tr>
                 </table>
             </div>
         </div>
@@ -350,10 +360,8 @@ $formatter = Yii::$app->formatter;
             <!-- SUMMARY -->
             <tfoot>
                 <tr>
-
                     <!-- LEFT BLOCK -->
-                    <td colspan="2" style="border:1px solid #000; padding:8px;">
-
+                    <td colspan="2" rowspan="4" style="border:1px solid #000; padding:8px; vertical-align: top;">
                         <div>
                             <div class="label">ใบกำกับภาษีเดิมเลขที่</div>
                             <div><?= Html::encode($model->original_invoice_no) ?></div>
@@ -368,45 +376,26 @@ $formatter = Yii::$app->formatter;
                             <div style="font-weight:bold;">เหตุผลที่ต้องเพิ่มหนี้:</div>
                             <?= nl2br(Html::encode($model->reason)) ?>
                         </div>
-
                     </td>
 
-                    <!-- MIDDLE LABELS -->
-                    <td colspan="2" style="border:1px solid #000; padding:0;">
-                        <table style="width:100%; border-collapse:collapse;">
-                            <tr>
-                                <td style="border:1px solid #000;">มูลค่าสินค้าตามใบกำกับฯเดิม</td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000;">รวมมูลค่าสินค้า</td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000;">ภาษีมูลค่าเพิ่ม <?= $formatter->asDecimal($model->vat_percent, 0) ?>%</td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000; font-weight:bold;">รวมเป็นเงินทั้งสิ้น</td>
-                            </tr>
-                        </table>
-                    </td>
-
-                    <!-- RIGHT VALUES -->
-                    <td style="border:1px solid #000; padding:0;">
-                        <table style="width:100%; border-collapse:collapse;">
-                            <tr>
-                                <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->original_amount, 2) ?></td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->adjust_amount, 2) ?></td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->vat_amount, 2) ?></td>
-                            </tr>
-                            <tr>
-                                <td style="border:1px solid #000; font-weight:bold; text-align:right;"><?= $formatter->asDecimal($model->total_amount, 2) ?></td>
-                            </tr>
-                        </table>
-                    </td>
-
+                    <!-- Row 1 -->
+                    <td colspan="2" style="border:1px solid #000;">มูลค่าสินค้าตามใบกำกับฯเดิม</td>
+                    <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->original_amount, 2) ?></td>
+                </tr>
+                <tr>
+                    <!-- Row 2 -->
+                    <td colspan="2" style="border:1px solid #000;">รวมมูลค่าสินค้า</td>
+                    <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->adjust_amount, 2) ?></td>
+                </tr>
+                <tr>
+                    <!-- Row 3 -->
+                    <td colspan="2" style="border:1px solid #000;">ภาษีมูลค่าเพิ่ม <?= $formatter->asDecimal($model->vat_percent, 0) ?>%</td>
+                    <td style="border:1px solid #000; text-align:right;"><?= $formatter->asDecimal($model->vat_amount, 2) ?></td>
+                </tr>
+                <tr>
+                    <!-- Row 4 -->
+                    <td colspan="2" style="border:1px solid #000; font-weight:bold;">รวมเป็นเงินทั้งสิ้น</td>
+                    <td style="border:1px solid #000; font-weight:bold; text-align:right;"><?= $formatter->asDecimal($model->total_amount, 2) ?></td>
                 </tr>
             </tfoot>
         </table>
@@ -414,9 +403,9 @@ $formatter = Yii::$app->formatter;
         <!-- AMOUNT TEXT -->
         <table width="100%">
             <tr>
-                <td width="20%">(ตัวอักษร)</td>
-                <td width="80%">
-                    <div class="amount-text">
+                <td class="letter-text" width="20%">(ตัวอักษร)</td>
+                <td class="letter-text" width="80%">
+                    <div class="amount-text letter-text">
                         <?= nl2br(Html::encode($model->amount_text)) ?>
                     </div>
                 </td>
@@ -424,7 +413,7 @@ $formatter = Yii::$app->formatter;
         </table>
 
         <!-- SIGNATURE -->
-        <div class="signature-section">
+        <div class="signature-section letter-text">
             <div class="signature-box">
                 <div>บริษัท เอ็ม.ซี.โอ. จำกัด</div>
                 <div class="signature-line"></div>
