@@ -273,7 +273,11 @@ class Purch extends ActiveRecord
                     $this->vat_amount = 0;
                 }
             }
-            $this->company_id = \Yii::$app->session->get('company_id') == null ? 1 : \Yii::$app->session->get('company_id');
+            if (!\Yii::$app->request->isConsoleRequest) {
+                $this->company_id = \Yii::$app->session->get('company_id') == null ? 1 : \Yii::$app->session->get('company_id');
+            } else {
+                $this->company_id = 1;
+            }
             return true;
         }
 

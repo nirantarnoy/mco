@@ -43,6 +43,7 @@ class PurchPaymentLine extends \yii\db\ActiveRecord
             [['pay_amount'], 'number'],
             [['bank_name'], 'string', 'max' => 255],
             [['doc', 'nodet'], 'string', 'max' => 500],
+            [['trans_date'], 'safe'],
             [['doc_file'], 'file', 'skipOnEmpty' => true, 'extensions' => 'png, jpg, jpeg, pdf', 'maxSize' => 1024 * 1024 * 2],
             [['purch_payment_id'], 'exist', 'skipOnError' => true, 'targetClass' => PurchPayment::class, 'targetAttribute' => ['purch_payment_id' => 'id']],
             [['payment_method_id'], 'exist', 'skipOnError' => true, 'targetClass' => PaymentMethod::class, 'targetAttribute' => ['payment_method_id' => 'id']],

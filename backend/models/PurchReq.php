@@ -223,7 +223,11 @@ class PurchReq extends ActiveRecord
             if (!empty($this->net_amount)) {
                 $this->total_text = $this->convertAmountToThaiText($this->net_amount);
             }
-            $this->company_id = \Yii::$app->session->get('company_id') == null ? 1 : \Yii::$app->session->get('company_id');
+            if (!\Yii::$app->request->isConsoleRequest) {
+                $this->company_id = \Yii::$app->session->get('company_id') == null ? 1 : \Yii::$app->session->get('company_id');
+            } else {
+                $this->company_id = 1;
+            }
             return true;
         }
 
@@ -334,4 +338,6 @@ class PurchReq extends ActiveRecord
     {
         return $this->hasOne(\backend\models\Vendor::className(), ['id' => 'vendor_id']);
     }
+
+    
 }

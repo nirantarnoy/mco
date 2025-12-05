@@ -82,6 +82,8 @@ class PurchPaymentController extends Controller
                         $line = new PurchPaymentLine();
                         $line->attributes = $lineData;
                         $line->purch_payment_id = $model->id;
+                        // Explicitly assign trans_date
+                        $line->trans_date = !empty($lineData['trans_date']) ? $lineData['trans_date'] : null;
 
                         $line->doc_file = UploadedFile::getInstance($line, "[{$index}]doc_file");
 
@@ -147,6 +149,8 @@ class PurchPaymentController extends Controller
                         $line = new PurchPaymentLine();
                         $line->attributes = $lineData;
                         $line->purch_payment_id = $model->id;
+                        // Explicitly assign trans_date
+                        $line->trans_date = !empty($lineData['trans_date']) ? $lineData['trans_date'] : null;
 
                         $line->doc_file = UploadedFile::getInstance($line, "[{$index}]doc_file");
 
