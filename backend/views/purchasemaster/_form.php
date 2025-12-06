@@ -120,14 +120,18 @@ function calculateTotal() {
         subtotal += parseFloat($(this).val()) || 0;
     });
     
+    var discount = parseFloat($('#purchasemaster-disc').val()) || 0;
+    var afterDiscount = subtotal - discount;
+    if (afterDiscount < 0) afterDiscount = 0;
+
     var vatPercent = parseFloat($('#purchasemaster-vat_percent').val()) || 0;
     var taxPercent = parseFloat($('#purchasemaster-tax_percent').val()) || 0;
     
-    var vatAmount = (subtotal * vatPercent) / 100;
-    var taxAmount = (subtotal * taxPercent) / 100;
-    var total = subtotal + vatAmount - taxAmount;
+    var vatAmount = (afterDiscount * vatPercent) / 100;
+    var taxAmount = (afterDiscount * taxPercent) / 100;
+    var total = afterDiscount + vatAmount - taxAmount;
     
-    $('#purchasemaster-vatpr0').val(subtotal.toFixed(2));
+    $('#purchasemaster-vatpr0').val(afterDiscount.toFixed(2));
     $('#purchasemaster-vat_amount').val(vatAmount.toFixed(2));
     $('#purchasemaster-tax_amount').val(taxAmount.toFixed(2));
     $('#purchasemaster-total_amount').val(total.toFixed(2));
@@ -137,6 +141,10 @@ function calculateTotal() {
     $('#display-tax').text(taxAmount.toFixed(2));
     $('#display-total').text(total.toFixed(2));
 }
+
+$(document).on('input', '#purchasemaster-disc', function() {
+    calculateTotal();
+});
 
 // คำนวณเมื่อเปลี่ยน VAT หรือ TAX
 $(document).on('input', '#purchasemaster-vat_percent, #purchasemaster-tax_percent', function() {
@@ -248,106 +256,106 @@ $(document).ready(function() {
     ]); ?>
 
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-12">
             <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">ข้อมูลหลัก</h5>
-                </div>
                 <div class="card-body">
                     <div class="row">
+                        <!-- Left Column -->
                         <div class="col-md-6">
-                            <?= $form->field($model, 'docnum')->textInput(['maxlength' => true, 'readonly' => true]) ?>
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">แผนก</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" placeholder="เลือกแผนก" disabled>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">รหัสผู้จำหน่าย</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'supcod')->widget(\kartik\select2\Select2::className(),[
+                                        'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Vendor::find()->all(),'id','code'),
+                                        'options'=>['placeholder'=>'เลือกรหัสผู้ขาย'],
+                                        'pluginOptions' => ['allowClear' => true]
+                                    ])->label(false) ?>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">ชื่อผู้จำหน่าย</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'supnam')->textInput(['readonly'=>'readonly', 'placeholder'=>'ดึงมาจากฐานข้อมูลผู้ขาย'])->label(false) ?>
+                                </div>
+                            </div>
+                            
+                            <!-- Hidden Fields (Yellow) -->
+                            <div class="d-none">
+                                <?= $form->field($model, 'addr01')->hiddenInput()->label(false) ?>
+                                <?= $form->field($model, 'addr02')->hiddenInput()->label(false) ?>
+                                <?= $form->field($model, 'addr03')->hiddenInput()->label(false) ?>
+                                <?= $form->field($model, 'zipcod')->hiddenInput()->label(false) ?>
+                                <?= $form->field($model, 'telnum')->hiddenInput()->label(false) ?>
+                            </div>
+
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">เลขประจำตัวผู้เสียภาษี</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'taxid')->textInput(['placeholder'=>'ดึงมาจากฐานข้อมูลผู้ขาย'])->label(false) ?>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- Right Column -->
                         <div class="col-md-6">
-                            <?= $form->field($model, 'docdat')->input('date') ?>
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">เลขที่บิล</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'refnum')->textInput(['placeholder'=>'กรอกข้อมูลเอง'])->label(false) ?>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">วันที่บิล</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'docdat')->input('date')->label(false) ?>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">JOB No.</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'job_no')->widget(\kartik\select2\Select2::className(),[
+                                        'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(),'id','job_no'),
+                                        'options'=>['placeholder'=>'ดึงมาจากฐานข้อมูลใบงาน'],
+                                        'pluginOptions' => ['allowClear' => true]
+                                    ])->label(false) ?>
+                                </div>
+                            </div>
+                            
+                            <!-- Hidden Fields (Yellow) -->
+                            <div class="d-none">
+                                <?= $form->field($model, 'orgnum')->hiddenInput()->label(false) ?>
+                            </div>
+
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">เครดิต</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'paytrm')->widget(\kartik\select2\Select2::className(),[
+                                        'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Paymentterm::find()->all(),'id','name'),
+                                        'options'=>['placeholder'=>'กรอกข้อมูลเอง'],
+                                        'pluginOptions' => ['allowClear' => true]
+                                    ])->label(false) ?>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">วันครบกำหนด</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'duedat')->textInput(['readonly' => true, 'placeholder'=>'คำนวณจากเครดิต'])->label(false) ?>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">หมายเหตุ</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'remark')->textInput(['placeholder'=>'กรอกข้อมูลเอง'])->label(false) ?>
+                                </div>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <?= $form->field($model, 'supcod')->widget(\kartik\select2\Select2::className(),[
-                                    'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Vendor::find()->all(),'id','code'),
-                                'options'=>[
-                                        'placeholder'=>'เลือกผู้ขาย'
-                                ],
-                                'pluginOptions' => [
-                                        'allowClear' => true,
-                                ]
-                            ]) ?>
-                        </div>
-                        <div class="col-md-6">
-                            <?= $form->field($model, 'job_no')->widget(\kartik\select2\Select2::className(),[
-                                'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(),'id','job_no'),
-                                'options'=>[
-                                    'placeholder'=>'เลือก job'
-                                ],
-                                'pluginOptions' => [
-                                    'allowClear' => true,
-                                ]
-                            ]) ?>
-                        </div>
-                    </div>
-
-                    <?= $form->field($model, 'supnam')->textInput(['maxlength' => true,'readonly'=>'readonly']) ?>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <?= $form->field($model, 'paytrm')->widget(\kartik\select2\Select2::className(),[
-                                    'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Paymentterm::find()->all(),'id','name'),
-                                'options'=>[
-                                    'placeholder'=>'เลือกเครดิต'
-                                ],
-                                'pluginOptions' => [
-                                    'allowClear' => true,
-                                ]
-                            ]) ?>
-                        </div>
-                        <div class="col-md-6">
-                            <?= $form->field($model, 'duedat')->input('date') ?>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <?= $form->field($model, 'taxid')->textInput(['maxlength' => true]) ?>
-                        </div>
-                        <div class="col-md-6">
-                            <?= $form->field($model, 'discod')->textInput(['maxlength' => true]) ?>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">ที่อยู่และข้อมูลอื่นๆ</h5>
-                </div>
-                <div class="card-body">
-                    <?= $form->field($model, 'addr01')->textInput(['maxlength' => true]) ?>
-                    <?= $form->field($model, 'addr02')->textInput(['maxlength' => true]) ?>
-                    <?= $form->field($model, 'addr03')->textInput(['maxlength' => true]) ?>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <?= $form->field($model, 'zipcod')->textInput(['maxlength' => true]) ?>
-                        </div>
-                        <div class="col-md-6">
-                            <?= $form->field($model, 'telnum')->textInput(['maxlength' => true]) ?>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <?= $form->field($model, 'orgnum')->textInput(['maxlength' => true]) ?>
-                        </div>
-                        <div class="col-md-6">
-                            <?= $form->field($model, 'refnum')->textInput(['maxlength' => true]) ?>
-                        </div>
-                    </div>
-
-                    <?= $form->field($model, 'vatdat')->input('date') ?>
                 </div>
             </div>
         </div>
@@ -367,14 +375,14 @@ $(document).ready(function() {
                 <table class="table table-bordered table-sm table-details mb-0" id="detail-table">
                     <thead>
                     <tr>
-                        <th width="50" class="text-center">ลำดับ</th>
+                        <th width="50" class="text-center">ลำดับที่</th>
                         <th width="150">รหัสสินค้า</th>
-                        <th>รายละเอียด</th>
+                        <th>ชื่อสินค้า</th>
                         <th width="100" class="text-center">จำนวน</th>
-                        <th width="120" class="text-center">ราคา/หน่วย</th>
-                        <th width="100" class="text-center">ส่วนลด</th>
-                        <th width="120" class="text-center">จำนวนเงิน</th>
-                        <th width="80" class="text-center">ลบ</th>
+                        <th width="120" class="text-center">ราคาต่อหน่วย</th>
+                        <th width="150" class="text-center">ส่วนลดแต่ละรายการ</th>
+                        <th width="150" class="text-center">จำนวนเงิน</th>
+                        <th width="50" class="text-center">ลบ</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -387,34 +395,34 @@ $(document).ready(function() {
                                            name="PurchaseDetail[<?= $index ?>][stkcod]"
                                            value="<?= Html::encode($detail->stkcod) ?>"
                                            data-index="<?= $index ?>"
-                                           placeholder="รหัสสินค้า">
+                                           placeholder="ดึงมาจากฐานข้อมูลสินค้า">
                                 </td>
                                 <td>
                                     <input type="text" class="form-control form-control-sm"
                                            name="PurchaseDetail[<?= $index ?>][stkdes]"
                                            value="<?= Html::encode($detail->stkdes) ?>"
-                                           placeholder="รายละเอียด">
+                                           placeholder="กรอกข้อมูลเอง">
                                 </td>
                                 <td>
                                     <input type="number" step="0.01" class="form-control form-control-sm text-right qty-input"
                                            name="PurchaseDetail[<?= $index ?>][uqnty]"
-                                           value="<?= $detail->uqnty ?>">
+                                           value="<?= $detail->uqnty ?>" placeholder="กรอกข้อมูลเอง">
                                 </td>
                                 <td>
                                     <input type="number" step="0.01" class="form-control form-control-sm text-right price-input"
                                            name="PurchaseDetail[<?= $index ?>][unitpr]"
-                                           value="<?= $detail->unitpr ?>">
+                                           value="<?= $detail->unitpr ?>" placeholder="กรอกข้อมูลเอง">
                                 </td>
                                 <td>
                                     <input type="text" class="form-control form-control-sm"
                                            name="PurchaseDetail[<?= $index ?>][disc]"
                                            value="<?= Html::encode($detail->disc) ?>"
-                                           placeholder="10% หรือ 100">
+                                           placeholder="กรอกข้อมูลเอง">
                                 </td>
                                 <td>
                                     <input type="number" step="0.01" class="form-control form-control-sm text-right amount-input"
                                            name="PurchaseDetail[<?= $index ?>][amount]"
-                                           value="<?= $detail->amount ?>" readonly>
+                                           value="<?= $detail->amount ?>" readonly placeholder="คำนวณจาก (จำนวน x ราคาต่อหน่วย)">
                                 </td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-danger btn-sm btn-remove-row">
@@ -431,59 +439,90 @@ $(document).ready(function() {
     </div>
 
     <div class="row mt-3">
-        <div class="col-md-6">
+        <div class="col-md-7">
             <div class="card">
                 <div class="card-body">
-                    <?= $form->field($model, 'remark')->textarea(['rows' => 3]) ?>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">เลขที่ใบกำกับ</label>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control form-control-sm" placeholder="กรอกข้อมูลเอง">
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">ลงวันที่บิล</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'vatdat')->input('date', ['class' => 'form-control form-control-sm'])->label(false) ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-5 col-form-label">ยื่นภาษีรวมในงวด</label>
+                                <div class="col-sm-7">
+                                    <input type="text" class="form-control form-control-sm" placeholder="กรอกข้อมูลเอง">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group row mt-2">
+                        <label class="col-sm-2 col-form-label">อื่นเพิ่มเติม</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control form-control-sm" placeholder="กรอกข้อมูลเอง">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-5">
             <div class="card">
-                <div class="card-body">
-                    <table class="table table-sm mb-0">
+                <div class="card-body p-2">
+                    <table class="table table-sm table-bordered mb-0">
                         <tr>
-                            <td class="text-right" width="60%"><strong>มูลค่าสินค้า:</strong></td>
-                            <td class="text-right" width="40%">
-                                <span id="display-subtotal">0.00</span> บาท
+                            <td class="text-right" width="50%"><strong>ส่วนลดท้ายบิล</strong></td>
+                            <td width="50%">
+                                <?= $form->field($model, 'disc')->textInput(['id' => 'purchasemaster-disc', 'class' => 'form-control form-control-sm text-right', 'placeholder' => 'กรอกข้อมูลเอง'])->label(false) ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-right"><strong>รวมเงิน</strong></td>
+                            <td class="text-right">
+                                <span id="display-subtotal">0.00</span>
                                 <?= $form->field($model, 'vatpr0')->hiddenInput()->label(false) ?>
                             </td>
                         </tr>
                         <tr>
                             <td class="text-right">
-                                <strong>VAT:</strong>
-                                <?= $form->field($model, 'vat_percent')->textInput([
-                                    'type' => 'number',
-                                    'step' => '0.01',
-                                    'class' => 'form-control form-control-sm d-inline-block',
-                                    'style' => 'width: 80px;'
-                                ])->label(false) ?> %
+                                <strong>VAT</strong>
+                                <div class="d-inline-block" style="width: 60px;">
+                                    <?= $form->field($model, 'vat_percent')->textInput(['type' => 'number', 'step' => '0.01', 'class' => 'form-control form-control-sm text-right'])->label(false) ?>
+                                </div>
+                                <strong>%</strong>
                             </td>
                             <td class="text-right">
-                                <span id="display-vat">0.00</span> บาท
+                                <span id="display-vat">0.00</span>
                                 <?= $form->field($model, 'vat_amount')->hiddenInput()->label(false) ?>
                             </td>
                         </tr>
                         <tr>
                             <td class="text-right">
-                                <strong>TAX:</strong>
-                                <?= $form->field($model, 'tax_percent')->textInput([
-                                    'type' => 'number',
-                                    'step' => '0.01',
-                                    'class' => 'form-control form-control-sm d-inline-block',
-                                    'style' => 'width: 80px;'
-                                ])->label(false) ?> %
+                                <strong>TAX</strong>
+                                <div class="d-inline-block" style="width: 60px;">
+                                    <?= $form->field($model, 'tax_percent')->textInput(['type' => 'number', 'step' => '0.01', 'class' => 'form-control form-control-sm text-right'])->label(false) ?>
+                                </div>
+                                <strong>%</strong>
                             </td>
                             <td class="text-right">
-                                <span id="display-tax">0.00</span> บาท
+                                <span id="display-tax">0.00</span>
                                 <?= $form->field($model, 'tax_amount')->hiddenInput()->label(false) ?>
                             </td>
                         </tr>
                         <tr class="table-active">
-                            <td class="text-right"><h5><strong>รวมทั้งสิ้น:</strong></h5></td>
+                            <td class="text-right"><strong>รวมสุทธิ</strong></td>
                             <td class="text-right">
-                                <h5><strong><span id="display-total">0.00</span> บาท</strong></h5>
+                                <strong><span id="display-total">0.00</span></strong>
                                 <?= $form->field($model, 'total_amount')->hiddenInput()->label(false) ?>
                             </td>
                         </tr>
