@@ -383,43 +383,120 @@ class PurchasemasterController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        // ตั้งค่า Header
-        $headers = [
-            'A' => 'DEPCOD',
-            'B' => 'DOCNUM',
-            'C' => 'DOCDAT',
-            'D' => 'SUPCOD',
-            'E' => 'SUPNAM',
-            'F' => 'STKCOD',
-            'G' => 'STKDES',
-            'H' => 'UQNTY',
-            'I' => 'UNITPR',
-            'J' => 'DISC',
-            'K' => 'AMOUNT',
-            'L' => 'LATE',
+        // Define columns
+        $columns = [
+            'Master ID',
+            'DOCNUM',
+            'DOCDAT',
+            'SUPCOD',
+            'SUPNAM',
+            'JOB No',
+            'Credit Term',
+            'Due Date',
+            'Tax ID',
+            'Discount Code',
+            'Address 1',
+            'Address 2',
+            'Address 3',
+            'Zip Code',
+            'Tel Num',
+            'Branch Num',
+            'Bill No',
+            'Vat Date',
+            'Vat Pr0',
+            'Master Amount',
+            'Master Unit Price',
+            'Master Discount',
+            'Vat %',
+            'Vat Amount',
+            'Tax %',
+            'Tax Amount',
+            'Total Amount',
+            'Master Remark',
+            'Status',
+            'Master Created At',
+            'Master Updated At',
+            'Master Created By',
+            'Master Updated By',
+            'Department ID',
+            'Invoice No',
+            'Vat Period',
+            'Additional Note',
+            'Is Deposit',
+            'Detail ID',
+            'Line No',
+            'STKCOD',
+            'STKDES',
+            'UQNTY',
+            'Detail UNITPR',
+            'Detail Discount',
+            'Detail Amount',
+            'Detail Remark',
         ];
 
-        $row = 3;
-        foreach ($headers as $col => $header) {
-            $sheet->setCellValue($col . $row, $header);
+        // Set Headers
+        $colIndex = 1;
+        foreach ($columns as $header) {
+            $sheet->setCellValueByColumnAndRow($colIndex, 3, $header);
+            $colIndex++;
         }
 
-        // ใส่ข้อมูล
+        // Set Data
         $row = 4;
         foreach ($models as $model) {
             foreach ($model->purchaseDetails as $detail) {
-                $sheet->setCellValue('A' . $row, ''); // DEPCOD
-                $sheet->setCellValue('B' . $row, $model->docnum);
-                $sheet->setCellValue('C' . $row, $model->docdat);
-                $sheet->setCellValue('D' . $row, $model->supcod);
-                $sheet->setCellValue('E' . $row, $model->supnam);
-                $sheet->setCellValue('F' . $row, $detail->stkcod);
-                $sheet->setCellValue('G' . $row, $detail->stkdes);
-                $sheet->setCellValue('H' . $row, $detail->uqnty);
-                $sheet->setCellValue('I' . $row, $detail->unitpr);
-                $sheet->setCellValue('J' . $row, $detail->disc);
-                $sheet->setCellValue('K' . $row, $detail->amount);
-                $sheet->setCellValue('L' . $row, '');
+                $colIndex = 1;
+
+                // Master Data
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->id);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->docnum);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->docdat);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->supcod);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->supnam);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->job_no);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->paytrm);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->duedat);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->taxid);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->discod);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->addr01);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->addr02);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->addr03);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->zipcod);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->telnum);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->orgnum);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->refnum);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->vatdat);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->vatpr0);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->amount);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->unitpr);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->disc);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->vat_percent);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->vat_amount);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->tax_percent);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->tax_amount);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->total_amount);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->remark);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->status);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->created_at ? date('Y-m-d H:i:s', $model->created_at) : '');
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->updated_at ? date('Y-m-d H:i:s', $model->updated_at) : '');
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->created_by);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->updated_by);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->department_id);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->invoice_no);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->vat_period);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->additional_note);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->is_deposit);
+
+                // Detail Data
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->id);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->line_no);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->stkcod);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->stkdes);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->uqnty);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->unitpr);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->disc);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->amount);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->remark);
 
                 $row++;
             }
