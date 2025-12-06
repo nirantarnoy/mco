@@ -284,30 +284,6 @@ $(document).ready(function() {
                             </div>
                             <div class="form-group row mb-2">
                                 <label class="col-sm-4 col-form-label">ชื่อผู้จำหน่าย</label>
-                                <div class="col-sm-8">
-                                    <?= $form->field($model, 'supnam')->textInput(['readonly'=>'readonly', 'placeholder'=>'ดึงมาจากฐานข้อมูลผู้ขาย'])->label(false) ?>
-                                </div>
-                            </div>
-                            
-                            <!-- Hidden Fields (Yellow) -->
-                            <div class="d-none">
-                                <?= $form->field($model, 'addr01')->hiddenInput()->label(false) ?>
-                                <?= $form->field($model, 'addr02')->hiddenInput()->label(false) ?>
-                                <?= $form->field($model, 'addr03')->hiddenInput()->label(false) ?>
-                                <?= $form->field($model, 'zipcod')->hiddenInput()->label(false) ?>
-                                <?= $form->field($model, 'telnum')->hiddenInput()->label(false) ?>
-                            </div>
-
-                            <div class="form-group row mb-2">
-                                <label class="col-sm-4 col-form-label">เลขประจำตัวผู้เสียภาษี</label>
-                                <div class="col-sm-8">
-                                    <?= $form->field($model, 'taxid')->textInput(['placeholder'=>'ดึงมาจากฐานข้อมูลผู้ขาย'])->label(false) ?>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Right Column -->
-                        <div class="col-md-6">
                             <div class="form-group row mb-2">
                                 <label class="col-sm-4 col-form-label">เลขที่บิล</label>
                                 <div class="col-sm-8">
