@@ -255,6 +255,126 @@ $(document).ready(function() {
         'options' => ['class' => 'form-horizontal','enctype' => 'multipart/form-data'],
     ]); ?>
 
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Left Column -->
+                        <div class="col-md-6">
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">แผนก</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'department_id')->widget(\kartik\select2\Select2::className(),[
+                                        'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Department::find()->all(),'id','name'),
+                                        'options'=>['placeholder'=>'เลือกแผนก'],
+                                        'pluginOptions' => ['allowClear' => true]
+                                    ])->label(false) ?>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">รหัสผู้จำหน่าย</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'supcod')->widget(\kartik\select2\Select2::className(),[
+                                        'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Vendor::find()->all(),'id','code'),
+                                        'options'=>['placeholder'=>'เลือกรหัสผู้ขาย'],
+                                        'pluginOptions' => ['allowClear' => true]
+                                    ])->label(false) ?>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">ชื่อผู้จำหน่าย</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'supnam')->textInput(['readonly'=>'readonly', 'placeholder'=>'ดึงมาจากฐานข้อมูลผู้ขาย'])->label(false) ?>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">ที่อยู่</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'addr01')->textInput(['placeholder'=>'ที่อยู่ 1', 'class' => 'form-control form-control-sm mb-1'])->label(false) ?>
+                                    <?= $form->field($model, 'addr02')->textInput(['placeholder'=>'ที่อยู่ 2', 'class' => 'form-control form-control-sm mb-1'])->label(false) ?>
+                                    <?= $form->field($model, 'addr03')->textInput(['placeholder'=>'ที่อยู่ 3', 'class' => 'form-control form-control-sm'])->label(false) ?>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">รหัสไปรษณีย์</label>
+                                <div class="col-sm-3">
+                                    <?= $form->field($model, 'zipcod')->textInput(['placeholder'=>'รหัสไปรษณีย์', 'class' => 'form-control form-control-sm'])->label(false) ?>
+                                </div>
+                                <label class="col-sm-2 col-form-label text-right" style="padding-right: 5px;">เบอร์โทร</label>
+                                <div class="col-sm-3">
+                                    <?= $form->field($model, 'telnum')->textInput(['placeholder'=>'เบอร์โทร', 'class' => 'form-control form-control-sm'])->label(false) ?>
+                                </div>
+                            </div>
+
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">เลขผู้เสียภาษี</label>
+                                <div class="col-sm-3">
+                                    <?= $form->field($model, 'taxid')->textInput(['placeholder'=>'เลขประจำตัวผู้เสียภาษี', 'class' => 'form-control form-control-sm'])->label(false) ?>
+                                </div>
+                                <label class="col-sm-2 col-form-label text-right" style="padding-right: 5px;">สาขา</label>
+                                <div class="col-sm-3">
+                                    <?= $form->field($model, 'orgnum')->textInput(['placeholder'=>'ลำดับสาขา', 'class' => 'form-control form-control-sm'])->label(false) ?>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="col-md-6">
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">เลขที่บิล</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'refnum')->textInput(['placeholder'=>'กรอกข้อมูลเอง'])->label(false) ?>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">วันที่บิล</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'docdat')->input('date')->label(false) ?>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">JOB No.</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'job_no')->widget(\kartik\select2\Select2::className(),[
+                                        'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(),'id','job_no'),
+                                        'options'=>['placeholder'=>'ดึงมาจากฐานข้อมูลใบงาน'],
+                                        'pluginOptions' => ['allowClear' => true]
+                                    ])->label(false) ?>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">เครดิต</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'paytrm')->widget(\kartik\select2\Select2::className(),[
+                                        'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Paymentterm::find()->all(),'id','name'),
+                                        'options'=>['placeholder'=>'กรอกข้อมูลเอง'],
+                                        'pluginOptions' => ['allowClear' => true]
+                                    ])->label(false) ?>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">วันครบกำหนด</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'duedat')->textInput(['readonly' => true, 'placeholder'=>'คำนวณจากเครดิต'])->label(false) ?>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">หมายเหตุ</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'remark')->textInput(['placeholder'=>'กรอกข้อมูลเอง'])->label(false) ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card mt-3">
         <div class="card-header">
             <h5 class="card-title">รายละเอียดสินค้า</h5>
