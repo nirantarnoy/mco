@@ -265,7 +265,11 @@ $(document).ready(function() {
                             <div class="form-group row mb-2">
                                 <label class="col-sm-4 col-form-label">แผนก</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control" placeholder="เลือกแผนก" disabled>
+                                    <?= $form->field($model, 'department_id')->widget(\kartik\select2\Select2::className(),[
+                                        'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Department::find()->all(),'id','name'),
+                                        'options'=>['placeholder'=>'เลือกแผนก'],
+                                        'pluginOptions' => ['allowClear' => true]
+                                    ])->label(false) ?>
                                 </div>
                             </div>
                             <div class="form-group row mb-2">
@@ -447,7 +451,7 @@ $(document).ready(function() {
                             <div class="form-group row mb-2">
                                 <label class="col-sm-4 col-form-label">เลขที่ใบกำกับ</label>
                                 <div class="col-sm-8">
-                                    <input type="text" class="form-control form-control-sm" placeholder="กรอกข้อมูลเอง">
+                                    <?= $form->field($model, 'invoice_no')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'กรอกข้อมูลเอง'])->label(false) ?>
                                 </div>
                             </div>
                             <div class="form-group row mb-2">
@@ -461,7 +465,7 @@ $(document).ready(function() {
                             <div class="form-group row mb-2">
                                 <label class="col-sm-5 col-form-label">ยื่นภาษีรวมในงวด</label>
                                 <div class="col-sm-7">
-                                    <input type="text" class="form-control form-control-sm" placeholder="กรอกข้อมูลเอง">
+                                    <?= $form->field($model, 'vat_period')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'กรอกข้อมูลเอง'])->label(false) ?>
                                 </div>
                             </div>
                         </div>
@@ -469,7 +473,7 @@ $(document).ready(function() {
                     <div class="form-group row mt-2">
                         <label class="col-sm-2 col-form-label">อื่นเพิ่มเติม</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control form-control-sm" placeholder="กรอกข้อมูลเอง">
+                            <?= $form->field($model, 'additional_note')->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'กรอกข้อมูลเอง'])->label(false) ?>
                         </div>
                     </div>
                 </div>

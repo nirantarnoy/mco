@@ -42,6 +42,10 @@ use yii\behaviors\BlameableBehavior;
  * @property int $updated_at
  * @property int|null $created_by
  * @property int|null $updated_by
+ * @property int|null $department_id
+ * @property string|null $invoice_no
+ * @property string|null $vat_period
+ * @property string|null $additional_note
  *
  * @property PurchaseDetail[] $purchaseDetails
  */
@@ -76,10 +80,10 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             [['docdat', 'duedat', 'vatdat'], 'safe'],
             [['vatpr0', 'amount', 'unitpr', 'vat_percent', 'vat_amount', 'tax_percent', 'tax_amount', 'total_amount'], 'number'],
             [['remark'], 'string'],
-            [['status', 'created_at', 'updated_at', 'created_by', 'updated_by','is_deposit'], 'integer'],
+            [['status', 'created_at', 'updated_at', 'created_by', 'updated_by','is_deposit', 'department_id'], 'integer'],
             [['docnum', 'job_no', 'discod', 'orgnum', 'refnum', 'disc'], 'string', 'max' => 50],
             [['supcod', 'taxid'], 'string', 'max' => 20],
-            [['supnam', 'addr01', 'addr02', 'addr03'], 'string', 'max' => 255],
+            [['supnam', 'addr01', 'addr02', 'addr03', 'invoice_no', 'vat_period', 'additional_note'], 'string', 'max' => 255],
             [['paytrm'], 'string', 'max' => 100],
             [['zipcod'], 'string', 'max' => 10],
             [['telnum'], 'string', 'max' => 50],
@@ -111,7 +115,7 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             'zipcod' => 'รหัสไปรษณีย์',
             'telnum' => 'เบอร์โทร',
             'orgnum' => 'สาขาเรา',
-            'refnum' => 'เลขที่ใบกำกับ',
+            'refnum' => 'เลขที่บิล',
             'vatdat' => 'วันที่ภาษี',
             'vatpr0' => 'มูลค่าก่อนภาษี',
             'amount' => 'จำนวนเงิน',
@@ -128,6 +132,10 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             'updated_at' => 'แก้ไขเมื่อ',
             'created_by' => 'สร้างโดย',
             'updated_by' => 'แก้ไขโดย',
+            'department_id' => 'แผนก',
+            'invoice_no' => 'เลขที่ใบกำกับ',
+            'vat_period' => 'ยื่นภาษีรวมในงวด',
+            'additional_note' => 'อื่นเพิ่มเติม',
         ];
     }
 
