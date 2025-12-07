@@ -360,13 +360,22 @@ use yii\helpers\Html; ?>
 </style>
 
 <div class="receipt-print-controls no-print">
-    <div class="receipt-btn-group">
-        <button onclick="printReceipt()" class="receipt-btn receipt-btn-primary">
-            <i class="fas fa-print"></i> พิมพ์
-        </button>
-        <button onclick="generateNewReceipt()" class="receipt-btn receipt-btn-success">
-            <i class="fas fa-plus"></i> สร้างใหม่
-        </button>
+    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px; position: relative;">
+        <div class="receipt-btn-group">
+            <button onclick="printReceipt()" class="receipt-btn receipt-btn-primary">
+                <i class="fas fa-print"></i> พิมพ์
+            </button>
+            <button onclick="generateNewReceipt()" class="receipt-btn receipt-btn-success">
+                <i class="fas fa-plus"></i> สร้างใหม่
+            </button>
+        </div>
+        <div style="position: absolute; right: 0;">
+            <label for="headerSelect" style="font-weight: bold; margin-right: 10px;">เลือกหัวบริษัท:</label>
+            <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+                <option value="mco" selected>M.C.O. Company Limited (Default)</option>
+                <option value="alternative">Alternative Company</option>
+            </select>
+        </div>
     </div>
 </div>
 
@@ -375,16 +384,16 @@ use yii\helpers\Html; ?>
     <div class="receipt-header-section">
         <div class="receipt-header-left">
             <div class="receipt-logo-section">
-                <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png', ['style' => 'max-width: 190px;']) ?>
+                <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 190px;" alt="">
             </div>
             <div class="receipt-company-info">
-                <div class="receipt-company-name-thai">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
-                <div class="receipt-company-name-eng">M.C.O. COMPANY LIMITED</div>
-                <div class="receipt-company-address" style="margin-top: -12px;">
+                <div class="receipt-company-name-thai" id="companyNameThai">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
+                <div class="receipt-company-name-eng" id="companyNameEng">M.C.O. COMPANY LIMITED</div>
+                <div class="receipt-company-address" style="margin-top: -12px;" id="addressThai">
                     8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 &nbsp;
                     โทร. 66-(0) 3887-5258-59 แฟกซ์ 66-(0)3861-9559
                 </div>
-                <div class="receipt-company-address">8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 &nbsp; Tel. 66-(0)3887-5258-59 &nbsp; Fax. 66-(0)3861-9559</div>
+                <div class="receipt-company-address" id="addressEng">8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 &nbsp; Tel. 66-(0)3887-5258-59 &nbsp; Fax. 66-(0)3861-9559</div>
             </div>
         </div>
     </div>
@@ -531,6 +540,36 @@ use yii\helpers\Html; ?>
 </div>
 
 <script>
+    // Function to change company header
+    function changeHeader() {
+        const headerSelect = document.getElementById('headerSelect');
+        const selectedValue = headerSelect.value;
+
+        const companyData = {
+            mco: {
+                logo: '../../backend/web/uploads/logo/mco_logo_2.png',
+                nameThai: 'บริษัท เอ็ม.ซี.โอ. จำกัด',
+                nameEng: 'M.C.O. COMPANY LIMITED',
+                addressThai: '8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 &nbsp; โทร. 66-(0) 3887-5258-59 แฟกซ์ 66-(0)3861-9559',
+                addressEng: '8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 &nbsp; Tel. 66-(0)3887-5258-59 &nbsp; Fax. 66-(0)3861-9559'
+            },
+            alternative: {
+                logo: '../../backend/web/uploads/logo/mco_logo.png',
+                nameThai: 'บริษัทอื่น จำกัด',
+                nameEng: 'ALTERNATIVE COMPANY LTD.',
+                addressThai: '123 ถนนตัวอย่าง เขต/อำเภอ จังหวัด 12345 &nbsp; โทร. 02-123-4567',
+                addressEng: '123 Example St., District, Province 12345 &nbsp; Tel. 02-123-4567'
+            }
+        };
+
+        const company = companyData[selectedValue];
+        document.getElementById('companyLogo').src = company.logo;
+        document.getElementById('companyNameThai').innerHTML = company.nameThai;
+        document.getElementById('companyNameEng').innerHTML = company.nameEng;
+        document.getElementById('addressThai').innerHTML = company.addressThai;
+        document.getElementById('addressEng').innerHTML = company.addressEng;
+    }
+
     function printReceipt() {
         window.print();
     }

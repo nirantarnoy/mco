@@ -716,29 +716,36 @@ window.addEventListener('afterprint', function() {
     </div>
 </div>
 
+<!-- Header Selection Dropdown (No Print) -->
+<div class="no-print" style="margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 5px;">
+    <label for="headerSelect" style="font-weight: bold; margin-right: 10px;">เลือกหัวบริษัท:</label>
+    <select id="headerSelect" onchange="changeHeader()" style="padding: 5px 10px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+        <option value="mco" selected>M.C.O. Company Limited (Default)</option>
+        <option value="alternative">Alternative Company</option>
+    </select>
+</div>
+
 <div class="print-container original">
     <!-- Header -->
     <div class="header-flex">
 
         <div class="logo-box">
-            <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png', [
-                'style' => 'max-width:180px;'
-            ]) ?>
+            <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width:180px;" alt="">
         </div>
 
         <div class="company-info-box">
-            <div class="company-name-thai">บริษัท เอ็ม. ซี. โอ. จำกัด (สำนักงานใหญ่)</div>
-            <div class="company-name-eng">M.C.O. COMPANY LIMITED</div>
-            <div class="company-address" style="margin-left: 48px">
+            <div class="company-name-thai">บริษัท <span id="companyNameThai">เอ็ม. ซี. โอ.</span> จำกัด (สำนักงานใหญ่)</div>
+            <div class="company-name-eng"><span id="companyNameEng">M.C.O. COMPANY LIMITED</span></div>
+            <div class="company-address" style="margin-left: 48px" id="addressThai">
                 8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์66-(0)-3861-9559
             </div>
-            <div class="company-address" style="margin-left: 82px">
+            <div class="company-address" style="margin-left: 82px" id="addressEng">
                 8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559
             </div>
         </div>
 
         <div class="taxid-box">
-            <div style="font-weight: bold; margin: 3px 0;">TAXID: 0215543000985</div>
+            <div style="font-weight: bold; margin: 3px 0;">TAXID: <span id="companyTaxId">0215543000985</span></div>
         </div>
 
     </div>
@@ -928,3 +935,41 @@ window.addEventListener('afterprint', function() {
         </div>
     </div>
 </div>
+
+<script>
+    function changeHeader() {
+        const headerSelect = document.getElementById('headerSelect');
+        const selectedValue = headerSelect.value;
+
+        // Company data
+        const companyData = {
+            mco: {
+                logo: '../../backend/web/uploads/logo/mco_logo_2.png',
+                nameThai: 'เอ็ม. ซี. โอ.',
+                nameEng: 'M.C.O. COMPANY LIMITED',
+                addressThai: '8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์66-(0)-3861-9559',
+                addressEng: '8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559',
+                taxId: '0215543000985'
+            },
+            alternative: {
+                logo: '../../backend/web/uploads/logo/mco_logo.png',
+                nameThai: 'บริษัทอื่น',
+                nameEng: 'ALTERNATIVE COMPANY LTD.',
+                addressThai: '123 ถนนตัวอย่าง เขต/อำเภอ จังหวัด 12345 โทร 02-123-4567',
+                addressEng: '123 Example St., District, Province 12345 Tel. 02-123-4567',
+                taxId: '1234567890123'
+            }
+        };
+
+        // Get selected company data
+        const company = companyData[selectedValue];
+
+        // Update DOM elements
+        document.getElementById('companyLogo').src = company.logo;
+        document.getElementById('companyNameThai').textContent = company.nameThai;
+        document.getElementById('companyNameEng').textContent = company.nameEng;
+        document.getElementById('addressThai').textContent = company.addressThai;
+        document.getElementById('addressEng').textContent = company.addressEng;
+        document.getElementById('companyTaxId').textContent = company.taxId;
+    }
+</script>

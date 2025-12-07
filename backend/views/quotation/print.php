@@ -249,6 +249,15 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
 </style>
 
 <div class="quotation-container">
+    <!-- Header Selection Dropdown (No Print) -->
+    <div class="no-print" style="margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 5px;">
+        <label for="headerSelect" style="font-weight: bold; margin-right: 10px;">เลือกหัวบริษัท:</label>
+        <select id="headerSelect" onchange="changeHeader()" style="padding: 5px 10px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+            <option value="mco" selected>M.C.O. Company Limited (Default)</option>
+            <option value="alternative">Alternative Company</option>
+        </select>
+    </div>
+
     <!-- Header -->
     <div class="header">
         <table style="width: 100%;border: none;">
@@ -256,7 +265,7 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
                 <td style="width: 50%;border: none;text-align: left;">
                     <div class="logo-section">
                         <div class="logo">
-                            <img src="../../backend/web/uploads/logo/mco_logo.png" width="50%" alt="">
+                            <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo.png" width="50%" alt="">
                         </div>
 
                     </div>
@@ -270,27 +279,27 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
     <table style="width: 100%;border: none;">
         <tr>
             <td style="width: 50%;border: none;text-align: left;">
-                <div>
+                <div id="companyInfo">
                     <div class="row-color" style="background-color: #8ea9db;">
                         <span class="info-label" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;Company Name :</span>
                     </div>
                     <div>
-                        <span class="label-font" style="font-weight: bold;">&nbsp;M.C.O. COMPANY LIMITED</span>
+                        <span class="label-font" style="font-weight: bold;">&nbsp;<span id="companyName">M.C.O. COMPANY LIMITED</span></span>
                     </div>
                     <div class="text-infomation">
-                        <span class="label-font" style="font-weight: bold;">&nbsp;8/18 Koh-kloy Road,</span>
+                        <span class="label-font" style="font-weight: bold;">&nbsp;<span id="companyAddress1">8/18 Koh-kloy Road,</span></span>
                     </div>
                     <div class="text-infomation">
-                        <span class="label-font" style="font-weight: bold;">&nbsp;Tambon Cherngnern,</span>
+                        <span class="label-font" style="font-weight: bold;">&nbsp;<span id="companyAddress2">Tambon Cherngnern,</span></span>
                     </div>
                     <div class="text-infomation">
-                        <span class="label-font" style="font-weight: bold;">&nbsp;Amphur Muang ,</span>
+                        <span class="label-font" style="font-weight: bold;">&nbsp;<span id="companyAddress3">Amphur Muang ,</span></span>
                     </div>
                     <div class="text-infomation">
-                        <span class="label-font" style="font-weight: bold;">&nbsp;Rayong 21000 Thailand.</span>
+                        <span class="label-font" style="font-weight: bold;">&nbsp;<span id="companyAddress4">Rayong 21000 Thailand.</span></span>
                     </div>
                     <div class="text-infomation">
-                        <span class="label-font" style="font-weight: bold;">&nbsp;info@thai-mco.com</span>
+                        <span class="label-font" style="font-weight: bold;">&nbsp;<span id="companyEmail">info@thai-mco.com</span></span>
                     </div>
                 </div>
             </td>
@@ -536,6 +545,47 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
         </div>
     </div>
 </div>
+
+<script>
+    function changeHeader() {
+        const headerSelect = document.getElementById('headerSelect');
+        const selectedValue = headerSelect.value;
+
+        // Company data
+        const companyData = {
+            mco: {
+                logo: '../../backend/web/uploads/logo/mco_logo.png',
+                name: 'M.C.O. COMPANY LIMITED',
+                address1: '8/18 Koh-kloy Road,',
+                address2: 'Tambon Cherngnern,',
+                address3: 'Amphur Muang ,',
+                address4: 'Rayong 21000 Thailand.',
+                email: 'info@thai-mco.com'
+            },
+            alternative: {
+                logo: '../../backend/web/uploads/logo/mco_logo_2.png',
+                name: 'ALTERNATIVE COMPANY LTD.',
+                address1: '123 Alternative Street,',
+                address2: 'District Name,',
+                address3: 'City Name,',
+                address4: 'Province 12345 Thailand.',
+                email: 'contact@alternative.com'
+            }
+        };
+
+        // Get selected company data
+        const company = companyData[selectedValue];
+
+        // Update DOM elements
+        document.getElementById('companyLogo').src = company.logo;
+        document.getElementById('companyName').textContent = company.name;
+        document.getElementById('companyAddress1').textContent = company.address1;
+        document.getElementById('companyAddress2').textContent = company.address2;
+        document.getElementById('companyAddress3').textContent = company.address3;
+        document.getElementById('companyAddress4').textContent = company.address4;
+        document.getElementById('companyEmail').textContent = company.email;
+    }
+</script>
 
 <!-- Print Button -->
 <div class="no-print" style="text-align: center; margin: 20px;">

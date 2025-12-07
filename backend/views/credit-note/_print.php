@@ -311,22 +311,62 @@ $formatter = Yii::$app->formatter;
             min-height: 60px;
         }
     </style>
+    <script>
+        // Function to change company header
+        function changeHeader() {
+            const headerSelect = document.getElementById('headerSelect');
+            const selectedValue = headerSelect.value;
+
+            const companyData = {
+                mco: {
+                    logo: '../../backend/web/uploads/logo/mco_logo_2.png',
+                    nameThai: 'บริษัท เอ็ม.ซี.โอ. จำกัด',
+                    nameEng: 'M.C.O. CO.,LTD.',
+                    address: '8/18 Koh-Kloy Rd., Tambon Cherngnoen, Amphur Muang, Rayong 21000<br>8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000',
+                    contact: 'Tel : (038) 875258-9 Fax : (038) 619559<br>e-mail: info@thai-mco.com www.thai-mco.com<br>'
+                },
+                alternative: {
+                    logo: '../../backend/web/uploads/logo/mco_logo.png',
+                    nameThai: 'บริษัทอื่น จำกัด',
+                    nameEng: 'ALTERNATIVE COMPANY LTD.',
+                    address: '123 Example St., District, Province 12345<br>123 ถนนตัวอย่าง เขต/อำเภอ จังหวัด 12345',
+                    contact: 'Tel : 02-123-4567 Fax : 02-123-4568<br>e-mail: info@example.com www.example.com<br>'
+                }
+            };
+
+            const company = companyData[selectedValue];
+            document.getElementById('companyLogo').src = company.logo;
+            document.getElementById('companyNameThai').textContent = company.nameThai;
+            document.getElementById('companyNameEng').textContent = company.nameEng;
+            document.getElementById('companyAddress').innerHTML = company.address;
+            document.getElementById('companyContact').innerHTML = company.contact;
+        }
+    </script>
 </head>
 
 
 <body>
     <div class="no-print text-center mb-4">
         <div class="print-controls">
-            <div class="btn-group">
-                <button onclick="window.printMultipleCopies()" class="btn btn-primary btn-print">
-                    <i class="fas fa-print"></i> พิมพ์
-                </button>
-                <button onclick="window.close()" class="btn btn-secondary">
-                    <i class="fas fa-times"></i> ปิด
-                </button>
-                <a href="<?= \yii\helpers\Url::to(['view', 'id' => $model->id]) ?>" class="btn btn-info">
-                    <i class="fas fa-eye"></i> ดูรายละเอียด
-                </a>
+            <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px; position: relative;">
+                <div class="btn-group">
+                    <button onclick="window.printMultipleCopies()" class="btn btn-primary btn-print">
+                        <i class="fas fa-print"></i> พิมพ์
+                    </button>
+                    <button onclick="window.close()" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> ปิด
+                    </button>
+                    <a href="<?= \yii\helpers\Url::to(['view', 'id' => $model->id]) ?>" class="btn btn-info">
+                        <i class="fas fa-eye"></i> ดูรายละเอียด
+                    </a>
+                </div>
+                <div style="position: absolute; right: 0;">
+                    <label for="headerSelect" style="font-weight: bold; margin-right: 10px;">เลือกหัวบริษัท:</label>
+                    <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+                        <option value="mco" selected>M.C.O. Company Limited (Default)</option>
+                        <option value="alternative">Alternative Company</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Progress Bar -->
@@ -345,21 +385,21 @@ $formatter = Yii::$app->formatter;
                 <table style="width: 100%;">
                     <td>
                         <div class="logo" style="margin-left: -4px;margin-top: -12px;">
-                            <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png', ['style' => 'max-width: 180px;']) ?>
+                            <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 180px;" alt="">
                         </div>
-                        <div class="company-details" style="margin-top: 12px;">
+                        <div class="company-details" style="margin-top: 12px;" id="companyContact">
                             Tel : (038) 875258-9 Fax : (038) 619559<br>
                             e-mail: info@thai-mco.com www.thai-mco.com<br>
                         </div>
                     </td>
                     <td class="text-right">
-                        <div class="company-name" style="margin-top: 25px;">
+                        <div class="company-name" style="margin-top: 25px;" id="companyNameThai">
                             บริษัท เอ็ม.ซี.โอ. จำกัด
                         </div>
-                        <div class="company-name" style="font-size: 20px;">
+                        <div class="company-name" style="font-size: 20px;" id="companyNameEng">
                             M.C.O. CO.,LTD.
                         </div>
-                        <div class="company-details">
+                        <div class="company-details" id="companyAddress">
                             8/18 Koh-Kloy Rd., Tambon Cherngnoen, Amphur Muang, Rayong 21000<br>
                             8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000
                         </div>
@@ -560,6 +600,36 @@ $formatter = Yii::$app->formatter;
 
 <?php
 $js = <<<JS
+// Function to change company header
+function changeHeader() {
+    const headerSelect = document.getElementById('headerSelect');
+    const selectedValue = headerSelect.value;
+    
+    const companyData = {
+        mco: {
+            logo: '../../backend/web/uploads/logo/mco_logo_2.png',
+            nameThai: 'บริษัท เอ็ม.ซี.โอ. จำกัด',
+            nameEng: 'M.C.O. CO.,LTD.',
+            address: '8/18 Koh-Kloy Rd., Tambon Cherngnoen, Amphur Muang, Rayong 21000<br>8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000',
+            contact: 'Tel : (038) 875258-9 Fax : (038) 619559<br>e-mail: info@thai-mco.com www.thai-mco.com<br>'
+        },
+        alternative: {
+            logo: '../../backend/web/uploads/logo/mco_logo.png',
+            nameThai: 'บริษัทอื่น จำกัด',
+            nameEng: 'ALTERNATIVE COMPANY LTD.',
+            address: '123 Example St., District, Province 12345<br>123 ถนนตัวอย่าง เขต/อำเภอ จังหวัด 12345',
+            contact: 'Tel : 02-123-4567 Fax : 02-123-4568<br>e-mail: info@example.com www.example.com<br>'
+        }
+    };
+    
+    const company = companyData[selectedValue];
+    document.getElementById('companyLogo').src = company.logo;
+    document.getElementById('companyNameThai').textContent = company.nameThai;
+    document.getElementById('companyNameEng').textContent = company.nameEng;
+    document.getElementById('companyAddress').innerHTML = company.address;
+    document.getElementById('companyContact').innerHTML = company.contact;
+}
+
 // Global variables
 let printInProgress = false;
 let currentCopy = 0;

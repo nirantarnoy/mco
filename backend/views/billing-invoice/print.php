@@ -555,15 +555,26 @@ window.addEventListener('afterprint', function() {
 ?>
 
 <div class="print-controls no-print">
-    <button onclick="window.printMultipleCopies()" class="btn btn-primary btn-print">
-        🖨️ พิมพ์ 3 ใบ (ต้นฉบับ + สำเนา 2 ใบ)
-    </button>
-    <button onclick="window.close()" class="btn btn-secondary">
-        ❌ ปิด
-    </button>
-    <a href="<?= \yii\helpers\Url::to(['view', 'id' => $model->id]) ?>" class="btn btn-success">
-        👁️ ดูรายละเอียด
-    </a>
+    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px; position: relative;">
+        <div>
+            <button onclick="window.printMultipleCopies()" class="btn btn-primary btn-print">
+                🖨️ พิมพ์ 3 ใบ (ต้นฉบับ + สำเนา 2 ใบ)
+            </button>
+            <button onclick="window.close()" class="btn btn-secondary">
+                ❌ ปิด
+            </button>
+            <a href="<?= \yii\helpers\Url::to(['view', 'id' => $model->id]) ?>" class="btn btn-success">
+                👁️ ดูรายละเอียด
+            </a>
+        </div>
+        <div style="position: absolute; right: 0;">
+            <label for="headerSelect" style="font-weight: bold; margin-right: 10px;">เลือกหัวบริษัท:</label>
+            <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+                <option value="mco" selected>M.C.O. Company Limited (Default)</option>
+                <option value="alternative">Alternative Company</option>
+            </select>
+        </div>
+    </div>
 
     <!-- Progress Bar -->
     <div class="progress-container">
@@ -574,15 +585,16 @@ window.addEventListener('afterprint', function() {
     </div>
 </div>
 
+
 <div class="print-container original">
     <div class="header-section">
         <div class="mco-logo">
-            <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png', ['style' => 'max-width: 180px;']) ?>
+            <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 180px;" alt="">
         </div>
         <div class="company-details">
-            <p style="font-size: 24px;font-family: 'THSarabunPSK' !important;font-weight: bold;">บริษัท เอ็ม.ซี.โอ. จำกัด</p>
-            <p style="margin-top: -1px;">8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000</p>
-            <p><strong>Tel :</strong> (038) 875258-9, &nbsp; <strong>Fax :</strong> (038) 619559</p>
+            <p style="font-size: 24px;font-family: 'THSarabunPSK' !important;font-weight: bold;">บริษัท <span id="companyName">เอ็ม.ซี.โอ.</span> จำกัด</p>
+            <p style="margin-top: -1px;" id="companyAddress">8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000</p>
+            <p id="companyContact"><strong>Tel :</strong> (038) 875258-9, &nbsp; <strong>Fax :</strong> (038) 619559</p>
         </div>
     </div>
 
@@ -761,3 +773,35 @@ window.addEventListener('afterprint', function() {
         </table>
     </div>
 </div>
+
+<script>
+    function changeHeader() {
+        const headerSelect = document.getElementById('headerSelect');
+        const selectedValue = headerSelect.value;
+
+        // Company data
+        const companyData = {
+            mco: {
+                logo: '../../backend/web/uploads/logo/mco_logo_2.png',
+                name: 'เอ็ม.ซี.โอ.',
+                address: '8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000',
+                contact: '<strong>Tel :</strong> (038) 875258-9, &nbsp; <strong>Fax :</strong> (038) 619559'
+            },
+            alternative: {
+                logo: '../../backend/web/uploads/logo/mco_logo.png',
+                name: 'บริษัทอื่น',
+                address: '123 ถนนตัวอย่าง เขต/อำเภอ จังหวัด 12345',
+                contact: '<strong>Tel :</strong> 02-123-4567, &nbsp; <strong>Fax :</strong> 02-123-4568'
+            }
+        };
+
+        // Get selected company data
+        const company = companyData[selectedValue];
+
+        // Update DOM elements
+        document.getElementById('companyLogo').src = company.logo;
+        document.getElementById('companyName').textContent = company.name;
+        document.getElementById('companyAddress').textContent = company.address;
+        document.getElementById('companyContact').innerHTML = company.contact;
+    }
+</script>

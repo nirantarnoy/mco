@@ -638,15 +638,26 @@ window.addEventListener('afterprint', function() {
 ?>
 
 <div class="print-controls no-print">
-    <button onclick="window.printMultipleCopies()" class="btn btn-primary btn-print">
-        🖨️ พิมพ์ 3 ใบ (ต้นฉบับ + สำเนา 2 ใบ)
-    </button>
-    <button onclick="window.close()" class="btn btn-secondary">
-        ❌ ปิด
-    </button>
-    <a href="<?= \yii\helpers\Url::to(['view', 'id' => $model->id]) ?>" class="btn btn-success">
-        👁️ ดูรายละเอียด
-    </a>
+    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px; position: relative;">
+        <div>
+            <button onclick="window.printMultipleCopies()" class="btn btn-primary btn-print">
+                🖨️ พิมพ์ 3 ใบ (ต้นฉบับ + สำเนา 2 ใบ)
+            </button>
+            <button onclick="window.close()" class="btn btn-secondary">
+                ❌ ปิด
+            </button>
+            <a href="<?= \yii\helpers\Url::to(['view', 'id' => $model->id]) ?>" class="btn btn-success">
+                👁️ ดูรายละเอียด
+            </a>
+        </div>
+        <div style="position: absolute; right: 0;">
+            <label for="headerSelect" style="font-weight: bold; margin-right: 10px;">เลือกหัวบริษัท:</label>
+            <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+                <option value="mco" selected>M.C.O. Company Limited (Default)</option>
+                <option value="alternative">Alternative Company</option>
+            </select>
+        </div>
+    </div>
 
     <!-- Progress Bar -->
     <div class="progress-container">
@@ -662,15 +673,15 @@ window.addEventListener('afterprint', function() {
     <div class="header">
         <div class="company-logo">
             <div class="logox">
-                <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png', ['style' => 'max-width: 180px;']) ?>
+                <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 180px;" alt="">
             </div>
             <div class="company-info">
-                <div class="company-name-thai">บริษัท เอ็ม. ซี. โอ. จำกัด (สำนักงานใหญ่)</div>
-                <div class="company-name-eng">M. C. O. COMPANY LIMITED</div>
-                <div class="company-address" style="margin-left:80px;">
+                <div class="company-name-thai">บริษัท <span id="companyNameThai">เอ็ม. ซี. โอ.</span> จำกัด (สำนักงานใหญ่)</div>
+                <div class="company-name-eng"><span id="companyNameEng">M. C. O. COMPANY LIMITED</span></div>
+                <div class="company-address" style="margin-left:80px;" id="addressThai">
                     8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์ 66-(0)-3861-9559
                 </div>
-                <div class="company-address" style="margin-left: 80px;">
+                <div class="company-address" style="margin-left: 80px;" id="addressEng">
                     8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559
                 </div>
             </div>
@@ -853,3 +864,34 @@ window.addEventListener('afterprint', function() {
             <div class="signature-date">วันที่/Date ____/_____/_____</div>
         </div>
     </div>
+</div>
+<script>
+function changeHeader() {
+    const headerSelect = document.getElementById('headerSelect');
+    const selectedValue = headerSelect.value;
+    
+    const companyData = {
+        mco: {
+            logo: '../../backend/web/uploads/logo/mco_logo_2.png',
+            nameThai: 'เอ็ม. ซี. โอ.',
+            nameEng: 'M. C. O. COMPANY LIMITED',
+            addressThai: '8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์ 66-(0)-3861-9559',
+            addressEng: '8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559'
+        },
+        alternative: {
+            logo: '../../backend/web/uploads/logo/mco_logo.png',
+            nameThai: 'บริษัทอื่น',
+            nameEng: 'ALTERNATIVE COMPANY LTD.',
+            addressThai: '123 ถนนตัวอย่าง เขต/อำเภอ จังหวัด 12345 โทร 02-123-4567',
+            addressEng: '123 Example St., District, Province 12345 Tel. 02-123-4567'
+        }
+    };
+    
+    const company = companyData[selectedValue];
+    document.getElementById('companyLogo').src = company.logo;
+    document.getElementById('companyNameThai').textContent = company.nameThai;
+    document.getElementById('companyNameEng').textContent = company.nameEng;
+    document.getElementById('addressThai').textContent = company.addressThai;
+    document.getElementById('addressEng').textContent = company.addressEng;
+}
+</script>
