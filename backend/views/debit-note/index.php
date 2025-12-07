@@ -98,7 +98,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             'total_amount:decimal',
                             [
                                 'attribute' => 'status',
-                                'value' => function($model) {
+                                'value' => function ($model) {
                                     return $model->getStatusLabel();
                                 }
                             ],
@@ -223,7 +223,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ]);
                             },
                             'print' => function ($url, $model, $key) {
-                                return Html::a('<i class="fas fa-print"></i>', ['print-pr', 'id' => $model->id], [
+                                return Html::a('<i class="fas fa-print"></i>', ['print', 'id' => $model->id], [
                                     'title' => 'พิมพ์',
                                     'class' => 'btn btn-sm btn-outline-secondary me-1',
                                     'target' => '_blank',
