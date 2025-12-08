@@ -8,7 +8,7 @@ use backend\models\Job;
 use backend\models\JobLine;
 use backend\models\Product;
 
-class SearchController extends Controller
+class SearchController extends BaseController
 {
     public function actionIndex()
     {

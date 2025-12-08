@@ -7,7 +7,7 @@ use backend\models\PettyCashAdvance;
 use backend\models\PettyCashVoucher;
 use yii\data\ArrayDataProvider;
 
-class PettyCashReportController extends Controller
+class PettyCashReportController extends BaseController
 {
     public function behaviors()
     {

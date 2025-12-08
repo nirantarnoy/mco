@@ -24,7 +24,7 @@ use Yii;
 /**
  * ProductController implements the CRUD actions for Product model.
  */
-class ProductController extends Controller
+class ProductController extends BaseController
 {
     public $enableCsrfValidation = false;
 
@@ -64,25 +64,14 @@ class ProductController extends Controller
         );
     }
 
-    public function beforeAction($action)
-    {
-        if (!$this->isSessionValid()) {
-            Yii::$app->user->logout();
-            return $this->redirect(['site/login']);
-        }
-        return parent::beforeAction($action);
-    }
+
 
     /**
      * Checks if the current session is valid.
      *
      * @return bool
      */
-    private function isSessionValid(): bool
-    {
-        $session = Yii::$app->session;
-        return !empty($session->get('company_id')) && !empty(Yii::$app->user->id);
-    }
+
 
     /**
      * Lists all Product models.

@@ -9,7 +9,7 @@ use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
-class VehicleExpenseController extends Controller
+class VehicleExpenseController extends BaseController
 {
     public function behaviors()
     {

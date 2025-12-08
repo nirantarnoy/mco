@@ -13,7 +13,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use yii\web\Response;
 
-class JobReportController extends Controller
+class JobReportController extends BaseController
 {
     public function actionIndex()
     {

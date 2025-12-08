@@ -13,7 +13,7 @@ use yii\filters\AccessControl;
 /**
  * StocktransController implements the CRUD actions for Stocktrans model.
  */
-class StocktransController extends Controller
+class StocktransController extends BaseController
 {
     public $enableCsrfValidation = false;
     /**

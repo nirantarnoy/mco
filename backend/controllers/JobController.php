@@ -17,7 +17,7 @@ use yii\web\UploadedFile;
 /**
  * JobController implements the CRUD actions for Job model.
  */
-class JobController extends Controller
+class JobController extends BaseController
 {
     /**
      * @inheritDoc

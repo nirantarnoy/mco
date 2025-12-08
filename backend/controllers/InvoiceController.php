@@ -21,7 +21,7 @@ use yii\web\UploadedFile;
 /**
  * InvoiceController implements the CRUD actions for Invoice model.
  */
-class InvoiceController extends Controller
+class InvoiceController extends BaseController
 {
     public $enableCsrfValidation = false;
 

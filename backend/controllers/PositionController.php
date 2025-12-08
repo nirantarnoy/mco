@@ -14,7 +14,7 @@ use yii\filters\VerbFilter;
 /**
  * UnitController implements the CRUD actions for Unit model.
  */
-class PositionController extends Controller
+class PositionController extends BaseController
 {
     public $enableCsrfValidation = false;
     /**

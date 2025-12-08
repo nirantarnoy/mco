@@ -13,7 +13,7 @@ use yii\web\UploadedFile;
 /**
  * EmployerController implements the CRUD actions for Employer model.
  */
-class EmployerController extends Controller
+class EmployerController extends BaseController
 {
     /**
      * @inheritDoc

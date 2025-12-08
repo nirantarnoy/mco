@@ -21,7 +21,7 @@ use yii\web\UploadedFile;
 /**
  * JournalTransController implements the CRUD actions for JournalTransX model.
  */
-class JournaltransController extends Controller
+class JournaltransController extends BaseController
 {
     public $enableCsrfValidation = false;
 
@@ -40,39 +40,10 @@ class JournaltransController extends Controller
             ],
             'actionLog' => [
                 'class' => ActionLogBehavior::class,
-                'actions' => ['create', 'update', 'delete', 'view', 'print', 'approve', 'createorigin'], // Log เฉพาะ actions เหล่านี้
+                'actions' => ['create', 'update', 'delete', 'view', 'print', 'approve', 'createorigin'],
             ],
         ];
     }
-
-    public function beforeAction($action)
-    {
-        if (!$this->isSessionValid()) {
-            Yii::$app->user->logout();
-            return $this->redirect(['site/login']);
-        }
-        return parent::beforeAction($action);
-    }
-
-    /**
-     * Checks if the current session is valid.
-     *
-     * @return bool
-     */
-    private function isSessionValid(): bool
-    {
-        $session = Yii::$app->session;
-        return !empty($session->get('company_id')) && !empty(Yii::$app->user->id);
-    }
-
-//    public function beforeAction($action)
-//    {
-//        if (!Yii::$app->session->get('company_id') || empty(Yii::$app->session->get('company_id')) || empty(Yii::$app->user->id)) {
-//            Yii::$app->user->logout();
-//            return $this->redirect(['site/login']);
-//        }
-//        return parent::beforeAction($action);
-//    }
 
     /**
      * Lists all JournalTransX models.
@@ -83,12 +54,6 @@ class JournaltransController extends Controller
         $searchModel = new \backend\models\JournalTransSearch();
         $dataProvider = $searchModel->search(\Yii::$app->request->queryParams);
         $dataProvider->setSort(['defaultOrder' => ['id' => SORT_DESC]]);
-//        $dataProvider = new ActiveDataProvider([
-//            'query' => JournalTrans::find()->orderBy(['created_at' => SORT_DESC]),
-//            'pagination' => [
-//                'pageSize' => 20,
-//            ],
-//        ]);
 
         return $this->render('index', [
             'dataProvider' => $dataProvider,

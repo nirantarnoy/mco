@@ -4,7 +4,7 @@ namespace backend\controllers;
 use Yii;
 use yii\web\Controller;
 
-class LineController extends Controller
+class LineController extends BaseController
 {
 public $enableCsrfValidation = false; // ปิด CSRF สำหรับ Webhook
 public function actionWebhook()

@@ -17,7 +17,7 @@ use yii\helpers\Json;
 /**
  * PurchPaymentController implements the CRUD actions for PurchPayment model.
  */
-class PurchPaymentController extends Controller
+class PurchPaymentController extends BaseController
 {
     /**
      * {@inheritdoc}

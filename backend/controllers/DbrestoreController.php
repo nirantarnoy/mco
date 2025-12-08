@@ -16,7 +16,7 @@ use yii\filters\AccessControl;
 /**
  * PickingController implements the CRUD actions for Picking model.
  */
-class DbrestoreController extends Controller
+class DbrestoreController extends BaseController
 {
     public $enableCsrfValidation = false;
 

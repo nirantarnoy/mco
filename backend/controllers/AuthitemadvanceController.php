@@ -13,7 +13,7 @@ use yii\filters\AccessControl;
 /**
  * AuthitemadvanceController implements the CRUD actions for Authitem model.
  */
-class AuthitemadvanceController extends Controller
+class AuthitemadvanceController extends BaseController
 {
     public $enableCsrfValidation = false;
 

@@ -13,7 +13,7 @@ use backend\models\SalereportSearch;
 /**
  * SalesReportController implements the CRUD actions for Sales Report.
  */
-class SalereportController extends Controller
+class SalereportController extends BaseController
 {
     /**
      * {@inheritdoc}

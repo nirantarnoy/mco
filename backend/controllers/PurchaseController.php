@@ -12,7 +12,7 @@ use yii\web\Response;
 /**
  * PurchaseController implements the CRUD actions for Purchase model.
  */
-class PurchaseController extends Controller
+class PurchaseController extends BaseController
 {
    // public $enableCsrfValidation = false;
     /**

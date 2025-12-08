@@ -15,7 +15,7 @@ use yii\filters\VerbFilter;
 /**
  * UsergroupController implements the CRUD actions for Usergroup model.
  */
-class UsergroupController extends Controller
+class UsergroupController extends BaseController
 {
     public $enableCsrfValidation = false;
     /**

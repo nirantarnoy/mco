@@ -18,7 +18,7 @@ use yii\data\ActiveDataProvider;
 /**
  * TransactionController implements stock transaction management
  */
-class TransactionController extends Controller
+class TransactionController extends BaseController
 {
     // Transaction Types
     const TRANS_TYPE_PO_RECEIVE = 1;

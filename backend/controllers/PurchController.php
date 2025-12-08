@@ -20,7 +20,7 @@ use yii\web\UploadedFile;
 /**
  * PurchController implements the CRUD actions for Purch model.
  */
-class PurchController extends Controller
+class PurchController extends BaseController
 {
     public $enableCsrfValidation = false;
 
@@ -47,10 +47,6 @@ class PurchController extends Controller
     {
         if ($action->id == 'showdoc') {
             $this->enableCsrfValidation = false;
-        }
-        if (!Yii::$app->session->get('company_id')) {
-            Yii::$app->user->logout();
-            return $this->redirect(['site/login']);
         }
         return parent::beforeAction($action);
     }

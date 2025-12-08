@@ -14,7 +14,7 @@ use yii\filters\AccessControl;
 /**
  * PaymenttermController implements the CRUD actions for Paymentterm model.
  */
-class PaymenttermController extends Controller
+class PaymenttermController extends BaseController
 {
     /**
      * @inheritDoc

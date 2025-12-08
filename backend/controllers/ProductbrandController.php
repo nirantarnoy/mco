@@ -16,7 +16,7 @@ use yii\filters\AccessControl;
 /**
  * ProductgroupController implements the CRUD actions for Productgroup model.
  */
-class ProductbrandController extends Controller
+class ProductbrandController extends BaseController
 {
     public $enableCsrfValidation =false;
     /**

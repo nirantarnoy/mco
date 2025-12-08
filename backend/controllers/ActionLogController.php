@@ -12,7 +12,7 @@ use yii\filters\AccessControl;
 /**
  * ActionLogController implements the CRUD operations for ActionLog model.
  */
-class ActionLogController extends Controller
+class ActionLogController extends BaseController
 {
     /**
      * {@inheritdoc}

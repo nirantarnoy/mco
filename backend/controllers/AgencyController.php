@@ -13,7 +13,7 @@ use yii\web\UploadedFile;
 /**
  * AgencyController implements the CRUD actions for Agency model.
  */
-class AgencyController extends Controller
+class AgencyController extends BaseController
 {
     /**
      * @inheritDoc

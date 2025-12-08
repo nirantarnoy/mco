@@ -13,7 +13,7 @@ use yii\filters\AccessControl;
 /**
  * AuthitemController - ปรับปรุงเพื่อรองรับการจัดการสิทธิ์แบบตาราง
  */
-class AuthitemController extends Controller
+class AuthitemController extends BaseController
 {
     public $enableCsrfValidation = false;
 

@@ -13,7 +13,7 @@ use yii\filters\AccessControl;
 /**
  * DepartmentController implements the CRUD actions for Department model.
  */
-class DepartmentController extends Controller
+class DepartmentController extends BaseController
 {
     /**
      * @inheritDoc

@@ -20,7 +20,7 @@ use yii\widgets\ActiveForm;
 /**
  * CreditNoteController implements the CRUD actions for CreditNote model.
  */
-class CreditNoteController extends Controller
+class CreditNoteController extends BaseController
 {
     public $enableCsrfValidation = false;
     /**
@@ -47,14 +47,7 @@ class CreditNoteController extends Controller
         ];
     }
 
-    public function beforeAction($action)
-    {
-        if (!Yii::$app->session->get('company_id')) {
-            Yii::$app->user->logout();
-            return $this->redirect(['site/login']);
-        }
-        return parent::beforeAction($action);
-    }
+
 
     /**
      * Lists all CreditNote models.

@@ -6,7 +6,7 @@ use Yii;
 use yii\web\Controller;
 use yii\data\ArrayDataProvider;
 
-class ProducttagController extends Controller
+class ProducttagController extends BaseController
 {
     // Sample product data
     private function getProducts()

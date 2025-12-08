@@ -20,7 +20,7 @@ use yii\widgets\ActiveForm;
 /**
  * DebitNoteController implements the CRUD actions for DebitNote model.
  */
-class DebitNoteController extends Controller
+class DebitNoteController extends BaseController
 {
     public $enableCsrfValidation = false;
     /**
@@ -47,14 +47,7 @@ class DebitNoteController extends Controller
         ];
     }
 
-    public function beforeAction($action)
-    {
-        if (!Yii::$app->session->get('company_id')) {
-            Yii::$app->user->logout();
-            return $this->redirect(['site/login']);
-        }
-        return parent::beforeAction($action);
-    }
+
 
     /**
      * Lists all DebitNote models.

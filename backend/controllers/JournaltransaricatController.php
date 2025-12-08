@@ -19,7 +19,7 @@ use yii\web\Response;
 /**
  * JournalTransController implements the CRUD actions for JournalTransX model.
  */
-class JournaltransaricatController extends Controller
+class JournaltransaricatController extends BaseController
 {
     /**
      * {@inheritdoc}

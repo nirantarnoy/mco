@@ -13,7 +13,7 @@ use yii\web\UploadedFile;
 /**
  * WorkgerController implements the CRUD actions for Worker model.
  */
-class WorkerController extends Controller
+class WorkerController extends BaseController
 {
     /**
      * @inheritDoc

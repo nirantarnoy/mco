@@ -19,7 +19,7 @@ use yii\web\UploadedFile;
 /**
  * CustomerController implements the CRUD actions for Customer model.
  */
-class CustomerController extends Controller
+class CustomerController extends BaseController
 {
     public $enableCsrfValidation = false;
     /**

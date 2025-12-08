@@ -21,7 +21,7 @@ use yii\web\UploadedFile;
 /**
  * PurchaseMasterController implements the CRUD actions for PurchaseMaster model.
  */
-class PurchasemasterController extends Controller
+class PurchasemasterController extends BaseController
 {
     public $enableCsrfValidation = false;
     /**

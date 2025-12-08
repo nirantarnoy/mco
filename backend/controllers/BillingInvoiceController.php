@@ -13,7 +13,7 @@ use backend\models\Customer;
 use backend\models\Invoice;
 use backend\models\BillingInvoiceSearch;
 
-class BillingInvoiceController extends Controller
+class BillingInvoiceController extends BaseController
 {
     public function behaviors()
     {

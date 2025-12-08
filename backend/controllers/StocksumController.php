@@ -13,7 +13,7 @@ use yii\filters\AccessControl;
 /**
  * StocksumController implements the CRUD actions for Stocksum model.
  */
-class StocksumController extends Controller
+class StocksumController extends BaseController
 {
     /**
      * @inheritDoc

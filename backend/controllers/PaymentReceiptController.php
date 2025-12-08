@@ -16,7 +16,7 @@ use yii\helpers\Json;
 /**
  * PaymentReceiptController implements the CRUD actions for PaymentReceipt model.
  */
-class PaymentReceiptController extends Controller
+class PaymentReceiptController extends BaseController
 {
     /**
      * {@inheritdoc}

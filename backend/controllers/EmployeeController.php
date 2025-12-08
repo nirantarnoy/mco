@@ -18,7 +18,7 @@ use yii\web\UploadedFile;
 /**
  * EmployeeController implements the CRUD actions for Employee model.
  */
-class EmployeeController extends Controller
+class EmployeeController extends BaseController
 {
 
     public $enableCsrfValidation = false;

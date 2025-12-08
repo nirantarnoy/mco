@@ -19,7 +19,7 @@ use yii\web\UploadedFile;
 /**
  * VendorController implements the CRUD actions for Vendor model.
  */
-class VendorController extends Controller
+class VendorController extends BaseController
 {
     public $enableCsrfValidation = false;
     /**

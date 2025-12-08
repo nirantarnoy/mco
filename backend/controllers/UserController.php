@@ -16,7 +16,7 @@ use yii\web\Session;
 /**
  * UserController implements the CRUD actions for User model.
  */
-class UserController extends Controller
+class UserController extends BaseController
 {
     public $enableCsrfValidation = false;
     public function behaviors()

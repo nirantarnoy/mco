@@ -17,7 +17,7 @@ use yii\web\UploadedFile;
 /**
  * PurchReqController implements the CRUD actions for PurchReq model.
  */
-class PurchreqController extends Controller
+class PurchreqController extends BaseController
 {
     public $enableCsrfValidation = false;
     /**
@@ -39,14 +39,7 @@ class PurchreqController extends Controller
         ];
     }
 
-    public function beforeAction($action)
-    {
-        if (!Yii::$app->session->get('company_id')) {
-            Yii::$app->user->logout();
-            return $this->redirect(['site/login']);
-        }
-        return parent::beforeAction($action);
-    }
+
 
     /**
      * Lists all PurchReq models.

@@ -14,7 +14,7 @@ use yii\filters\AccessControl;
 /**
  * WarehouseController implements the CRUD actions for Warehouse model.
  */
-class WarehouseController extends Controller
+class WarehouseController extends BaseController
 {
     public $enableCsrfValidation =false;
     /**

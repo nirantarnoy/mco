@@ -20,7 +20,7 @@ use yii\web\UploadedFile;
 /**
  * PettyCashVoucherController implements the CRUD actions for PettyCashVoucher model.
  */
-class PettyCashVoucherController extends Controller
+class PettyCashVoucherController extends BaseController
 {
     public $enableCsrfValidation = false;
     /**
@@ -38,14 +38,7 @@ class PettyCashVoucherController extends Controller
         ];
     }
 
-    public function beforeAction($action)
-    {
-        if (!Yii::$app->session->get('company_id')) {
-            Yii::$app->user->logout();
-            return $this->redirect(['site/login']);
-        }
-        return parent::beforeAction($action);
-    }
+
 
     /**
      * Lists all PettyCashVoucher models.
