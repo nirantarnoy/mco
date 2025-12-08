@@ -311,12 +311,20 @@ class DeliveryNoteController extends BaseController
             if (!empty($jobLines)) {
                 foreach ($jobLines as $jLine) {
                     $product = $jLine->product;
+                    $unitId = null;
+                    if ($jLine->hasAttribute('unit_id')) {
+                        $unitId = $jLine->unit_id;
+                    }
+                    if (!$unitId && $product) {
+                        $unitId = $product->unit_id;
+                    }
+
                     $lines[] = [
                         'item_no' => count($lines) + 1,
                         'description' => $product ? $product->name : $jLine->note,
                         'part_no' => $product ? $product->code : '',
                         'qty' => $jLine->qty,
-                        'unit_id' => $jLine->unit_id ?: ($product ? $product->unit_id : null),
+                        'unit_id' => $unitId,
                     ];
                 }
             } 
