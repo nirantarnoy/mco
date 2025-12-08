@@ -111,36 +111,10 @@ class PettyCashVoucher extends ActiveRecord
     /**
      * Generate PCV Number
      */
-//    public function generatePcvNo()
-//    {
-//        $year = date('Y');
-//        $sequence = Yii::$app->db->createCommand()
-//            ->select(['last_number'])
-//            ->from('petty_cash_sequence')
-//            ->where(['year' => $year])
-//            ->queryOne();
-//
-//        if (!$sequence) {
-//            // Insert new year
-//            Yii::$app->db->createCommand()
-//                ->insert('petty_cash_sequence', ['year' => $year, 'last_number' => 1])
-//                ->execute();
-//            $nextNumber = 1;
-//        } else {
-//            $nextNumber = $sequence['last_number'] + 1;
-//            Yii::$app->db->createCommand()
-//                ->update('petty_cash_sequence',
-//                    ['last_number' => $nextNumber],
-//                    ['year' => $year])
-//                ->execute();
-//        }
-//
-//        return 'PCV' . $year . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-//    }
-
     public function generatePcvNo()
     {
-        $prefix = 'PCV' . date('y') . str_pad(date('m'), 2, '0', STR_PAD_LEFT);
+        $date = $this->date ? strtotime($this->date) : time();
+        $prefix = 'PCV' . date('y', $date) . str_pad(date('m', $date), 2, '0', STR_PAD_LEFT);
         $lastRecord = self::find()
             ->where(['like', 'pcv_no', $prefix])
             ->orderBy(['id' => SORT_DESC])
@@ -193,9 +167,4 @@ class PettyCashVoucher extends ActiveRecord
         $this->amount = $this->calculateTotalAmount();
         return $this->save(false);
     }
-
-//    public function beforeSave($insert){
-//        $this->company_id = \Yii::$app->session->get('company_id');
-//        return true;
-//    }
 }
