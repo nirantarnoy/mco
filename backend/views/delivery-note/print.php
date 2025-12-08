@@ -74,6 +74,13 @@ $this->title = 'Delivery Note ' . $model->dn_no;
             width: 80%;
             margin: 30px auto 10px;
         }
+        .company-logo {
+            background-color: #fff;
+            padding: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            display: inline-block;
+        }
         @media print {
             @page {
                 margin: 1cm;
@@ -91,6 +98,10 @@ $this->title = 'Delivery Note ' . $model->dn_no;
         </div>
 
         <div class="company-info">
+            <div class="company-logo">
+                <strong style="color: #c41e3a; font-size: 16px;">MCO</strong>
+                <span style="color: #ffa500; font-size: 12px;">▲</span>
+            </div><br>
             <strong>M.C.O. COMPANY LIMITED</strong><br>
             8/18 Koh-Kloy Rd., T. Cherngnoen,<br>
             A. Muang, Rayong 21000 Thailand.<br>

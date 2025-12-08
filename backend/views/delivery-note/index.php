@@ -13,8 +13,6 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="delivery-note-index">
 
-    <h1><?= Html::encode($this->title) ?></h1>
-
     <p>
         <?= Html::a('<i class="fas fa-plus"></i> สร้างใบส่งของ', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
