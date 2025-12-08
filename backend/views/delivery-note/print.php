@@ -12,9 +12,27 @@ $this->title = 'Delivery Note ' . $model->dn_no;
     <meta charset="UTF-8">
     <title><?= Html::encode($this->title) ?></title>
     <style>
+        @font-face {
+            font-family: 'THSarabunPSK';
+            src: url('../../backend/web/fonts/thsarabun/THSarabunPSK.ttf') format('truetype');
+            font-weight: normal;
+        }
+
+        @font-face {
+            font-family: 'THSarabunPSK';
+            src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Bold.ttf') format('truetype');
+            font-weight: bold;
+        }
+
+        @font-face {
+            font-family: 'THSarabunPSK';
+            src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Italic.ttf') format('truetype');
+            font-style: italic;
+        }
+
         body {
-            font-family: 'Sarabun', sans-serif;
-            font-size: 14px;
+            font-family: 'THSarabunPSK', sans-serif;
+            font-size: 16px;
             line-height: 1.4;
         }
         .container {
