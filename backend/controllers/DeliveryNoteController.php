@@ -305,14 +305,31 @@ class DeliveryNoteController extends BaseController
             $customer = $quotation ? $quotation->customer : null;
             
             $lines = [];
-            if ($quotation && $quotation->quotationLines) {
-                foreach ($quotation->quotationLines as $qLine) {
+            
+            // Try to get lines from JobLine first
+            $jobLines = $job->jobLines;
+            if (!empty($jobLines)) {
+                foreach ($jobLines as $jLine) {
+                    $product = $jLine->product;
                     $lines[] = [
                         'item_no' => count($lines) + 1,
-                        'description' => $qLine->name, // Assuming name is description
-                        'part_no' => '', // Need to check where P/N comes from
+                        'description' => $product ? $product->name : $jLine->note,
+                        'part_no' => $product ? $product->code : '',
+                        'qty' => $jLine->qty,
+                        'unit_id' => $jLine->unit_id ?: ($product ? $product->unit_id : null),
+                    ];
+                }
+            } 
+            // Fallback to QuotationLine
+            elseif ($quotation && $quotation->quotationLines) {
+                foreach ($quotation->quotationLines as $qLine) {
+                    $product = $qLine->product;
+                    $lines[] = [
+                        'item_no' => count($lines) + 1,
+                        'description' => $qLine->product_name,
+                        'part_no' => $product ? $product->code : '',
                         'qty' => $qLine->qty,
-                        'unit_id' => $qLine->unit_id,
+                        'unit_id' => $product ? $product->unit_id : null,
                     ];
                 }
             }
@@ -321,7 +338,7 @@ class DeliveryNoteController extends BaseController
                 'customer_name' => $customer ? $customer->name : '',
                 'address' => $customer ? 'เลขที่ ' . $customer->home_number . ' ถนน ' . $customer->street . ' ' . $customer->city_name . ' ' . $customer->province_name : '',
                 'tel' => $customer ? $customer->phone : '',
-                'attn' => '', // Need to find where to get Attn
+                'attn' => '', // Attn might be in Quotation or Customer contact
                 'our_ref' => $job->job_no,
                 'ref_no' => $quotation ? $quotation->quotation_no : '',
                 'lines' => $lines
