@@ -353,6 +353,12 @@
                                         <p>ใบงาน</p>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a href="index.php?r=delivery-note/index" class="nav-link delivery-note">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>ใบตรวจรับงาน</p>
+                                    </a>
+                                </li>
                             <?php endif; ?>
 
                             <?php //if (\Yii::$app->user->can('job/index')): ?>
