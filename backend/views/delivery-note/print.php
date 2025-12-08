@@ -138,23 +138,23 @@ $this->title = 'Delivery Note ' . $model->dn_no;
 
                         <tr>
                             <td><strong>OUR REF :</strong></td>
-                            <td><?= Html::encode($model->our_ref) ?></td>
+                            <td style="border-bottom: 1px dotted #000;"><?= Html::encode($model->our_ref) ?></td>
                         </tr>
                         <tr>
                             <td><strong>FROM :</strong></td>
-                            <td><?= Html::encode($model->from_name) ?></td>
+                            <td style="border-bottom: 1px dotted #000;"><?= Html::encode($model->from_name) ?></td>
                         </tr>
                         <tr>
                             <td><strong>TEL :</strong></td>
-                            <td><?= Html::encode($model->tel) ?></td>
+                            <td style="border-bottom: 1px dotted #000;"><?= Html::encode($model->tel) ?></td>
                         </tr>
                         <tr>
                             <td><strong>REF.NO. :</strong></td>
-                            <td><?= Html::encode($model->ref_no) ?></td>
+                            <td style="border-bottom: 1px dotted #000;"><?= Html::encode($model->ref_no) ?></td>
                         </tr>
                         <tr>
                             <td><strong>Page No. :</strong></td>
-                            <td><?= Html::encode($model->page_no) ?></td>
+                            <td style="border-bottom: 1px dotted #000;"><?= Html::encode($model->page_no) ?></td>
                         </tr>
                     </table>
                 </td>
