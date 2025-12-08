@@ -119,7 +119,8 @@ $this->title = 'Delivery Note ' . $model->dn_no;
             <div class="company-logo">
                 <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png',['style' => 'max-width: 150px;']) ?>
             </div><br>
-            <strong>M.C.O. COMPANY LIMITED</strong><br>
+            <strong>M.C.O. COMPANY LIMITED</strong>
+            <span style="float: right;"><strong>Date :</strong> <?= Yii::$app->formatter->asDate($model->date, 'php:d/m/Y') ?></span><br>
             8/18 Koh-Kloy Rd., T. Cherngnoen,<br>
             A. Muang, Rayong 21000 Thailand.<br>
             ID.NO. 0215543000985<br>
@@ -134,10 +135,7 @@ $this->title = 'Delivery Note ' . $model->dn_no;
                 </td>
                 <td width="40%">
                     <table width="100%">
-                        <tr>
-                            <td><strong>Date :</strong></td>
-                            <td><?= Yii::$app->formatter->asDate($model->date, 'php:d/m/Y') ?></td>
-                        </tr>
+
                         <tr>
                             <td><strong>OUR REF :</strong></td>
                             <td><?= Html::encode($model->our_ref) ?></td>
