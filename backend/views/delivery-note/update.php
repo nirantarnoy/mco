@@ -6,8 +6,8 @@ use yii\helpers\Html;
 /* @var $model backend\models\DeliveryNote */
 /* @var $details backend\models\DeliveryNoteLine[] */
 
-$this->title = 'แก้ไขใบส่งของ: ' . $model->dn_no;
-$this->params['breadcrumbs'][] = ['label' => 'ใบส่งของ', 'url' => ['index']];
+$this->title = 'แก้ไขใบตรวจรับ: ' . $model->dn_no;
+$this->params['breadcrumbs'][] = ['label' => 'ใบตรวจรับ', 'url' => ['index']];
 $this->params['breadcrumbs'][] = ['label' => $model->dn_no, 'url' => ['view', 'id' => $model->id]];
 $this->params['breadcrumbs'][] = 'แก้ไข';
 ?>

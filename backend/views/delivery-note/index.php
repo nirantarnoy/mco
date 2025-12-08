@@ -8,13 +8,13 @@ use yii\widgets\Pjax;
 /* @var $searchModel backend\models\DeliveryNoteSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'ใบส่งของ';
+$this->title = 'ใบตรวจรับ';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="delivery-note-index">
 
     <p>
-        <?= Html::a('<i class="fas fa-plus"></i> สร้างใบส่งของ', ['create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a('<i class="fas fa-plus"></i> สร้างใบตรวจรับ', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
 
     <?php Pjax::begin(); ?>

@@ -7,7 +7,7 @@ use yii\widgets\DetailView;
 /* @var $model backend\models\DeliveryNote */
 
 $this->title = $model->dn_no;
-$this->params['breadcrumbs'][] = ['label' => 'ใบส่งของ', 'url' => ['index']];
+$this->params['breadcrumbs'][] = ['label' => 'ใบตรวจรับ', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
 ?>

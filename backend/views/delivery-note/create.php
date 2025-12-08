@@ -6,8 +6,8 @@ use yii\helpers\Html;
 /* @var $model backend\models\DeliveryNote */
 /* @var $details backend\models\DeliveryNoteLine[] */
 
-$this->title = 'สร้างใบส่งของ';
-$this->params['breadcrumbs'][] = ['label' => 'ใบส่งของ', 'url' => ['index']];
+$this->title = 'สร้างใบตรวจรับ';
+$this->params['breadcrumbs'][] = ['label' => 'ใบตรวจรับ', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="delivery-note-create">
