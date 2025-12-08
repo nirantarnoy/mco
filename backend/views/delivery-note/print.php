@@ -99,8 +99,7 @@ $this->title = 'Delivery Note ' . $model->dn_no;
 
         <div class="company-info">
             <div class="company-logo">
-                <strong style="color: #c41e3a; font-size: 16px;">MCO</strong>
-                <span style="color: #ffa500; font-size: 12px;">▲</span>
+                <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png',['style' => 'max-width: 150px;']) ?>
             </div><br>
             <strong>M.C.O. COMPANY LIMITED</strong><br>
             8/18 Koh-Kloy Rd., T. Cherngnoen,<br>
