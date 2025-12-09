@@ -87,12 +87,12 @@ class PettyCashReportSearch extends Model
         // Build SQL query
         $sql = "SELECT 
                     d.*,
-                    v.pcv_nox,
+                    v.pcv_no,
                     v.date as voucher_date,
                     v.name as voucher_name
                 FROM petty_cash_detail d
                 INNER JOIN petty_cash_voucher v ON d.voucher_id = v.id
-                WHERE v.status = 1";
+                WHERE v.approve_status = 1";
 
         $params = [];
         
@@ -147,7 +147,7 @@ class PettyCashReportSearch extends Model
                     COUNT(*) as count_transactions
                 FROM petty_cash_detail d
                 INNER JOIN petty_cash_voucher v ON d.voucher_id = v.id
-                WHERE v.status = 1";
+                WHERE v.approve_status = 1";
 
         $params = [];
         
@@ -200,7 +200,7 @@ class PettyCashReportSearch extends Model
                     COUNT(*) as count_transactions
                 FROM petty_cash_detail d
                 INNER JOIN petty_cash_voucher v ON d.voucher_id = v.id
-                WHERE v.status = 1";
+                WHERE v.approve_status = 1";
 
         $params = [];
         
