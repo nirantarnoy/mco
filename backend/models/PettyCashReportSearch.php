@@ -6,7 +6,6 @@ use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use yii\data\SqlDataProvider;
-use yii\db\Query;
 
 /**
  * PettyCashReportSearch represents the model behind the search form for Petty Cash Report.
@@ -97,8 +96,11 @@ class PettyCashReportSearch extends Model
 
         $params = [];
         
-        // Robust date logic: use detail_date if valid, else voucher date
-        $dateField = "IF(d.detail_date IS NULL OR d.detail_date = '' OR d.detail_date = '0000-00-00', v.date, d.detail_date)";
+        // Use CASE WHEN for robust date selection
+        $dateField = "(CASE 
+            WHEN d.detail_date IS NOT NULL AND d.detail_date != '' AND d.detail_date != '0000-00-00' THEN d.detail_date 
+            ELSE v.date 
+        END)";
 
         // Filter by date range
         if ($this->date_from) {
@@ -154,8 +156,11 @@ class PettyCashReportSearch extends Model
 
         $params = [];
         
-        // Robust date logic: use detail_date if valid, else voucher date
-        $dateField = "IF(d.detail_date IS NULL OR d.detail_date = '' OR d.detail_date = '0000-00-00', v.date, d.detail_date)";
+        // Use CASE WHEN for robust date selection
+        $dateField = "(CASE 
+            WHEN d.detail_date IS NOT NULL AND d.detail_date != '' AND d.detail_date != '0000-00-00' THEN d.detail_date 
+            ELSE v.date 
+        END)";
 
         // Filter by date range
         if ($this->date_from) {
@@ -210,8 +215,11 @@ class PettyCashReportSearch extends Model
 
         $params = [];
         
-        // Robust date logic: use detail_date if valid, else voucher date
-        $dateField = "IF(d.detail_date IS NULL OR d.detail_date = '' OR d.detail_date = '0000-00-00', v.date, d.detail_date)";
+        // Use CASE WHEN for robust date selection
+        $dateField = "(CASE 
+            WHEN d.detail_date IS NOT NULL AND d.detail_date != '' AND d.detail_date != '0000-00-00' THEN d.detail_date 
+            ELSE v.date 
+        END)";
 
         // Apply same filters
         if ($this->date_from) {
