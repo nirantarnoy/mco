@@ -99,11 +99,11 @@ class PettyCashReportSearch extends Model
 
         // Filter by date range
         if ($this->date_from) {
-            $sql .= " AND v.date >= :date_from";
+            $sql .= " AND COALESCE(d.detail_date, v.date) >= :date_from";
             $params[':date_from'] = $this->date_from;
         }
         if ($this->date_to) {
-            $sql .= " AND v.date <= :date_to";
+            $sql .= " AND COALESCE(d.detail_date, v.date) <= :date_to";
             $params[':date_to'] = $this->date_to;
         }
 
@@ -153,11 +153,11 @@ class PettyCashReportSearch extends Model
 
         // Filter by date range
         if ($this->date_from) {
-            $sql .= " AND v.date >= :date_from";
+            $sql .= " AND COALESCE(d.detail_date, v.date) >= :date_from";
             $params[':date_from'] = $this->date_from;
         }
         if ($this->date_to) {
-            $sql .= " AND v.date <= :date_to";
+            $sql .= " AND COALESCE(d.detail_date, v.date) <= :date_to";
             $params[':date_to'] = $this->date_to;
         }
 
@@ -206,11 +206,11 @@ class PettyCashReportSearch extends Model
 
         // Apply same filters
         if ($this->date_from) {
-            $sql .= " AND v.date >= :date_from";
+            $sql .= " AND COALESCE(d.detail_date, v.date) >= :date_from";
             $params[':date_from'] = $this->date_from;
         }
         if ($this->date_to) {
-            $sql .= " AND v.date <= :date_to";
+            $sql .= " AND COALESCE(d.detail_date, v.date) <= :date_to";
             $params[':date_to'] = $this->date_to;
         }
         if (!empty($this->ac_code)) {

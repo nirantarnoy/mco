@@ -197,41 +197,6 @@ $totalSummary = $searchModel->getTotalSummary();
                             ],
                         ],
                     ]); ?>
-                <?php else: ?>
-                    <!-- Detail Report -->
-                    <?= GridView::widget([
-                        'dataProvider' => $dataProvider,
-                        'tableOptions' => ['class' => 'table table-striped table-bordered table-sm mb-0'],
-                        'summary' => 'แสดง {begin} - {end} จากทั้งหมด {totalCount} รายการ',
-                        'emptyText' => '<div class="text-center text-muted p-4"><i class="fas fa-inbox fa-2x"></i><br>ไม่พบข้อมูล</div>',
-                        'showFooter' => true,
-                        'footerRowOptions' => ['class' => 'table-warning font-weight-bold'],
-                        'columns' => [
-                            ['class' => 'yii\grid\SerialColumn'],
-                            [
-                                'attribute' => 'voucher_date',
-                                'label' => 'วันที่',
-                                'headerOptions' => ['width' => '100px'],
-                                'contentOptions' => ['class' => 'text-center'],
-                                'value' => function($model) {
-                                    return Yii::$app->formatter->asDate($model['voucher_date'], 'dd/MM/yyyy');
-                                },
-                                'footer' => '<strong>รวมทั้งหมด</strong>',
-                                'footerOptions' => ['class' => 'text-center', 'colspan' => 3],
-                            ],
-                            [
-                                'attribute' => 'pcv_no',
-                                'label' => 'เลขที่เอกสาร',
-                                'headerOptions' => ['width' => '120px'],
-                                'contentOptions' => ['class' => 'text-center'],
-                                'footerOptions' => ['style' => 'display: none;'],
-                            ],
-                            [
-                                'attribute' => 'detail',
-                                'label' => 'รายการ',
-                                'value' => function($model) {
-                                    $detail = isset($model['detail']) ? $model['detail'] : '';
-                                    $acCode = isset($model['ac_code']) ? $model['ac_code'] : '';
                                     return $detail . ($acCode ? ' (A/C: ' . $acCode . ')' : '');
                                 },
                                 'footerOptions' => ['style' => 'display: none;'],
