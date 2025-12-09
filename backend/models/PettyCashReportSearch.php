@@ -96,14 +96,17 @@ class PettyCashReportSearch extends Model
                 WHERE v.status = 1";
 
         $params = [];
+        
+        // Robust date logic: use detail_date if valid, else voucher date
+        $dateField = "IF(d.detail_date IS NULL OR d.detail_date = '' OR d.detail_date = '0000-00-00', v.date, d.detail_date)";
 
         // Filter by date range
         if ($this->date_from) {
-            $sql .= " AND COALESCE(d.detail_date, v.date) >= :date_from";
+            $sql .= " AND $dateField >= :date_from";
             $params[':date_from'] = $this->date_from;
         }
         if ($this->date_to) {
-            $sql .= " AND COALESCE(d.detail_date, v.date) <= :date_to";
+            $sql .= " AND $dateField <= :date_to";
             $params[':date_to'] = $this->date_to;
         }
 
@@ -150,14 +153,17 @@ class PettyCashReportSearch extends Model
                 WHERE v.status = 1";
 
         $params = [];
+        
+        // Robust date logic: use detail_date if valid, else voucher date
+        $dateField = "IF(d.detail_date IS NULL OR d.detail_date = '' OR d.detail_date = '0000-00-00', v.date, d.detail_date)";
 
         // Filter by date range
         if ($this->date_from) {
-            $sql .= " AND COALESCE(d.detail_date, v.date) >= :date_from";
+            $sql .= " AND $dateField >= :date_from";
             $params[':date_from'] = $this->date_from;
         }
         if ($this->date_to) {
-            $sql .= " AND COALESCE(d.detail_date, v.date) <= :date_to";
+            $sql .= " AND $dateField <= :date_to";
             $params[':date_to'] = $this->date_to;
         }
 
@@ -203,14 +209,17 @@ class PettyCashReportSearch extends Model
                 WHERE v.status = 1";
 
         $params = [];
+        
+        // Robust date logic: use detail_date if valid, else voucher date
+        $dateField = "IF(d.detail_date IS NULL OR d.detail_date = '' OR d.detail_date = '0000-00-00', v.date, d.detail_date)";
 
         // Apply same filters
         if ($this->date_from) {
-            $sql .= " AND COALESCE(d.detail_date, v.date) >= :date_from";
+            $sql .= " AND $dateField >= :date_from";
             $params[':date_from'] = $this->date_from;
         }
         if ($this->date_to) {
-            $sql .= " AND COALESCE(d.detail_date, v.date) <= :date_to";
+            $sql .= " AND $dateField <= :date_to";
             $params[':date_to'] = $this->date_to;
         }
         if (!empty($this->ac_code)) {

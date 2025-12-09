@@ -149,28 +149,6 @@ $totalSummary = $searchModel->getTotalSummary();
                                 'headerOptions' => ['width' => '100px'],
                                 'contentOptions' => ['class' => 'text-right'],
                                 'value' => function($model) {
-                                    return number_format($model['total_vat_amount'], 2);
-                                },
-                                'footer' => number_format($totalSummary['total_vat_amount'], 2),
-                                'footerOptions' => ['class' => 'text-right'],
-                            ],
-                            [
-                                'attribute' => 'total_wht',
-                                'label' => 'W/H',
-                                'headerOptions' => ['width' => '100px'],
-                                'contentOptions' => ['class' => 'text-right'],
-                                'value' => function($model) {
-                                    return number_format($model['total_wht'], 2);
-                                },
-                                'footer' => number_format($totalSummary['total_wht'], 2),
-                                'footerOptions' => ['class' => 'text-right'],
-                            ],
-                            [
-                                'attribute' => 'total_other',
-                                'label' => 'อื่นๆ',
-                                'headerOptions' => ['width' => '100px'],
-                                'contentOptions' => ['class' => 'text-right'],
-                                'value' => function($model) {
                                     return number_format($model['total_other'], 2);
                                 },
                                 'footer' => number_format($totalSummary['total_other'], 2),

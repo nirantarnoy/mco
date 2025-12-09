@@ -254,7 +254,7 @@ window.onload = function() {
                 $runningBalance -= $model['total']; // Subtract expenses
                 ?>
                 <tr>
-                    <td class="text-center"><?= Yii::$app->formatter->asDate(!empty($model['detail_date']) ? $model['detail_date'] : $model['voucher_date'], 'dd/MM/yy') ?></td>
+                    <td class="text-center"><?= Yii::$app->formatter->asDate((!empty($model['detail_date']) && $model['detail_date'] != '0000-00-00') ? $model['detail_date'] : $model['voucher_date'], 'dd/MM/yy') ?></td>
                     <td class="text-left"><?= Html::encode($model['detail']) ?></td>
                     <td class="text-right">-</td>
                     <td class="text-right"><?= number_format($model['amount'], 2) ?></td>
