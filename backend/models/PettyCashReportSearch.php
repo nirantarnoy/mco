@@ -96,11 +96,9 @@ class PettyCashReportSearch extends Model
 
         $params = [];
         
-        // Use CASE WHEN for robust date selection
-        $dateField = "(CASE 
-            WHEN d.detail_date IS NOT NULL AND d.detail_date != '' AND d.detail_date != '0000-00-00' THEN d.detail_date 
-            ELSE v.date 
-        END)";
+        // Robust date logic: use detail_date if it looks like a valid date (after 1990), else voucher date
+        // This handles NULL, empty string, '0', '0000-00-00' correctly
+        $dateField = "IF(d.detail_date > '1990-01-01', d.detail_date, v.date)";
 
         // Filter by date range
         if ($this->date_from) {
@@ -156,11 +154,8 @@ class PettyCashReportSearch extends Model
 
         $params = [];
         
-        // Use CASE WHEN for robust date selection
-        $dateField = "(CASE 
-            WHEN d.detail_date IS NOT NULL AND d.detail_date != '' AND d.detail_date != '0000-00-00' THEN d.detail_date 
-            ELSE v.date 
-        END)";
+        // Robust date logic: use detail_date if it looks like a valid date (after 1990), else voucher date
+        $dateField = "IF(d.detail_date > '1990-01-01', d.detail_date, v.date)";
 
         // Filter by date range
         if ($this->date_from) {
@@ -215,11 +210,8 @@ class PettyCashReportSearch extends Model
 
         $params = [];
         
-        // Use CASE WHEN for robust date selection
-        $dateField = "(CASE 
-            WHEN d.detail_date IS NOT NULL AND d.detail_date != '' AND d.detail_date != '0000-00-00' THEN d.detail_date 
-            ELSE v.date 
-        END)";
+        // Robust date logic: use detail_date if it looks like a valid date (after 1990), else voucher date
+        $dateField = "IF(d.detail_date > '1990-01-01', d.detail_date, v.date)";
 
         // Apply same filters
         if ($this->date_from) {
