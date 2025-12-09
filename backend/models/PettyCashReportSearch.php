@@ -175,6 +175,8 @@ class PettyCashReportSearch extends Model
 
         $sql .= " GROUP BY d.ac_code ORDER BY d.ac_code ASC";
 
+        echo $sql; return;
+
         return new SqlDataProvider([
             'sql' => $sql,
             'params' => $params,
