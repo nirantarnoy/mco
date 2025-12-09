@@ -87,7 +87,7 @@ class PettyCashReportSearch extends Model
         // Build SQL query
         $sql = "SELECT 
                     d.*,
-                    v.pcv_no,
+                    v.pcv_nox,
                     v.date as voucher_date,
                     v.name as voucher_name
                 FROM petty_cash_detail d
@@ -120,6 +120,7 @@ class PettyCashReportSearch extends Model
         }
 
         $sql .= " ORDER BY v.date ASC, v.id ASC, d.sort_order ASC";
+
 
         return new SqlDataProvider([
             'sql' => $sql,
@@ -174,8 +175,6 @@ class PettyCashReportSearch extends Model
         }
 
         $sql .= " GROUP BY d.ac_code ORDER BY d.ac_code ASC";
-
-        echo $sql; return;
 
         return new SqlDataProvider([
             'sql' => $sql,
