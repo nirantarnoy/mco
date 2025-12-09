@@ -126,28 +126,6 @@ $totalSummary = $searchModel->getTotalSummary();
                             ['class' => 'yii\grid\SerialColumn'],
                             [
                                 'attribute' => 'ac_code',
-                                'label' => 'A/C CODE',
-                                'headerOptions' => ['width' => '120px'],
-                                'contentOptions' => ['class' => 'text-center'],
-                                'footer' => '<strong>รวมทั้งหมด</strong>',
-                                'footerOptions' => ['class' => 'text-center'],
-                            ],
-                            [
-                                'attribute' => 'total_amount',
-                                'label' => 'จำนวนเงิน',
-                                'headerOptions' => ['width' => '120px'],
-                                'contentOptions' => ['class' => 'text-right'],
-                                'value' => function($model) {
-                                    return number_format($model['total_amount'], 2);
-                                },
-                                'footer' => number_format($totalSummary['total_amount'], 2),
-                                'footerOptions' => ['class' => 'text-right'],
-                            ],
-                            [
-                                'attribute' => 'total_vat_amount',
-                                'label' => 'VAT',
-                                'headerOptions' => ['width' => '100px'],
-                                'contentOptions' => ['class' => 'text-right'],
                                 'value' => function($model) {
                                     return number_format($model['total_other'], 2);
                                 },

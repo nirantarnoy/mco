@@ -96,17 +96,13 @@ class PettyCashReportSearch extends Model
 
         $params = [];
         
-        // Robust date logic: use detail_date if it looks like a valid date (after 1990), else voucher date
-        // This handles NULL, empty string, '0', '0000-00-00' correctly
-        $dateField = "IF(d.detail_date > '1990-01-01', d.detail_date, v.date)";
-
         // Filter by date range
         if ($this->date_from) {
-            $sql .= " AND $dateField >= :date_from";
+            $sql .= " AND v.date >= :date_from";
             $params[':date_from'] = $this->date_from;
         }
         if ($this->date_to) {
-            $sql .= " AND $dateField <= :date_to";
+            $sql .= " AND v.date <= :date_to";
             $params[':date_to'] = $this->date_to;
         }
 
@@ -154,16 +150,13 @@ class PettyCashReportSearch extends Model
 
         $params = [];
         
-        // Robust date logic: use detail_date if it looks like a valid date (after 1990), else voucher date
-        $dateField = "IF(d.detail_date > '1990-01-01', d.detail_date, v.date)";
-
         // Filter by date range
         if ($this->date_from) {
-            $sql .= " AND $dateField >= :date_from";
+            $sql .= " AND v.date >= :date_from";
             $params[':date_from'] = $this->date_from;
         }
         if ($this->date_to) {
-            $sql .= " AND $dateField <= :date_to";
+            $sql .= " AND v.date <= :date_to";
             $params[':date_to'] = $this->date_to;
         }
 
@@ -210,16 +203,13 @@ class PettyCashReportSearch extends Model
 
         $params = [];
         
-        // Robust date logic: use detail_date if it looks like a valid date (after 1990), else voucher date
-        $dateField = "IF(d.detail_date > '1990-01-01', d.detail_date, v.date)";
-
         // Apply same filters
         if ($this->date_from) {
-            $sql .= " AND $dateField >= :date_from";
+            $sql .= " AND v.date >= :date_from";
             $params[':date_from'] = $this->date_from;
         }
         if ($this->date_to) {
-            $sql .= " AND $dateField <= :date_to";
+            $sql .= " AND v.date <= :date_to";
             $params[':date_to'] = $this->date_to;
         }
         if (!empty($this->ac_code)) {
