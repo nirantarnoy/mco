@@ -694,6 +694,28 @@ window.addEventListener('afterprint', function() {
 
 <div class="no-print text-center mb-4">
     <div class="print-controls">
+        <!-- Combined Controls Row -->
+        <div style="display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
+            <!-- Language Switcher -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="languageSelect" style="font-weight: bold; margin: 0;">ภาษา / Language:</label>
+                <select id="languageSelect" onchange="changeLanguage()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+                    <option value="th" selected>ไทย/อังกฤษ (Bilingual)</option>
+                    <option value="en">English Only</option>
+                </select>
+            </div>
+
+            <!-- Header Selection -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="headerSelect" style="font-weight: bold; margin: 0;">เลือกหัวบริษัท:</label>
+                <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+                    <option value="mco" selected>M.C.O. Company Limited (Default)</option>
+                    <option value="alternative">Alternative Company</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Print Buttons -->
         <div class="btn-group">
             <button onclick="window.printMultipleCopies()" class="btn btn-primary btn-print">
                 <i class="fas fa-print"></i> พิมพ์ 3 ใบ (ต้นฉบับ + สำเนา 2 ใบ)
@@ -714,15 +736,6 @@ window.addEventListener('afterprint', function() {
             <div class="progress-text">เตรียมพิมพ์...</div>
         </div>
     </div>
-</div>
-
-<!-- Header Selection Dropdown (No Print) -->
-<div class="no-print" style="margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 5px;">
-    <label for="headerSelect" style="font-weight: bold; margin-right: 10px;">เลือกหัวบริษัท:</label>
-    <select id="headerSelect" onchange="changeHeader()" style="padding: 5px 10px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
-        <option value="mco" selected>M.C.O. Company Limited (Default)</option>
-        <option value="alternative">Alternative Company</option>
-    </select>
 </div>
 
 <div class="print-container original">
@@ -916,22 +929,22 @@ window.addEventListener('afterprint', function() {
     <!-- Signature Section -->
     <div class="signature-section">
         <div class="signature-box">
-            <div style="font-size: 12px; font-weight: 900; margin-bottom: 10px;">ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง</div>
+            <div id="verificationText" style="font-size: 12px; font-weight: 900; margin-bottom: 10px;">ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง</div>
             <div class="signature-line" style="margin-top: 30px;"></div>
             <div class="signature-title">ผู้รับสินค้า / Received By</div>
-            <div style="text-align: center; font-size: 12px; font-weight: 900;">วันที่ / Date______/_____/_____</div>
+            <div class="signature-date-label" style="text-align: center; font-size: 12px; font-weight: 900;">วันที่ / Date______/_____/_____</div>
         </div>
         <div class="signature-box">
             <div style="height: 22px;"></div>
             <div class="signature-line" style="margin-top: 30px;"></div>
             <div class="signature-title">ผู้ส่งสินค้า / Send By</div>
-            <div style="text-align: center; font-size: 12px; font-weight: 900;">วันที่ / Date______/_____/_____</div>
+            <div class="signature-date-label" style="text-align: center; font-size: 12px; font-weight: 900;">วันที่ / Date______/_____/_____</div>
         </div>
         <div class="signature-box">
             <div style="height: 22px;"></div>
             <div class="signature-line" style="margin-top: 30px;"></div>
             <div class="signature-title">ผู้มีอำนาจลงนาม / Authorized Signature</div>
-            <div style="text-align: center; font-size: 12px; font-weight: 900;">วันที่ / Date______/_____/_____</div>
+            <div class="signature-date-label" style="text-align: center; font-size: 12px; font-weight: 900;">วันที่ / Date______/_____/_____</div>
         </div>
     </div>
 </div>
@@ -971,5 +984,146 @@ window.addEventListener('afterprint', function() {
         document.getElementById('addressThai').textContent = company.addressThai;
         document.getElementById('addressEng').textContent = company.addressEng;
         document.getElementById('companyTaxId').textContent = company.taxId;
+    }
+
+    function changeLanguage() {
+        const lang = document.getElementById('languageSelect').value;
+
+        // Invoice title
+        const invoiceTitle = document.querySelector('.invoice-title');
+        if (invoiceTitle) {
+            invoiceTitle.textContent = lang === 'en' ? 'Invoice/Delivery Note' : 'ใบแจ้งหนี้/ใบส่งสินค้า-บริการ';
+        }
+
+        // Not tax invoice
+        const notTaxInvoice = document.querySelector('.not-tax-invoice');
+        if (notTaxInvoice) {
+            notTaxInvoice.textContent = lang === 'en' ? '(Not a Tax Invoice)' : '(ไม่ใช่ใบกำกับภาษี)';
+        }
+
+        // Field labels - hide Thai when English only
+        const fieldLabels = document.querySelectorAll('.field-label');
+        fieldLabels.forEach(label => {
+            const text = label.textContent.trim();
+            if (lang === 'en') {
+                if (text === 'รหัสลูกค้า :') label.style.display = 'none';
+                else if (text === 'Code') {
+                    label.textContent = 'Code:';
+                    label.style.display = 'block';
+                } else if (text === 'ขายให้ :') label.style.display = 'none';
+                else if (text === 'Sold To') {
+                    label.textContent = 'Sold To:';
+                    label.style.display = 'block';
+                } else if (text.includes('วันที่ / Date:')) label.textContent = 'Date:';
+                else if (text.includes('เลขที่ / In.No.:')) label.textContent = 'In.No.:';
+                else if (text.includes('ใบสั่งซื้อเลขที่ / P/O No.:')) label.textContent = 'P/O No.:';
+                else if (text.includes('วันที่สั่งซื้อ / P/O Date:')) label.textContent = 'P/O Date:';
+                else if (text.includes('เงื่อนไข / กำหนดชำระ / Credit, Due:')) label.textContent = 'Credit, Due:';
+            } else {
+                if (text === 'รหัสลูกค้า :') label.style.display = 'block';
+                else if (text === 'Code:') {
+                    label.textContent = 'Code';
+                    label.style.display = 'block';
+                } else if (text === 'ขายให้ :') label.style.display = 'block';
+                else if (text === 'Sold To:') {
+                    label.textContent = 'Sold To';
+                    label.style.display = 'block';
+                } else if (text === 'Date:') label.textContent = 'วันที่ / Date:';
+                else if (text === 'In.No.:') label.textContent = 'เลขที่ / In.No.:';
+                else if (text === 'P/O No.:') label.textContent = 'ใบสั่งซื้อเลขที่ / P/O No.:';
+                else if (text === 'P/O Date:') label.textContent = 'วันที่สั่งซื้อ / P/O Date:';
+                else if (text === 'Credit, Due:') label.textContent = 'เงื่อนไข / กำหนดชำระ / Credit, Due:';
+            }
+        });
+
+        // Table headers
+        const tableHeaders = document.querySelectorAll('.items-table thead th');
+        if (tableHeaders.length >= 5) {
+            if (lang === 'en') {
+                tableHeaders[0].innerHTML = 'Item';
+                tableHeaders[1].innerHTML = 'Description';
+                tableHeaders[2].innerHTML = 'Quantity';
+                tableHeaders[3].innerHTML = 'Unit/Price';
+                tableHeaders[4].innerHTML = 'Amount';
+            } else {
+                tableHeaders[0].innerHTML = 'ลำดับ<br>Item';
+                tableHeaders[1].innerHTML = 'รายการ<br>Description';
+                tableHeaders[2].innerHTML = 'จำนวน<br>Quantity';
+                tableHeaders[3].innerHTML = 'ราคาต่อหน่วย<br>Unit/Price';
+                tableHeaders[4].innerHTML = 'จำนวนเงินรวม<br>Amount';
+            }
+        }
+
+        // Summary labels in footer
+        const footerCells = document.querySelectorAll('.items-table tfoot td');
+        footerCells.forEach(cell => {
+            const text = cell.textContent;
+            if (text.includes('รวมเงิน') || text.includes('Total')) {
+                cell.innerHTML = lang === 'en' ?
+                    '<span style="font-weight: 800; -webkit-text-stroke: 0.25px black;">Total</span>' :
+                    '<span style="font-weight: 800; -webkit-text-stroke: 0.25px black;">รวมเงิน / Total</span>';
+            } else if (text.includes('ภาษีมูลค่าเพิ่ม') || text.includes('Vat')) {
+                const vatPercent = text.match(/\d+/) || ['7'];
+                cell.innerHTML = lang === 'en' ?
+                    '<span style="font-weight: 800; -webkit-text-stroke: 0.25px black;">Vat ' + vatPercent[0] + '%</span>' :
+                    '<span style="font-weight: 800; -webkit-text-stroke: 0.25px black;">ภาษีมูลค่าเพิ่ม / Vat ' + vatPercent[0] + '%</span>';
+            } else if (text.includes('รวมเงินทั้งสิ้น') || text.includes('Grand Total')) {
+                cell.innerHTML = lang === 'en' ?
+                    '<span style="font-weight: 800; -webkit-text-stroke: 0.25px black;">Grand Total</span>' :
+                    '<span style="font-weight: 800; -webkit-text-stroke: 0.25px black;">รวมเงินทั้งสิ้น / Grand Total</span>';
+            }
+        });
+
+        // Amount text
+        const amountText = document.querySelector('.amount-text');
+        if (amountText) {
+            amountText.textContent = lang === 'en' ? '(In Words)' : '(ตัวอักษร)';
+        }
+
+        // Notes section
+        const notesTitle = document.querySelector('.notes-title');
+        if (notesTitle) {
+            if (lang === 'en') {
+                notesTitle.innerHTML = 'Notes:<br>' +
+                    '<span style="line-height: 2;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. The above items remain the property of the seller until full payment is received.</span><br>' +
+                    '<span style="line-height: 2;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. Products purchased over 7 days, the company reserves the right not to accept returns and charge 1.5% interest per month.</span><br>' +
+                    '<span style="line-height: 2;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. Payment via Bangkok Bank PCL, Rayong Branch, Account: M.C.O. Company Limited, No: 277-3-02318-5, Current Account.</span>';
+            } else {
+                notesTitle.innerHTML = 'หมายเหตุ :<br>' +
+                    '<span style="line-height: 2;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. ตามรายการข้างต้น แม้จะได้ส่งมอบสินค้าแก่ผู้ซื้อแล้วก็ยังเป็นทรัพย์สินของผู้ขายจนกว่าผู้ซื้อจะได้รับชำระเงิน</span><br>' +
+                    '<span style="line-height: 2;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. สินค้าที่ซื้อไปเกินกว่า 7 วัน ทางบริษัทฯใคร่ขอสงวนสิทธิ์ไม่รับคืนสินค้าและคิดดอกเบี้ยร้อยละ1.5 ต่อเดือน</span><br>' +
+                    '<span style="line-height: 2;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. สามารถชำระผ่านช่องทางธนาคารกรุงเทพจำกัด (มหาชน) สาขาระยอง ชื่อบัญชีบจ.เอ็ม.ซี.โอ. เลขบัญชี277-3-02318-5 บัญชีกระแสรายวัน</span>';
+            }
+        }
+
+        // Signature titles
+        const signatureTitles = document.querySelectorAll('.signature-title');
+        if (signatureTitles.length >= 3) {
+            if (lang === 'en') {
+                signatureTitles[0].textContent = 'Received By';
+                signatureTitles[1].textContent = 'Send By';
+                signatureTitles[2].textContent = 'Authorized Signature';
+            } else {
+                signatureTitles[0].textContent = 'ผู้รับสินค้า / Received By';
+                signatureTitles[1].textContent = 'ผู้ส่งสินค้า / Send By';
+                signatureTitles[2].textContent = 'ผู้มีอำนาจลงนาม / Authorized Signature';
+            }
+        }
+
+        // Signature verification text
+        const verificationText = document.getElementById('verificationText');
+        if (verificationText) {
+            verificationText.textContent = lang === 'en' ?
+                'Goods received as per above list correctly' :
+                'ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง';
+        }
+
+        // Signature date labels
+        const dateLabels = document.querySelectorAll('.signature-date-label');
+        dateLabels.forEach(label => {
+            label.textContent = lang === 'en' ?
+                'Date______/_____/_____' :
+                'วันที่ / Date______/_____/_____';
+        });
     }
 </script>

@@ -341,6 +341,115 @@ $formatter = Yii::$app->formatter;
             document.getElementById('companyAddress').innerHTML = company.address;
             document.getElementById('companyContact').innerHTML = company.contact;
         }
+
+        function changeLanguage() {
+            const lang = document.getElementById('languageSelect').value;
+
+            // Document titles
+            const docTitle = document.querySelector('.document-title');
+            const docTitleEn = document.querySelector('.document-title-en');
+            if (lang === 'en') {
+                if (docTitle) docTitle.textContent = 'CREDIT NOTE / TAX INVOICE';
+                if (docTitleEn) docTitleEn.style.display = 'none';
+            } else {
+                if (docTitle) docTitle.textContent = 'ใบลดหนี้ / ใบกำกับภาษี';
+                if (docTitleEn) {
+                    docTitleEn.style.display = 'block';
+                    docTitleEn.textContent = 'CREDIT NOTE / TAX INVOICE';
+                }
+            }
+
+            // Customer section labels
+            const labels = document.querySelectorAll('.label, .label-right');
+            labels.forEach(label => {
+                const text = label.textContent.trim();
+                if (lang === 'en') {
+                    if (text === 'เลขประจำตัวผู้เสียภาษี') label.textContent = 'Tax ID';
+                    else if (text === 'รหัสลูกค้า') label.textContent = 'Customer Code';
+                    else if (text === 'ชื่อลูกค้า') label.textContent = 'Customer Name';
+                    else if (text === 'ที่อยู่') label.textContent = 'Address';
+                    else if (text === 'เลขที่') label.textContent = 'No.';
+                    else if (text === 'วันที่') label.textContent = 'Date';
+                    else if (text === 'ใบกำกับภาษีเดิมเลขที่') label.textContent = 'Original Invoice No.';
+                    else if (text === 'ลงวันที่') label.textContent = 'Date';
+                } else {
+                    if (text === 'Tax ID') label.textContent = 'เลขประจำตัวผู้เสียภาษี';
+                    else if (text === 'Customer Code') label.textContent = 'รหัสลูกค้า';
+                    else if (text === 'Customer Name') label.textContent = 'ชื่อลูกค้า';
+                    else if (text === 'Address') label.textContent = 'ที่อยู่';
+                    else if (text === 'No.') label.textContent = 'เลขที่';
+                    else if (text === 'Date' && !label.classList.contains('label-right')) label.textContent = 'ลงวันที่';
+                    else if (text === 'Date' && label.classList.contains('label-right')) label.textContent = 'วันที่';
+                    else if (text === 'Original Invoice No.') label.textContent = 'ใบกำกับภาษีเดิมเลขที่';
+                }
+            });
+
+            // Table headers
+            const tableHeaders = document.querySelectorAll('.items-table thead th');
+            if (tableHeaders.length >= 5) {
+                if (lang === 'en') {
+                    tableHeaders[0].textContent = 'No.';
+                    tableHeaders[1].textContent = 'Description';
+                    tableHeaders[2].textContent = 'Quantity';
+                    tableHeaders[3].textContent = 'Price';
+                    tableHeaders[4].textContent = 'Total';
+                } else {
+                    tableHeaders[0].textContent = 'ลำดับ';
+                    tableHeaders[1].textContent = 'รายการ';
+                    tableHeaders[2].textContent = 'จำนวน';
+                    tableHeaders[3].textContent = 'ราคา';
+                    tableHeaders[4].textContent = 'ราคารวม';
+                }
+            }
+
+            // Summary labels in tfoot
+            const summaryLabels = document.querySelectorAll('.items-table tfoot td');
+            summaryLabels.forEach(cell => {
+                const text = cell.textContent.trim();
+                if (lang === 'en') {
+                    if (text === 'มูลค่าสินค้าตามใบกำกับฯเดิม') cell.textContent = 'Original Invoice Amount';
+                    else if (text === 'มูลค่าสินค้าตามจริง') cell.textContent = 'Actual Amount';
+                    else if (text === 'รวมมูลค่าสินค้า') cell.textContent = 'Total Amount';
+                    else if (text.includes('ภาษีมูลค่าเพิ่ม')) {
+                        const vatPercent = text.match(/\d+/);
+                        cell.textContent = 'VAT ' + (vatPercent ? vatPercent[0] : '7') + '%';
+                    } else if (text === 'รวมเป็นเงินทั้งสิ้น') cell.textContent = 'Grand Total';
+                } else {
+                    if (text === 'Original Invoice Amount') cell.textContent = 'มูลค่าสินค้าตามใบกำกับฯเดิม';
+                    else if (text === 'Actual Amount') cell.textContent = 'มูลค่าสินค้าตามจริง';
+                    else if (text === 'Total Amount') cell.textContent = 'รวมมูลค่าสินค้า';
+                    else if (text.includes('VAT')) {
+                        const vatPercent = text.match(/\d+/);
+                        cell.textContent = 'ภาษีมูลค่าเพิ่ม ' + (vatPercent ? vatPercent[0] : '7') + '%';
+                    } else if (text === 'Grand Total') cell.textContent = 'รวมเป็นเงินทั้งสิ้น';
+                }
+            });
+
+            // Reason label
+            const reasonLabel = document.querySelector('div[style*="font-weight: 500"]');
+            if (reasonLabel && reasonLabel.textContent.includes('เหตุผล')) {
+                reasonLabel.textContent = lang === 'en' ? 'Reason for credit note:' : 'เหตุผลที่ต้องลดหนี้:';
+            }
+
+            // Amount text label
+            const amountLabel = document.querySelector('td[width="20%"]');
+            if (amountLabel && amountLabel.textContent.includes('ตัวอักษร')) {
+                amountLabel.textContent = lang === 'en' ? '(In Words)' : '(ตัวอักษร)';
+            }
+
+            // Signature labels
+            const signatureBoxes = document.querySelectorAll('.signature-box div');
+            signatureBoxes.forEach(div => {
+                const text = div.textContent.trim();
+                if (lang === 'en') {
+                    if (text.includes('ผู้มีอำนาจลงนาม')) div.textContent = 'Authorized Signature';
+                    else if (text === 'ลายเซ็นผู้รับเอกสาร') div.textContent = 'Receiver Signature';
+                } else {
+                    if (text === 'Authorized Signature') div.textContent = 'ผู้มีอำนาจลงนาม / ผู้รับมอบอำนาจ';
+                    else if (text === 'Receiver Signature') div.textContent = 'ลายเซ็นผู้รับเอกสาร';
+                }
+            });
+        }
     </script>
 </head>
 
@@ -348,7 +457,29 @@ $formatter = Yii::$app->formatter;
 <body>
     <div class="no-print text-center mb-4">
         <div class="print-controls">
-            <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px; position: relative;">
+            <!-- Combined Controls Row -->
+            <div style="display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 10px;">
+                <!-- Language Switcher -->
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label for="languageSelect" style="font-weight: bold; margin: 0;">ภาษา / Language:</label>
+                    <select id="languageSelect" onchange="changeLanguage()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+                        <option value="th" selected>ไทย</option>
+                        <option value="en">English Only</option>
+                    </select>
+                </div>
+
+                <!-- Header Selection -->
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label for="headerSelect" style="font-weight: bold; margin: 0;">เลือกหัวบริษัท:</label>
+                    <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+                        <option value="mco" selected>M.C.O. Company Limited (Default)</option>
+                        <option value="alternative">Alternative Company</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Print Buttons -->
+            <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
                 <div class="btn-group">
                     <button onclick="window.printMultipleCopies()" class="btn btn-primary btn-print">
                         <i class="fas fa-print"></i> พิมพ์
@@ -359,13 +490,6 @@ $formatter = Yii::$app->formatter;
                     <a href="<?= \yii\helpers\Url::to(['view', 'id' => $model->id]) ?>" class="btn btn-info">
                         <i class="fas fa-eye"></i> ดูรายละเอียด
                     </a>
-                </div>
-                <div style="position: absolute; right: 0;">
-                    <label for="headerSelect" style="font-weight: bold; margin-right: 10px;">เลือกหัวบริษัท:</label>
-                    <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
-                        <option value="mco" selected>M.C.O. Company Limited (Default)</option>
-                        <option value="alternative">Alternative Company</option>
-                    </select>
                 </div>
             </div>
 

@@ -360,7 +360,28 @@ use yii\helpers\Html; ?>
 </style>
 
 <div class="receipt-print-controls no-print">
-    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px; position: relative;">
+    <div style="display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 10px;">
+        <!-- Language Switcher -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <label for="languageSelect" style="font-weight: bold; margin: 0;">ภาษา:</label>
+            <select id="languageSelect" onchange="changeLanguage()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+                <option value="th" selected>ไทย</option>
+                <option value="en">English Only</option>
+            </select>
+        </div>
+
+        <!-- Header Selection -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <label for="headerSelect" style="font-weight: bold; margin: 0;">เลือกหัวบริษัท:</label>
+            <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+                <option value="mco" selected>M.C.O. Company Limited (Default)</option>
+                <option value="alternative">Alternative Company</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Print Buttons -->
+    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
         <div class="receipt-btn-group">
             <button onclick="printReceipt()" class="receipt-btn receipt-btn-primary">
                 <i class="fas fa-print"></i> พิมพ์
@@ -368,13 +389,6 @@ use yii\helpers\Html; ?>
             <button onclick="generateNewReceipt()" class="receipt-btn receipt-btn-success">
                 <i class="fas fa-plus"></i> สร้างใหม่
             </button>
-        </div>
-        <div style="position: absolute; right: 0;">
-            <label for="headerSelect" style="font-weight: bold; margin-right: 10px;">เลือกหัวบริษัท:</label>
-            <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
-                <option value="mco" selected>M.C.O. Company Limited (Default)</option>
-                <option value="alternative">Alternative Company</option>
-            </select>
         </div>
     </div>
 </div>
@@ -401,7 +415,7 @@ use yii\helpers\Html; ?>
     <!-- Title and Receipt Info -->
     <div class="receipt-row receipt-compact-row">
         <div class="receipt-col" style="text-align: left; padding-left: 10px;">
-            <strong style="font-size: 12px; margin-top: 10px; display: inline-block;">เลขประจำตัวผู้เสียภาษี: 0215543000985</strong>
+            <strong id="taxIdLabel" style="font-size: 12px; margin-top: 10px; display: inline-block;">เลขประจำตัวผู้เสียภาษี: 0215543000985</strong>
         </div>
         <div class="receipt-col">
             <div class="receipt-title">ใบเสร็จรับเงิน<br>RECEIPT</div>
@@ -568,6 +582,119 @@ use yii\helpers\Html; ?>
         document.getElementById('companyNameEng').innerHTML = company.nameEng;
         document.getElementById('addressThai').innerHTML = company.addressThai;
         document.getElementById('addressEng').innerHTML = company.addressEng;
+    }
+
+    function changeLanguage() {
+        const lang = document.getElementById('languageSelect').value;
+
+        // Tax ID label
+        const taxIdLabel = document.getElementById('taxIdLabel');
+        if (taxIdLabel) {
+            taxIdLabel.textContent = lang === 'en' ? 'Tax ID: 0215543000985' : 'เลขประจำตัวผู้เสียภาษี: 0215543000985';
+        }
+
+        // Receipt title
+        const receiptTitle = document.querySelector('.receipt-title');
+        if (receiptTitle) {
+            receiptTitle.innerHTML = lang === 'en' ? 'RECEIPT' : 'ใบเสร็จรับเงิน<br>RECEIPT';
+        }
+
+        // Details table labels
+        const detailsLabels = document.querySelectorAll('.receipt-details-table .receipt-label-cell');
+        if (lang === 'en') {
+            if (detailsLabels[0]) detailsLabels[0].innerHTML = 'CODE';
+            if (detailsLabels[1]) detailsLabels[1].innerHTML = 'DATE';
+            if (detailsLabels[2]) detailsLabels[2].innerHTML = 'NO';
+            if (detailsLabels[3]) detailsLabels[3].innerHTML = 'SALE TO';
+            if (detailsLabels[4]) detailsLabels[4].innerHTML = 'PO NO';
+            if (detailsLabels[5]) detailsLabels[5].innerHTML = 'PO DATE';
+            if (detailsLabels[6]) detailsLabels[6].innerHTML = 'RFQ.IV';
+            if (detailsLabels[7]) detailsLabels[7].innerHTML = 'RFQ.DATE.IV';
+        } else {
+            if (detailsLabels[0]) detailsLabels[0].innerHTML = 'รหัสลูกค้า<br>CODE';
+            if (detailsLabels[1]) detailsLabels[1].innerHTML = 'วันที่<br>DATE';
+            if (detailsLabels[2]) detailsLabels[2].innerHTML = 'เลขที่<br>NO';
+            if (detailsLabels[3]) detailsLabels[3].innerHTML = 'ขายให้<br>SALE TO';
+            if (detailsLabels[4]) detailsLabels[4].innerHTML = 'ใบสั่งซื้อเลขที่<br>PO NO';
+            if (detailsLabels[5]) detailsLabels[5].innerHTML = 'วันที่สั่งซื้อ<br>PO DATE';
+            if (detailsLabels[6]) detailsLabels[6].innerHTML = 'อ้างถึงเลขที่ใบแจ้งหนี้<br>RFQ.IV';
+            if (detailsLabels[7]) detailsLabels[7].innerHTML = 'อ้างถึงวันที่ใบแจ้งหนี้<br>RFQ.DATE.IV';
+        }
+
+        // Items table headers
+        const itemHeaders = document.querySelectorAll('.receipt-items-table thead th');
+        if (itemHeaders.length >= 5) {
+            if (lang === 'en') {
+                itemHeaders[0].innerHTML = 'ITEM';
+                itemHeaders[1].innerHTML = 'DESCRIPTION';
+                itemHeaders[2].innerHTML = 'QUANTITY';
+                itemHeaders[3].innerHTML = 'UNIT PRICE';
+                itemHeaders[4].innerHTML = 'AMOUNT';
+            } else {
+                itemHeaders[0].innerHTML = 'ลำดับ<br>ITEM';
+                itemHeaders[1].innerHTML = 'รายการ<br>DESCRIPTION';
+                itemHeaders[2].innerHTML = 'จำนวน<br>QUANTITY';
+                itemHeaders[3].innerHTML = 'ราคาต่อหน่วย<br>UNIT PRICE';
+                itemHeaders[4].innerHTML = 'จำนวนเงิน<br>AMOUNT';
+            }
+        }
+
+        // Footer summary labels
+        const footerRows = document.querySelectorAll('.receipt-items-table tfoot tr');
+        if (footerRows.length >= 3) {
+            const totalLabel = footerRows[0].querySelectorAll('td')[1];
+            if (totalLabel && totalLabel.querySelector('strong')) {
+                totalLabel.querySelector('strong').innerHTML = lang === 'en' ? 'TOTAL' : 'รวมเงิน<br>TOTAL';
+            }
+
+            const vatLabel = footerRows[1].querySelectorAll('td')[0];
+            if (vatLabel && vatLabel.querySelector('strong')) {
+                vatLabel.querySelector('strong').innerHTML = lang === 'en' ? 'VAT 7%' : 'ภาษีมูลค่าเพิ่ม<br>VAT 7%';
+            }
+
+            const totalAmountLabel = footerRows[2].querySelectorAll('td')[1];
+            if (totalAmountLabel && totalAmountLabel.querySelector('strong')) {
+                totalAmountLabel.querySelector('strong').innerHTML = lang === 'en' ? 'TOTAL AMOUNT' : 'รวมเงินทั้งสิ้น<br>TOTAL AMOUNT';
+            }
+        }
+
+        // Footer note
+        const footerNote = document.querySelector('.receipt-footer-note');
+        if (footerNote) {
+            if (lang === 'en') {
+                footerNote.innerHTML = '<strong>E.&O.E.</strong><br><strong>Note:</strong> This receipt will be valued only when the cheque is cleared with the Bank';
+            } else {
+                footerNote.innerHTML = '<strong>ผิด ตก ยกเว็น E.&O.E.</strong><br><strong>หมายเหตุ</strong> ใบเสร็จรับเงินฉบับนี้จะสมบูรณ์ต่อเมื่อเก็บเงินตามเช็คได้เรียบร้อยแล้ว<br><strong>This receipt will be valued only when the cheque is cleared with the Bank</strong>';
+            }
+        }
+
+        // Payment section
+        const paymentLabels = document.querySelectorAll('.receipt-payment-signature-table strong');
+        if (lang === 'en') {
+            if (paymentLabels[0]) paymentLabels[0].textContent = 'PAID BY';
+            if (paymentLabels[1]) paymentLabels[1].textContent = 'CASH';
+            if (paymentLabels[2]) paymentLabels[2].textContent = 'CHEQUE';
+            if (paymentLabels[3]) paymentLabels[3].textContent = 'BANK:';
+            if (paymentLabels[4]) paymentLabels[4].textContent = 'CHEQUE NO.:';
+            if (paymentLabels[5]) paymentLabels[5].textContent = 'DATE:';
+            if (paymentLabels[6]) paymentLabels[6].textContent = 'AMOUNT';
+            if (paymentLabels[7]) paymentLabels[7].innerHTML = 'COLLECTOR';
+            if (paymentLabels[8]) paymentLabels[8].textContent = 'DATE';
+            if (paymentLabels[9]) paymentLabels[9].innerHTML = 'MANAGER / AUTHORIZED SIGNATURE';
+            if (paymentLabels[10]) paymentLabels[10].textContent = '';
+        } else {
+            if (paymentLabels[0]) paymentLabels[0].textContent = 'ชำระโดย PAID BY';
+            if (paymentLabels[1]) paymentLabels[1].textContent = 'เงินสด CASH';
+            if (paymentLabels[2]) paymentLabels[2].textContent = 'เช็ค CHEQUE';
+            if (paymentLabels[3]) paymentLabels[3].textContent = 'ธนาคาร BANK:';
+            if (paymentLabels[4]) paymentLabels[4].textContent = 'เลขที่เช็ค CHEQUE NO.:';
+            if (paymentLabels[5]) paymentLabels[5].textContent = 'ลงวันที่ DATE:';
+            if (paymentLabels[6]) paymentLabels[6].textContent = 'จำนวนเงิน / AMOUNT';
+            if (paymentLabels[7]) paymentLabels[7].innerHTML = 'ผู้เก็บเงิน / COLLECTOR';
+            if (paymentLabels[8]) paymentLabels[8].textContent = 'วันที่ / DATE';
+            if (paymentLabels[9]) paymentLabels[9].innerHTML = 'ผู้จัดการ / ผู้มีอำนาจลงนาม';
+            if (paymentLabels[10]) paymentLabels[10].textContent = 'MANAGER / AUTHORIZED SIGNATURE';
+        }
     }
 
     function printReceipt() {

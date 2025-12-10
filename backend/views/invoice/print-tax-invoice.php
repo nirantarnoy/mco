@@ -638,7 +638,29 @@ window.addEventListener('afterprint', function() {
 ?>
 
 <div class="print-controls no-print">
-    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px; position: relative;">
+    <!-- Combined Controls Row -->
+    <div style="display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 10px;">
+        <!-- Language Switcher -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <label for="languageSelect" style="font-weight: bold; margin: 0;">ภาษา / Language:</label>
+            <select id="languageSelect" onchange="changeLanguage()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+                <option value="th" selected>ไทย/อังกฤษ (Bilingual)</option>
+                <option value="en">English Only</option>
+            </select>
+        </div>
+
+        <!-- Header Selection -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <label for="headerSelect" style="font-weight: bold; margin: 0;">เลือกหัวบริษัท:</label>
+            <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+                <option value="mco" selected>M.C.O. Company Limited (Default)</option>
+                <option value="alternative">Alternative Company</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Print Buttons -->
+    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
         <div>
             <button onclick="window.printMultipleCopies()" class="btn btn-primary btn-print">
                 🖨️ พิมพ์ 3 ใบ (ต้นฉบับ + สำเนา 2 ใบ)
@@ -649,13 +671,6 @@ window.addEventListener('afterprint', function() {
             <a href="<?= \yii\helpers\Url::to(['view', 'id' => $model->id]) ?>" class="btn btn-success">
                 👁️ ดูรายละเอียด
             </a>
-        </div>
-        <div style="position: absolute; right: 0;">
-            <label for="headerSelect" style="font-weight: bold; margin-right: 10px;">เลือกหัวบริษัท:</label>
-            <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
-                <option value="mco" selected>M.C.O. Company Limited (Default)</option>
-                <option value="alternative">Alternative Company</option>
-            </select>
         </div>
     </div>
 
@@ -866,32 +881,156 @@ window.addEventListener('afterprint', function() {
     </div>
 </div>
 <script>
-function changeHeader() {
-    const headerSelect = document.getElementById('headerSelect');
-    const selectedValue = headerSelect.value;
-    
-    const companyData = {
-        mco: {
-            logo: '../../backend/web/uploads/logo/mco_logo_2.png',
-            nameThai: 'เอ็ม. ซี. โอ.',
-            nameEng: 'M. C. O. COMPANY LIMITED',
-            addressThai: '8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์ 66-(0)-3861-9559',
-            addressEng: '8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559'
-        },
-        alternative: {
-            logo: '../../backend/web/uploads/logo/mco_logo.png',
-            nameThai: 'บริษัทอื่น',
-            nameEng: 'ALTERNATIVE COMPANY LTD.',
-            addressThai: '123 ถนนตัวอย่าง เขต/อำเภอ จังหวัด 12345 โทร 02-123-4567',
-            addressEng: '123 Example St., District, Province 12345 Tel. 02-123-4567'
+    function changeHeader() {
+        const headerSelect = document.getElementById('headerSelect');
+        const selectedValue = headerSelect.value;
+
+        const companyData = {
+            mco: {
+                logo: '../../backend/web/uploads/logo/mco_logo_2.png',
+                nameThai: 'เอ็ม. ซี. โอ.',
+                nameEng: 'M. C. O. COMPANY LIMITED',
+                addressThai: '8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์ 66-(0)-3861-9559',
+                addressEng: '8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559'
+            },
+            alternative: {
+                logo: '../../backend/web/uploads/logo/mco_logo.png',
+                nameThai: 'บริษัทอื่น',
+                nameEng: 'ALTERNATIVE COMPANY LTD.',
+                addressThai: '123 ถนนตัวอย่าง เขต/อำเภอ จังหวัด 12345 โทร 02-123-4567',
+                addressEng: '123 Example St., District, Province 12345 Tel. 02-123-4567'
+            }
+        };
+
+        const company = companyData[selectedValue];
+        document.getElementById('companyLogo').src = company.logo;
+        document.getElementById('companyNameThai').textContent = company.nameThai;
+        document.getElementById('companyNameEng').textContent = company.nameEng;
+        document.getElementById('addressThai').textContent = company.addressThai;
+        document.getElementById('addressEng').textContent = company.addressEng;
+    }
+
+    function changeLanguage() {
+        const lang = document.getElementById('languageSelect').value;
+
+        // Invoice title
+        const invoiceTitle = document.querySelector('.invoice-title');
+        const invoiceSubtitle = document.querySelector('.invoice-subtitle');
+        if (lang === 'en') {
+            if (invoiceTitle) invoiceTitle.textContent = 'Tax Invoice';
+            if (invoiceSubtitle) invoiceSubtitle.style.display = 'none';
+        } else {
+            if (invoiceTitle) invoiceTitle.textContent = 'ใบกำกับภาษี';
+            if (invoiceSubtitle) {
+                invoiceSubtitle.style.display = 'block';
+                invoiceSubtitle.textContent = 'Tax Invoice';
+            }
         }
-    };
-    
-    const company = companyData[selectedValue];
-    document.getElementById('companyLogo').src = company.logo;
-    document.getElementById('companyNameThai').textContent = company.nameThai;
-    document.getElementById('companyNameEng').textContent = company.nameEng;
-    document.getElementById('addressThai').textContent = company.addressThai;
-    document.getElementById('addressEng').textContent = company.addressEng;
-}
+
+        // Table headers - hide Thai text when English only
+        const tableHeaders = document.querySelectorAll('.items-table thead th');
+        if (tableHeaders.length >= 5) {
+            if (lang === 'en') {
+                tableHeaders[0].innerHTML = 'Item';
+                tableHeaders[1].innerHTML = 'Description';
+                tableHeaders[2].innerHTML = 'Quantity';
+                tableHeaders[3].innerHTML = 'Unit/Price';
+                tableHeaders[4].innerHTML = 'Amount';
+            } else {
+                tableHeaders[0].innerHTML = 'ลำดับ<br>Item';
+                tableHeaders[1].innerHTML = 'รายการ<br>Description';
+                tableHeaders[2].innerHTML = 'จำนวน<br>Quantity';
+                tableHeaders[3].innerHTML = 'ราคาต่อหน่วย<br>Unit/Price';
+                tableHeaders[4].innerHTML = 'จำนวนเงินรวม<br>Amount';
+            }
+        }
+
+        // Summary section labels
+        const summaryRows = document.querySelectorAll('.summary-row span:first-child');
+        if (summaryRows.length >= 3) {
+            if (lang === 'en') {
+                summaryRows[0].innerHTML = 'Total';
+                summaryRows[1].innerHTML = 'VAT <?= $model->vat_percent ?>%';
+                summaryRows[2].innerHTML = 'TOTAL';
+            } else {
+                summaryRows[0].innerHTML = 'รวมเงิน<br>Total';
+                summaryRows[1].innerHTML = 'ภาษีมูลค่าเพิ่ม<br>VAT <?= $model->vat_percent ?>%';
+                summaryRows[2].innerHTML = 'รวมเงินทั้งสิ้น<br>TOTAL';
+            }
+        }
+
+        // Signature titles
+        const signatureTitles = document.querySelectorAll('.signature-title');
+        if (signatureTitles.length >= 6) {
+            if (lang === 'en') {
+                signatureTitles[0].textContent = 'Goods received as per above list correctly';
+                signatureTitles[1].textContent = 'Received By';
+                signatureTitles[3].textContent = 'Delivery By';
+                signatureTitles[5].textContent = 'Authorized Signature';
+            } else {
+                signatureTitles[0].textContent = 'ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง';
+                signatureTitles[1].textContent = 'ผู้รับสินค้า / Received By';
+                signatureTitles[3].textContent = 'ผู้ส่งสินค้า / Delivery By';
+                signatureTitles[5].textContent = 'ผู้มีอำนาจลงนาม / Authorized Signature';
+            }
+        }
+
+        // Signature dates
+        const signatureDates = document.querySelectorAll('.signature-date');
+        signatureDates.forEach(dateDiv => {
+            dateDiv.textContent = lang === 'en' ?
+                'Date ____/_____/_____' :
+                'วันที่/Date ____/_____/_____';
+        });
+
+        // Field labels - hide Thai text when English only
+        const fieldLabels = document.querySelectorAll('.field-label');
+        fieldLabels.forEach(label => {
+            const text = label.innerHTML;
+            if (lang === 'en') {
+                if (text.includes('เลขประจำตัวผู้เสียภาษี:')) label.textContent = 'Tax ID:';
+                else if (text.includes('รหัสลูกค้า :')) label.textContent = 'Code';
+                else if (text.includes('ขายให้ :')) label.textContent = 'Sold To';
+                else if (text.includes('วันที่ / Date:')) label.textContent = 'Date:';
+                else if (text.includes('เลขที่ / Inv.No.:')) label.textContent = 'Inv.No.:';
+                else if (text.includes('ใบสั่งซื้อเลขที่ / P/O No.:')) label.textContent = 'P/O No.:';
+                else if (text.includes('วันที่สั่งซื้อ / P/O Date:')) label.textContent = 'P/O Date:';
+                else if (text.includes('เงื่อนไข / กำหนดชำระ / Credit, Due:')) label.textContent = 'Credit, Due:';
+            } else {
+                if (text === 'Tax ID:') label.textContent = 'เลขประจำตัวผู้เสียภาษี:';
+                else if (text === 'Code') label.innerHTML = 'รหัสลูกค้า :<br>Code';
+                else if (text === 'Sold To') label.innerHTML = 'ขายให้ :<br>Sold To';
+                else if (text === 'Date:') label.textContent = 'วันที่ / Date:';
+                else if (text === 'Inv.No.:') label.textContent = 'เลขที่ / Inv.No.:';
+                else if (text === 'P/O No.:') label.textContent = 'ใบสั่งซื้อเลขที่ / P/O No.:';
+                else if (text === 'P/O Date:') label.textContent = 'วันที่สั่งซื้อ / P/O Date:';
+                else if (text === 'Credit, Due:') label.textContent = 'เงื่อนไข / กำหนดชำระ / Credit, Due:';
+            }
+        });
+
+        // Summary left section - "ตัวอักษร" label
+        const summaryLeftLabel = document.querySelector('.summary-left div:first-child');
+        if (summaryLeftLabel) {
+            summaryLeftLabel.textContent = lang === 'en' ? 'In Words' : 'ตัวอักษร';
+        }
+
+        // Notes section
+        const notesTitle = document.querySelector('.notes-title');
+        const noteItems = document.querySelectorAll('.note-item');
+        if (lang === 'en') {
+            if (notesTitle) notesTitle.textContent = 'Notes:';
+            if (noteItems.length >= 3) {
+                noteItems[0].textContent = '1. The above items remain the property of the company until full payment is received.';
+                noteItems[1].textContent = '2. Products purchased over 7 days, the company reserves the right not to accept returns and charge 1.5% interest per month.';
+                noteItems[2].textContent = '3. Payment via Bangkok Bank PCL, Rayong Branch, Account: M.C.O. Company Limited, No: 277-3-02318-5, Current Account.';
+            }
+        } else {
+            if (notesTitle) notesTitle.textContent = 'หมายเหตุ :';
+            if (noteItems.length >= 3) {
+                noteItems[0].textContent = '1. ตามรายการข้างต้น แม้จะได้ส่งมอบสินค้าแก่ผู้ซื้อแล้วก็ยังเป็นทรัพย์สินของบริษัทฯ จนกว่าจะได้รับชำระเงินครบถ้วน';
+                noteItems[1].textContent = '2. สินค้าที่ซื้อไปเกินกว่า 7 วัน ทางบริษัทฯ ใคร่ขอสงวนสิทธิ์ไม่รับคืนสินค้า และคิดดอกเบี้ยร้อยละ 1.5 ต่อเดือน';
+                noteItems[2].textContent = '3. สามารถชำระผ่านช่องทางธนาคารกรุงเทพจำกัด (มหาชน) สาขาระยอง ชื่อบัญชี บจ.เอ็ม.ซี.โอ. เลขบัญชี 277-3-02318-5 บัญชีกระแสรายวัน';
+            }
+        }
+    }
 </script>

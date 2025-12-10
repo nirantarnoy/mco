@@ -555,7 +555,29 @@ window.addEventListener('afterprint', function() {
 ?>
 
 <div class="print-controls no-print">
-    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px; position: relative;">
+    <!-- Combined Controls Row -->
+    <div style="display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; margin-bottom: 10px;">
+        <!-- Language Switcher -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <label for="languageSelect" style="font-weight: bold; margin: 0;">ภาษา / Language:</label>
+            <select id="languageSelect" onchange="changeLanguage()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+                <option value="th" selected>ไทย/อังกฤษ (Bilingual)</option>
+                <option value="en">English Only</option>
+            </select>
+        </div>
+
+        <!-- Header Selection -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <label for="headerSelect" style="font-weight: bold; margin: 0;">เลือกหัวบริษัท:</label>
+            <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+                <option value="mco" selected>M.C.O. Company Limited (Default)</option>
+                <option value="alternative">Alternative Company</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Print Buttons -->
+    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
         <div>
             <button onclick="window.printMultipleCopies()" class="btn btn-primary btn-print">
                 🖨️ พิมพ์ 3 ใบ (ต้นฉบับ + สำเนา 2 ใบ)
@@ -566,13 +588,6 @@ window.addEventListener('afterprint', function() {
             <a href="<?= \yii\helpers\Url::to(['view', 'id' => $model->id]) ?>" class="btn btn-success">
                 👁️ ดูรายละเอียด
             </a>
-        </div>
-        <div style="position: absolute; right: 0;">
-            <label for="headerSelect" style="font-weight: bold; margin-right: 10px;">เลือกหัวบริษัท:</label>
-            <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 12px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
-                <option value="mco" selected>M.C.O. Company Limited (Default)</option>
-                <option value="alternative">Alternative Company</option>
-            </select>
         </div>
     </div>
 
@@ -607,14 +622,14 @@ window.addEventListener('afterprint', function() {
             <table>
                 <tr>
                     <td>
-                        <strong style="border-bottom: 1px solid #000;">ชื่อลูกค้า</strong>
+                        <strong id="labelCustomerName" style="border-bottom: 1px solid #000;">ชื่อลูกค้า</strong>
                     </td>
                     <td>
                         <strong><?= Html::encode($model->customer->name ?? 'บริษัท ส.สิริเสถ จำกัด (สำนักงานใหญ่)') ?></strong>
                     </td>
                 </tr>
                 <tr>
-                    <td><strong style="border-bottom: 1px solid #000;">ที่อยู่</strong></td>
+                    <td><strong id="labelCustomerAddress" style="border-bottom: 1px solid #000;">ที่อยู่</strong></td>
                     <td>
                         <?= Html::encode($model->customer->address ?? '140 ถ.วิภาวดีรังสิต แขวงดินแดง เขตดินแดง') ?><br>
                         <?= Html::encode($model->customer->tax_id ?? 'กรุงเทพมหานคร 10400 TAXID 0105520017611') ?>
@@ -803,5 +818,78 @@ window.addEventListener('afterprint', function() {
         document.getElementById('companyName').textContent = company.name;
         document.getElementById('companyAddress').textContent = company.address;
         document.getElementById('companyContact').innerHTML = company.contact;
+    }
+
+    function changeLanguage() {
+        const lang = document.getElementById('languageSelect').value;
+
+        // Billing title
+        const billingTitle = document.querySelector('.invoice-title');
+        if (billingTitle) {
+            billingTitle.textContent = lang === 'en' ? 'Billing Invoice' : 'ใบวางบิล';
+        }
+
+        // Customer labels
+        const labelCustomerName = document.getElementById('labelCustomerName');
+        const labelCustomerAddress = document.getElementById('labelCustomerAddress');
+        if (labelCustomerName) {
+            labelCustomerName.textContent = lang === 'en' ? 'Customer Name' : 'ชื่อลูกค้า';
+        }
+        if (labelCustomerAddress) {
+            labelCustomerAddress.textContent = lang === 'en' ? 'Address' : 'ที่อยู่';
+        }
+
+        // Billing number labels
+        const billingLabels = document.querySelectorAll('.billing-numbers .label span');
+        if (billingLabels.length >= 2) {
+            billingLabels[0].textContent = lang === 'en' ? 'Billing No.' : 'เลขที่ใบวางบิล';
+            billingLabels[1].textContent = lang === 'en' ? 'Billing Date' : 'วันที่ใบวางบิล';
+        }
+
+        // "As per the following list" text
+        const listText = document.querySelector('p span[style*="border-bottom"]');
+        if (listText) {
+            listText.textContent = lang === 'en' ? 'As per the following list' : 'ดังรายการต่อไปนี้';
+        }
+
+        // Table headers
+        const tableHeaders = document.querySelectorAll('.items-table thead th strong');
+        if (tableHeaders.length >= 6) {
+            if (lang === 'en') {
+                tableHeaders[0].textContent = 'No.';
+                tableHeaders[1].textContent = 'P/O No.';
+                tableHeaders[2].textContent = 'Invoice No.';
+                tableHeaders[3].textContent = 'Date';
+                tableHeaders[4].textContent = 'Due Date';
+                tableHeaders[5].textContent = 'Amount';
+            } else {
+                tableHeaders[0].textContent = 'ลำดับที่';
+                tableHeaders[1].textContent = 'หมายเลขใบสั่งซื้อ';
+                tableHeaders[2].textContent = 'เลขที่เอกสารตั้งหนี้';
+                tableHeaders[3].textContent = 'ลงวันที่';
+                tableHeaders[4].textContent = 'นัดชําระเงินวันที่';
+                tableHeaders[5].textContent = 'จำนวนเงิน';
+            }
+        }
+
+        // Total amount label
+        const totalLabel = document.querySelector('.items-table tfoot u');
+        if (totalLabel) {
+            totalLabel.textContent = lang === 'en' ? 'Grand Total' : 'รวมเงินทั้งสิ้น';
+        }
+
+        // Signature labels
+        const signatureLabels = document.querySelectorAll('.signature-section u');
+        if (signatureLabels.length >= 3) {
+            if (lang === 'en') {
+                signatureLabels[0].textContent = 'Received By';
+                signatureLabels[1].textContent = 'Check Date';
+                signatureLabels[2].textContent = 'Billed By';
+            } else {
+                signatureLabels[0].textContent = 'ผู้รับวางบิล';
+                signatureLabels[1].textContent = 'วันนัดรับเช็ค';
+                signatureLabels[2].textContent = 'ผู้วางบิล';
+            }
+        }
     }
 </script>

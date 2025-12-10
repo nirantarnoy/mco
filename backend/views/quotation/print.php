@@ -306,27 +306,27 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
             <td style="width: 50%;border: none;text-align: right;vertical-align: top;">
                 <div style="margin-top: -2px">
                     <div class="info-row" style="margin-bottom: 5px;">
-                        <span class="label-font label-left">Date</span>
+                        <span class="label-font label-left" id="labelDate">Date</span>
                         <span class="label-font" style="margin-top: 2px">: <?= Yii::$app->formatter->asDate($quotation->quotation_date, 'php:m/d/Y') ?></span>
                     </div>
                     <div class="info-row" style="margin-bottom: 5px;">
-                        <span class="label-font label-left">OUR REF</span>
+                        <span class="label-font label-left" id="labelOurRef">OUR REF</span>
                         <span class="label-font" style="margin-top: 2px">: <?= Html::encode($quotation->quotation_no) ?></span>
                     </div>
                     <div class="info-row" style="margin-bottom: 5px;">
-                        <span class="label-font label-left">FROM</span>
+                        <span class="label-font label-left" id="labelFrom">FROM</span>
                         <span class="label-font" style="margin-top: 2px">: <?= Html::encode(\backend\models\Employee::findFullName($quotation->sale_emp_id) ?? '') ?></span>
                     </div>
                     <div class="info-row" style="margin-bottom: 5px;">
-                        <span class="label-font label-left">FAX</span>
+                        <span class="label-font label-left" id="labelFax">FAX</span>
                         <span class="label-font" style="margin-top: 2px">: 66-38-619559</span>
                     </div>
                     <div class="info-row" style="margin-bottom: 5px;">
-                        <span class="label-font label-left">TEL</span>
+                        <span class="label-font label-left" id="labelTel">TEL</span>
                         <span class="label-font" style="margin-top: 2px">: 038-875258 875259</span>
                     </div>
                     <div class="info-row">
-                        <span class="label-font label-left">YOUR REF</span>
+                        <span class="label-font label-left" id="labelYourRef">YOUR REF</span>
                         <span class="label-font" style="margin-top: 2px">: </span>
                     </div>
                 </div>
@@ -356,23 +356,23 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
                             <div class="address-section">
                                 <div>
                                     <div class="info-row">
-                                        <span class="info-label" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;Tel : <?= Html::encode($phone) ?></span>
+                                        <span class="info-label" id="labelCustomerTel" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;Tel : <?= Html::encode($phone) ?></span>
                                         <span class="label-font"></span>
                                     </div>
                                     <div class="info-row">
-                                        <span class="info-label" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;Fax :</span>
+                                        <span class="info-label" id="labelCustomerFax" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;Fax :</span>
                                         <span class="label-font"></span>
                                     </div>
                                     <div class="info-row">
-                                        <span class="info-label" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;To :</span>
+                                        <span class="info-label" id="labelTo" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;To :</span>
                                         <span class="label-font"><?= Html::encode($quotation->customer_name ?? '') ?></span>
                                     </div>
                                     <div class="info-row">
-                                        <span class="info-label" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;Purchaser</span>
+                                        <span class="info-label" id="labelPurchaser" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;Purchaser</span>
                                         <span class="label-font"></span>
                                     </div>
                                     <div class="info-row">
-                                        <span class="info-label" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;Project Name :</span>
+                                        <span class="info-label" id="labelProjectName" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;Project Name :</span>
                                         <span class="label-font"></span>
                                     </div>
                                 </div>
@@ -588,7 +588,15 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
 </script>
 
 <!-- Print Button -->
-<div class="no-print" style="text-align: center; margin: 20px;">
+<div class="no-print" style="text-align: center; margin: 20px; display: flex; justify-content: center; align-items: center; gap: 15px;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <label for="languageSelect" style="font-weight: bold; margin: 0;">ภาษา / Language:</label>
+        <select id="languageSelect" onchange="changeLanguage()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+            <option value="en" selected>English</option>
+            <option value="th">ไทย (Thai)</option>
+        </select>
+    </div>
+
     <button onclick="window.print()" class="btn btn-primary">
         <i class="glyphicon glyphicon-print"></i> Print
     </button>
@@ -598,3 +606,255 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
     </a>
     <button onclick="window.close()" class="btn btn-default">Close</button>
 </div>
+
+<script>
+    function changeLanguage() {
+        const lang = document.getElementById('languageSelect').value;
+
+        // Define translations
+        const translations = {
+            quotationTitle: {
+                en: 'Quotation',
+                th: 'ใบเสนอราคา'
+            },
+            companyNameLabel: {
+                en: 'Company Name :',
+                th: 'ชื่อบริษัท :'
+            },
+            customerLabel: {
+                en: 'Customer :',
+                th: 'ลูกค้า :'
+            },
+            headerLabels: {
+                date: {
+                    en: 'Date',
+                    th: 'วันที่'
+                },
+                ourRef: {
+                    en: 'OUR REF',
+                    th: 'เลขที่เอกสาร'
+                },
+                from: {
+                    en: 'FROM',
+                    th: 'จาก'
+                },
+                fax: {
+                    en: 'FAX',
+                    th: 'แฟกซ์'
+                },
+                tel: {
+                    en: 'TEL',
+                    th: 'โทร'
+                },
+                yourRef: {
+                    en: 'YOUR REF',
+                    th: 'เลขที่อ้างอิง'
+                }
+            },
+            customerInfoLabels: {
+                tel: {
+                    en: 'Tel :',
+                    th: 'โทร :'
+                },
+                fax: {
+                    en: 'Fax :',
+                    th: 'แฟกซ์ :'
+                },
+                to: {
+                    en: 'To :',
+                    th: 'ถึง :'
+                },
+                purchaser: {
+                    en: 'Purchaser',
+                    th: 'ผู้ซื้อ'
+                },
+                projectName: {
+                    en: 'Project Name :',
+                    th: 'ชื่อโครงการ :'
+                }
+            },
+            tableHeaders: {
+                item: {
+                    en: 'ITEM',
+                    th: 'ลำดับ'
+                },
+                description: {
+                    en: 'DESCRIPTION',
+                    th: 'รายละเอียด'
+                },
+                qty: {
+                    en: 'QTY',
+                    th: 'จำนวน'
+                },
+                unit: {
+                    en: 'UNIT',
+                    th: 'หน่วย'
+                },
+                material: {
+                    en: 'MATERIAL',
+                    th: 'วัสดุ'
+                },
+                labour: {
+                    en: 'LABOUR',
+                    th: 'แรงงาน'
+                },
+                unitPrice: {
+                    en: 'UNIT PRICE',
+                    th: 'ราคา/หน่วย'
+                },
+                total: {
+                    en: 'TOTAL',
+                    th: 'รวม'
+                }
+            },
+            summaryLabels: {
+                excludeVat: {
+                    en: 'EXCLUDES VAT AND SEPARATED PURCHASING IS NOT ALLOWED.',
+                    th: 'ราคายังไม่รวมภาษีมูลค่าเพิ่ม และไม่อนุญาตให้แยกซื้อ'
+                },
+                currency: {
+                    en: 'CURRENCY :',
+                    th: 'สกุลเงิน :'
+                },
+                delivery: {
+                    en: 'DELIVERY :',
+                    th: 'การจัดส่ง :'
+                },
+                payment: {
+                    en: 'PAYMENT :',
+                    th: 'การชำระเงิน :'
+                },
+                validity: {
+                    en: 'VALIDITY :',
+                    th: 'อายุใบเสนอราคา :'
+                },
+                validityText: {
+                    en: '7 day after today.',
+                    th: '7 วันหลังจากวันนี้'
+                },
+                remark: {
+                    en: 'REMARK',
+                    th: 'หมายเหตุ'
+                },
+                totalLabel: {
+                    en: 'Total',
+                    th: 'รวม'
+                },
+                discount: {
+                    en: 'Discount',
+                    th: 'ส่วนลด'
+                },
+                vat: {
+                    en: 'Vat 7%',
+                    th: 'ภาษีมูลค่าเพิ่ม 7%'
+                },
+                grandTotal: {
+                    en: 'Grand Total',
+                    th: 'รวมทั้งสิ้น'
+                }
+            },
+            signatureLabels: {
+                acceptQuotation: {
+                    en: 'ACCEPT ABOVE QUOTATION',
+                    th: 'ยอมรับใบเสนอราคาข้างต้น'
+                },
+                purchaser: {
+                    en: 'Purchaser',
+                    th: 'ผู้ซื้อ'
+                },
+                quotedBy: {
+                    en: 'QUOTED BY',
+                    th: 'ผู้เสนอราคา'
+                },
+                authorizedSignature: {
+                    en: 'AUTHORIZED SIGNATURE',
+                    th: 'ผู้มีอำนาจลงนาม'
+                }
+            }
+        };
+
+        // Update quotation title
+        document.querySelector('.quotation-title').textContent = translations.quotationTitle[lang];
+
+        // Update header labels (Date, OUR REF, FROM, FAX, TEL, YOUR REF)
+        document.getElementById('labelDate').textContent = translations.headerLabels.date[lang];
+        document.getElementById('labelOurRef').textContent = translations.headerLabels.ourRef[lang];
+        document.getElementById('labelFrom').textContent = translations.headerLabels.from[lang];
+        document.getElementById('labelFax').textContent = translations.headerLabels.fax[lang];
+        document.getElementById('labelTel').textContent = translations.headerLabels.tel[lang];
+        document.getElementById('labelYourRef').textContent = translations.headerLabels.yourRef[lang];
+
+        // Update customer info labels (Tel, Fax, To, Purchaser, Project Name)
+        const phoneValue = document.getElementById('labelCustomerTel').textContent.split(':')[1] || '';
+        document.getElementById('labelCustomerTel').innerHTML = '&nbsp;' + translations.customerInfoLabels.tel[lang] + phoneValue;
+        document.getElementById('labelCustomerFax').innerHTML = '&nbsp;' + translations.customerInfoLabels.fax[lang];
+        document.getElementById('labelTo').innerHTML = '&nbsp;' + translations.customerInfoLabels.to[lang];
+        document.getElementById('labelPurchaser').innerHTML = '&nbsp;' + translations.customerInfoLabels.purchaser[lang];
+        document.getElementById('labelProjectName').innerHTML = '&nbsp;' + translations.customerInfoLabels.projectName[lang];
+
+        // Update Company Name label
+        const companyNameLabels = document.querySelectorAll('.info-label');
+        if (companyNameLabels[0]) {
+            companyNameLabels[0].innerHTML = '&nbsp;' + translations.companyNameLabel[lang];
+        }
+
+        // Update Customer label
+        if (companyNameLabels[1]) {
+            companyNameLabels[1].innerHTML = '&nbsp;' + translations.customerLabel[lang];
+        }
+
+        // Update table headers
+        const tableHeaders = document.querySelectorAll('table thead th');
+        if (tableHeaders.length >= 9) {
+            tableHeaders[0].textContent = translations.tableHeaders.item[lang];
+            tableHeaders[1].textContent = translations.tableHeaders.description[lang];
+            tableHeaders[2].textContent = translations.tableHeaders.qty[lang];
+            tableHeaders[3].textContent = translations.tableHeaders.unit[lang];
+
+            // Material header
+            tableHeaders[4].innerHTML = translations.tableHeaders.material[lang] + '<br><span style="font-size: 15px;text-align: left;margin-left: -20px">' +
+                translations.tableHeaders.unitPrice[lang] + ' &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ' +
+                translations.tableHeaders.total[lang] + '</span>';
+
+            // Labour header  
+            tableHeaders[5].innerHTML = translations.tableHeaders.labour[lang] + '<br><span style="font-size: 15px;">' +
+                translations.tableHeaders.unitPrice[lang] + ' &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ' +
+                translations.tableHeaders.total[lang] + '</span>';
+
+            tableHeaders[6].textContent = translations.tableHeaders.total[lang];
+        }
+
+        // Update summary section
+        const termsSectionDivs = document.querySelectorAll('.terms-section .label-font');
+        if (termsSectionDivs.length >= 6) {
+            termsSectionDivs[0].textContent = translations.summaryLabels.excludeVat[lang];
+            termsSectionDivs[1].innerHTML = '<span style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">' +
+                translations.summaryLabels.currency[lang] + '</span> Baht';
+            termsSectionDivs[2].innerHTML = '<span style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">' +
+                translations.summaryLabels.delivery[lang] + ' <?= $quotation->delivery_day_text ?></span>';
+            termsSectionDivs[3].innerHTML = '<span style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">' +
+                translations.summaryLabels.payment[lang] + '</span> <?= \backend\models\Paymentterm::findName($quotation->payment_term_id) ?>';
+            termsSectionDivs[4].innerHTML = '<span style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">' +
+                translations.summaryLabels.validity[lang] + '</span> ' + translations.summaryLabels.validityText[lang];
+            termsSectionDivs[5].textContent = translations.summaryLabels.remark[lang];
+        }
+
+        // Update summary table
+        const summaryTable = document.querySelectorAll('.summary-section table td');
+        if (summaryTable.length >= 8) {
+            summaryTable[0].textContent = translations.summaryLabels.totalLabel[lang];
+            summaryTable[2].textContent = translations.summaryLabels.discount[lang];
+            summaryTable[4].textContent = translations.summaryLabels.vat[lang];
+            summaryTable[6].textContent = translations.summaryLabels.grandTotal[lang];
+        }
+
+        // Update signature labels
+        const signatureBoxes = document.querySelectorAll('.signature-box div');
+        if (signatureBoxes.length >= 12) {
+            signatureBoxes[1].textContent = translations.signatureLabels.acceptQuotation[lang];
+            signatureBoxes[2].textContent = translations.signatureLabels.purchaser[lang];
+            signatureBoxes[6].textContent = translations.signatureLabels.quotedBy[lang];
+            signatureBoxes[11].textContent = translations.signatureLabels.authorizedSignature[lang];
+        }
+    }
+</script>
