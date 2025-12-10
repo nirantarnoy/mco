@@ -23,9 +23,9 @@ class User extends \common\models\User
     {
         return
             [
-                [['username','user_group_id'],'required'],
+                [['username', 'user_group_id'], 'required'],
                 [['username', 'pwd'], 'string'],
-                [['user_group_id','emp_ref_id','status'],'integer'],
+                [['user_group_id', 'emp_ref_id', 'status'], 'integer'],
                 [['roles'], 'safe'],
             ];
     }
@@ -34,51 +34,51 @@ class User extends \common\models\User
     {
         return [
             'roles' => 'Role',
-            'username' =>'Username',
+            'username' => 'Username',
             'password' => 'Password',
 
         ];
     }
-//    public function behaviors()
-//    {
-//        return [
-//            'timestampcdate'=>[
-//                'class'=> \yii\behaviors\AttributeBehavior::className(),
-//                'attributes'=>[
-//                    ActiveRecord::EVENT_BEFORE_INSERT=>'created_at',
-//                ],
-//                'value'=> time(),
-//            ],
-//            'timestampudate'=>[
-//                'class'=> \yii\behaviors\AttributeBehavior::className(),
-//                'attributes'=>[
-//                    ActiveRecord::EVENT_BEFORE_INSERT=>'updated_at',
-//                ],
-//                'value'=> time(),
-//            ],
-////            'timestampcby'=>[
-////                'class'=> \yii\behaviors\AttributeBehavior::className(),
-////                'attributes'=>[
-////                    ActiveRecord::EVENT_BEFORE_INSERT=>'created_by',
-////                ],
-////                'value'=> Yii::$app->user->identity->id,
-////            ],
-////            'timestamuby'=>[
-////                'class'=> \yii\behaviors\AttributeBehavior::className(),
-////                'attributes'=>[
-////                    ActiveRecord::EVENT_BEFORE_UPDATE=>'updated_by',
-////                ],
-////                'value'=> Yii::$app->user->identity->id,
-////            ],
-//            'timestampupdate'=>[
-//                'class'=> \yii\behaviors\AttributeBehavior::className(),
-//                'attributes'=>[
-//                    ActiveRecord::EVENT_BEFORE_UPDATE=>'updated_at',
-//                ],
-//                'value'=> time(),
-//            ],
-//        ];
-//    }
+    //    public function behaviors()
+    //    {
+    //        return [
+    //            'timestampcdate'=>[
+    //                'class'=> \yii\behaviors\AttributeBehavior::className(),
+    //                'attributes'=>[
+    //                    ActiveRecord::EVENT_BEFORE_INSERT=>'created_at',
+    //                ],
+    //                'value'=> time(),
+    //            ],
+    //            'timestampudate'=>[
+    //                'class'=> \yii\behaviors\AttributeBehavior::className(),
+    //                'attributes'=>[
+    //                    ActiveRecord::EVENT_BEFORE_INSERT=>'updated_at',
+    //                ],
+    //                'value'=> time(),
+    //            ],
+    ////            'timestampcby'=>[
+    ////                'class'=> \yii\behaviors\AttributeBehavior::className(),
+    ////                'attributes'=>[
+    ////                    ActiveRecord::EVENT_BEFORE_INSERT=>'created_by',
+    ////                ],
+    ////                'value'=> Yii::$app->user->identity->id,
+    ////            ],
+    ////            'timestamuby'=>[
+    ////                'class'=> \yii\behaviors\AttributeBehavior::className(),
+    ////                'attributes'=>[
+    ////                    ActiveRecord::EVENT_BEFORE_UPDATE=>'updated_by',
+    ////                ],
+    ////                'value'=> Yii::$app->user->identity->id,
+    ////            ],
+    //            'timestampupdate'=>[
+    //                'class'=> \yii\behaviors\AttributeBehavior::className(),
+    //                'attributes'=>[
+    //                    ActiveRecord::EVENT_BEFORE_UPDATE=>'updated_at',
+    //                ],
+    //                'value'=> time(),
+    //            ],
+    //        ];
+    //    }
 
     public static function findName($id)
     {
@@ -144,7 +144,6 @@ class User extends \common\models\User
     {
         $model = User::find()->where(['id' => $id])->one();
         return count($model) > 0 ? $model : null;
-
     }
 
     public function getRoleByUser()
@@ -174,7 +173,6 @@ class User extends \common\models\User
                 $auth->assign($auth->getRole($roleName), $this->id);
             }
         }
-
     }
 
     //// Add
@@ -192,12 +190,13 @@ class User extends \common\models\User
         return $roleSelect;
     }
 
-    public static function checkhasrole($user_id,$role_name){
+    public static function checkhasrole($user_id, $role_name)
+    {
         $res = 0;
         $user_roles = \Yii::$app->authManager->getRolesByUser($user_id);
         if ($user_roles != null) {
             foreach ($user_roles as $value) {
-                if($value->name == $role_name){
+                if ($value->name == $role_name) {
                     $res = 1;
                 }
             }
@@ -205,28 +204,39 @@ class User extends \common\models\User
         return $res;
     }
 
-    public static function findEmployeeNameByUserId($id){
+    public static function findEmployeeNameByUserId($id)
+    {
         $emp_name = '';
         $model = User::find()->where(['id' => $id])->one();
-        if($model){
+        if ($model) {
             $emp_id = $model->emp_ref_id;
             $emp = Employee::find()->where(['id' => $emp_id])->one();
-            if($emp){
-                $emp_name = $emp->fname.' '.$emp->lname;
+            if ($emp) {
+                $emp_name = $emp->fname . ' ' . $emp->lname;
             }
         }
         return $emp_name;
     }
-    public static function findEmployeeSignature($id){
+    public static function findEmployeeSignature($id)
+    {
         $emp_name = '';
+        // First try as User ID
         $model = User::find()->where(['id' => $id])->one();
-        if($model){
-            $emp_id = $model->emp_ref_id;
-            $emp = Employee::find()->where(['id' => $emp_id])->one();
-            if($emp){
+        if ($model && $model->emp_ref_id) {
+            $emp = Employee::find()->where(['id' => $model->emp_ref_id])->one();
+            if ($emp) {
                 $emp_name = $emp->signature;
             }
         }
+
+        // If not found, try as Employee ID directly
+        // if (empty($emp_name)) {
+        //     $emp = Employee::find()->where(['id' => $id])->one();
+        //     if ($emp) {
+        //         $emp_name = $emp->signature;
+        //     }
+        // }
+
         return $emp_name;
     }
 }

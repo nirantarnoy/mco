@@ -7,12 +7,30 @@ use yii\helpers\Html;
 
 $this->title = 'พิมพ์ใบสำคัญจ่ายเงินสดย่อย - ' . $model->pcv_no;
 
-// Add print styles that match the original form exactly
+// Add print styles for A5 PORTRAIT - optimized column widths
 $this->registerCss("
 @page {
-    size: A4;
-    margin: 0.5in;
+    size: A5 portrait;
+    margin: 6mm;
 }
+
+ @font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK.ttf') format('truetype');
+        font-weight: normal;
+    }
+
+    @font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Bold.ttf') format('truetype');
+        font-weight: bold;
+    }
+
+    @font-face {
+        font-family: 'THSarabunPSK';
+        src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Italic.ttf') format('truetype');
+        font-style: italic;
+    }
 
 @media print {
     .no-print { display: none !important; }
@@ -20,61 +38,55 @@ $this->registerCss("
         margin: 0; 
         padding: 0; 
         font-family: 'Sarabun', 'TH SarabunPSK', Arial, sans-serif; 
-        font-size: 14px;
+        font-size: 17px;
         color: #000;
     }
     .print-container { 
+    font-family: 'THSarabunPSK' !important;
         max-width: 100%; 
-        width: 100%;
+        width: 78%;
+        height: 100%;
         page-break-inside: avoid;
     }
 }
 
 .print-container {
-    max-width: 210mm;
-    margin: 0 auto;
+    font-family: 'THSarabunPSK' !important;
+    max-width: 100%;
+    margin: 0;
     background: white;
-    padding: 10mm;
-    border: 1px solid #ddd;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    padding: 0;
 }
 
 .company-header {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     border-bottom: 2px solid #000;
-    padding-bottom: 15px;
+    padding-bottom: 12px;
 }
 
-.company-logo {
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(45deg, #d32f2f, #f57c00);
-    border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 20px;
-    font-weight: bold;
+.logo img {
+    width: 28%;
     margin-bottom: 8px;
 }
 
 .company-name {
-    font-size: 20px;
-    font-weight: bold;
+    font-size: 24px;
+    font-weight: 900;
     margin: 5px 0;
     letter-spacing: 1px;
+    -webkit-text-stroke: 0.5px black;
 }
 
 .form-title {
-    font-size: 16px;
-    font-weight: bold;
+    font-size: 20px;
+    font-weight: 900;
     margin: 5px 0 0 0;
+    -webkit-text-stroke: 0.5px black;
 }
 
 .voucher-header {
-    margin: 20px 0;
+    margin: 16px 0;
     display: table;
     width: 100%;
 }
@@ -95,69 +107,75 @@ $this->registerCss("
 .header-field {
     margin-bottom: 8px;
     line-height: 1.4;
+    font-size: 16px;
 }
 
 .header-label {
-    font-weight: bold;
+    font-weight: 900;
     display: inline-block;
-    width: 80px;
+    width: 70px;
+    -webkit-text-stroke: 0.3px black;
 }
 
 .paid-for-section {
-    margin: 15px 0;
+    margin: 14px 0;
     border: 1px solid #000;
     padding: 10px;
     min-height: 40px;
 }
 
 .paid-for-label {
-    font-weight: bold;
+    font-weight: 900;
     margin-bottom: 5px;
+    font-size: 16px;
+    -webkit-text-stroke: 0.3px black;
 }
 
 .voucher-table {
     width: 100%;
     border-collapse: collapse;
-    margin: 15px 0;
-    font-size: 12px;
+    margin: 12px 0;
+    font-size: 10px;
 }
 
 .voucher-table th,
 .voucher-table td {
     border: 1px solid #000;
-    padding: 6px 4px;
+    padding: 3px 1px;
     text-align: center;
     vertical-align: middle;
-    line-height: 1.2;
+    line-height: 1.1;
 }
 
 .voucher-table th {
     background-color: #f8f9fa;
-    font-weight: bold;
-    height: 35px;
+    font-weight: 900;
+    height: 30px;
+    -webkit-text-stroke: 0.3px black;
 }
 
 .voucher-table td {
-    height: 35px;
+    height: 30px;
 }
 
 .voucher-table .detail-cell {
     text-align: left;
-    padding: 6px 8px;
+    padding: 3px 3px;
 }
 
 .voucher-table .amount-cell {
     text-align: right;
-    padding-right: 8px;
+    padding-right: 2px;
 }
 
 .total-row {
     background-color: #f0f0f0;
-    font-weight: bold;
+    font-weight: 900;
+    -webkit-text-stroke: 0.3px black;
 }
 
 .signature-section {
-    margin-top: 30px;
+    margin-top: 24px;
     display: table;
     width: 100%;
 }
@@ -167,7 +185,7 @@ $this->registerCss("
     width: 50%;
     border: 1px solid #000;
     padding: 0;
-    height: 120px;
+    height: 115px;
     position: relative;
     vertical-align: top;
 }
@@ -181,8 +199,9 @@ $this->registerCss("
     top: 8px;
     left: 50%;
     transform: translateX(-50%);
-    font-weight: bold;
-    font-size: 12px;
+    font-weight: 900;
+    font-size: 16px;
+    -webkit-text-stroke: 0.3px black;
 }
 
 .signature-name {
@@ -208,7 +227,7 @@ $this->registerCss("
     bottom: 5px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 11px;
+    font-size: 14px;
     display: flex;
     gap: 5px;
     align-items: center;
@@ -225,14 +244,14 @@ $this->registerCss("
     position: absolute;
     bottom: 5px;
     right: 10px;
-    font-size: 10px;
+    font-size: 12px;
     color: #666;
 }
 
 .text-center { text-align: center; }
 .text-right { text-align: right; }
 .text-left { text-align: left; }
-.font-bold { font-weight: bold; }
+.font-bold { font-weight: 900; }
 
 /* Hide empty borders for better printing */
 @media print {
@@ -288,7 +307,7 @@ window.onload = function() {
             <div class="header-field">
                 <span class="header-label">AMOUNT:</span>
                 <span><?= number_format($model->amount, 2) ?></span>
-<!--                <span style="margin-left: 20px;">Paid For</span>-->
+                <!--                <span style="margin-left: 20px;">Paid For</span>-->
             </div>
         </div>
         <div class="voucher-right">
@@ -314,75 +333,78 @@ window.onload = function() {
     <!-- Details Table -->
     <table class="voucher-table">
         <thead>
-        <tr>
-            <th style="width: 10%;">A/C CODE</th>
-            <th style="width: 8%;">DATE</th>
-            <th style="width: 28%;">DETAIL</th>
-            <th style="width: 12%;">AMOUNT</th>
-            <th style="width: 7%;">VAT</th>
-            <th style="width: 10%;">VAT<br>จำนวน</th>
-            <th style="width: 7%;">W/H</th>
-            <th style="width: 7%;">อื่นๆ</th>
-            <th style="width: 12%;">TOTAL</th>
-        </tr>
+            <tr>
+                <th style="width: 4%;">A/C</th>
+                <th style="width: 3%;">DT</th>
+                <th style="width: 38%;">DETAIL</th>
+                <th style="width: 9%;">AMT</th>
+                <th style="width: 3%;">VAT</th>
+                <th style="width: 6%;">VAT<br>จำนวน</th>
+                <th style="width: 3%;">W/H</th>
+                <th style="width: 3%;">อื่นๆ</th>
+                <th style="width: 9%;">TOTAL</th>
+            </tr>
         </thead>
         <tbody>
-        <?php
-        $details = $model->details;
-        $totalAmount = 0;
+            <?php
+            $details = $model->details;
+            $totalAmount = 0;
 
-        // Calculate actual total
-        foreach ($details as $detail) {
-            $totalAmount += $detail->total;
-        }
+            // Calculate actual total
+            foreach ($details as $detail) {
+                $totalAmount += $detail->total;
+            }
 
-        // Ensure we have at least 8 rows like the original form
-        $minRows = 8;
-        $maxRows = max($minRows, count($details));
+            // Ensure we have at least 8 rows like the original form
+            $minRows = 8;
+            $maxRows = max($minRows, count($details));
 
-        for ($i = 0; $i < $maxRows; $i++):
-            $detail = isset($details[$i]) ? $details[$i] : null;
+            for ($i = 0; $i < $maxRows; $i++):
+                $detail = isset($details[$i]) ? $details[$i] : null;
             ?>
-            <tr>
-                <td class="text-center">
-                    <?php //echo $detail ? Html::encode($detail->ac_code) : '&nbsp;' ?>
-                </td>
-                <td class="text-center">
-                    <?php //echo $detail && $detail->detail_date ? Yii::$app->formatter->asDate($detail->detail_date, 'dd/MM/yy') : '&nbsp;' ?>
-                </td>
-                <td class="detail-cell text-left">
-                    <?php //echo $detail ? nl2br(Html::encode($detail->detail)) : '&nbsp;' ?>
-                </td>
-                <td class="amount-cell">
-                    <?= $detail && $detail->amount > 0 ? number_format($detail->amount, 2) : '&nbsp;' ?>
-                </td>
-                <td class="amount-cell">
-                    <?= $detail && $detail->vat > 0 ? number_format($detail->vat, 2) : '&nbsp;' ?>
-                </td>
-                <td class="amount-cell">
-                    <?= $detail && $detail->vat_amount > 0 ? number_format($detail->vat_amount, 2) : '&nbsp;' ?>
-                </td>
-                <td class="amount-cell">
-                    <?= $detail && $detail->wht > 0 ? number_format($detail->wht, 2) : '&nbsp;' ?>
-                </td>
-                <td class="amount-cell">
-                    <?= $detail && $detail->other > 0 ? number_format($detail->other, 2) : '&nbsp;' ?>
+                <tr>
+                    <td class="text-center">
+                        <?php //echo $detail ? Html::encode($detail->ac_code) : '&nbsp;' 
+                        ?>
+                    </td>
+                    <td class="text-center">
+                        <?php //echo $detail && $detail->detail_date ? Yii::$app->formatter->asDate($detail->detail_date, 'dd/MM/yy') : '&nbsp;' 
+                        ?>
+                    </td>
+                    <td class="detail-cell text-left">
+                        <?php //echo $detail ? nl2br(Html::encode($detail->detail)) : '&nbsp;' 
+                        ?>
+                    </td>
+                    <td class="amount-cell">
+                        <?= $detail && $detail->amount > 0 ? number_format($detail->amount, 2) : '&nbsp;' ?>
+                    </td>
+                    <td class="amount-cell">
+                        <?= $detail && $detail->vat > 0 ? number_format($detail->vat, 2) : '&nbsp;' ?>
+                    </td>
+                    <td class="amount-cell">
+                        <?= $detail && $detail->vat_amount > 0 ? number_format($detail->vat_amount, 2) : '&nbsp;' ?>
+                    </td>
+                    <td class="amount-cell">
+                        <?= $detail && $detail->wht > 0 ? number_format($detail->wht, 2) : '&nbsp;' ?>
+                    </td>
+                    <td class="amount-cell">
+                        <?= $detail && $detail->other > 0 ? number_format($detail->other, 2) : '&nbsp;' ?>
+                    </td>
+                    <td class="amount-cell font-bold">
+                        <?= $detail && $detail->total > 0 ? number_format($detail->total, 2) : '&nbsp;' ?>
+                    </td>
+                </tr>
+            <?php endfor; ?>
+
+            <!-- Total Row -->
+            <tr class="total-row">
+                <td colspan="8" class="text-right font-bold" style="padding-right: 15px;">
+                    TOTAL
                 </td>
                 <td class="amount-cell font-bold">
-                    <?= $detail && $detail->total > 0 ? number_format($detail->total, 2) : '&nbsp;' ?>
+                    <?= number_format($totalAmount, 2) ?>
                 </td>
             </tr>
-        <?php endfor; ?>
-
-        <!-- Total Row -->
-        <tr class="total-row">
-            <td colspan="8" class="text-right font-bold" style="padding-right: 15px;">
-                TOTAL
-            </td>
-            <td class="amount-cell font-bold">
-                <?= number_format($totalAmount, 2) ?>
-            </td>
-        </tr>
         </tbody>
     </table>
 
@@ -393,10 +415,11 @@ window.onload = function() {
             <div class="signature-name">
                 <?php
                 $approve_signature = \backend\models\User::findEmployeeSignature(trim($model->created_by));
-                if(!empty($approve_signature)): ?>
-                    <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" alt="Requestor Signature">
+                if (!empty($approve_signature)): ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?= $approve_signature ?>" alt="Requestor Signature">
                 <?php endif; ?>
-<!--                --><?php //= $model->issued_by ? Html::encode($model->issued_by) : '&nbsp;' ?>
+                <!--                --><?php //= $model->issued_by ? Html::encode($model->issued_by) : '&nbsp;' 
+                                        ?>
             </div>
             <div class="signature-date">
                 <span class="date-field">
@@ -415,14 +438,12 @@ window.onload = function() {
 
         <div class="signature-box">
             <div class="signature-label">APPROVED BY</div>
-            <div style="height: 10px;"></div>
             <div class="signature-name">
                 <?php
                 $approve_signature = \backend\models\User::findEmployeeSignature(trim($model->approved_by));
-                if(!empty($approve_signature)): ?>
-                <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" alt="Requestor Signature">
+                if (!empty($approve_signature)): ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?= $approve_signature ?>" alt="Approved Signature">
                 <?php endif; ?>
-<!--                --><?php //= $model->approved_by ? Html::encode($model->approved_by) : '&nbsp;' ?>
             </div>
             <div class="signature-date">
                 <span class="date-field">
