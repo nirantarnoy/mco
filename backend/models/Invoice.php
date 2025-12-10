@@ -153,18 +153,17 @@ class Invoice extends ActiveRecord
      *
      * @return \yii\db\ActiveQuery
      */
-    public function getInvoiceItems()
+    public function getItems()
     {
         return $this->hasMany(InvoiceItem::class, ['invoice_id' => 'id'])
             ->orderBy(['sort_order' => SORT_ASC, 'id' => SORT_ASC]);
     }
 
     /**
-     * Gets query for [[Customer]].
+     * Gets query for [[Quotation]].
      *
      * @return \yii\db\ActiveQuery
      */
-
     public function getQuotation()
     {
         return $this->hasOne(Quotation::class, ['id' => 'quotation_id']);

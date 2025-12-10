@@ -181,7 +181,7 @@ $model_doc = \common\models\InvoiceDoc::find()->where(['invoice_id' => $model->i
             </h5>
         </div>
         <div class="card-body p-0">
-            <?php if (!empty($model->invoiceItems)): ?>
+            <?php if (!empty($model->items)): ?>
                 <div class="table-responsive">
                     <table class="table table-bordered table-sm mb-0">
                         <thead class="table-light">
@@ -195,7 +195,7 @@ $model_doc = \common\models\InvoiceDoc::find()->where(['invoice_id' => $model->i
                         </tr>
                         </thead>
                         <tbody>
-                        <?php foreach ($model->invoiceItems as $index => $item): ?>
+                        <?php foreach ($model->items as $index => $item): ?>
                             <tr>
                                 <td class="text-center"><?= $index + 1 ?></td>
                                 <td><?= nl2br(Html::encode($item->item_description)) ?></td>
