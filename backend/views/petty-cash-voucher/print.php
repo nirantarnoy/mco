@@ -440,7 +440,7 @@ window.onload = function() {
             <div class="signature-label">APPROVED BY</div>
             <div class="signature-name">
                 <?php
-                $approve_signature = \backend\models\User::findEmployeeSignature(trim($model->approved_by));
+                $approve_signature = \backend\models\User::findEmployeeSignature(5); // 5 is super admin
                 if (!empty($approve_signature)): ?>
                     <img src="../../backend/web/uploads/employee_signature/<?= $approve_signature ?>" alt="Approved Signature">
                 <?php endif; ?>
