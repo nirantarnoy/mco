@@ -7,10 +7,10 @@ use yii\helpers\Html;
 
 $this->title = 'พิมพ์ใบสำคัญจ่ายเงินสดย่อย - ' . $model->pcv_no;
 
-// Add print styles for A5 PORTRAIT - optimized column widths
+// Add print styles for A5 LANDSCAPE - optimized column widths
 $this->registerCss("
 @page {
-    size: A5 portrait;
+    size: A5 landscape;
     margin: 6mm;
 }
 
@@ -44,7 +44,7 @@ $this->registerCss("
     .print-container { 
     font-family: 'THSarabunPSK' !important;
         max-width: 100%; 
-        width: 78%;
+        width: 100%;
         height: 100%;
         page-break-inside: avoid;
     }
