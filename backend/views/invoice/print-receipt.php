@@ -375,7 +375,14 @@ use yii\helpers\Html; ?>
             <label for="headerSelect" style="font-weight: bold; margin: 0;">เลือกหัวบริษัท:</label>
             <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
                 <option value="mco" selected>M.C.O. Company Limited (Default)</option>
-                <option value="alternative">Alternative Company</option>
+                <?php
+                $companies = \backend\models\Company::find()->all();
+                foreach ($companies as $comp) {
+                    if (strtoupper($comp->name) !== 'M.C.O. COMPANY LIMITED') {
+                        echo '<option value="' . Html::encode($comp->name) . '">' . Html::encode($comp->name) . '</option>';
+                    }
+                }
+                ?>
             </select>
         </div>
     </div>
@@ -507,7 +514,13 @@ use yii\helpers\Html; ?>
             </tr>
             <tr>
                 <td colspan="3" class="receipt-summary-highlight" style="border: none; padding: 6px;">
-                    <strong><?= $model->total_amount_text ?: '' ?></strong>
+                    <?php
+                    $textThai = $model->total_amount_text ?: '-';
+                    $textEng = \backend\helpers\NumberToText::convert($model->total_amount);
+                    ?>
+                    <strong id="amountText" data-th="<?= Html::encode($textThai) ?>" data-en="<?= Html::encode($textEng) ?>">
+                        <?= Html::encode($textThai) ?>
+                    </strong>
                 </td>
                 <td class="receipt-text-left receipt-summary-highlight" style="border: 1.5px solid #333; border-top: none;"><strong style="font-weight: 800;">รวมเงินทั้งสิ้น<br>TOTAL AMOUNT</strong></td>
                 <td class="receipt-text-right receipt-summary-highlight" style="border: 1.5px solid #333; border-top: none;"><strong style="font-weight: 800;"><?= number_format($model->total_amount, 2) ?></strong></td>
@@ -559,29 +572,28 @@ use yii\helpers\Html; ?>
         const headerSelect = document.getElementById('headerSelect');
         const selectedValue = headerSelect.value;
 
-        const companyData = {
-            mco: {
-                logo: '../../backend/web/uploads/logo/mco_logo_2.png',
-                nameThai: 'บริษัท เอ็ม.ซี.โอ. จำกัด',
-                nameEng: 'M.C.O. COMPANY LIMITED',
-                addressThai: '8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 &nbsp; โทร. 66-(0) 3887-5258-59 แฟกซ์ 66-(0)3861-9559',
-                addressEng: '8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 &nbsp; Tel. 66-(0)3887-5258-59 &nbsp; Fax. 66-(0)3861-9559'
-            },
-            alternative: {
-                logo: '../../backend/web/uploads/logo/mco_logo.png',
-                nameThai: 'บริษัทอื่น จำกัด',
-                nameEng: 'ALTERNATIVE COMPANY LTD.',
-                addressThai: '123 ถนนตัวอย่าง เขต/อำเภอ จังหวัด 12345 &nbsp; โทร. 02-123-4567',
-                addressEng: '123 Example St., District, Province 12345 &nbsp; Tel. 02-123-4567'
-            }
-        };
+        const companyNameThai = document.getElementById('companyNameThai');
+        const companyNameEng = document.getElementById('companyNameEng');
 
-        const company = companyData[selectedValue];
-        document.getElementById('companyLogo').src = company.logo;
-        document.getElementById('companyNameThai').innerHTML = company.nameThai;
-        document.getElementById('companyNameEng').innerHTML = company.nameEng;
-        document.getElementById('addressThai').innerHTML = company.addressThai;
-        document.getElementById('addressEng').innerHTML = company.addressEng;
+        if (selectedValue === 'mco') {
+            // Restore MCO Layout
+            if (companyNameThai) {
+                companyNameThai.style.display = 'block';
+                companyNameThai.textContent = 'บริษัท เอ็ม.ซี.โอ. จำกัด';
+            }
+            if (companyNameEng) {
+                companyNameEng.style.display = 'block';
+                companyNameEng.textContent = 'M.C.O. COMPANY LIMITED';
+            }
+        } else {
+            // Other Company - Show Name Only (using the Eng container)
+            if (companyNameThai) companyNameThai.style.display = 'none';
+
+            if (companyNameEng) {
+                companyNameEng.style.display = 'block';
+                companyNameEng.textContent = selectedValue;
+            }
+        }
     }
 
     function changeLanguage() {
@@ -597,6 +609,12 @@ use yii\helpers\Html; ?>
         const receiptTitle = document.querySelector('.receipt-title');
         if (receiptTitle) {
             receiptTitle.innerHTML = lang === 'en' ? 'RECEIPT' : 'ใบเสร็จรับเงิน<br>RECEIPT';
+        }
+
+        // Amount Text
+        const amountText = document.getElementById('amountText');
+        if (amountText) {
+            amountText.textContent = lang === 'en' ? amountText.getAttribute('data-en') : amountText.getAttribute('data-th');
         }
 
         // Details table labels

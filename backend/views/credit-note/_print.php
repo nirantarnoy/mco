@@ -431,10 +431,18 @@ $formatter = Yii::$app->formatter;
                 reasonLabel.textContent = lang === 'en' ? 'Reason for credit note:' : 'เหตุผลที่ต้องลดหนี้:';
             }
 
-            // Amount text label
+            // Amount text label & content
             const amountLabel = document.querySelector('td[width="20%"]');
-            if (amountLabel && amountLabel.textContent.includes('ตัวอักษร')) {
+            if (amountLabel) {
+                // Check content or just set based on lang strictly
+                const text = amountLabel.textContent.trim();
+                // Simple toggle logic or direct set
                 amountLabel.textContent = lang === 'en' ? '(In Words)' : '(ตัวอักษร)';
+            }
+
+            const amountTextSpan = document.getElementById('amountText');
+            if (amountTextSpan) {
+                amountTextSpan.innerHTML = lang === 'en' ? amountTextSpan.getAttribute('data-en') : amountTextSpan.getAttribute('data-th');
             }
 
             // Signature labels
@@ -449,6 +457,18 @@ $formatter = Yii::$app->formatter;
                     else if (text === 'Receiver Signature') div.textContent = 'ลายเซ็นผู้รับเอกสาร';
                 }
             });
+
+            // Signature company name
+            const sigComName = document.getElementById('sigComName');
+            const headerSelect = document.getElementById('headerSelect');
+            if (sigComName) {
+                // If not MCO, keep the selected company name
+                if (headerSelect && headerSelect.value !== 'mco') {
+                    sigComName.textContent = headerSelect.value;
+                } else {
+                    sigComName.textContent = lang === 'en' ? 'M.C.O. CO.,LTD.' : 'บริษัท เอ็ม.ซี.โอ. จำกัด';
+                }
+            }
         }
     </script>
 </head>
@@ -473,7 +493,14 @@ $formatter = Yii::$app->formatter;
                     <label for="headerSelect" style="font-weight: bold; margin: 0;">เลือกหัวบริษัท:</label>
                     <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
                         <option value="mco" selected>M.C.O. Company Limited (Default)</option>
-                        <option value="alternative">Alternative Company</option>
+                        <?php
+                        $companies = \backend\models\Company::find()->all();
+                        foreach ($companies as $comp) {
+                            if (strtoupper($comp->name) !== 'M.C.O. COMPANY LIMITED') {
+                                echo '<option value="' . Html::encode($comp->name) . '">' . Html::encode($comp->name) . '</option>';
+                            }
+                        }
+                        ?>
                     </select>
                 </div>
             </div>
@@ -695,7 +722,13 @@ $formatter = Yii::$app->formatter;
                 </td>
                 <td width="80%">
                     <div class="amount-text">
-                        <?= nl2br(Html::encode($model->amount_text)) ?>
+                        <?php
+                        $textThai = $model->amount_text; // Assuming this is correct from DB/Model
+                        $textEng = \backend\helpers\NumberToText::convert($model->total_amount);
+                        ?>
+                        <span id="amountText" data-th="<?= Html::encode($textThai) ?>" data-en="<?= Html::encode($textEng) ?>">
+                            <?= nl2br(Html::encode($textThai)) ?>
+                        </span>
                     </div>
                 </td>
             </tr>
@@ -704,7 +737,7 @@ $formatter = Yii::$app->formatter;
         <!-- Signature Section -->
         <div class="signature-section">
             <div class="signature-box">
-                <div style="font-weight: 800; -webkit-text-stroke: 0.25px black;">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
+                <div id="sigComName" style="font-weight: 800; -webkit-text-stroke: 0.25px black;">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
                 <div class="signature-line"></div>
                 <div style="font-weight: 800; -webkit-text-stroke: 0.25px black;">ผู้มีอำนาจลงนาม / ผู้รับมอบอำนาจ</div>
                 <div style="margin-top: 10px; font-weight: 800;">_____/_____/_____</div>
@@ -722,37 +755,50 @@ $formatter = Yii::$app->formatter;
 
 </html>
 
+<script>
+    // Function to change company header
+    function changeHeader() {
+        const headerSelect = document.getElementById('headerSelect');
+        const selectedValue = headerSelect.value;
+
+        const companyNameThai = document.getElementById('companyNameThai');
+        const companyNameEng = document.getElementById('companyNameEng');
+        const sigComName = document.getElementById('sigComName');
+        const langSelect = document.getElementById('languageSelect');
+        const currentLang = langSelect ? langSelect.value : 'th';
+
+        if (selectedValue === 'mco') {
+            // Restore MCO Layout
+            if (companyNameThai) {
+                companyNameThai.style.display = 'block';
+                companyNameThai.textContent = 'บริษัท เอ็ม.ซี.โอ. จำกัด';
+            }
+            if (companyNameEng) {
+                companyNameEng.style.display = 'block';
+                companyNameEng.textContent = 'M.C.O. CO.,LTD.';
+            }
+            // Restore Sig Name based on current language
+            if (sigComName) {
+                sigComName.textContent = currentLang === 'en' ? 'M.C.O. CO.,LTD.' : 'บริษัท เอ็ม.ซี.โอ. จำกัด';
+            }
+        } else {
+            // Other Company
+            if (companyNameThai) companyNameThai.style.display = 'none';
+
+            if (companyNameEng) {
+                companyNameEng.style.display = 'block';
+                companyNameEng.textContent = selectedValue;
+            }
+
+            // Update Sig Name to selected company name
+            if (sigComName) sigComName.textContent = selectedValue;
+        }
+    }
+</script>
+
 <?php
 $js = <<<JS
-// Function to change company header
-function changeHeader() {
-    const headerSelect = document.getElementById('headerSelect');
-    const selectedValue = headerSelect.value;
-    
-    const companyData = {
-        mco: {
-            logo: '../../backend/web/uploads/logo/mco_logo_2.png',
-            nameThai: 'บริษัท เอ็ม.ซี.โอ. จำกัด',
-            nameEng: 'M.C.O. CO.,LTD.',
-            address: '8/18 Koh-Kloy Rd., Tambon Cherngnoen, Amphur Muang, Rayong 21000<br>8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000',
-            contact: 'Tel : (038) 875258-9 Fax : (038) 619559<br>e-mail: info@thai-mco.com www.thai-mco.com<br>'
-        },
-        alternative: {
-            logo: '../../backend/web/uploads/logo/mco_logo.png',
-            nameThai: 'บริษัทอื่น จำกัด',
-            nameEng: 'ALTERNATIVE COMPANY LTD.',
-            address: '123 Example St., District, Province 12345<br>123 ถนนตัวอย่าง เขต/อำเภอ จังหวัด 12345',
-            contact: 'Tel : 02-123-4567 Fax : 02-123-4568<br>e-mail: info@example.com www.example.com<br>'
-        }
-    };
-    
-    const company = companyData[selectedValue];
-    document.getElementById('companyLogo').src = company.logo;
-    document.getElementById('companyNameThai').textContent = company.nameThai;
-    document.getElementById('companyNameEng').textContent = company.nameEng;
-    document.getElementById('companyAddress').innerHTML = company.address;
-    document.getElementById('companyContact').innerHTML = company.contact;
-}
+// Global variables
 
 // Global variables
 let printInProgress = false;

@@ -153,36 +153,28 @@ $this->registerCss("
         }
     }
 ");
-
-$this->registerJs("
+?>
+<script>
     window.changeHeader = function() {
-        var companyData = {
-            'mco': {
-                'logo': '../../backend/web/uploads/logo/mco_logo_2.png',
-                'html_content': '<strong>M.C.O. COMPANY LIMITED</strong><br>8/18 Koh-Kloy Rd., T. Cherngnoen,<br>A. Muang, Rayong 21000 Thailand.<br>ID.NO. 0215543000985<br>Tel : (038)-875258-9 , 094-6984555'
-            },
-            'alternative': {
-                'logo': '../../backend/web/uploads/logo/pj_logo_2.png',
-                'html_content': '<strong>บริษัท พี.เจ. พาร์ท แอนด์ เซอร์วิส ระยอง จำกัด</strong><br><strong>P.J. PART & SERVICE RAYONG CO., LTD.</strong><br>26/7 ถนนมาบยา ตำบลมาบตาพุด อำเภอเมืองระยอง จังหวัดระยอง 21150<br>TAX ID : 0215555001429<br>Tel : 038-608852, 094-6984555'
-            }
-        };
+        var headerSelect = document.getElementById('headerSelect');
+        var selectedValue = headerSelect.value;
+        var companyName = document.getElementById('companyName');
 
-        var selectedType = document.getElementById('headerSelect').value;
-        var data = companyData[selectedType];
-        var img = document.getElementById('companyLogoImg');
-        
-        if(img) img.src = data.logo;
-        var details = document.getElementById('companyDetails');
-        if(details) details.innerHTML = data.html_content;
+        if (selectedValue === 'mco') {
+            if (companyName) companyName.innerHTML = '<strong>M.C.O. COMPANY LIMITED</strong>';
+        } else {
+            if (companyName) companyName.innerHTML = '<strong>' + selectedValue + '</strong>';
+        }
+        // Note: Address and Logo remain static M.C.O. as per requirement.
     };
 
     window.changeLanguage = function() {
         var lang = document.getElementById('languageSelect').value;
-        
+
         // Helper to safely set innerHTML
         var safeSetHtml = function(id, html) {
             var el = document.getElementById(id);
-            if(el) el.innerHTML = html;
+            if (el) el.innerHTML = html;
         };
 
         // Title
@@ -202,17 +194,17 @@ $this->registerJs("
         var th = document.querySelectorAll('.items-table th');
         if (th.length >= 5) {
             if (lang === 'th') {
-                 th[0].innerHTML = 'ลำดับ<br>ITEM';
-                 th[1].innerHTML = 'รายการ<br>DESCRIPTION';
-                 th[2].innerHTML = 'หมายเลขสินค้า<br>P/N';
-                 th[3].innerHTML = 'จำนวน<br>Q\'TY';
-                 th[4].innerHTML = 'หน่วย<br>UNIT';
+                th[0].innerHTML = 'ลำดับ<br>ITEM';
+                th[1].innerHTML = 'รายการ<br>DESCRIPTION';
+                th[2].innerHTML = 'หมายเลขสินค้า<br>P/N';
+                th[3].innerHTML = 'จำนวน<br>Q\'TY';
+                th[4].innerHTML = 'หน่วย<br>UNIT';
             } else {
-                 th[0].innerHTML = 'ITEM';
-                 th[1].innerHTML = 'DESCRIPTION';
-                 th[2].innerHTML = 'P/N';
-                 th[3].innerHTML = 'Q\'TY';
-                 th[4].innerHTML = 'UNIT';
+                th[0].innerHTML = 'ITEM';
+                th[1].innerHTML = 'DESCRIPTION';
+                th[2].innerHTML = 'P/N';
+                th[3].innerHTML = 'Q\'TY';
+                th[4].innerHTML = 'UNIT';
             }
         }
 
@@ -225,8 +217,7 @@ $this->registerJs("
             safeSetHtml('sigSender', 'Sender _____________________');
         }
     };
-", \yii\web\View::POS_HEAD);
-?>
+</script>
 
 <div class="delivery-note-view">
     <!-- Buttons & Controls -->
@@ -234,8 +225,15 @@ $this->registerJs("
         <div class="control-group">
             <span style="font-weight: bold;">เลือกบริษัท:</span>
             <select id="headerSelect" class="form-control" onchange="changeHeader()">
-                <option value="mco">M.C.O. COMPANY LIMITED</option>
-                <option value="alternative">P.J. PART & SERVICE RAYONG CO., LTD.</option>
+                <option value="mco">M.C.O. COMPANY LIMITED (Default)</option>
+                <?php
+                $companies = \backend\models\Company::find()->all();
+                foreach ($companies as $comp) {
+                    if (strtoupper($comp->name) !== 'M.C.O. COMPANY LIMITED') {
+                        echo '<option value="' . Html::encode($comp->name) . '">' . Html::encode($comp->name) . '</option>';
+                    }
+                }
+                ?>
             </select>
         </div>
 
@@ -269,8 +267,10 @@ $this->registerJs("
                 <?= Html::img('../../backend/web/uploads/logo/mco_logo_2.png', ['style' => 'max-width: 150px;', 'id' => 'companyLogoImg']) ?>
             </div><br>
 
-            <div id="companyDetails">
-                <strong>M.C.O. COMPANY LIMITED</strong><br>
+            <div id="companyName" style="margin-bottom: 5px;">
+                <strong>M.C.O. COMPANY LIMITED</strong>
+            </div>
+            <div id="companyAddress">
                 8/18 Koh-Kloy Rd., T. Cherngnoen,<br>
                 A. Muang, Rayong 21000 Thailand.<br>
                 ID.NO. 0215543000985<br>

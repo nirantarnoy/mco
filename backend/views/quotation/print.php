@@ -253,8 +253,12 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
     <div class="no-print" style="margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 5px;">
         <label for="headerSelect" style="font-weight: bold; margin-right: 10px;">เลือกหัวบริษัท:</label>
         <select id="headerSelect" onchange="changeHeader()" style="padding: 5px 10px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
-            <option value="mco" selected>M.C.O. Company Limited (Default)</option>
-            <option value="alternative">Alternative Company</option>
+            <?php
+            $companies = \backend\models\Company::find()->all();
+            foreach ($companies as $comp) {
+                echo '<option value="' . Html::encode($comp->name) . '">' . Html::encode($comp->name) . '</option>';
+            }
+            ?>
         </select>
     </div>
 
@@ -549,41 +553,13 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
 <script>
     function changeHeader() {
         const headerSelect = document.getElementById('headerSelect');
-        const selectedValue = headerSelect.value;
+        const selectedValues = headerSelect.value;
 
-        // Company data
-        const companyData = {
-            mco: {
-                logo: '../../backend/web/uploads/logo/mco_logo.png',
-                name: 'M.C.O. COMPANY LIMITED',
-                address1: '8/18 Koh-kloy Road,',
-                address2: 'Tambon Cherngnern,',
-                address3: 'Amphur Muang ,',
-                address4: 'Rayong 21000 Thailand.',
-                email: 'info@thai-mco.com'
-            },
-            alternative: {
-                logo: '../../backend/web/uploads/logo/mco_logo_2.png',
-                name: 'ALTERNATIVE COMPANY LTD.',
-                address1: '123 Alternative Street,',
-                address2: 'District Name,',
-                address3: 'City Name,',
-                address4: 'Province 12345 Thailand.',
-                email: 'contact@alternative.com'
-            }
-        };
-
-        // Get selected company data
-        const company = companyData[selectedValue];
-
-        // Update DOM elements
-        document.getElementById('companyLogo').src = company.logo;
-        document.getElementById('companyName').textContent = company.name;
-        document.getElementById('companyAddress1').textContent = company.address1;
-        document.getElementById('companyAddress2').textContent = company.address2;
-        document.getElementById('companyAddress3').textContent = company.address3;
-        document.getElementById('companyAddress4').textContent = company.address4;
-        document.getElementById('companyEmail').textContent = company.email;
+        // Update Company Name Only (Logo remains fixed as per request)
+        const companyName = document.getElementById('companyName');
+        if (companyName) {
+            companyName.textContent = selectedValues;
+        }
     }
 </script>
 

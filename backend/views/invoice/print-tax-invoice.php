@@ -654,7 +654,14 @@ window.addEventListener('afterprint', function() {
             <label for="headerSelect" style="font-weight: bold; margin: 0;">เลือกหัวบริษัท:</label>
             <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
                 <option value="mco" selected>M.C.O. Company Limited (Default)</option>
-                <option value="alternative">Alternative Company</option>
+                <?php
+                $companies = \backend\models\Company::find()->all();
+                foreach ($companies as $comp) {
+                    if (strtoupper($comp->name) !== 'M.C.O. COMPANY LIMITED') {
+                        echo '<option value="' . Html::encode($comp->name) . '">' . Html::encode($comp->name) . '</option>';
+                    }
+                }
+                ?>
             </select>
         </div>
     </div>
@@ -825,13 +832,21 @@ window.addEventListener('afterprint', function() {
     <!-- Summary Section -->
     <div class="summary-section">
         <div class="summary-left" style="border: 1px solid #000; padding: 10px;">
-            <div style="font-weight: 800; margin-bottom: 8px; -webkit-text-stroke: 0.25px black;">ตัวอักษร</div>
+            <div style="font-weight: 800; margin-bottom: 8px; -webkit-text-stroke: 0.25px black;">
+                <span id="labelAmountText">ตัวอักษร</span>
+            </div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                 <span style="font-weight: 800;">Discount</span>
                 <span style="font-weight: 800;"><?= number_format($model->discount_amount, 2) ?></span>
             </div>
             <div class="amount-text" style="text-align: left; margin-top: 10px;">
-                <?= $model->total_amount_text ?: '' ?>
+                <?php
+                $textThai = $model->total_amount_text ?: '-';
+                $textEng = \backend\helpers\NumberToText::convert($model->total_amount);
+                ?>
+                <span id="amountText" data-th="<?= Html::encode($textThai) ?>" data-en="<?= Html::encode($textEng) ?>">
+                    <?= Html::encode($textThai) ?>
+                </span>
             </div>
         </div>
         <div class="summary-right" style="border: 1px solid #000;">
@@ -885,29 +900,28 @@ window.addEventListener('afterprint', function() {
         const headerSelect = document.getElementById('headerSelect');
         const selectedValue = headerSelect.value;
 
-        const companyData = {
-            mco: {
-                logo: '../../backend/web/uploads/logo/mco_logo_2.png',
-                nameThai: 'เอ็ม. ซี. โอ.',
-                nameEng: 'M. C. O. COMPANY LIMITED',
-                addressThai: '8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์ 66-(0)-3861-9559',
-                addressEng: '8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559'
-            },
-            alternative: {
-                logo: '../../backend/web/uploads/logo/mco_logo.png',
-                nameThai: 'บริษัทอื่น',
-                nameEng: 'ALTERNATIVE COMPANY LTD.',
-                addressThai: '123 ถนนตัวอย่าง เขต/อำเภอ จังหวัด 12345 โทร 02-123-4567',
-                addressEng: '123 Example St., District, Province 12345 Tel. 02-123-4567'
-            }
-        };
+        const companyNameThaiDiv = document.querySelector('.company-name-thai');
+        const companyNameEngDiv = document.querySelector('.company-name-eng');
+        const companyNameThai = document.getElementById('companyNameThai');
+        const companyNameEng = document.getElementById('companyNameEng');
 
-        const company = companyData[selectedValue];
-        document.getElementById('companyLogo').src = company.logo;
-        document.getElementById('companyNameThai').textContent = company.nameThai;
-        document.getElementById('companyNameEng').textContent = company.nameEng;
-        document.getElementById('addressThai').textContent = company.addressThai;
-        document.getElementById('addressEng').textContent = company.addressEng;
+        if (selectedValue === 'mco') {
+            // Restore Default MCO Layout (Thai + Eng)
+            if (companyNameThaiDiv) companyNameThaiDiv.style.display = 'block';
+            if (companyNameEngDiv) companyNameEngDiv.style.display = 'block';
+
+            if (companyNameThai) companyNameThai.textContent = 'เอ็ม. ซี. โอ.';
+            if (companyNameEng) companyNameEng.textContent = 'M. C. O. COMPANY LIMITED';
+        } else {
+            // Other Company -> Show Name Only
+
+            // Hide Thai Line
+            if (companyNameThaiDiv) companyNameThaiDiv.style.display = 'none';
+
+            // Show Eng Line and set to selected name
+            if (companyNameEngDiv) companyNameEngDiv.style.display = 'block';
+            if (companyNameEng) companyNameEng.textContent = selectedValue;
+        }
     }
 
     function changeLanguage() {
@@ -1008,10 +1022,15 @@ window.addEventListener('afterprint', function() {
             }
         });
 
-        // Summary left section - "ตัวอักษร" label
-        const summaryLeftLabel = document.querySelector('.summary-left div:first-child');
-        if (summaryLeftLabel) {
-            summaryLeftLabel.textContent = lang === 'en' ? 'In Words' : 'ตัวอักษร';
+        // Amount Text switching
+        const amountText = document.getElementById('amountText');
+        const labelAmountText = document.getElementById('labelAmountText');
+
+        if (amountText) {
+            amountText.textContent = lang === 'en' ? amountText.getAttribute('data-en') : amountText.getAttribute('data-th');
+        }
+        if (labelAmountText) {
+            labelAmountText.textContent = lang === 'en' ? 'Amount in Text' : 'ตัวอักษร';
         }
 
         // Notes section

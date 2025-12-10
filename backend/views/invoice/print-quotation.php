@@ -710,7 +710,17 @@ window.addEventListener('afterprint', function() {
                 <label for="headerSelect" style="font-weight: bold; margin: 0;">เลือกหัวบริษัท:</label>
                 <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
                     <option value="mco" selected>M.C.O. Company Limited (Default)</option>
-                    <option value="alternative">Alternative Company</option>
+                    <?php
+                    $companies = \backend\models\Company::find()->all();
+                    foreach ($companies as $comp) {
+                        // Assuming MCO might be in DB, we skip it if we want to enforce the 'mco' value logic above, 
+                        // or just list them. If name matches MCO, we could exclude it to avoid duplicates, 
+                        // but simple appending is safer to ensure all other options are there.
+                        if (strtoupper($comp->name) !== 'M.C.O. COMPANY LIMITED') {
+                            echo '<option value="' . Html::encode($comp->name) . '">' . Html::encode($comp->name) . '</option>';
+                        }
+                    }
+                    ?>
                 </select>
             </div>
         </div>
@@ -882,8 +892,15 @@ window.addEventListener('afterprint', function() {
                     <td colspan="3" rowspan="3" style="padding: 8px;text-align: left;">
                         <div class="summary-left">
                             <div class="amount-text">(ตัวอักษร)</div>
-                            <div style="font-size: 14px; font-weight: 800; text-align: center; -webkit-text-stroke: 0.25px black;">
-                                <?= $model->total_amount_text ?: '' ?>
+
+                            <?php
+                            $textThai = $model->total_amount_text ?: '-';
+                            // Use the helper class we created
+                            $textEng = \backend\helpers\NumberToText::convert($model->total_amount);
+                            ?>
+
+                            <div id="amountText" data-th="<?= Html::encode($textThai) ?>" data-en="<?= Html::encode($textEng) ?>" style="font-size: 14px; font-weight: 800; text-align: center; -webkit-text-stroke: 0.25px black;">
+                                <?= Html::encode($textThai) ?>
                             </div>
 
                             <br>
@@ -895,7 +912,6 @@ window.addEventListener('afterprint', function() {
                     <td class="text-right"><span style="font-weight: 800; -webkit-text-stroke: 0.25px black;"><?= number_format($model->subtotal, 2) ?></span></td>
                 </tr>
                 <tr>
-                    <!--                <td colspan="3" style="padding: 8px;"></td>-->
                     <td>
                         <span style="font-weight: 800; -webkit-text-stroke: 0.25px black;">ภาษีมูลค่าเพิ่ม / Vat <?= $model->vat_percent ?>%</span>
                     </td>
@@ -904,7 +920,6 @@ window.addEventListener('afterprint', function() {
                     </td>
                 </tr>
                 <tr>
-                    <!--                <td colspan="3" style="padding: 8px;"></td>-->
                     <td>
                         <span style="font-weight: 800; -webkit-text-stroke: 0.25px black;">รวมเงินทั้งสิ้น / Grand Total</span>
                     </td>
@@ -954,36 +969,34 @@ window.addEventListener('afterprint', function() {
         const headerSelect = document.getElementById('headerSelect');
         const selectedValue = headerSelect.value;
 
-        // Company data
-        const companyData = {
-            mco: {
-                logo: '../../backend/web/uploads/logo/mco_logo_2.png',
-                nameThai: 'เอ็ม. ซี. โอ.',
-                nameEng: 'M.C.O. COMPANY LIMITED',
-                addressThai: '8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์66-(0)-3861-9559',
-                addressEng: '8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559',
-                taxId: '0215543000985'
-            },
-            alternative: {
-                logo: '../../backend/web/uploads/logo/mco_logo.png',
-                nameThai: 'บริษัทอื่น',
-                nameEng: 'ALTERNATIVE COMPANY LTD.',
-                addressThai: '123 ถนนตัวอย่าง เขต/อำเภอ จังหวัด 12345 โทร 02-123-4567',
-                addressEng: '123 Example St., District, Province 12345 Tel. 02-123-4567',
-                taxId: '1234567890123'
-            }
-        };
+        const companyNameThaiDiv = document.querySelector('.company-name-thai');
+        const companyNameEngDiv = document.querySelector('.company-name-eng');
+        const companyNameThai = document.getElementById('companyNameThai');
+        const companyNameEng = document.getElementById('companyNameEng');
 
-        // Get selected company data
-        const company = companyData[selectedValue];
+        if (selectedValue === 'mco') {
+            // Restore Default MCO Layout (Thai + Eng)
+            if (companyNameThaiDiv) companyNameThaiDiv.style.display = 'block';
+            if (companyNameEngDiv) companyNameEngDiv.style.display = 'block';
 
-        // Update DOM elements
-        document.getElementById('companyLogo').src = company.logo;
-        document.getElementById('companyNameThai').textContent = company.nameThai;
-        document.getElementById('companyNameEng').textContent = company.nameEng;
-        document.getElementById('addressThai').textContent = company.addressThai;
-        document.getElementById('addressEng').textContent = company.addressEng;
-        document.getElementById('companyTaxId').textContent = company.taxId;
+            if (companyNameThai) companyNameThai.textContent = 'เอ็ม. ซี. โอ.';
+            if (companyNameEng) companyNameEng.textContent = 'M.C.O. COMPANY LIMITED';
+
+            // Note: Logo and Address are NOT updated, keeping the ones currently in HTML (which are MCO defaults)
+            // or if they were changed, this logic doesn't revert them (but we assume page starts with MCO).
+            // To be safe, if we wanted to revert Address we would need the text. 
+            // But instruction says "Change ONLY Name".
+
+        } else {
+            // Other Company -> Show Name Only
+
+            // Hide Thai Line
+            if (companyNameThaiDiv) companyNameThaiDiv.style.display = 'none';
+
+            // Show Eng Line and set to selected name
+            if (companyNameEngDiv) companyNameEngDiv.style.display = 'block';
+            if (companyNameEng) companyNameEng.textContent = selectedValue;
+        }
     }
 
     function changeLanguage() {
@@ -999,6 +1012,12 @@ window.addEventListener('afterprint', function() {
         const notTaxInvoice = document.querySelector('.not-tax-invoice');
         if (notTaxInvoice) {
             notTaxInvoice.textContent = lang === 'en' ? '(Not a Tax Invoice)' : '(ไม่ใช่ใบกำกับภาษี)';
+        }
+
+        // Amount Text
+        const amountTextDiv = document.getElementById('amountText');
+        if (amountTextDiv) {
+            amountTextDiv.textContent = lang === 'en' ? amountTextDiv.getAttribute('data-en') : amountTextDiv.getAttribute('data-th');
         }
 
         // Field labels - hide Thai when English only

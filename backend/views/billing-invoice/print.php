@@ -571,7 +571,14 @@ window.addEventListener('afterprint', function() {
             <label for="headerSelect" style="font-weight: bold; margin: 0;">เลือกหัวบริษัท:</label>
             <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
                 <option value="mco" selected>M.C.O. Company Limited (Default)</option>
-                <option value="alternative">Alternative Company</option>
+                <?php
+                $companies = \backend\models\Company::find()->all();
+                foreach ($companies as $comp) {
+                    if (strtoupper($comp->name) !== 'M.C.O. COMPANY LIMITED') {
+                        echo '<option value="' . Html::encode($comp->name) . '">' . Html::encode($comp->name) . '</option>';
+                    }
+                }
+                ?>
             </select>
         </div>
     </div>
@@ -607,7 +614,7 @@ window.addEventListener('afterprint', function() {
             <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 180px;" alt="">
         </div>
         <div class="company-details">
-            <p style="font-size: 24px;font-family: 'THSarabunPSK' !important;font-weight: bold;">บริษัท <span id="companyName">เอ็ม.ซี.โอ.</span> จำกัด</p>
+            <p style="font-size: 24px;font-family: 'THSarabunPSK' !important;font-weight: bold;" id="companyNameHeader">บริษัท เอ็ม.ซี.โอ. จำกัด</p>
             <p style="margin-top: -1px;" id="companyAddress">8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000</p>
             <p id="companyContact"><strong>Tel :</strong> (038) 875258-9, &nbsp; <strong>Fax :</strong> (038) 619559</p>
         </div>
@@ -753,11 +760,18 @@ window.addEventListener('afterprint', function() {
 
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <div>
-                            <u style="border-bottom: 1px solid #000;font-weight: 800;">รวมเงินทั้งสิ้น</u>&nbsp;&nbsp;
-                            <span style="font-weight: 800;"><?= \backend\models\PurchReq::numtothai($model->total_amount) ?></span>
+                            <?php
+                            // Use the same logic as the numeric display below
+                            $grandTotal = ($totalAmount > 0) ? $totalAmount : $model->total_amount;
+
+                            $textThai = \backend\models\PurchReq::numtothai($grandTotal);
+                            $textEng = \backend\helpers\NumberToText::convert($grandTotal);
+                            ?>
+                            <u id="labelTotalText" style="border-bottom: 1px solid #000;font-weight: 800;">รวมเงินทั้งสิ้น</u>&nbsp;&nbsp;
+                            <span id="amountText" data-th="<?= Html::encode($textThai) ?>" data-en="<?= Html::encode($textEng) ?>" style="font-weight: 800;"><?= Html::encode($textThai) ?></span>
                         </div>
                         <div class="total-box">
-                            <?= number_format($totalAmount > 0 ? $totalAmount : $model->total_amount, 2) ?>
+                            <?= number_format($grandTotal, 2) ?>
                         </div>
 
                     </div>
@@ -794,65 +808,42 @@ window.addEventListener('afterprint', function() {
         const headerSelect = document.getElementById('headerSelect');
         const selectedValue = headerSelect.value;
 
-        // Company data
-        const companyData = {
-            mco: {
-                logo: '../../backend/web/uploads/logo/mco_logo_2.png',
-                name: 'เอ็ม.ซี.โอ.',
-                address: '8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000',
-                contact: '<strong>Tel :</strong> (038) 875258-9, &nbsp; <strong>Fax :</strong> (038) 619559'
-            },
-            alternative: {
-                logo: '../../backend/web/uploads/logo/mco_logo.png',
-                name: 'บริษัทอื่น',
-                address: '123 ถนนตัวอย่าง เขต/อำเภอ จังหวัด 12345',
-                contact: '<strong>Tel :</strong> 02-123-4567, &nbsp; <strong>Fax :</strong> 02-123-4568'
+        const companyNameHeader = document.getElementById('companyNameHeader');
+        if (companyNameHeader) {
+            if (selectedValue === 'mco') {
+                companyNameHeader.textContent = 'บริษัท เอ็ม.ซี.โอ. จำกัด';
+            } else {
+                companyNameHeader.textContent = selectedValue;
             }
-        };
-
-        // Get selected company data
-        const company = companyData[selectedValue];
-
-        // Update DOM elements
-        document.getElementById('companyLogo').src = company.logo;
-        document.getElementById('companyName').textContent = company.name;
-        document.getElementById('companyAddress').textContent = company.address;
-        document.getElementById('companyContact').innerHTML = company.contact;
+        }
     }
 
     function changeLanguage() {
         const lang = document.getElementById('languageSelect').value;
 
-        // Billing title
+        // Title
         const billingTitle = document.querySelector('.invoice-title');
-        if (billingTitle) {
-            billingTitle.textContent = lang === 'en' ? 'Billing Invoice' : 'ใบวางบิล';
-        }
+        if (billingTitle) billingTitle.textContent = lang === 'en' ? 'Billing Invoice' : 'ใบวางบิล';
 
-        // Customer labels
+        // Customer Labels
         const labelCustomerName = document.getElementById('labelCustomerName');
-        const labelCustomerAddress = document.getElementById('labelCustomerAddress');
-        if (labelCustomerName) {
-            labelCustomerName.textContent = lang === 'en' ? 'Customer Name' : 'ชื่อลูกค้า';
-        }
-        if (labelCustomerAddress) {
-            labelCustomerAddress.textContent = lang === 'en' ? 'Address' : 'ที่อยู่';
-        }
+        if (labelCustomerName) labelCustomerName.textContent = lang === 'en' ? 'Customer Name' : 'ชื่อลูกค้า';
 
-        // Billing number labels
+        const labelCustomerAddress = document.getElementById('labelCustomerAddress');
+        if (labelCustomerAddress) labelCustomerAddress.textContent = lang === 'en' ? 'Address' : 'ที่อยู่';
+
+        // Billing Labels
         const billingLabels = document.querySelectorAll('.billing-numbers .label span');
         if (billingLabels.length >= 2) {
             billingLabels[0].textContent = lang === 'en' ? 'Billing No.' : 'เลขที่ใบวางบิล';
             billingLabels[1].textContent = lang === 'en' ? 'Billing Date' : 'วันที่ใบวางบิล';
         }
 
-        // "As per the following list" text
+        // List Text
         const listText = document.querySelector('p span[style*="border-bottom"]');
-        if (listText) {
-            listText.textContent = lang === 'en' ? 'As per the following list' : 'ดังรายการต่อไปนี้';
-        }
+        if (listText) listText.textContent = lang === 'en' ? 'As per the following list' : 'ดังรายการต่อไปนี้';
 
-        // Table headers
+        // Table Headers
         const tableHeaders = document.querySelectorAll('.items-table thead th strong');
         if (tableHeaders.length >= 6) {
             if (lang === 'en') {
@@ -864,21 +855,22 @@ window.addEventListener('afterprint', function() {
                 tableHeaders[5].textContent = 'Amount';
             } else {
                 tableHeaders[0].textContent = 'ลำดับที่';
-                tableHeaders[1].textContent = 'หมายเลขใบสั่งซื้อ';
+                tableHeaders[1].textContent = 'เลขที่ใบสั่งซื้อ';
                 tableHeaders[2].textContent = 'เลขที่เอกสารตั้งหนี้';
                 tableHeaders[3].textContent = 'ลงวันที่';
-                tableHeaders[4].textContent = 'นัดชําระเงินวันที่';
+                tableHeaders[4].textContent = 'กำหนดชำระ';
                 tableHeaders[5].textContent = 'จำนวนเงิน';
             }
         }
 
-        // Total amount label
-        const totalLabel = document.querySelector('.items-table tfoot u');
-        if (totalLabel) {
-            totalLabel.textContent = lang === 'en' ? 'Grand Total' : 'รวมเงินทั้งสิ้น';
-        }
+        // Amount Text
+        const amountText = document.getElementById('amountText');
+        if (amountText) amountText.textContent = lang === 'en' ? amountText.getAttribute('data-en') : amountText.getAttribute('data-th');
 
-        // Signature labels
+        const labelTotalText = document.getElementById('labelTotalText');
+        if (labelTotalText) labelTotalText.textContent = lang === 'en' ? 'Grand Total' : 'รวมเงินทั้งสิ้น';
+
+        // Signatures
         const signatureLabels = document.querySelectorAll('.signature-section u');
         if (signatureLabels.length >= 3) {
             if (lang === 'en') {
