@@ -170,4 +170,51 @@ class PettyCashVoucher extends ActiveRecord
         $this->amount = $this->calculateTotalAmount();
         return $this->save(false);
     }
+    /**
+     * Calculate total VAT
+     */
+    public function getTotalVat()
+    {
+        $total = 0;
+        foreach ($this->details as $detail) {
+            $total += $detail->vat;
+        }
+        return $total;
+    }
+
+    /**
+     * Calculate total VAT Prohibit
+     */
+    public function getTotalVatProhibit()
+    {
+        $total = 0;
+        foreach ($this->details as $detail) {
+            $total += $detail->vat_prohibit;
+        }
+        return $total;
+    }
+
+    /**
+     * Calculate total WHT
+     */
+    public function getTotalWht()
+    {
+        $total = 0;
+        foreach ($this->details as $detail) {
+            $total += $detail->wht;
+        }
+        return $total;
+    }
+
+    /**
+     * Calculate total Other
+     */
+    public function getTotalOther()
+    {
+        $total = 0;
+        foreach ($this->details as $detail) {
+            $total += $detail->other;
+        }
+        return $total;
+    }
 }

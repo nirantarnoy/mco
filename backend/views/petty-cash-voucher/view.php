@@ -99,6 +99,28 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                                 'format' => 'ntext',
                             ],
                             [
+                                'label' => 'VAT',
+                                'value' => number_format($model->getTotalVat(), 2) . ' บาท',
+                            ],
+                            [
+                                'label' => 'VAT ต้องห้าม',
+                                'value' => number_format($model->getTotalVatProhibit(), 2) . ' บาท',
+                            ],
+                            [
+                                'label' => 'W/H',
+                                'value' => number_format($model->getTotalWht(), 2) . ' บาท',
+                            ],
+                            [
+                                'label' => 'อื่นๆ',
+                                'value' => number_format($model->getTotalOther(), 2) . ' บาท',
+                            ],
+                            [
+                                'label' => 'TOTAL',
+                                'value' => number_format($model->amount, 2) . ' บาท',
+                                'contentOptions' => ['class' => 'font-weight-bold'],
+                                'captionOptions' => ['class' => 'font-weight-bold'],
+                            ],
+                            [
                                 'attribute' => 'quotation_id',
                                 'value' => function ($model) {
                                     return \backend\models\Quotation::findNo($model->quotation_id);
