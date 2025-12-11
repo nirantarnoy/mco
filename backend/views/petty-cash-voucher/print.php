@@ -59,33 +59,33 @@ $this->registerCss("
 
 .company-header {
     text-align: center;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     border-bottom: 2px solid #000;
-    padding-bottom: 5px;
+    padding-bottom: 2px;
 }
 
 .logo img {
-    width: 28%;
-    margin-bottom: 2px;
+    width: 20%;
+    margin-bottom: 0;
 }
 
 .company-name {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 900;
-    margin: 2px 0;
+    margin: 0;
     letter-spacing: 1px;
     -webkit-text-stroke: 0.5px black;
 }
 
 .form-title {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 900;
-    margin: 2px 0 0 0;
+    margin: 0;
     -webkit-text-stroke: 0.5px black;
 }
 
 .voucher-header {
-    margin: 8px 0;
+    margin: 4px 0;
     display: table;
     width: 100%;
 }
@@ -104,9 +104,9 @@ $this->registerCss("
 }
 
 .header-field {
-    margin-bottom: 4px;
-    line-height: 1.2;
-    font-size: 15px;
+    margin-bottom: 2px;
+    line-height: 1.1;
+    font-size: 14px;
 }
 
 .header-label {
@@ -117,30 +117,30 @@ $this->registerCss("
 }
 
 .paid-for-section {
-    margin: 8px 0;
+    margin: 4px 0;
     border: 1px solid #000;
-    padding: 5px;
-    min-height: 30px;
+    padding: 3px;
+    min-height: 25px;
 }
 
 .paid-for-label {
     font-weight: 900;
-    margin-bottom: 2px;
-    font-size: 15px;
+    margin-bottom: 0;
+    font-size: 14px;
     -webkit-text-stroke: 0.3px black;
 }
 
 .voucher-table {
     width: 100%;
     border-collapse: collapse;
-    margin: 8px 0;
-    font-size: 14px;
+    margin: 4px 0;
+    font-size: 13px;
 }
 
 .voucher-table th,
 .voucher-table td {
     border: 1px solid #000;
-    padding: 2px 1px;
+    padding: 1px 1px;
     text-align: center;
     vertical-align: middle;
     line-height: 1;
@@ -149,17 +149,17 @@ $this->registerCss("
 .voucher-table th {
     background-color: #f8f9fa;
     font-weight: 900;
-    height: 22px;
+    height: 20px;
     -webkit-text-stroke: 0.3px black;
 }
 
 .voucher-table td {
-    height: 22px;
+    height: 20px;
 }
 
 .voucher-table .detail-cell {
     text-align: left;
-    padding: 2px 3px;
+    padding: 1px 3px;
 }
 
 .voucher-table .amount-cell {
@@ -174,7 +174,7 @@ $this->registerCss("
 }
 
 .signature-section {
-    margin-top: 10px;
+    margin-top: 5px;
     display: table;
     width: 100%;
 }
@@ -184,7 +184,7 @@ $this->registerCss("
     width: 50%;
     border: 1px solid #000;
     padding: 0;
-    height: 90px;
+    height: 80px;
     position: relative;
     vertical-align: top;
 }
@@ -195,17 +195,17 @@ $this->registerCss("
 
 .signature-label {
     position: absolute;
-    top: 5px;
+    top: 2px;
     left: 50%;
     transform: translateX(-50%);
     font-weight: 900;
-    font-size: 15px;
+    font-size: 14px;
     -webkit-text-stroke: 0.3px black;
 }
 
 .signature-name {
     position: absolute;
-    bottom: 22px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     width: 80%;
@@ -216,17 +216,17 @@ $this->registerCss("
 }
 
 .signature-name img {
-            max-width: 120px !important;
-            max-height: 40px !important;
+            max-width: 100px !important;
+            max-height: 35px !important;
             object-fit: contain;
         }
 
 .signature-date {
     position: absolute;
-    bottom: 4px;
+    bottom: 2px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 13px;
+    font-size: 12px;
     display: flex;
     gap: 5px;
     align-items: center;
@@ -241,9 +241,9 @@ $this->registerCss("
 
 .form-code {
     position: absolute;
-    bottom: 2px;
+    bottom: 1px;
     right: 5px;
-    font-size: 10px;
+    font-size: 9px;
     color: #666;
 }
 
@@ -289,7 +289,7 @@ window.onload = function() {
     <!-- Company Header -->
     <div class="company-header">
         <div class="logo">
-            <img src="../../backend/web/uploads/logo/mco_logo.png" class="logo-img" style="width: 32%;bottom: 5px;" alt="">
+            <img src="../../backend/web/uploads/logo/mco_logo.png" class="logo-img" style="width: 20%;bottom: 5px;" alt="">
         </div>
         <div class="company-name">M.C.O. COMPANY LIMITED</div>
         <div class="form-title">PETTY CASH VOUCHER</div>
