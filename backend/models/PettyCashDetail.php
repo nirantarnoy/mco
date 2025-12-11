@@ -43,7 +43,7 @@ class PettyCashDetail extends ActiveRecord
             [['voucher_id', 'sort_order'], 'integer'],
             [['detail_date','job_ref_id','other'], 'safe'],
             [['detail'], 'string'],
-            [['amount', 'vat', 'vat_amount', 'wht', 'total'], 'number'],
+            [['amount', 'vat', 'vat_amount', 'wht', 'total','vat_prohibit'], 'number'],
             [['ac_code'], 'string', 'max' => 50],
             [['voucher_id'], 'exist', 'skipOnError' => true, 'targetClass' => PettyCashVoucher::class, 'targetAttribute' => ['voucher_id' => 'id']],
         ];
@@ -67,6 +67,7 @@ class PettyCashDetail extends ActiveRecord
             'other' => 'อื่นๆ',
             'total' => 'TOTAL',
             'sort_order' => 'Sort Order',
+            'vat_prohibit' => 'VAT ต้องห้าม',
         ];
     }
 
@@ -88,19 +89,20 @@ class PettyCashDetail extends ActiveRecord
         if (parent::beforeSave($insert)) {
             // Convert to float and handle empty values
             $amount = !empty($this->amount) ? (float)$this->amount : 0.00;
-            $vatAmount = !empty($this->vat_amount) ? (float)$this->vat_amount : 0.00;
+            $vat = !empty($this->vat) ? (float)$this->vat : 0.00;
+            $vatProhibit = !empty($this->vat_prohibit) ? (float)$this->vat_prohibit : 0.00;
             $wht = !empty($this->wht) ? (float)$this->wht : 0.00;
             $other = !empty($this->other) ? (float)$this->other : 0.00;
 
-            // Calculate total = amount + vat_amount - wht + other
-            $this->total = $amount + $vatAmount - $wht + $other;
+            // Calculate total = amount + vat + vat_prohibit - wht + other
+            $this->total = $amount + $vat + $vatProhibit - $wht + $other;
 
             // Ensure all numeric fields are properly set
             $this->amount = $amount;
-            $this->vat_amount = $vatAmount;
+            $this->vat = $vat;
+            $this->vat_prohibit = $vatProhibit;
             $this->wht = $wht;
             $this->other = $other;
-            $this->vat = !empty($this->vat) ? (float)$this->vat : 0.00;
 
             return true;
         }

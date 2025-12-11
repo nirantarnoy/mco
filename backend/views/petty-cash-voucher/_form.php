@@ -110,11 +110,12 @@ $this->registerJs("
 // Function to calculate row total
 function calculateRowTotal(row) {
     var amount = parseFloat(row.find('.amount-input').val()) || 0;
-    var vatAmount = parseFloat(row.find('.vat-amount-input').val()) || 0;
+    var vat = parseFloat(row.find('.vat-input').val()) || 0;
+    var vatProhibit = parseFloat(row.find('.vat-prohibit-input').val()) || 0;
     var wht = parseFloat(row.find('.wht-input').val()) || 0;
     var other = parseFloat(row.find('.other-input').val()) || 0;
     
-    var total = amount + vatAmount - wht + other;
+    var total = amount + vat + vatProhibit - wht + other;
     row.find('.total-input').val(total.toFixed(2));
     
     calculateGrandTotal();
@@ -196,25 +197,25 @@ function removeDetailRow(button) {
 }
 
 // Calculate VAT amount automatically (7%)
-function calculateVAT(row) {
-    var amount = parseFloat(row.find('.amount-input').val()) || 0;
-    var vatRate = parseFloat(row.find('input[name$=\"[vat]\"]').val()) || 0;
-    
-    if (vatRate > 0) {
-        var vatAmount = (amount * vatRate) / 100;
-        row.find('.vat-amount-input').val(vatAmount.toFixed(2));
-        calculateRowTotal(row);
-    }
-}
+// function calculateVAT(row) {
+//     var amount = parseFloat(row.find('.amount-input').val()) || 0;
+//     var vatRate = parseFloat(row.find('input[name$=\"[vat]\"]').val()) || 0;
+//     
+//     if (vatRate > 0) {
+//         var vatAmount = (amount * vatRate) / 100;
+//         row.find('.vat-amount-input').val(vatAmount.toFixed(2));
+//         calculateRowTotal(row);
+//     }
+// }
 
 // Event handlers
-$(document).on('input', '.amount-input, .vat-amount-input, .wht-input, .other-input', function() {
+$(document).on('input', '.amount-input, .vat-input, .vat-prohibit-input, .wht-input, .other-input', function() {
     calculateRowTotal($(this).closest('tr'));
 });
 
-$(document).on('input', 'input[name$=\"[vat]\"]', function() {
-    calculateVAT($(this).closest('tr'));
-});
+// $(document).on('input', 'input[name$=\"[vat]\"]', function() {
+//     calculateVAT($(this).closest('tr'));
+// });
 
 $(document).on('click', '.btn-add-row', function() {
     addDetailRow();
@@ -393,7 +394,7 @@ $(document).ready(function() {
                             <th width="10%">ใบงาน</th>
                             <th width="12%">AMOUNT</th>
                             <th width="8%">VAT</th>
-                            <th width="10%">VAT จำนวน</th>
+                            <th width="10%">VAT ต้องห้าม</th>
                             <th width="8%">W/H</th>
                             <th width="8%">อื่นๆ</th>
                             <th width="12%">TOTAL</th>
@@ -444,15 +445,15 @@ $(document).ready(function() {
                                 </td>
                                 <td>
                                     <?= Html::textInput("PettyCashDetail[{$index}][vat]", $detail->vat, [
-                                        'class' => 'form-control form-control-sm text-right',
+                                        'class' => 'form-control form-control-sm vat-input text-right',
                                         'type' => 'number',
                                         'step' => '0.01',
                                         'placeholder' => '0.00'
                                     ]) ?>
                                 </td>
                                 <td>
-                                    <?= Html::textInput("PettyCashDetail[{$index}][vat_amount]", $detail->vat_amount, [
-                                        'class' => 'form-control form-control-sm vat-amount-input text-right',
+                                    <?= Html::textInput("PettyCashDetail[{$index}][vat_prohibit]", $detail->vat_prohibit, [
+                                        'class' => 'form-control form-control-sm vat-prohibit-input text-right',
                                         'type' => 'number',
                                         'step' => '0.01',
                                         'placeholder' => '0.00'
@@ -708,10 +709,10 @@ function addDetailRow() {
             <input type="number" name="PettyCashDetail[` + rowIndex + `][amount]" class="form-control form-control-sm amount-input text-right" step="0.01" placeholder="0.00" value="0.00">
         </td>
         <td>
-            <input type="number" name="PettyCashDetail[` + rowIndex + `][vat]" class="form-control form-control-sm text-right" step="0.01" placeholder="0.00" value="0.00">
+            <input type="number" name="PettyCashDetail[` + rowIndex + `][vat]" class="form-control form-control-sm vat-input text-right" step="0.01" placeholder="0.00" value="0.00">
         </td>
         <td>
-            <input type="number" name="PettyCashDetail[` + rowIndex + `][vat_amount]" class="form-control form-control-sm vat-amount-input text-right" step="0.01" placeholder="0.00" value="0.00">
+            <input type="number" name="PettyCashDetail[` + rowIndex + `][vat_prohibit]" class="form-control form-control-sm vat-prohibit-input text-right" step="0.01" placeholder="0.00" value="0.00">
         </td>
         <td>
             <input type="number" name="PettyCashDetail[` + rowIndex + `][wht]" class="form-control form-control-sm wht-input text-right" step="0.01" placeholder="0.00" value="0.00">

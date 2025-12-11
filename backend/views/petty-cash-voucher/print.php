@@ -349,7 +349,7 @@ window.onload = function() {
                 <th style="width: 38%;">DETAIL</th>
                 <th style="width: 9%;">AMT</th>
                 <th style="width: 3%;">VAT</th>
-                <th style="width: 6%;">VAT<br>จำนวน</th>
+                <th style="width: 6%;">VAT<br>ต้องห้าม</th>
                 <th style="width: 3%;">W/H</th>
                 <th style="width: 3%;">อื่นๆ</th>
                 <th style="width: 9%;">TOTAL</th>
@@ -392,7 +392,7 @@ window.onload = function() {
                         <?= $detail && $detail->vat > 0 ? number_format($detail->vat, 2) : '&nbsp;' ?>
                     </td>
                     <td class="amount-cell">
-                        <?= $detail && $detail->vat_amount > 0 ? number_format($detail->vat_amount, 2) : '&nbsp;' ?>
+                        <?= $detail && $detail->vat_prohibit > 0 ? number_format($detail->vat_prohibit, 2) : '&nbsp;' ?>
                     </td>
                     <td class="amount-cell">
                         <?= $detail && $detail->wht > 0 ? number_format($detail->wht, 2) : '&nbsp;' ?>
