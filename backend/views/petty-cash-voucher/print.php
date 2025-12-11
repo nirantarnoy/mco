@@ -10,7 +10,7 @@ $this->title = 'พิมพ์ใบสำคัญจ่ายเงินส�
 $this->registerCss("
 @page {
     size: A5 landscape;
-    margin: 4mm;
+    margin: 1cm;
 }
 
  @font-face {
@@ -45,7 +45,6 @@ $this->registerCss("
         font-family: 'THSarabunPSK' !important;
         max-width: 100%; 
         width: 100%;
-        /* Removed height: 100% and page-break-inside: avoid to prevent forced page breaks */
     }
 }
 
@@ -58,14 +57,26 @@ $this->registerCss("
 }
 
 .company-header {
+    position: relative;
     text-align: center;
     margin-bottom: 4px;
     border-bottom: 2px solid #000;
-    padding-bottom: 2px;
+    padding-bottom: 5px;
+    min-height: 60px;
+}
+
+.logo {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
 }
 
 .logo img {
-    width: 20%;
+    height: 55px;
+    width: auto;
     margin-bottom: 0;
 }
 
@@ -289,7 +300,7 @@ window.onload = function() {
     <!-- Company Header -->
     <div class="company-header">
         <div class="logo">
-            <img src="../../backend/web/uploads/logo/mco_logo.png" class="logo-img" style="width: 20%;bottom: 5px;" alt="">
+            <img src="../../backend/web/uploads/logo/mco_logo.png" class="logo-img" alt="">
         </div>
         <div class="company-name">M.C.O. COMPANY LIMITED</div>
         <div class="form-title">PETTY CASH VOUCHER</div>
