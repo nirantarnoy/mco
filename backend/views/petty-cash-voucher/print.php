@@ -365,8 +365,8 @@ window.onload = function() {
                 $totalAmount += $detail->total;
             }
 
-            // Ensure we have at least 15 rows like the original form
-            $minRows = 15;
+            // Ensure we have at least 10 rows like the original form
+            $minRows = 10;
             $maxRows = max($minRows, count($details));
 
             for ($i = 0; $i < $maxRows; $i++):
