@@ -176,7 +176,7 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                             <th width="10%">JOB</th>
                             <th width="12%">AMOUNT</th>
                             <th width="8%">VAT</th>
-                            <th width="10%">VAT จำนวน</th>
+                            <th width="10%">VAT ต้องห้าม</th>
                             <th width="8%">W/H</th>
                             <th width="8%">อื่นๆ</th>
                             <th width="12%">TOTAL</th>
@@ -195,7 +195,7 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                                 <td><?= Html::encode(\backend\models\Job::findJobNo($detail->job_ref_id)) ?></td>
                                 <td class="text-right"><?= number_format($detail->amount, 2) ?></td>
                                 <td class="text-right"><?= number_format($detail->vat, 2) ?></td>
-                                <td class="text-right"><?= number_format($detail->vat_amount, 2) ?></td>
+                                <td class="text-right"><?= number_format($detail->vat_prohibit, 2) ?></td>
                                 <td class="text-right"><?= number_format($detail->wht, 2) ?></td>
                                 <td class="text-right"><?= number_format($detail->other, 2) ?></td>
                                 <td class="text-right font-weight-bold"><?= number_format($detail->total, 2) ?></td>

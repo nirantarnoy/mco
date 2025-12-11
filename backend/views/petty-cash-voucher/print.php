@@ -338,28 +338,26 @@ window.onload = function() {
         <div style="min-height: 20px; margin-top: 5px;">
             <?= $model->paid_for ? nl2br(Html::encode($model->paid_for)) : '&nbsp;' ?>
         </div>
+
     </div>
 
     <!-- Details Table -->
     <table class="voucher-table">
         <thead>
             <tr>
-                <th style="width: 4%;">A/C</th>
-                <th style="width: 3%;">DT</th>
-                <th style="width: 38%;">DETAIL</th>
+                <th style="width: 5%;">A/C</th>
+                <th style="width: 8%;">DT</th>
+                <th style="width: 33%;">DETAIL</th>
                 <th style="width: 9%;">AMT</th>
-                <th style="width: 3%;">VAT</th>
-                <th style="width: 6%;">VAT<br>ต้องห้าม</th>
-                <th style="width: 3%;">W/H</th>
-                <th style="width: 3%;">อื่นๆ</th>
+                <th style="width: 9%;">VAT</th>
+                <th style="width: 9%;">VAT<br>ต้องห้าม</th>
+                <th style="width: 9%;">W/H</th>
+                <th style="width: 9%;">อื่นๆ</th>
                 <th style="width: 9%;">TOTAL</th>
             </tr>
         </thead>
         <tbody>
             <?php
-            $details = $model->details;
-            $totalAmount = 0;
-
             // Calculate actual total
             foreach ($details as $detail) {
                 $totalAmount += $detail->total;
