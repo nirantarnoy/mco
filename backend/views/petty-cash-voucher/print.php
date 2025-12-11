@@ -10,7 +10,7 @@ $this->title = 'พิมพ์ใบสำคัญจ่ายเงินส�
 $this->registerCss("
 @page {
     size: A5 landscape;
-    margin: 1cm;
+    margin: 10mm;
 }
 
  @font-face {
@@ -160,12 +160,12 @@ $this->registerCss("
 .voucher-table th {
     background-color: #f8f9fa;
     font-weight: 900;
-    height: 20px;
+    height: 26px;
     -webkit-text-stroke: 0.3px black;
 }
 
 .voucher-table td {
-    height: 20px;
+    height: 26px;
 }
 
 .voucher-table .detail-cell {
@@ -365,7 +365,7 @@ window.onload = function() {
             }
 
             // Ensure we have at least 8 rows like the original form
-            $minRows = 6;
+            $minRows = 8;
             $maxRows = max($minRows, count($details));
 
             for ($i = 0; $i < $maxRows; $i++):

@@ -927,8 +927,8 @@ function selectProduct(input, product) {
     
     // อัพเดตจำนวนเงิน (ถ้ามีข้อมูล)
     if (product.job_amount) {
-        var amountInput = input.closest('tr').find('.amount-input');
-        amountInput.val(parseFloat(product.job_amount).toFixed(2));
+       // var amountInput = input.closest('tr').find('.amount-input');
+      //  amountInput.val(parseFloat(product.job_amount).toFixed(2));
         
         // คำนวณยอดรวมใหม่
       //  calculateRowTotal(input.closest('tr'));
