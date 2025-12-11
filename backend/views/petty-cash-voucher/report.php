@@ -155,6 +155,17 @@ $totalSummary = $searchModel->getTotalSummary();
                                 'footerOptions' => ['class' => 'text-right'],
                             ],
                             [
+                                'attribute' => 'total_vat_prohibit',
+                                'label' => 'VAT ต้องห้าม',
+                                'headerOptions' => ['width' => '100px'],
+                                'contentOptions' => ['class' => 'text-right'],
+                                'value' => function($model) {
+                                    return number_format($model['total_vat_prohibit'], 2);
+                                },
+                                'footer' => number_format($totalSummary['total_vat_prohibit'], 2),
+                                'footerOptions' => ['class' => 'text-right'],
+                            ],
+                            [
                                 'attribute' => 'total_wht',
                                 'label' => 'W/H',
                                 'headerOptions' => ['width' => '100px'],
@@ -256,6 +267,17 @@ $totalSummary = $searchModel->getTotalSummary();
                                     return number_format($model['vat_amount'], 2);
                                 },
                                 'footer' => number_format($totalSummary['total_vat_amount'], 2),
+                                'footerOptions' => ['class' => 'text-right'],
+                            ],
+                            [
+                                'attribute' => 'vat_prohibit',
+                                'label' => 'VAT ต้องห้าม',
+                                'headerOptions' => ['width' => '80px'],
+                                'contentOptions' => ['class' => 'text-right'],
+                                'value' => function($model) {
+                                    return number_format($model['vat_prohibit'], 2);
+                                },
+                                'footer' => number_format($totalSummary['total_vat_prohibit'], 2),
                                 'footerOptions' => ['class' => 'text-right'],
                             ],
                             [

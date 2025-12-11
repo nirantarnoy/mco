@@ -141,6 +141,7 @@ class PettyCashReportSearch extends Model
                     COALESCE(d.ac_code, 'ไม่ระบุ') as ac_code,
                     SUM(d.amount) as total_amount,
                     SUM(d.vat_amount) as total_vat_amount,
+                    SUM(d.vat_prohibit) as total_vat_prohibit,
                     SUM(d.wht) as total_wht,
                     SUM(d.other) as total_other,
                     SUM(d.total) as grand_total,
@@ -194,6 +195,7 @@ class PettyCashReportSearch extends Model
         $sql = "SELECT 
                     SUM(d.amount) as total_amount,
                     SUM(d.vat_amount) as total_vat_amount,
+                    SUM(d.vat_prohibit) as total_vat_prohibit,
                     SUM(d.wht) as total_wht,
                     SUM(d.other) as total_other,
                     SUM(d.total) as grand_total,
@@ -229,6 +231,7 @@ class PettyCashReportSearch extends Model
         return $result ?: [
             'total_amount' => 0,
             'total_vat_amount' => 0,
+            'total_vat_prohibit' => 0,
             'total_wht' => 0,
             'total_other' => 0,
             'grand_total' => 0,
