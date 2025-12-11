@@ -42,11 +42,10 @@ $this->registerCss("
         line-height: 1.1;
     }
     .print-container { 
-    font-family: 'THSarabunPSK' !important;
+        font-family: 'THSarabunPSK' !important;
         max-width: 100%; 
         width: 100%;
-        height: 100%;
-        page-break-inside: avoid;
+        /* Removed height: 100% and page-break-inside: avoid to prevent forced page breaks */
     }
 }
 
@@ -355,7 +354,7 @@ window.onload = function() {
             }
 
             // Ensure we have at least 8 rows like the original form
-            $minRows = 8;
+            $minRows = 6;
             $maxRows = max($minRows, count($details));
 
             for ($i = 0; $i < $maxRows; $i++):
