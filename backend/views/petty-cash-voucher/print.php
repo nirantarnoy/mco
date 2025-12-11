@@ -359,6 +359,8 @@ window.onload = function() {
         <tbody>
             <?php
             // Calculate actual total
+            $details = $model->details;
+            $totalAmount = 0;
             foreach ($details as $detail) {
                 $totalAmount += $detail->total;
             }

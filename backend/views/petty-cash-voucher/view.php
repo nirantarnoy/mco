@@ -205,7 +205,7 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                         </tbody>
                         <tfoot class="table-secondary">
                         <tr>
-                            <th colspan="9" class="text-right">รวมทั้งหมด:</th>
+                            <th colspan="10" class="text-right">รวมทั้งหมด:</th>
                             <th class="text-right"><?= number_format($totalAmount, 2) ?> บาท</th>
                         </tr>
                         </tfoot>
