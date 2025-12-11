@@ -347,10 +347,10 @@ class PettyCashVoucherController extends BaseController
 
         }
 
-        $model->amount = $all_total;
-        $model->save(false);
+        //$model->amount = $all_total;
+        //$model->save(false);
         // Update total amount
-        //$model->updateAmountFromDetails();
+        $model->updateAmountFromDetails();
     }
 
     /**
