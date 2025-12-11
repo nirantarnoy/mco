@@ -54,6 +54,7 @@ $this->registerCss("
     margin: 0;
     background: white;
     padding: 0;
+    padding-top: 10mm;
 }
 
 .company-header {
@@ -364,8 +365,8 @@ window.onload = function() {
                 $totalAmount += $detail->total;
             }
 
-            // Ensure we have at least 8 rows like the original form
-            $minRows = 8;
+            // Ensure we have at least 15 rows like the original form
+            $minRows = 15;
             $maxRows = max($minRows, count($details));
 
             for ($i = 0; $i < $maxRows; $i++):
