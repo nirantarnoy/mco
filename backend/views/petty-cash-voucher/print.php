@@ -7,11 +7,10 @@ use yii\helpers\Html;
 
 $this->title = 'พิมพ์ใบสำคัญจ่ายเงินสดย่อย - ' . $model->pcv_no;
 
-// Add print styles for A5 LANDSCAPE - optimized column widths
 $this->registerCss("
 @page {
     size: A5 landscape;
-    margin: 6mm;
+    margin: 4mm;
 }
 
  @font-face {
@@ -38,8 +37,9 @@ $this->registerCss("
         margin: 0; 
         padding: 0; 
         font-family: 'Sarabun', 'TH SarabunPSK', Arial, sans-serif; 
-        font-size: 17px;
+        font-size: 15px;
         color: #000;
+        line-height: 1.1;
     }
     .print-container { 
     font-family: 'THSarabunPSK' !important;
@@ -60,33 +60,33 @@ $this->registerCss("
 
 .company-header {
     text-align: center;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
     border-bottom: 2px solid #000;
-    padding-bottom: 12px;
+    padding-bottom: 5px;
 }
 
 .logo img {
     width: 28%;
-    margin-bottom: 8px;
+    margin-bottom: 2px;
 }
 
 .company-name {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 900;
-    margin: 5px 0;
+    margin: 2px 0;
     letter-spacing: 1px;
     -webkit-text-stroke: 0.5px black;
 }
 
 .form-title {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 900;
-    margin: 5px 0 0 0;
+    margin: 2px 0 0 0;
     -webkit-text-stroke: 0.5px black;
 }
 
 .voucher-header {
-    margin: 16px 0;
+    margin: 8px 0;
     display: table;
     width: 100%;
 }
@@ -105,62 +105,62 @@ $this->registerCss("
 }
 
 .header-field {
-    margin-bottom: 8px;
-    line-height: 1.4;
-    font-size: 16px;
+    margin-bottom: 4px;
+    line-height: 1.2;
+    font-size: 15px;
 }
 
 .header-label {
     font-weight: 900;
     display: inline-block;
-    width: 70px;
+    width: 60px;
     -webkit-text-stroke: 0.3px black;
 }
 
 .paid-for-section {
-    margin: 14px 0;
+    margin: 8px 0;
     border: 1px solid #000;
-    padding: 10px;
-    min-height: 40px;
+    padding: 5px;
+    min-height: 30px;
 }
 
 .paid-for-label {
     font-weight: 900;
-    margin-bottom: 5px;
-    font-size: 16px;
+    margin-bottom: 2px;
+    font-size: 15px;
     -webkit-text-stroke: 0.3px black;
 }
 
 .voucher-table {
     width: 100%;
     border-collapse: collapse;
-    margin: 12px 0;
-    font-size: 10px;
+    margin: 8px 0;
+    font-size: 14px;
 }
 
 .voucher-table th,
 .voucher-table td {
     border: 1px solid #000;
-    padding: 3px 1px;
+    padding: 2px 1px;
     text-align: center;
     vertical-align: middle;
-    line-height: 1.1;
+    line-height: 1;
 }
 
 .voucher-table th {
     background-color: #f8f9fa;
     font-weight: 900;
-    height: 30px;
+    height: 22px;
     -webkit-text-stroke: 0.3px black;
 }
 
 .voucher-table td {
-    height: 30px;
+    height: 22px;
 }
 
 .voucher-table .detail-cell {
     text-align: left;
-    padding: 3px 3px;
+    padding: 2px 3px;
 }
 
 .voucher-table .amount-cell {
@@ -175,7 +175,7 @@ $this->registerCss("
 }
 
 .signature-section {
-    margin-top: 24px;
+    margin-top: 10px;
     display: table;
     width: 100%;
 }
@@ -185,7 +185,7 @@ $this->registerCss("
     width: 50%;
     border: 1px solid #000;
     padding: 0;
-    height: 115px;
+    height: 90px;
     position: relative;
     vertical-align: top;
 }
@@ -196,17 +196,17 @@ $this->registerCss("
 
 .signature-label {
     position: absolute;
-    top: 8px;
+    top: 5px;
     left: 50%;
     transform: translateX(-50%);
     font-weight: 900;
-    font-size: 16px;
+    font-size: 15px;
     -webkit-text-stroke: 0.3px black;
 }
 
 .signature-name {
     position: absolute;
-    bottom: 25px;
+    bottom: 22px;
     left: 50%;
     transform: translateX(-50%);
     width: 80%;
@@ -217,17 +217,17 @@ $this->registerCss("
 }
 
 .signature-name img {
-            max-width: 130px !important;
-            max-height: 50px !important;
+            max-width: 120px !important;
+            max-height: 40px !important;
             object-fit: contain;
         }
 
 .signature-date {
     position: absolute;
-    bottom: 5px;
+    bottom: 4px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 14px;
+    font-size: 13px;
     display: flex;
     gap: 5px;
     align-items: center;
@@ -242,9 +242,9 @@ $this->registerCss("
 
 .form-code {
     position: absolute;
-    bottom: 5px;
-    right: 10px;
-    font-size: 12px;
+    bottom: 2px;
+    right: 5px;
+    font-size: 10px;
     color: #666;
 }
 
@@ -263,7 +263,6 @@ $this->registerCss("
 }
 ");
 
-// Auto print when page loads
 $this->registerJs("
 window.onload = function() {
     setTimeout(function() {
