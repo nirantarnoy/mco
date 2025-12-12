@@ -66,23 +66,22 @@ class PettyCashAdvanceController extends BaseController
         $model->request_date = date('Y-m-d');
 
         if ($model->load(\Yii::$app->request->post())) {
-            // ตรวจสอบว่าสามารถเบิกได้หรือไม่
+            // ตรวจสอบว่าสามารถเบิกได้หรือไม่ (แจ้งเตือนเท่านั้น)
             if (!PettyCashAdvance::canRequestAdvance($model->amount)) {
                 $currentBalance = PettyCashAdvance::getCurrentBalance();
                 $maxRequest = PettyCashAdvance::MAX_AMOUNT - $currentBalance;
-                \Yii::$app->session->setFlash('error',
-                    "ไม่สามารถเบิกเงินได้ เนื่องจากจะเกินวงเงินสูงสุด {PettyCashAdvance::MAX_AMOUNT} บาท
-                    <br>ยอดคงเหลือปัจจุบัน: " . number_format($currentBalance, 2) . " บาท
-                    <br>จำนวนที่เบิกได้สูงสุด: " . number_format($maxRequest, 2) . " บาท");
-            } else {
-                $model->advance_no = PettyCashAdvance::generateAdvanceNo($model->request_date);
+                \Yii::$app->session->setFlash('warning',
+                    "ยอดเงินเกินวงเงินสูงสุด " . number_format(PettyCashAdvance::MAX_AMOUNT) . " บาท
+                    <br>ยอดคงเหลือปัจจุบัน: " . number_format($currentBalance, 2) . " บาท");
+            }
 
-                if ($model->save()) {
-                    \Yii::$app->session->setFlash('success', 'บันทึกใบเบิกเงินทดแทนเรียบร้อยแล้ว');
-                    return $this->redirect(['view', 'id' => $model->id]);
-                } else {
-                    \Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-                }
+            $model->advance_no = PettyCashAdvance::generateAdvanceNo($model->request_date);
+
+            if ($model->save()) {
+                \Yii::$app->session->setFlash('success', 'บันทึกใบเบิกเงินทดแทนเรียบร้อยแล้ว');
+                return $this->redirect(['view', 'id' => $model->id]);
+            } else {
+                \Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
             }
         }
 
