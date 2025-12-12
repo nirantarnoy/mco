@@ -81,7 +81,7 @@ function dateToThaiShort($date) {
             top: -10px; /* Adjust vertical position */
         }
         .logo-img {
-            width: 120px; /* Adjust width as needed */
+            width: 80px; /* Adjust width as needed */
             height: auto;
         }
         .title {
@@ -125,6 +125,7 @@ function dateToThaiShort($date) {
             border: 1px solid #000;
             padding: 4px;
             vertical-align: top;
+            font-size: 14px;
         }
         .data-table th {
             text-align: center;
