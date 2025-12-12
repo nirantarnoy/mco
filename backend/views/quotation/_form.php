@@ -531,14 +531,14 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                         ]) ?>
                         <?= $form->field($model, 'discount_percent')->textInput([
                             'type' => 'number',
-                            'min' => 0,
+                            'min' => '0',
                             'id' => 'purch-discount_per',
                             'onchange' => 'calculateGrandTotal();',
 
                         ]) ?>
                         <?= $form->field($model, 'discount_amount')->textInput([
                             'type' => 'number',
-                            'min' => 0,
+                            'min' => '0',
                             'id' => 'purch-discount_amount',
                             'onchange' => 'calculateGrandTotal();'
 
@@ -565,7 +565,9 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                     'model' => $model->quotationLines[0] ?? new \backend\models\QuotationLine(),
                     'formId' => 'dynamic-form',
                     'formFields' => [
+                        'id',
                         'product_id',
+                        'product_name',
                         'qty',
                         'line_price',
                         'discount_amount',
@@ -597,7 +599,7 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                         <?php foreach ($model->quotationLines as $index => $quotationLine): ?>
                             <tr class="item">
                                 <?php if (!$quotationLine->isNewRecord): ?>
-                                    <?= Html::activeHiddenInput($quotationLine, "[{$index}]id") ?>
+                                    <?= Html::activeHiddenInput($quotationLine, "[{$index}]id", ['class' => 'line-id']) ?>
                                 <?php endif; ?>
                                 <td style="text-align: center">
                                     <span class="item-number"><?= $index + 1 ?></span>
@@ -762,6 +764,7 @@ $(document).ready(function() {
             
             // ล้างค่าในรายการใหม่
             var \$item = $(item);
+            \$item.find('.line-id').val('');
             \$item.find('.product-autocomplete').val('');
             \$item.find('.product-id-hidden').val('');
             \$item.find('input[type="number"]').val('');

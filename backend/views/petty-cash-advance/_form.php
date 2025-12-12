@@ -173,7 +173,6 @@ $(document).ready(function() {
                         'type' => 'number',
                         'step' => '0.01',
                         'min' => '1',
-                        'max' => $maxRequestAmount,
                         'class' => 'form-control text-right',
                         'placeholder' => '0.00'
                     ])->hint("จำนวนเงินที่เบิกได้สูงสุด: " . number_format($maxRequestAmount, 2) . " บาท") ?>

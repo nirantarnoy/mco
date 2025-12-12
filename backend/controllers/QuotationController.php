@@ -86,18 +86,26 @@ class QuotationController extends BaseController
 
             $quotationLines = [];
             $valid = $model->validate();
+            $lineErrors = [];
 
             if (isset($_POST['QuotationLine'])) {
-//                echo "จำนวนแถวที่ส่งมา: " . count($_POST['QuotationLine']);
-//                var_dump($_POST['QuotationLine']);
-//                exit; // ใส่ไว้ชั่วคราวเพื่อดูข้อมูล
                 foreach ($_POST['QuotationLine'] as $index => $quotationLineData) {
                     $quotationLine = new QuotationLine();
-                 //   $quotationLine->load($quotationLineData, '');
                     $quotationLine->setAttributes($quotationLineData);
                     $quotationLines[] = $quotationLine;
-                    $valid = $quotationLine->validate() && $valid;
+                    if (!$quotationLine->validate()) {
+                        $valid = false;
+                        $lineErrors[] = "รายการที่ " . ($index + 1) . ": " . implode(', ', $quotationLine->getFirstErrors());
+                    }
                 }
+            }
+
+            if (!$valid) {
+                $errorMsg = implode('<br>', $model->getFirstErrors());
+                if (!empty($lineErrors)) {
+                    $errorMsg .= '<br>' . implode('<br>', $lineErrors);
+                }
+                Yii::$app->session->setFlash('error', '<b>พบข้อผิดพลาด:</b><br>' . $errorMsg);
             }
 
             if ($valid) {
@@ -151,13 +159,13 @@ class QuotationController extends BaseController
         }
 
         if ($model->load(Yii::$app->request->post())) {
-
             $discount_total_amount = \Yii::$app->request->post('discount_total_amount');
             $total_vat_amount = \Yii::$app->request->post('total_vat_amount');
             $sum_total_amount = \Yii::$app->request->post('summary_total_amount');
 
             $quotationLines = [];
             $valid = $model->validate();
+            $lineErrors = [];
 
             if (isset($_POST['QuotationLine'])) {
                 foreach ($_POST['QuotationLine'] as $index => $quotationLineData) {
@@ -171,15 +179,21 @@ class QuotationController extends BaseController
                         // Create new line
                         $quotationLine = new QuotationLine();
                     }
-                   // $quotationLine->load($quotationLineData, '');
                     $quotationLine->setAttributes($quotationLineData);
                     $quotationLines[] = $quotationLine;
-                    $valid = $quotationLine->validate() && $valid;
-
-
-
-
+                    if (!$quotationLine->validate()) {
+                        $valid = false;
+                        $lineErrors[] = "รายการที่ " . ($index + 1) . ": " . implode(', ', $quotationLine->getFirstErrors());
+                    }
                 }
+            }
+
+            if (!$valid) {
+                $errorMsg = implode('<br>', $model->getFirstErrors());
+                if (!empty($lineErrors)) {
+                    $errorMsg .= '<br>' . implode('<br>', $lineErrors);
+                }
+                Yii::$app->session->setFlash('error', '<b>พบข้อผิดพลาด:</b><br>' . $errorMsg);
             }
 
             if ($valid) {
@@ -204,7 +218,6 @@ class QuotationController extends BaseController
                             ['not in', 'id', $existingLineIds]
                         ]);
 
-                       // \common\models\QuotationLine::DeleteAll(['quotation_id' => $model->id]);
                         // Save quotation lines
                         foreach ($quotationLines as $quotationLine) {
                             $quotationLine->quotation_id = $model->id;
