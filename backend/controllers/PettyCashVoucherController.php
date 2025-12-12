@@ -331,7 +331,7 @@ class PettyCashVoucherController extends BaseController
                 'job_ref_id' => isset($detailData['job_ref_id']) ? trim($detailData['job_ref_id']) : 0,
                 'amount' => !empty($detailData['amount']) ? (float)$detailData['amount'] : 0.00,
                 'vat' => !empty($detailData['vat']) ? (float)$detailData['vat'] : 0.00,
-                'vat_amount' => !empty($detailData['vat_amount']) ? (float)$detailData['vat_amount'] : 0.00,
+                'vat_amount' => !empty($detailData['vat']) ? (float)$detailData['vat'] : 0.00,
                 'vat_prohibit' => !empty($detailData['vat_prohibit']) ? (float)$detailData['vat_prohibit'] : 0.00,
                 'wht' => !empty($detailData['wht']) ? (float)$detailData['wht'] : 0.00,
                 'other' => !empty($detailData['other']) ? (float)$detailData['other'] : 0.00,

@@ -837,22 +837,6 @@ $(document).ready(function() {
         }
        
         if (query) {
-            var results = searchProducts(query);
-            showAutocompleteResults(input, results);
-        }
-    });
-    
-    $(document).on('blur', '.job-autocomplete', function() {
-        var input = $(this);
-        setTimeout(function() {
-            input.siblings('.autocomplete-dropdown').hide();
-        }, 200);
-    });
-    
-    $(document).on('click', '.autocomplete-item', function() {
-        var product = $(this).data('product');
-        var dropdown = $(this).closest('.autocomplete-dropdown');
-        var input = dropdown.siblings('.job-autocomplete');
         selectProduct(input, product);
     });
     
