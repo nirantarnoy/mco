@@ -1,3 +1,25 @@
+<?php
+
+use yii\helpers\Html;
+use yii\grid\GridView;
+use yii\widgets\Pjax;
+
+/* @var $this yii\web\View */
+/* @var $searchModel backend\models\PettyCashVoucherSearch */
+/* @var $dataProvider yii\data\ActiveDataProvider */
+
+$this->title = 'ใบสำคัญจ่ายเงินสดย่อย (Petty Cash Voucher)';
+$this->params['breadcrumbs'][] = $this->title;
+?>
+<div class="petty-cash-voucher-index">
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+
+            <div>
+                <?= Html::a('<i class="fas fa-plus"></i> สร้างใหม่', ['create'], [
+                    'class' => 'btn btn-success'
+                ]) ?>
                 <?= Html::a('<i class="fas fa-chart-bar"></i> รายงาน', ['report'], [
                     'class' => 'btn btn-info'
                 ]) ?>
