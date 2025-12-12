@@ -186,14 +186,15 @@ window.onload = function() {
             <thead>
             <tr>
                 <th style="width: 5%;">ลำดับ</th>
-                <th style="width: 15%;">A/C CODE</th>
-                <th style="width: 15%;">รายจ่าย</th>
-                <th style="width: 12%;">VAT</th>
-                <th style="width: 12%;">W/H</th>
-                <th style="width: 12%;">อื่นๆ</th>
-                <th style="width: 15%;">ทั้งหมด</th>
-                <th style="width: 10%;">จำนวนรายการ</th>
-                <th style="width: 14%;">คงเหลือ</th>
+                <th style="width: 10%;">A/C CODE</th>
+                <th style="width: 12%;">รายจ่าย</th>
+                <th style="width: 10%;">VAT</th>
+                <th style="width: 10%;">VAT ต้องห้าม</th>
+                <th style="width: 10%;">W/H</th>
+                <th style="width: 10%;">อื่นๆ</th>
+                <th style="width: 12%;">ทั้งหมด</th>
+                <th style="width: 8%;">จำนวนรายการ</th>
+                <th style="width: 13%;">คงเหลือ</th>
             </tr>
             </thead>
             <tbody>
@@ -208,6 +209,7 @@ window.onload = function() {
                     <td class="text-center"><?= Html::encode($model['ac_code'] ?: '-') ?></td>
                     <td class="text-right"><?= number_format($model['total_amount'], 2) ?></td>
                     <td class="text-right"><?= number_format($model['total_vat_amount'], 2) ?></td>
+                    <td class="text-right"><?= number_format($model['total_vat_prohibit'], 2) ?></td>
                     <td class="text-right"><?= number_format($model['total_wht'], 2) ?></td>
                     <td class="text-right"><?= number_format($model['total_other'], 2) ?></td>
                     <td class="text-right"><?= number_format($model['grand_total'], 2) ?></td>
@@ -221,6 +223,7 @@ window.onload = function() {
                 <td colspan="2" class="text-center"><strong>รวมทั้งหมด</strong></td>
                 <td class="text-right"><strong><?= number_format($totalSummary['total_amount'], 2) ?></strong></td>
                 <td class="text-right"><strong><?= number_format($totalSummary['total_vat_amount'], 2) ?></strong></td>
+                <td class="text-right"><strong><?= number_format($totalSummary['total_vat_prohibit'], 2) ?></strong></td>
                 <td class="text-right"><strong><?= number_format($totalSummary['total_wht'], 2) ?></strong></td>
                 <td class="text-right"><strong><?= number_format($totalSummary['total_other'], 2) ?></strong></td>
                 <td class="text-right"><strong><?= number_format($totalSummary['grand_total'], 2) ?></strong></td>
@@ -235,15 +238,16 @@ window.onload = function() {
             <thead>
             <tr>
                 <th style="width: 8%;">วันที่</th>
-                <th style="width: 20%;">รายการ</th>
-                <th style="width: 12%;">รายรับ</th>
-                <th style="width: 12%;">รายจ่าย</th>
+                <th style="width: 15%;">รายการ</th>
+                <th style="width: 8%;">รายรับ</th>
+                <th style="width: 8%;">รายจ่าย</th>
                 <th style="width: 8%;">VAT</th>
+                <th style="width: 8%;">VAT ต้องห้าม</th>
                 <th style="width: 8%;">W/H</th>
                 <th style="width: 8%;">อื่นๆ</th>
-                <th style="width: 12%;">ทั้งหมด</th>
-                <th style="width: 12%;">คงเหลือ</th>
-                <th style="width: 12%;">เลขที่เอกสาร</th>
+                <th style="width: 9%;">ทั้งหมด</th>
+                <th style="width: 10%;">คงเหลือ</th>
+                <th style="width: 10%;">เลขที่เอกสาร</th>
             </tr>
             </thead>
             <tbody>
@@ -259,6 +263,7 @@ window.onload = function() {
                     <td class="text-right">-</td>
                     <td class="text-right"><?= number_format($model['amount'], 2) ?></td>
                     <td class="text-right"><?= number_format($model['vat_amount'], 2) ?></td>
+                    <td class="text-right"><?= number_format($model['vat_prohibit'], 2) ?></td>
                     <td class="text-right"><?= number_format($model['wht'], 2) ?></td>
                     <td class="text-right"><?= number_format($model['other'], 2) ?></td>
                     <td class="text-right"><?= number_format($model['total'], 2) ?></td>
@@ -272,6 +277,7 @@ window.onload = function() {
                 <td colspan="3" class="text-center"><strong>รวมรายจ่าย</strong></td>
                 <td class="text-right"><strong><?= number_format($totalSummary['total_amount'], 2) ?></strong></td>
                 <td class="text-right"><strong><?= number_format($totalSummary['total_vat_amount'], 2) ?></strong></td>
+                <td class="text-right"><strong><?= number_format($totalSummary['total_vat_prohibit'], 2) ?></strong></td>
                 <td class="text-right"><strong><?= number_format($totalSummary['total_wht'], 2) ?></strong></td>
                 <td class="text-right"><strong><?= number_format($totalSummary['total_other'], 2) ?></strong></td>
                 <td class="text-right"><strong><?= number_format($totalSummary['grand_total'], 2) ?></strong></td>
@@ -284,19 +290,23 @@ window.onload = function() {
 
     <!-- Summary Section -->
     <div class="summary-section">
-        <div class="summary-box">
+        <div class="summary-box" style="width: 20%;">
             <div class="summary-label">รายจ่ายรวม</div>
             <div class="summary-amount"><?= number_format($totalSummary['total_amount'], 2) ?></div>
         </div>
-        <div class="summary-box">
+        <div class="summary-box" style="width: 20%;">
             <div class="summary-label">VAT รวม</div>
             <div class="summary-amount"><?= number_format($totalSummary['total_vat_amount'], 2) ?></div>
         </div>
-        <div class="summary-box">
+        <div class="summary-box" style="width: 20%;">
+            <div class="summary-label">VAT ต้องห้าม</div>
+            <div class="summary-amount"><?= number_format($totalSummary['total_vat_prohibit'], 2) ?></div>
+        </div>
+        <div class="summary-box" style="width: 20%;">
             <div class="summary-label">หัก ณ ที่จ่าย</div>
             <div class="summary-amount"><?= number_format($totalSummary['total_wht'], 2) ?></div>
         </div>
-        <div class="summary-box">
+        <div class="summary-box" style="width: 20%;">
             <div class="summary-label">คงเหลือ</div>
             <div class="summary-amount"><?= number_format($runningBalance, 2) ?></div>
         </div>
