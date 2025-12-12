@@ -67,7 +67,7 @@ function dateToThaiShort($date) {
 
         body {
             font-family: "THSarabunPSK", "Sarabun", sans-serif;
-            font-size: 16px;
+            font-size: 15px;
             line-height: 1.1;
         }
         .header {
@@ -81,7 +81,7 @@ function dateToThaiShort($date) {
             top: -10px; /* Adjust vertical position */
         }
         .logo-img {
-            width: 150px; /* Adjust width as needed */
+            width: 120px; /* Adjust width as needed */
             height: auto;
         }
         .title {
