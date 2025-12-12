@@ -47,10 +47,28 @@ function dateToThaiShort($date) {
             size: A4;
             margin: 10mm;
         }
+        @font-face {
+            font-family: 'THSarabunPSK';
+            src: url('../../backend/web/fonts/thsarabun/THSarabunPSK.ttf') format('truetype');
+            font-weight: normal;
+        }
+
+        @font-face {
+            font-family: 'THSarabunPSK';
+            src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Bold.ttf') format('truetype');
+            font-weight: bold;
+        }
+
+        @font-face {
+            font-family: 'THSarabunPSK';
+            src: url('../../backend/web/fonts/thsarabun/THSarabunPSK-Italic.ttf') format('truetype');
+            font-style: italic;
+        }
+
         body {
-            font-family: "Sarabun", sans-serif;
-            font-size: 12px;
-            line-height: 1.4;
+            font-family: "THSarabunPSK", "Sarabun", sans-serif;
+            font-size: 16px;
+            line-height: 1.1;
         }
         .header {
             text-align: center;
@@ -119,6 +137,24 @@ function dateToThaiShort($date) {
         /* Utility for print */
         @media print {
             .no-print { display: none; }
+        }
+
+        .footer-box {
+            border: 1px solid #000;
+            border-top: none;
+            padding: 10px;
+            margin-top: -1px; /* Connect with table border */
+        }
+        .note-section {
+            margin-bottom: 50px;
+        }
+        .signature-section {
+            display: flex;
+            justify-content: space-around;
+            padding-bottom: 20px;
+        }
+        .signature-block {
+            text-align: center;
         }
     </style>
 </head>
@@ -199,12 +235,26 @@ function dateToThaiShort($date) {
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="3" class="text-right text-bold">รวม</td>
+                <td colspan="3" class="text-center text-bold">รวม</td>
                 <td class="text-right text-bold"><?= number_format($totalAmount, 2) ?></td>
                 <td></td>
             </tr>
         </tfoot>
     </table>
+
+    <div class="footer-box">
+        <div class="note-section">
+            <strong>หมายเหตุ :</strong>
+        </div>
+        <div class="signature-section">
+            <div class="signature-block">
+                ผู้รักษาเงินสดย่อย......................................................
+            </div>
+            <div class="signature-block">
+                ผู้อนุมัติ......................................................
+            </div>
+        </div>
+    </div>
 
     <script>
         window.onload = function() {

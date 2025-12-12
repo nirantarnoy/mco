@@ -24,7 +24,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     'class' => 'btn btn-info'
                 ]) ?>
                 <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#printSummaryModal">
-                    <i class="fas fa-print"></i> พิมพ์ใบสรุป
+                    <i class="fas fa-print"></i> พิมพ์ใบสรุปเบิกเงินสดย่อย
                 </button>
             </div>
         </div>
