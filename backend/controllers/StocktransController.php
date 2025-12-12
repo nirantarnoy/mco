@@ -2,7 +2,7 @@
 
 namespace backend\controllers;
 
-use backend\models\Stocktrans;
+use backend\models\StockTrans;
 use backend\models\StocktransSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -11,7 +11,7 @@ use yii\web\ForbiddenHttpException;
 use yii\filters\AccessControl;
 
 /**
- * StocktransController implements the CRUD actions for Stocktrans model.
+ * StocktransController implements the CRUD actions for StockTrans model.
  */
 class StocktransController extends BaseController
 {
@@ -53,7 +53,7 @@ class StocktransController extends BaseController
     }
 
     /**
-     * Lists all Stocktrans models.
+     * Lists all StockTrans models.
      *
      * @return string
      */
@@ -70,7 +70,7 @@ class StocktransController extends BaseController
     }
 
     /**
-     * Displays a single Stocktrans model.
+     * Displays a single StockTrans model.
      * @param int $id ID
      * @return string
      * @throws NotFoundHttpException if the model cannot be found
@@ -83,13 +83,13 @@ class StocktransController extends BaseController
     }
 
     /**
-     * Creates a new Stocktrans model.
+     * Creates a new StockTrans model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
-        $model = new Stocktrans();
+        $model = new StockTrans();
 
         if ($this->request->isPost) {
             if ($model->load($this->request->post()) && $model->save()) {
@@ -105,7 +105,7 @@ class StocktransController extends BaseController
     }
 
     /**
-     * Updates an existing Stocktrans model.
+     * Updates an existing StockTrans model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param int $id ID
      * @return string|\yii\web\Response
@@ -125,7 +125,7 @@ class StocktransController extends BaseController
     }
 
     /**
-     * Deletes an existing Stocktrans model.
+     * Deletes an existing StockTrans model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param int $id ID
      * @return \yii\web\Response
@@ -139,15 +139,15 @@ class StocktransController extends BaseController
     }
 
     /**
-     * Finds the Stocktrans model based on its primary key value.
+     * Finds the StockTrans model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param int $id ID
-     * @return Stocktrans the loaded model
+     * @return StockTrans the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Stocktrans::findOne(['id' => $id])) !== null) {
+        if (($model = StockTrans::findOne(['id' => $id])) !== null) {
             return $model;
         }
 

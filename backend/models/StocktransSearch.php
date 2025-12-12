@@ -41,9 +41,10 @@ class StocktransSearch extends StockTrans
      */
     public function search($params)
     {
-        $query = Stocktrans::find();
+        $query = StockTrans::find();
 
         // add conditions that should always apply here
+        $query->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -69,8 +70,6 @@ class StocktransSearch extends StockTrans
             'stock_type_id' => $this->stock_type_id,
             'warehouse_id' => $this->warehouse_id,
         ]);
-
-       // $query->andFilterWhere(['like', 'journal_no', $this->journal_no]);
 
         return $dataProvider;
     }
