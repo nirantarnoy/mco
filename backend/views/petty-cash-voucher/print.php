@@ -374,34 +374,31 @@ window.onload = function() {
             ?>
                 <tr>
                     <td class="text-center">
-                        <?php //echo $detail ? Html::encode($detail->ac_code) : '&nbsp;' 
-                        ?>
+                        <?= $detail ? Html::encode($detail->ac_code) : '&nbsp;' ?>
                     </td>
                     <td class="text-center">
-                        <?php //echo $detail && $detail->detail_date ? Yii::$app->formatter->asDate($detail->detail_date, 'dd/MM/yy') : '&nbsp;' 
-                        ?>
+                        <?= $detail && $detail->detail_date ? Yii::$app->formatter->asDate($detail->detail_date, 'dd/MM/yy') : '&nbsp;' ?>
                     </td>
                     <td class="detail-cell text-left">
-                        <?php //echo $detail ? nl2br(Html::encode($detail->detail)) : '&nbsp;' 
-                        ?>
+                        <?= $detail ? nl2br(Html::encode($detail->detail)) : '&nbsp;' ?>
                     </td>
                     <td class="amount-cell">
-                        <?= $detail && $detail->amount > 0 ? number_format($detail->amount, 2) : '&nbsp;' ?>
+                        <?= $detail && $detail->amount != 0 ? number_format($detail->amount, 2) : '&nbsp;' ?>
                     </td>
                     <td class="amount-cell">
-                        <?= $detail && $detail->vat > 0 ? number_format($detail->vat, 2) : '&nbsp;' ?>
+                        <?= $detail && $detail->vat != 0 ? number_format($detail->vat, 2) : '&nbsp;' ?>
                     </td>
                     <td class="amount-cell">
-                        <?= $detail && $detail->vat_prohibit > 0 ? number_format($detail->vat_prohibit, 2) : '&nbsp;' ?>
+                        <?= $detail && $detail->vat_prohibit != 0 ? number_format($detail->vat_prohibit, 2) : '&nbsp;' ?>
                     </td>
                     <td class="amount-cell">
-                        <?= $detail && $detail->wht > 0 ? number_format($detail->wht, 2) : '&nbsp;' ?>
+                        <?= $detail && $detail->wht != 0 ? number_format($detail->wht, 2) : '&nbsp;' ?>
                     </td>
                     <td class="amount-cell">
-                        <?= $detail && $detail->other > 0 ? number_format($detail->other, 2) : '&nbsp;' ?>
+                        <?= $detail && $detail->other != 0 ? number_format($detail->other, 2) : '&nbsp;' ?>
                     </td>
                     <td class="amount-cell font-bold">
-                        <?= $detail && $detail->total > 0 ? number_format($detail->total, 2) : '&nbsp;' ?>
+                        <?= $detail && $detail->total != 0 ? number_format($detail->total, 2) : '&nbsp;' ?>
                     </td>
                 </tr>
             <?php endfor; ?>
