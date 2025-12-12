@@ -167,9 +167,11 @@ class PettyCashVoucher extends ActiveRecord
      */
     public function updateAmountFromDetails()
     {
+        unset($this->details);
         $this->amount = $this->calculateTotalAmount();
         return $this->save(false);
     }
+
     /**
      * Calculate total VAT
      */

@@ -120,18 +120,18 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                                 'contentOptions' => ['class' => 'font-weight-bold'],
                                 'captionOptions' => ['class' => 'font-weight-bold'],
                             ],
-                            [
-                                'attribute' => 'quotation_id',
-                                'value' => function ($model) {
-                                    return \backend\models\Quotation::findNo($model->quotation_id);
-                                },
-                            ],
-                            [
-                                'attribute' => 'job_id',
-                                'value' => function ($model) {
-                                    return \backend\models\Job::findJobNo($model->job_id);
-                                },
-                            ],
+                            // [
+                            //     'attribute' => 'quotation_id',
+                            //     'value' => function ($model) {
+                            //         return \backend\models\Quotation::findNo($model->quotation_id);
+                            //     },
+                            // ],
+                            // [
+                            //     'attribute' => 'job_id',
+                            //     'value' => function ($model) {
+                            //         return \backend\models\Job::findJobNo($model->job_id);
+                            //     },
+                            // ],
                         ],
                     ]) ?>
                 </div>
