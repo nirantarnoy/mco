@@ -564,4 +564,60 @@ class PettyCashVoucherController extends BaseController
 
 
 
+    /**
+     * พิมพ์ใบสรุปการเบิกชดเชยเงินสดย่อย
+     */
+    public function actionPrintSummary($from_date = null, $to_date = null)
+    {
+        if (!$from_date) $from_date = date('Y-m-01');
+        if (!$to_date) $to_date = date('Y-m-t');
+
+        // ดึงข้อมูล Petty Cash Voucher ในช่วงเวลาที่กำหนด
+        // เฉพาะสถานะที่อนุมัติแล้ว หรือ จ่ายแล้ว (ตาม Business Logic)
+        // สมมติว่าเอาเฉพาะที่อนุมัติแล้ว (approved) หรือ จ่ายแล้ว (paid)
+        // หรือถ้าต้องการทั้งหมดก็ไม่ต้อง filter status
+        $query = PettyCashVoucher::find()
+            ->where(['>=', 'date', $from_date])
+            ->andWhere(['<=', 'date', $to_date])
+            ->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')])
+            ->orderBy(['date' => SORT_ASC, 'pcv_no' => SORT_ASC]);
+
+        $vouchers = $query->all();
+
+        // คำนวณยอดรวม
+        $totalAmount = 0;
+        foreach ($vouchers as $voucher) {
+            $totalAmount += $voucher->amount;
+        }
+
+        // ข้อมูลวงเงิน (สมมติว่าดึงจาก PettyCashAdvance หรือ Config)
+        $pettyCashLimit = PettyCashAdvance::MAX_AMOUNT;
+        $currentBalance = PettyCashAdvance::getCurrentBalance(); // ยอดคงเหลือปัจจุบัน (Real-time)
+        
+        // หมายเหตุ: ยอดคงเหลือในรายงานควรจะเป็นยอด ณ วันที่สิ้นสุดรายงาน หรือยอดปัจจุบัน?
+        // ตามภาพ "เงินสดย่อยคงเหลือ" น่าจะเป็นยอดปัจจุบัน หรือยอดหลังหักรายการในรายงาน
+        // แต่ถ้าเป็นรายงานย้อนหลัง การคำนวณยอดคงเหลือ ณ วันนั้นอาจจะซับซ้อน
+        // เบื้องต้นใช้ยอดปัจจุบันไปก่อน หรือคำนวณจาก Limit - Total Reimbursement (ถ้าเป็นการเบิกชดเชยเต็มจำนวน)
+        
+        // ถ้าเป็นการเบิกชดเชย (Replenishment) ปกติจะเบิกเท่ากับยอดที่ใช้ไป
+        // ดังนั้น ยอดเบิก = Total Amount ในรายงาน
+        // เงินสดย่อยคงเหลือ = Limit - Total Amount (ก่อนเบิก)
+        // หรือ เงินสดย่อยคงเหลือ = Current Balance (ถ้ามองว่าเป็นสถานะปัจจุบัน)
+        
+        // ลองคำนวณแบบง่าย:
+        // วงเงิน: 30,000
+        // ใช้ไป (ในรายงาน): X
+        // คงเหลือ (ตามทฤษฎี): 30,000 - X (ถ้าเริ่มจากเต็ม)
+        
+        // แต่ถ้าใช้ Current Balance จากระบบ มันคือยอดจริงที่มีอยู่
+        
+        return $this->renderPartial('print-summary', [
+            'vouchers' => $vouchers,
+            'from_date' => $from_date,
+            'to_date' => $to_date,
+            'totalAmount' => $totalAmount,
+            'pettyCashLimit' => $pettyCashLimit,
+            'currentBalance' => $currentBalance,
+        ]);
+    }
 }

@@ -1,27 +1,9 @@
-<?php
-
-use yii\helpers\Html;
-use yii\grid\GridView;
-use yii\widgets\Pjax;
-
-/* @var $this yii\web\View */
-/* @var $dataProvider yii\data\ActiveDataProvider */
-
-$this->title = 'ใบสำคัญจ่ายเงินสดย่อย (Petty Cash Voucher)';
-$this->params['breadcrumbs'][] = $this->title;
-?>
-<div class="petty-cash-voucher-index">
-
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-
-            <div>
-                <?= Html::a('<i class="fas fa-plus"></i> สร้างใหม่', ['create'], [
-                    'class' => 'btn btn-success'
-                ]) ?>
                 <?= Html::a('<i class="fas fa-chart-bar"></i> รายงาน', ['report'], [
                     'class' => 'btn btn-info'
                 ]) ?>
+                <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#printSummaryModal">
+                    <i class="fas fa-print"></i> พิมพ์ใบสรุป
+                </button>
             </div>
         </div>
         <div class="card-body">
@@ -125,4 +107,50 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 
+</div>
+
+<!-- Modal Print Summary -->
+<div class="modal fade" id="printSummaryModal" tabindex="-1" role="dialog" aria-labelledby="printSummaryModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="printSummaryModalLabel">พิมพ์ใบสรุปการเบิกชดเชยเงินสดย่อย</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <?= Html::beginForm(['print-summary'], 'get', ['target' => '_blank']) ?>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>ตั้งแต่วันที่</label>
+                    <?= \kartik\date\DatePicker::widget([
+                        'name' => 'from_date',
+                        'value' => date('Y-m-01'),
+                        'pluginOptions' => [
+                            'autoclose' => true,
+                            'format' => 'yyyy-mm-dd',
+                            'todayHighlight' => true
+                        ]
+                    ]) ?>
+                </div>
+                <div class="form-group">
+                    <label>ถึงวันที่</label>
+                    <?= \kartik\date\DatePicker::widget([
+                        'name' => 'to_date',
+                        'value' => date('Y-m-d'),
+                        'pluginOptions' => [
+                            'autoclose' => true,
+                            'format' => 'yyyy-mm-dd',
+                            'todayHighlight' => true
+                        ]
+                    ]) ?>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">ปิด</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-print"></i> พิมพ์รายงาน</button>
+            </div>
+            <?= Html::endForm() ?>
+        </div>
+    </div>
 </div>
