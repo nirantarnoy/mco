@@ -562,4 +562,23 @@ class PurchasemasterController extends BaseController
         }
         echo "OK";
     }
+
+    public function actionGetVendor($id)
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $vendor = \backend\models\Vendor::findOne($id);
+        if ($vendor) {
+            return [
+                'name' => $vendor->name,
+                'addr01' => trim($vendor->home_number . ' ' . $vendor->street . ' ' . $vendor->aisle),
+                'addr02' => trim($vendor->district_name . ' ' . $vendor->city_name),
+                'addr03' => trim($vendor->province_name),
+                'zipcod' => $vendor->zipcode,
+                'telnum' => $vendor->phone,
+                'taxid' => $vendor->taxid,
+                'orgnum' => $vendor->is_head ? '00000' : $vendor->branch_name,
+            ];
+        }
+        return null;
+    }
 }

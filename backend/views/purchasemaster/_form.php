@@ -34,7 +34,11 @@ $this->registerCss("
 }
 ");
 $model_doc = \common\models\PurchNonePrDoc::find()->where(['purchase_master_id' => $model->id])->all();
-$this->registerJs("
+
+$urlSearchProduct = Url::to(['search-product']);
+$urlGetVendor = Url::to(['get-vendor']);
+
+$this->registerJs(<<<JS
 var detailRowIndex = 0;
 
 // เพิ่มแถวรายละเอียด
@@ -94,7 +98,6 @@ $(document).on('click', '.btn-remove-row', function() {
     calculateTotal();
 });
 
-// อัพเดทเลขลำดับ
 function updateRowNumbers() {
     $('#detail-table tbody tr').each(function(index) {
         $(this).find('td:first').text(index + 1);
@@ -146,7 +149,6 @@ $(document).on('input', '#purchasemaster-disc', function() {
     calculateTotal();
 });
 
-// คำนวณเมื่อเปลี่ยน VAT หรือ TAX
 $(document).on('input', '#purchasemaster-vat_percent, #purchasemaster-tax_percent', function() {
     calculateTotal();
 });
@@ -156,7 +158,7 @@ function initAutocomplete() {
     $('.product-autocomplete').each(function() {
         var input = $(this);
         var index = input.data('index');
-        var suggestionsDiv = $('<div class=\"autocomplete-suggestions\"></div>');
+        var suggestionsDiv = $('<div class="autocomplete-suggestions"></div>');
         input.after(suggestionsDiv);
         suggestionsDiv.hide();
         
@@ -169,7 +171,7 @@ function initAutocomplete() {
             }
             
             $.ajax({
-                url: '" . Url::to(['search-product']) . "',
+                url: '$urlSearchProduct',
                 data: { q: query },
                 dataType: 'json',
                 success: function(data) {
@@ -177,7 +179,7 @@ function initAutocomplete() {
                     
                     if (data.length > 0) {
                         $.each(data, function(i, item) {
-                            var div = $('<div class=\"autocomplete-suggestion\"></div>')
+                            var div = $('<div class="autocomplete-suggestion"></div>')
                                 .text(item.code + ' - ' + item.name)
                                 .data('item', item);
                             suggestionsDiv.append(div);
@@ -194,9 +196,9 @@ function initAutocomplete() {
             var item = $(this).data('item');
             var row = input.closest('tr');
             
-            row.find('input[name*=\"[stkcod]\"]').val(item.code);
-            row.find('input[name*=\"[stkdes]\"]').val(item.name);
-            row.find('input[name*=\"[unitpr]\"]').val(item.price || 0);
+            row.find('input[name*="[stkcod]"]').val(item.code);
+            row.find('input[name*="[stkdes]"]').val(item.name);
+            row.find('input[name*="[unitpr]"]').val(item.price || 0);
             
             suggestionsDiv.hide();
             
@@ -226,11 +228,45 @@ $(document).ready(function() {
             addDetailRow();
         }
     }
+
+    // ดึงข้อมูลผู้ขายเมื่อมีการเลือก
+    $('#purchasemaster-supcod').on('change', function() {
+        var vendorId = $(this).val();
+        if (vendorId) {
+            $.ajax({
+                url: '$urlGetVendor',
+                data: { id: vendorId },
+                dataType: 'json',
+                success: function(data) {
+                    if (data) {
+                        $('#purchasemaster-supnam').val(data.name);
+                        $('#purchasemaster-addr01').val(data.addr01);
+                        $('#purchasemaster-addr02').val(data.addr02);
+                        $('#purchasemaster-addr03').val(data.addr03);
+                        $('#purchasemaster-zipcod').val(data.zipcod);
+                        $('#purchasemaster-telnum').val(data.telnum);
+                        $('#purchasemaster-taxid').val(data.taxid);
+                        $('#purchasemaster-orgnum').val(data.orgnum);
+                    }
+                }
+            });
+        } else {
+            $('#purchasemaster-supnam').val('');
+            $('#purchasemaster-addr01').val('');
+            $('#purchasemaster-addr02').val('');
+            $('#purchasemaster-addr03').val('');
+            $('#purchasemaster-zipcod').val('');
+            $('#purchasemaster-telnum').val('');
+            $('#purchasemaster-taxid').val('');
+            $('#purchasemaster-orgnum').val('');
+        }
+    });
     
     initAutocomplete();
     calculateTotal();
 });
-", \yii\web\View::POS_END);
+JS
+);
 ?>
 
 <div class="purchase-master-form">
