@@ -92,7 +92,7 @@ $this->registerJs("
             <div class="row">
                 <div class="col-md-6">
                     <?= $form->field($model, 'dn_no')->textInput(['readonly' => true, 'placeholder' => 'สร้างอัตโนมัติ']) ?>
-                    
+
                     <?= $form->field($model, 'date')->widget(DatePicker::class, [
                         'options' => ['placeholder' => 'เลือกวันที่'],
                         'pluginOptions' => [
@@ -119,7 +119,7 @@ $this->registerJs("
                                                 $('#deliverynote-address').val(data.address);
                                                 $('#deliverynote-tel').val(data.tel);
                                                 $('#deliverynote-our_ref').val(data.our_ref);
-                                                $('#deliverynote-ref_no').val(data.ref_no);
+                                                // $('#deliverynote-ref_no').val(data.ref_no);
                                                 
                                                 // Clear existing lines
                                                 $('#details-table tbody').empty();
@@ -172,6 +172,7 @@ $this->registerJs("
 
                     <?= $form->field($model, 'customer_name')->textInput(['maxlength' => true]) ?>
                     <?= $form->field($model, 'address')->textarea(['rows' => 3]) ?>
+                    <?= $form->field($model, 'note')->textarea(['rows' => 3]) ?>
                 </div>
                 <div class="col-md-6">
                     <?= $form->field($model, 'attn')->textInput(['maxlength' => true]) ?>
@@ -181,6 +182,7 @@ $this->registerJs("
                     <?= $form->field($model, 'ref_no')->textInput(['maxlength' => true]) ?>
                     <?= $form->field($model, 'page_no')->textInput(['maxlength' => true]) ?>
                 </div>
+
             </div>
         </div>
     </div>
@@ -209,31 +211,33 @@ $this->registerJs("
                     </thead>
                     <tbody>
                         <?php foreach ($details as $index => $detail): ?>
-                        <tr>
-                            <td>
-                                <?= Html::textInput("DeliveryNoteLine[{$index}][item_no]", $detail->item_no ?: ($index + 1), ['class' => 'form-control form-control-sm']) ?>
-                            </td>
-                            <td>
-                                <?= Html::textarea("DeliveryNoteLine[{$index}][description]", $detail->description, ['class' => 'form-control form-control-sm', 'rows' => 2]) ?>
-                            </td>
-                            <td>
-                                <?= Html::textInput("DeliveryNoteLine[{$index}][part_no]", $detail->part_no, ['class' => 'form-control form-control-sm']) ?>
-                            </td>
-                            <td>
-                                <?= Html::input('number', "DeliveryNoteLine[{$index}][qty]", $detail->qty, ['class' => 'form-control form-control-sm text-right', 'step' => '0.01']) ?>
-                            </td>
-                            <td>
-                                <?= Html::dropDownList("DeliveryNoteLine[{$index}][unit_id]", $detail->unit_id, 
-                                    \yii\helpers\ArrayHelper::map(\backend\models\Unit::find()->all(), 'id', 'name'),
-                                    ['class' => 'form-control form-control-sm', 'prompt' => '-- หน่วย --']
-                                ) ?>
-                            </td>
-                            <td class="text-center">
-                                <button type="button" class="btn btn-sm btn-danger btn-remove-row">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td>
+                                    <?= Html::textInput("DeliveryNoteLine[{$index}][item_no]", $detail->item_no ?: ($index + 1), ['class' => 'form-control form-control-sm']) ?>
+                                </td>
+                                <td>
+                                    <?= Html::textarea("DeliveryNoteLine[{$index}][description]", $detail->description, ['class' => 'form-control form-control-sm', 'rows' => 2]) ?>
+                                </td>
+                                <td>
+                                    <?= Html::textInput("DeliveryNoteLine[{$index}][part_no]", $detail->part_no, ['class' => 'form-control form-control-sm']) ?>
+                                </td>
+                                <td>
+                                    <?= Html::input('number', "DeliveryNoteLine[{$index}][qty]", $detail->qty, ['class' => 'form-control form-control-sm text-right', 'step' => '0.01']) ?>
+                                </td>
+                                <td>
+                                    <?= Html::dropDownList(
+                                        "DeliveryNoteLine[{$index}][unit_id]",
+                                        $detail->unit_id,
+                                        \yii\helpers\ArrayHelper::map(\backend\models\Unit::find()->orderBy('name')->all(), 'id', 'name'),
+                                        ['class' => 'form-control form-control-sm', 'prompt' => '-- หน่วย --']
+                                    ) ?>
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-danger btn-remove-row">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>

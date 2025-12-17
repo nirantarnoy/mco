@@ -142,6 +142,14 @@ function calculateItemAmount(row) {
     calculateTotal();
 }
 
+// ฟังก์ชันจัดรูปแบบตัวเลขให้มี comma
+function formatNumber(num) {
+    if (num === null || num === undefined || num === '') {
+        return '0.00';
+    }
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 // Function to calculate total
 function calculateTotal() {
     var subtotal = 0;
@@ -149,22 +157,29 @@ function calculateTotal() {
         subtotal += parseFloat($(this).val()) || 0;
     });
     
-    $('#invoice-subtotal').val(subtotal.toFixed(2));
+    // Update display fields with formatted values
+    $('#invoice-subtotal').val(formatNumber(subtotal.toFixed(2)));
     
     // Calculate discount
     var discountPercent = parseFloat($('#invoice-discount_percent').val()) || 0;
     var discountAmount = subtotal * (discountPercent / 100);
-    $('#invoice-discount_amount').val(discountAmount.toFixed(2));
+    $('#invoice-discount_amount').val(formatNumber(discountAmount.toFixed(2)));
     
     var afterDiscount = subtotal - discountAmount;
     
     // Calculate VAT
     var vatPercent = parseFloat($('#invoice-vat_percent').val()) || 0;
     var vatAmount = afterDiscount * (vatPercent / 100);
-    $('#invoice-vat_amount').val(vatAmount.toFixed(2));
+    $('#invoice-vat_amount').val(formatNumber(vatAmount.toFixed(2)));
     
     var totalAmount = afterDiscount + vatAmount;
-    $('#invoice-total_amount').val(totalAmount.toFixed(2));
+    $('#invoice-total_amount').val(formatNumber(totalAmount.toFixed(2)));
+    
+    // Update hidden fields with unformatted values for form submission
+    $('#invoice-subtotal-hidden').val(subtotal.toFixed(2));
+    $('#invoice-discount_amount-hidden').val(discountAmount.toFixed(2));
+    $('#invoice-vat_amount-hidden').val(vatAmount.toFixed(2));
+    $('#invoice-total_amount-hidden').val(totalAmount.toFixed(2));
 }
 
 // ตัวแปรเก็บข้อมูลหน่วย (โหลดจาก PHP)
@@ -577,193 +592,200 @@ $typeLabels = Invoice::getTypeOptions();
 $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$model->invoice_type] : 'เอกสาร';
 ?>
 
-    <div class="invoice-form">
-        <?php if (\Yii::$app->session->hasFlash('success')): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle me-2"></i>
-                <?= \Yii::$app->session->getFlash('success') ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <?php endif; ?>
+<div class="invoice-form">
+    <?php if (\Yii::$app->session->hasFlash('success')): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <?= \Yii::$app->session->getFlash('success') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
 
-        <?php if (\Yii::$app->session->hasFlash('error')): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                <?= \Yii::$app->session->getFlash('error') ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <?php endif; ?>
-        <?php $form = ActiveForm::begin([
-            'id' => 'invoice-form',
-            'options' => ['class' => 'form-horizontal'],
-        ]); ?>
+    <?php if (\Yii::$app->session->hasFlash('error')): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <?= \Yii::$app->session->getFlash('error') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+    <?php $form = ActiveForm::begin([
+        'id' => 'invoice-form',
+        'options' => ['class' => 'form-horizontal'],
+    ]); ?>
 
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-file-invoice"></i> ข้อมูล<?= $currentTypeLabel ?>
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <?= $form->field($model, 'invoice_number')->textInput([
-                            'maxlength' => true,
-                            'readonly' => !$model->isNewRecord,
-                            'placeholder' => 'จะสร้างอัตโนมัติ'
-                        ]) ?>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-file-invoice"></i> ข้อมูล<?= $currentTypeLabel ?>
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <?= $form->field($model, 'invoice_number')->textInput([
+                        'maxlength' => true,
+                        'readonly' => !$model->isNewRecord,
+                        'placeholder' => 'จะสร้างอัตโนมัติ'
+                    ]) ?>
 
-                        <?= $form->field($model, 'invoice_date')->widget(DatePicker::class, [
-                            'options' => ['placeholder' => 'เลือกวันที่'],
-                            'pluginOptions' => [
-                                'autoclose' => true,
-                                'format' => 'yyyy-mm-dd',
-                                'todayHighlight' => true,
-                            ]
-                        ]) ?>
+                    <?= $form->field($model, 'invoice_date')->widget(DatePicker::class, [
+                        'options' => ['placeholder' => 'เลือกวันที่'],
+                        'pluginOptions' => [
+                            'autoclose' => true,
+                            'format' => 'yyyy-mm-dd',
+                            'todayHighlight' => true,
+                        ]
+                    ]) ?>
 
-<!--                        --><?php //= $form->field($model, 'job_id')->widget(Select2::class, [
-//                            'data' => ArrayHelper::map(\backend\models\Job::find()->all(), 'id', 'job_no'),
-//                            'options' => [
-//                                'placeholder' => '...เลือกงาน...',
-//                                'id' => 'invoice-job-id',
-//                            ],
-//                            'pluginOptions' => [
-//                                'allowClear' => true,
-//                                'escapeMarkup' => new \yii\web\JsExpression('function (markup) { return markup; }'),
-//                            ],
-//                        ]) ?>
+                    <!--                        --><?php //= $form->field($model, 'job_id')->widget(Select2::class, [
+                                                    //                            'data' => ArrayHelper::map(\backend\models\Job::find()->all(), 'id', 'job_no'),
+                                                    //                            'options' => [
+                                                    //                                'placeholder' => '...เลือกงาน...',
+                                                    //                                'id' => 'invoice-job-id',
+                                                    //                            ],
+                                                    //                            'pluginOptions' => [
+                                                    //                                'allowClear' => true,
+                                                    //                                'escapeMarkup' => new \yii\web\JsExpression('function (markup) { return markup; }'),
+                                                    //                            ],
+                                                    //                        ]) 
+                                                    ?>
 
-                        <?= $form->field($model, 'quotation_id')->widget(Select2::class, [
-                            'data' => ArrayHelper::map(\backend\models\Quotation::find()->all(), 'id', 'quotation_no'),
+                    <?= $form->field($model, 'quotation_id')->widget(Select2::class, [
+                        'data' => ArrayHelper::map(\backend\models\Quotation::find()->all(), 'id', 'quotation_no'),
+                        'options' => [
+                            'placeholder' => '...เลือกใบเสนอราคา...',
+                            'id' => 'invoice-job-id',
+                        ],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            'escapeMarkup' => new \yii\web\JsExpression('function (markup) { return markup; }'),
+                        ],
+                    ]) ?>
+
+                    <?= $form->field($model, 'customer_name')->textInput([
+                        'maxlength' => true,
+                        'placeholder' => 'ชื่อลูกค้า',
+                        'id' => 'invoice-customer-name',
+                    ]) ?>
+
+                    <?= $form->field($model, 'customer_address')->textarea([
+                        'rows' => 3,
+                        'placeholder' => 'ที่อยู่ลูกค้า',
+                        'id' => 'invoice-customer-address',
+                    ]) ?>
+                </div>
+                <div class="col-md-4" style="padding-top: 20px;">
+                    <?= $form->field($model, 'customer_tax_id')->textInput([
+                        'maxlength' => true,
+                        'placeholder' => 'เลขประจำตัวผู้เสียภาษี',
+                        'id' => 'invoice-customer-tax-id',
+                    ]) ?>
+
+                    <!--                        --><?php //= $form->field($model, 'po_number')->textInput([
+                                                    //                            'maxlength' => true,
+                                                    //                            'placeholder' => 'เลขที่ใบสั่งซื้อ'
+                                                    //                        ]) 
+                                                    ?>
+                    <!---->
+                    <!--                        --><?php //= $form->field($model, 'po_date')->widget(DatePicker::class, [
+                                                    //                            'options' => ['placeholder' => 'วันที่ใบสั่งซื้อ'],
+                                                    //                            'pluginOptions' => [
+                                                    //                                'autoclose' => true,
+                                                    //                                'format' => 'yyyy-mm-dd',
+                                                    //                                'todayHighlight' => true,
+                                                    //                            ]
+                                                    //                        ]) 
+                                                    ?>
+
+                    <?= $form->field($model, 'payment_term_id')->widget(
+                        Select2::class,
+                        [
+                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name'),
                             'options' => [
-                                'placeholder' => '...เลือกใบเสนอราคา...',
-                                'id' => 'invoice-job-id',
+                                'placeholder' => 'เลือกเงื่อนไขชําระเงิน...',
+                                'id' => 'invoice-payment_term_id',
+                                'onchange' => 'calculateDueDate($(this))',
                             ],
                             'pluginOptions' => [
                                 'allowClear' => true,
-                                'escapeMarkup' => new \yii\web\JsExpression('function (markup) { return markup; }'),
                             ],
-                        ]) ?>
+                        ]
+                    ) ?>
 
-                        <?= $form->field($model, 'customer_name')->textInput([
-                            'maxlength' => true,
-                            'placeholder' => 'ชื่อลูกค้า',
-                            'id' => 'invoice-customer-name',
-                        ]) ?>
+                    <?= $form->field($model, 'due_date')->widget(DatePicker::class, [
+                        'options' => ['placeholder' => 'วันครบกำหนดชำระ', 'id' => 'invoice-due-date', 'readonly' => true],
+                        'pluginOptions' => [
+                            'autoclose' => true,
+                            'format' => 'yyyy-mm-dd',
+                            'todayHighlight' => true,
+                        ]
+                    ]) ?>
 
-                        <?= $form->field($model, 'customer_address')->textarea([
-                            'rows' => 3,
-                            'placeholder' => 'ที่อยู่ลูกค้า',
-                            'id' => 'invoice-customer-address',
-                        ]) ?>
-                    </div>
-                    <div class="col-md-4" style="padding-top: 20px;">
-                        <?= $form->field($model, 'customer_tax_id')->textInput([
-                            'maxlength' => true,
-                            'placeholder' => 'เลขประจำตัวผู้เสียภาษี',
-                            'id' => 'invoice-customer-tax-id',
-                        ]) ?>
-
-<!--                        --><?php //= $form->field($model, 'po_number')->textInput([
-//                            'maxlength' => true,
-//                            'placeholder' => 'เลขที่ใบสั่งซื้อ'
-//                        ]) ?>
-<!---->
-<!--                        --><?php //= $form->field($model, 'po_date')->widget(DatePicker::class, [
-//                            'options' => ['placeholder' => 'วันที่ใบสั่งซื้อ'],
-//                            'pluginOptions' => [
-//                                'autoclose' => true,
-//                                'format' => 'yyyy-mm-dd',
-//                                'todayHighlight' => true,
-//                            ]
-//                        ]) ?>
-
-                        <?= $form->field($model, 'payment_term_id')->widget(Select2::class, [
-                                'data' => \yii\helpers\ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name'),
-                                'options' => [
-                                    'placeholder' => 'เลือกเงื่อนไขชําระเงิน...',
-                                    'id' => 'invoice-payment_term_id',
-                                    'onchange' => 'calculateDueDate($(this))',
-                                ],
-                                'pluginOptions' => [
-                                    'allowClear' => true,
-                                ],
-                            ]
-                        ) ?>
-
-                        <?= $form->field($model, 'due_date')->widget(DatePicker::class, [
-                            'options' => ['placeholder' => 'วันครบกำหนดชำระ', 'id' => 'invoice-due-date', 'readonly' => true],
+                    <?php if ($model->invoice_type == Invoice::TYPE_BILL_PLACEMENT): ?>
+                        <?= $form->field($model, 'payment_due_date')->widget(DatePicker::class, [
+                            'options' => ['placeholder' => 'วันนัดชำระเงิน'],
                             'pluginOptions' => [
                                 'autoclose' => true,
                                 'format' => 'yyyy-mm-dd',
-                                'todayHighlight' => true,
                             ]
                         ]) ?>
 
-                        <?php if ($model->invoice_type == Invoice::TYPE_BILL_PLACEMENT): ?>
-                            <?= $form->field($model, 'payment_due_date')->widget(DatePicker::class, [
-                                'options' => ['placeholder' => 'วันนัดชำระเงิน'],
-                                'pluginOptions' => [
-                                    'autoclose' => true,
-                                    'format' => 'yyyy-mm-dd',
-                                ]
-                            ]) ?>
-
-                            <?= $form->field($model, 'check_due_date')->widget(DatePicker::class, [
-                                'options' => ['placeholder' => 'วันนัดรับเช็ค'],
-                                'pluginOptions' => [
-                                    'autoclose' => true,
-                                    'format' => 'yyyy-mm-dd',
-                                ]
-                            ]) ?>
-                        <?php endif; ?>
-                    </div>
-                    <div class="col-md-4" style="padding-top: 20px;">
-                        <?php //if ($model->invoice_type == Invoice::TYPE_TAX_INVOICE): ?>
-                            <?= $form->field($model, 'po_number')->textInput(['maxlength' => true, 'placeholder' => 'เลขที่ใบสั่งซื้อ']) ?>
-
-                            <?= $form->field($model, 'po_date')->widget(DatePicker::class, [
-                                'options' => ['placeholder' => 'วันที่ใบสั่งซื้อ'],
-                                'pluginOptions' => [
-                                    'autoclose' => true,
-                                    'format' => 'yyyy-mm-dd',
-                                ]
-                            ]) ?>
-                        <?php //endif; ?>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-lg-12">
-                        <?= $form->field($model, 'special_note')->textarea([
-                            'rows' => 3,
-                            'placeholder' => 'บันทึกอื่นๆ'
+                        <?= $form->field($model, 'check_due_date')->widget(DatePicker::class, [
+                            'options' => ['placeholder' => 'วันนัดรับเช็ค'],
+                            'pluginOptions' => [
+                                'autoclose' => true,
+                                'format' => 'yyyy-mm-dd',
+                            ]
                         ]) ?>
-                    </div>
+                    <?php endif; ?>
+                </div>
+                <div class="col-md-4" style="padding-top: 20px;">
+                    <?php //if ($model->invoice_type == Invoice::TYPE_TAX_INVOICE): 
+                    ?>
+                    <?= $form->field($model, 'po_number')->textInput(['maxlength' => true, 'placeholder' => 'เลขที่ใบสั่งซื้อ']) ?>
+
+                    <?= $form->field($model, 'po_date')->widget(DatePicker::class, [
+                        'options' => ['placeholder' => 'วันที่ใบสั่งซื้อ'],
+                        'pluginOptions' => [
+                            'autoclose' => true,
+                            'format' => 'yyyy-mm-dd',
+                        ]
+                    ]) ?>
+                    <?php //endif; 
+                    ?>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <?= $form->field($model, 'special_note')->textarea([
+                        'rows' => 3,
+                        'placeholder' => 'บันทึกอื่นๆ'
+                    ]) ?>
                 </div>
             </div>
         </div>
-        <?= $form->field($model, 'invoice_type')->hiddenInput(['value' => $model->invoice_type])->label(false) ?>
-        <?= $form->field($model, 'customer_id')->hiddenInput(['value' => $model->customer_id,'id' => 'invoice-customer-id'])->label(false) ?>
+    </div>
+    <?= $form->field($model, 'invoice_type')->hiddenInput(['value' => $model->invoice_type])->label(false) ?>
+    <?= $form->field($model, 'customer_id')->hiddenInput(['value' => $model->customer_id, 'id' => 'invoice-customer-id'])->label(false) ?>
 
-        <div class="card mt-3">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-list"></i> รายการสินค้า/บริการ
-                </h5>
-                <div>
-                    <button type="button" class="btn btn-sm btn-info btn-load-job-items me-2">
-                        <i class="fas fa-download"></i> โหลดจากใบงาน
-                    </button>
-                    <button type="button" class="btn btn-sm btn-primary btn-add-item">
-                        <i class="fas fa-plus"></i> เพิ่มรายการ
-                    </button>
-                </div>
+    <div class="card mt-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-list"></i> รายการสินค้า/บริการ
+            </h5>
+            <div>
+                <button type="button" class="btn btn-sm btn-info btn-load-job-items me-2">
+                    <i class="fas fa-download"></i> โหลดจากใบงาน
+                </button>
+                <button type="button" class="btn btn-sm btn-primary btn-add-item">
+                    <i class="fas fa-plus"></i> เพิ่มรายการ
+                </button>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table id="items-table" class="table table-bordered table-sm mb-0">
-                        <thead class="table-light">
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="items-table" class="table table-bordered table-sm mb-0">
+                    <thead class="table-light">
                         <tr>
                             <th width="5%">ลำดับ</th>
                             <th width="35%">รายการ</th>
@@ -773,8 +795,8 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                             <th width="15%">จำนวนเงิน</th>
                             <th width="10%"></th>
                         </tr>
-                        </thead>
-                        <tbody>
+                    </thead>
+                    <tbody>
                         <?php foreach ($items as $index => $item): ?>
                             <tr>
                                 <td class="text-center"><?= $index + 1 ?></td>
@@ -801,7 +823,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                     <?= Html::dropDownList(
                                         "InvoiceItem[{$index}][unit_id]",
                                         $item->unit_id,
-                                        ArrayHelper::map(Unit::find()->where(['status' => 1])->all(), 'id', 'name'),
+                                        ArrayHelper::map(Unit::find()->where(['status' => 1])->orderBy('name')->all(), 'id', 'name'),
                                         [
                                             'prompt' => 'เลือกหน่วย',
                                             'class' => 'form-control form-control-sm text-center'
@@ -825,142 +847,146 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                 </td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-sm btn-danger btn-remove-item"
-                                            title="ลบรายการ">
+                                        title="ลบรายการ">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
+                    </tbody>
+                </table>
             </div>
         </div>
+    </div>
 
-        <!-- Summary Section -->
-        <div class="card mt-3">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-calculator"></i> สรุปยอดเงิน
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <?= $form->field($model, 'notes')->textarea([
-                            'rows' => 4,
-                            'placeholder' => 'หมายเหตุเพิ่มเติม'
-                        ]) ?>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <?= $form->field($model, 'subtotal')->textInput([
-                                    'type' => 'number',
-                                    'step' => '0.01',
-                                    'readonly' => true,
-                                    'class' => 'form-control text-right',
-                                    'style' => 'background-color: #f8f9fa;'
-                                ]) ?>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <?= $form->field($model, 'discount_percent', [
-                                    'template' => '{label}<div class="input-group"><div class="input-group-prepend"><span class="input-group-text">%</span></div>{input}</div>{error}'
-                                ])->textInput([
-                                    'type' => 'number',
-                                    'step' => '0.01',
-                                    'min' => '0',
-                                    'max' => '100',
-                                    'class' => 'form-control text-right'
-                                ]) ?>
-                            </div>
-                            <div class="col-sm-6">
-                                <?= $form->field($model, 'discount_amount')->textInput([
-                                    'type' => 'number',
-                                    'step' => '0.01',
-                                    'readonly' => true,
-                                    'class' => 'form-control text-right',
-                                    'style' => 'background-color: #f8f9fa;'
-                                ]) ?>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <?= $form->field($model, 'vat_percent', [
-                                    'template' => '{label}<div class="input-group"><div class="input-group-prepend"><span class="input-group-text">%</span></div>{input}</div>{error}'
-                                ])->textInput([
-                                    'type' => 'number',
-                                    'step' => '0.01',
-                                    'min' => '0',
-                                    'max' => '100',
-                                    'class' => 'form-control text-right'
-                                ]) ?>
-                            </div>
-                            <div class="col-sm-6">
-                                <?= $form->field($model, 'vat_amount')->textInput([
-                                    'type' => 'number',
-                                    'step' => '0.01',
-                                    'readonly' => true,
-                                    'class' => 'form-control text-right',
-                                    'style' => 'background-color: #f8f9fa;'
-                                ]) ?>
-                            </div>
-                        </div>
-
-                        <?= $form->field($model, 'total_amount')->textInput([
-                            'type' => 'number',
-                            'step' => '0.01',
-                            'readonly' => true,
-                            'class' => 'form-control text-right font-weight-bold',
-                            'style' => 'background-color: #e3f2fd; font-size: 16px; border: 2px solid #2196f3;'
-                        ]) ?>
-                    </div>
-                </div>
-            </div>
+    <!-- Summary Section -->
+    <div class="card mt-3">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-calculator"></i> สรุปยอดเงิน
+            </h5>
         </div>
-
-        <div class="form-group mt-4">
-            <div class="text-center">
-                <?= Html::submitButton($model->isNewRecord ? '<i class="fas fa-save"></i> บันทึก' : '<i class="fas fa-save"></i> แก้ไข', [
-                    'class' => $model->isNewRecord ? 'btn btn-success btn-lg' : 'btn btn-primary btn-lg'
-                ]) ?>
-                <?= Html::a('<i class="fas fa-times"></i> ยกเลิก', ['index'], ['class' => 'btn btn-secondary btn-lg']) ?>
-                <?php if (!$model->isNewRecord): ?>
-                    <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
-                        'class' => 'btn btn-info btn-lg',
-                        'target' => '_blank'
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <?= $form->field($model, 'notes')->textarea([
+                        'rows' => 4,
+                        'placeholder' => 'หมายเหตุเพิ่มเติม'
                     ]) ?>
-                <?php endif; ?>
+                </div>
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <?= Html::hiddenInput('Invoice[subtotal]', $model->subtotal, ['id' => 'invoice-subtotal-hidden']) ?>
+                            <?= $form->field($model, 'subtotal')->textInput([
+                                'type' => 'text',
+                                'readonly' => true,
+                                'disabled' => true,
+                                'class' => 'form-control text-right',
+                                'style' => 'background-color: #f8f9fa;'
+                            ]) ?>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <?= $form->field($model, 'discount_percent', [
+                                'template' => '{label}<div class="input-group"><div class="input-group-prepend"><span class="input-group-text">%</span></div>{input}</div>{error}'
+                            ])->textInput([
+                                'type' => 'number',
+                                'step' => '0.01',
+                                'min' => '0',
+                                'max' => '100',
+                                'class' => 'form-control text-right'
+                            ]) ?>
+                        </div>
+                        <div class="col-sm-6">
+                            <?= Html::hiddenInput('Invoice[discount_amount]', $model->discount_amount, ['id' => 'invoice-discount_amount-hidden']) ?>
+                            <?= $form->field($model, 'discount_amount')->textInput([
+                                'type' => 'text',
+                                'readonly' => true,
+                                'disabled' => true,
+                                'class' => 'form-control text-right',
+                                'style' => 'background-color: #f8f9fa;'
+                            ]) ?>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <?= $form->field($model, 'vat_percent', [
+                                'template' => '{label}<div class="input-group"><div class="input-group-prepend"><span class="input-group-text">%</span></div>{input}</div>{error}'
+                            ])->textInput([
+                                'type' => 'number',
+                                'step' => '0.01',
+                                'min' => '0',
+                                'max' => '100',
+                                'class' => 'form-control text-right'
+                            ]) ?>
+                        </div>
+                        <div class="col-sm-6">
+                            <?= Html::hiddenInput('Invoice[vat_amount]', $model->vat_amount, ['id' => 'invoice-vat_amount-hidden']) ?>
+                            <?= $form->field($model, 'vat_amount')->textInput([
+                                'type' => 'text',
+                                'readonly' => true,
+                                'disabled' => true,
+                                'class' => 'form-control text-right',
+                                'style' => 'background-color: #f8f9fa;'
+                            ]) ?>
+                        </div>
+                    </div>
+
+                    <?= Html::hiddenInput('Invoice[total_amount]', $model->total_amount, ['id' => 'invoice-total_amount-hidden']) ?>
+                    <?= $form->field($model, 'total_amount')->textInput([
+                        'type' => 'text',
+                        'readonly' => true,
+                        'disabled' => true,
+                        'class' => 'form-control text-right font-weight-bold',
+                        'style' => 'background-color: #e3f2fd; font-size: 16px; border: 2px solid #2196f3;'
+                    ]) ?>
+                </div>
             </div>
         </div>
+    </div>
 
-
-        <?php ActiveForm::end(); ?>
-
-        <?php
-        $model_doc = \common\models\InvoiceDoc::find()->where(['invoice_id' => $model->id])->all();
-        ?>
-        <hr>
-        <br/>
-        <div class="label">
-            <h4>เอกสารแนบ</h4>
+    <div class="form-group mt-4">
+        <div class="text-center">
+            <?= Html::submitButton($model->isNewRecord ? '<i class="fas fa-save"></i> บันทึก' : '<i class="fas fa-save"></i> แก้ไข', [
+                'class' => $model->isNewRecord ? 'btn btn-success btn-lg' : 'btn btn-primary btn-lg'
+            ]) ?>
+            <?= Html::a('<i class="fas fa-times"></i> ยกเลิก', ['index'], ['class' => 'btn btn-secondary btn-lg']) ?>
+            <?php if (!$model->isNewRecord): ?>
+                <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
+                    'class' => 'btn btn-info btn-lg',
+                    'target' => '_blank'
+                ]) ?>
+            <?php endif; ?>
         </div>
-        <div class="row">
-            <div class="col-lg-12">
-                <table class="table table-bordered table-striped" style="width: 100%">
-                    <thead>
+    </div>
+
+
+    <?php ActiveForm::end(); ?>
+
+    <?php
+    $model_doc = \common\models\InvoiceDoc::find()->where(['invoice_id' => $model->id])->all();
+    ?>
+    <hr>
+    <br />
+    <div class="label">
+        <h4>เอกสารแนบ</h4>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <table class="table table-bordered table-striped" style="width: 100%">
+                <thead>
                     <tr>
                         <th style="width: 5%;text-align: center">#</th>
                         <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
                         <th style="width: 10%;text-align: center">ดูเอกสาร</th>
                         <th style="width: 5%;text-align: center">-</th>
                     </tr>
-                    </thead>
-                    <tbody>
+                </thead>
+                <tbody>
                     <?php if ($model_doc != null): ?>
 
                         <?php foreach ($model_doc as $key => $value): ?>
@@ -969,48 +995,48 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                 <td><?= $value->doc ?></td>
                                 <td style="text-align: center">
                                     <a href="<?= Yii::$app->request->BaseUrl . '/uploads/invoice_doc/' . $value->doc ?>"
-                                       target="_blank">
+                                        target="_blank">
                                         ดูเอกสาร
                                     </a>
                                 </td>
                                 <td style="text-align: center">
                                     <div class="btn btn-danger" data-var="<?= trim($value->doc) ?>"
-                                         onclick="delete_doc($(this))">ลบ
+                                        onclick="delete_doc($(this))">ลบ
                                     </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
-                    </tbody>
-                </table>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <br />
+
+    <form action="<?= Url::to(['invoice/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="id" value="<?= $model->id ?>">
+        <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+            <div class="row">
+                <div class="col-lg-12">
+                    <label for="">เอกสารแนบ</label>
+                    <input type="file" name="file_doc" multiple>
+                </div>
+            </div>
+            <br />
+            <div class="row">
+                <div class="col-lg-12">
+                    <button class="btn btn-info">
+                        <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ
+                    </button>
+                </div>
             </div>
         </div>
-        <br/>
-
-        <form action="<?= Url::to(['invoice/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
-            <input type="hidden" name="id" value="<?= $model->id ?>">
-            <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <label for="">เอกสารแนบ</label>
-                        <input type="file" name="file_doc" multiple>
-                    </div>
-                </div>
-                <br/>
-                <div class="row">
-                    <div class="col-lg-12">
-                        <button class="btn btn-info">
-                            <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </form>
-        <form id="form-delete-doc-file" action="<?= Url::to(['invoice/delete-doc-file'], true) ?>" method="post">
-            <input type="hidden" name="id" value="<?= $model->id ?>">
-            <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
-        </form>
-    </div>
+    </form>
+    <form id="form-delete-doc-file" action="<?= Url::to(['invoice/delete-doc-file'], true) ?>" method="post">
+        <input type="hidden" name="id" value="<?= $model->id ?>">
+        <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
+    </form>
+</div>
 
 <?php
 $this->registerCss("

@@ -66,7 +66,7 @@ class DeliveryNote extends ActiveRecord
             [['date'], 'safe'],
             [['job_id', 'customer_id', 'status', 'company_id', 'created_at', 'updated_at', 'created_by', 'updated_by'], 'integer'],
             [['address'], 'string'],
-            [['dn_no', 'customer_name', 'attn', 'our_ref', 'from_name', 'tel', 'ref_no', 'page_no'], 'string', 'max' => 255],
+            [['dn_no', 'customer_name', 'attn', 'our_ref', 'from_name', 'tel', 'ref_no', 'page_no', 'note'], 'string', 'max' => 255],
             [['dn_no'], 'unique'],
         ];
     }
@@ -88,7 +88,7 @@ class DeliveryNote extends ActiveRecord
             'our_ref' => 'Our Ref',
             'from_name' => 'From',
             'tel' => 'Tel',
-            'ref_no' => 'Ref No.',
+            'ref_no' => 'Your Ref',
             'page_no' => 'Page No.',
             'status' => 'สถานะ',
             'company_id' => 'Company ID',
@@ -96,6 +96,7 @@ class DeliveryNote extends ActiveRecord
             'updated_at' => 'Updated At',
             'created_by' => 'Created By',
             'updated_by' => 'Updated By',
+            'note' => 'Note',
         ];
     }
 

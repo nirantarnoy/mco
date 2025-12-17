@@ -53,7 +53,7 @@ class InvoiceController extends BaseController
             ],
         ]);
 
-        $dataProvider->query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
+        $dataProvider->query->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')]);
 
         return $this->render('index', [
             'dataProvider' => $dataProvider,
@@ -135,6 +135,17 @@ class InvoiceController extends BaseController
                     //  print_r($itemsData);return;
                     $this->saveItems($model, $itemsData);
 
+                    // Save invoice relationship if this is a copy
+                    if ($copy_from) {
+                        $relation = new \backend\models\InvoiceRelation();
+                        $relation->parent_invoice_id = $copy_from;
+                        $relation->child_invoice_id = $model->id;
+                        $relation->relation_type = $sourceInvoice->invoice_type . '_to_' . $type;
+                        if (!$relation->save()) {
+                            Yii::error('Failed to save invoice relation: ' . json_encode($relation->errors), __METHOD__);
+                        }
+                    }
+
                     $transaction->commit();
                     Yii::$app->session->setFlash('success', 'บันทึกข้อมูลเรียบร้อยแล้ว');
                     return $this->redirect(['view', 'id' => $model->id]);
@@ -205,9 +216,9 @@ class InvoiceController extends BaseController
      */
     public function actionDelete($id)
     {
-  //      $model = $this->findModel($id);
-//        $model->status = Invoice::STATUS_CANCELLED;
-//        $model->save(false);
+        //      $model = $this->findModel($id);
+        //        $model->status = Invoice::STATUS_CANCELLED;
+        //        $model->save(false);
 
         Invoice::deleteAll(['id' => $id]);
 
@@ -325,13 +336,13 @@ class InvoiceController extends BaseController
             }
         );
 
-//        return ArrayHelper::map(
-//            Customer::getActiveCustomersList(),
-//            'customer_code',
-//            function($model) {
-//                return $model->customer_code . ' - ' . $model->customer_name;
-//            }
-//        );
+        //        return ArrayHelper::map(
+        //            Customer::getActiveCustomersList(),
+        //            'customer_code',
+        //            function($model) {
+        //                return $model->customer_code . ' - ' . $model->customer_name;
+        //            }
+        //        );
     }
 
     /**
@@ -376,18 +387,18 @@ class InvoiceController extends BaseController
         }
         return json_encode($customer_data);
     }
-//    public function actionGetJob()
-//    {
-//        $id = \Yii::$app->request->post('id');
-//        $customer_data = null;
-//        if ($id) {
-//            $model = Job::find()->where(['id' => $id])->one();
-//            if ($model) {
-//                $customer_data = \backend\models\Job::findCustomerData($model->quotation_id);
-//            }
-//        }
-//        return json_encode($customer_data);
-//    }
+    //    public function actionGetJob()
+    //    {
+    //        $id = \Yii::$app->request->post('id');
+    //        $customer_data = null;
+    //        if ($id) {
+    //            $model = Job::find()->where(['id' => $id])->one();
+    //            if ($model) {
+    //                $customer_data = \backend\models\Job::findCustomerData($model->quotation_id);
+    //            }
+    //        }
+    //        return json_encode($customer_data);
+    //    }
 
     public function actionGetJobItems()
     {
@@ -434,7 +445,7 @@ class InvoiceController extends BaseController
                     'quantity' => $jobItem->qty, // number_format($jobItem->qty, 2),
                     'unit' => $jobItem->product->unit->name ?: 'หน่วย',
                     'unit_price' => $jobItem->line_price, //number_format($jobItem->line_price,2),
-                    'amount' => ($jobItem->qty * $jobItem->line_price),//number_format($jobItem->qty * $jobItem->line_price, 2),
+                    'amount' => ($jobItem->qty * $jobItem->line_price), //number_format($jobItem->qty * $jobItem->line_price, 2),
                     // ข้อมูลเพิ่มเติมที่อาจจำเป็น
                     'product_id' => $jobItem->product_id,
                     'notes' => $jobItem->note,
@@ -450,7 +461,6 @@ class InvoiceController extends BaseController
                     'customer_name' => 'test',
                 ]
             ];
-
         } catch (\Exception $e) {
             \Yii::error("Error in actionGetJobItems: " . $e->getMessage(), __METHOD__);
 
@@ -460,77 +470,77 @@ class InvoiceController extends BaseController
             ];
         }
     }
-//    public function actionGetJobItems()
-//    {
-//        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-//
-//        $jobId = \Yii::$app->request->post('id');
-//
-//        if (!$jobId) {
-//            return [
-//                'success' => false,
-//                'message' => 'ไม่พบ ID ของใบงาน'
-//            ];
-//        }
-//
-//        try {
-//            // ตรวจสอบว่าใบงานมีอยู่จริง
-//            $job = \backend\models\Job::findOne($jobId);
-//            if (!$job) {
-//                return [
-//                    'success' => false,
-//                    'message' => 'ไม่พบใบงานที่ระบุ'
-//                ];
-//            }
-//
-//            // ดึงรายการสินค้า/บริการจากใบงาน
-//            // สมมติว่ามีตาราง job_items ที่เก็บรายการสินค้าของแต่ละงาน
-//            $jobItems = \common\models\JobLine::find()
-//                ->where(['job_id' => $jobId])
-//                ->orderBy(['id' => SORT_ASC])
-//                ->all();
-//
-//            if (empty($jobItems)) {
-//                return [
-//                    'success' => false,
-//                    'message' => 'ไม่พบรายการสินค้า/บริการในใบงานนี้'
-//                ];
-//            }
-//
-//            // จัดรูปแบบข้อมูลให้ตรงกับที่ฟอร์มต้องการ
-//            $items = [];
-//            foreach ($jobItems as $jobItem) {
-//                $items[] = [
-//                    'item_description' => $jobItem->product->name,
-//                    'quantity' => number_format($jobItem->qty, 0),
-//                    'unit' => $jobItem->product->unit->name ?: 'หน่วย',
-//                    'unit_price' => number_format($jobItem->line_price, 2),
-//                    'amount' => number_format($jobItem->qty * $jobItem->line_price, 2),
-//                    // ข้อมูลเพิ่มเติมที่อาจจำเป็น
-//                    'product_id' => $jobItem->product_id,
-//                    'notes' => $jobItem->note,
-//                ];
-//            }
-//
-//            return [
-//                'success' => true,
-//                'items' => $items,
-//                'job_info' => [
-//                    'job_no' => $job->job_no,
-//                    'job_name' => $job->job_no,
-//                    'customer_name' => 'test',
-//                ]
-//            ];
-//
-//        } catch (\Exception $e) {
-//            \Yii::error("Error in actionGetJobItems: " . $e->getMessage(), __METHOD__);
-//
-//            return [
-//                'success' => false,
-//                'message' => 'เกิดข้อผิดพลาดในการดึงข้อมูล: ' . $e->getMessage()
-//            ];
-//        }
-//    }
+    //    public function actionGetJobItems()
+    //    {
+    //        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    //
+    //        $jobId = \Yii::$app->request->post('id');
+    //
+    //        if (!$jobId) {
+    //            return [
+    //                'success' => false,
+    //                'message' => 'ไม่พบ ID ของใบงาน'
+    //            ];
+    //        }
+    //
+    //        try {
+    //            // ตรวจสอบว่าใบงานมีอยู่จริง
+    //            $job = \backend\models\Job::findOne($jobId);
+    //            if (!$job) {
+    //                return [
+    //                    'success' => false,
+    //                    'message' => 'ไม่พบใบงานที่ระบุ'
+    //                ];
+    //            }
+    //
+    //            // ดึงรายการสินค้า/บริการจากใบงาน
+    //            // สมมติว่ามีตาราง job_items ที่เก็บรายการสินค้าของแต่ละงาน
+    //            $jobItems = \common\models\JobLine::find()
+    //                ->where(['job_id' => $jobId])
+    //                ->orderBy(['id' => SORT_ASC])
+    //                ->all();
+    //
+    //            if (empty($jobItems)) {
+    //                return [
+    //                    'success' => false,
+    //                    'message' => 'ไม่พบรายการสินค้า/บริการในใบงานนี้'
+    //                ];
+    //            }
+    //
+    //            // จัดรูปแบบข้อมูลให้ตรงกับที่ฟอร์มต้องการ
+    //            $items = [];
+    //            foreach ($jobItems as $jobItem) {
+    //                $items[] = [
+    //                    'item_description' => $jobItem->product->name,
+    //                    'quantity' => number_format($jobItem->qty, 0),
+    //                    'unit' => $jobItem->product->unit->name ?: 'หน่วย',
+    //                    'unit_price' => number_format($jobItem->line_price, 2),
+    //                    'amount' => number_format($jobItem->qty * $jobItem->line_price, 2),
+    //                    // ข้อมูลเพิ่มเติมที่อาจจำเป็น
+    //                    'product_id' => $jobItem->product_id,
+    //                    'notes' => $jobItem->note,
+    //                ];
+    //            }
+    //
+    //            return [
+    //                'success' => true,
+    //                'items' => $items,
+    //                'job_info' => [
+    //                    'job_no' => $job->job_no,
+    //                    'job_name' => $job->job_no,
+    //                    'customer_name' => 'test',
+    //                ]
+    //            ];
+    //
+    //        } catch (\Exception $e) {
+    //            \Yii::error("Error in actionGetJobItems: " . $e->getMessage(), __METHOD__);
+    //
+    //            return [
+    //                'success' => false,
+    //                'message' => 'เกิดข้อผิดพลาดในการดึงข้อมูล: ' . $e->getMessage()
+    //            ];
+    //        }
+    //    }
 
     public function actionGetProductInfo()
     {
@@ -597,7 +607,6 @@ class InvoiceController extends BaseController
                     $loop++;
                 }
             }
-
         }
         return $this->redirect(['update', 'id' => $id]);
     }
@@ -619,14 +628,14 @@ class InvoiceController extends BaseController
         return $this->redirect(['update', 'id' => $id]);
     }
 
-    public function actionGetPaymentTermDay(){
+    public function actionGetPaymentTermDay()
+    {
         $id = \Yii::$app->request->post('id');
         $model = \common\models\PaymentTerm::find()->where(['id' => $id])->one();
-        if($model) {
-           echo $model->day_count;
-        }else{
+        if ($model) {
+            echo $model->day_count;
+        } else {
             echo 0;
         }
     }
-
 }

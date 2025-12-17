@@ -232,161 +232,163 @@ $(document).ready(function() {
 ");
 ?>
 
-    <div class="petty-cash-voucher-form">
-        <!-- Flash Messages -->
-        <?php if (\Yii::$app->session->hasFlash('success')): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle me-2"></i>
-                <?= \Yii::$app->session->getFlash('success') ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <?php endif; ?>
-
-        <?php if (\Yii::$app->session->hasFlash('error')): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                <?= \Yii::$app->session->getFlash('error') ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <?php endif; ?>
-
-        <?php if (\Yii::$app->session->hasFlash('warning')): ?>
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <?= \Yii::$app->session->getFlash('warning') ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <?php endif; ?>
-
-        <?php if (\Yii::$app->session->hasFlash('info')): ?>
-            <div class="alert alert-info alert-dismissible fade show" role="alert">
-                <i class="fas fa-info-circle me-2"></i>
-                <?= \Yii::$app->session->getFlash('info') ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <?php endif; ?>
-        <?php $form = ActiveForm::begin([
-            'id' => 'petty-cash-form',
-            'options' => ['class' => 'form-horizontal','enctype'=>'multipart/form-data',],
-            'fieldConfig' => [
-                'template' => '<div class="col-sm-3">{label}</div><div class="col-sm-9">{input}{error}</div>',
-                'labelOptions' => ['class' => 'control-label'],
-            ]
-        ]); ?>
-
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-money-bill-wave"></i> ข้อมูลใบสำคัญจ่ายเงินสดย่อย
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <?= $form->field($model, 'pcv_no')->textInput([
-                            'maxlength' => true,
-                            'readonly' => !$model->isNewRecord,
-                            'placeholder' => 'จะสร้างอัตโนมัติ'
-                        ]) ?>
-
-                        <?= $form->field($model, 'date')->widget(DatePicker::class, [
-                            'options' => ['placeholder' => 'เลือกวันที่'],
-                            'pluginOptions' => [
-                                'autoclose' => true,
-                                'format' => 'yyyy-mm-dd',
-                                'todayHighlight' => true,
-                            ]
-                        ]) ?>
-
-                        <?= $form->field($model, 'pay_for_emp_id')->widget(\kartik\select2\Select2::className(), [
-                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Employee::find()->all(), 'id', function ($data) {
-                                return $data->fname . ' ' . $data->lname;
-                            }),
-                            'options' => [
-                                'placeholder' => 'เลือกพนักงาน',
-                            ],
-                            'pluginOptions' => [
-                                'allowClear' => true,
-                            ],
-                        ]) ?>
-                        <?= $form->field($model, 'vendor_id')->widget(\kartik\select2\Select2::className(), [
-                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Vendor::find()->all(), 'id', function ($data) {
-                                return $data->code . ' ' . $data->name;
-                            }),
-                            'options' => [
-                                'placeholder' => 'เลือกผู้จำหน่าย',
-                            ],
-                            'pluginOptions' => [
-                                'allowClear' => true,
-                            ],
-                        ]) ?>
-                    </div>
-                    <div class="col-md-6">
-                        <?= $form->field($model, 'amount')->textInput([
-                            'type' => 'number',
-                            'step' => '0.01',
-                            'readonly' => true,
-                            'class' => 'form-control text-right'
-                        ]) ?>
-<!--                        --><?php //= $form->field($model, 'quotation_id')->widget(\kartik\select2\Select2::className(), [
-//                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Quotation::find()->all(), 'id', function ($data) {
-//                                return $data->quotation_no;
-//                            }),
-//                            'options' => [
-//                                'placeholder' => '--เลือกใบเสนอราคา--',
-//                            ],
-//                            'pluginOptions' => [
-//                                'allowClear' => true,
-//                            ],
-//                        ]) ?>
-<!--                        --><?php //= $form->field($model, 'job_id')->widget(\kartik\select2\Select2::className(), [
-//                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(), 'id', function ($data) {
-//                                return $data->job_no;
-//                            }),
-//                            'options' => [
-//                                'placeholder' => '--เลือกใบงาน--',
-//                            ],
-//                            'pluginOptions' => [
-//                                'allowClear' => true,
-//                            ],
-//                        ]) ?>
-
-                        <?= $form->field($model, 'issued_by')->textInput(['maxlength' => true, 'placeholder' => 'ผู้จัดทำ', 'readonly' => 'readonly', 'value' => $model->isNewRecord ? \backend\models\User::findEmployeeNameByUserId(\Yii::$app->user->id) : $model->issued_by]) ?>
-
-                        <?= $form->field($model, 'approved_by')->textInput(['maxlength' => true, 'placeholder' => 'ผู้อนุมัติ', 'readonly' => 'readonly','value'=>$model->approved_by?\backend\models\User::findEmployeeNameByUserId($model->approved_by):'']) ?>
-                    </div>
-                </div>
-
-                <?= $form->field($model, 'paid_for')->textarea([
-                    'rows' => 3,
-                    'placeholder' => 'จ่ายเพื่อ...'
-                ])->label('จ่ายเพื่อ') ?>
-            </div>
+<div class="petty-cash-voucher-form">
+    <!-- Flash Messages -->
+    <?php if (\Yii::$app->session->hasFlash('success')): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <?= \Yii::$app->session->getFlash('success') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+    <?php endif; ?>
 
-        <div class="card mt-3">
-            <div class="card-header">
-                <table style="width: 100%">
-                    <tr>
-                        <td>
-                            <h5 class="card-title mb-0">
-                                <i class="fas fa-list"></i> รายละเอียดการจ่าย
-                            </h5>
-                        </td>
-                        <td style="text-align: right">
-                            <button type="button" class="btn btn-sm btn-primary btn-add-row">
-                                <i class="fas fa-plus"></i> เพิ่มรายการ
-                            </button>
-                        </td>
-                    </tr>
-                </table>
+    <?php if (\Yii::$app->session->hasFlash('error')): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <?= \Yii::$app->session->getFlash('error') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
 
+    <?php if (\Yii::$app->session->hasFlash('warning')): ?>
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <?= \Yii::$app->session->getFlash('warning') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
 
+    <?php if (\Yii::$app->session->hasFlash('info')): ?>
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            <?= \Yii::$app->session->getFlash('info') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+    <?php $form = ActiveForm::begin([
+        'id' => 'petty-cash-form',
+        'options' => ['class' => 'form-horizontal', 'enctype' => 'multipart/form-data',],
+        'fieldConfig' => [
+            'template' => '<div class="col-sm-3">{label}</div><div class="col-sm-9">{input}{error}</div>',
+            'labelOptions' => ['class' => 'control-label'],
+        ]
+    ]); ?>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-money-bill-wave"></i> ข้อมูลใบสำคัญจ่ายเงินสดย่อย
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <?= $form->field($model, 'pcv_no')->textInput([
+                        'maxlength' => true,
+                        'readonly' => !$model->isNewRecord,
+                        'placeholder' => 'จะสร้างอัตโนมัติ'
+                    ]) ?>
+
+                    <?= $form->field($model, 'date')->widget(DatePicker::class, [
+                        'options' => ['placeholder' => 'เลือกวันที่'],
+                        'pluginOptions' => [
+                            'autoclose' => true,
+                            'format' => 'yyyy-mm-dd',
+                            'todayHighlight' => true,
+                        ]
+                    ]) ?>
+
+                    <?= $form->field($model, 'pay_for_emp_id')->widget(\kartik\select2\Select2::className(), [
+                        'data' => \yii\helpers\ArrayHelper::map(\backend\models\Employee::find()->all(), 'id', function ($data) {
+                            return $data->fname . ' ' . $data->lname;
+                        }),
+                        'options' => [
+                            'placeholder' => 'เลือกพนักงาน',
+                        ],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                        ],
+                    ]) ?>
+                    <?= $form->field($model, 'vendor_id')->widget(\kartik\select2\Select2::className(), [
+                        'data' => \yii\helpers\ArrayHelper::map(\backend\models\Vendor::find()->all(), 'id', function ($data) {
+                            return $data->code . ' ' . $data->name;
+                        }),
+                        'options' => [
+                            'placeholder' => 'เลือกผู้จำหน่าย',
+                        ],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                        ],
+                    ]) ?>
+                </div>
+                <div class="col-md-6">
+                    <?= $form->field($model, 'amount')->textInput([
+                        'type' => 'number',
+                        'step' => '0.01',
+                        'readonly' => true,
+                        'class' => 'form-control text-right'
+                    ]) ?>
+                    <!--                        --><?php //= $form->field($model, 'quotation_id')->widget(\kartik\select2\Select2::className(), [
+                                                    //                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Quotation::find()->all(), 'id', function ($data) {
+                                                    //                                return $data->quotation_no;
+                                                    //                            }),
+                                                    //                            'options' => [
+                                                    //                                'placeholder' => '--เลือกใบเสนอราคา--',
+                                                    //                            ],
+                                                    //                            'pluginOptions' => [
+                                                    //                                'allowClear' => true,
+                                                    //                            ],
+                                                    //                        ]) 
+                                                    ?>
+                    <!--                        --><?php //= $form->field($model, 'job_id')->widget(\kartik\select2\Select2::className(), [
+                                                    //                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(), 'id', function ($data) {
+                                                    //                                return $data->job_no;
+                                                    //                            }),
+                                                    //                            'options' => [
+                                                    //                                'placeholder' => '--เลือกใบงาน--',
+                                                    //                            ],
+                                                    //                            'pluginOptions' => [
+                                                    //                                'allowClear' => true,
+                                                    //                            ],
+                                                    //                        ]) 
+                                                    ?>
+
+                    <?= $form->field($model, 'issued_by')->textInput(['maxlength' => true, 'placeholder' => 'ผู้จัดทำ', 'readonly' => 'readonly', 'value' => $model->isNewRecord ? \backend\models\User::findEmployeeNameByUserId(\Yii::$app->user->id) : $model->issued_by]) ?>
+
+                    <?= $form->field($model, 'approved_by')->textInput(['maxlength' => true, 'placeholder' => 'ผู้อนุมัติ', 'readonly' => 'readonly', 'value' => $model->approved_by ? \backend\models\User::findEmployeeNameByUserId($model->approved_by) : '']) ?>
+                </div>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table id="details-table" class="table table-bordered table-sm mb-0">
-                        <thead class="table-light">
+
+            <?= $form->field($model, 'paid_for')->textarea([
+                'rows' => 3,
+                'placeholder' => 'จ่ายเพื่อ...'
+            ])->label('จ่ายเพื่อ') ?>
+        </div>
+    </div>
+
+    <div class="card mt-3">
+        <div class="card-header">
+            <table style="width: 100%">
+                <tr>
+                    <td>
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list"></i> รายละเอียดการจ่าย
+                        </h5>
+                    </td>
+                    <td style="text-align: right">
+                        <button type="button" class="btn btn-sm btn-primary btn-add-row">
+                            <i class="fas fa-plus"></i> เพิ่มรายการ
+                        </button>
+                    </td>
+                </tr>
+            </table>
+
+
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="details-table" class="table table-bordered table-sm mb-0">
+                    <thead class="table-light">
                         <tr>
                             <th width="10%">สำหรับเลขที่บิล</th>
                             <th width="10%">DATE</th>
@@ -400,8 +402,8 @@ $(document).ready(function() {
                             <th width="12%">TOTAL</th>
                             <th width="5%"></th>
                         </tr>
-                        </thead>
-                        <tbody>
+                    </thead>
+                    <tbody>
                         <?php foreach ($details as $index => $detail): ?>
                             <tr>
                                 <td>
@@ -427,7 +429,7 @@ $(document).ready(function() {
                                         'class' => 'form-control form-control-sm job-autocomplete',
                                         'placeholder' => 'ใบงาน',
                                         'data-index' => $index,
-                                        'autocomplete'=>'off',
+                                        'autocomplete' => 'off',
                                     ]) ?>
                                     <?= Html::hiddenInput("PettyCashDetail[{$index}][job_ref_id]", $detail->job_ref_id, [
                                         'class' => 'job-id-hidden',
@@ -489,71 +491,72 @@ $(document).ready(function() {
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
+                    </tbody>
+                </table>
             </div>
         </div>
+    </div>
 
-        <div class="form-group mt-4">
-            <div class="text-center">
-                <?= Html::submitButton($model->isNewRecord ? '<i class="fas fa-save"></i> บันทึก' : '<i class="fas fa-save"></i> แก้ไข', [
-                    'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
+    <div class="form-group mt-4">
+        <div class="text-center">
+            <?= Html::submitButton($model->isNewRecord ? '<i class="fas fa-save"></i> บันทึก' : '<i class="fas fa-save"></i> แก้ไข', [
+                'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
+            ]) ?>
+            <!--                --><?php //= Html::a('<i class="fas fa-times"></i> ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) 
+                                    ?>
+            <?php if (!$model->isNewRecord): ?>
+                <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
+                    'class' => 'btn btn-info',
+                    'target' => '_blank'
                 ]) ?>
-<!--                --><?php //= Html::a('<i class="fas fa-times"></i> ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
-                <?php if (!$model->isNewRecord): ?>
-                    <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
-                        'class' => 'btn btn-info',
-                        'target' => '_blank'
-                    ]) ?>
-                <?php endif; ?>
-            </div>
+            <?php endif; ?>
         </div>
-        <?php if ($model->isNewRecord): ?>
-            <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <label for="">อัพโหลดเอกสารแนบสลิป</label>
-                        <input type="file" name="file_doc_slip" multiple>
-                    </div>
-                </div>
-            </div>
-            <br/>
-            <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <label for="">อัพโหลดเอกสารค่าสินค้า</label>
-                        <input type="file" name="file_doc_bill" multiple>
-                    </div>
-                </div>
-
-            </div>
-        <?php endif; ?>
-
-        <?php ActiveForm::end(); ?>
-
-        <?php
-        $model_doc_slip = \common\models\PettyCashVoucherDocSlip::find()->where(['petty_cash_voucher_id' => $model->id])->all();
-        $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_cash_voucher_id' => $model->id])->all();
-        ?>
-        <hr>
-        <?php if (!$model->isNewRecord): ?>
-            <br/>
-            <div class="label">
-                <h4>เอกสารแนบสลิป</h4>
-            </div>
+    </div>
+    <?php if ($model->isNewRecord): ?>
+        <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
             <div class="row">
                 <div class="col-lg-12">
-                    <table class="table table-bordered table-striped" style="width: 100%">
-                        <thead>
+                    <label for="">อัพโหลดเอกสารแนบสลิป</label>
+                    <input type="file" name="file_doc_slip" multiple>
+                </div>
+            </div>
+        </div>
+        <br />
+        <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+            <div class="row">
+                <div class="col-lg-12">
+                    <label for="">อัพโหลดเอกสารค่าสินค้า</label>
+                    <input type="file" name="file_doc_bill" multiple>
+                </div>
+            </div>
+
+        </div>
+    <?php endif; ?>
+
+    <?php ActiveForm::end(); ?>
+
+    <?php
+    $model_doc_slip = \common\models\PettyCashVoucherDocSlip::find()->where(['petty_cash_voucher_id' => $model->id])->all();
+    $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_cash_voucher_id' => $model->id])->all();
+    ?>
+    <hr>
+    <?php if (!$model->isNewRecord): ?>
+        <br />
+        <div class="label">
+            <h4>เอกสารแนบสลิป</h4>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <table class="table table-bordered table-striped" style="width: 100%">
+                    <thead>
                         <tr>
                             <th style="width: 5%;text-align: center">#</th>
                             <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
                             <th style="width: 10%;text-align: center">ดูเอกสาร</th>
                             <th style="width: 5%;text-align: center">-</th>
                         </tr>
-                        </thead>
-                        <tbody>
+                    </thead>
+                    <tbody>
                         <?php if ($model_doc_slip != null): ?>
 
                             <?php foreach ($model_doc_slip as $key => $value): ?>
@@ -562,67 +565,69 @@ $(document).ready(function() {
                                     <td><?= $value->doc ?></td>
                                     <td style="text-align: center">
                                         <a href="<?= Yii::$app->request->BaseUrl . '/uploads/pettycash_doc_slip/' . $value->doc ?>"
-                                           target="_blank">
+                                            target="_blank">
                                             ดูเอกสาร
                                         </a>
                                     </td>
                                     <td style="text-align: center">
                                         <div class="btn btn-danger" data-var="<?= trim($value->doc) ?>"
-                                             onclick="delete_doc($(this),1)">ลบ
+                                            onclick="delete_doc($(this),1)">ลบ
                                         </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
+                    </tbody>
+                </table>
             </div>
-            <br/>
+        </div>
+        <br />
 
-            <form action="<?= Url::to(['petty-cash-voucher/add-doc-file'], true) ?>" method="post"
-                  enctype="multipart/form-data">
-                <input type="hidden" name="id" value="<?= $model->id ?>">
-                <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <label for="">เอกสารแนบ</label>
-                            <input type="file" name="file_doc" multiple>
-                        </div>
-                    </div>
-                    <br/>
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <button class="btn btn-info">
-                                <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบสลิป
-                            </button>
-                        </div>
+        <form action="<?= Url::to(['petty-cash-voucher/add-doc-file'], true) ?>" method="post"
+            enctype="multipart/form-data">
+            <input type="hidden" name="id" value="<?= $model->id ?>">
+            <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <label for="">เอกสารแนบ</label>
+                        <input type="file" name="file_doc" multiple>
                     </div>
                 </div>
-            </form>
-<!--            <form id="form-delete-doc-file" action="--><?php //= Url::to(['petty-cash-voucher/delete-doc-file'], true) ?><!--"-->
-<!--                  method="post">-->
-<!--                <input type="hidden" name="id" value="--><?php //= $model->id ?><!--">-->
-<!--                <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">-->
-<!--            </form>-->
-
-            <hr>
-            <br/>
-            <div class="label">
-                <h4>เอกสารแนบใบเสร็จค่าสินค้า</h4>
+                <br />
+                <div class="row">
+                    <div class="col-lg-12">
+                        <button class="btn btn-info">
+                            <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบสลิป
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="row">
-                <div class="col-lg-12">
-                    <table class="table table-bordered table-striped" style="width: 100%">
-                        <thead>
+        </form>
+        <!--            <form id="form-delete-doc-file" action="--><?php //= Url::to(['petty-cash-voucher/delete-doc-file'], true) 
+                                                                    ?><!--"-->
+        <!--                  method="post">-->
+        <!--                <input type="hidden" name="id" value="--><?php //= $model->id 
+                                                                        ?><!--">-->
+        <!--                <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">-->
+        <!--            </form>-->
+
+        <hr>
+        <br />
+        <div class="label">
+            <h4>เอกสารแนบใบเสร็จค่าสินค้า</h4>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <table class="table table-bordered table-striped" style="width: 100%">
+                    <thead>
                         <tr>
                             <th style="width: 5%;text-align: center">#</th>
                             <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
                             <th style="width: 10%;text-align: center">ดูเอกสาร</th>
                             <th style="width: 5%;text-align: center">-</th>
                         </tr>
-                        </thead>
-                        <tbody>
+                    </thead>
+                    <tbody>
                         <?php if ($model_doc_bill != null): ?>
 
                             <?php foreach ($model_doc_bill as $key => $value): ?>
@@ -631,52 +636,52 @@ $(document).ready(function() {
                                     <td><?= $value->doc ?></td>
                                     <td style="text-align: center">
                                         <a href="<?= Yii::$app->request->BaseUrl . '/uploads/pettycash_doc_bill/' . $value->doc ?>"
-                                           target="_blank">
+                                            target="_blank">
                                             ดูเอกสาร
                                         </a>
                                     </td>
                                     <td style="text-align: center">
                                         <div class="btn btn-danger" data-var="<?= trim($value->doc) ?>"
-                                             onclick="delete_doc($(this),2)">ลบ
+                                            onclick="delete_doc($(this),2)">ลบ
                                         </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
-                        </tbody>
-                    </table>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <br />
+
+        <form action="<?= Url::to(['petty-cash-voucher/add-doc-file-bill'], true) ?>" method="post"
+            enctype="multipart/form-data">
+            <input type="hidden" name="id" value="<?= $model->id ?>">
+            <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <label for="">เอกสารแนบ</label>
+                        <input type="file" name="file_doc" multiple>
+                    </div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-lg-12">
+                        <button class="btn btn-info">
+                            <i class="fas fa-upload"></i> อัพโหลดเอกสารใบเสร็จค่าสินค้า
+                        </button>
+                    </div>
                 </div>
             </div>
-            <br/>
-
-            <form action="<?= Url::to(['petty-cash-voucher/add-doc-file-bill'], true) ?>" method="post"
-                  enctype="multipart/form-data">
-                <input type="hidden" name="id" value="<?= $model->id ?>">
-                <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <label for="">เอกสารแนบ</label>
-                            <input type="file" name="file_doc" multiple>
-                        </div>
-                    </div>
-                    <br/>
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <button class="btn btn-info">
-                                <i class="fas fa-upload"></i> อัพโหลดเอกสารใบเสร็จค่าสินค้า
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </form>
-            <form id="form-delete-doc-file" action="<?= Url::to(['petty-cash-voucher/delete-doc-file'], true) ?>"
-                  method="post">
-                <input type="hidden" name="id" value="<?= $model->id ?>">
-                <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
-                <input type="hidden" class="delete-doc-type" name="doc_delete_type" value="">
-            </form>
-        <?php endif; ?>
-    </div>
+        </form>
+        <form id="form-delete-doc-file" action="<?= Url::to(['petty-cash-voucher/delete-doc-file'], true) ?>"
+            method="post">
+            <input type="hidden" name="id" value="<?= $model->id ?>">
+            <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
+            <input type="hidden" class="delete-doc-type" name="doc_delete_type" value="">
+        </form>
+    <?php endif; ?>
+</div>
 <?php
 // URL สำหรับ AJAX
 $ajax_url = Url::to(['get-job-info']);
@@ -809,6 +814,16 @@ $(document).ready(function() {
     // โหลดข้อมูลสินค้าตอนเริ่มต้น
     loadProductsData();
     
+    // Event สำหรับคลิกเลือกรายการจาก autocomplete
+    $(document).on('click', '.autocomplete-item', function() {
+        var product = $(this).data('product');
+        var dropdown = $(this).parent('.autocomplete-dropdown');
+        var index = dropdown.attr('data-index');
+        var input = $('.job-autocomplete[data-index="' + index + '"]');
+        
+        selectProduct(input, product);
+    });
+    
     // Event สำหรับ autocomplete
     $(document).on('input', '.job-autocomplete', function() {
         var input = $(this);
@@ -837,7 +852,9 @@ $(document).ready(function() {
         }
        
         if (query) {
-        selectProduct(input, product);
+            var results = searchProducts(query);
+            showAutocompleteResults(input, results);
+        }
     });
     
     // Event navigation ด้วย keyboard

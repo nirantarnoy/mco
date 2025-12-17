@@ -40,6 +40,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     ],
                     'customer_name',
                     'address:ntext',
+                    'note:ntext',
                 ],
             ]) ?>
         </div>
@@ -75,13 +76,13 @@ $this->params['breadcrumbs'][] = $this->title;
                 </thead>
                 <tbody>
                     <?php foreach ($model->deliveryNoteLines as $line): ?>
-                    <tr>
-                        <td><?= Html::encode($line->item_no) ?></td>
-                        <td><?= nl2br(Html::encode($line->description)) ?></td>
-                        <td><?= Html::encode($line->part_no) ?></td>
-                        <td class="text-right"><?= Html::encode($line->qty) ?></td>
-                        <td><?= $line->unit ? Html::encode($line->unit->name) : '' ?></td>
-                    </tr>
+                        <tr>
+                            <td><?= Html::encode($line->item_no) ?></td>
+                            <td><?= nl2br(Html::encode($line->description)) ?></td>
+                            <td><?= Html::encode($line->part_no) ?></td>
+                            <td class="text-right"><?= Html::encode($line->qty) ?></td>
+                            <td><?= $line->unit ? Html::encode($line->unit->name) : '' ?></td>
+                        </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>

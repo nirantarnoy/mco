@@ -809,7 +809,14 @@ window.addEventListener('afterprint', function() {
 
                 <span class="field-value">
                     <?= Html::encode($model->quotation->customer->name ?: '') ?> <br>
-                    <?= Html::encode($model->customer_address ?: '') ?><br>
+                    <?php
+                    // Clean up address by removing empty fields like "ซอย -", "ถนน -", etc.
+                    $address = $model->customer_address ?: '';
+                    $address = preg_replace('/\s*(ซอย|ถนน|ตำบล|อำเภอ|จังหวัด|แขวง|เขต|หมู่|Soi|Road|Sub-district|District|Province)\s*-\s*/u', '', $address);
+                    $address = preg_replace('/\s+/', ' ', $address); // Remove extra spaces
+                    $address = trim($address);
+                    echo Html::encode($address);
+                    ?><br>
                     เลขประจำตัวผู้เสียภาษี
                     <?= Html::encode($model->customer_tax_id ?: '') ?>
                 </span>

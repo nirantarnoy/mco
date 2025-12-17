@@ -306,6 +306,14 @@ function calculateItemAmount(row) {
     calculateTotal();
 }
 
+// ฟังก์ชันจัดรูปแบบตัวเลขให้มี comma
+function formatNumber(num) {
+    if (num === null || num === undefined || num === "") {
+        return "0.00";
+    }
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 // ฟังก์ชันคำนวณยอดรวมทั้งหมด
 function calculateTotal() {
     var subtotal = 0;
@@ -317,9 +325,15 @@ function calculateTotal() {
     var vat = subtotal * (vatPercent / 100);
     var total = subtotal + vat;
     
-    $("#debit-note-adjust_amount").val(subtotal.toFixed(2));
-    $("#debit-note-vat_amount").val(vat.toFixed(2));
-    $("#debit-note-total_amount").val(total.toFixed(2));
+    // Update display fields with formatted values
+    $("#debit-note-adjust_amount").val(formatNumber(subtotal.toFixed(2)));
+    $("#debit-note-vat_amount").val(formatNumber(vat.toFixed(2)));
+    $("#debit-note-total_amount").val(formatNumber(total.toFixed(2)));
+    
+    // Update hidden fields with unformatted values for form submission
+    $("#debit-note-adjust_amount-hidden").val(subtotal.toFixed(2));
+    $("#debit-note-vat_amount-hidden").val(vat.toFixed(2));
+    $("#debit-note-total_amount-hidden").val(total.toFixed(2));
 }
 
 // ฟังก์ชันล้างรายการทั้งหมด
@@ -574,113 +588,112 @@ $(document).ready(function() {
 $this->registerJs($js);
 ?>
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
 
-        .debit-note-form {
-            font-family: 'Prompt', sans-serif;
-        }
+    .debit-note-form {
+        font-family: 'Prompt', sans-serif;
+    }
 
-        .debit-note-form .card {
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            border: none;
-        }
+    .debit-note-form .card {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border: none;
+    }
 
-        .debit-note-form .card-header {
-            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
-            border-bottom: 1px solid #dee2e6;
-        }
+    .debit-note-form .card-header {
+        background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+        border-bottom: 1px solid #dee2e6;
+    }
 
-        .debit-note-form .table th {
-            background-color: #f8f9fa;
-            border-color: #dee2e6;
-            font-weight: 600;
-            font-size: 13px;
-        }
+    .debit-note-form .table th {
+        background-color: #f8f9fa;
+        border-color: #dee2e6;
+        font-weight: 600;
+        font-size: 13px;
+    }
 
-        .debit-note-form .form-control-sm {
-            font-size: 13px;
-        }
+    .debit-note-form .form-control-sm {
+        font-size: 13px;
+    }
 
-        .form-section {
-            margin-bottom: 30px;
-        }
+    .form-section {
+        margin-bottom: 30px;
+    }
 
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #007bff;
-        }
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+    }
 
-        #debit-note-total_amount {
-            font-size: 18px !important;
-            font-weight: bold !important;
-            background-color: #e3f2fd !important;
-            border: 2px solid #2196f3 !important;
-        }
+    #debit-note-total_amount {
+        font-size: 18px !important;
+        font-weight: bold !important;
+        background-color: #e3f2fd !important;
+    }
 
-        .btn-load-invoice-items {
-            margin-right: 8px;
-        }
+    .btn-load-invoice-items {
+        margin-right: 8px;
+    }
 
-        .autocomplete-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            z-index: 9999 !important;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            max-height: 200px;
-            overflow-y: auto;
-            width: 100%;
-            display: none;
-        }
+    .autocomplete-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 9999 !important;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        max-height: 200px;
+        overflow-y: auto;
+        width: 100%;
+        display: none;
+    }
 
-        .autocomplete-item {
-            padding: 8px 12px;
-            cursor: pointer;
-            border-bottom: 1px solid #eee;
-            font-size: 14px;
-        }
+    .autocomplete-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+    }
 
-        .autocomplete-item:hover, .autocomplete-item.highlighted {
-            background-color: #007bff;
-            color: white;
-        }
+    .autocomplete-item:hover,
+    .autocomplete-item.highlighted {
+        background-color: #007bff;
+        color: white;
+    }
 
-        .autocomplete-item:last-child {
-            border-bottom: none;
-        }
+    .autocomplete-item:last-child {
+        border-bottom: none;
+    }
 
-        .product-code {
-            color: #666;
-            font-size: 12px;
-        }
+    .product-code {
+        color: #666;
+        font-size: 12px;
+    }
 
-        .autocomplete-item.highlighted .product-code {
-            color: #e9ecef;
-        }
+    .autocomplete-item.highlighted .product-code {
+        color: #e9ecef;
+    }
 
-        /* ป้องกันปัญหา overflow ของ table */
-        .table-responsive {
-            overflow: visible !important;
-        }
+    /* ป้องกันปัญหา overflow ของ table */
+    .table-responsive {
+        overflow: visible !important;
+    }
 
-        .table {
-            overflow: visible !important;
-        }
+    .table {
+        overflow: visible !important;
+    }
 
-        .card-body {
-            overflow: visible !important;
-        }
-    </style>
+    .card-body {
+        overflow: visible !important;
+    }
+</style>
 
-    <!-- Flash Messages -->
+<!-- Flash Messages -->
 <?php if (\Yii::$app->session->hasFlash('success')): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="fas fa-check-circle me-2"></i>
@@ -713,130 +726,130 @@ $this->registerJs($js);
     </div>
 <?php endif; ?>
 
-    <div class="debit-note-form">
+<div class="debit-note-form">
 
-        <?php $form = ActiveForm::begin(['id' => 'debit-note-form']); ?>
+    <?php $form = ActiveForm::begin(['id' => 'debit-note-form']); ?>
 
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">
-                    <i class="fas fa-file-invoice-dollar"></i> ข้อมูลใบเพิ่มหนี้
-                </h3>
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-file-invoice-dollar"></i> ข้อมูลใบเพิ่มหนี้
+            </h3>
+        </div>
+        <div class="card-body">
+
+            <div class="form-section">
+                <h4 class="section-title">ข้อมูลเอกสาร</h4>
+                <div class="row">
+                    <div class="col-md-3">
+                        <?= $form->field($model, 'document_no')->textInput(['maxlength' => true, 'readonly' => !$model->isNewRecord]) ?>
+                    </div>
+                    <div class="col-md-3">
+                        <?= $form->field($model, 'document_date')->widget(DatePicker::class, [
+                            'options' => ['placeholder' => 'เลือกวันที่...'],
+                            'pluginOptions' => [
+                                'autoclose' => true,
+                                'format' => 'yyyy-mm-dd',
+                                'todayHighlight' => true,
+                            ]
+                        ]) ?>
+                    </div>
+                    <div class="col-md-3">
+                        <?= $form->field($model, 'customer_id')->widget(Select2::class, [
+                            'data' => ArrayHelper::map(Customer::find()->orderBy('code')->all(), 'id', function ($model) {
+                                return $model->code . ' - ' . $model->name;
+                            }),
+                            'options' => [
+                                'placeholder' => 'เลือกลูกค้า...',
+                                'id' => 'debit-note-customer_id'
+                            ],
+                            'pluginOptions' => [
+                                'allowClear' => true
+                            ],
+                        ]) ?>
+                    </div>
+                    <div class="col-md-3">
+                        <?= $form->field($model, 'vendor_id')->widget(Select2::class, [
+                            'data' => ArrayHelper::map(\backend\models\Vendor::find()->orderBy('code')->all(), 'id', function ($model) {
+                                return $model->code . ' - ' . $model->name;
+                            }),
+                            'options' => [
+                                'placeholder' => 'เลือกผู้ขาย...',
+                                'id' => 'credit-note-vendor_id'
+                            ],
+                            'pluginOptions' => [
+                                'allowClear' => true
+                            ],
+                        ]) ?>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
 
-                <div class="form-section">
-                    <h4 class="section-title">ข้อมูลเอกสาร</h4>
-                    <div class="row">
-                        <div class="col-md-3">
-                            <?= $form->field($model, 'document_no')->textInput(['maxlength' => true, 'readonly' => !$model->isNewRecord]) ?>
-                        </div>
-                        <div class="col-md-3">
-                            <?= $form->field($model, 'document_date')->widget(DatePicker::class, [
-                                'options' => ['placeholder' => 'เลือกวันที่...'],
-                                'pluginOptions' => [
-                                    'autoclose' => true,
-                                    'format' => 'yyyy-mm-dd',
-                                    'todayHighlight' => true,
-                                ]
-                            ]) ?>
-                        </div>
-                        <div class="col-md-3">
-                            <?= $form->field($model, 'customer_id')->widget(Select2::class, [
-                                'data' => ArrayHelper::map(Customer::find()->orderBy('code')->all(), 'id', function($model) {
-                                    return $model->code . ' - ' . $model->name;
-                                }),
-                                'options' => [
-                                    'placeholder' => 'เลือกลูกค้า...',
-                                    'id' => 'debit-note-customer_id'
-                                ],
-                                'pluginOptions' => [
-                                    'allowClear' => true
-                                ],
-                            ]) ?>
-                        </div>
-                        <div class="col-md-3">
-                            <?= $form->field($model, 'vendor_id')->widget(Select2::class, [
-                                'data' => ArrayHelper::map(\backend\models\Vendor::find()->orderBy('code')->all(), 'id', function($model) {
-                                    return $model->code . ' - ' . $model->name;
-                                }),
-                                'options' => [
-                                    'placeholder' => 'เลือกผู้ขาย...',
-                                    'id' => 'credit-note-vendor_id'
-                                ],
-                                'pluginOptions' => [
-                                    'allowClear' => true
-                                ],
-                            ]) ?>
-                        </div>
+            <div class="form-section">
+                <h4 class="section-title">ข้อมูลใบกำกับภาษีเดิม</h4>
+                <div class="row">
+                    <div class="col-md-3">
+                        <?= $form->field($model, 'invoice_id')->widget(Select2::class, [
+                            'data' => [], // เริ่มต้นเป็นอาร์เรย์ว่าง จะโหลดผ่าน AJAX
+                            'options' => [
+                                'placeholder' => 'เลือกใบแจ้งหนี้...',
+                                'id' => 'debit-note-invoice_id'
+                            ],
+                            'pluginOptions' => [
+                                'allowClear' => true
+                            ],
+                        ]) ?>
+                    </div>
+                    <div class="col-md-3">
+                        <?= $form->field($model, 'original_invoice_no')->textInput(['maxlength' => true, 'id' => 'debit-note-original_invoice_no']) ?>
+                    </div>
+                    <div class="col-md-3">
+                        <?= $form->field($model, 'original_invoice_date')->widget(DatePicker::class, [
+                            'options' => [
+                                'placeholder' => 'เลือกวันที่...',
+                                'id' => 'debit-note-original_invoice_date'
+                            ],
+                            'pluginOptions' => [
+                                'autoclose' => true,
+                                'format' => 'yyyy-mm-dd'
+                            ]
+                        ]) ?>
+                    </div>
+                    <div class="col-md-3">
+                        <?= $form->field($model, 'original_amount')->textInput([
+                            'type' => 'number',
+                            'step' => '0.01',
+                            'id' => 'debit-note-original_amount'
+                        ]) ?>
                     </div>
                 </div>
 
-                <div class="form-section">
-                    <h4 class="section-title">ข้อมูลใบกำกับภาษีเดิม</h4>
-                    <div class="row">
-                        <div class="col-md-3">
-                            <?= $form->field($model, 'invoice_id')->widget(Select2::class, [
-                                'data' => [], // เริ่มต้นเป็นอาร์เรย์ว่าง จะโหลดผ่าน AJAX
-                                'options' => [
-                                    'placeholder' => 'เลือกใบแจ้งหนี้...',
-                                    'id' => 'debit-note-invoice_id'
-                                ],
-                                'pluginOptions' => [
-                                    'allowClear' => true
-                                ],
-                            ]) ?>
-                        </div>
-                        <div class="col-md-3">
-                            <?= $form->field($model, 'original_invoice_no')->textInput(['maxlength' => true, 'id' => 'debit-note-original_invoice_no']) ?>
-                        </div>
-                        <div class="col-md-3">
-                            <?= $form->field($model, 'original_invoice_date')->widget(DatePicker::class, [
-                                'options' => [
-                                    'placeholder' => 'เลือกวันที่...',
-                                    'id' => 'debit-note-original_invoice_date'
-                                ],
-                                'pluginOptions' => [
-                                    'autoclose' => true,
-                                    'format' => 'yyyy-mm-dd'
-                                ]
-                            ]) ?>
-                        </div>
-                        <div class="col-md-3">
-                            <?= $form->field($model, 'original_amount')->textInput([
-                                'type' => 'number',
-                                'step' => '0.01',
-                                'id' => 'debit-note-original_amount'
-                            ]) ?>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <?= $form->field($model, 'reason')->textarea(['rows' => 3]) ?>
-                        </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <?= $form->field($model, 'reason')->textarea(['rows' => 3]) ?>
                     </div>
                 </div>
+            </div>
 
-                <div class="form-section">
-                    <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h4 class="section-title mb-0">
-                                <i class="fas fa-list"></i> รายการสินค้า/บริการ
-                            </h4>
-                            <div>
-                                <button type="button" class="btn btn-sm btn-info btn-load-invoice-items">
-                                    <i class="fas fa-download"></i> โหลดจากใบแจ้งหนี้
-                                </button>
-                                <button type="button" class="btn btn-sm btn-primary btn-add-item">
-                                    <i class="fas fa-plus"></i> เพิ่มรายการ
-                                </button>
-                            </div>
+            <div class="form-section">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4 class="section-title mb-0">
+                            <i class="fas fa-list"></i> รายการสินค้า/บริการ
+                        </h4>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-info btn-load-invoice-items">
+                                <i class="fas fa-download"></i> โหลดจากใบแจ้งหนี้
+                            </button>
+                            <button type="button" class="btn btn-sm btn-primary btn-add-item">
+                                <i class="fas fa-plus"></i> เพิ่มรายการ
+                            </button>
                         </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table id="items-table" class="table table-bordered table-sm mb-0">
-                                    <thead class="table-light">
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table id="items-table" class="table table-bordered table-sm mb-0">
+                                <thead class="table-light">
                                     <tr>
                                         <th width="5%">ลำดับ</th>
                                         <th width="35%">รายละเอียด</th>
@@ -846,8 +859,8 @@ $this->registerJs($js);
                                         <th width="15%">จำนวนเงิน</th>
                                         <th width="10%"></th>
                                     </tr>
-                                    </thead>
-                                    <tbody>
+                                </thead>
+                                <tbody>
                                     <?php foreach ($modelsItem as $i => $modelItem): ?>
                                         <tr>
                                             <td class="text-center"><?= ($i + 1) ?></td>
@@ -876,7 +889,7 @@ $this->registerJs($js);
                                             </td>
                                             <td>
                                                 <?= $form->field($modelItem, "[{$i}]unit_id")->dropDownList(
-                                                    ArrayHelper::map(Unit::find()->where(['status' => 1])->all(), 'id', 'name'),
+                                                    ArrayHelper::map(Unit::find()->where(['status' => 1])->orderBy('name')->all(), 'id', 'name'),
                                                     [
                                                         'prompt' => 'เลือกหน่วย',
                                                         'class' => 'form-control form-control-sm'
@@ -907,114 +920,117 @@ $this->registerJs($js);
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section">
-                    <h4 class="section-title">สรุปยอดเงิน</h4>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <!-- สามารถเพิ่มฟิลด์อื่นๆ ที่นี่ได้ -->
-                        </div>
-                        <div class="col-md-6">
-                            <table class="table table-bordered">
-                                <tr>
-                                    <td><strong>รวมมูลค่าเพิ่มหนี้</strong></td>
-                                    <td>
-                                        <?= $form->field($model, 'adjust_amount')->textInput([
-                                            'type' => 'number',
-                                            'step' => '0.01',
-                                            'id' => 'debit-note-adjust_amount',
-                                            'readonly' => true,
-                                            'class' => 'form-control text-right',
-                                            'style' => 'background-color: #f8f9fa;'
-                                        ])->label(false) ?>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <span>ภาษีมูลค่าเพิ่ม</span>
-                                            <div class="input-group ml-2" style="width: 80px;">
-                                                <?= $form->field($model, 'vat_percent')->textInput([
-                                                    'type' => 'number',
-                                                    'step' => '0.01',
-                                                    'id' => 'debit-note-vat_percent',
-                                                    'class' => 'form-control form-control-sm text-right'
-                                                ])->label(false) ?>
-                                                <div class="input-group-append">
-                                                    <span class="input-group-text">%</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <?= $form->field($model, 'vat_amount')->textInput([
-                                            'type' => 'number',
-                                            'step' => '0.01',
-                                            'id' => 'debit-note-vat_amount',
-                                            'readonly' => true,
-                                            'class' => 'form-control text-right',
-                                            'style' => 'background-color: #f8f9fa;'
-                                        ])->label(false) ?>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>รวมเป็นเงินทั้งสิ้น</strong></td>
-                                    <td>
-                                        <?= $form->field($model, 'total_amount')->textInput([
-                                            'type' => 'number',
-                                            'step' => '0.01',
-                                            'id' => 'debit-note-total_amount',
-                                            'readonly' => true,
-                                            'class' => 'form-control text-right font-weight-bold'
-                                        ])->label(false) ?>
-                                    </td>
-                                </tr>
+                                </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-
             </div>
-            <div class="card-footer text-center">
-                <?= Html::submitButton('<i class="fas fa-save"></i> บันทึก', ['class' => 'btn btn-success btn-lg']) ?>
-                <?= Html::a('<i class="fas fa-times"></i> ยกเลิก', ['index'], ['class' => 'btn btn-secondary btn-lg']) ?>
-                <?php if (!$model->isNewRecord): ?>
-                    <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
-                        'class' => 'btn btn-info btn-lg',
-                        'target' => '_blank'
-                    ]) ?>
-                <?php endif; ?>
+
+            <div class="form-section">
+                <h4 class="section-title">สรุปยอดเงิน</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- สามารถเพิ่มฟิลด์อื่นๆ ที่นี่ได้ -->
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-bordered">
+                            <tr>
+                                <td><strong>รวมมูลค่าเพิ่มหนี้</strong></td>
+                                <td>
+                                    <?= Html::hiddenInput('DebitNote[adjust_amount]', $model->adjust_amount, ['id' => 'debit-note-adjust_amount-hidden']) ?>
+                                    <?= $form->field($model, 'adjust_amount')->textInput([
+                                        'type' => 'text',
+                                        'readonly' => true,
+                                        'disabled' => true,
+                                        'id' => 'debit-note-adjust_amount',
+                                        'class' => 'form-control text-right',
+                                        'style' => 'background-color: #f8f9fa;'
+                                    ])->label(false) ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span>ภาษีมูลค่าเพิ่ม</span>
+                                        <div class="input-group ml-2" style="width: 80px;">
+                                            <?= $form->field($model, 'vat_percent')->textInput([
+                                                'type' => 'number',
+                                                'step' => '0.01',
+                                                'id' => 'debit-note-vat_percent',
+                                                'class' => 'form-control form-control-sm text-right'
+                                            ])->label(false) ?>
+                                            <div class="input-group-append">
+                                                <span class="input-group-text">%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <?= Html::hiddenInput('DebitNote[vat_amount]', $model->vat_amount, ['id' => 'debit-note-vat_amount-hidden']) ?>
+                                    <?= $form->field($model, 'vat_amount')->textInput([
+                                        'type' => 'text',
+                                        'readonly' => true,
+                                        'disabled' => true,
+                                        'id' => 'debit-note-vat_amount',
+                                        'class' => 'form-control text-right',
+                                        'style' => 'background-color: #f8f9fa;'
+                                    ])->label(false) ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>รวมเป็นเงินทั้งสิ้น</strong></td>
+                                <td>
+                                    <?= Html::hiddenInput('DebitNote[total_amount]', $model->total_amount, ['id' => 'debit-note-total_amount-hidden']) ?>
+                                    <?= $form->field($model, 'total_amount')->textInput([
+                                        'type' => 'text',
+                                        'readonly' => true,
+                                        'disabled' => true,
+                                        'id' => 'debit-note-total_amount',
+                                        'class' => 'form-control text-right font-weight-bold'
+                                    ])->label(false) ?>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <?php ActiveForm::end(); ?>
-
-        <?php
-        $model_doc = \common\models\DebitNoteDoc::find()->where(['debit_note_id' => $model->id])->all();
-        ?>
-        <hr>
-        <br/>
-        <div class="label">
-            <h4>เอกสารแนบ</h4>
         </div>
-        <div class="row">
-            <div class="col-lg-12">
-                <table class="table table-bordered table-striped" style="width: 100%">
-                    <thead>
+        <div class="card-footer text-center">
+            <?= Html::submitButton('<i class="fas fa-save"></i> บันทึก', ['class' => 'btn btn-success btn-lg']) ?>
+            <?= Html::a('<i class="fas fa-times"></i> ยกเลิก', ['index'], ['class' => 'btn btn-secondary btn-lg']) ?>
+            <?php if (!$model->isNewRecord): ?>
+                <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
+                    'class' => 'btn btn-info btn-lg',
+                    'target' => '_blank'
+                ]) ?>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <?php ActiveForm::end(); ?>
+
+    <?php
+    $model_doc = \common\models\DebitNoteDoc::find()->where(['debit_note_id' => $model->id])->all();
+    ?>
+    <hr>
+    <br />
+    <div class="label">
+        <h4>เอกสารแนบ</h4>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <table class="table table-bordered table-striped" style="width: 100%">
+                <thead>
                     <tr>
                         <th style="width: 5%;text-align: center">#</th>
                         <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
                         <th style="width: 10%;text-align: center">ดูเอกสาร</th>
                         <th style="width: 5%;text-align: center">-</th>
                     </tr>
-                    </thead>
-                    <tbody>
+                </thead>
+                <tbody>
                     <?php if ($model_doc != null): ?>
 
                         <?php foreach ($model_doc as $key => $value): ?>
@@ -1023,49 +1039,49 @@ $this->registerJs($js);
                                 <td><?= $value->doc ?></td>
                                 <td style="text-align: center">
                                     <a href="<?= Yii::$app->request->BaseUrl . '/uploads/debitnote_doc/' . $value->doc ?>"
-                                       target="_blank">
+                                        target="_blank">
                                         ดูเอกสาร
                                     </a>
                                 </td>
                                 <td style="text-align: center">
                                     <div class="btn btn-danger" data-var="<?= trim($value->doc) ?>"
-                                         onclick="delete_doc($(this))">ลบ
+                                        onclick="delete_doc($(this))">ลบ
                                     </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
-                    </tbody>
-                </table>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <br />
+
+    <form action="<?= Url::to(['debit-note/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="id" value="<?= $model->id ?>">
+        <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+            <div class="row">
+                <div class="col-lg-12">
+                    <label for="">เอกสารแนบ</label>
+                    <input type="file" name="file_doc" multiple>
+                </div>
+            </div>
+            <br />
+            <div class="row">
+                <div class="col-lg-12">
+                    <button class="btn btn-info">
+                        <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ
+                    </button>
+                </div>
             </div>
         </div>
-        <br/>
+    </form>
+    <form id="form-delete-doc-file" action="<?= Url::to(['debit-note/delete-doc-file'], true) ?>" method="post">
+        <input type="hidden" name="id" value="<?= $model->id ?>">
+        <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
+    </form>
 
-        <form action="<?= Url::to(['debit-note/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
-            <input type="hidden" name="id" value="<?= $model->id ?>">
-            <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <label for="">เอกสารแนบ</label>
-                        <input type="file" name="file_doc" multiple>
-                    </div>
-                </div>
-                <br/>
-                <div class="row">
-                    <div class="col-lg-12">
-                        <button class="btn btn-info">
-                            <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </form>
-        <form id="form-delete-doc-file" action="<?= Url::to(['debit-note/delete-doc-file'], true) ?>" method="post">
-            <input type="hidden" name="id" value="<?= $model->id ?>">
-            <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
-        </form>
-
-    </div>
+</div>
 
 <?php
 $script = <<< JS

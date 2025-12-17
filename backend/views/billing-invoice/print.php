@@ -675,16 +675,33 @@ window.addEventListener('afterprint', function() {
             foreach ($model->billingInvoiceItems as $index => $item):
                 $itemCount++;
                 $totalAmount += $item->amount;
-                $invoice = $item->invoice; // ดึงข้อมูล invoice ที่เกี่ยวข้อง
-                $quotation_no = \backend\models\Invoice::getQuotationNo($invoice->id);
+
+                // ดึงข้อมูล invoice ต้นฉบับจาก invoice_relations
+                $billingInvoice = \backend\models\Invoice::findOne($item->invoice_id);
+
+                // หา parent invoice จาก invoice_relations
+                $relation = \backend\models\InvoiceRelation::find()
+                    ->where(['child_invoice_id' => $item->invoice_id])
+                    ->one();
+
+                $invoice = null;
+                if ($relation) {
+                    // ถ้ามี relation ให้ใช้ parent invoice
+                    $invoice = \backend\models\Invoice::findOne($relation->parent_invoice_id);
+                } else {
+                    // ถ้าไม่มี relation ให้ใช้ invoice ตัวเอง
+                    $invoice = $billingInvoice;
+                }
+
+                $quotation_no = $invoice ? \backend\models\Invoice::getQuotationNo($invoice->id) : '-';
             ?>
                 <tr>
                     <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= $itemCount ?></td>
                     <td class="text-left"
-                        style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= Html::encode($quotation_no ?? '-') ?></td>
-                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= Html::encode($invoice->invoice_number ?? '-') ?></td>
-                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= Yii::$app->formatter->asDate($invoice->invoice_date ?? $model->billing_date, 'php:j/n/y') ?></td>
-                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= Yii::$app->formatter->asDate($invoice->payment_due_date ?? $model->payment_due_date ?? date('Y-m-d', strtotime($model->billing_date . ' +30 days')), 'php:j/n/y') ?></td>
+                        style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= Html::encode($quotation_no) ?></td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold" title="Billing Invoice ID: <?= $item->invoice_id ?>, Parent Invoice ID: <?= $relation ? $relation->parent_invoice_id : 'N/A' ?>"><?= Html::encode($invoice ? $invoice->invoice_number : '-') ?></td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= $invoice ? Yii::$app->formatter->asDate($invoice->invoice_date, 'php:j/n/y') : Yii::$app->formatter->asDate($model->billing_date, 'php:j/n/y') ?></td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= $invoice && $invoice->payment_due_date ? Yii::$app->formatter->asDate($invoice->payment_due_date, 'php:j/n/y') : ($model->payment_due_date ? Yii::$app->formatter->asDate($model->payment_due_date, 'php:j/n/y') : Yii::$app->formatter->asDate(date('Y-m-d', strtotime($model->billing_date . ' +30 days')), 'php:j/n/y')) ?></td>
                     <td class="text-right"
                         style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= number_format($item->amount, 2) ?></td>
                 </tr>

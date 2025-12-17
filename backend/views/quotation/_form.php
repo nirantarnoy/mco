@@ -400,7 +400,7 @@ JS;
 
 $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
 ?>
-    <!-- Flash Messages -->
+<!-- Flash Messages -->
 <?php if (\Yii::$app->session->hasFlash('success')): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="fas fa-check-circle me-2"></i>
@@ -432,152 +432,153 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 <?php endif; ?>
-    <div class="quotation-form">
+<div class="quotation-form">
 
-        <?php $form = ActiveForm::begin([
-            'id' => 'dynamic-form',
-            'options' => ['class' => 'form-horizontal'],
-        ]); ?>
+    <?php $form = ActiveForm::begin([
+        'id' => 'dynamic-form',
+        'options' => ['class' => 'form-horizontal'],
+    ]); ?>
 
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">ข้อมูลใบเสนอราคา</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <?= $form->field($model, 'quotation_no')->textInput([
-                            'maxlength' => true,
-                            'placeholder' => 'ระบบจะสร้างอัตโนมัติหากไม่ระบุ'
-                        ]) ?>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">ข้อมูลใบเสนอราคา</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <?= $form->field($model, 'quotation_no')->textInput([
+                        'maxlength' => true,
+                        'placeholder' => 'ระบบจะสร้างอัตโนมัติหากไม่ระบุ'
+                    ]) ?>
 
-                        <?= $form->field($model, 'quotation_date')->widget(DatePicker::class, [
-                            'options' => ['placeholder' => 'เลือกวันที่'],
-                            'pluginOptions' => [
-                                'autoclose' => true,
-                                'format' => 'yyyy-mm-dd',
-                                'todayHighlight' => true,
-                            ]
-                        ]) ?>
+                    <?= $form->field($model, 'quotation_date')->widget(DatePicker::class, [
+                        'options' => ['placeholder' => 'เลือกวันที่'],
+                        'pluginOptions' => [
+                            'autoclose' => true,
+                            'format' => 'yyyy-mm-dd',
+                            'todayHighlight' => true,
+                        ]
+                    ]) ?>
 
-                        <?= $form->field($model, 'customer_id')->widget(Select2::className(), [
-                            'data' => ArrayHelper::map(\backend\models\Customer::find()->all(), 'id', 'name'),
-                            'options' => ['placeholder' => 'เลือกลูกค้า'],
-                            'pluginOptions' => [
-                                'allowClear' => true
-                            ]
-                        ]) ?>
+                    <?= $form->field($model, 'customer_id')->widget(Select2::className(), [
+                        'data' => ArrayHelper::map(\backend\models\Customer::find()->all(), 'id', 'name'),
+                        'options' => ['placeholder' => 'เลือกลูกค้า'],
+                        'pluginOptions' => [
+                            'allowClear' => true
+                        ]
+                    ]) ?>
 
-                        <?= $form->field($model, 'currency_id')->widget(Select2::className(), [
-                            'data' => ArrayHelper::map(\backend\models\Currency::find()->all(), 'id', 'name'),
-                            'options' => ['placeholder' => 'เลือกสกุลเงิน'],
-                            'pluginOptions' => [
-                                'allowClear' => true
-                            ]
-                        ]) ?>
-
-
-                        <?= $form->field($model, 'status')->dropDownList([
-                            Quotation::STATUS_DRAFT => 'ร่าง',
-                            Quotation::STATUS_ACTIVE => 'ใช้งาน',
-                            Quotation::STATUS_CANCELLED => 'ยกเลิก',
-                        ], ['prompt' => 'เลือกสถานะ']) ?>
-                    </div>
-                    <div class="col-md-4">
-                        <?= $form->field($model, 'approve_status')->dropDownList([
-                            Quotation::APPROVE_STATUS_PENDING => 'รอพิจารณา',
-                            Quotation::APPROVE_STATUS_APPROVED => 'อนุมัติ',
-                            Quotation::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
-                        ], ['prompt' => 'เลือกสถานะอนุมัติ']) ?>
-
-                        <?= $form->field($model, 'total_amount')->textInput([
-                            'type' => 'number',
-                            'step' => '0.01',
-                            'readonly' => true,
-                            'style' => 'background-color: #f8f9fa;',
-                        ]) ?>
-                        <?= $form->field($model,'customer_tax_id')->textInput()->label() ?>
+                    <?= $form->field($model, 'currency_id')->widget(Select2::className(), [
+                        'data' => ArrayHelper::map(\backend\models\Currency::find()->all(), 'id', 'name'),
+                        'options' => ['placeholder' => 'เลือกสกุลเงิน'],
+                        'pluginOptions' => [
+                            'allowClear' => true
+                        ]
+                    ]) ?>
 
 
-                        <?= $form->field($model, 'note')->textarea([
-                            'rows' => 4,
-                            'placeholder' => 'หมายเหตุ'
-                        ]) ?>
-                    </div>
-                    <div class="col-lg-4">
-                        <!--                        --><?php //= $form->field($model, 'payment_term_id')->widget(Select2::className(), [
-                        //                            'data' => ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name'),
-                        //                            'options' => ['placeholder' => 'เลือกเงื่อนไขชําระเงิน'],
-                        //                            'pluginOptions' => [
-                        //                                'allowClear' => true
-                        //                            ]
-                        //                        ]) ?>
-                        <?= $form->field($model, 'delivery_day_text')->textInput([]) ?>
-                        <?= $form->field($model, 'payment_term_id')->widget(Select2::className(), [
-                            'data' => ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name'),
-                            'options' => ['placeholder' => 'เลือกเงื่อนไขชําระเงิน'],
-                            'pluginOptions' => [
-                                'allowClear' => true
-                            ]
-                        ]) ?>
-                        <?= $form->field($model, 'sale_emp_id')->widget(Select2::className(), [
-                            'data' => ArrayHelper::map(\backend\models\Employee::find()->all(), 'id', function ($model) {
-                                return $model->fname . ' ' . $model->lname;
-                            }),
-                            'options' => ['placeholder' => 'เลือกพนักงานขาย'],
-                            'pluginOptions' => [
-                                'allowClear' => true
-                            ]
-                        ]) ?>
-                        <?= $form->field($model, 'discount_percent')->textInput([
-                            'type' => 'number',
-                            'min' => '0',
-                            'id' => 'purch-discount_per',
-                            'onchange' => 'calculateGrandTotal();',
+                    <?= $form->field($model, 'status')->dropDownList([
+                        Quotation::STATUS_DRAFT => 'ร่าง',
+                        Quotation::STATUS_ACTIVE => 'ใช้งาน',
+                        Quotation::STATUS_CANCELLED => 'ยกเลิก',
+                    ], ['prompt' => 'เลือกสถานะ']) ?>
+                </div>
+                <div class="col-md-4">
+                    <?= $form->field($model, 'approve_status')->dropDownList([
+                        Quotation::APPROVE_STATUS_PENDING => 'รอพิจารณา',
+                        Quotation::APPROVE_STATUS_APPROVED => 'อนุมัติ',
+                        Quotation::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
+                    ], ['prompt' => 'เลือกสถานะอนุมัติ']) ?>
 
-                        ]) ?>
-                        <?= $form->field($model, 'discount_amount')->textInput([
-                            'type' => 'number',
-                            'min' => '0',
-                            'id' => 'purch-discount_amount',
-                            'onchange' => 'calculateGrandTotal();'
+                    <?= $form->field($model, 'total_amount')->textInput([
+                        'type' => 'number',
+                        'step' => '0.01',
+                        'readonly' => true,
+                        'style' => 'background-color: #f8f9fa;',
+                    ]) ?>
+                    <?= $form->field($model, 'customer_tax_id')->textInput()->label() ?>
 
-                        ]) ?>
-                    </div>
+
+                    <?= $form->field($model, 'note')->textarea([
+                        'rows' => 4,
+                        'placeholder' => 'หมายเหตุ'
+                    ]) ?>
+                </div>
+                <div class="col-lg-4">
+                    <!--                        --><?php //= $form->field($model, 'payment_term_id')->widget(Select2::className(), [
+                                                    //                            'data' => ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name'),
+                                                    //                            'options' => ['placeholder' => 'เลือกเงื่อนไขชําระเงิน'],
+                                                    //                            'pluginOptions' => [
+                                                    //                                'allowClear' => true
+                                                    //                            ]
+                                                    //                        ]) 
+                                                    ?>
+                    <?= $form->field($model, 'delivery_day_text')->textInput([]) ?>
+                    <?= $form->field($model, 'payment_term_id')->widget(Select2::className(), [
+                        'data' => ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name'),
+                        'options' => ['placeholder' => 'เลือกเงื่อนไขชําระเงิน'],
+                        'pluginOptions' => [
+                            'allowClear' => true
+                        ]
+                    ]) ?>
+                    <?= $form->field($model, 'sale_emp_id')->widget(Select2::className(), [
+                        'data' => ArrayHelper::map(\backend\models\Employee::find()->all(), 'id', function ($model) {
+                            return $model->fname . ' ' . $model->lname;
+                        }),
+                        'options' => ['placeholder' => 'เลือกพนักงานขาย'],
+                        'pluginOptions' => [
+                            'allowClear' => true
+                        ]
+                    ]) ?>
+                    <?= $form->field($model, 'discount_percent')->textInput([
+                        'type' => 'number',
+                        'min' => '0',
+                        'id' => 'purch-discount_per',
+                        'onchange' => 'calculateGrandTotal();',
+
+                    ]) ?>
+                    <?= $form->field($model, 'discount_amount')->textInput([
+                        'type' => 'number',
+                        'min' => '0',
+                        'id' => 'purch-discount_amount',
+                        'onchange' => 'calculateGrandTotal();'
+
+                    ]) ?>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">รายละเอียดสินค้า</h5>
-            </div>
-            <div class="card-body">
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">รายละเอียดสินค้า</h5>
+        </div>
+        <div class="card-body">
 
-                <?php DynamicFormWidget::begin([
-                    'widgetContainer' => 'dynamicform_wrapper',
-                    'widgetBody' => '.container-items',
-                    'widgetItem' => '.item',
-                    'limit' => 50,
-                    'min' => 1,
-                    'insertButton' => '.add-item',
-                    'deleteButton' => '.remove-item',
-                    'model' => $model->quotationLines[0] ?? new \backend\models\QuotationLine(),
-                    'formId' => 'dynamic-form',
-                    'formFields' => [
-                        'id',
-                        'product_id',
-                        'product_name',
-                        'qty',
-                        'line_price',
-                        'discount_amount',
-                        'line_total',
-                    ],
-                ]); ?>
+            <?php DynamicFormWidget::begin([
+                'widgetContainer' => 'dynamicform_wrapper',
+                'widgetBody' => '.container-items',
+                'widgetItem' => '.item',
+                'limit' => 50,
+                'min' => 1,
+                'insertButton' => '.add-item',
+                'deleteButton' => '.remove-item',
+                'model' => $model->quotationLines[0] ?? new \backend\models\QuotationLine(),
+                'formId' => 'dynamic-form',
+                'formFields' => [
+                    'id',
+                    'product_id',
+                    'product_name',
+                    'qty',
+                    'line_price',
+                    'discount_amount',
+                    'line_total',
+                ],
+            ]); ?>
 
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead class="table-light">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="table-light">
                         <tr>
                             <th style="width: 50px;">ลำดับ</th>
                             <th style="width: 200px;">ชื่อสินค้า</th>
@@ -591,8 +592,8 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                                 </button>
                             </th>
                         </tr>
-                        </thead>
-                        <tbody class="container-items">
+                    </thead>
+                    <tbody class="container-items">
                         <?php if (empty($model->quotationLines)): ?>
                             <?php $model->quotationLines = [new \backend\models\QuotationLine()]; ?>
                         <?php endif; ?>
@@ -666,59 +667,59 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-
-
-                <?php DynamicFormWidget::end(); ?>
+                    </tbody>
+                </table>
             </div>
-        </div>
 
-        <!-- Summary Section -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5 class="card-title mb-0">สรุปยอดเงิน</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6 offset-md-6">
-                        <div class="card bg-light">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-8"><strong>ยอดรวม:</strong></div>
-                                    <div class="col-4 text-end">
-                                        <span id="sub-total" class="fw-bold text-primary h5">0.00</span> บาท
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-8"><strong>ส่วนลด:</strong></div>
-                                    <div class="col-4 text-end">
-                                        <span id="discount-total" class="fw-bold text-primary h5">0.00</span> บาท
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-8"><strong>ยอดรวมทั้งสิ้น:</strong></div>
-                                    <div class="col-4 text-end">
-                                        <span id="summary-total" class="fw-bold text-primary h5">0.00</span> บาท
-                                    </div>
-                                </div>
-                            </div>
 
-                        </div>
-
-                    </div>
-                </div>
-
-            </div>
+            <?php DynamicFormWidget::end(); ?>
         </div>
     </div>
 
+    <!-- Summary Section -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">สรุปยอดเงิน</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 offset-md-6">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-8"><strong>ยอดรวม:</strong></div>
+                                <div class="col-4 text-end">
+                                    <span id="sub-total" class="fw-bold text-primary h5">0.00</span> บาท
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-8"><strong>ส่วนลด:</strong></div>
+                                <div class="col-4 text-end">
+                                    <span id="discount-total" class="fw-bold text-primary h5">0.00</span> บาท
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-8"><strong>ยอดรวมทั้งสิ้น:</strong></div>
+                                <div class="col-4 text-end">
+                                    <span id="summary-total" class="fw-bold text-primary h5">0.00</span> บาท
+                                </div>
+                            </div>
+                        </div>
 
-    <input type="hidden" id="sub-total-amount" name="sub_total_amount" value="0">
-    <input type="hidden" id="discount-total-amount" name="discount_total_amount" value="0">
-    <input type="hidden" id="total-vat-amount" name="total_vat_amount" value="0">
-    <input type="hidden" id="summary-total-amount" name="summary_total_amount" value="0">
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<input type="hidden" id="sub-total-amount" name="sub_total_amount" value="0">
+<input type="hidden" id="discount-total-amount" name="discount_total_amount" value="0">
+<input type="hidden" id="total-vat-amount" name="total_vat_amount" value="0">
+<input type="hidden" id="summary-total-amount" name="summary_total_amount" value="0">
 
 <?php if ($model->isNewRecord || $model->status == Quotation::STATUS_DRAFT || !checkHasCreateBillPlace($model->id)): ?>
     <div class="form-group mt-3">
@@ -817,6 +818,11 @@ $(document).ready(function() {
     //  calculateGrandTotal2();
 });
 
+// ฟังก์ชันจัดรูปแบบตัวเลขให้มี comma
+function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 // ฟังก์ชันคำนวณยอดรวมในแต่ละรายการ
 function calculateLineTotal(index) {
     console.log('Calculating line total for index:', index);
@@ -868,15 +874,17 @@ function calculateGrandTotal() {
     // console.log('Grand total:', total);
     
     $('#quotation-total_amount').val(total.toFixed(2));
-    $("#sub-total").html(total_before_discount.toFixed(2));
-    $("#discount-total").html(discount.toFixed(2));
-    $('#summary-total').text(total.toFixed(2));
+    $("#sub-total").html(formatNumber(total_before_discount.toFixed(2)));
+    $("#discount-total").html(formatNumber(discount.toFixed(2)));
+    $('#summary-total').text(formatNumber(total.toFixed(2)));
     
     $('#sub-total-amount').val(total_before_discount.toFixed(2));
     $('#discount-total-amount').val(discount.toFixed(2));
     $('#total-vat-amount').val(vat.toFixed(2));
     $('#summary-total-amount').val(total.toFixed(2));
 }
+
+
 
 // Event handlers สำหรับการคำนวณ
 $(document).on('change keyup input', '.qty-input, .price-input, .discount-input', function() {

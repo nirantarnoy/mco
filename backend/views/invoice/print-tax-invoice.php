@@ -750,7 +750,14 @@ window.addEventListener('afterprint', function() {
                             <td class="field-label" style="vertical-align: top;">ขายให้ :<br>Sold To</td>
                             <td class="field-value">
                                 <?= Html::encode($model->customer_name ?: '') ?><br>
-                                <?= Html::encode($model->customer_address ?: '') ?><br>
+                                <?php
+                                // Clean up address by removing empty fields like "ซอย -", "ถนน -", etc.
+                                $address = $model->customer_address ?: '';
+                                $address = preg_replace('/\s*(ซอย|ถนน|ตำบล|อำเภอ|จังหวัด|แขวง|เขต|หมู่|Soi|Road|Sub-district|District|Province)\s*-\s*/u', '', $address);
+                                $address = preg_replace('/\s+/', ' ', $address); // Remove extra spaces
+                                $address = trim($address);
+                                echo Html::encode($address);
+                                ?><br>
                                 TAX ID: <?= Html::encode($model->customer_tax_id ?: '') ?>
                             </td>
                         </tr>
@@ -776,7 +783,7 @@ window.addEventListener('afterprint', function() {
                         </tr>
                         <tr>
                             <td class="field-label">เงื่อนไข / กำหนดชำระ / Credit, Due:</td>
-                            <td class="field-value-right"><?= Html::encode($model->paymentTerm ? $model->paymentTerm->name : '') ?> <?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'd/M/yy') : '' ?></td>
+                            <td class="field-value-right"><?= Html::encode($model->paymentTerm ? $model->paymentTerm->name : '') ?> <?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'MM/dd/yyyy') : '' ?></td>
                         </tr>
                     </table>
                 </td>
@@ -832,12 +839,12 @@ window.addEventListener('afterprint', function() {
     <!-- Summary Section -->
     <div class="summary-section">
         <div class="summary-left" style="border: 1px solid #000; padding: 10px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="font-weight: 800;">ส่วนลด / Discount</span>
+                <span style="font-weight: 800;"><?= number_format($model->discount_amount, 2) ?></span>
+            </div>
             <div style="font-weight: 800; margin-bottom: 8px; -webkit-text-stroke: 0.25px black;">
                 <span id="labelAmountText">ตัวอักษร</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                <span style="font-weight: 800;">Discount</span>
-                <span style="font-weight: 800;"><?= number_format($model->discount_amount, 2) ?></span>
             </div>
             <div class="amount-text" style="text-align: left; margin-top: 10px;">
                 <?php
@@ -971,6 +978,14 @@ window.addEventListener('afterprint', function() {
                 summaryRows[1].innerHTML = 'ภาษีมูลค่าเพิ่ม<br>VAT <?= $model->vat_percent ?>%';
                 summaryRows[2].innerHTML = 'รวมเงินทั้งสิ้น<br>TOTAL';
             }
+        }
+
+        // Discount label in summary-left
+        const discountLabel = document.querySelector('.summary-left span:first-child');
+        if (discountLabel && discountLabel.textContent.includes('Discount')) {
+            discountLabel.textContent = lang === 'en' ? 'Discount' : 'ส่วนลด / Discount';
+        } else if (discountLabel && discountLabel.textContent.includes('ส่วนลด')) {
+            discountLabel.textContent = lang === 'en' ? 'Discount' : 'ส่วนลด / Discount';
         }
 
         // Signature titles

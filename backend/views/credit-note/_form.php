@@ -307,6 +307,14 @@ function calculateItemAmount(row) {
     calculateTotal();
 }
 
+// ฟังก์ชันจัดรูปแบบตัวเลขให้มี comma
+function formatNumber(num) {
+    if (num === null || num === undefined || num === "") {
+        return "0.00";
+    }
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 // ฟังก์ชันคำนวณยอดรวมทั้งหมด
 function calculateTotal() {
     var subtotal = 0;
@@ -318,9 +326,15 @@ function calculateTotal() {
     var vat = subtotal * (vatPercent / 100);
     var total = subtotal + vat;
     
-    $("#credit-note-adjust_amount").val(subtotal.toFixed(2));
-    $("#credit-note-vat_amount").val(vat.toFixed(2));
-    $("#credit-note-total_amount").val(total.toFixed(2));
+    // Update display fields with formatted values
+    $("#credit-note-adjust_amount").val(formatNumber(subtotal.toFixed(2)));
+    $("#credit-note-vat_amount").val(formatNumber(vat.toFixed(2)));
+    $("#credit-note-total_amount").val(formatNumber(total.toFixed(2)));
+    
+    // Update hidden fields with unformatted values for form submission
+    $("#credit-note-adjust_amount-hidden").val(subtotal.toFixed(2));
+    $("#credit-note-vat_amount-hidden").val(vat.toFixed(2));
+    $("#credit-note-total_amount-hidden").val(total.toFixed(2));
 }
 
 // ฟังก์ชันล้างรายการทั้งหมด
@@ -585,7 +599,7 @@ $this->registerJs($js);
     }
 
     .credit-note-form .card {
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         border: none;
     }
 
@@ -614,14 +628,12 @@ $this->registerJs($js);
         font-weight: 600;
         margin-bottom: 20px;
         padding-bottom: 10px;
-        border-bottom: 2px solid #007bff;
     }
 
     #credit-note-total_amount {
         font-size: 18px !important;
         font-weight: bold !important;
         background-color: #e3f2fd !important;
-        border: 2px solid #2196f3 !important;
     }
 
     .btn-load-invoice-items {
@@ -637,7 +649,7 @@ $this->registerJs($js);
         background: white;
         border: 1px solid #ccc;
         border-radius: 4px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         max-height: 200px;
         overflow-y: auto;
         width: 100%;
@@ -651,7 +663,8 @@ $this->registerJs($js);
         font-size: 14px;
     }
 
-    .autocomplete-item:hover, .autocomplete-item.highlighted {
+    .autocomplete-item:hover,
+    .autocomplete-item.highlighted {
         background-color: #007bff;
         color: white;
     }
@@ -682,7 +695,7 @@ $this->registerJs($js);
         overflow: visible !important;
     }
 </style>
-    <!-- Flash Messages -->
+<!-- Flash Messages -->
 <?php if (\Yii::$app->session->hasFlash('success')): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="fas fa-check-circle me-2"></i>
@@ -744,7 +757,7 @@ $this->registerJs($js);
                     </div>
                     <div class="col-md-3">
                         <?= $form->field($model, 'customer_id')->widget(Select2::class, [
-                            'data' => ArrayHelper::map(Customer::find()->orderBy('code')->all(), 'id', function($model) {
+                            'data' => ArrayHelper::map(Customer::find()->orderBy('code')->all(), 'id', function ($model) {
                                 return $model->code . ' - ' . $model->name;
                             }),
                             'options' => [
@@ -758,7 +771,7 @@ $this->registerJs($js);
                     </div>
                     <div class="col-md-3">
                         <?= $form->field($model, 'vendor_id')->widget(Select2::class, [
-                            'data' => ArrayHelper::map(\backend\models\Vendor::find()->orderBy('code')->all(), 'id', function($model) {
+                            'data' => ArrayHelper::map(\backend\models\Vendor::find()->orderBy('code')->all(), 'id', function ($model) {
                                 return $model->code . ' - ' . $model->name;
                             }),
                             'options' => [
@@ -844,85 +857,85 @@ $this->registerJs($js);
                         <div class="table-responsive">
                             <table id="items-table" class="table table-bordered table-sm mb-0">
                                 <thead class="table-light">
-                                <tr>
-                                    <th width="5%">ลำดับ</th>
-                                    <th width="25%">รายละเอียด</th>
-                                    <th width="10%">จำนวน</th>
-                                    <th width="10%">หน่วย</th>
-                                    <th width="12%">ราคาต่อหน่วย</th>
-                                    <th width="12%">ส่วนลด</th>
-                                    <th width="16%">จำนวนเงิน</th>
-                                    <th width="10%"></th>
-                                </tr>
+                                    <tr>
+                                        <th width="5%">ลำดับ</th>
+                                        <th width="25%">รายละเอียด</th>
+                                        <th width="10%">จำนวน</th>
+                                        <th width="10%">หน่วย</th>
+                                        <th width="12%">ราคาต่อหน่วย</th>
+                                        <th width="12%">ส่วนลด</th>
+                                        <th width="16%">จำนวนเงิน</th>
+                                        <th width="10%"></th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                <?php foreach ($modelsItem as $i => $modelItem): ?>
-                                    <tr>
-                                        <td class="text-center"><?= ($i + 1) ?></td>
-                                        <td style="position: relative;">
-                                            <?php
-                                            // necessary for update action.
-                                            if (! $modelItem->isNewRecord) {
-                                                echo Html::activeHiddenInput($modelItem, "[{$i}]id");
-                                            }
-                                            ?>
-                                            <?= Html::activeHiddenInput($modelItem, "[{$i}]product_id", ['class' => 'product-id-input']) ?>
-                                            <?= $form->field($modelItem, "[{$i}]description")->textInput([
-                                                'class' => 'form-control form-control-sm item-description',
-                                                'placeholder' => 'รายละเอียดสินค้า/บริการ',
-                                                'autocomplete' => 'off'
-                                            ])->label(false) ?>
-                                            <div class="autocomplete-dropdown"></div>
-                                        </td>
-                                        <td>
-                                            <?= $form->field($modelItem, "[{$i}]quantity")->textInput([
-                                                'type' => 'number',
-                                                'step' => '0.001',
-                                                'class' => 'form-control form-control-sm quantity text-right',
-                                                'min' => '0'
-                                            ])->label(false) ?>
-                                        </td>
-                                        <td>
-                                            <?= $form->field($modelItem, "[{$i}]unit_id")->dropDownList(
-                                                ArrayHelper::map(Unit::find()->where(['status' => 1])->all(), 'id', 'name'),
-                                                [
-                                                    'prompt' => 'เลือกหน่วย',
-                                                    'class' => 'form-control form-control-sm'
-                                                ]
-                                            )->label(false) ?>
-                                        </td>
-                                        <td>
-                                            <?= $form->field($modelItem, "[{$i}]unit_price")->textInput([
-                                                'type' => 'number',
-                                                'step' => '0.001',
-                                                'class' => 'form-control form-control-sm unit-price text-right',
-                                                'min' => '0'
-                                            ])->label(false) ?>
-                                        </td>
-                                        <td>
-                                            <?= $form->field($modelItem, "[{$i}]discount_amount")->textInput([
-                                                'type' => 'number',
-                                                'step' => '0.001',
-                                                'class' => 'form-control form-control-sm discount-amount text-right',
-                                                'min' => '0'
-                                            ])->label(false) ?>
-                                        </td>
-                                        <td>
-                                            <?= $form->field($modelItem, "[{$i}]amount")->textInput([
-                                                'type' => 'number',
-                                                'step' => '0.001',
-                                                'class' => 'form-control form-control-sm amount text-right',
-                                                'readonly' => true,
-                                                'style' => 'background-color: #f8f9fa;'
-                                            ])->label(false) ?>
-                                        </td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-sm btn-danger btn-remove-item" title="ลบรายการ">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
+                                    <?php foreach ($modelsItem as $i => $modelItem): ?>
+                                        <tr>
+                                            <td class="text-center"><?= ($i + 1) ?></td>
+                                            <td style="position: relative;">
+                                                <?php
+                                                // necessary for update action.
+                                                if (! $modelItem->isNewRecord) {
+                                                    echo Html::activeHiddenInput($modelItem, "[{$i}]id");
+                                                }
+                                                ?>
+                                                <?= Html::activeHiddenInput($modelItem, "[{$i}]product_id", ['class' => 'product-id-input']) ?>
+                                                <?= $form->field($modelItem, "[{$i}]description")->textInput([
+                                                    'class' => 'form-control form-control-sm item-description',
+                                                    'placeholder' => 'รายละเอียดสินค้า/บริการ',
+                                                    'autocomplete' => 'off'
+                                                ])->label(false) ?>
+                                                <div class="autocomplete-dropdown"></div>
+                                            </td>
+                                            <td>
+                                                <?= $form->field($modelItem, "[{$i}]quantity")->textInput([
+                                                    'type' => 'number',
+                                                    'step' => '0.001',
+                                                    'class' => 'form-control form-control-sm quantity text-right',
+                                                    'min' => '0'
+                                                ])->label(false) ?>
+                                            </td>
+                                            <td>
+                                                <?= $form->field($modelItem, "[{$i}]unit_id")->dropDownList(
+                                                    ArrayHelper::map(Unit::find()->where(['status' => 1])->orderBy('name')->all(), 'id', 'name'),
+                                                    [
+                                                        'prompt' => 'เลือกหน่วย',
+                                                        'class' => 'form-control form-control-sm'
+                                                    ]
+                                                )->label(false) ?>
+                                            </td>
+                                            <td>
+                                                <?= $form->field($modelItem, "[{$i}]unit_price")->textInput([
+                                                    'type' => 'number',
+                                                    'step' => '0.001',
+                                                    'class' => 'form-control form-control-sm unit-price text-right',
+                                                    'min' => '0'
+                                                ])->label(false) ?>
+                                            </td>
+                                            <td>
+                                                <?= $form->field($modelItem, "[{$i}]discount_amount")->textInput([
+                                                    'type' => 'number',
+                                                    'step' => '0.001',
+                                                    'class' => 'form-control form-control-sm discount-amount text-right',
+                                                    'min' => '0'
+                                                ])->label(false) ?>
+                                            </td>
+                                            <td>
+                                                <?= $form->field($modelItem, "[{$i}]amount")->textInput([
+                                                    'type' => 'number',
+                                                    'step' => '0.001',
+                                                    'class' => 'form-control form-control-sm amount text-right',
+                                                    'readonly' => true,
+                                                    'style' => 'background-color: #f8f9fa;'
+                                                ])->label(false) ?>
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-danger btn-remove-item" title="ลบรายการ">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -941,11 +954,12 @@ $this->registerJs($js);
                             <tr>
                                 <td><strong>รวมมูลค่าลดหนี้</strong></td>
                                 <td>
+                                    <?= Html::hiddenInput('CreditNote[adjust_amount]', $model->adjust_amount, ['id' => 'credit-note-adjust_amount-hidden']) ?>
                                     <?= $form->field($model, 'adjust_amount')->textInput([
-                                        'type' => 'number',
-                                        'step' => '0.01',
-                                        'id' => 'credit-note-adjust_amount',
+                                        'type' => 'text',
                                         'readonly' => true,
+                                        'disabled' => true,
+                                        'id' => 'credit-note-adjust_amount',
                                         'class' => 'form-control text-right',
                                         'style' => 'background-color: #f8f9fa;'
                                     ])->label(false) ?>
@@ -969,11 +983,12 @@ $this->registerJs($js);
                                     </div>
                                 </td>
                                 <td>
+                                    <?= Html::hiddenInput('CreditNote[vat_amount]', $model->vat_amount, ['id' => 'credit-note-vat_amount-hidden']) ?>
                                     <?= $form->field($model, 'vat_amount')->textInput([
-                                        'type' => 'number',
-                                        'step' => '0.01',
-                                        'id' => 'credit-note-vat_amount',
+                                        'type' => 'text',
                                         'readonly' => true,
+                                        'disabled' => true,
+                                        'id' => 'credit-note-vat_amount',
                                         'class' => 'form-control text-right',
                                         'style' => 'background-color: #f8f9fa;'
                                     ])->label(false) ?>
@@ -982,11 +997,12 @@ $this->registerJs($js);
                             <tr>
                                 <td><strong>รวมเป็นเงินทั้งสิ้น</strong></td>
                                 <td>
+                                    <?= Html::hiddenInput('CreditNote[total_amount]', $model->total_amount, ['id' => 'credit-note-total_amount-hidden']) ?>
                                     <?= $form->field($model, 'total_amount')->textInput([
-                                        'type' => 'number',
-                                        'step' => '0.01',
-                                        'id' => 'credit-note-total_amount',
+                                        'type' => 'text',
                                         'readonly' => true,
+                                        'disabled' => true,
+                                        'id' => 'credit-note-total_amount',
                                         'class' => 'form-control text-right font-weight-bold'
                                     ])->label(false) ?>
                                 </td>
@@ -1015,7 +1031,7 @@ $this->registerJs($js);
     $model_doc = \common\models\CreditNoteDoc::find()->where(['credit_note_id' => $model->id])->all();
     ?>
     <hr>
-    <br/>
+    <br />
     <div class="label">
         <h4>เอกสารแนบ</h4>
     </div>
@@ -1023,39 +1039,39 @@ $this->registerJs($js);
         <div class="col-lg-12">
             <table class="table table-bordered table-striped" style="width: 100%">
                 <thead>
-                <tr>
-                    <th style="width: 5%;text-align: center">#</th>
-                    <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
-                    <th style="width: 10%;text-align: center">ดูเอกสาร</th>
-                    <th style="width: 5%;text-align: center">-</th>
-                </tr>
+                    <tr>
+                        <th style="width: 5%;text-align: center">#</th>
+                        <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
+                        <th style="width: 10%;text-align: center">ดูเอกสาร</th>
+                        <th style="width: 5%;text-align: center">-</th>
+                    </tr>
                 </thead>
                 <tbody>
-                <?php if ($model_doc != null): ?>
+                    <?php if ($model_doc != null): ?>
 
-                    <?php foreach ($model_doc as $key => $value): ?>
-                        <tr>
-                            <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
-                            <td><?= $value->doc ?></td>
-                            <td style="text-align: center">
-                                <a href="<?= Yii::$app->request->BaseUrl . '/uploads/creditnote_doc/' . $value->doc ?>"
-                                   target="_blank">
-                                    ดูเอกสาร
-                                </a>
-                            </td>
-                            <td style="text-align: center">
-                                <div class="btn btn-danger" data-var="<?= trim($value->doc) ?>"
-                                     onclick="delete_doc($(this))">ลบ
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+                        <?php foreach ($model_doc as $key => $value): ?>
+                            <tr>
+                                <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
+                                <td><?= $value->doc ?></td>
+                                <td style="text-align: center">
+                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/creditnote_doc/' . $value->doc ?>"
+                                        target="_blank">
+                                        ดูเอกสาร
+                                    </a>
+                                </td>
+                                <td style="text-align: center">
+                                    <div class="btn btn-danger" data-var="<?= trim($value->doc) ?>"
+                                        onclick="delete_doc($(this))">ลบ
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </div>
-    <br/>
+    <br />
 
     <form action="<?= Url::to(['credit-note/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
         <input type="hidden" name="id" value="<?= $model->id ?>">
@@ -1066,7 +1082,7 @@ $this->registerJs($js);
                     <input type="file" name="file_doc" multiple>
                 </div>
             </div>
-            <br/>
+            <br />
             <div class="row">
                 <div class="col-lg-12">
                     <button class="btn btn-info">

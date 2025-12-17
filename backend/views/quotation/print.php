@@ -26,7 +26,20 @@ $grandTotal = $quotation->total_amount == null ? 0 : $quotation->total_amount;
 $customer_info = \backend\models\Customer::findCustomerInfo($quotation->customer_id);
 //print_r($customer_info);return;
 $customer_name = $customer_info !== null && count($customer_info) > 0 ? $customer_info['name'] : '';
-$customer_address = $customer_info !== null && count($customer_info) > 0 ? $customer_info['home_number'] . ' ' . $customer_info['street'] . ' ' . $customer_info['aisle'] . ', ' . $customer_info['district_name'] . ', ' . $customer_info['city_name'] . ', ' . $customer_info['province_name'] . ', ' . $customer_info['zipcode'] : '';
+
+// Build address from parts, filtering out empty values and '-'
+$address_parts = [];
+if ($customer_info !== null && count($customer_info) > 0) {
+    if (!empty($customer_info['home_number']) && $customer_info['home_number'] !== '-') $address_parts[] = $customer_info['home_number'];
+    if (!empty($customer_info['street']) && $customer_info['street'] !== '-') $address_parts[] = $customer_info['street'];
+    if (!empty($customer_info['aisle']) && $customer_info['aisle'] !== '-') $address_parts[] = $customer_info['aisle'];
+    if (!empty($customer_info['district_name']) && $customer_info['district_name'] !== '-') $address_parts[] = $customer_info['district_name'];
+    if (!empty($customer_info['city_name']) && $customer_info['city_name'] !== '-') $address_parts[] = $customer_info['city_name'];
+    if (!empty($customer_info['province_name']) && $customer_info['province_name'] !== '-') $address_parts[] = $customer_info['province_name'];
+    if (!empty($customer_info['zipcode']) && $customer_info['zipcode'] !== '-') $address_parts[] = $customer_info['zipcode'];
+}
+$customer_address = implode(', ', $address_parts);
+
 $phone = $customer_info !== null && count($customer_info) > 0 ? $customer_info['phone'] : '';
 $email = $customer_info !== null && count($customer_info) > 0 ? $customer_info['email'] : '';
 $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $customer_info['taxid'] : '';

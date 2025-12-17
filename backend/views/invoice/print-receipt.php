@@ -450,7 +450,14 @@ use yii\helpers\Html; ?>
         </tr>
         <tr>
             <td class="receipt-data-cell" style="border-top: none;">
-                <?= Html::encode($model->customer_address ?: '') ?><br>
+                <?php
+                // Clean up address by removing empty fields like "ซอย -", "ถนน -", etc.
+                $address = $model->customer_address ?: '';
+                $address = preg_replace('/\s*(ซอย|ถนน|ตำบล|อำเภอ|จังหวัด|แขวง|เขต|หมู่|Soi|Road|Sub-district|District|Province)\s*-\s*/u', '', $address);
+                $address = preg_replace('/\s+/', ' ', $address); // Remove extra spaces
+                $address = trim($address);
+                echo Html::encode($address);
+                ?><br>
                 TAXID: <?= Html::encode($model->customer_tax_id ?: '') ?>
             </td>
             <td class="receipt-label-cell" style="border-right: none;">อ้างถึงเลขที่ใบแจ้งหนี้<br>RFQ.IV</td>
