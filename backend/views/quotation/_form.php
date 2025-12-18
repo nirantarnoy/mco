@@ -729,7 +729,7 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
 <input type="hidden" id="total-vat-amount" name="total_vat_amount" value="0">
 <input type="hidden" id="summary-total-amount" name="summary_total_amount" value="0">
 
-<?php if ($model->isNewRecord || $model->status == Quotation::STATUS_DRAFT || !checkHasCreateBillPlace($model->id)): ?>
+<?php //if ($model->isNewRecord || $model->status == Quotation::STATUS_DRAFT || !checkHasCreateBillPlace($model->id)): ?>
     <div class="form-group mt-3">
         <div class="d-flex justify-content-between">
             <?= Html::submitButton($model->isNewRecord ? 'สร้างใบเสนอราคา' : 'บันทึกการแก้ไข', [
@@ -738,7 +738,7 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
             <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
         </div>
     </div>
-<?php endif; ?>
+<?php //endif; ?>
 
 <?php ActiveForm::end(); ?>
 
