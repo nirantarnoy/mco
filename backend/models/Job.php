@@ -32,20 +32,20 @@ class Job extends \common\models\Job
                 ],
                 'value' => time(),
             ],
-//            'timestampcby'=>[
-//                'class'=> \yii\behaviors\AttributeBehavior::className(),
-//                'attributes'=>[
-//                    ActiveRecord::EVENT_BEFORE_INSERT=>'created_by',
-//                ],
-//                'value'=> Yii::$app->user->identity->id,
-//            ],
-//            'timestamuby'=>[
-//                'class'=> \yii\behaviors\AttributeBehavior::className(),
-//                'attributes'=>[
-//                    ActiveRecord::EVENT_BEFORE_UPDATE=>'updated_by',
-//                ],
-//                'value'=> Yii::$app->user->identity->id,
-//            ],
+            //            'timestampcby'=>[
+            //                'class'=> \yii\behaviors\AttributeBehavior::className(),
+            //                'attributes'=>[
+            //                    ActiveRecord::EVENT_BEFORE_INSERT=>'created_by',
+            //                ],
+            //                'value'=> Yii::$app->user->identity->id,
+            //            ],
+            //            'timestamuby'=>[
+            //                'class'=> \yii\behaviors\AttributeBehavior::className(),
+            //                'attributes'=>[
+            //                    ActiveRecord::EVENT_BEFORE_UPDATE=>'updated_by',
+            //                ],
+            //                'value'=> Yii::$app->user->identity->id,
+            //            ],
             'timestampupdate' => [
                 'class' => \yii\behaviors\AttributeBehavior::className(),
                 'attributes' => [
@@ -63,10 +63,13 @@ class Job extends \common\models\Job
         if ($quotation) {
             $customer_data = \backend\models\Customer::find()->where(['id' => $quotation->customer_id])->one();
             if ($customer_data) {
+                // ใช้ AddressHelper จัดรูปแบบที่อยู่ (แยกกรุงเทพฯ กับจังหวัดอื่นอัตโนมัติ)
+                $formattedAddress = \backend\helpers\AddressHelper::formatCustomerAddress($customer_data);
+
                 array_push($data, [
                     'customer_id' => $customer_data->id,
                     'customer_name' => $customer_data->name,
-                    'customer_address' => 'เลขที่ ' . $customer_data->home_number . ' ถนน ' . $customer_data->street . ' ซอย ' . $customer_data->aisle . ' ตำบล/แขวง ' . $customer_data->district_name . ' อําเภอ/เขต ' . $customer_data->city_name . ' จังหวัด ' . $customer_data->province_name . ' ' . $customer_data->zipcode,
+                    'customer_address' => $formattedAddress,
                     'customer_tax_id' => $customer_data->taxid,
                     'invoice_due_date' => self::calDueDate($quotation->payment_term_id),
                 ]);
@@ -282,7 +285,7 @@ class Job extends \common\models\Job
 
     public function getHasBilling()
     {
-       return $this->hasBilling($this->id);
+        return $this->hasBilling($this->id);
     }
 
     public function getHasPayment()
@@ -296,13 +299,13 @@ class Job extends \common\models\Job
      * ตรวจสอบว่ามีใบขอซื้อหรือไม่
      * @return bool
      */
-//    public function hasPurchaseRequest($id)
-//    {
-//        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch_req pr INNER JOIN purch_req_doc prd ON prd.purch_req_id = pr.id WHERE pr.job_id = :jobId')
-//            ->bindParam(':jobId', $id)
-//            ->queryScalar();
-//        return $count > 0;
-//    }
+    //    public function hasPurchaseRequest($id)
+    //    {
+    //        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch_req pr INNER JOIN purch_req_doc prd ON prd.purch_req_id = pr.id WHERE pr.job_id = :jobId')
+    //            ->bindParam(':jobId', $id)
+    //            ->queryScalar();
+    //        return $count > 0;
+    //    }
 
     public function hasPurchaseRequest($id)
     {
@@ -355,13 +358,13 @@ class Job extends \common\models\Job
      * ตรวจสอบว่ามีใบสั่งซื้อหรือไม่
      * @return bool
      */
-//    public function hasPurchaseOrder($id)
-//    {
-//        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch p INNER JOIN purch_doc pd ON pd.purch_id = p.id WHERE p.job_id = :jobId')
-//            ->bindParam(':jobId', $id)
-//            ->queryScalar();
-//        return $count > 0;
-//    }
+    //    public function hasPurchaseOrder($id)
+    //    {
+    //        $count = Yii::$app->db->createCommand('SELECT COUNT(*) FROM purch p INNER JOIN purch_doc pd ON pd.purch_id = p.id WHERE p.job_id = :jobId')
+    //            ->bindParam(':jobId', $id)
+    //            ->queryScalar();
+    //        return $count > 0;
+    //    }
 
     public function hasPurchaseOrder($jobId)
     {
@@ -788,5 +791,4 @@ class Job extends \common\models\Job
         }
         return $this->_activityCache[$key];
     }
-
 }

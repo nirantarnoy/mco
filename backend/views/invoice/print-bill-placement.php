@@ -515,11 +515,8 @@ window.addEventListener('afterprint', function() {
                     <td><strong id="labelCustomerAddress" style="border-bottom: 1px solid #000;">ที่อยู่</strong></td>
                     <td>
                         <?php
-                        // Clean up address
-                        $address = $model->customer_address ?: '';
-                        $address = preg_replace('/\s*(ซอย|ถนน|ตำบล|อำเภอ|จังหวัด|แขวง|เขต|หมู่|Soi|Road|Sub-district|District|Province)\s*-\s*/u', '', $address);
-                        $address = preg_replace('/\s+/', ' ', $address);
-                        $address = trim($address);
+                        // ใช้ AddressHelper ทำความสะอาดที่อยู่
+                        $address = \backend\helpers\AddressHelper::cleanAddress($model->customer_address ?: '');
                         echo Html::encode($address);
                         ?><br>
                         <span id="labelTaxId">เลขประจำตัวผู้เสียภาษี</span> <?= Html::encode($model->customer_tax_id ?? '') ?>
@@ -533,7 +530,7 @@ window.addEventListener('afterprint', function() {
                 <div class="label"><span style="font-weight: bold;border-bottom: 1px solid #000;">เลขที่ใบวางบิล</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?= Html::encode($model->invoice_number) ?></div>
             </div>
             <div>
-                <div class="label" id="billingDateLabel" data-original-date="<?= Yii::$app->formatter->asDate($model->invoice_date, 'php:d-M-y') ?>"><span style="font-weight: bold;border-bottom: 1px solid #000;">วันที่ใบวางบิล</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?= Yii::$app->formatter->asDate($model->invoice_date, 'php:d-M-y') ?></div>
+                <div class="label" id="billingDateLabel" data-original-date="<?= Yii::$app->formatter->asDate($model->invoice_date, 'php:d/m/Y') ?>"><span style="font-weight: bold;border-bottom: 1px solid #000;">วันที่ใบวางบิล</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<?= Yii::$app->formatter->asDate($model->invoice_date, 'php:d/m/Y') ?></div>
             </div>
         </div>
     </div>
@@ -577,8 +574,8 @@ window.addEventListener('afterprint', function() {
                     <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= $itemCount ?></td>
                     <td class="text-left" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= Html::encode($parentInvoice->po_number ?? '-') ?></td>
                     <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold" title="Parent Invoice ID: <?= $relation->parent_invoice_id ?>"><?= Html::encode($parentInvoice->invoice_number) ?></td>
-                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= Yii::$app->formatter->asDate($parentInvoice->invoice_date, 'php:d-M-y') ?></td>
-                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= $parentInvoice->due_date ? Yii::$app->formatter->asDate($parentInvoice->due_date, 'php:d-M-y') : '' ?></td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= Yii::$app->formatter->asDate($parentInvoice->invoice_date, 'php:d/m/Y') ?></td>
+                    <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= $parentInvoice->due_date ? Yii::$app->formatter->asDate($parentInvoice->due_date, 'php:d/m/Y') : '' ?></td>
                     <td class="text-right" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= number_format($parentInvoice->total_amount, 2) ?></td>
                 </tr>
                 <?php
@@ -593,8 +590,8 @@ window.addEventListener('afterprint', function() {
                             <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= $itemCount ?></td>
                             <td class="text-left" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= Html::encode($model->po_number ?? '-') ?></td>
                             <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= Html::encode($model->invoice_number) ?></td>
-                            <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= Yii::$app->formatter->asDate($model->invoice_date, 'php:d-M-y') ?></td>
-                            <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'php:d-M-y') : '' ?></td>
+                            <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= Yii::$app->formatter->asDate($model->invoice_date, 'php:d/m/Y') ?></td>
+                            <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'php:d/m/Y') : '' ?></td>
                             <td class="text-right" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= number_format($item->amount, 2) ?></td>
                         </tr>
             <?php
@@ -662,12 +659,12 @@ window.addEventListener('afterprint', function() {
                     <u>ผู้รับวางบิล</u> <span> ...................................................................</span>
                 </td>
                 <td style="width: 50%;font-size: 18px;text-align: right;padding-right: 40px;font-weight: 800;-webkit-text-stroke: 0.25px black;">
-                    <u>วันนัดรับเช็ค</u> <span> ..................................................................</span>
+                    <u>ผู้วางบิล</u> <span> ..................................................................</span>
                 </td>
             </tr>
             <tr>
                 <td style="width: 50%;font-size: 18px;padding-left: 40px;font-weight: 800;-webkit-text-stroke: 0.25px black;">
-                    <u>ผู้วางบิล</u> <span> .....................................................................</span>
+                    <u>วันนัดรับเช็ค</u> <span> .................................................................</span>
                 </td>
                 <td style="text-align: left"></td>
             </tr>

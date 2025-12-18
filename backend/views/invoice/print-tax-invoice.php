@@ -767,7 +767,7 @@ window.addEventListener('afterprint', function() {
                     <table style="width: 100%;">
                         <tr>
                             <td class="field-label" style="width: 250px;">วันที่ / Date:</td>
-                            <td class="field-value-right"><?= Yii::$app->formatter->asDate($model->invoice_date, 'MM/dd/yyyy') ?></td>
+                            <td class="field-value-right"><?= Yii::$app->formatter->asDate($model->invoice_date, 'php:d/m/Y') ?></td>
                         </tr>
                         <tr>
                             <td class="field-label">เลขที่ / Inv.No.:</td>
@@ -779,11 +779,11 @@ window.addEventListener('afterprint', function() {
                         </tr>
                         <tr>
                             <td class="field-label">วันที่สั่งซื้อ / P/O Date:</td>
-                            <td class="field-value-right"><?= $po_date ? Yii::$app->formatter->asDate($po_date, 'MM/dd/yyyy') : '' ?></td>
+                            <td class="field-value-right"><?= $po_date ? Yii::$app->formatter->asDate($po_date, 'php:d/m/Y') : '' ?></td>
                         </tr>
                         <tr>
                             <td class="field-label">เงื่อนไข / กำหนดชำระ / Credit, Due:</td>
-                            <td class="field-value-right"><?= Html::encode($model->paymentTerm ? $model->paymentTerm->name : '') ?> <?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'MM/dd/yyyy') : '' ?></td>
+                            <td class="field-value-right"><?= Html::encode($model->paymentTerm ? $model->paymentTerm->name : '') ?> <?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'php:d/m/Y') : '' ?></td>
                         </tr>
                     </table>
                 </td>
@@ -812,7 +812,7 @@ window.addEventListener('afterprint', function() {
                     <?php foreach ($model_line as $index => $item): ?>
                         <tr>
                             <td style=" padding:8px;text-align:center"><?= $index + 1 ?></td>
-                    <td class="text-left" style=" padding:8px;"><?= Html::encode($item->item_description) ?></td>
+                    <td class="text-left" style=" padding:8px;"><?= Html::encode($item->product_id ? \backend\models\Product::findCode($item->product_id) : $item->item_description) ?></td>
                     <td style="padding:8px;text-align:center""><?= number_format($item->quantity, 0) ?> <?= Html::encode(\backend\models\Unit::findName($item->unit_id)) ?></td>
                             <td class=" text-right" style="padding:8px;"><?= number_format($item->unit_price, 3) ?></td>
                     <td class="text-right" style="padding:8px;"><?= number_format($item->amount, 3) ?></td>

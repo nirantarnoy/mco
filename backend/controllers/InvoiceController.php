@@ -272,11 +272,14 @@ class InvoiceController extends BaseController
         $customer = Customer::findOne(['customer_code' => $code, 'status' => Customer::STATUS_ACTIVE]);
 
         if ($customer) {
+            // ใช้ AddressHelper จัดรูปแบบที่อยู่ (แยกกรุงเทพฯ กับจังหวัดอื่นอัตโนมัติ)
+            $formattedAddress = \backend\helpers\AddressHelper::formatCustomerAddress($customer);
+
             return [
                 'success' => true,
                 'data' => [
                     'customer_name' => $customer->customer_name,
-                    'customer_address' => $customer->customer_address,
+                    'customer_address' => $formattedAddress,
                     'customer_tax_id' => $customer->tax_id,
                     'credit_terms' => $customer->credit_terms,
                 ]
@@ -444,6 +447,7 @@ class InvoiceController extends BaseController
                     'item_description' => $jobItem->product_name, // $jobItem->product->name,
                     'quantity' => $jobItem->qty, // number_format($jobItem->qty, 2),
                     'unit' => $jobItem->product->unit->name ?: 'หน่วย',
+                    'unit_id' => $jobItem->product->unit_id ?: null,  // เพิ่ม unit_id
                     'unit_price' => $jobItem->line_price, //number_format($jobItem->line_price,2),
                     'amount' => ($jobItem->qty * $jobItem->line_price), //number_format($jobItem->qty * $jobItem->line_price, 2),
                     // ข้อมูลเพิ่มเติมที่อาจจำเป็น

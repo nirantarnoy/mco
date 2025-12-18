@@ -1,7 +1,10 @@
 <?php
+
 namespace backend\models;
+
 use Yii;
 use yii\db\ActiveRecord;
+
 date_default_timezone_set('Asia/Bangkok');
 
 class Customer extends \common\models\Customer
@@ -9,19 +12,19 @@ class Customer extends \common\models\Customer
     public function behaviors()
     {
         return [
-            'timestampcdate'=>[
-                'class'=> \yii\behaviors\AttributeBehavior::className(),
-                'attributes'=>[
-                    ActiveRecord::EVENT_BEFORE_INSERT=>'created_at',
+            'timestampcdate' => [
+                'class' => \yii\behaviors\AttributeBehavior::className(),
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_INSERT => 'created_at',
                 ],
-                'value'=> time(),
+                'value' => time(),
             ],
-            'timestampudate'=>[
-                'class'=> \yii\behaviors\AttributeBehavior::className(),
-                'attributes'=>[
-                    ActiveRecord::EVENT_BEFORE_INSERT=>'updated_at',
+            'timestampudate' => [
+                'class' => \yii\behaviors\AttributeBehavior::className(),
+                'attributes' => [
+                    ActiveRecord::EVENT_BEFORE_INSERT => 'updated_at',
                 ],
-                'value'=> time(),
+                'value' => time(),
             ],
             'timestampcby' => [
                 'class' => \yii\behaviors\AttributeBehavior::className(),
@@ -47,30 +50,39 @@ class Customer extends \common\models\Customer
         ];
     }
 
-    public static function findCode($id){
-        $model = Customer::find()->where(['id'=>$id])->one();
-        return $model!= null?$model->code:'';
+    public static function findCode($id)
+    {
+        $model = Customer::find()->where(['id' => $id])->one();
+        return $model != null ? $model->code : '';
     }
-    public static function findName($id){
-        $model = Customer::find()->where(['id'=>$id])->one();
-        return $model!= null?$model->name:'';
-    }
-
-    public static function findTaxId($id){
-        $model = Customer::find()->where(['id'=>$id])->one();
-        return $model!= null?$model->taxid:'';
+    public static function findName($id)
+    {
+        $model = Customer::find()->where(['id' => $id])->one();
+        return $model != null ? $model->name : '';
     }
 
-    public static function findFullAddress($id){
-        $model = Customer::find()->where(['id'=>$id])->one();
-        return $model!= null?$model->home_number.' '.$model->street.' '.$model->aisle.' '.$model->district_name.' '.$model->city_name.' '.$model->province_name.' '.$model->zipcode:'';
+    public static function findTaxId($id)
+    {
+        $model = Customer::find()->where(['id' => $id])->one();
+        return $model != null ? $model->taxid : '';
+    }
+
+    public static function findFullAddress($id)
+    {
+        $model = Customer::find()->where(['id' => $id])->one();
+        if ($model != null) {
+            // ใช้ AddressHelper จัดรูปแบบที่อยู่ (แยกกรุงเทพฯ กับจังหวัดอื่นอัตโนมัติ)
+            return \backend\helpers\AddressHelper::formatCustomerAddress($model);
+        }
+        return '';
     }
 
 
-    public static function findCustomerInfo($id){
+    public static function findCustomerInfo($id)
+    {
         $data = [];
-        $model = Customer::find()->where(['id'=>$id])->one();
-        if($model){
+        $model = Customer::find()->where(['id' => $id])->one();
+        if ($model) {
             $data['name'] = $model->name;
             $data['home_number'] = $model->home_number;
             $data['street'] = $model->street;
@@ -83,7 +95,6 @@ class Customer extends \common\models\Customer
             $data['phone'] = $model->phone;
             $data['email'] = $model->email;
             $data['taxid'] = $model->taxid;
-
         }
         return $data;
     }
@@ -119,5 +130,4 @@ class Customer extends \common\models\Customer
         $this->company_id = \Yii::$app->session->get('company_id');
         return true;
     }
-
 }

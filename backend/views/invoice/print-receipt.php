@@ -436,7 +436,7 @@ use yii\helpers\Html; ?>
             <td class="receipt-label-cell" style="width: 9%; border-right: none;">รหัสลูกค้า<br>CODE</td>
             <td class="receipt-data-cell" style="width: 22%;"><?= Html::encode(\backend\models\Customer::findCode($model->customer_id) ?: '') ?></td>
             <td class="receipt-label-cell" style="width: 12%; border-right: none;">วันที่<br>DATE</td>
-            <td class="receipt-data-cell" style="width: 22%;"><?= date('m/d/Y', strtotime($model->invoice_date)) ?></td>
+            <td class="receipt-data-cell" style="width: 22%;"><?= date('d/m/Y', strtotime($model->invoice_date)) ?></td>
             <td class="receipt-label-cell" style="width: 10%; border-right: none;">เลขที่<br>NO</td>
             <td class="receipt-data-cell" style="width: 22%;"><?= Html::encode($model->invoice_number) ?></td>
         </tr>
@@ -446,7 +446,7 @@ use yii\helpers\Html; ?>
             <td class="receipt-label-cell" style="border-right: none;">ใบสั่งซื้อเลขที่<br>PO NO</td>
             <td class="receipt-data-cell"><?= Html::encode($model->po_number ?: '') ?></td>
             <td class="receipt-label-cell" style="border-right: none;">วันที่สั่งซื้อ<br>PO DATE</td>
-            <td class="receipt-data-cell"><?= date('m/d/Y', strtotime($model->po_date)) ?></td>
+            <td class="receipt-data-cell"><?= date('d/m/Y', strtotime($model->po_date)) ?></td>
         </tr>
         <tr>
             <td class="receipt-data-cell" style="border-top: none;">
@@ -486,7 +486,7 @@ use yii\helpers\Html; ?>
                 <?php foreach ($model_line as $index => $item): ?>
                     <tr>
                         <td><?= $index + 1 ?></td>
-                        <td class="receipt-text-left"><?= nl2br(Html::encode($item->item_description)) ?></td>
+                        <td class="receipt-text-left"><?= nl2br(Html::encode($item->product_id ? \backend\models\Product::findCode($item->product_id) : $item->item_description)) ?></td>
                         <td><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
                         <td class="receipt-text-right"><?= number_format($item->unit_price, 2) ?></td>
                         <td class="receipt-text-right"><?= number_format($item->amount, 2) ?></td>

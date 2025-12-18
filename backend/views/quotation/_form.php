@@ -288,7 +288,7 @@ function selectProduct(input, product) {
     var index = input.attr('data-index');
     
     // อัพเดตค่า
-    input.val(product.display);
+    input.val(product.code);
     $('.product-id-hidden[data-index="' + index + '"]').val(product.id);
     
     // อัพเดตราคา
@@ -612,11 +612,19 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                                             'data-index' => $index,
                                         ]) ?>
 
+                                        <?php
+                                        // ถ้ามี product_id ให้ดึงรหัสสินค้ามาแสดง ถ้าไม่มีให้แสดง product_name เดิม
+                                        $displayValue = $quotationLine->product_id
+                                            ? \backend\models\Product::findCode($quotationLine->product_id)
+                                            : $quotationLine->product_name;
+                                        ?>
+
                                         <?= $form->field($quotationLine, "[{$index}]product_name")->textInput([
                                             'class' => 'form-control product-autocomplete',
                                             'placeholder' => 'พิมพ์ชื่อสินค้าหรือรหัสสินค้า...',
                                             'data-index' => $index,
-                                            'autocomplete' => 'off'
+                                            'autocomplete' => 'off',
+                                            'value' => $displayValue
                                         ])->label(false) ?>
 
                                         <div class="autocomplete-dropdown" data-index="<?= $index ?>"></div>

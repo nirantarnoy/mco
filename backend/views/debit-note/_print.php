@@ -550,7 +550,7 @@ $formatter = Yii::$app->formatter;
 
                             <div class="section-row" style="margin-left:150px;">
                                 <div class="label-right">วันที่</div>
-                                <div class="value"><?= $formatter->asDate($model->document_date, 'php:m/d/Y') ?></div>
+                                <div class="value"><?= $formatter->asDate($model->document_date, 'php:d/m/Y') ?></div>
                             </div>
                         </div>
                     </td>

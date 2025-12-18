@@ -1,4 +1,5 @@
 <?php
+
 namespace backend\models;
 
 use Yii;
@@ -65,11 +66,11 @@ class Quotation extends ActiveRecord
     public function rules()
     {
         return [
-            [['customer_id'],'required'],
-            [['quotation_date','currency_id','customer_tax_id'], 'safe'],
-            [['customer_id', 'status', 'approve_status', 'approve_by', 'created_at', 'created_by', 'updated_at', 'updated_by','payment_term_id','payment_method_id','sale_emp_id'], 'integer'],
-            [['total_amount','discount_amount','discount_percent','total_discount_amount','vat_percent','vat_total_amount'], 'number'],
-            [['quotation_no', 'customer_name', 'total_amount_text', 'note','delivery_day_text'], 'string', 'max' => 255],
+            [['customer_id'], 'required'],
+            [['quotation_date', 'currency_id', 'customer_tax_id'], 'safe'],
+            [['customer_id', 'status', 'approve_status', 'approve_by', 'created_at', 'created_by', 'updated_at', 'updated_by', 'payment_term_id', 'payment_method_id', 'sale_emp_id'], 'integer'],
+            [['total_amount', 'discount_amount', 'discount_percent', 'total_discount_amount', 'vat_percent', 'vat_total_amount'], 'number'],
+            [['quotation_no', 'customer_name', 'total_amount_text', 'note', 'delivery_day_text'], 'string', 'max' => 255],
             [['quotation_no'], 'unique'],
         ];
     }
@@ -109,10 +110,11 @@ class Quotation extends ActiveRecord
         ];
     }
 
-//    public function getQuotation(){
-//        return $this->hasOne(Quotation::className(), ['id' => 'quotation_id']);
-//    }
-    public function getCustomer(){
+    //    public function getQuotation(){
+    //        return $this->hasOne(Quotation::className(), ['id' => 'quotation_id']);
+    //    }
+    public function getCustomer()
+    {
         return $this->hasOne(Customer::class, ['id' => 'customer_id']);
     }
 
@@ -225,8 +227,8 @@ class Quotation extends ActiveRecord
     private function convertAmountToThaiText($amount)
     {
         // This is a simplified version - you can implement full Thai number conversion
-       // $formatter = new \NumberFormatter('th', \NumberFormatter::SPELLOUT);
-       // return $formatter->format($amount) . ' บาทถ้วน';
+        // $formatter = new \NumberFormatter('th', \NumberFormatter::SPELLOUT);
+        // return $formatter->format($amount) . ' บาทถ้วน';
 
         return $this->numtothai($amount);
     }
@@ -317,19 +319,24 @@ class Quotation extends ActiveRecord
         return $return_str;
     }
 
-    public function getJob(){
-       return $this->hasOne(Job::class, ['id' => 'job_id']);
+    public function getJob()
+    {
+        return $this->hasOne(Job::class, ['id' => 'job_id']);
     }
 
-    public static function findCustomerData($quotation_id){
+    public static function findCustomerData($quotation_id)
+    {
         $data = [];
         $quotation = Quotation::find()->where(['id' => $quotation_id])->one();
-        if($quotation){
+        if ($quotation) {
             $customer_data = \backend\models\Customer::find()->where(['id' => $quotation->customer_id])->one();
-            if($customer_data){
+            if ($customer_data) {
+                // ใช้ AddressHelper จัดรูปแบบที่อยู่ (แยกกรุงเทพฯ กับจังหวัดอื่นอัตโนมัติ)
+                $formattedAddress = \backend\helpers\AddressHelper::formatCustomerAddress($customer_data);
+
                 array_push($data, [
                     'customer_name' => $customer_data->name,
-                    'customer_address' => 'เลขที่ '. $customer_data->home_number.' ถนน '.$customer_data->street.' ซอย '.$customer_data->aisle.' ตำบล/แขวง '.$customer_data->district_name.' อําเภอ/เขต '.$customer_data->city_name.' จังหวัด '.$customer_data->province_name.' '.$customer_data->zipcode,
+                    'customer_address' => $formattedAddress,
                     'customer_tax_id' => $customer_data->taxid,
                     'invoice_due_date' => self::calDueDate($quotation->payment_term_id),
                 ]);
@@ -337,12 +344,26 @@ class Quotation extends ActiveRecord
         }
         return $data;
     }
-    public static function findCustomerData2($quotation_id){
+
+    public static function calDueDate($payment_term_id)
+    {
+        $due_date = null;
+        if ($payment_term_id) {
+            $payment_term = \backend\models\Paymentterm::find()->where(['id' => $payment_term_id])->one();
+            if ($payment_term) {
+                $due_date = $payment_term->day_count == 0 || $payment_term->day_count == null ? null : date('Y-m-d', strtotime('+' . $payment_term->day_count . ' day'));
+            }
+        }
+        return $due_date;
+    }
+
+    public static function findCustomerData2($quotation_id)
+    {
         $data = [];
         $quotation = Quotation::find()->where(['id' => $quotation_id])->one();
-        if($quotation){
+        if ($quotation) {
             $customer_data = \backend\models\Customer::find()->where(['id' => $quotation->customer_id])->one();
-            if($customer_data){
+            if ($customer_data) {
                 array_push($data, [
                     'customer_name' => $customer_data->name,
                 ]);
@@ -351,11 +372,12 @@ class Quotation extends ActiveRecord
         return $data;
     }
 
-    public static function findNo($id){
+    public static function findNo($id)
+    {
         $quotation = Quotation::find()->where(['id' => $id])->one();
-        if($quotation){
+        if ($quotation) {
             return $quotation->quotation_no;
-        }else{
+        } else {
             return '';
         }
     }

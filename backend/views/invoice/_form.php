@@ -27,12 +27,52 @@ $getJobItemsUrl = Url::to(['get-job-items']);
 $getCustomerUrl = Url::to(['get-customer']);
 $getJobUrl = Url::to(['get-job']);
 
-$unitsData = json_encode(ArrayHelper::map(Unit::find()->where(['status' => 1])->all(), 'id', 'name'));
+// เรียง units ตามตัวอักษร
+$units = Unit::find()->where(['status' => 1])->all();
+usort($units, function ($a, $b) {
+    return strcmp($a->name, $b->name);
+});
+
+$sortedUnits = ArrayHelper::map($units, 'id', 'name');
+$unitsData = json_encode($sortedUnits);
 
 $js = <<<JS
 // ตัวแปรเก็บข้อมูลสินค้า
 var productsData = [];
 var isProductsLoaded = false;
+
+// ตัวแปรเก็บข้อมูล units
+var unitsData = {$unitsData};
+
+// ฟังก์ชันสร้าง unit options (เรียงตามตัวอักษร)
+function createUnitOptions(selectedUnit) {
+    console.log('=== createUnitOptions called ===');
+    console.log('selectedUnit:', selectedUnit);
+    console.log('unitsData:', unitsData);
+    
+    var options = '<option value="">เลือกหน่วย</option>';
+    
+    // แปลง object เป็น array และเรียงตามชื่อ
+    var unitsArray = Object.keys(unitsData).map(function(id) {
+        return { id: id, name: unitsData[id] };
+    });
+    
+    // เรียงตามตัวอักษร
+    unitsArray.sort(function(a, b) {
+        return a.name.localeCompare(b.name);
+    });
+    
+    console.log('Sorted units:', unitsArray);
+    
+    // สร้าง options
+    unitsArray.forEach(function(unit) {
+        var selected = (unit.name === selectedUnit || unit.id == selectedUnit) ? 'selected' : '';
+        options += '<option value="' + unit.id + '" ' + selected + '>' + unit.name + '</option>';
+    });
+    
+    console.log('Generated options HTML length:', options.length);
+    return options;
+}
 
 // ฟังก์ชันโหลดข้อมูลสินค้า
 function loadProductsData() {
@@ -109,8 +149,8 @@ function selectProduct(input, product) {
     var row = input.closest('tr');
     
     // อัพเดตค่า
-    var description = product.description || product.item_description || product.name || '';
-    input.val(description);
+    var code = product.code || product.item_code || '';
+    input.val(code);
     
     // อัพเดต product_id
     var productId = product.id || product.product_id || '';
@@ -225,12 +265,37 @@ function addItemRow(itemData = null) {
 
     // ถ้าพบแถวที่ว่าง ให้ใส่ข้อมูลลงในแถวที่ว่างนั้น
     if (emptyDescriptionRow.length > 0) {
+        var productId = itemData.product_id || '';
         var description = itemData.item_description || '';
+        
+        // ถ้ามี product_id ให้ค้นหารหัสสินค้าจาก productsData
+        if (productId && productsData.length > 0) {
+            var product = productsData.find(function(p) {
+                return p.id == productId || p.product_id == productId;
+            });
+            if (product) {
+                description = product.code || product.item_code || description;
+            }
+        }
+        
         var quantity = itemData.quantity || '1.00';
         var unit = itemData.unit || '';
+        var unitId = itemData.unit_id || '';
         var unitPrice = itemData.unit_price || '0.00';
         var amount = itemData.amount || '0.00';
-        var productId = itemData.product_id || '';
+        
+        // ถ้าไม่มี unit_id แต่มี unit ให้ค้นหา unit_id จาก unitsData
+        if (!unitId && unit && unitsData) {
+            for (var id in unitsData) {
+                if (unitsData[id].trim() === unit.trim()) {
+                    unitId = id;
+                    console.log('Found unit_id from unitsData:', unitId, 'for unit:', unit);
+                    break;
+                }
+            }
+        }
+        
+        console.log('Unit data:', { unit: unit, unitId: unitId, itemData: itemData });
 
         // ใส่ข้อมูลลงในแถวที่ว่าง
         emptyDescriptionRow.find('.product-id-input').val(productId);
@@ -239,14 +304,35 @@ function addItemRow(itemData = null) {
         emptyDescriptionRow.find('.unit-price-input').val(parseFloat(unitPrice).toFixed(2));
         emptyDescriptionRow.find('.amount-input').val(amount);
         
-        // ตั้งค่า unit dropdown
-        if (unit) {
-            emptyDescriptionRow.find('select[name*="[unit_id]"] option').each(function() {
-                if ($(this).text() === unit || $(this).val() === unit) {
-                    $(this).prop('selected', true);
-                }
-            });
-        }
+        // ตั้งค่า unit dropdown - ใช้ unit_id ถ้ามี ถ้าไม่มีให้ค้นหาจากชื่อ
+        var unitSelect = emptyDescriptionRow.find('select[name*="[unit_id]"]');
+        
+        alert('Re-populating dropdown! unitId: ' + unitId + ', unit: ' + unit);
+        
+        // Clear และสร้าง options ใหม่เพื่อให้เรียงถูกต้อง
+        unitSelect.empty();
+        unitSelect.append('<option value="">เลือกหน่วย</option>');
+        
+        // สร้าง options จาก unitsData (ที่เรียงแล้ว)
+        var unitsArray = Object.keys(unitsData).map(function(id) {
+            return { id: id, name: unitsData[id] };
+        });
+        
+        // เรียงตามตัวอักษร
+        unitsArray.sort(function(a, b) {
+            return a.name.localeCompare(b.name);
+        });
+        
+        // เพิ่ม options และ select ตัวที่ถูกต้อง
+        unitsArray.forEach(function(unit) {
+            var selected = '';
+            if (unitId && unit.id == unitId) {
+                selected = 'selected';
+            } else if (!unitId && unit.name === unit.trim()) {
+                selected = 'selected';
+            }
+            unitSelect.append('<option value="' + unit.id + '" ' + selected + '>' + unit.name + '</option>');
+        });
 
         // คำนวณ amount ใหม่
         calculateItemAmount(emptyDescriptionRow);
@@ -265,12 +351,24 @@ function addItemRow(itemData = null) {
     // คำนวณ rowIndex หลังจากลบแถวล่าสุด
     var rowIndex = $('#items-table tbody tr').length;
 
+    var productId = itemData ? itemData.product_id || '' : '';
     var description = itemData ? itemData.item_description || '' : '';
+    
+    // ถ้ามี product_id ให้ค้นหารหัสสินค้าจาก productsData
+    if (productId && productsData.length > 0) {
+        var product = productsData.find(function(p) {
+            return p.id == productId || p.product_id == productId;
+        });
+        if (product) {
+            description = product.code || product.item_code || description;
+        }
+    }
+    
     var quantity = itemData ? itemData.quantity || '1.00' : '1.00';
     var unit = itemData ? itemData.unit || '' : '';
+    var unitId = itemData ? itemData.unit_id || '' : '';
     var unitPrice = itemData ? itemData.unit_price || '0.00' : '0.00';
     var amount = itemData ? itemData.amount || '0.00' : '0.00';
-    var productId = itemData ? itemData.product_id || '' : '';
 
     var newRowHtml = `
     <tr>
@@ -285,7 +383,7 @@ function addItemRow(itemData = null) {
         </td>
         <td>
             <select name="InvoiceItem[` + rowIndex + `][unit_id]" class="form-control form-control-sm">
-                ` + createUnitOptions(unit) + `
+                ` + createUnitOptions(unitId || unit) + `
             </select>
         </td>
         <td>
@@ -382,6 +480,24 @@ function loadJobItems(jobId) {
     }
 }
 
+// ฟังก์ชันทำความสะอาดที่อยู่
+function cleanAddress(address) {
+    if (!address) return '';
+    
+    // ลบคำที่ตามด้วย - หรือช่องว่างซ้ำๆ
+    var cleaned = address
+        .replace(/เลขที่\s*-\s*/g, '')
+        .replace(/ซอย\s*-\s*/g, '')
+        .replace(/ถนน\s*-\s*/g, '')
+        .replace(/ตำบล\/แขวง\s*-\s*/g, '')
+        .replace(/อําเภอ\/เขต\s*-\s*/g, '')
+        .replace(/จังหวัด\s*-\s*/g, '')
+        .replace(/\s+/g, ' ')  // ลบช่องว่างซ้ำๆ
+        .trim();  // ลบช่องว่างหน้าหลัง
+    
+    return cleaned;
+}
+
 // Load customer data
 function loadCustomerData(customerCode) {
     if (customerCode) {
@@ -392,7 +508,7 @@ function loadCustomerData(customerCode) {
             success: function(response) {
                 if (response.success) {
                     $('#invoice-customer_name').val(response.data.customer_name);
-                    $('#invoice-customer_address').val(response.data.customer_address);
+                    $('#invoice-customer_address').val(cleanAddress(response.data.customer_address));
                     $('#invoice-customer_tax_id').val(response.data.customer_tax_id);
                     $('#invoice-credit_terms').val(response.data.credit_terms);
                 }
@@ -558,7 +674,7 @@ $(document).on('change', '#invoice-job-id', function() {
                 if (data != null) {
                     $('#invoice-customer-id').val(data[0].customer_id);
                     $('#invoice-customer-name').val(data[0].customer_name);
-                    $('#invoice-customer-address').val(data[0].customer_address);
+                    $('#invoice-customer-address').val(cleanAddress(data[0].customer_address));
                     $('#invoice-customer-tax-id').val(data[0].customer_tax_id);
                     $('#invoice-due-date').val(data[0].invoice_due_date);
                 }
@@ -586,7 +702,6 @@ JS;
 
 // ใช้งาน
 $this->registerJs($js);
-
 
 $typeLabels = Invoice::getTypeOptions();
 $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$model->invoice_type] : 'เอกสาร';
@@ -804,7 +919,13 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                     <?= Html::hiddenInput("InvoiceItem[{$index}][product_id]", $item->product_id, [
                                         'class' => 'product-id-input'
                                     ]) ?>
-                                    <?= Html::textInput("InvoiceItem[{$index}][item_description]", $item->item_description, [
+                                    <?php
+                                    // ถ้ามี product_id ให้ดึงรหัสสินค้ามาแสดง ถ้าไม่มีให้แสดง item_description เดิม
+                                    $displayValue = $item->product_id
+                                        ? \backend\models\Product::findCode($item->product_id)
+                                        : $item->item_description;
+                                    ?>
+                                    <?= Html::textInput("InvoiceItem[{$index}][item_description]", $displayValue, [
                                         'class' => 'form-control form-control-sm item-description-input',
                                         'placeholder' => 'รายละเอียดสินค้า/บริการ',
                                         'autocomplete' => 'off'
@@ -823,7 +944,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                     <?= Html::dropDownList(
                                         "InvoiceItem[{$index}][unit_id]",
                                         $item->unit_id,
-                                        ArrayHelper::map(Unit::find()->where(['status' => 1])->orderBy('name')->all(), 'id', 'name'),
+                                        $sortedUnits,
                                         [
                                             'prompt' => 'เลือกหน่วย',
                                             'class' => 'form-control form-control-sm text-center'
