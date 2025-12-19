@@ -146,18 +146,18 @@ use yii\helpers\Html; ?>
     .receipt-company-name-thai {
         font-size: 60px;
         font-weight: 800;
-        color: #0066CC;
-        text-shadow: 0 1px 2px rgba(0, 102, 204, 0.1);
+        color: #000;
+        text-shadow: none;
         text-decoration: underline;
         text-decoration-thickness: 2px;
-        text-decoration-color: #0066CC;
+        text-decoration-color: #000;
         text-underline-offset: 6px;
     }
 
     .receipt-company-name-eng {
         font-size: 45px;
         font-weight: 800;
-        color: #0066CC;
+        color: #000;
         margin-bottom: 1px;
         margin-top: -15px;
     }
@@ -195,29 +195,34 @@ use yii\helpers\Html; ?>
     /* Customer and Details Table */
     .receipt-details-table {
         width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
+        border-collapse: collapse;
         margin-bottom: 2px;
         font-size: 13px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        border: 1.5px solid #333;
-        border-radius: 8px;
-        overflow: hidden;
+        border: 1px solid #000;
     }
 
     .receipt-details-table td {
-        border-right: 1.5px solid #333;
-        border-bottom: 1.5px solid #333;
+        border-top: 1px solid #000;
+        border-bottom: 1px solid #000;
+        border-left: none;
+        border-right: none;
         padding: 3px 5px;
         vertical-align: middle;
     }
 
-    .receipt-details-table td:last-child {
-        border-right: none;
+    /* Add vertical separator between data groups */
+    /* For rows 1-2: columns 3 and 5 are label columns */
+    .receipt-details-table tr:nth-child(1) td:nth-child(3),
+    .receipt-details-table tr:nth-child(1) td:nth-child(5),
+    .receipt-details-table tr:nth-child(2) td:nth-child(3),
+    .receipt-details-table tr:nth-child(2) td:nth-child(5) {
+        border-left: 1px solid #000;
     }
 
-    .receipt-details-table tr:last-child td {
-        border-bottom: none;
+    /* For row 3: columns 2 and 4 are label columns (because column 1 is rowspan) */
+    .receipt-details-table tr:nth-child(3) td:nth-child(2),
+    .receipt-details-table tr:nth-child(3) td:nth-child(4) {
+        border-left: 1px solid #000;
     }
 
     .receipt-label-cell {
@@ -232,28 +237,32 @@ use yii\helpers\Html; ?>
     /* Items Table */
     .receipt-items-table {
         width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        border: 1.5px solid #333;
+        border-collapse: collapse;
         margin-bottom: 2px;
         font-size: 13px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-        overflow: hidden;
+        border: 1px solid #000;
     }
 
     .receipt-items-table th,
     .receipt-items-table td {
-        border-right: 1.5px solid #333;
+        border-left: 1px solid #000;
+        border-right: 1px solid #000;
+        border-top: none;
         border-bottom: none;
         padding: 4px 6px;
         text-align: center;
         vertical-align: middle;
     }
 
-    .receipt-items-table th:last-child,
-    .receipt-items-table td:last-child {
-        border-right: none;
+    /* Keep border for header row */
+    .receipt-items-table th {
+        border-top: 1px solid #000;
+        border-bottom: 1px solid #000;
+    }
+
+    /* Add bottom border to last row in tbody */
+    .receipt-items-table tbody tr:last-child td {
+        border-bottom: 1px solid #000;
     }
 
     .receipt-items-table th {
@@ -264,12 +273,11 @@ use yii\helpers\Html; ?>
         font-size: 11px;
         text-transform: uppercase;
         letter-spacing: 0.3px;
-        border-bottom: 1.5px solid #333;
     }
 
     .receipt-items-table td {
         height: 18px;
-        font-weight: 500;
+        font-weight: 800;
     }
 
     .receipt-items-table tfoot td {
@@ -297,28 +305,15 @@ use yii\helpers\Html; ?>
     /* Payment and Signature Section */
     .receipt-payment-signature-table {
         width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-        border: 1.5px solid #333;
+        border-collapse: collapse;
         font-size: 9px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-        overflow: hidden;
+        border: 1px solid #000;
     }
 
     .receipt-payment-signature-table td {
-        border-right: 1.5px solid #333;
-        border-bottom: 1.5px solid #333;
+        border: 1px solid #000;
         padding: 3px;
         vertical-align: top;
-    }
-
-    .receipt-payment-signature-table td:last-child {
-        border-right: none;
-    }
-
-    .receipt-payment-signature-table tr:last-child td {
-        border-bottom: none;
     }
 
     .receipt-checkbox {
@@ -461,9 +456,14 @@ use yii\helpers\Html; ?>
                 TAXID: <?= Html::encode($model->customer_tax_id ?: '') ?>
             </td>
             <td class="receipt-label-cell" style="border-right: none;">อ้างถึงเลขที่ใบแจ้งหนี้<br>RFQ.IV</td>
-            <td class="receipt-data-cell"></td>
+            <td class="receipt-data-cell"><?= Html::encode(\backend\models\Quotation::findNo($model->quotation_id) ?: '') ?></td>
             <td class="receipt-label-cell" style="border-right: none;">อ้างถึงวันที่ใบแจ้งหนี้<br>RFQ.DATE.IV</td>
-            <td class="receipt-data-cell"></td>
+            <td class="receipt-data-cell">
+                <?php
+                $quotation_date = \backend\models\Quotation::findDate($model->quotation_id);
+                echo $quotation_date ? date('d/m/Y', strtotime($quotation_date)) : '';
+                ?>
+            </td>
         </tr>
     </table>
 
@@ -486,7 +486,7 @@ use yii\helpers\Html; ?>
                 <?php foreach ($model_line as $index => $item): ?>
                     <tr>
                         <td><?= $index + 1 ?></td>
-                        <td class="receipt-text-left"><?= nl2br(Html::encode($item->product_id ? \backend\models\Product::findCode($item->product_id) : $item->item_description)) ?></td>
+                        <td class="receipt-text-left"><?= nl2br(Html::encode($item->product_id ? \backend\models\Product::findDescription($item->product_id) : $item->item_description)) ?></td>
                         <td><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
                         <td class="receipt-text-right"><?= number_format($item->unit_price, 2) ?></td>
                         <td class="receipt-text-right"><?= number_format($item->amount, 2) ?></td>
@@ -505,19 +505,19 @@ use yii\helpers\Html; ?>
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="3" rowspan="2" style="border-top: 1.5px solid #333; border-right: none; border-bottom: none; border-left: none;">
+                <td colspan="3" rowspan="2" style="border-top: 1px solid #000; border-right: none; border-bottom: none; border-left: none;">
                     <div class="receipt-footer-note">
                         <strong>ผิด ตก ยกเว็น E.&O.E.</strong><br>
                         <strong>หมายเหตุ</strong> ใบเสร็จรับเงินฉบับนี้จะสมบูรณ์ต่อเมื่อเก็บเงินตามเช็คได้เรียบร้อยแล้ว<br>
                         <strong>This receipt will be valued only when the cheque is cleared with the Bank</strong>
                     </div>
                 </td>
-                <td class="receipt-text-left" style="border: 1.5px solid #333; border-top: 1.5px solid #333;"><strong style="font-weight: 800;">รวมเงิน<br>TOTAL</strong></td>
-                <td class="receipt-text-right" style="border: 1.5px solid #333; border-top: 1.5px solid #333;"><strong style="font-weight: 800;"><?= number_format($model->subtotal, 2) ?></strong></td>
+                <td class="receipt-text-left" style="border: 1px solid #000; border-top: 1px solid #000;"><strong style="font-weight: 800;">รวมเงิน<br>TOTAL</strong></td>
+                <td class="receipt-text-right" style="border: 1px solid #000; border-top: 1px solid #000;"><strong style="font-weight: 800;"><?= number_format($model->subtotal, 2) ?></strong></td>
             </tr>
             <tr>
-                <td class="receipt-text-left" style="border: 1.5px solid #333; border-top: none;"><strong style="font-weight: 800;">ภาษีมูลค่าเพิ่ม<br>VAT 7%</strong></td>
-                <td class="receipt-text-right" style="border: 1.5px solid #333; border-top: none;"><strong style="font-weight: 800;"><?= number_format($model->vat_amount, 2) ?></strong></td>
+                <td class="receipt-text-left" style="border: 1px solid #000; border-top: none;"><strong style="font-weight: 800;">ภาษีมูลค่าเพิ่ม<br>VAT 7%</strong></td>
+                <td class="receipt-text-right" style="border: 1px solid #000; border-top: none;"><strong style="font-weight: 800;"><?= number_format($model->vat_amount, 2) ?></strong></td>
             </tr>
             <tr>
                 <td colspan="3" class="receipt-summary-highlight" style="border: none; padding: 6px;">
@@ -529,8 +529,8 @@ use yii\helpers\Html; ?>
                         <?= Html::encode($textThai) ?>
                     </strong>
                 </td>
-                <td class="receipt-text-left receipt-summary-highlight" style="border: 1.5px solid #333; border-top: none;"><strong style="font-weight: 800;">รวมเงินทั้งสิ้น<br>TOTAL AMOUNT</strong></td>
-                <td class="receipt-text-right receipt-summary-highlight" style="border: 1.5px solid #333; border-top: none;"><strong style="font-weight: 800;"><?= number_format($model->total_amount, 2) ?></strong></td>
+                <td class="receipt-text-left receipt-summary-highlight" style="border: 1px solid #000; border-top: none;"><strong style="font-weight: 800;">รวมเงินทั้งสิ้น<br>TOTAL AMOUNT</strong></td>
+                <td class="receipt-text-right receipt-summary-highlight" style="border: 1px solid #000; border-top: none;"><strong style="font-weight: 800;"><?= number_format($model->total_amount, 2) ?></strong></td>
             </tr>
         </tfoot>
     </table>

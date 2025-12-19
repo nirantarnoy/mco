@@ -381,4 +381,14 @@ class Quotation extends ActiveRecord
             return '';
         }
     }
+
+    public static function findDate($id)
+    {
+        $quotation = Quotation::find()->where(['id' => $id])->one();
+        if ($quotation) {
+            return $quotation->quotation_date;
+        } else {
+            return '';
+        }
+    }
 }

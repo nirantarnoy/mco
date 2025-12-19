@@ -305,13 +305,25 @@ class InvoiceController extends BaseController
             $item->invoice_id = $model->id;
             $item->sort_order = $sortOrder++;
 
+            // Get unit name from unit_id if not provided
+            $unitName = 'หน่วย'; // default value
+            if (!empty($itemData['unit_id'])) {
+                $unit = \backend\models\Unit::findOne($itemData['unit_id']);
+                if ($unit) {
+                    $unitName = $unit->name;
+                }
+            } elseif (isset($itemData['unit']) && !empty(trim($itemData['unit']))) {
+                $unitName = trim($itemData['unit']);
+            }
+
             // Clean and validate data
             $cleanData = [
                 'item_seq' => $sortOrder - 1,
                 'product_id' => isset($itemData['product_id']) ? trim($itemData['product_id']) : '',
                 'item_description' => isset($itemData['item_description']) ? trim($itemData['item_description']) : '',
                 'quantity' => !empty($itemData['quantity']) ? (float)$itemData['quantity'] : 1.000,
-                'unit_id' => isset($itemData['unit_id']) ? trim($itemData['unit_id']) : 0,
+                'unit_id' => isset($itemData['unit_id']) && !empty($itemData['unit_id']) ? (int)$itemData['unit_id'] : 0,
+                'unit' => $unitName,
                 'unit_price' => !empty($itemData['unit_price']) ? (float)$itemData['unit_price'] : 0.00,
             ];
 
