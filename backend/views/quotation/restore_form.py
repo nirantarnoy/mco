@@ -1,4 +1,8 @@
-<?php
+
+import os
+
+# Part 1: Header to line 178
+part1 = r"""<?php
 
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
@@ -176,7 +180,10 @@ $this->registerCss($autocompleteCSS);
 // Register Font Awesome
 $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css');
 // JavaScript สำหรับการคำนวณ
+"""
 
+# Part 2: From line 217 to 821 (Skipping the redundant $calculationJs)
+part2 = r"""
 // URL สำหรับ AJAX
 $ajax_url = Url::to(['get-product-info']);
 // JavaScript สำหรับ autocomplete
@@ -255,7 +262,7 @@ function selectProduct(input, product) {
     $('.product-id-hidden[data-index="' + index + '"]').val(product.id);
     
     // อัพเดตราคา
-    $('.price-input[data-index="' + index + '"]').val(toFixedNoRound(parseFloat(product.price)));
+    $('.price-input[data-index="' + index + '"]').val(parseFloat(product.price).toFixed(2));
     
     // ซ่อน dropdown
     $('.autocomplete-dropdown[data-index="' + index + '"]').hide();
@@ -875,3 +882,9 @@ JS;
 
 $this->registerJs($dynamicFormJs, static::POS_END);
 ?>
+"""
+
+full_content = part1 + part2
+
+with open(r'e:\xampp\htdocs\mco\backend\views\quotation\_form.php', 'w', encoding='utf-8') as f:
+    f.write(full_content)
