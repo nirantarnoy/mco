@@ -461,7 +461,7 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
                     ?>
                     <tr class="<?= ($itemNo % 2 == 0) ? 'striped-row' : '' ?>">
                         <td class="text-detail"><?= $itemNo++ ?></td>
-                        <td class="description-cell text-detail"><?= Html::encode($line->product_id ? \backend\models\Product::findCode($line->product_id) : $line->product_name) ?></td>
+                        <td class="description-cell text-detail"><?= Html::encode($line->product_name) ?></td>
                         <td class="text-detail"><?= number_format($line->qty, 1) ?></td>
                         <td class="text-detail"><?= Html::encode(\backend\models\Unit::findName($line->product->unit_id) ?? '') ?></td>
                         <td class="number-cell text-detail"><?= $is_labour_price == 0 ? number_format($line->line_price, 2) : '-' ?></td>

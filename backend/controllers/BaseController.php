@@ -16,7 +16,8 @@ class BaseController extends Controller
 
         if (!$this->isSessionValid()) {
             Yii::$app->user->logout();
-            return $this->redirect(['site/login']);
+            Yii::$app->response->redirect(['site/login'])->send();
+            exit;
         }
 
         return parent::beforeAction($action);
