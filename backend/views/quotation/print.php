@@ -461,7 +461,22 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
                     ?>
                     <tr class="<?= ($itemNo % 2 == 0) ? 'striped-row' : '' ?>">
                         <td class="text-detail"><?= $itemNo++ ?></td>
-                        <td class="description-cell text-detail"><?= Html::encode($line->product_name) ?></td>
+                        <?php
+                            $product_name = $line->product_name;
+                            $product_code = $line->product ? $line->product->code : '';
+                            if ($product_code && strpos($product_name, $product_code) === 0) {
+                                $product_name = trim(substr($product_name, strlen($product_code)));
+                                // Remove leading parenthesis if present (from old format "Code (Name)")
+                                if (strpos($product_name, '(') === 0) {
+                                    $product_name = trim(substr($product_name, 1));
+                                    // Remove trailing parenthesis if it matches the old format
+                                    if (substr($product_name, -1) === ')') {
+                                        $product_name = substr($product_name, 0, -1);
+                                    }
+                                }
+                            }
+                        ?>
+                        <td class="description-cell text-detail"><?= Html::encode($product_name) ?></td>
                         <td class="text-detail"><?= number_format($line->qty, 1) ?></td>
                         <td class="text-detail"><?= Html::encode(\backend\models\Unit::findName($line->product->unit_id) ?? '') ?></td>
                         <td class="number-cell text-detail"><?= $is_labour_price == 0 ? number_format($line->line_price, 2) : '-' ?></td>
