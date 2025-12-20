@@ -741,57 +741,11 @@ $this->registerJs($js);
 
             <div class="form-section">
                 <h4 class="section-title">ข้อมูลเอกสาร</h4>
-                <div class="row">
-                    <div class="col-md-3">
-                        <?= $form->field($model, 'document_no')->textInput(['maxlength' => true, 'readonly' => !$model->isNewRecord]) ?>
-                    </div>
-                    <div class="col-md-3">
-                        <?= $form->field($model, 'document_date')->widget(DatePicker::class, [
-                            'options' => ['placeholder' => 'เลือกวันที่...'],
-                            'pluginOptions' => [
-                                'autoclose' => true,
-                                'format' => 'yyyy-mm-dd',
-                                'todayHighlight' => true,
-                            ]
-                        ]) ?>
-                    </div>
-                    <div class="col-md-3">
-                        <?= $form->field($model, 'customer_id')->widget(Select2::class, [
-                            'data' => ArrayHelper::map(Customer::find()->orderBy('code')->all(), 'id', function ($model) {
-                                return $model->code . ' - ' . $model->name;
-                            }),
-                            'options' => [
-                                'placeholder' => 'เลือกลูกค้า...',
-                                'id' => 'credit-note-customer_id'
-                            ],
-                            'pluginOptions' => [
-                                'allowClear' => true
-                            ],
-                        ]) ?>
-                    </div>
-                    <div class="col-md-3">
-                        <?= $form->field($model, 'vendor_id')->widget(Select2::class, [
-                            'data' => ArrayHelper::map(\backend\models\Vendor::find()->orderBy('code')->all(), 'id', function ($model) {
-                                return $model->code . ' - ' . $model->name;
-                            }),
-                            'options' => [
-                                'placeholder' => 'เลือกผู้ขาย...',
-                                'id' => 'credit-note-vendor_id'
-                            ],
-                            'pluginOptions' => [
-                                'allowClear' => true
-                            ],
-                        ]) ?>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-section">
                 <h4 class="section-title">ข้อมูลใบกำกับภาษีเดิม</h4>
                 <div class="row">
                     <div class="col-md-3">
                         <?= $form->field($model, 'invoice_id')->widget(Select2::class, [
-                            'data' => ArrayHelper::map(Invoice::find()->orderBy('invoice_number DESC')->all(), 'id', 'invoice_number'),
+                            'data' => ArrayHelper::map(Invoice::find()->where(\Yii::$app->session->get('company_id') == 1 ? ['in', 'company_id', [1, 2]] : ['company_id' => \Yii::$app->session->get('company_id')])->orderBy('invoice_number DESC')->all(), 'id', 'invoice_number'),
                             'options' => [
                                 'placeholder' => 'เลือกใบแจ้งหนี้...',
                                 'id' => 'credit-note-invoice_id'

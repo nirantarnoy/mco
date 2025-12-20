@@ -723,6 +723,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     <?php endif; ?>
+
     <?php $form = ActiveForm::begin([
         'id' => 'invoice-form',
         'options' => ['class' => 'form-horizontal'],
@@ -752,21 +753,8 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                         ]
                     ]) ?>
 
-                    <!--                        --><?php //= $form->field($model, 'job_id')->widget(Select2::class, [
-                                                    //                            'data' => ArrayHelper::map(\backend\models\Job::find()->all(), 'id', 'job_no'),
-                                                    //                            'options' => [
-                                                    //                                'placeholder' => '...เลือกงาน...',
-                                                    //                                'id' => 'invoice-job-id',
-                                                    //                            ],
-                                                    //                            'pluginOptions' => [
-                                                    //                                'allowClear' => true,
-                                                    //                                'escapeMarkup' => new \yii\web\JsExpression('function (markup) { return markup; }'),
-                                                    //                            ],
-                                                    //                        ]) 
-                                                    ?>
-
                     <?= $form->field($model, 'quotation_id')->widget(Select2::class, [
-                        'data' => ArrayHelper::map(\backend\models\Quotation::find()->all(), 'id', 'quotation_no'),
+                        'data' => ArrayHelper::map(\backend\models\Quotation::find()->where(\Yii::$app->session->get('company_id') == 1 ? ['in', 'company_id', [1, 2]] : ['company_id' => \Yii::$app->session->get('company_id')])->all(), 'id', 'quotation_no'),
                         'options' => [
                             'placeholder' => '...เลือกใบเสนอราคา...',
                             'id' => 'invoice-job-id',
@@ -795,22 +783,6 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                         'placeholder' => 'เลขประจำตัวผู้เสียภาษี',
                         'id' => 'invoice-customer-tax-id',
                     ]) ?>
-
-                    <!--                        --><?php //= $form->field($model, 'po_number')->textInput([
-                                                    //                            'maxlength' => true,
-                                                    //                            'placeholder' => 'เลขที่ใบสั่งซื้อ'
-                                                    //                        ]) 
-                                                    ?>
-                    <!---->
-                    <!--                        --><?php //= $form->field($model, 'po_date')->widget(DatePicker::class, [
-                                                    //                            'options' => ['placeholder' => 'วันที่ใบสั่งซื้อ'],
-                                                    //                            'pluginOptions' => [
-                                                    //                                'autoclose' => true,
-                                                    //                                'format' => 'yyyy-mm-dd',
-                                                    //                                'todayHighlight' => true,
-                                                    //                            ]
-                                                    //                        ]) 
-                                                    ?>
 
                     <?= $form->field($model, 'payment_term_id')->widget(
                         Select2::class,
@@ -855,8 +827,6 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                     <?php endif; ?>
                 </div>
                 <div class="col-md-4" style="padding-top: 20px;">
-                    <?php //if ($model->invoice_type == Invoice::TYPE_TAX_INVOICE): 
-                    ?>
                     <?= $form->field($model, 'po_number')->textInput(['maxlength' => true, 'placeholder' => 'เลขที่ใบสั่งซื้อ']) ?>
 
                     <?= $form->field($model, 'po_date')->widget(DatePicker::class, [
@@ -866,8 +836,6 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                             'format' => 'yyyy-mm-dd',
                         ]
                     ]) ?>
-                    <?php //endif; 
-                    ?>
                 </div>
             </div>
             <div class="row">

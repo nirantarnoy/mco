@@ -476,6 +476,7 @@ class PettyCashVoucherController extends BaseController
 //                ->where(['status' => 1]) // approved
 //                ->all();
             $jobs = \backend\models\Job::find()// approved
+                ->where(\Yii::$app->session->get('company_id') == 1 ? ['in', 'company_id', [1, 2]] : ['company_id' => \Yii::$app->session->get('company_id')])
                 ->all();
 
             $result = [];
@@ -495,7 +496,10 @@ class PettyCashVoucherController extends BaseController
         // ถ้าขอข้อมูลสินค้าเฉพาะ ID (สำหรับการเลือกสินค้า)
         $id = $request->get('id');
         if ($id) {
-            $job = \backend\models\Job::findOne($id);
+            $job = \backend\models\Job::find()
+                ->where(['id' => $id])
+                ->andWhere(\Yii::$app->session->get('company_id') == 1 ? ['in', 'company_id', [1, 2]] : ['company_id' => \Yii::$app->session->get('company_id')])
+                ->one();
             if ($job) {
                 return [
                     'id' => $job->id,

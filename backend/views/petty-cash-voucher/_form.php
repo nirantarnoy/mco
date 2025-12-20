@@ -293,30 +293,6 @@ $(document).ready(function() {
                         'options' => ['placeholder' => 'เลือกวันที่'],
                         'pluginOptions' => [
                             'autoclose' => true,
-                            'format' => 'yyyy-mm-dd',
-                            'todayHighlight' => true,
-                        ]
-                    ]) ?>
-
-                    <?= $form->field($model, 'pay_for_emp_id')->widget(\kartik\select2\Select2::className(), [
-                        'data' => \yii\helpers\ArrayHelper::map(\backend\models\Employee::find()->all(), 'id', function ($data) {
-                            return $data->fname . ' ' . $data->lname;
-                        }),
-                        'options' => [
-                            'placeholder' => 'เลือกพนักงาน',
-                        ],
-                        'pluginOptions' => [
-                            'allowClear' => true,
-                        ],
-                    ]) ?>
-                    <?= $form->field($model, 'vendor_id')->widget(\kartik\select2\Select2::className(), [
-                        'data' => \yii\helpers\ArrayHelper::map(\backend\models\Vendor::find()->all(), 'id', function ($data) {
-                            return $data->code . ' ' . $data->name;
-                        }),
-                        'options' => [
-                            'placeholder' => 'เลือกผู้จำหน่าย',
-                        ],
-                        'pluginOptions' => [
                             'allowClear' => true,
                         ],
                     ]) ?>

@@ -180,6 +180,7 @@ class PaymentReceiptController extends BaseController
         $invoice = BillingInvoice::find()
             ->with(['billingInvoiceItems', 'customer'])
             ->where(['id' => $id])
+            ->andWhere(\Yii::$app->session->get('company_id') == 1 ? ['in', 'company_id', [1, 2]] : ['company_id' => \Yii::$app->session->get('company_id')])
             ->one();
 
         if (!$invoice) {

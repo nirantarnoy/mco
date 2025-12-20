@@ -147,24 +147,6 @@ $(document).ready(function() {
                         'options' => ['placeholder' => 'เลือกวันที่เบิก'],
                         'pluginOptions' => [
                             'autoclose' => true,
-                            'format' => 'yyyy-mm-dd',
-                            'todayHighlight' => true,
-                        ]
-                    ]) ?>
-
-                    <?= $form->field($model, 'employee_id')->widget(\kartik\select2\Select2::class, [
-                        'data' => \yii\helpers\ArrayHelper::map(
-                            \backend\models\Employee::find()->all(),
-                            'id',
-                            function ($data) {
-                                return $data->fname . ' ' . $data->lname;
-                            }
-                        ),
-                        'options' => [
-                            'placeholder' => 'เลือกพนักงาน',
-                        ],
-                        'pluginOptions' => [
-                            'allowClear' => true,
                         ],
                     ]) ?>
                 </div>

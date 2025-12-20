@@ -533,10 +533,16 @@ class DebitNoteController extends BaseController
             return ['success' => false, 'message' => 'Customer ID required'];
         }
 
-        $invoices = Invoice::find()
-            ->where(['customer_id' => $customer_id])
-            ->orderBy('invoice_number DESC')
-            ->all();
+        $query = Invoice::find()
+            ->where(['customer_id' => $customer_id]);
+
+        if (\Yii::$app->session->get('company_id') == 1) {
+            $query->andWhere(['in', 'company_id', [1, 2]]);
+        } else {
+            $query->andWhere(['company_id' => \Yii::$app->session->get('company_id')]);
+        }
+
+        $invoices = $query->orderBy('invoice_number DESC')->all();
 
         $invoiceList = [];
         foreach ($invoices as $invoice) {
@@ -559,10 +565,16 @@ class DebitNoteController extends BaseController
             return ['success' => false, 'message' => 'Vendor ID required'];
         }
 
-        $purch = \backend\models\Purch::find()
-            ->where(['vendor_id' => $vendor_id])
-            ->orderBy('purch_no DESC')
-            ->all();
+        $query = \backend\models\Purch::find()
+            ->where(['vendor_id' => $vendor_id]);
+
+        if (\Yii::$app->session->get('company_id') == 1) {
+            $query->andWhere(['in', 'company_id', [1, 2]]);
+        } else {
+            $query->andWhere(['company_id' => \Yii::$app->session->get('company_id')]);
+        }
+
+        $purch = $query->orderBy('purch_no DESC')->all();
 
         $invoiceList = [];
         foreach ($purch as $invoice) {
