@@ -1365,7 +1365,6 @@ class PurchController extends BaseController
 
     public function actionDeleteDocFile()
     {
-        echo "OK";
         $id = \Yii::$app->request->post('id');
         $doc_delete_list = trim(\Yii::$app->request->post('doc_delete_list'));
         if ($id) {
@@ -1378,8 +1377,7 @@ class PurchController extends BaseController
                 }
             }
         }
-      //  return $this->redirect(['update', 'id' => $id]);
-        echo "OK";
+        return $this->redirect(['update', 'id' => $id]);
     }
 
     public function actionAddDocFileNew()
