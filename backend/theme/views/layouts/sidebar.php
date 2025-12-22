@@ -292,6 +292,14 @@
                             <?php endif; ?>
                             <?php if (\Yii::$app->user->can('purch/index')): ?>
                                 <li class="nav-item">
+                                    <a href="index.php?r=purch/report-vendor-summary" class="nav-link report-vendor-summary">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>สรุปยอดสั่งซื้อ Vendor</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                            <?php if (\Yii::$app->user->can('purch/index')): ?>
+                                <li class="nav-item">
                                     <a href="index.php?r=purch-payment" class="nav-link purch-payment">
                                         <i class="far fa-circlez nav-icon"></i>
                                         <p>โอนเงินคำสั่งซื้อ</p>
