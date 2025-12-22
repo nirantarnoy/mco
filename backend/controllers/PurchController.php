@@ -863,18 +863,18 @@ class PurchController extends BaseController
 
             $loop_index = 0;
             // Process each item
-            foreach ($validItems as $productId => $qty) {
+            foreach ($validItems as $lineId => $qty) {
                 $line_warehouse_id = $warehouseId[$loop_index];
                 $loop_index++;
 
-                // Get product and PO line info
-                $poLine = \backend\models\PurchLine::find()
-                    ->where(['purch_id' => $purchModel->id, 'product_id' => $productId])
-                    ->one();
+                // Get PO line info by ID
+                $poLine = \backend\models\PurchLine::findOne($lineId);
 
-                if (!$poLine) {
-                    throw new \Exception("ไม่พบสินค้า ID: $productId ในใบสั่งซื้อ");
+                if (!$poLine || $poLine->purch_id != $purchModel->id) {
+                    throw new \Exception("ไม่พบรายการสินค้าในใบสั่งซื้อ (Line ID: $lineId)");
                 }
+
+                $productId = $poLine->product_id;
 
                 // Create Journal Transaction Line
                 $journalTransLine = new \backend\models\JournalTransLine();
@@ -883,6 +883,10 @@ class PurchController extends BaseController
                 $journalTransLine->warehouse_id = $line_warehouse_id;
                 $journalTransLine->qty = $qty;
                 $journalTransLine->remark = "รับสินค้าจาก PO: " . $purchModel->purch_no;
+                // Save unit_id if available in PO line
+                if(isset($poLine->unit_id)){
+                     $journalTransLine->unit_id = $poLine->unit_id;
+                }
 
                 if (!$journalTransLine->save()) {
                     throw new \Exception('ไม่สามารถสร้าง Journal Transaction Line ได้: ' . implode(', ', $journalTransLine->getFirstErrors()));

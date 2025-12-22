@@ -180,14 +180,14 @@ $('#toggle-checklist').click(function() {
                                 <strong class="text-primary"><?= number_format($line['remaining_qty'], 2) ?></strong>
                             </td>
                             <td>
-                                <?= Html::textInput("receive[{$line['product_id']}]", '', [
+                                <?= Html::textInput("receive[{$line['id']}]", '', [
                                     'class' => 'form-control receive-qty',
                                     'type' => 'number',
                                     'step' => '0.01',
                                     'min' => '0',
                                     'max' => $line['remaining_qty'],
                                     'placeholder' => '0',
-                                    'id' => 'receive-' . $line['product_id'],
+                                    'id' => 'receive-' . $line['id'],
                                     'required' => true,
                                 ]) ?>
                             </td>
@@ -204,7 +204,7 @@ $('#toggle-checklist').click(function() {
                             </td>
                             <td class="text-center">
                                 <button type="button" class="btn btn-sm btn-outline-primary receive-all"
-                                        data-product-id="<?= $line['product_id'] ?>"
+                                        data-product-id="<?= $line['id'] ?>"
                                         data-max-qty="<?= $line['remaining_qty'] ?>"
                                         title="รับทั้งหมด">
                                     <i class="fas fa-check-circle"></i>
