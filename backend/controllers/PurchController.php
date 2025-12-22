@@ -1501,6 +1501,7 @@ class PurchController extends BaseController
         $dataProvider = new \yii\data\ActiveDataProvider([
             'query' => $query,
             'pagination' => false,
+            'key' => 'vendor_id',
         ]);
 
         return $this->render('report_vendor_summary', [
