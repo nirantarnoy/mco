@@ -260,14 +260,15 @@ use yii\helpers\Html; ?>
         border-bottom: 1px solid #000;
     }
 
+
     /* Add bottom border to last row in tbody */
     .receipt-items-table tbody tr:last-child td {
         border-bottom: 1px solid #000;
     }
 
     .receipt-items-table th {
-        background: linear-gradient(135deg, #0066CC 0%, #0052a3 100%);
-        color: white;
+        background: white;
+        color: black;
         font-weight: 800;
         height: 22px;
         font-size: 11px;
@@ -485,7 +486,7 @@ use yii\helpers\Html; ?>
             <?php if (!empty($model_line)): ?>
                 <?php foreach ($model_line as $index => $item): ?>
                     <tr>
-                        <td><?= $index + 1 ?></td>
+                        <td style="text-align: center;"><b><?= $index + 1 ?></b></td>
                         <td class="receipt-text-left"><?= nl2br(Html::encode($item->product_id ? \backend\models\Product::findDescription($item->product_id) : $item->item_description)) ?></td>
                         <td><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
                         <td class="receipt-text-right"><?= number_format($item->unit_price, 2) ?></td>
