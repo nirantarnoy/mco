@@ -1480,7 +1480,7 @@ class PurchController extends BaseController
         $to_date = \Yii::$app->request->get('to_date');
         $vendor_id = \Yii::$app->request->get('vendor_id');
 
-        $query = \backend\models\Purch::find();
+        $query = \backend\models\Purch::find()->asArray();
         $query->select([
             'vendor_id',
             'COUNT(id) as po_count',

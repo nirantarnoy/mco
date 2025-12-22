@@ -19,6 +19,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card">
                 <div class="card-body">
                     <form method="get" action="<?= \yii\helpers\Url::to(['report-vendor-summary']) ?>">
+                        <input type="hidden" name="r" value="purch/report-vendor-summary">
                         <div class="row">
                             <div class="col-md-3">
                                 <label>จากวันที่</label>
@@ -81,7 +82,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'attribute' => 'vendor_id',
                         'label' => 'ผู้ขาย',
                         'value' => function ($model) {
-                            return \backend\models\Vendor::findName($model->vendor_id);
+                            return \backend\models\Vendor::findName($model['vendor_id']);
                         },
                     ],
                     [
@@ -90,9 +91,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         'contentOptions' => ['style' => 'text-align: right;'],
                         'headerOptions' => ['style' => 'text-align: right;'],
                         'value' => function ($model) {
-                            return number_format($model->po_count);
+                            return number_format($model['po_count']);
                         },
-                        'footer' => number_format(array_sum(array_map(function($model){ return $model->po_count; }, $dataProvider->getModels()))),
+                        'footer' => number_format(array_sum(array_map(function($model){ return $model['po_count']; }, $dataProvider->getModels()))),
                         'footerOptions' => ['style' => 'text-align: right; font-weight: bold;'],
                     ],
                     [
@@ -101,9 +102,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         'contentOptions' => ['style' => 'text-align: right;'],
                         'headerOptions' => ['style' => 'text-align: right;'],
                         'value' => function ($model) {
-                            return number_format((float)$model->total_amount, 2);
+                            return number_format((float)$model['total_amount'], 2);
                         },
-                        'footer' => number_format(array_sum(array_map(function($model){ return (float)$model->total_amount; }, $dataProvider->getModels())), 2),
+                        'footer' => number_format(array_sum(array_map(function($model){ return (float)$model['total_amount']; }, $dataProvider->getModels())), 2),
                         'footerOptions' => ['style' => 'text-align: right; font-weight: bold;'],
                     ],
                 ],
