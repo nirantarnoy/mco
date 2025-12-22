@@ -1478,6 +1478,7 @@ class PurchController extends BaseController
         
         $from_date = \Yii::$app->request->get('from_date');
         $to_date = \Yii::$app->request->get('to_date');
+        $vendor_id = \Yii::$app->request->get('vendor_id');
 
         $query = \backend\models\Purch::find();
         $query->select([
@@ -1488,6 +1489,10 @@ class PurchController extends BaseController
         
         if ($from_date && $to_date) {
             $query->andFilterWhere(['between', 'purch_date', $from_date, $to_date]);
+        }
+
+        if ($vendor_id) {
+            $query->andFilterWhere(['vendor_id' => $vendor_id]);
         }
         
         $query->groupBy(['vendor_id']);
@@ -1503,6 +1508,7 @@ class PurchController extends BaseController
             'dataProvider' => $dataProvider,
             'from_date' => $from_date,
             'to_date' => $to_date,
+            'vendor_id' => $vendor_id,
         ]);
     }
 

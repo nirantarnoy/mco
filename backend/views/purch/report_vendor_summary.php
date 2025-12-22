@@ -14,15 +14,13 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="purch-report-vendor-summary">
 
-    <h1><?= Html::encode($this->title) ?></h1>
-
     <div class="row">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-body">
                     <form method="get" action="<?= \yii\helpers\Url::to(['report-vendor-summary']) ?>">
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label>จากวันที่</label>
                                 <?= DatePicker::widget([
                                     'name' => 'from_date',
@@ -34,7 +32,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     ]
                                 ]); ?>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label>ถึงวันที่</label>
                                 <?= DatePicker::widget([
                                     'name' => 'to_date',
@@ -46,7 +44,19 @@ $this->params['breadcrumbs'][] = $this->title;
                                     ]
                                 ]); ?>
                             </div>
-                            <div class="col-md-4" style="padding-top: 30px;">
+                            <div class="col-md-3">
+                                <label>ผู้ขาย</label>
+                                <?= \kartik\select2\Select2::widget([
+                                    'name' => 'vendor_id',
+                                    'value' => $vendor_id,
+                                    'data' => \yii\helpers\ArrayHelper::map(\backend\models\Vendor::find()->all(), 'id', 'name'),
+                                    'options' => ['placeholder' => 'เลือกผู้ขาย...'],
+                                    'pluginOptions' => [
+                                        'allowClear' => true
+                                    ],
+                                ]); ?>
+                            </div>
+                            <div class="col-md-3" style="padding-top: 30px;">
                                 <button type="submit" class="btn btn-primary">ค้นหา</button>
                                 <a href="<?= \yii\helpers\Url::to(['report-vendor-summary']) ?>" class="btn btn-default">รีเซ็ต</a>
                             </div>
@@ -91,9 +101,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         'contentOptions' => ['style' => 'text-align: right;'],
                         'headerOptions' => ['style' => 'text-align: right;'],
                         'value' => function ($model) {
-                            return number_format($model->total_amount, 2);
+                            return number_format((float)$model->total_amount, 2);
                         },
-                        'footer' => number_format(array_sum(array_map(function($model){ return $model->total_amount; }, $dataProvider->getModels())), 2),
+                        'footer' => number_format(array_sum(array_map(function($model){ return (float)$model->total_amount; }, $dataProvider->getModels())), 2),
                         'footerOptions' => ['style' => 'text-align: right; font-weight: bold;'],
                     ],
                 ],
