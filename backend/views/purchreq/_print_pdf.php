@@ -110,9 +110,10 @@ $logoPath = Yii::getAlias('@webroot') . '/uploads/logo/mco_logo_2.png';
         margin-right: 3px;
         position: relative;
         top: 2px;
-    }
-    .checkbox-checked {
-        background-color: #000;
+        text-align: center;
+        line-height: 11px;
+        font-size: 10px;
+        font-weight: bold;
     }
     .signature-line {
         border-bottom: 1px solid #000;
@@ -169,10 +170,10 @@ $logoPath = Yii::getAlias('@webroot') . '/uploads/logo/mco_logo_2.png';
             <td width="50%">
                 <span class="form-label">เหตุผลในการสั่งซื้อ :</span><br>
                 <?php foreach ($reasons as $reason) : 
-                    $checked = $requestType == $reason->id ? 'checkbox-checked' : '';
+                    $isChecked = $requestType == $reason->id;
                 ?>
                     <div class="checkbox-item">
-                        <div class="checkbox-box <?= $checked ?>"></div>
+                        <div class="checkbox-box"><?= $isChecked ? '/' : '' ?></div>
                         <?= Html::encode($reason->name) ?>
                     </div>
                 <?php endforeach; ?>
@@ -183,10 +184,10 @@ $logoPath = Yii::getAlias('@webroot') . '/uploads/logo/mco_logo_2.png';
             <td width="50%">
                 <span class="form-label">ค่าใช้จ่ายในส่วนแผนก :</span><br>
                 <?php foreach ($departments as $department) : 
-                     $checked = $model->req_for_dep_id == $department->id ? 'checkbox-checked' : '';
+                     $isChecked = $model->req_for_dep_id == $department->id;
                 ?>
                     <div class="checkbox-item">
-                        <div class="checkbox-box <?= $checked ?>"></div>
+                        <div class="checkbox-box"><?= $isChecked ? '/' : '' ?></div>
                         <?= Html::encode($department->name) ?>
                     </div>
                 <?php endforeach; ?>
@@ -259,9 +260,9 @@ $logoPath = Yii::getAlias('@webroot') . '/uploads/logo/mco_logo_2.png';
                         $isNo = isCheckedPdf($model->id, $item->id, '0');
                         ?>
                         
-                        <div class="checkbox-box <?= $isYes ? 'checkbox-checked' : '' ?>"></div> ใช่
+                        <div class="checkbox-box"><?= $isYes ? '/' : '' ?></div> ใช่
                         &nbsp;&nbsp;
-                        <div class="checkbox-box <?= $isNo ? 'checkbox-checked' : '' ?>"></div> ไม่ใช่
+                        <div class="checkbox-box"><?= $isNo ? '/' : '' ?></div> ไม่ใช่
                     </div>
                 <?php endforeach; ?>
             </td>
