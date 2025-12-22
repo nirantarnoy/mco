@@ -488,7 +488,7 @@ use yii\helpers\Html; ?>
                     <tr>
                         <td style="text-align: center;"><b><?= $index + 1 ?></b></td>
                         <td class="receipt-text-left"><?= nl2br(Html::encode($item->product_id ? \backend\models\Product::findDescription($item->product_id) : $item->item_description)) ?></td>
-                        <td><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
+                        <td><?= number_format($item->quantity, 0) ?> <?= Html::encode(\backend\models\Unit::findName($item->unit_id)) ?></td>
                         <td class="receipt-text-right"><?= number_format($item->unit_price, 2) ?></td>
                         <td class="receipt-text-right"><?= number_format($item->amount, 2) ?></td>
                     </tr>
