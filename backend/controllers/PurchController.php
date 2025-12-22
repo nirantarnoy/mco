@@ -1471,4 +1471,39 @@ class PurchController extends BaseController
         }
     }
 
+    public function actionReportVendorSummary()
+    {
+        $searchModel = new \backend\models\PurchSearch();
+        $dataProvider = null;
+        
+        $from_date = \Yii::$app->request->get('from_date');
+        $to_date = \Yii::$app->request->get('to_date');
+
+        $query = \backend\models\Purch::find();
+        $query->select([
+            'vendor_id',
+            'COUNT(id) as po_count',
+            'SUM(net_amount) as total_amount'
+        ]);
+        
+        if ($from_date && $to_date) {
+            $query->andFilterWhere(['between', 'purch_date', $from_date, $to_date]);
+        }
+        
+        $query->groupBy(['vendor_id']);
+        $query->orderBy(['total_amount' => SORT_DESC]);
+
+        $dataProvider = new \yii\data\ActiveDataProvider([
+            'query' => $query,
+            'pagination' => false,
+        ]);
+
+        return $this->render('report_vendor_summary', [
+            'searchModel' => $searchModel,
+            'dataProvider' => $dataProvider,
+            'from_date' => $from_date,
+            'to_date' => $to_date,
+        ]);
+    }
+
 }

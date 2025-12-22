@@ -44,6 +44,8 @@ class Purch extends ActiveRecord
      * @var PurchLine[] $purchLines for form handling
      */
     public $purchLines = [];
+    public $po_count;
+    public $total_amount;
 
     /**
      * {@inheritdoc}
