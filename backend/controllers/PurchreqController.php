@@ -607,9 +607,12 @@ class PurchreqController extends BaseController
     {
         $model = $this->findModel($id);
 
+        $model_line = \backend\models\PurchReqLine::find()->where(['purch_req_id' => $model->id])->all();
+
         // Get HTML content
-        $content = $this->renderPartial('print', [
+        $content = $this->renderPartial('_print', [
             'model' => $model,
+            'model_line' => $model_line,
         ]);
 
         // Configure mPDF

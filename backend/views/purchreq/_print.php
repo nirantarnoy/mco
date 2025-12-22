@@ -421,7 +421,7 @@ $approverDate = '';
             <div class="pr-title">ใบขอซื้อ / ขอจ้าง</div>
             <p><strong>PR.NO. / เลขที่ :</strong> <?= Html::encode($prNumber) ?></p>
             <p><strong>Date / วันที่ :</strong> <?= Html::encode($date) ?></p>
-            <p><strong>วันที่ต้องการใช้งาน :</strong> _____________________</p>
+            <p><strong>วันที่ต้องการใช้งาน :</strong> <?= date('d/m/Y',strtotime($model->required_date)) ?></p>
         </div>
     </div>
 
@@ -580,13 +580,9 @@ $approverDate = '';
     <button onclick="window.print()" class="btn btn-primary" style="font-size: 20px;font-weight: bold;">
         <i class="glyphicon glyphicon-print"></i> Print
     </button>
-<!--    <a href="--><?php //= \yii\helpers\Url::to(['print', 'id' => $model->id, 'format' => 'pdf']) ?><!--"-->
-<!--       class="btn btn-danger" target="_blank" style="font-size: 20px;font-weight: bold;">-->
-<!--        <i class="glyphicon glyphicon-file"></i> Download PDF-->
-<!--    </a>-->
-    <button onclick="printToPDF()" class="btn btn-success" style="font-size: 20px;font-weight: bold;">
-        <i class="glyphicon glyphicon-download-alt"></i> Print to PDF
-    </button>
+    <a href="<?= \yii\helpers\Url::to(['purchreq/pdf', 'id' => $model->id]) ?>" class="btn btn-danger" target="_blank" style="font-size: 20px;font-weight: bold;">
+        <i class="glyphicon glyphicon-file"></i> Download PDF
+    </a>
     <button onclick="window.close()" class="btn btn-default" style="font-size: 20px;font-weight: bold;">Close</button>
 </div>
 <?php
