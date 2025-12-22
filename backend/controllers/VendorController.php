@@ -508,4 +508,49 @@ class VendorController extends BaseController
 
         return $content;
     }
+    public function actionAddDocFile(){
+        $id = \Yii::$app->request->post('id');
+        if($id){
+            $uploaded = UploadedFile::getInstancesByName('file_doc');
+            if (!empty($uploaded)) {
+                // Create directory if not exists
+                $path = 'uploads/vendor_doc/';
+                if (!file_exists($path)) {
+                    mkdir($path, 0777, true);
+                }
+
+                $loop = 0;
+                foreach ($uploaded as $file) {
+                    $upfiles = "vendor_" . time()."_".$loop . "." . $file->getExtension();
+                    if ($file->saveAs($path . $upfiles)) {
+                        $model_doc = new \common\models\VendorDoc();
+                        $model_doc->vendor_id = $id;
+                        $model_doc->doc_name = $upfiles;
+                        $model_doc->created_by = \Yii::$app->user->id;
+                        $model_doc->created_at = time();
+                        $model_doc->save(false);
+                    }
+                    $loop++;
+                }
+            }
+
+        }
+        return $this->redirect(['update', 'id' => $id]);
+    }
+
+    public function actionDeleteDocFile(){
+        $id = \Yii::$app->request->post('id');
+        $doc_delete_list = trim(\Yii::$app->request->post('doc_delete_list'));
+        if($id){
+            $model_doc = \common\models\VendorDoc::find()->where(['vendor_id' => $id,'doc_name' => $doc_delete_list])->one();
+            if($model_doc){
+                if($model_doc->delete()){
+                    if(file_exists('uploads/vendor_doc/'.$model_doc->doc_name)){
+                        unlink('uploads/vendor_doc/'.$model_doc->doc_name);
+                    }
+                }
+            }
+        }
+        return $this->redirect(['update', 'id' => $id]);
+    }
 }

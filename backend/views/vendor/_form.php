@@ -2,6 +2,7 @@
 
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+use yii\helpers\Url;
 
 /** @var yii\web\View $this */
 /** @var backend\models\Customer $model */
@@ -15,6 +16,7 @@ $city_chk = \backend\models\AddressInfo::findAmphurId($model->id, 1);
 $province_chk = \backend\models\AddressInfo::findProvinceId($model->id, 1);
 
 $address_chk = \backend\models\AddressInfo::find()->where(['party_id' => $model->id, 'party_type_id' => 1])->one();
+$model_doc = \common\models\VendorDoc::find()->where(['vendor_id' => $model->id])->all();
 
 $x_address = $address_chk == null ? '' : $address_chk->address;
 $x_street = $address_chk == null ? '' : $address_chk->street;
@@ -259,6 +261,74 @@ if($model->isNewRecord) {
         </div>
 
         <?php ActiveForm::end(); ?>
+        
+        <hr>
+        <br/>
+        <div class="label">
+            <h4>เอกสารแนบ</h4>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <table class="table table-bordered table-striped" style="width: 100%">
+                    <thead>
+                    <tr>
+                        <th style="width: 5%;text-align: center">#</th>
+                        <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
+                        <th style="width: 10%;text-align: center">ดูเอกสาร</th>
+                        <th style="width: 5%;text-align: center">-</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php if ($model_doc != null): ?>
+
+                        <?php foreach ($model_doc as $key => $value): ?>
+                            <tr>
+                                <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
+                                <td><?= $value->doc_name ?></td>
+                                <td style="text-align: center">
+                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/vendor_doc/' . $value->doc_name ?>"
+                                       target="_blank">
+                                        ดูเอกสาร
+                                    </a>
+                                </td>
+                                <td style="text-align: center">
+                                    <div class="btn btn-danger" data-var="<?= trim($value->doc_name) ?>"
+                                         onclick="delete_doc($(this))">ลบ
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <br/>
+        <?php if (!$model->isNewRecord): ?>
+            <form action="<?= Url::to(['vendor/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="id" value="<?= $model->id ?>">
+                <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <label for="">เอกสารแนบ</label>
+                            <input type="file" name="file_doc[]" multiple>
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <button class="btn btn-info">
+                                <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        <?php endif; ?>
+        <form id="form-delete-doc-file" action="<?= Url::to(['vendor/delete-doc-file'], true) ?>" method="post">
+            <input type="hidden" name="id" value="<?= $model->id ?>">
+            <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
+        </form>
 
     </div>
 
@@ -296,6 +366,13 @@ function getAddres(e){
         $("#city").html(data);
         $("select#city").prop("disabled","");
     });
+}
+function delete_doc(e){
+    var file_name = e.attr('data-var');
+    if(file_name != null){
+        $(".delete-doc-list").val(file_name);
+        $("#form-delete-doc-file").submit();
+    }
 }
 JS;
 
