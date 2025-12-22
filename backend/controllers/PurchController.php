@@ -1376,8 +1376,9 @@ class PurchController extends BaseController
                     }
                 }
             }
+            return $this->redirect(['update', 'id' => $id]);
         }
-        return $this->redirect(['update', 'id' => $id]);
+        return $this->redirect(['index']);
     }
 
     public function actionAddDocFileNew()
