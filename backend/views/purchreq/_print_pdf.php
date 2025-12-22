@@ -2,7 +2,6 @@
 use yii\helpers\Html;
 
 // Data preparation
-//$emp_info  = \backend\models\Employee::findEmpInfo(\Yii::$app->user->id);
 $emp_info  = \backend\models\Employee::findEmpInfo($model->created_by);
 $prNumber = $model->purch_req_no;
 $date = date('d/m/Y',strtotime($model->purch_req_date));
@@ -40,6 +39,18 @@ function isCheckedPdf($purch_req_id, $key, $value) {
         return $model->is_enable == $value;
     }
     return false;
+}
+
+// Helper function to render checkbox using Table (most reliable for mPDF)
+function renderCheckbox($label, $checked) {
+    $mark = $checked ? '/' : '&nbsp;';
+    // Use a nested table for the checkbox to ensure borders render correctly
+    return '<table style="display: inline-table; vertical-align: middle; margin-right: 10px; border-collapse: collapse;">
+        <tr>
+            <td style="border: 1px solid #000; width: 14px; height: 14px; text-align: center; font-size: 10px; line-height: 14px; padding: 0;">' . $mark . '</td>
+            <td style="border: none; padding-left: 5px; font-size: 14px;">' . $label . '</td>
+        </tr>
+    </table>';
 }
 
 // Image paths for mPDF
@@ -97,24 +108,6 @@ $logoPath = Yii::getAlias('@webroot') . '/uploads/logo/mco_logo_2.png';
     .items-table .number {
         text-align: right;
     }
-    .checkbox-item {
-        display: inline-block;
-        margin-right: 10px;
-    }
-    /* Checkbox simulation for PDF */
-    .checkbox-box {
-        display: inline-block;
-        width: 12px;
-        height: 12px;
-        border: 1px solid #000;
-        margin-right: 3px;
-        position: relative;
-        top: 2px;
-        text-align: center;
-        line-height: 11px;
-        font-size: 10px;
-        font-weight: bold;
-    }
     .signature-line {
         border-bottom: 1px solid #000;
         margin-top: 5px;
@@ -171,12 +164,8 @@ $logoPath = Yii::getAlias('@webroot') . '/uploads/logo/mco_logo_2.png';
                 <span class="form-label">เหตุผลในการสั่งซื้อ :</span><br>
                 <?php foreach ($reasons as $reason) : 
                     $isChecked = $requestType == $reason->id;
-                ?>
-                    <div class="checkbox-item">
-                        <div class="checkbox-box"><?= $isChecked ? '/' : '' ?></div>
-                        <?= Html::encode($reason->name) ?>
-                    </div>
-                <?php endforeach; ?>
+                    echo renderCheckbox(Html::encode($reason->name), $isChecked);
+                endforeach; ?>
                 <div style="margin-left: 10px; display: inline-block; border-bottom: 1px dotted #999; min-width: 50px;">
                     <?=$model->reason?>
                 </div>
@@ -185,12 +174,8 @@ $logoPath = Yii::getAlias('@webroot') . '/uploads/logo/mco_logo_2.png';
                 <span class="form-label">ค่าใช้จ่ายในส่วนแผนก :</span><br>
                 <?php foreach ($departments as $department) : 
                      $isChecked = $model->req_for_dep_id == $department->id;
-                ?>
-                    <div class="checkbox-item">
-                        <div class="checkbox-box"><?= $isChecked ? '/' : '' ?></div>
-                        <?= Html::encode($department->name) ?>
-                    </div>
-                <?php endforeach; ?>
+                     echo renderCheckbox(Html::encode($department->name), $isChecked);
+                endforeach; ?>
             </td>
         </tr>
     </table>
@@ -258,11 +243,10 @@ $logoPath = Yii::getAlias('@webroot') . '/uploads/logo/mco_logo_2.png';
                         <?php 
                         $isYes = isCheckedPdf($model->id, $item->id, '1');
                         $isNo = isCheckedPdf($model->id, $item->id, '0');
-                        ?>
                         
-                        <div class="checkbox-box"><?= $isYes ? '/' : '' ?></div> ใช่
-                        &nbsp;&nbsp;
-                        <div class="checkbox-box"><?= $isNo ? '/' : '' ?></div> ไม่ใช่
+                        echo renderCheckbox('ใช่', $isYes);
+                        echo renderCheckbox('ไม่ใช่', $isNo);
+                        ?>
                     </div>
                 <?php endforeach; ?>
             </td>
