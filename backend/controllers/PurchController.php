@@ -892,7 +892,7 @@ class PurchController extends BaseController
                     throw new \Exception('ไม่สามารถสร้าง Journal Transaction Line ได้: ' . implode(', ', $journalTransLine->getFirstErrors()));
                 }
 
-                if ($line_warehouse_id > 0) {
+                if ($line_warehouse_id > 0 && !empty($productId)) {
                     // Create Stock Transaction
                     $stockTrans = new \backend\models\StockTrans();
                     $stockTrans->journal_trans_id = $journalTrans->id;
