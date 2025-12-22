@@ -85,6 +85,80 @@ use yii\helpers\Html; ?>
         margin-bottom: 20px;
         text-align: center;
     }
+
+    .receipt-btn-group {
+        display: inline-flex;
+        gap: 10px;
+    }
+
+    .receipt-btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 11px;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .receipt-btn-primary {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .receipt-btn-success {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .receipt-btn:hover {
+        opacity: 0.8;
+    }
+
+    /* Header Section */
+    .receipt-header-section {
+        display: flex;
+        justify-content: flex-start;
+        align-items: flex-start;
+        margin-bottom: 1px;
+        padding-bottom: 0;
+    }
+
+    .receipt-header-left {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .receipt-logo-section {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 3px;
+        margin-right: 20px;
+    }
+
+    .receipt-company-info {
+        text-align: left;
+    }
+
+    .receipt-company-name-thai {
+        font-size: 60px;
+        font-weight: 800;
+        color: #000;
+        text-shadow: none;
+        text-decoration: underline;
+        text-decoration-thickness: 2px;
+        text-decoration-color: #000;
+        text-underline-offset: 6px;
+    }
+
+    .receipt-company-name-eng {
+        font-size: 45px;
+        font-weight: 800;
+        color: #000;
+        margin-bottom: 1px;
         margin-top: -15px;
     }
 
