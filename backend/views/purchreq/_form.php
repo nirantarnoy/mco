@@ -868,8 +868,10 @@ $script = <<< JS
 function delete_doc(e){
     var file_name = e.attr('data-var');
     if(file_name != null){
-        $(".delete-doc-list").val(file_name);
-        $("#form-delete-doc-file").submit();
+        if(confirm('คุณต้องการลบไฟล์นี้ใช่หรือไม่?')){
+            $(".delete-doc-list").val(file_name);
+            $("#form-delete-doc-file").submit();
+        }
     }
 }
 function enableReason(e) {
