@@ -143,7 +143,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <?= formatValue($transaction['vat_amount']) ?>
                                     </td>
 
-                                    <td class="text-right">-</td>
+                                    <td class="text-right">
+                                        <?= formatValue($transaction['vat_prohibit']) ?>
+                                    </td>
 
                                     <td class="text-right">
                                         <?= formatValue($transaction['wht']) ?>
@@ -177,7 +179,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <td class="text-right">
                                     <?= number_format($totalVat, 2) ?>
                                 </td>
-                                <td class="text-right">-</td>
+                                <td class="text-right">
+                                    <?= number_format($totalVatProhibit, 2) ?>
+                                </td>
                                 <td class="text-right">
                                     <?= number_format($totalWht, 2) ?>
                                 </td>

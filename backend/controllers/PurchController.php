@@ -355,8 +355,9 @@ class PurchController extends BaseController
                         // คำนวณส่วนลด (สมมติว่ามีฟิลด์ discount_percent ใน model)
                         if (isset($model->discount_per) && $model->discount_per > 0) {
                             $discountAmount = ($totalAmount * $model->discount_per) / 100;
-                        } else if (isset($model->discount_amount) && $model->discount_amount > 0.00) {
-                            $discountAmount = $model->discount_amount;
+                        }
+                        if (isset($model->discount_amount) && $model->discount_amount > 0.00) {
+                            $discountAmount += $model->discount_amount;
                         }
 
                         // คำนวณยอดหลังหักส่วนลด
@@ -793,6 +794,8 @@ class PurchController extends BaseController
             SELECT 
                 pl.*,
                 p.product_type_id,
+                p.name as master_name,
+                p.description as master_description,
                 COALESCE(received.total_received, 0) as total_received,
                 (pl.qty - COALESCE(received.total_received, 0)) as remaining_qty
             FROM purch_line pl

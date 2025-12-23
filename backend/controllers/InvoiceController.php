@@ -124,17 +124,42 @@ class InvoiceController extends BaseController
             // If copying to a different type (e.g. Invoice -> Receipt), 
             // set the quotation_id to the source invoice ID to maintain reference.
             if ($sourceInvoice->invoice_type != $type) {
-                $model->quotation_id = $sourceInvoice->quotation_id;
+                 if ($type === Invoice::TYPE_RECEIPT && $sourceInvoice->invoice_type !== Invoice::TYPE_RECEIPT) {
+                    $model->quotation_id = $sourceInvoice->id;
+                 } else {
+                    $model->quotation_id = $sourceInvoice->quotation_id;
+                 }
             }
+        }
 
-            // Auto-save if creating a Receipt from copy
-            if ($type === Invoice::TYPE_RECEIPT) {
+        // Simplified form for Receipt from copy
+        if ($type === Invoice::TYPE_RECEIPT && $copy_from) {
+             // Pre-load data for modal if it's a new request (not post)
+             if (!Yii::$app->request->isPost) {
+                 // The model is already populated with copied data above
+             }
+             
+             // If it's a POST request for the modal form
+             if ($model->load(Yii::$app->request->post())) {
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
                     $model->status = Invoice::STATUS_ACTIVE;
                     $model->is_billed = 0;
+                    
+                    // Ensure quotation_id is preserved/set correctly
+                    if ($copy_from) {
+                         $sourceInvoice = $this->findModel($copy_from);
+                         if ($sourceInvoice->invoice_type != $type) {
+                             if ($type === Invoice::TYPE_RECEIPT && $sourceInvoice->invoice_type !== Invoice::TYPE_RECEIPT) {
+                                $model->quotation_id = $sourceInvoice->id;
+                             } else {
+                                $model->quotation_id = $sourceInvoice->quotation_id;
+                             }
+                         }
+                    }
 
                     if ($model->save(false)) {
+                        // Save items (from $items variable populated from source)
                         foreach ($items as $item) {
                             $item->invoice_id = $model->id;
                             if (!$item->save(false)) {
@@ -159,6 +184,10 @@ class InvoiceController extends BaseController
                     Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
                 }
             }
+            
+            return $this->render('create_receipt_modal', [
+                'model' => $model,
+            ]);
         }
 
         if ($model->load(Yii::$app->request->post())) {
@@ -166,7 +195,6 @@ class InvoiceController extends BaseController
             $transaction = Yii::$app->db->beginTransaction();
             try {
                 // $model->total_amount_text = \backend\models\PurchReq::numtothai($model->total_amount);
-                $model->status = Invoice::STATUS_ACTIVE;
                 $model->is_billed = 0;
                 
                 // Ensure quotation_id is set if we are copying from another invoice
@@ -175,7 +203,11 @@ class InvoiceController extends BaseController
                 if ($copy_from && empty($model->quotation_id)) {
                      $sourceInvoice = $this->findModel($copy_from);
                      if ($sourceInvoice->invoice_type != $type) {
-                        $model->quotation_id = $sourceInvoice->quotation_id;
+                         if ($type === Invoice::TYPE_RECEIPT && $sourceInvoice->invoice_type !== Invoice::TYPE_RECEIPT) {
+                            $model->quotation_id = $sourceInvoice->id;
+                         } else {
+                            $model->quotation_id = $sourceInvoice->quotation_id;
+                         }
                      }
                 }
 

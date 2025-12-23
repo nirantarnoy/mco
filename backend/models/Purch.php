@@ -31,33 +31,17 @@ use yii\behaviors\TimestampBehavior;
  */
 class Purch extends ActiveRecord
 {
+    public $purchLines;
+    
     const STATUS_DRAFT = 0;
     const STATUS_ACTIVE = 1;
-    const STATUS_CANCELLED = 3;
-    const STATUS_COMPLETED = 4;
+    const STATUS_CANCELLED = 100;
+    const STATUS_COMPLETED = 3;
 
     const APPROVE_STATUS_PENDING = 0;
     const APPROVE_STATUS_APPROVED = 1;
     const APPROVE_STATUS_REJECTED = 2;
 
-    /**
-     * @var PurchLine[] $purchLines for form handling
-     */
-    public $purchLines = [];
-    public $po_count;
-    public $total_amount;
-
-    /**
-     * {@inheritdoc}
-     */
-    public static function tableName()
-    {
-        return 'purch';
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function behaviors()
     {
         return [
@@ -226,55 +210,31 @@ class Purch extends ActiveRecord
         foreach ($this->purchLines as $line) {
             $total += $line->line_total;
         }
-
+        
         if($this->discount_per >0){
             $discount = $total * ($this->discount_per / 100);
         }
         if($this->discount_amount > 0.00){
             $discount += $this->discount_amount;
         }
+        
+        $after_discount = $total - $discount;
+        
         if($this->is_vat == 1){
-            $vat_amount = $total * 0.07;
+            $vat_amount = $after_discount * 0.07;
         }
 
-        $total -= $discount;
-        $total += $vat_amount;
+        $total = $after_discount + $vat_amount;
 
-        return $total;
-    }
-    public function calculateTotalAmount2(){
-        $total = 0;
-        foreach ($this->purchLines as $line) {
-            $total += $line->line_total;
-        }
         return $total;
     }
 
     /**
      * Before save
      */
-//    public function beforeSave($insert)
-//    {
-//        if (parent::beforeSave($insert)) {
-//            if ($insert && empty($this->purch_no)) {
-//                $this->purch_no = $this->generatePurchNo();
-//            }
-//            return true;
-//        }
-//        return false;
-//    }
-
     public function beforeSave($insert)
     {
         if (parent::beforeSave($insert)) {
-            if ($insert && !empty($this->purch_no)) {
-                $this->net_amount = $this->calculateTotalAmount();
-                if ($this->is_vat == 1) {
-                    $this->vat_amount = $this->calculateTotalAmount2() * 0.07;
-                } else {
-                    $this->vat_amount = 0;
-                }
-            }
             if (!\Yii::$app->request->isConsoleRequest) {
                 $this->company_id = \Yii::$app->session->get('company_id') == null ? 1 : \Yii::$app->session->get('company_id');
             } else {
@@ -285,8 +245,6 @@ class Purch extends ActiveRecord
 
         return false;
     }
-
-
 
     /**
      * Generate purchase number
@@ -316,6 +274,7 @@ class Purch extends ActiveRecord
     {
         return $this->getPurchReqs()->all();
     }
+
     public static function checkPoremain($purchId)
     {
         $sql = "

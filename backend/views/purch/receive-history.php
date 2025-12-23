@@ -105,7 +105,15 @@ $this->params['breadcrumbs'][] = 'ประวัติการรับสิ�
                                 <tr class="<?= $receive->status == \backend\models\JournalTrans::STATUS_CANCELLED ? 'text-muted' : '' ?>">
                                     <td><?= $lineNum++ ?></td>
                                     <td>
-                                        <?= Html::encode(\backend\models\Product::findName($line->product_id) ?? 'N/A') ?>
+                                        <?php
+                                            $purchLine = \backend\models\PurchLine::find()->where(['purch_id' => $purchModel->id, 'product_id' => $line->product_id])->one();
+                                            $productName = $purchLine ? $purchLine->product_name : (\backend\models\Product::findName($line->product_id) ?? 'N/A');
+                                            $productDesc = $purchLine ? $purchLine->product_description : '';
+                                        ?>
+                                        <?= Html::encode($productName) ?>
+                                        <?php if($productDesc): ?>
+                                            <br><small class="text-muted"><?= Html::encode($productDesc) ?></small>
+                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <?= Html::encode($line->warehouse->name ?? 'N/A') ?>

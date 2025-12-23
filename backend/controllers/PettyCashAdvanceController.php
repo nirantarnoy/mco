@@ -617,7 +617,7 @@ class PettyCashAdvanceController extends BaseController
             // Query รายจ่าย (voucher details) ก่อนวันที่เริ่มต้น
             $previousVouchers = (new \yii\db\Query())
                 ->select([
-                    'SUM(d.amount + d.vat_amount - d.wht + d.other) as total'
+                    'SUM(d.amount + d.vat_amount + d.vat_prohibit - d.wht + d.other) as total'
                 ])
                 ->from(['v' => PettyCashVoucher::tableName()])
                 ->innerJoin(['d' => PettyCashDetail::tableName()], 'd.voucher_id = v.id')
@@ -654,6 +654,7 @@ class PettyCashAdvanceController extends BaseController
                 'd.detail',
                 'd.vat',
                 'd.vat_amount',
+                'd.vat_prohibit',
                 'd.wht',
                 'd.other'
             ])
@@ -695,6 +696,7 @@ class PettyCashAdvanceController extends BaseController
                 'expense' => 0,
                 'vat' => 0,
                 'vat_amount' => 0,
+                'vat_prohibit' => 0,
                 'wht' => 0,
                 'other' => 0,
                 'total_expense' => 0,
@@ -712,6 +714,7 @@ class PettyCashAdvanceController extends BaseController
                 'expense' => 0,
                 'vat' => 0,
                 'vat_amount' => 0,
+                'vat_prohibit' => 0,
                 'wht' => 0,
                 'other' => 0,
                 'total_expense' => 0,
@@ -720,7 +723,7 @@ class PettyCashAdvanceController extends BaseController
 
         // แสดงแต่ละ detail เป็นแถวแยกกัน
         foreach ($vouchers as $voucher) {
-            $totalExpense = (double)$voucher['amount'] + (double)$voucher['vat_amount'] - (double)$voucher['wht'] + (double)$voucher['other'];
+            $totalExpense = (double)$voucher['amount'] + (double)$voucher['vat_amount'] + (double)$voucher['vat_prohibit'] - (double)$voucher['wht'] + (double)$voucher['other'];
 
             $allTransactions[] = [
                 'date' => $voucher['date'],
@@ -732,6 +735,7 @@ class PettyCashAdvanceController extends BaseController
                 'expense' => $voucher['amount'],
                 'vat' => $voucher['vat'],
                 'vat_amount' => $voucher['vat_amount'],
+                'vat_prohibit' => $voucher['vat_prohibit'],
                 'wht' => $voucher['wht'],
                 'other' => $voucher['other'],
                 'total_expense' => $totalExpense,
@@ -760,6 +764,7 @@ class PettyCashAdvanceController extends BaseController
         $totalIncome = array_sum(array_column($allTransactions, 'income'));
         $totalExpense = array_sum(array_column($allTransactions, 'expense'));
         $totalVat = array_sum(array_column($allTransactions, 'vat_amount'));
+        $totalVatProhibit = array_sum(array_column($allTransactions, 'vat_prohibit'));
         $totalWht = array_sum(array_column($allTransactions, 'wht'));
         $totalOther = array_sum(array_column($allTransactions, 'other'));
         $totalAllExpenses = array_sum(array_column($allTransactions, 'total_expense'));
@@ -772,6 +777,7 @@ class PettyCashAdvanceController extends BaseController
                 'totalIncome' => $totalIncome,
                 'totalExpense' => $totalExpense,
                 'totalVat' => $totalVat,
+                'totalVatProhibit' => $totalVatProhibit,
                 'totalWht' => $totalWht,
                 'totalOther' => $totalOther,
                 'totalAllExpenses' => $totalAllExpenses,
@@ -787,6 +793,7 @@ class PettyCashAdvanceController extends BaseController
             'totalIncome' => $totalIncome,
             'totalExpense' => $totalExpense,
             'totalVat' => $totalVat,
+            'totalVatProhibit' => $totalVatProhibit,
             'totalWht' => $totalWht,
             'totalOther' => $totalOther,
             'totalAllExpenses' => $totalAllExpenses,
@@ -855,7 +862,7 @@ class PettyCashAdvanceController extends BaseController
             $sheet->setCellValue('D' . $row, $transaction['income'] > 0 ? $transaction['income'] : '');
             $sheet->setCellValue('E' . $row, $transaction['expense'] > 0 ? $transaction['expense'] : '');
             $sheet->setCellValue('F' . $row, $transaction['vat_amount'] > 0 ? $transaction['vat_amount'] : '');
-            $sheet->setCellValue('G' . $row, ''); // VAT ต้องหาม - add logic if needed
+            $sheet->setCellValue('G' . $row, $transaction['vat_prohibit'] != 0 ? $transaction['vat_prohibit'] : '');
             $sheet->setCellValue('H' . $row, $transaction['wht'] > 0 ? $transaction['wht'] : '');
             $sheet->setCellValue('I' . $row, $transaction['other'] > 0 ? $transaction['other'] : '');
             $sheet->setCellValue('J' . $row, $transaction['total_expense'] > 0 ? $transaction['total_expense'] : '');
@@ -873,6 +880,7 @@ class PettyCashAdvanceController extends BaseController
         $sheet->setCellValue('D' . $row, $totals['totalIncome']);
         $sheet->setCellValue('E' . $row, $totals['totalExpense']);
         $sheet->setCellValue('F' . $row, $totals['totalVat']);
+        $sheet->setCellValue('G' . $row, $totals['totalVatProhibit']);
         $sheet->setCellValue('H' . $row, $totals['totalWht']);
         $sheet->setCellValue('I' . $row, $totals['totalOther']);
         $sheet->setCellValue('J' . $row, $totals['totalAllExpenses']);

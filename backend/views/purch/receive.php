@@ -165,9 +165,19 @@ $('#toggle-checklist').click(function() {
                         <tr>
                             <td class="text-center"><?= $rowNum++ ?></td>
                             <td>
-                                <strong><?= Html::encode($line['product_name']) ?></strong>
-                                <?php if (!empty($line['product_description'])): ?>
-                                    <br><small class="text-muted"><?= Html::encode($line['product_description']) ?></small>
+                                <?php
+                                $product_name = $line['product_name'];
+                                if (empty($product_name)) {
+                                    $product_name = $line['master_name'];
+                                }
+                                $product_desc = $line['product_description'];
+                                if (empty($product_desc)) {
+                                    $product_desc = $line['master_description'];
+                                }
+                                ?>
+                                <strong><?= Html::encode($product_name) ?></strong>
+                                <?php if (!empty($product_desc)): ?>
+                                    <br><small class="text-muted"><?= Html::encode($product_desc) ?></small>
                                 <?php endif; ?>
                             </td>
                             <td class="text-center">
@@ -400,7 +410,13 @@ $('#toggle-checklist').click(function() {
                 <strong><i class="fas fa-info-circle"></i> รายการสินค้าอ้างอิง:</strong>
                 <ol class="mb-0 mt-2">
                     <?php foreach ($poLines as $index => $line): ?>
-                        <li><?= Html::encode($line['product_name']) ?></li>
+                        <?php
+                        $product_name = $line['product_name'];
+                        if (empty($product_name)) {
+                            $product_name = $line['master_name'];
+                        }
+                        ?>
+                        <li><?= Html::encode($product_name) ?></li>
                     <?php endforeach; ?>
                 </ol>
             </div>

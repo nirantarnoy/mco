@@ -1,5 +1,6 @@
 <?php
 
+
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 use kartik\date\DatePicker;
@@ -9,6 +10,7 @@ use yii\helpers\ArrayHelper;
 use backend\models\Purch;
 use backend\models\Product;
 use yii\helpers\Url;
+
 
 /* @var $this yii\web\View */
 /* @var $model backend\models\Purch */
@@ -293,157 +295,9 @@ $(document).ready(function() {
     });
 });
 JS;
-
-
-$this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
-
-// JavaScript สำหรับการคำนวณ
-$calculationJs = <<<JS
-function calculateLineTotal(index) {
-    var qty = parseFloat($('.qty-input[data-index="' + index + '"]').val()) || 0;
-    var price = parseFloat($('.price-input[data-index="' + index + '"]').val()) || 0;
-    var total = qty * price;
-    $('.line-total[data-index="' + index + '"]').val(total.toFixed(2));
-    calculateGrandTotal();
-    calculateGrandTotal2();
-}
-
-function calculateGrandTotal() {
-    var subtotal = 0;
-    $('.line-total').each(function() {
-        subtotal += parseFloat($(this).val()) || 0;
-    });
-    
-    // var discount = parseFloat($('#purchreq-discount_amount').val()) || 0;
-    // var afterDiscount = subtotal - discount;
-    // var vat = afterDiscount * 0.07; // 7% VAT
-    // var netAmount = afterDiscount + vat;
-    
-    var purch_req_is_vat =  $("#purch-req-is-vat").val();
-    
-    var discount = 0;
-    var discount_per = parseFloat($('#purch-discount_per').val()) || 0;
-    var discount_amount = parseFloat($('#purch-discount_amount').val()) || 0;
-    
-    var tax_per = parseFloat($('#purch-tax_per').val()) || 0;
-    $(".tax-text").text(tax_per + '%');
-    
-  //  alert(discount_per);
-    
-    if(discount_per > 0){
-        discount = subtotal * (discount_per / 100);
-    }
-    discount = discount + discount_amount;
-    
-    var afterDiscount = subtotal - discount;
-    
-    var tax_amount = 0;
-    
-    if(afterDiscount > 0){
-       tax_amount = afterDiscount * (tax_per / 100);
-    }
-    
-    var after_save_vat_amount = parseFloat($("#after-save-vat-amount").val());
-    var vat = parseFloat($("#summary-vat-amount").val());
-    if(after_save_vat_amount !=null || after_save_vat_amount !=''){
-        vat = after_save_vat_amount;
-    }
-    // var vat = 0;
-    // if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){
-    //     vat = afterDiscount * 0.07; // 7% VAT
-    // }
-    
-    var netAmount = afterDiscount + vat - tax_amount;
-    
-    $('#purchreq-total_amount').val(subtotal.toFixed(2));
-    $('#purchreq-vat_amount').val(parseFloat(vat).toFixed(2));
-    $('#purchreq-net_amount').val(netAmount.toFixed(2));
-    
-    // Update summary display
-    $('#summary-subtotal').text(subtotal.toFixed(2));
-    $('#summary-discount').text(discount.toFixed(2));
-    $('#summary-vat').text(parseFloat(vat).toFixed(2));
-    $('#summary-vat-amount').val(parseFloat(vat).toFixed(2));
-    $('#summary-tax').text(parseFloat(tax_amount).toFixed(2));
-    $('#summary-net').text(netAmount.toFixed(2));
-}
-
-$(document).on('change keyup input', '.qty-input, .price-input', function() {
-    var index = $(this).attr('data-index');
-    if (index !== undefined) {
-        calculateLineTotal(index);
-    }
-});
-
-$(document).on('change keyup', '#purchreq-discount_amount', function() {
-    calculateGrandTotal();
-});
-
-$(document).ready(function() {
-   // calculateGrandTotal();
-});
-JS;
-
-$this->registerJs($calculationJs, \yii\web\View::POS_READY);
-
-// Dynamic Form JavaScript
-$dynamicFormJs = <<<JS
-$(document).ready(function() {
-    
-    // จัดการเมื่อเพิ่มรายการใหม่
-    $('.dynamicform_wrapper').on('afterInsert', function(e, item) {
-        setTimeout(function() {
-            updateAllDataIndexes();
-            updateItemNumbers();
-            
-            var \$item = $(item);
-            \$item.find('.product-autocomplete').val('');
-            \$item.find('.product-id-hidden').val('');
-            \$item.find('.line-product-description').val('');
-            \$item.find('input[type="number"]').val('');
-            
-            calculateGrandTotal();
-        }, 100);
-    });
-    
-    $('.dynamicform_wrapper').on('afterDelete', function(e) {
-        setTimeout(function() {
-            updateAllDataIndexes();
-            updateItemNumbers();
-            calculateGrandTotal();
-        }, 100);
-    });
-    
-    function updateAllDataIndexes() {
-        $('.dynamicform_wrapper .item').each(function(index) {
-            var \$item = $(this);
-            
-            \$item.find('.product-autocomplete').attr('data-index', index);
-            \$item.find('.product-id-hidden').attr('data-index', index);
-            \$item.find('.line-product-description').attr('data-index', index);
-            \$item.find('.autocomplete-dropdown').attr('data-index', index);
-            \$item.find('.qty-input').attr('data-index', index);
-            \$item.find('.price-input').attr('data-index', index);
-            \$item.find('.line-total').attr('data-index', index);
-        });
-    }
-    
-    function updateItemNumbers() {
-        $('.dynamicform_wrapper .item').each(function(index) {
-            $(this).find('.item-number').text(index + 1);
-        });
-    }
-    
-    updateAllDataIndexes();
-    updateItemNumbers();
-   // calculateGrandTotal();
-});
-JS;
-
-$this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
+$this->registerJs($autocompleteJs);
 ?>
 
-    <!-- Flash Messages -->
 <?php if (\Yii::$app->session->hasFlash('success')): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="fas fa-check-circle me-2"></i>
@@ -666,7 +520,10 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                     </div>
                                 </td>
                                 <td>
-                                    <?= $form->field($purchLine, "[{$index}]product_description")->textarea(['class' => 'form-control line-product-description'])->label(false); ?>
+                                    <?= $form->field($purchLine, "[{$index}]product_description")->textarea([
+                                        'class' => 'form-control line-product-description',
+                                        'data-index' => $index
+                                    ])->label(false); ?>
                                 </td>
                                 <td>
                                     <?= $form->field($purchLine, "[{$index}]doc_ref_no")->label(false); ?>
@@ -988,7 +845,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 
 
         <div class="d-flex justify-content-between">
-            <?php if ($model->status != 3 || $model->isNewRecord || Yii::$app->user->can('CanApprovePo')): ?>
+            <?php if ($model->status != 3 || $model->isNewRecord || \Yii::$app->user->can('CanApprovePo')): ?>
                 <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
                     'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
                 ]) ?>
@@ -1094,7 +951,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <td><?= \backend\helpers\PurchDocType::getTypeById($value->doc_type_id) ?></td>
                                 <td style="text-align: center">
                                     <?php
-                                    $url = Yii::$app->request->hostInfo . Yii::$app->request->baseUrl . '/uploads/purch_doc/' . $value->doc_name;
+                                    $url = \Yii::$app->request->hostInfo . \Yii::$app->request->baseUrl . '/uploads/purch_doc/' . $value->doc_name;
                                     echo Html::a(
                                         'ดูเอกสาร',
                                         ['purch/showdoc', 'filename' => $value->doc_name],
@@ -1155,16 +1012,12 @@ function delete_doc(e){
     var file_name = e.attr('data-var');
     var id = e.attr('data-value');
     if(id > 0 && file_name != null && confirm('ต้องการลบไฟล์แนบใช่หรือไม่?')){
-       // // alert(file_name);
-       //  $(".delete-doc-list").val(file_name);
-       //  $("#form-delete-doc-file")[0].submit();
        $.ajax({
          type: "POST",
          dataType: "html",
          url: "$url_to_delele_file",
          data: {id: id, doc_delete_list: file_name},
          success: function (data) {
-             //alert(data)
              console.log(data);
              location.reload();
          },
@@ -1177,198 +1030,132 @@ function delete_doc(e){
 
 function enableVat(e){
     var id = $(e).val();
-    if(id!=null || id!=''){
+    if(id!=null && id!=''){
         $("#purch-req-is-vat").val(id);
     }else{
         $("#purch-req-is-vat").val('');
     }
-    
-    calculateGrandTotal2();
+    calculateGrandTotal();
 }
-function calculateGrandTotal2() {
-  //   var subtotal = 0;
-  //   $('.line-total').each(function() {
-  //       subtotal += parseFloat($(this).val()) || 0;
-  //   });
-  //  
-  //  
-  //  
-  //   var purch_req_is_vat =  $("#purch-req-is-vat").val();
-  //  
-  //   var discount = 0;
-  //   var discount_per = parseFloat($('#purch-discount_per').val()) || 0;
-  //   var discount_amount = parseFloat($('#purch-discount_amount').val()) || 0;
-  //  
-  //   var tax_per = parseFloat($('#purch-tax_per').val()) || 0;
-  //  
-  //   $(".tax-text").text(tax_per + '%');
-  //  
-  // //  alert(discount_per);
-  //  
-  //   if(discount_per > 0){
-  //       discount = subtotal * (discount_per / 100);
-  //   }
-  //   discount = discount + discount_amount;
-  //  
-  //   var afterDiscount = subtotal - discount;
-  //   var tax_amount = 0;
-  //  
-  //   if(afterDiscount > 0){
-  //      tax_amount = afterDiscount * (tax_per / 100);
-  //   }
-  //  
-  //  
-  //   var after_save_vat_amount = parseFloat($("#after-save-vat-amount").val());
-  //   var vat = parseFloat($("#summary-vat-amount").val());
-  //   if(after_save_vat_amount !=null || after_save_vat_amount !=''){
-  //       vat = after_save_vat_amount;
-  //   }
-  //   // var vat = 0;
-  //   // if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){
-  //   //     vat = afterDiscount * 0.07; // 7% VAT
-  //   // }
-  //  
-  //   var netAmount = parseFloat(afterDiscount) + parseFloat(vat) - parseFloat(tax_amount);
-  //  
-  //   $('#purchreq-total_amount').val(subtotal.toFixed(2));
-  //   $('#purchreq-vat_amount').val(vat.toFixed(2));
-  //   $('#purchreq-net_amount').val(netAmount.toFixed(2));
-  //  
-  //   $('#purch-tax_amount').val(tax_amount.toFixed(2));
-  //  
-  //   // Update summary display
-  //   $('#summary-subtotal').text(subtotal.toFixed(2));
-  //   $('#summary-discount').text(discount.toFixed(2));
-  //   $('#summary-vat').text(vat.toFixed(2));
-  //   $('#summary-vat-amount').val(vat.toFixed(2));
-  //   $('#summary-tax').text(tax_amount.toFixed(2));
-  //   $('#summary-net').text(netAmount.toFixed(2));
-  
-   var subtotal = 0;
-    $('.line-total').each(function() {
-        subtotal += parseFloat($(this).val()) || 0;
-    });
-    
-    var purch_req_is_vat =  $("#purch-req-is-vat").val();
-    
-    var discount = 0;
-    var discount_per = parseFloat($('#purch-discount_per').val()) || 0;
-    var discount_amount = parseFloat($('#purch-discount_amount').val()) || 0;
-    
-    var tax_per = parseFloat($('#purch-tax_per').val()) || 0;
-    
-    $(".tax-text").text(tax_per + '%');
-    
-  //  alert(discount_per);
-    
-    if(discount_per > 0){
-        discount = subtotal * (discount_per / 100);
-    }
-    discount = discount + discount_amount;
-    
-    var afterDiscount = subtotal - discount;
-    
-    // var tax_amount = 0;
-    //
-    // if(afterDiscount > 0){
-    //    tax_amount = afterDiscount * (tax_per / 100);
-    // }
-    
-    var tax_amount = $("#summary-tax").val();
-    if(parseFloat(tax_amount) === 0 || tax_amount ==null){
-       tax_amount = 0;
-    }
-   
-    
-    var after_save_vat_amount = $("#after-save-vat-amount").val();
-    var vat = parseFloat($("#summary-vat-amount").val());
-   
-    // if(after_save_vat_amount !=null || after_save_vat_amount !=''){
-    //     vat = after_save_vat_amount;
-    // }
-    // if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){
-    //     vat = afterDiscount * 0.07; // 7% VAT
-    // }
-    
-    var netAmount = parseFloat(afterDiscount) + parseFloat(vat) - parseFloat(tax_amount);
-    // alert(netAmount);
-    $('#purchreq-total_amount').val(subtotal.toFixed(2));
-    $('#purchreq-vat_amount').val(parseFloat(vat).toFixed(2));
-    $('#purchreq-net_amount').val(netAmount.toFixed(2));
-    
-    $('#purch-tax_amount').val(parseFloat(tax_amount).toFixed(2));
-    
-    // Update summary display
-    $('#summary-subtotal').text(subtotal.toFixed(2));
-    $('#summary-discount').text(discount.toFixed(2));
-    $('#summary-vat').text(parseFloat(vat).toFixed(2));
-    $('#summary-vat-amount').val(parseFloat(vat).toFixed(2));
-    $('#summary-tax').val(parseFloat(tax_amount).toFixed(2));
-    $('#summary-net').text(parseFloat(netAmount).toFixed(2));
-}
-function calculateGrandTotal3() {
+
+function calculateGrandTotal() {
     var subtotal = 0;
     $('.line-total').each(function() {
         subtotal += parseFloat($(this).val()) || 0;
     });
     
-    var purch_req_is_vat =  $("#purch-req-is-vat").val();
+    var discount_per = parseFloat($('#purch-discount_per').val()) || 0;
+    var discount_amount_input = parseFloat($('#purch-discount_amount').val()) || 0;
     
     var discount = 0;
-    var discount_per = parseFloat($('#purch-discount_per').val()) || 0;
-    var discount_amount = parseFloat($('#purch-discount_amount').val()) || 0;
-    
-    var tax_per = parseFloat($('#purch-tax_per').val()) || 0;
-    
-    $(".tax-text").text(tax_per + '%');
-    
-  //  alert(discount_per);
-    
     if(discount_per > 0){
         discount = subtotal * (discount_per / 100);
     }
-    discount = discount + discount_amount;
+    discount += discount_amount_input;
     
     var afterDiscount = subtotal - discount;
+    if(afterDiscount < 0) afterDiscount = 0;
     
-    // var tax_amount = 0;
-    //
-    // if(afterDiscount > 0){
-    //    tax_amount = afterDiscount * (tax_per / 100);
-    // }
+    var tax_per = parseFloat($('#purch-tax_per').val()) || 0;
+    $(".tax-text").text(tax_per + '%');
     
-    var tax_amount = $("#summary-tax").val();
-    if(parseFloat(tax_amount) === 0 || tax_amount ==null){
-       tax_amount = 0;
+    var tax_amount = 0;
+    if(tax_per > 0){
+       tax_amount = afterDiscount * (tax_per / 100);
     }
-   
     
-    var after_save_vat_amount = $("#after-save-vat-amount").val();
-    var vat = parseFloat($("#summary-vat-amount").val());
-   
-    // if(after_save_vat_amount !=null || after_save_vat_amount !=''){
-    //     vat = after_save_vat_amount;
-    // }
-    // if(purch_req_is_vat === 1 || purch_req_is_vat =='1'){
-    //     vat = afterDiscount * 0.07; // 7% VAT
-    // }
+    var purch_req_is_vat = $("#purch-req-is-vat").val();
+    var vat = 0;
+    if(purch_req_is_vat == 1 || purch_req_is_vat == '1'){
+        vat = afterDiscount * 0.07;
+    }
     
-    var netAmount = parseFloat(afterDiscount) + parseFloat(vat) - parseFloat(tax_amount);
-    // alert(netAmount);
+    var netAmount = afterDiscount + vat - tax_amount;
+    
+    // Update Hidden Fields
     $('#purchreq-total_amount').val(subtotal.toFixed(2));
-    $('#purchreq-vat_amount').val(parseFloat(vat).toFixed(2));
+    $('#purchreq-vat_amount').val(vat.toFixed(2));
     $('#purchreq-net_amount').val(netAmount.toFixed(2));
     
-    $('#purch-tax_amount').val(parseFloat(tax_amount).toFixed(2));
-    
-    // Update summary display
+    // Update Display Fields
     $('#summary-subtotal').text(subtotal.toFixed(2));
     $('#summary-discount').text(discount.toFixed(2));
-    $('#summary-vat').text(parseFloat(vat).toFixed(2));
-    $('#summary-vat-amount').val(parseFloat(vat).toFixed(2));
-    $('#summary-tax').val(parseFloat(tax_amount).toFixed(2));
-    $('#summary-net').text(parseFloat(netAmount).toFixed(2));
+    
+    // Update Inputs in Summary
+    $('#summary-vat-amount').val(vat.toFixed(2));
+    $('#summary-tax').val(tax_amount.toFixed(2));
+    
+    $('#summary-net').text(netAmount.toFixed(2));
+    
+    // Update readonly tax amount field
+    $('#purch-tax_amount').val(tax_amount.toFixed(2));
 }
+
+function calculateGrandTotalManual() {
+    var subtotal = 0;
+    $('.line-total').each(function() {
+        subtotal += parseFloat($(this).val()) || 0;
+    });
+    
+    var discount_per = parseFloat($('#purch-discount_per').val()) || 0;
+    var discount_amount_input = parseFloat($('#purch-discount_amount').val()) || 0;
+    
+    var discount = 0;
+    if(discount_per > 0){
+        discount = subtotal * (discount_per / 100);
+    }
+    discount += discount_amount_input;
+    
+    var afterDiscount = subtotal - discount;
+    if(afterDiscount < 0) afterDiscount = 0;
+    
+    // Read manual values
+    var tax_amount = parseFloat($('#summary-tax').val()) || 0;
+    var vat = parseFloat($('#summary-vat-amount').val()) || 0;
+    
+    var netAmount = afterDiscount + vat - tax_amount;
+    
+    $('#purchreq-total_amount').val(subtotal.toFixed(2));
+    $('#purchreq-vat_amount').val(vat.toFixed(2));
+    $('#purchreq-net_amount').val(netAmount.toFixed(2));
+    
+    $('#summary-subtotal').text(subtotal.toFixed(2));
+    $('#summary-discount').text(discount.toFixed(2));
+    $('#summary-net').text(netAmount.toFixed(2));
+    
+    $('#purch-tax_amount').val(tax_amount.toFixed(2));
+}
+
+// Aliases for compatibility with existing onchange handlers
+function calculateGrandTotal2() {
+    calculateGrandTotal();
+}
+function calculateGrandTotal3() {
+    calculateGrandTotalManual();
+}
+
+function calculateLineTotal(index) {
+    var qty = parseFloat($('.qty-input[data-index="' + index + '"]').val()) || 0;
+    var price = parseFloat($('.price-input[data-index="' + index + '"]').val()) || 0;
+    var total = qty * price;
+    $('.line-total[data-index="' + index + '"]').val(total.toFixed(2));
+    calculateGrandTotal();
+}
+
+$(document).ready(function() {
+    $(document).on('change keyup', '.qty-input, .price-input', function() {
+        var index = $(this).attr('data-index');
+        calculateLineTotal(index);
+    });
+
+    $(".dynamicform_wrapper").on("afterDelete", function(e) {
+        calculateGrandTotal();
+    });
+    
+    $(".dynamicform_wrapper").on("afterInsert", function(e, item) {
+        // Re-initialize any plugins if necessary
+    });
+});
 JS;
 $this->registerJs($script, static::POS_END);
 ?>
