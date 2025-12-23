@@ -329,8 +329,8 @@ use yii\helpers\Html; ?>
 
     .receipt-signature-line {
         border-bottom: 1.5px solid #333;
-        height: 15px;
-        margin-bottom: 2px;
+        height: 50px;
+        margin-bottom: 5px;
     }
 
     /* Form Code */
@@ -593,16 +593,16 @@ use yii\helpers\Html; ?>
             </td>
         </tr>
         <tr>
-            <td style="text-align: center; padding: 10px; min-height: 50px;">
+            <td style="text-align: center; padding: 10px; height: 100px; vertical-align: bottom;">
                 <div class="receipt-signature-line"></div>
                 <strong style="font-size: 10px;">จำนวนเงิน / AMOUNT</strong>
             </td>
-            <td style="text-align: center; width: 32.5%; padding: 10px; min-height: 50px;">
+            <td style="text-align: center; width: 32.5%; padding: 10px; height: 100px; vertical-align: bottom;">
                 <div class="receipt-signature-line"></div>
                 <strong style="font-size: 10px;">ผู้เก็บเงิน / COLLECTOR</strong><br>
                 <strong style="font-size: 10px;">วันที่ / DATE</strong>
             </td>
-            <td style="text-align: center; width: 32.5%; padding: 10px; min-height: 50px;">
+            <td style="text-align: center; width: 32.5%; padding: 10px; height: 100px; vertical-align: bottom;">
                 <div class="receipt-signature-line"></div>
                 <strong style="font-size: 10px;">ผู้จัดการ / ผู้มีอำนาจลงนาม</strong><br>
                 <strong style="font-size: 10px;">MANAGER / AUTHORIZED SIGNATURE</strong>
