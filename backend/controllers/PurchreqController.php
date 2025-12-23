@@ -902,8 +902,9 @@ class PurchreqController extends BaseController
                     }
                 }
             }
+            return $this->redirect(['update', 'id' => $id]);
         }
-        return $this->redirect(['update', 'id' => $id]);
+        return $this->redirect(['index']);
     }
     public function actionTransferPoLine()
     {

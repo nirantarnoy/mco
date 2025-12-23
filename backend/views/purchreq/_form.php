@@ -845,7 +845,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                 </div>
             </form>
         <?php endif; ?>
-        <form id="form-delete-doc-file" action="<?= Url::to(['purch/delete-doc-file'], true) ?>" method="post">
+        <form id="form-delete-doc-file" action="<?= Url::to(['purchreq/delete-doc-file'], true) ?>" method="post">
             <input type="hidden" name="id" value="<?= $model->id ?>">
             <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
         </form>
