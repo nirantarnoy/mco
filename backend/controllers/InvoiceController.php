@@ -124,7 +124,40 @@ class InvoiceController extends BaseController
             // If copying to a different type (e.g. Invoice -> Receipt), 
             // set the quotation_id to the source invoice ID to maintain reference.
             if ($sourceInvoice->invoice_type != $type) {
-                $model->quotation_id = $sourceInvoice->id;
+                $model->quotation_id = $sourceInvoice->quotation_id;
+            }
+
+            // Auto-save if creating a Receipt from copy
+            if ($type === Invoice::TYPE_RECEIPT) {
+                $transaction = Yii::$app->db->beginTransaction();
+                try {
+                    $model->status = Invoice::STATUS_ACTIVE;
+                    $model->is_billed = 0;
+
+                    if ($model->save(false)) {
+                        foreach ($items as $item) {
+                            $item->invoice_id = $model->id;
+                            if (!$item->save(false)) {
+                                throw new \Exception('Failed to save item');
+                            }
+                        }
+
+                        $model->updateAmountsFromItems();
+
+                        $relation = new \backend\models\InvoiceRelation();
+                        $relation->parent_invoice_id = $copy_from;
+                        $relation->child_invoice_id = $model->id;
+                        $relation->relation_type = $sourceInvoice->invoice_type . '_to_' . $type;
+                        $relation->save(false);
+
+                        $transaction->commit();
+                        Yii::$app->session->setFlash('success', 'สร้างใบเสร็จรับเงินเรียบร้อยแล้ว');
+                        return $this->redirect(['view', 'id' => $model->id]);
+                    }
+                } catch (\Exception $e) {
+                    $transaction->rollBack();
+                    Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+                }
             }
         }
 
@@ -142,7 +175,7 @@ class InvoiceController extends BaseController
                 if ($copy_from && empty($model->quotation_id)) {
                      $sourceInvoice = $this->findModel($copy_from);
                      if ($sourceInvoice->invoice_type != $type) {
-                        $model->quotation_id = $sourceInvoice->id;
+                        $model->quotation_id = $sourceInvoice->quotation_id;
                      }
                 }
 
