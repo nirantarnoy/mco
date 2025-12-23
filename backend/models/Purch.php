@@ -31,6 +31,14 @@ use yii\behaviors\TimestampBehavior;
  */
 class Purch extends ActiveRecord
 {
+    /**
+     * {@inheritdoc}
+     */
+    public static function tableName()
+    {
+        return 'purch';
+    }
+
     public $purchLines;
     
     const STATUS_DRAFT = 0;
