@@ -202,29 +202,12 @@ use yii\helpers\Html; ?>
     }
 
     .receipt-details-table td {
-        border-top: 1px solid #000;
-        border-bottom: 1px solid #000;
-        border-left: none;
-        border-right: none;
+        border: 1px solid #000;
         padding: 3px 5px;
         vertical-align: middle;
     }
 
-    /* Add vertical separator between data groups */
-    /* For rows 1-2: columns 3 and 5 are label columns */
-    .receipt-details-table tr:nth-child(1) td:nth-child(3),
-    .receipt-details-table tr:nth-child(1) td:nth-child(5),
-    .receipt-details-table tr:nth-child(2) td:nth-child(3),
-    .receipt-details-table tr:nth-child(2) td:nth-child(5) {
-        border-left: 1px solid #000;
-    }
-
-    /* For row 3: columns 2 and 4 are label columns (because column 1 is rowspan) */
-    .receipt-details-table tr:nth-child(3) td:nth-child(2),
-    .receipt-details-table tr:nth-child(3) td:nth-child(4) {
-        border-left: 1px solid #000;
-    }
-
+    /* Label cells are bold */
     .receipt-label-cell {
         font-weight: 700;
         color: #000;
@@ -245,25 +228,10 @@ use yii\helpers\Html; ?>
 
     .receipt-items-table th,
     .receipt-items-table td {
-        border-left: 1px solid #000;
-        border-right: 1px solid #000;
-        border-top: none;
-        border-bottom: none;
+        border: 1px solid #000;
         padding: 4px 6px;
         text-align: center;
         vertical-align: middle;
-    }
-
-    /* Keep border for header row */
-    .receipt-items-table th {
-        border-top: 1px solid #000;
-        border-bottom: 1px solid #000;
-    }
-
-
-    /* Add bottom border to last row in tbody */
-    .receipt-items-table tbody tr:last-child td {
-        border-bottom: 1px solid #000;
     }
 
     .receipt-items-table th {
@@ -510,7 +478,7 @@ use yii\helpers\Html; ?>
                     <td class="receipt-text-left">
                         <b>ใบกำกับภาษี เลขที่ <?= Html::encode($refNo) ?></b>
                     </td>
-                    <td>1 <?= Html::encode('ฉบับ') ?></td>
+                    <td>1 <?= Html::encode('job') ?></td>
                     <td class="receipt-text-right"><?= number_format($totalModel->subtotal, 2) ?></td>
                     <td class="receipt-text-right"><?= number_format($totalModel->subtotal, 2) ?></td>
                 </tr>
