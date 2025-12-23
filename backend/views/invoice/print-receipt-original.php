@@ -456,32 +456,14 @@ use yii\helpers\Html; ?>
                 ?><br>
                 TAXID: <?= Html::encode($model->customer_tax_id ?: '') ?>
             </td>
-            <?php
-            // Determine the model to use for totals and reference info
-            $totalModel = $model;
-            $refNo = '';
-            $refDate = '';
-            
-            if ($model->invoice_type == 'receipt' || $model->invoice_type == 'bill_placement') {
-                 $refInvoice = \backend\models\Invoice::findOne($model->quotation_id);
-                 if($refInvoice){
-                     $totalModel = $refInvoice;
-                     $refNo = $refInvoice->invoice_number;
-                     $refDate = $refInvoice->invoice_date;
-                 }
-            } else {
-                 $refQuotation = \backend\models\Quotation::findOne($model->quotation_id);
-                 if($refQuotation){
-                     $refNo = $refQuotation->quotation_no;
-                     $refDate = $refQuotation->quotation_date;
-                 }
-            }
-            ?>
             <td class="receipt-label-cell" style="border-right: none;">อ้างถึงเลขที่ใบแจ้งหนี้<br>RFQ.IV</td>
-            <td class="receipt-data-cell"><?= Html::encode($refNo) ?></td>
+            <td class="receipt-data-cell"><?= Html::encode(\backend\models\Quotation::findNo($model->quotation_id) ?: '') ?></td>
             <td class="receipt-label-cell" style="border-right: none;">อ้างถึงวันที่ใบแจ้งหนี้<br>RFQ.DATE.IV</td>
             <td class="receipt-data-cell">
-                <?= $refDate ? date('d/m/Y', strtotime($refDate)) : '' ?>
+                <?php
+                $quotation_date = \backend\models\Quotation::findDate($model->quotation_id);
+                echo $quotation_date ? date('d/m/Y', strtotime($quotation_date)) : '';
+                ?>
             </td>
         </tr>
     </table>
@@ -499,38 +481,19 @@ use yii\helpers\Html; ?>
         </thead>
         <tbody>
             <?php
-            // Check if we are referencing another document (Invoice or Bill Placement)
-            $isRefDocument = ($model->invoice_type == 'receipt' || $model->invoice_type == 'bill_placement') && !empty($refNo);
-            
-            if ($isRefDocument) {
-                // Display summary row for referenced document
-                ?>
-                <tr>
-                    <td style="text-align: center;"><b>1</b></td>
-                    <td class="receipt-text-left">
-                        <b>ใบกำกับภาษี เลขที่ <?= Html::encode($refNo) ?></b>
-                    </td>
-                    <td>1 <?= Html::encode('ฉบับ') ?></td>
-                    <td class="receipt-text-right"><?= number_format($totalModel->subtotal, 2) ?></td>
-                    <td class="receipt-text-right"><?= number_format($totalModel->subtotal, 2) ?></td>
-                </tr>
-                <?php
-            } else {
-                // Display detailed items for standard invoice/quotation
-                $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
-                if (!empty($model_line)): 
-                    foreach ($model_line as $index => $item): ?>
-                        <tr>
-                            <td style="text-align: center;"><b><?= $index + 1 ?></b></td>
-                            <td class="receipt-text-left"><?= nl2br(Html::encode($item->product_id ? \backend\models\Product::findDescription($item->product_id) : $item->item_description)) ?></td>
-                            <td><?= number_format($item->quantity, 0) ?> <?= Html::encode(\backend\models\Unit::findName($item->unit_id)) ?></td>
-                            <td class="receipt-text-right"><?= number_format($item->unit_price, 2) ?></td>
-                            <td class="receipt-text-right"><?= number_format($item->amount, 2) ?></td>
-                        </tr>
-                    <?php endforeach; 
-                endif; 
-            }
+            $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
             ?>
+            <?php if (!empty($model_line)): ?>
+                <?php foreach ($model_line as $index => $item): ?>
+                    <tr>
+                        <td style="text-align: center;"><b><?= $index + 1 ?></b></td>
+                        <td class="receipt-text-left"><?= nl2br(Html::encode($item->product_id ? \backend\models\Product::findDescription($item->product_id) : $item->item_description)) ?></td>
+                        <td><?= number_format($item->quantity, 0) ?> <?= Html::encode(\backend\models\Unit::findName($item->unit_id)) ?></td>
+                        <td class="receipt-text-right"><?= number_format($item->unit_price, 2) ?></td>
+                        <td class="receipt-text-right"><?= number_format($item->amount, 2) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
             <?php for ($i = 0; $i < 1; $i++): ?>
                 <tr>
                     <td>&nbsp;</td>
@@ -551,29 +514,24 @@ use yii\helpers\Html; ?>
                     </div>
                 </td>
                 <td class="receipt-text-left" style="border: 1px solid #000; border-top: 1px solid #000;"><strong style="font-weight: 800;">รวมเงิน<br>TOTAL</strong></td>
-                <td class="receipt-text-right" style="border: 1px solid #000; border-top: 1px solid #000;"><strong style="font-weight: 800;"><?= number_format($totalModel->subtotal, 2) ?></strong></td>
+                <td class="receipt-text-right" style="border: 1px solid #000; border-top: 1px solid #000;"><strong style="font-weight: 800;"><?= number_format($model->subtotal, 2) ?></strong></td>
             </tr>
             <tr>
                 <td class="receipt-text-left" style="border: 1px solid #000; border-top: none;"><strong style="font-weight: 800;">ภาษีมูลค่าเพิ่ม<br>VAT 7%</strong></td>
-                <td class="receipt-text-right" style="border: 1px solid #000; border-top: none;"><strong style="font-weight: 800;"><?= number_format($totalModel->vat_amount, 2) ?></strong></td>
+                <td class="receipt-text-right" style="border: 1px solid #000; border-top: none;"><strong style="font-weight: 800;"><?= number_format($model->vat_amount, 2) ?></strong></td>
             </tr>
             <tr>
                 <td colspan="3" class="receipt-summary-highlight" style="border: none; padding: 6px;">
                     <?php
-                    if (isset($totalModel->total_amount_text) && !empty($totalModel->total_amount_text)) {
-                        $textThai = $totalModel->total_amount_text;
-                    } else {
-                        // Use Quotation's numtothai method as a fallback
-                        $textThai = (new \backend\models\Quotation())->numtothai($totalModel->total_amount);
-                    }
-                    $textEng = \backend\helpers\NumberToText::convert($totalModel->total_amount);
+                    $textThai = $model->total_amount_text ?: '-';
+                    $textEng = \backend\helpers\NumberToText::convert($model->total_amount);
                     ?>
                     <strong id="amountText" data-th="<?= Html::encode($textThai) ?>" data-en="<?= Html::encode($textEng) ?>">
                         <?= Html::encode($textThai) ?>
                     </strong>
                 </td>
                 <td class="receipt-text-left receipt-summary-highlight" style="border: 1px solid #000; border-top: none;"><strong style="font-weight: 800;">รวมเงินทั้งสิ้น<br>TOTAL AMOUNT</strong></td>
-                <td class="receipt-text-right receipt-summary-highlight" style="border: 1px solid #000; border-top: none;"><strong style="font-weight: 800;"><?= number_format($totalModel->total_amount, 2) ?></strong></td>
+                <td class="receipt-text-right receipt-summary-highlight" style="border: 1px solid #000; border-top: none;"><strong style="font-weight: 800;"><?= number_format($model->total_amount, 2) ?></strong></td>
             </tr>
         </tfoot>
     </table>

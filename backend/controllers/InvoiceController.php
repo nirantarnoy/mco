@@ -120,6 +120,12 @@ class InvoiceController extends BaseController
                 $item->invoice_id = null;
                 $items[] = $item;
             }
+
+            // If copying to a different type (e.g. Invoice -> Receipt), 
+            // set the quotation_id to the source invoice ID to maintain reference.
+            if ($sourceInvoice->invoice_type != $type) {
+                $model->quotation_id = $sourceInvoice->id;
+            }
         }
 
         if ($model->load(Yii::$app->request->post())) {
@@ -129,6 +135,17 @@ class InvoiceController extends BaseController
                 // $model->total_amount_text = \backend\models\PurchReq::numtothai($model->total_amount);
                 $model->status = Invoice::STATUS_ACTIVE;
                 $model->is_billed = 0;
+                
+                // Ensure quotation_id is set if we are copying from another invoice
+                // This is crucial because the form might not include quotation_id as a hidden field,
+                // or it might be overwritten during load().
+                if ($copy_from && empty($model->quotation_id)) {
+                     $sourceInvoice = $this->findModel($copy_from);
+                     if ($sourceInvoice->invoice_type != $type) {
+                        $model->quotation_id = $sourceInvoice->id;
+                     }
+                }
+
                 if ($model->save(false)) {
                     // Handle items
                     $itemsData = Yii::$app->request->post('InvoiceItem', []);
