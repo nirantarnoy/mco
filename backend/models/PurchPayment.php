@@ -39,7 +39,7 @@ class PurchPayment extends \yii\db\ActiveRecord
                 'class' => TimestampBehavior::class,
                 'createdAtAttribute' => 'created_at',
                 'updatedAtAttribute' => false,
-                'value' => date('Y-m-d H:i:s'),
+                'value' => time(),
             ],
             [
                 'class' => BlameableBehavior::class,
