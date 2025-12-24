@@ -294,9 +294,11 @@ $(document).ready(function() {
                         'pluginOptions' => [
                             'autoclose' => true,
                             'allowClear' => true,
+                            'format' => 'dd/mm/yyyy',
                         ],
                     ]) ?>
-                      <?= $form->field($model, 'vendor_id')->widget(\kartik\select2\Select2::className(), [
+
+                    <?= $form->field($model, 'vendor_id')->widget(\kartik\select2\Select2::className(), [
                         'data' => \yii\helpers\ArrayHelper::map(\backend\models\Vendor::find()->all(), 'id', 'name'),
                         'options' => [
                             'placeholder' => '--เลือกผู้จำหน่าย--',
@@ -313,8 +315,6 @@ $(document).ready(function() {
                         'readonly' => true,
                         'class' => 'form-control text-right'
                     ]) ?>
-
-                  
 
                     <?= $form->field($model, 'issued_by')->textInput(['maxlength' => true, 'placeholder' => 'ผู้จัดทำ', 'readonly' => 'readonly', 'value' => $model->isNewRecord ? \backend\models\User::findEmployeeNameByUserId(\Yii::$app->user->id) : $model->issued_by]) ?>
 
@@ -800,8 +800,12 @@ $(document).ready(function() {
             return;
         }
         
+        if (query.length < 1) {
+            hideAutocomplete(input.attr('data-index'));
+            return;
+        }
+        
         var results = searchProducts(query);
-        console.log('Search results:', results); // Debug log
         showAutocompleteResults(input, results);
     });
     
