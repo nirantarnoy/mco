@@ -15,11 +15,8 @@ use backend\models\Invoice;
 /* @var $customers array */
 /* @var $form yii\widgets\ActiveForm */
 
-//$getProductInfoUrl = Url::to(['get-product-info']);
-//$getJobItemsUrl = Url::to(['get-job-items']);
-//$getCustomerUrl = Url::to(['get-customer']);
-//$getJobUrl = Url::to(['get-job']);
-
+// Check if this is a Receipt Copy scenario
+$isCopyReceipt = ($model->invoice_type == Invoice::TYPE_RECEIPT && !empty($copy_from));
 
 // ตั้งค่าตัวแปร URLs ก่อน
 $getProductInfoUrl = Url::to(['get-product-info']);
@@ -42,14 +39,10 @@ var productsData = [];
 var isProductsLoaded = false;
 
 // ตัวแปรเก็บข้อมูล units
-var unitsData = {$unitsData};
+var unitsData = {$unitsData} || {};
 
 // ฟังก์ชันสร้าง unit options (เรียงตามตัวอักษร)
 function createUnitOptions(selectedUnit) {
-    console.log('=== createUnitOptions called ===');
-    console.log('selectedUnit:', selectedUnit);
-    console.log('unitsData:', unitsData);
-    
     var options = '<option value="">เลือกหน่วย</option>';
     
     // แปลง object เป็น array และเรียงตามชื่อ
@@ -62,15 +55,12 @@ function createUnitOptions(selectedUnit) {
         return a.name.localeCompare(b.name);
     });
     
-    console.log('Sorted units:', unitsArray);
-    
     // สร้าง options
     unitsArray.forEach(function(unit) {
         var selected = (unit.name === selectedUnit || unit.id == selectedUnit) ? 'selected' : '';
         options += '<option value="' + unit.id + '" ' + selected + '>' + unit.name + '</option>';
     });
     
-    console.log('Generated options HTML length:', options.length);
     return options;
 }
 
@@ -84,7 +74,6 @@ function loadProductsData() {
         data: { action: 'get-all-products' },
         dataType: 'json',
         success: function(data) {
-            console.log('Products loaded:', data);
             productsData = data || [];
             isProductsLoaded = true;
         },
@@ -101,480 +90,8 @@ function searchProducts(query) {
     
     query = query.toLowerCase();
     return productsData.filter(function(product) {
-        var description = (product.description || product.item_description || '').toLowerCase();
-        var code = (product.code || product.item_code || '').toLowerCase();
-        var name = (product.name || product.item_name || '').toLowerCase();
-        
-        return description.includes(query) || 
-               code.includes(query) ||
-               name.includes(query);
-    }).slice(0, 10);
-}
-
-// ฟังก์ชันแสดงผลลัพธ์
-function showAutocompleteResults(input, results) {
-    var row = input.closest('tr');
-    var dropdown = row.find('.autocomplete-dropdown');
-    
-    dropdown.empty();
-    
-    if (results.length === 0) {
-        dropdown.hide();
-        return;
-    }
-    
-    results.forEach(function(product) {
-        var description = product.description || product.item_description || product.name || 'ไม่ระบุ';
-        var code = product.code || product.item_code || '';
-        
-        var item = $('<div class="autocomplete-item">')
-            .html('<div>' + description + '</div>' + 
-                  (code ? '<div class="product-code">' + code + '</div>' : ''))
-            .data('product', product);
-        dropdown.append(item);
-    });
-    
-    dropdown.show();
-}
-
-// ฟังก์ชันซ่อน dropdown
-function hideAutocomplete(row) {
-    setTimeout(function() {
-        row.find('.autocomplete-dropdown').hide();
-    }, 200);
-}
-
-// ฟังก์ชันเลือกสินค้า
-function selectProduct(input, product) {
-    var row = input.closest('tr');
-    
-    // อัพเดตค่า
-    var code = product.code || product.item_code || '';
-    input.val(code);
-    
-    // อัพเดต product_id
-    var productId = product.id || product.product_id || '';
-    row.find('.product-id-input').val(productId);
-    
-    // อัพเดตราคา
-    var price = product.unit_price || product.price || product.item_price || '0.000';
-    row.find('.unit-price-input').val(price);
-    
-    // อัพเดตหน่วย
-    var unit = product.unit || product.item_unit || 'หน่วย';
-    row.find('input[name*="[unit_id]"]').val(unit);
-    
-    // ซ่อน dropdown
-    row.find('.autocomplete-dropdown').hide();
-    
-    // คำนวณยอดรวม
-    calculateItemAmount(row);
-}
-
-// Function to calculate item amount
-function calculateItemAmount(row) {
-    var quantity = parseFloat(row.find('.quantity-input').val()) || 0;
-    var unitPrice = parseFloat(row.find('.unit-price-input').val()) || 0;
-    
-    var amount = quantity * unitPrice;
-    row.find('.amount-input').val(amount.toFixed(3));
-    
-    calculateTotal();
-}
-
-// ฟังก์ชันจัดรูปแบบตัวเลขให้มี comma
-function formatNumber(num) {
-    if (num === null || num === undefined || num === '') {
-        return '0.00';
-    }
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
-// Function to calculate total
-function calculateTotal() {
-    var subtotal = 0;
-    $('.amount-input').each(function() {
-        subtotal += parseFloat($(this).val()) || 0;
-    });
-    
-    // Update display fields with formatted values
-    $('#invoice-subtotal').val(formatNumber(subtotal.toFixed(2)));
-    
-    // Calculate discount
-    var discountPercent = parseFloat($('#invoice-discount_percent').val()) || 0;
-    var discountAmount = subtotal * (discountPercent / 100);
-    $('#invoice-discount_amount').val(formatNumber(discountAmount.toFixed(2)));
-    
-    var afterDiscount = subtotal - discountAmount;
-    
-    // Calculate VAT
-    var vatPercent = parseFloat($('#invoice-vat_percent').val()) || 0;
-    var vatAmount = afterDiscount * (vatPercent / 100);
-    $('#invoice-vat_amount').val(formatNumber(vatAmount.toFixed(2)));
-    
-    var totalAmount = afterDiscount + vatAmount;
-    $('#invoice-total_amount').val(formatNumber(totalAmount.toFixed(2)));
-    
-    // Update hidden fields with unformatted values for form submission
-    $('#invoice-subtotal-hidden').val(subtotal.toFixed(2));
-    $('#invoice-discount_amount-hidden').val(discountAmount.toFixed(2));
-    $('#invoice-vat_amount-hidden').val(vatAmount.toFixed(2));
-    $('#invoice-total_amount-hidden').val(totalAmount.toFixed(2));
-}
-
-// ตัวแปรเก็บข้อมูลหน่วย (โหลดจาก PHP)
-var unitsData = {$unitsData};
-
-// ฟังก์ชันสร้าง options สำหรับ unit dropdown
-function createUnitOptions(selectedUnit = "") {
-    var options = "<option value=\"\">เลือกหน่วย</option>";
-    for (var unitCode in unitsData) {
-        var selected = (unitCode === selectedUnit) ? "selected" : "";
-        options += "<option value=\"" + unitCode + "\" " + selected + ">" + unitsData[unitCode] + "</option>";
-    }
-    return options;
-}
-// ฟังก์ชันสร้าง unit options (ต้องเพิ่มฟังก์ชันนี้)
-// function createUnitOptions(selectedUnit = '') {
-//     // ตัวอย่างข้อมูลหน่วย - ควรโหลดจากฐานข้อมูล
-//     var units = {
-//         '': 'เลือกหน่วย',
-//         'piece': 'ชิ้น',
-//         'box': 'กล่อง',
-//         'kg': 'กิโลกรัม',
-//         'meter': 'เมตร',
-//         'liter': 'ลิตร'
-//     };
-//    
-//     var options = '';
-//     for (var value in units) {
-//         var selected = (value === selectedUnit) ? 'selected' : '';
-//         options += '<option value="' + value + '" ' + selected + '>' + units[value] + '</option>';
-//     }
-//    
-//     return options;
-// }
-
-// Add new item row
-function addItemRow(itemData = null) {
-    // เช็คว่ามีแถวที่ item_description ว่างอยู่หรือไม่
-    var emptyDescriptionRow = $('#items-table tbody tr').filter(function() {
-        var description = $(this).find('.item-description-input').val();
-        return description === '' || description.trim() === '';
-    }).first();
-
-    // ถ้าพบแถวที่ว่าง ให้ใส่ข้อมูลลงในแถวที่ว่างนั้น
-    if (emptyDescriptionRow.length > 0) {
-        var productId = itemData.product_id || '';
-        var description = itemData.item_description || '';
-        
-        // ถ้ามี product_id ให้ค้นหารหัสสินค้าจาก productsData
-        if (productId && productsData.length > 0) {
-            var product = productsData.find(function(p) {
-                return p.id == productId || p.product_id == productId;
-            });
-            if (product) {
-                description = product.code || product.item_code || description;
             }
-        }
-        
-        var quantity = itemData.quantity || '1.00';
-        var unit = itemData.unit || '';
-        var unitId = itemData.unit_id || '';
-        var unitPrice = itemData.unit_price || '0.00';
-        var amount = itemData.amount || '0.00';
-        
-        // ถ้าไม่มี unit_id แต่มี unit ให้ค้นหา unit_id จาก unitsData
-        if (!unitId && unit && unitsData) {
-            for (var id in unitsData) {
-                if (unitsData[id].trim() === unit.trim()) {
-                    unitId = id;
-                    console.log('Found unit_id from unitsData:', unitId, 'for unit:', unit);
-                    break;
-                }
-            }
-        }
-        
-        console.log('Unit data:', { unit: unit, unitId: unitId, itemData: itemData });
-
-        // ใส่ข้อมูลลงในแถวที่ว่าง
-        emptyDescriptionRow.find('.product-id-input').val(productId);
-        emptyDescriptionRow.find('.item-description-input').val(description);
-        emptyDescriptionRow.find('.quantity-input').val(quantity);
-        emptyDescriptionRow.find('.unit-price-input').val(parseFloat(unitPrice).toFixed(2));
-        emptyDescriptionRow.find('.amount-input').val(amount);
-        
-        // ตั้งค่า unit dropdown - ใช้ unit_id ถ้ามี ถ้าไม่มีให้ค้นหาจากชื่อ
-        var unitSelect = emptyDescriptionRow.find('select[name*="[unit_id]"]');
-        
-        alert('Re-populating dropdown! unitId: ' + unitId + ', unit: ' + unit);
-        
-        // Clear และสร้าง options ใหม่เพื่อให้เรียงถูกต้อง
-        unitSelect.empty();
-        unitSelect.append('<option value="">เลือกหน่วย</option>');
-        
-        // สร้าง options จาก unitsData (ที่เรียงแล้ว)
-        var unitsArray = Object.keys(unitsData).map(function(id) {
-            return { id: id, name: unitsData[id] };
-        });
-        
-        // เรียงตามตัวอักษร
-        unitsArray.sort(function(a, b) {
-            return a.name.localeCompare(b.name);
-        });
-        
-        // เพิ่ม options และ select ตัวที่ถูกต้อง
-        unitsArray.forEach(function(unit) {
-            var selected = '';
-            if (unitId && unit.id == unitId) {
-                selected = 'selected';
-            } else if (!unitId && unit.name === unit.trim()) {
-                selected = 'selected';
-            }
-            unitSelect.append('<option value="' + unit.id + '" ' + selected + '>' + unit.name + '</option>');
-        });
-
-        // คำนวณ amount ใหม่
-        calculateItemAmount(emptyDescriptionRow);
-        
-        return; // ออกจากฟังก์ชันโดยไม่เพิ่มแถวใหม่
-    }
-
-    // ถ้าไม่มี itemData ไม่ต้องทำอะไร
-    if (!itemData) {
-        return;
-    }
-
-    // ลบแถวล่าสุดก่อน (ถ้าต้องการ)
-    // $('#items-table tbody tr:first').remove();
-
-    // คำนวณ rowIndex หลังจากลบแถวล่าสุด
-    var rowIndex = $('#items-table tbody tr').length;
-
-    var productId = itemData ? itemData.product_id || '' : '';
-    var description = itemData ? itemData.item_description || '' : '';
-    
-    // ถ้ามี product_id ให้ค้นหารหัสสินค้าจาก productsData
-    if (productId && productsData.length > 0) {
-        var product = productsData.find(function(p) {
-            return p.id == productId || p.product_id == productId;
-        });
-        if (product) {
-            description = product.code || product.item_code || description;
-        }
-    }
-    
-    var quantity = itemData ? itemData.quantity || '1.00' : '1.00';
-    var unit = itemData ? itemData.unit || '' : '';
-    var unitId = itemData ? itemData.unit_id || '' : '';
-    var unitPrice = itemData ? itemData.unit_price || '0.00' : '0.00';
-    var amount = itemData ? itemData.amount || '0.00' : '0.00';
-
-    var newRowHtml = `
-    <tr>
-        <td class="text-center">` + (rowIndex + 1) + `</td>
-        <td>
-            <input type="hidden" name="InvoiceItem[` + rowIndex + `][product_id]" class="product-id-input" value="` + productId + `">
-            <input type="text" name="InvoiceItem[` + rowIndex + `][item_description]" class="form-control form-control-sm item-description-input" placeholder="รายละเอียดสินค้า/บริการ" autocomplete="off" value="` + description + `">
-            <div class="autocomplete-dropdown"></div>
-        </td>
-        <td>
-            <input type="number" name="InvoiceItem[` + rowIndex + `][quantity]" class="form-control form-control-sm quantity-input text-right" step="0.001" min="0" value="` + quantity + `">
-        </td>
-        <td>
-            <select name="InvoiceItem[` + rowIndex + `][unit_id]" class="form-control form-control-sm">
-                ` + createUnitOptions(unitId || unit) + `
-            </select>
-        </td>
-        <td>
-            <input type="number" name="InvoiceItem[` + rowIndex + `][unit_price]" class="form-control form-control-sm unit-price-input text-right" step="0.001" min="0" value="` + parseFloat(unitPrice).toFixed(2) + `">
-        </td>
-        <td>
-            <input type="number" name="InvoiceItem[` + rowIndex + `][amount]" class="form-control form-control-sm amount-input text-right" readonly style="background-color: #f8f9fa;" value="` + amount + `">
-        </td>
-        <td class="text-center">
-            <button type="button" class="btn btn-sm btn-danger btn-remove-item" title="ลบรายการ">
-                <i class="fas fa-trash"></i>
-            </button>
-        </td>
-    </tr>`;
-
-    $('#items-table tbody').append(newRowHtml);
-
-    // Initialize autocomplete for the new row
-    initializeAutocomplete($('#items-table tbody tr:last .item-description-input'));
-
-    // Calculate amount for the new row
-    if (itemData) {
-        calculateItemAmount($('#items-table tbody tr:last'));
-    }
-}
-
-
-// Remove item row
-function removeItemRow(button) {
-    var rowCount = $('#items-table tbody tr').length;
-    if (rowCount > 1) {
-        $(button).closest('tr').remove();
-        
-        // Re-index rows
-        $('#items-table tbody tr').each(function(index) {
-            $(this).find('td:first').text(index + 1);
-            $(this).find('input, textarea, select').each(function() {
-                var name = $(this).attr('name');
-                if (name) {
-                    var newName = name.replace(/\\[\\d+\\]/, '[' + index + ']');
-                    $(this).attr('name', newName);
-                }
-            });
-        });
-        
-        calculateTotal();
-    } else {
-        alert('ต้องมีรายการอย่างน้อย 1 รายการ');
-    }
-}
-
-// Clear all items
-function clearAllItems() {
-    $('#items-table tbody').empty();
-    addItemRow(); // Add one empty row
-}
-
-// Load job items
-function loadJobItems(jobId) {
-    if (jobId) {
-        $.ajax({
-            url: '{$getJobItemsUrl}',
-            data: {id: jobId},
-            dataType: 'json',
-            type: 'POST',
-            success: function(response) {
-                console.log('Job items response:', response);
-                if (response.success && response.items && response.items.length > 0) {
-                    // Show confirmation dialog
-                    if (confirm('พบรายการสินค้า/บริการจากใบงานนี้ ต้องการโหลดรายการหรือไม่?\\n\\n' +
-                               'หมายเหตุ: การโหลดจะเขียนทับรายการที่มีอยู่')) {
-                        clearAllItems();
-                        
-                        console.log('Job items:', response.items);
-                        // Add items from job
-                        response.items.forEach(function(item) {
-                            addItemRow(item);
-                        });
-                        
-                        calculateTotal();
-                        
-                        // Show success message
-                        showMessage('success', 'โหลดรายการสินค้า/บริการเรียบร้อยแล้ว (' + response.items.length + ' รายการ)');
-                    }
-                } else {
-                    showMessage('info', 'ไม่พบรายการสินค้า/บริการในใบงานนี้');
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error loading job items:', error);
-                showMessage('error', 'เกิดข้อผิดพลาดในการโหลดรายการสินค้า/บริการ');
-            }
-        });
-    }
-}
-
-// ฟังก์ชันทำความสะอาดที่อยู่
-function cleanAddress(address) {
-    if (!address) return '';
-    
-    // ลบคำที่ตามด้วย - หรือช่องว่างซ้ำๆ
-    var cleaned = address
-        .replace(/เลขที่\s*-\s*/g, '')
-        .replace(/ซอย\s*-\s*/g, '')
-        .replace(/ถนน\s*-\s*/g, '')
-        .replace(/ตำบล\/แขวง\s*-\s*/g, '')
-        .replace(/อําเภอ\/เขต\s*-\s*/g, '')
-        .replace(/จังหวัด\s*-\s*/g, '')
-        .replace(/\s+/g, ' ')  // ลบช่องว่างซ้ำๆ
-        .trim();  // ลบช่องว่างหน้าหลัง
-    
-    return cleaned;
-}
-
-// Load customer data
-function loadCustomerData(customerCode) {
-    if (customerCode) {
-        $.ajax({
-            url: '{$getCustomerUrl}',
-            data: {code: customerCode},
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    $('#invoice-customer_name').val(response.data.customer_name);
-                    $('#invoice-customer_address').val(cleanAddress(response.data.customer_address));
-                    $('#invoice-customer_tax_id').val(response.data.customer_tax_id);
-                    $('#invoice-credit_terms').val(response.data.credit_terms);
-                }
-            }
-        });
-    }
-}
-
-// Initialize autocomplete for item description
-function initializeAutocomplete(element) {
-    // Initialize autocomplete events for the element
-    element.off('input.autocomplete focus.autocomplete blur.autocomplete keydown.autocomplete');
-    
-    element.on('input.autocomplete', function() {
-        var input = $(this);
-        var query = input.val();
-        
-        if (!isProductsLoaded) {
-            loadProductsData();
-            return;
-        }
-        
-        var results = searchProducts(query);
-        showAutocompleteResults(input, results);
-    });
-    
-    element.on('focus.autocomplete', function() {
-        var input = $(this);
-        var query = input.val();
-        
-        if (!isProductsLoaded) {
-            loadProductsData();
-            return;
-        }
-        
-        if (query) {
-            var results = searchProducts(query);
-            showAutocompleteResults(input, results);
-        }
-    });
-    
-    element.on('blur.autocomplete', function() {
-        var row = $(this).closest('tr');
-        hideAutocomplete(row);
-    });
-    
-    element.on('keydown.autocomplete', function(e) {
-        var row = $(this).closest('tr');
-        var dropdown = row.find('.autocomplete-dropdown');
-        var items = dropdown.find('.autocomplete-item');
-        var highlighted = items.filter('.highlighted');
-        
-        if (e.keyCode === 40) { // Arrow Down
-            e.preventDefault();
-            if (highlighted.length === 0) {
-                items.first().addClass('highlighted');
-            } else {
-                highlighted.removeClass('highlighted');
-                var next = highlighted.next('.autocomplete-item');
-                if (next.length) {
-                    next.addClass('highlighted');
-                } else {
-                    items.first().addClass('highlighted');
-                }
-            }
-        } else if (e.keyCode === 38) { // Arrow Up
+        } else if (e.keyCode === 38) {
             e.preventDefault();
             if (highlighted.length === 0) {
                 items.last().addClass('highlighted');
@@ -587,19 +104,18 @@ function initializeAutocomplete(element) {
                     items.last().addClass('highlighted');
                 }
             }
-        } else if (e.keyCode === 13) { // Enter
+        } else if (e.keyCode === 13) {
             e.preventDefault();
             if (highlighted.length) {
                 var product = highlighted.data('product');
                 selectProduct($(this), product);
             }
-        } else if (e.keyCode === 27) { // Escape
+        } else if (e.keyCode === 27) {
             dropdown.hide();
         }
     });
 }
 
-// Show message function
 function showMessage(type, message) {
     var alertClass = 'alert-info';
     switch(type) {
@@ -607,23 +123,18 @@ function showMessage(type, message) {
         case 'error': alertClass = 'alert-danger'; break;
         case 'warning': alertClass = 'alert-warning'; break;
     }
-    
     var alertHtml = '<div class="alert ' + alertClass + ' alert-dismissible fade show" role="alert">' +
                     message +
                     '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
                     '<span aria-hidden="true">&times;</span>' +
                     '</button>' +
                     '</div>';
-    
     $('.invoice-form').prepend(alertHtml);
-    
-    // Auto hide after 5 seconds
     setTimeout(function() {
         $('.alert').fadeOut();
     }, 5000);
 }
 
-// Event handlers
 $(document).on('input', '.quantity-input, .unit-price-input', function() {
     calculateItemAmount($(this).closest('tr'));
 });
@@ -670,7 +181,6 @@ $(document).on('change', '#invoice-job-id', function() {
             dataType: 'json',
             type: 'POST',
             success: function(data) {
-                console.log(data);
                 if (data != null) {
                     $('#invoice-customer-id').val(data[0].customer_id);
                     $('#invoice-customer-name').val(data[0].customer_name);
@@ -688,19 +198,15 @@ $(document).on('change', '#invoice-job-id', function() {
     }
 });
 
-// Initialize calculations and autocomplete on page load
 $(document).ready(function() {
-    loadProductsData(); // โหลดข้อมูลสินค้าตอนเริ่มต้น
+    loadProductsData();
     calculateTotal();
-    
-    // Initialize autocomplete for existing items
     $('.item-description-input').each(function() {
         initializeAutocomplete($(this));
     });
 });
 JS;
 
-// ใช้งาน
 $this->registerJs($js);
 
 $typeLabels = Invoice::getTypeOptions();
@@ -740,7 +246,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                 <div class="col-md-4">
                     <?= $form->field($model, 'invoice_number')->textInput([
                         'maxlength' => true,
-                        'readonly' => !$model->isNewRecord,
+                        'readonly' => !$model->isNewRecord && !$isCopyReceipt,
                         'placeholder' => 'จะสร้างอัตโนมัติ'
                     ]) ?>
 
@@ -758,23 +264,29 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                         'options' => [
                             'placeholder' => '...เลือกใบเสนอราคา...',
                             'id' => 'invoice-job-id',
+                            'disabled' => $isCopyReceipt,
                         ],
                         'pluginOptions' => [
                             'allowClear' => true,
                             'escapeMarkup' => new \yii\web\JsExpression('function (markup) { return markup; }'),
                         ],
                     ]) ?>
+                    <?php if ($isCopyReceipt): ?>
+                        <?= Html::activeHiddenInput($model, 'quotation_id') ?>
+                    <?php endif; ?>
 
                     <?= $form->field($model, 'customer_name')->textInput([
                         'maxlength' => true,
                         'placeholder' => 'ชื่อลูกค้า',
                         'id' => 'invoice-customer-name',
+                        'readonly' => $isCopyReceipt,
                     ]) ?>
 
                     <?= $form->field($model, 'customer_address')->textarea([
                         'rows' => 3,
                         'placeholder' => 'ที่อยู่ลูกค้า',
                         'id' => 'invoice-customer-address',
+                        'readonly' => $isCopyReceipt,
                     ]) ?>
                 </div>
                 <div class="col-md-4" style="padding-top: 20px;">
@@ -782,6 +294,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                         'maxlength' => true,
                         'placeholder' => 'เลขประจำตัวผู้เสียภาษี',
                         'id' => 'invoice-customer-tax-id',
+                        'readonly' => $isCopyReceipt,
                     ]) ?>
 
                     <?= $form->field($model, 'payment_term_id')->widget(
@@ -792,12 +305,16 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                 'placeholder' => 'เลือกเงื่อนไขชําระเงิน...',
                                 'id' => 'invoice-payment_term_id',
                                 'onchange' => 'calculateDueDate($(this))',
+                                'disabled' => $isCopyReceipt,
                             ],
                             'pluginOptions' => [
                                 'allowClear' => true,
                             ],
                         ]
                     ) ?>
+                    <?php if ($isCopyReceipt): ?>
+                        <?= Html::activeHiddenInput($model, 'payment_term_id') ?>
+                    <?php endif; ?>
 
                     <?= $form->field($model, 'due_date')->widget(DatePicker::class, [
                         'options' => ['placeholder' => 'วันครบกำหนดชำระ', 'id' => 'invoice-due-date', 'readonly' => true],
@@ -827,10 +344,10 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                     <?php endif; ?>
                 </div>
                 <div class="col-md-4" style="padding-top: 20px;">
-                    <?= $form->field($model, 'po_number')->textInput(['maxlength' => true, 'placeholder' => 'เลขที่ใบสั่งซื้อ']) ?>
+                    <?= $form->field($model, 'po_number')->textInput(['maxlength' => true, 'placeholder' => 'เลขที่ใบสั่งซื้อ', 'readonly' => $isCopyReceipt]) ?>
 
                     <?= $form->field($model, 'po_date')->widget(DatePicker::class, [
-                        'options' => ['placeholder' => 'วันที่ใบสั่งซื้อ'],
+                        'options' => ['placeholder' => 'วันที่ใบสั่งซื้อ', 'readonly' => $isCopyReceipt],
                         'pluginOptions' => [
                             'autoclose' => true,
                             'format' => 'yyyy-mm-dd',
@@ -846,23 +363,13 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                     ]) ?>
                 </div>
             </div>
-        </div>
-    </div>
-    <?= $form->field($model, 'invoice_type')->hiddenInput(['value' => $model->invoice_type])->label(false) ?>
-    <?= $form->field($model, 'customer_id')->hiddenInput(['value' => $model->customer_id, 'id' => 'invoice-customer-id'])->label(false) ?>
-
-    <div class="card mt-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-list"></i> รายการสินค้า/บริการ
-            </h5>
-            <div>
                 <button type="button" class="btn btn-sm btn-info btn-load-job-items me-2">
                     <i class="fas fa-download"></i> โหลดจากใบงาน
                 </button>
                 <button type="button" class="btn btn-sm btn-primary btn-add-item">
                     <i class="fas fa-plus"></i> เพิ่มรายการ
                 </button>
+                <?php endif; ?>
             </div>
         </div>
         <div class="card-body p-0">
@@ -896,7 +403,8 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                     <?= Html::textInput("InvoiceItem[{$index}][item_description]", $displayValue, [
                                         'class' => 'form-control form-control-sm item-description-input',
                                         'placeholder' => 'รายละเอียดสินค้า/บริการ',
-                                        'autocomplete' => 'off'
+                                        'autocomplete' => 'off',
+                                        'readonly' => $isCopyReceipt,
                                     ]) ?>
                                     <div class="autocomplete-dropdown"></div>
                                 </td>
@@ -905,7 +413,8 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                         'class' => 'form-control form-control-sm quantity-input text-right',
                                         'type' => 'number',
                                         'step' => '0.001',
-                                        'min' => '0'
+                                        'min' => '0',
+                                        'readonly' => $isCopyReceipt,
                                     ]) ?>
                                 </td>
                                 <td>
@@ -915,9 +424,13 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                         $sortedUnits,
                                         [
                                             'prompt' => 'เลือกหน่วย',
-                                            'class' => 'form-control form-control-sm text-center'
+                                            'class' => 'form-control form-control-sm text-center',
+                                            'disabled' => $isCopyReceipt,
                                         ]
                                     ) ?>
+                                    <?php if ($isCopyReceipt): ?>
+                                        <?= Html::hiddenInput("InvoiceItem[{$index}][unit_id]", $item->unit_id) ?>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <?= Html::textInput("InvoiceItem[{$index}][unit_price]", $item->unit_price ?: '0.000', [
@@ -935,10 +448,12 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                     ]) ?>
                                 </td>
                                 <td class="text-center">
+                                    <?php if (!$isCopyReceipt): ?>
                                     <button type="button" class="btn btn-sm btn-danger btn-remove-item"
                                         title="ลบรายการ">
                                         <i class="fas fa-trash"></i>
                                     </button>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -986,7 +501,8 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                 'step' => '0.01',
                                 'min' => '0',
                                 'max' => '100',
-                                'class' => 'form-control text-right'
+                                'class' => 'form-control text-right',
+                                'readonly' => $isCopyReceipt,
                             ]) ?>
                         </div>
                         <div class="col-sm-6">
@@ -1010,196 +526,30 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                 'step' => '0.01',
                                 'min' => '0',
                                 'max' => '100',
-                                'class' => 'form-control text-right'
+                                'class' => 'form-control text-right',
+                                'readonly' => $isCopyReceipt,
                             ]) ?>
                         </div>
                         <div class="col-sm-6">
                             <?= Html::hiddenInput('Invoice[vat_amount]', $model->vat_amount, ['id' => 'invoice-vat_amount-hidden']) ?>
                             <?= $form->field($model, 'vat_amount')->textInput([
                                 'type' => 'text',
-                                'readonly' => true,
-                                'disabled' => true,
-                                'class' => 'form-control text-right',
-                                'style' => 'background-color: #f8f9fa;'
-                            ]) ?>
-                        </div>
-                    </div>
-
-                    <?= Html::hiddenInput('Invoice[total_amount]', $model->total_amount, ['id' => 'invoice-total_amount-hidden']) ?>
-                    <?= $form->field($model, 'total_amount')->textInput([
-                        'type' => 'text',
-                        'readonly' => true,
-                        'disabled' => true,
-                        'class' => 'form-control text-right font-weight-bold',
-                        'style' => 'background-color: #e3f2fd; font-size: 16px; border: 2px solid #2196f3;'
-                    ]) ?>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="form-group mt-4">
-        <div class="text-center">
-            <?= Html::submitButton($model->isNewRecord ? '<i class="fas fa-save"></i> บันทึก' : '<i class="fas fa-save"></i> แก้ไข', [
-                'class' => $model->isNewRecord ? 'btn btn-success btn-lg' : 'btn btn-primary btn-lg'
-            ]) ?>
-            <?= Html::a('<i class="fas fa-times"></i> ยกเลิก', ['index'], ['class' => 'btn btn-secondary btn-lg']) ?>
-            <?php if (!$model->isNewRecord): ?>
-                <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
-                    'class' => 'btn btn-info btn-lg',
-                    'target' => '_blank'
-                ]) ?>
-            <?php endif; ?>
-        </div>
-    </div>
-
-
-    <?php ActiveForm::end(); ?>
-
-    <?php
-    $model_doc = \common\models\InvoiceDoc::find()->where(['invoice_id' => $model->id])->all();
-    ?>
-    <hr>
-    <br />
-    <div class="label">
-        <h4>เอกสารแนบ</h4>
-    </div>
-    <div class="row">
-        <div class="col-lg-12">
-            <table class="table table-bordered table-striped" style="width: 100%">
-                <thead>
-                    <tr>
-                        <th style="width: 5%;text-align: center">#</th>
-                        <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
-                        <th style="width: 10%;text-align: center">ดูเอกสาร</th>
-                        <th style="width: 5%;text-align: center">-</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if ($model_doc != null): ?>
-
-                        <?php foreach ($model_doc as $key => $value): ?>
-                            <tr>
-                                <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
-                                <td><?= $value->doc ?></td>
-                                <td style="text-align: center">
-                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/invoice_doc/' . $value->doc ?>"
-                                        target="_blank">
-                                        ดูเอกสาร
-                                    </a>
-                                </td>
-                                <td style="text-align: center">
-                                    <div class="btn btn-danger" data-var="<?= trim($value->doc) ?>"
-                                        onclick="delete_doc($(this))">ลบ
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <br />
-
-    <form action="<?= Url::to(['invoice/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
-        <input type="hidden" name="id" value="<?= $model->id ?>">
-        <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-            <div class="row">
-                <div class="col-lg-12">
-                    <label for="">เอกสารแนบ</label>
-                    <input type="file" name="file_doc" multiple>
-                </div>
-            </div>
-            <br />
-            <div class="row">
-                <div class="col-lg-12">
-                    <button class="btn btn-info">
-                        <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ
-                    </button>
-                </div>
-            </div>
-        </div>
-    </form>
-    <form id="form-delete-doc-file" action="<?= Url::to(['invoice/delete-doc-file'], true) ?>" method="post">
-        <input type="hidden" name="id" value="<?= $model->id ?>">
-        <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
-    </form>
-</div>
-
-<?php
-$this->registerCss("
-.invoice-form .card {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border: none;
-}
-
-.invoice-form .card-header {
-    background: linear-gradient(45deg, #f8f9fa, #e9ecef);
-    border-bottom: 1px solid #dee2e6;
-}
-
-.invoice-form .table th {
-    background-color: #f8f9fa;
-    border-color: #dee2e6;
-    font-weight: 600;
-    font-size: 13px;
-}
-
-.invoice-form .form-control-sm {
-    font-size: 13px;
-}
-
-.invoice-form .btn-lg {
-    padding: 12px 30px;
-    font-size: 16px;
-}
-
-.invoice-form .input-group-text {
-    background-color: #e9ecef;
-    border-color: #ced4da;
-    font-weight: 600;
-}
-
-#invoice-total_amount {
-    font-size: 18px !important;
-    font-weight: bold !important;
-}
-
-.btn-load-job-items {
-    margin-right: 8px;
-}
-
-.autocomplete-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 9999 !important;
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    max-height: 200px;
-    overflow-y: auto;
-    width: 100%;
     display: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
 .autocomplete-item {
-    padding: 8px 12px;
+    padding: 0.5rem;
     cursor: pointer;
-    border-bottom: 1px solid #eee;
-    font-size: 14px;
-}
-
-.autocomplete-item:hover, .autocomplete-item.highlighted {
-    background-color: #007bff;
-    color: white;
+    border-bottom: 1px solid #e9ecef;
 }
 
 .autocomplete-item:last-child {
     border-bottom: none;
+}
+
+.autocomplete-item:hover, .autocomplete-item.highlighted {
+    background-color: #f8f9fa;
 }
 
 .product-code {
@@ -1233,8 +583,7 @@ td:has(.autocomplete-dropdown) {
     z-index: 1000;
     position: relative;
 }
-");
-?>
+</style>
 
 <?php
 $url_to_get_payment_term_day = Url::to(['invoice/get-payment-term-day'], true);

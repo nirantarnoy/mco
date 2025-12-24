@@ -143,6 +143,15 @@ class PettyCashVoucher extends ActiveRecord
             if($this->approve_status ==1){
                 $this->approved_by = \backend\models\User::findEmployeeNameByUserId(5);
             }
+
+            // Convert date from d/m/Y to Y-m-d
+            if (!empty($this->date) && strpos($this->date, '/') !== false) {
+                $dateParts = explode('/', $this->date);
+                if (count($dateParts) == 3) {
+                    $this->date = $dateParts[2] . '-' . $dateParts[1] . '-' . $dateParts[0];
+                }
+            }
+
             return true;
         }
         $this->company_id = 1;

@@ -420,4 +420,55 @@ class Purch extends ActiveRecord
     {
         return $this->purch_no . ' - ' . $this->vendor_name . ' (' . Yii::$app->formatter->asDecimal($this->net_amount, 2) . ' บาท)';
     }
+
+    public function getPurchDocs()
+    {
+        return $this->hasMany(\common\models\PurchDoc::class, ['purch_id' => 'id']);
+    }
+
+    public function getPurchDeposits()
+    {
+        return $this->hasMany(\backend\models\PurchDeposit::class, ['purch_id' => 'id']);
+    }
+
+    public function getPurchVendorBill()
+    {
+        return $this->hasOne(\common\models\PurchVendorBill::class, ['purch_id' => 'id']);
+    }
+
+    public function getAttachedDocuments()
+    {
+        $docs = [
+            'acknowledge' => false,
+            'invoice' => false,
+            'slip' => false,
+            'deposit' => false,
+            'deposit_return' => false,
+            'vendor_bill' => false,
+        ];
+
+        // Check PurchDoc
+        $purchDocs = $this->purchDocs;
+        foreach ($purchDocs as $doc) {
+            if ($doc->doc_type_id == 1) $docs['acknowledge'] = true;
+            if ($doc->doc_type_id == 2) $docs['invoice'] = true;
+            if ($doc->doc_type_id == 3) $docs['slip'] = true;
+        }
+
+        // Check Deposit
+        foreach ($this->purchDeposits as $deposit) {
+            $lines = \backend\models\PurchDepositLine::find()->where(['purch_deposit_id' => $deposit->id])->all();
+            foreach ($lines as $line) {
+                if (!empty($line->deposit_doc)) $docs['deposit'] = true;
+                if (!empty($line->receive_doc)) $docs['deposit_return'] = true;
+            }
+        }
+
+        // Check Vendor Bill
+        if ($this->purchVendorBill && !empty($this->purchVendorBill->bill_doc)) {
+            $docs['vendor_bill'] = true;
+        }
+
+        return $docs;
+    }
 }

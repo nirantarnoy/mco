@@ -133,62 +133,62 @@ class InvoiceController extends BaseController
         }
 
         // Simplified form for Receipt from copy
-        if ($type === Invoice::TYPE_RECEIPT && $copy_from) {
-             // Pre-load data for modal if it's a new request (not post)
-             if (!Yii::$app->request->isPost) {
-                 // The model is already populated with copied data above
-             }
-             
-             // If it's a POST request for the modal form
-             if ($model->load(Yii::$app->request->post())) {
-                $transaction = Yii::$app->db->beginTransaction();
-                try {
-                    $model->status = Invoice::STATUS_ACTIVE;
-                    $model->is_billed = 0;
-                    
-                    // Ensure quotation_id is preserved/set correctly
-                    if ($copy_from) {
-                         $sourceInvoice = $this->findModel($copy_from);
-                         if ($sourceInvoice->invoice_type != $type) {
-                             if ($type === Invoice::TYPE_RECEIPT && $sourceInvoice->invoice_type !== Invoice::TYPE_RECEIPT) {
-                                $model->quotation_id = $sourceInvoice->id;
-                             } else {
-                                $model->quotation_id = $sourceInvoice->quotation_id;
-                             }
-                         }
-                    }
-
-                    if ($model->save(false)) {
-                        // Save items (from $items variable populated from source)
-                        foreach ($items as $item) {
-                            $item->invoice_id = $model->id;
-                            if (!$item->save(false)) {
-                                throw new \Exception('Failed to save item');
-                            }
-                        }
-
-                        $model->updateAmountsFromItems();
-
-                        $relation = new \backend\models\InvoiceRelation();
-                        $relation->parent_invoice_id = $copy_from;
-                        $relation->child_invoice_id = $model->id;
-                        $relation->relation_type = $sourceInvoice->invoice_type . '_to_' . $type;
-                        $relation->save(false);
-
-                        $transaction->commit();
-                        Yii::$app->session->setFlash('success', 'สร้างใบเสร็จรับเงินเรียบร้อยแล้ว');
-                        return $this->redirect(['view', 'id' => $model->id]);
-                    }
-                } catch (\Exception $e) {
-                    $transaction->rollBack();
-                    Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
-                }
-            }
-            
-            return $this->render('create_receipt_modal', [
-                'model' => $model,
-            ]);
-        }
+//        if ($type === Invoice::TYPE_RECEIPT && $copy_from) {
+//             // Pre-load data for modal if it's a new request (not post)
+//             if (!Yii::$app->request->isPost) {
+//                 // The model is already populated with copied data above
+//             }
+//             
+//             // If it's a POST request for the modal form
+//             if ($model->load(Yii::$app->request->post())) {
+//                $transaction = Yii::$app->db->beginTransaction();
+//                try {
+//                    $model->status = Invoice::STATUS_ACTIVE;
+//                    $model->is_billed = 0;
+//                    
+//                    // Ensure quotation_id is preserved/set correctly
+//                    if ($copy_from) {
+//                         $sourceInvoice = $this->findModel($copy_from);
+//                         if ($sourceInvoice->invoice_type != $type) {
+//                             if ($type === Invoice::TYPE_RECEIPT && $sourceInvoice->invoice_type !== Invoice::TYPE_RECEIPT) {
+//                                $model->quotation_id = $sourceInvoice->id;
+//                             } else {
+//                                $model->quotation_id = $sourceInvoice->quotation_id;
+//                             }
+//                         }
+//                    }
+//
+//                    if ($model->save(false)) {
+//                        // Save items (from $items variable populated from source)
+//                        foreach ($items as $item) {
+//                            $item->invoice_id = $model->id;
+//                            if (!$item->save(false)) {
+//                                throw new \Exception('Failed to save item');
+//                            }
+//                        }
+//
+//                        $model->updateAmountsFromItems();
+//
+//                        $relation = new \backend\models\InvoiceRelation();
+//                        $relation->parent_invoice_id = $copy_from;
+//                        $relation->child_invoice_id = $model->id;
+//                        $relation->relation_type = $sourceInvoice->invoice_type . '_to_' . $type;
+//                        $relation->save(false);
+//
+//                        $transaction->commit();
+//                        Yii::$app->session->setFlash('success', 'สร้างใบเสร็จรับเงินเรียบร้อยแล้ว');
+//                        return $this->redirect(['view', 'id' => $model->id]);
+//                    }
+//                } catch (\Exception $e) {
+//                    $transaction->rollBack();
+//                    Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+//                }
+//            }
+//            
+//            return $this->render('create_receipt_modal', [
+//                'model' => $model,
+//            ]);
+//        }
 
         if ($model->load(Yii::$app->request->post())) {
             // print_r(Yii::$app->request->post('InvoiceItem', []));return;
@@ -219,6 +219,7 @@ class InvoiceController extends BaseController
 
                     // Save invoice relationship if this is a copy
                     if ($copy_from) {
+                        $sourceInvoice = $this->findModel($copy_from); // Need to re-fetch source invoice to get type
                         $relation = new \backend\models\InvoiceRelation();
                         $relation->parent_invoice_id = $copy_from;
                         $relation->child_invoice_id = $model->id;
@@ -238,10 +239,30 @@ class InvoiceController extends BaseController
             }
         }
 
+        $sourceInvoice = null;
+        $totalPaid = 0;
+        if ($copy_from) {
+            $sourceInvoice = $this->findModel($copy_from);
+            
+            // Calculate total paid from existing relations
+            $relations = \backend\models\InvoiceRelation::find()
+                ->where(['parent_invoice_id' => $copy_from])
+                ->all();
+            
+            foreach ($relations as $rel) {
+                if ($rel->childInvoice && $rel->childInvoice->status == Invoice::STATUS_ACTIVE) {
+                    $totalPaid += $rel->childInvoice->total_amount;
+                }
+            }
+        }
+
         return $this->render('create', [
             'model' => $model,
             'items' => $items,
             'customers' => $this->getCustomersList(),
+            'copy_from' => $copy_from,
+            'sourceInvoice' => $sourceInvoice,
+            'totalPaid' => $totalPaid,
         ]);
     }
 

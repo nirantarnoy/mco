@@ -95,19 +95,38 @@ $this->params['breadcrumbs'][] = $this->title;
                     ]
                 ]),
             ],
-//            [
-//                'attribute' => 'vendor_id',
-//                'label' => 'ผู้ขาย',
-//                'headerOptions' => ['style' => 'width: 200px;'],
-//                'value' => function ($model) {
-//                    return $model->vendor_id ? \backend\models\Vendor::findName($model->vendor_id) : 'ไม่ระบุ';
-//                },
-//            ],
             [
                 'attribute' => 'vendor_name',
                 'label' => 'ผู้ขาย',
                 'headerOptions' => ['style' => 'width: 200px;'],
-                'value' => 'vendor.name', // ✅ แสดงชื่อ vendor
+                'value' => 'vendor.name',
+            ],
+            [
+                'attribute' => 'net_amount',
+                'label' => 'ยอดเงินรวม',
+                'headerOptions' => ['style' => 'width: 120px; text-align: right;'],
+                'contentOptions' => ['style' => 'text-align: right;'],
+                'value' => function ($model) {
+                    return number_format($model->net_amount, 2);
+                },
+            ],
+            [
+                'label' => 'เอกสารแนบ',
+                'headerOptions' => ['style' => 'width: 250px; text-align: center;'],
+                'contentOptions' => ['style' => 'text-align: center;'],
+                'format' => 'raw',
+                'value' => function ($model) {
+                    $docs = $model->getAttachedDocuments();
+                    $html = '';
+                    if ($docs['acknowledge']) $html .= '<span class="badge bg-primary me-1" title="ใบตอบรับ">ตอบรับ</span>';
+                    if ($docs['invoice']) $html .= '<span class="badge bg-info me-1" title="ใบแจ้งหนี้">แจ้งหนี้</span>';
+                    if ($docs['slip']) $html .= '<span class="badge bg-success me-1" title="สลิปโอนเงิน">สลิป</span>';
+                    if ($docs['deposit']) $html .= '<span class="badge bg-warning me-1" title="มัดจำ">มัดจำ</span>';
+                    if ($docs['deposit_return']) $html .= '<span class="badge bg-secondary me-1" title="รับมัดจำคืน">คืนมัดจำ</span>';
+                    if ($docs['vendor_bill']) $html .= '<span class="badge bg-dark me-1" title="วางบิล">วางบิล</span>';
+                    
+                    return $html ?: '<span class="text-muted">-</span>';
+                },
             ],
             [
                 'attribute' => 'approve_status',
