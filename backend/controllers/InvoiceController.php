@@ -227,6 +227,15 @@ class InvoiceController extends BaseController
                         if (!$relation->save()) {
                             Yii::error('Failed to save invoice relation: ' . json_encode($relation->errors), __METHOD__);
                         }
+
+                        // Save Payment History
+                        $history = new \backend\models\InvoicePaymentHistory();
+                        $history->invoice_id = $copy_from;
+                        $history->receipt_id = $model->id;
+                        $history->amount = $model->total_amount;
+                        $history->payment_date = $model->invoice_date ?: date('Y-m-d');
+                        $history->company_id = $model->company_id;
+                        $history->save();
                     }
 
                     $transaction->commit();
@@ -293,6 +302,14 @@ class InvoiceController extends BaseController
                     // Handle new items
                     $itemsData = Yii::$app->request->post('InvoiceItem', []);
                     $this->saveItems($model, $itemsData);
+
+                    // Update Payment History if exists
+                    $history = \backend\models\InvoicePaymentHistory::findOne(['receipt_id' => $model->id]);
+                    if ($history) {
+                        $history->amount = $model->total_amount;
+                        $history->payment_date = $model->invoice_date;
+                        $history->save();
+                    }
 
                     $transaction->commit();
                     Yii::$app->session->setFlash('success', 'แก้ไขข้อมูลเรียบร้อยแล้ว');
