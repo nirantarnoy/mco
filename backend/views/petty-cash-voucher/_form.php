@@ -9,6 +9,12 @@ use kartik\date\DatePicker;
 /* @var $model backend\models\PettyCashVoucher */
 /* @var $details backend\models\PettyCashDetail[] */
 /* @var $form yii\widgets\ActiveForm */
+
+// Convert date to d/m/Y for display in DatePicker
+if (!empty($model->date) && strpos($model->date, '-') !== false) {
+    $model->date = date('d/m/Y', strtotime($model->date));
+}
+
 // CSS สำหรับ autocomplete
 $autocompleteCSS = <<<CSS
 .autocomplete-dropdown {
@@ -130,49 +136,6 @@ function calculateGrandTotal() {
     $('#pettycashvoucher-amount').val(grandTotal.toFixed(2));
 }
 
-//// Add new row
-//function addDetailRow() {
-//    var rowIndex = $('#details-table tbody tr').length;
-//    
-//    var newRowHtml = `
-//    <tr>
-//        <td>
-//            <input type=\"text\" name=\"PettyCashDetail[` + rowIndex + `][ac_code]\" class=\"form-control form-control-sm\" placeholder=\"รหัสบัญชี\" maxlength=\"50\">
-//        </td>
-//        <td>
-//            <input type=\"date\" name=\"PettyCashDetail[` + rowIndex + `][detail_date]\" class=\"form-control form-control-sm\">
-//        </td>
-//        <td>
-//            <textarea name=\"PettyCashDetail[` + rowIndex + `][detail]\" class=\"form-control form-control-sm\" rows=\"2\" placeholder=\"รายละเอียดการจ่าย\"></textarea>
-//        </td>
-//        <td>
-//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][amount]\" class=\"form-control form-control-sm amount-input text-right\" step=\"0.01\"  placeholder=\"0.00\" value=\"0.00\">
-//        </td>
-//        <td>
-//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][vat]\" class=\"form-control form-control-sm text-right\" step=\"0.01\" min=\"\" placeholder=\"0.00\" value=\"0.00\">
-//        </td>
-//        <td>
-//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][vat_amount]\" class=\"form-control form-control-sm vat-amount-input text-right\" step=\"0.01\" min=\"\" placeholder=\"0.00\" value=\"0.00\">
-//        </td>
-//        <td>
-//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][wht]\" class=\"form-control form-control-sm wht-input text-right\" step=\"0.01\" min=\"\" placeholder=\"0.00\" value=\"0.00\">
-//        </td>
-//        <td>
-//            <input type=\"number\" name=\"PettyCashDetail[` + rowIndex + `][other]\" class=\"form-control form-control-sm other-input text-right\" step=\"0.01\" min=\"\" placeholder=\"0.00\" value=\"0.00\">
-//        </td>
-//        <td>
-//            <input type=\"text\" name=\"PettyCashDetail[` + rowIndex + `][total]\" class=\"form-control form-control-sm total-input text-right\" readonly style=\"background-color: #f8f9fa;\" value=\"0.00\">
-//        </td>
-//        <td class=\"text-center\">
-//            <button type=\"button\" class=\"btn btn-sm btn-danger btn-remove-row\" title=\"ลบรายการ\">
-//                <i class=\"fas fa-trash\"></i>
-//            </button>
-//        </td>
-//    </tr>`;
-//    
-//    $('#details-table tbody').append(newRowHtml);
-//}
-
 // Remove row
 function removeDetailRow(button) {
     var rowCount = $('#details-table tbody tr').length;
@@ -196,26 +159,10 @@ function removeDetailRow(button) {
     }
 }
 
-// Calculate VAT amount automatically (7%)
-// function calculateVAT(row) {
-//     var amount = parseFloat(row.find('.amount-input').val()) || 0;
-//     var vatRate = parseFloat(row.find('input[name$=\"[vat]\"]').val()) || 0;
-//     
-//     if (vatRate > 0) {
-//         var vatAmount = (amount * vatRate) / 100;
-//         row.find('.vat-amount-input').val(vatAmount.toFixed(2));
-//         calculateRowTotal(row);
-//     }
-// }
-
 // Event handlers
 $(document).on('input', '.amount-input, .vat-input, .vat-prohibit-input, .wht-input, .other-input', function() {
     calculateRowTotal($(this).closest('tr'));
 });
-
-// $(document).on('input', 'input[name$=\"[vat]\"]', function() {
-//     calculateVAT($(this).closest('tr'));
-// });
 
 $(document).on('click', '.btn-add-row', function() {
     addDetailRow();
@@ -290,11 +237,12 @@ $(document).ready(function() {
                     ]) ?>
 
                     <?= $form->field($model, 'date')->widget(DatePicker::class, [
-                        'options' => ['placeholder' => 'เลือกวันที่'],
+                        'options' => ['placeholder' => 'เลือกวันที่', 'autocomplete' => 'off'],
                         'pluginOptions' => [
                             'autoclose' => true,
                             'allowClear' => true,
                             'format' => 'dd/mm/yyyy',
+                            'todayHighlight' => true,
                         ],
                     ]) ?>
 
@@ -371,18 +319,6 @@ $(document).ready(function() {
                             <tr>
                                 <td>
                                     <?= Html::textInput("PettyCashDetail[{$index}][ac_code]", $detail->ac_code, [
-                                        'class' => 'form-control form-control-sm',
-                                        'placeholder' => 'รหัสบัญชี'
-                                    ]) ?>
-                                </td>
-                                <td>
-                                    <?= Html::input('date', "PettyCashDetail[{$index}][detail_date]", $detail->detail_date, [
-                                        'class' => 'form-control form-control-sm'
-                                    ]) ?>
-                                </td>
-                                <td>
-                                    <?= Html::textarea("PettyCashDetail[{$index}][detail]", $detail->detail, [
-                                        'class' => 'form-control form-control-sm',
                                         'rows' => 2,
                                         'placeholder' => 'รายละเอียด'
                                     ]) ?>
@@ -657,18 +593,6 @@ var isProductsLoaded = false;
 function addDetailRow() {
     var rowIndex = $('#details-table tbody tr').length;
     
-    var newRowHtml = `
-    <tr>
-        <td>
-            <input type="text" name="PettyCashDetail[` + rowIndex + `][ac_code]" class="form-control form-control-sm" placeholder="รหัสบัญชี" maxlength="50">
-        </td>
-        <td>
-            <input type="date" name="PettyCashDetail[` + rowIndex + `][detail_date]" class="form-control form-control-sm">
-        </td>
-        <td>
-            <textarea name="PettyCashDetail[` + rowIndex + `][detail]" class="form-control form-control-sm" rows="2" placeholder="รายละเอียดการจ่าย"></textarea>
-        </td>
-        <td>
             <input type="text" name="PettyCashDetail[` + rowIndex + `][job_ref_detail]" class="form-control form-control-sm job-autocomplete" placeholder="ใบงาน" data-index="` + rowIndex + `" autocomplete="off">
             <input type="hidden" name="PettyCashDetail[` + rowIndex + `][job_ref_id]" class="job-id-hidden" data-index="` + rowIndex + `" value="">
             <div class="autocomplete-dropdown" data-index="` + rowIndex + `"></div>

@@ -40,7 +40,10 @@ class InvoicePaymentHistory extends ActiveRecord
     public function behaviors()
     {
         return [
-            TimestampBehavior::class,
+            [
+                'class' => TimestampBehavior::class,
+                'value' => function() { return date('Y-m-d H:i:s'); },
+            ],
             [
                 'class' => BlameableBehavior::class,
                 'updatedByAttribute' => false,

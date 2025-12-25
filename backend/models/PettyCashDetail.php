@@ -104,6 +104,14 @@ class PettyCashDetail extends ActiveRecord
             $this->wht = $wht;
             $this->other = $other;
 
+            // Convert detail_date from d/m/Y to Y-m-d
+            if (!empty($this->detail_date) && strpos($this->detail_date, '/') !== false) {
+                $dateParts = explode('/', $this->detail_date);
+                if (count($dateParts) == 3) {
+                    $this->detail_date = $dateParts[2] . '-' . $dateParts[1] . '-' . $dateParts[0];
+                }
+            }
+
             return true;
         }
         return false;
