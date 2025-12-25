@@ -878,6 +878,13 @@ class PurchController extends BaseController
                 }
 
                 $productId = $poLine->product_id;
+                $productCode = '';
+                if($productId){
+                    $product = \backend\models\Product::findOne($productId);
+                    if($product){
+                        $productCode = $product->code;
+                    }
+                }
 
                 // Create Journal Transaction Line
                 $journalTransLine = new \backend\models\JournalTransLine();
@@ -907,7 +914,7 @@ class PurchController extends BaseController
                     $stockTrans->qty = $qty;
                     $stockTrans->line_price = $poLine->line_price;
                     $stockTrans->status = 1;
-                    $stockTrans->remark = "รับสินค้าจาก PO: " . $purchModel->purch_no;
+                    $stockTrans->remark = $poLine->product_name;
 
                     if (!$stockTrans->save()) {
                         throw new \Exception('ไม่สามารถสร้าง Stock Transaction ได้: ' . implode(', ', $stockTrans->getFirstErrors()));

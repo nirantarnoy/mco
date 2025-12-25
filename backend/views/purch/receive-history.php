@@ -92,6 +92,7 @@ $this->params['breadcrumbs'][] = 'ประวัติการรับสิ�
                             <thead class="table-light">
                             <tr>
                                 <th>#</th>
+                                <th>รหัสสินค้า</th>
                                 <th>ชื่อสินค้า</th>
                                 <th>คลังสินค้า</th>
                                 <th class="text-center">จำนวนที่รับ</th>
@@ -104,6 +105,18 @@ $this->params['breadcrumbs'][] = 'ประวัติการรับสิ�
                             <?php foreach ($journal_trans_line as $line): ?>
                                 <tr class="<?= $receive->status == \backend\models\JournalTrans::STATUS_CANCELLED ? 'text-muted' : '' ?>">
                                     <td><?= $lineNum++ ?></td>
+                                    <td>
+                                        <?php
+                                            $productCode = '';
+                                            if ($line->product_id) {
+                                                $product = \backend\models\Product::findOne($line->product_id);
+                                                if ($product) {
+                                                    $productCode = $product->code;
+                                                }
+                                            }
+                                        ?>
+                                        <?= Html::encode($productCode) ?>
+                                    </td>
                                     <td>
                                         <?php
                                             if (empty($line->product_id)) {
@@ -134,7 +147,7 @@ $this->params['breadcrumbs'][] = 'ประวัติการรับสิ�
                             </tbody>
                             <tfoot class="table-secondary">
                             <tr>
-                                <td colspan="3" class="text-end"><strong>รวมจำนวนที่รับ:</strong></td>
+                                <td colspan="4" class="text-end"><strong>รวมจำนวนที่รับ:</strong></td>
                                 <td class="text-center">
                                     <strong><?= number_format($receive->qty, 2) ?></strong>
                                 </td>
