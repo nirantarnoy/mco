@@ -957,7 +957,7 @@ class PurchController extends BaseController
                 $journalTransLine->product_id = $productId;
                 $journalTransLine->warehouse_id = $line_warehouse_id;
                 $journalTransLine->qty = $qty;
-                $journalTransLine->remark = $poLine->product_name;
+                $journalTransLine->remark = $poLine->product_name . ' (' . $purchModel->purch_no . ')';
                 // Save unit_id if available in PO line
                 if(isset($poLine->unit_id)){
                      $journalTransLine->unit_id = $poLine->unit_id;
