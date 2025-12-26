@@ -132,12 +132,15 @@ class PurchController extends BaseController
             $deposit_date = \Yii::$app->request->post('deposit_data');
             $deposit_amount = \Yii::$app->request->post('deposit_amount');
             $deposit_doc = UploadedFile::getInstanceByName('deposit_doc');
+            $custom_vat_amount = \Yii::$app->request->post('purch_vat_amount');
+            $customer_tax_amount = \Yii::$app->request->post('purch_tax_amount');
 
 
             if (isset($_POST['PurchLine'])) {
                 foreach ($_POST['PurchLine'] as $index => $purchLineData) {
                     $purchLine = new PurchLine();
                     $purchLine->load($purchLineData, '');
+                    $purchLine->status = 1;
                     $purchLines[] = $purchLine;
                     $valid = $purchLine->validate() && $valid;
                 }
@@ -147,12 +150,68 @@ class PurchController extends BaseController
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
                     if ($model->save()) {
+                        $totalAmount = 0;
+                        $discountAmount = 0;
+                        $vatAmount = 0;
+                        $netAmount = 0;
+                        $tax_amount = 0;
+
                         // Save purch lines
                         foreach ($purchLines as $purchLine) {
                             $purchLine->purch_id = $model->id;
                             if (!$purchLine->save()) {
                                 throw new \Exception('Failed to save purch line');
                             }
+                            // คำนวณยอดรวมจากแต่ละรายการ
+                            $lineTotal = $purchLine->qty * $purchLine->line_price;
+                            $totalAmount += $lineTotal;
+                        }
+
+                        // คำนวณส่วนลด
+                        if (isset($model->discount_per) && $model->discount_per > 0) {
+                            $discountAmount = ($totalAmount * $model->discount_per) / 100;
+                        }
+                        if (isset($model->discount_amount) && $model->discount_amount > 0.00) {
+                            $discountAmount += $model->discount_amount;
+                        }
+
+                        // คำนวณยอดหลังหักส่วนลด
+                        $afterDiscountAmount = $totalAmount - $discountAmount;
+
+                        // คำนวณ VAT
+                        $vatPercent = isset($model->vat_percent) ? $model->vat_percent : 7;
+                        if ($vatPercent > 0 && $model->is_vat == 1) {
+                            if ($custom_vat_amount != null) {
+                                $vatAmount = $custom_vat_amount;
+                            } else {
+                                $vatAmount = ($afterDiscountAmount * $vatPercent) / 100;
+                            }
+                        }
+
+                        // คำนวน WHT
+                        if ($model->whd_tax_per > 0) {
+                            if ($customer_tax_amount != null) {
+                                $tax_amount = $customer_tax_amount;
+                            } else {
+                                $tax_amount = ($afterDiscountAmount * $model->whd_tax_per) / 100;
+                            }
+                        } else {
+                            if ($customer_tax_amount != null) {
+                                $tax_amount = $customer_tax_amount;
+                            }
+                        }
+
+                        // คำนวณยอดสุทธิ
+                        $netAmount = $afterDiscountAmount + $vatAmount - $tax_amount;
+
+                        $model->total_amount = $totalAmount;
+                        $model->discount_total_amount = $discountAmount;
+                        $model->vat_amount = $vatAmount;
+                        $model->whd_tax_amount = $tax_amount;
+                        $model->net_amount = $netAmount;
+                        $model->total_text = PurchReq::numtothai($netAmount);
+                        if (!$model->save()) {
+                            throw new \Exception('Failed to update total amount');
                         }
 
                         // upload
@@ -313,6 +372,7 @@ class PurchController extends BaseController
                         $purchLine = new PurchLine();
                     }
                     $purchLine->load($purchLineData, '');
+                    $purchLine->status = 1;
                     $purchLines[] = $purchLine;
                     $valid = $purchLine->validate() && $valid;
                 }
@@ -809,17 +869,22 @@ class PurchController extends BaseController
                 WHERE jt.trans_ref_id = :purchId 
                 AND jt.trans_type_id = :transType 
                 AND jt.po_rec_status = :status
+                AND jt.company_id = :companyId
                 GROUP BY product_id
             ) received ON pl.product_id = received.product_id
             WHERE pl.purch_id = :purchId 
-            AND pl.status = :lineStatus
+            AND (pl.status = :lineStatus OR pl.status IS NULL)
             AND (pl.qty - COALESCE(received.total_received, 0)) > 0
         ";
+
+        // Use session company_id or default to 1
+        $companyId = \Yii::$app->session->get('company_id') ?: 1;
 
         return \Yii::$app->db->createCommand($sql, [
             ':purchId' => $purchId,
             ':transType' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE,
             ':status' => 1,
+            ':companyId' => $companyId,
             ':lineStatus' => \backend\models\PurchLine::STATUS_ACTIVE,
         ])->queryAll();
     }

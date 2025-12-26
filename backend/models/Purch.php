@@ -300,17 +300,22 @@ class Purch extends ActiveRecord
                 WHERE jt.trans_ref_id = :purchId 
                 AND jt.trans_type_id = :transType 
                 AND jt.po_rec_status = :status
+                AND jt.company_id = :companyId
                 GROUP BY product_id
             ) received ON pl.product_id = received.product_id
             WHERE pl.purch_id = :purchId 
-            AND pl.status = :lineStatus
+            AND (pl.status = :lineStatus OR pl.status IS NULL)
             AND (pl.qty - COALESCE(received.total_received, 0)) > 0
         ";
+
+        // Use session company_id or default to 1
+        $companyId = \Yii::$app->session->get('company_id') ?: 1;
 
         return \Yii::$app->db->createCommand($sql, [
             ':purchId' => $purchId,
             ':transType' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE,
             ':status' => 1,
+            ':companyId' => $companyId,
             ':lineStatus' => \backend\models\PurchLine::STATUS_ACTIVE,
         ])->queryAll();
     }
@@ -344,27 +349,6 @@ class Purch extends ActiveRecord
         return $name;
     }
     public static function findVendorAddress($vendor_id){
-//        $address = '';
-//        $model_address = \backend\models\AddressInfo::find()->where(['party_id'=>$vendor_id,'party_type_id'=>2])->one();
-//        if($model_address){
-//            $address = $model_address->address.' '.$model_address->street;
-//            $model_district = \common\models\District::find()->where(['DISTRICT_ID'=>$model_address->district_id])->one();
-//            if($model_district){
-//                $address = $address.' '.$model_district->DISTRICT_NAME;
-//            }
-//            $model_city = \common\models\Amphur::find()->where(['AMPHUR_ID'=>$model_address->city_id])->one();
-//            if($model_city){
-//                $address = $address.' '.$model_city->CITY_NAME;
-//            }
-//            $model_province = \common\models\Province::find()->where(['PROVINCE_ID'=>$model_address->province_id])->one();
-//            if($model_province){
-//                $address = $address.' '.$model_province->PROVINCE_NAME;
-//            }
-//            $address = $address.' '.$model_address->zipcode;
-//
-//        }
-//        return $address;
-
         $address = '';
         $model = \backend\models\Vendor::findOne($vendor_id);
         if($model){
@@ -400,11 +384,6 @@ class Purch extends ActiveRecord
         $model = \backend\models\PurchReq::find()->where(['purch_id'=>$purch_id])->one();
         return $model !=null?$model->created_by:0;
     }
-
-//    public function beforeSave($insert){
-//        $this->company_id = \Yii::$app->session->get('company_id');
-//        return true;
-//    }
 
     public function getPurchPayments()
     {

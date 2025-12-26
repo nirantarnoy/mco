@@ -433,7 +433,7 @@ use yii\helpers\Html; ?>
             if ($model->invoice_type == 'receipt' || $model->invoice_type == 'bill_placement') {
                  $refInvoice = \backend\models\Invoice::findOne($model->quotation_id);
                  if($refInvoice){
-                     $totalModel = $refInvoice;
+                     // $totalModel = $refInvoice;
                      $refNo = $refInvoice->invoice_number;
                      $refDate = $refInvoice->invoice_date;
                  }

@@ -93,9 +93,12 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                         'class' => 'btn btn-success',
                         'target' => '_blank'
                     ]) ?>
-                    <?= Html::a('<i class="fas fa-download"></i> รับสินค้าเข้าคลัง', ['receive', 'id' => $model->id], [
-                        'class' => 'btn btn-success'
-                    ]) ?>
+                    <?php $po_remain = \backend\models\Purch::checkPoremain($model->id); ?>
+                    <?php if (!empty($po_remain)): ?>
+                        <?= Html::a('<i class="fas fa-download"></i> รับสินค้าเข้าคลัง', ['receive', 'id' => $model->id], [
+                            'class' => 'btn btn-success'
+                        ]) ?>
+                    <?php endif; ?>
                     <?php if ($model->status != Purch::STATUS_COMPLETED): ?>
                         <?= Html::a('<i class="fas fa-check-circle"></i> ยืนยันรับบริการ/ปิดจบ', ['confirm-service-receive', 'id' => $model->id], [
                             'class' => 'btn btn-primary',
