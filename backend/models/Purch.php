@@ -20,6 +20,7 @@ use yii\behaviors\TimestampBehavior;
  * @property float|null $discount_amount
  * @property float|null $vat_amount
  * @property float|null $net_amount
+ * @property float|null $value_amount
  * @property string|null $ref_text
  * @property int|null $created_at
  * @property int|null $created_by
@@ -94,7 +95,7 @@ class Purch extends ActiveRecord
             [['vendor_id'], 'required'],
             [['purch_date'], 'safe'],
             [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by','discount_percent','vat_percent','approve_by','currency_id'], 'integer'],
-            [['total_amount', 'vat_amount', 'net_amount','vat_percent','discount_per','whd_tax_per','whd_tax_amount','discount_total_amount','currency_rate'], 'number'],
+            [['total_amount', 'vat_amount', 'net_amount','vat_percent','discount_per','whd_tax_per','whd_tax_amount','discount_total_amount','currency_rate', 'value_amount'], 'number'],
             [['purch_no', 'vendor_name', 'note','delivery_note','payment_note','footer_delivery','footer_payment','ref_no'], 'string', 'max' => 255],
             [['purch_no'], 'unique'],
             [['approve_date','discount_amount','fee_amount','exchange_rate'], 'safe'],
@@ -141,6 +142,7 @@ class Purch extends ActiveRecord
             'currency_rate' => 'อัตราแลกเปลี่ยน',
             'special_note' => 'บันทึกอื่นๆ',
             'is_deposit' => 'มีค่ามัดจำ',
+            'value_amount' => 'มูลค่าแปลงตามเรท',
 
         ];
     }

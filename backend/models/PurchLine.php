@@ -19,6 +19,8 @@ use yii\db\ActiveRecord;
  * @property float|null $line_total
  * @property int|null $status
  * @property string|null $note
+ * @property int|null $migrate
+ * @property float|null $value_amount
  *
  * @property Purch $purch
  * @property Product $product
@@ -42,8 +44,8 @@ class PurchLine extends ActiveRecord
     public function rules()
     {
         return [
-            [['purch_id', 'product_id',], 'integer'],
-            [['qty', 'line_price', 'line_total'], 'number'],
+            [['purch_id', 'product_id', 'migrate'], 'integer'],
+            [['qty', 'line_price', 'line_total', 'value_amount'], 'number'],
             [['product_name',  'note','doc_ref_no','product_description'], 'string', 'max' => 255],
             [['qty', 'line_price'], 'required'],
             [['purch_id'], 'exist', 'skipOnError' => true, 'targetClass' => Purch::class, 'targetAttribute' => ['purch_id' => 'id']],
@@ -70,6 +72,8 @@ class PurchLine extends ActiveRecord
             'line_total' => 'ราคารวม',
             'status' => 'สถานะ',
             'note' => 'หมายเหตุ',
+            'migrate' => 'Migrate',
+            'value_amount' => 'มูลค่าแปลงตามเรท',
         ];
     }
 

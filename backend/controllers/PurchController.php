@@ -159,6 +159,8 @@ class PurchController extends BaseController
                         // Save purch lines
                         foreach ($purchLines as $purchLine) {
                             $purchLine->purch_id = $model->id;
+                            $rate = $model->currency_rate > 0 ? $model->currency_rate : 1;
+                            $purchLine->value_amount = ($purchLine->qty * $purchLine->line_price) * $rate;
                             if (!$purchLine->save()) {
                                 throw new \Exception('Failed to save purch line');
                             }
@@ -209,6 +211,8 @@ class PurchController extends BaseController
                         $model->vat_amount = $vatAmount;
                         $model->whd_tax_amount = $tax_amount;
                         $model->net_amount = $netAmount;
+                        $rate = $model->currency_rate > 0 ? $model->currency_rate : 1;
+                        $model->value_amount = $netAmount * $rate;
                         $model->total_text = PurchReq::numtothai($netAmount);
                         if (!$model->save()) {
                             throw new \Exception('Failed to update total amount');
@@ -404,6 +408,8 @@ class PurchController extends BaseController
                         // Save purch lines
                         foreach ($purchLines as $purchLine) {
                             $purchLine->purch_id = $model->id;
+                            $rate = $model->currency_rate > 0 ? $model->currency_rate : 1;
+                            $purchLine->value_amount = ($purchLine->qty * $purchLine->line_price) * $rate;
                             if (!$purchLine->save()) {
                                 throw new \Exception('Failed to save purch line');
                             }
@@ -459,6 +465,8 @@ class PurchController extends BaseController
                         $model->vat_amount = $vatAmount;
                         $model->whd_tax_amount = $tax_amount;
                         $model->net_amount = $netAmount;
+                        $rate = $model->currency_rate > 0 ? $model->currency_rate : 1;
+                        $model->value_amount = $netAmount * $rate;
                         $model->total_text = PurchReq::numtothai($netAmount);
                         if (!$model->save()) {
                             throw new \Exception('Failed to update total amount');
