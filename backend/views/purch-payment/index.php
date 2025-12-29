@@ -18,6 +18,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <h3 class="card-title"><?= Html::encode($this->title) ?></h3>
             <div class="card-tools">
                 <?= Html::a('<i class="fas fa-plus"></i> สร้างรายการใหม่', ['create'], ['class' => 'btn btn-success btn-sm']) ?>
+                <?= Html::a('<i class="fas fa-file-alt"></i> รายงาน', ['report'], ['class' => 'btn btn-info btn-sm ml-2']) ?>
             </div>
         </div>
         <div class="card-body">

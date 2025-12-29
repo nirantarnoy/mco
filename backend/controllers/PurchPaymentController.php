@@ -13,12 +13,85 @@ use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\UploadedFile;
 use yii\helpers\Json;
+use Mpdf\Mpdf;
+use yii\data\ActiveDataProvider;
 
 /**
  * PurchPaymentController implements the CRUD actions for PurchPayment model.
  */
 class PurchPaymentController extends BaseController
 {
+    /**
+     * Report PurchPayment
+     * @return mixed
+     */
+    public function actionReport()
+    {
+        $from_date = Yii::$app->request->get('from_date');
+        $to_date = Yii::$app->request->get('to_date');
+        $export = Yii::$app->request->get('export');
+
+        $dataProvider = null;
+
+        if ($from_date && $to_date) {
+            $query = PurchPaymentLine::find()
+                ->where(['between', 'trans_date', $from_date, $to_date])
+                ->orderBy(['trans_date' => SORT_ASC]);
+
+            if ($export == 'pdf') {
+                $models = $query->all();
+                $content = $this->renderPartial('report-pdf', [
+                    'models' => $models,
+                    'from_date' => $from_date,
+                    'to_date' => $to_date,
+                ]);
+
+                $pdf = new Mpdf([
+                    'mode' => 'utf-8',
+                    'format' => 'A4',
+                    'margin_left' => 10,
+                    'margin_right' => 10,
+                    'margin_top' => 10,
+                    'margin_bottom' => 10,
+                    'fontDir' => [Yii::getAlias('@webroot') . '/fonts/'],
+                    'fontdata' => [
+                        'thsarabun' => [
+                            'R' => 'THSarabunNew.ttf',
+                            'B' => 'THSarabunNew-Bold.ttf',
+                        ],
+                    ],
+                    'default_font' => 'thsarabun',
+                    'default_font_size' => 14,
+                ]);
+                
+                $pdf->WriteHTML($content);
+                $pdf->Output('Payment_Report_' . date('Ymd') . '.pdf', 'I');
+                exit;
+            } elseif ($export == 'excel') {
+                $models = $query->all();
+                $filename = 'Payment_Report_' . date('Ymd') . '.xls';
+                header("Content-Type: application/vnd.ms-excel");
+                header("Content-Disposition: attachment; filename=\"$filename\"");
+                echo $this->renderPartial('report-pdf', [
+                    'models' => $models,
+                    'from_date' => $from_date,
+                    'to_date' => $to_date,
+                ]);
+                exit;
+            }
+
+            $dataProvider = new ActiveDataProvider([
+                'query' => $query,
+                'pagination' => false,
+            ]);
+        }
+
+        return $this->render('report', [
+            'dataProvider' => $dataProvider,
+            'from_date' => $from_date,
+            'to_date' => $to_date,
+        ]);
+    }
     /**
      * {@inheritdoc}
      */
