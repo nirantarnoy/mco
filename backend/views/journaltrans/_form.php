@@ -736,7 +736,7 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                 'min' => 1,
                 'insertButton' => '.add-item',
                 'deleteButton' => '.remove-item',
-                'model' => $model->journalTransLines[0] ?? new \backend\models\JournalTransLine(),
+                'model' => $lines[0] ?? new \backend\models\JournalTransLine(),
                 'formId' => 'journal-trans-form',
                 'formFields' => [
                     'product_id',
@@ -769,12 +769,12 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                     </tr>
                     </thead>
                     <tbody class="container-items">
-                    <?php if (empty($model->journalTransLines)): ?>
+                    <?php if (empty($lines)): ?>
                         <tr class="item">
                             <td colspan="10" class="text-center">กรุณาเลือกรายการที่ต้องการคืนก่อน</td>
                         </tr>
                     <?php else: ?>
-                        <?php foreach ($model->journalTransLines as $index => $journaltransline): ?>
+                        <?php foreach ($lines as $index => $journaltransline): ?>
                             <tr class="item">
                                 <td class="text-center align-middle">
                                     <span class="item-number"><?= $index + 1 ?></span>

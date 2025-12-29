@@ -260,14 +260,15 @@ class JournaltransController extends BaseController
                 $oldLines[$line->id] = [
                     'qty' => $line->qty,
                     'product_id' => $line->product_id,
+
                     'warehouse_id' => $line->warehouse_id,
                 ];
             }
         }
 
-        $model->journalTransLines = $model->getJournalTransLines()->all();
-        if (empty($model->journalTransLines)) {
-            $model->journalTransLines = [new JournalTransLine()];
+        $lines = $model->getJournalTransLines()->all();
+        if (empty($lines)) {
+            $lines = [new JournalTransLine()];
         }
 
         if ($model->load(Yii::$app->request->post())) {
@@ -527,7 +528,7 @@ class JournaltransController extends BaseController
 
         return $this->render('create', [
             'model' => $model,
-            'lines' => $lines,
+            'lines' => (empty($journalTransLines)) ? $lines : $journalTransLines,
         ]);
     }
 
@@ -575,7 +576,7 @@ class JournaltransController extends BaseController
 
         return $this->render('createorigin', [
             'model' => $model,
-            'lines' => $lines,
+            'lines' => (empty($journalTransLines)) ? $lines : $journalTransLines,
         ]);
     }
 
