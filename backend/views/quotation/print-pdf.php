@@ -333,7 +333,7 @@ $grandTotal = $subtotal + $vat - $discount;
                         <div><strong>EXCLUDES VAT AND SEPARATED PURCHASING IS NOT ALLOWED.</strong></div>
                         <div><strong>CURRENCY :</strong> Baht</div>
                         <div><strong>DELIVERY :</strong></div>
-                        <div><strong>PAYMENT :</strong> Cash</div>
+                        <div><strong>PAYMENT :</strong> <?= $quotation->payment_term_text ?></div>
                         <div><strong>VALIDITY :</strong> 7 day after today.</div>
                         <div><strong>REMARK</strong></div>
                     </div>

@@ -468,22 +468,23 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                     ]) ?>
                 </div>
                 <div class="col-lg-4">
-                    <!--                        --><?php //= $form->field($model, 'payment_term_id')->widget(Select2::className(), [
-                                                    //                            'data' => ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name'),
-                                                    //                            'options' => ['placeholder' => 'เลือกเงื่อนไขชําระเงิน'],
-                                                    //                            'pluginOptions' => [
-                                                    //                                'allowClear' => true
-                                                    //                            ]
-                                                    //                        ]) 
-                                                    ?>
-                    <?= $form->field($model, 'delivery_day_text')->textInput([]) ?>
                     <?= $form->field($model, 'payment_term_id')->widget(Select2::className(), [
                         'data' => ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name'),
-                        'options' => ['placeholder' => 'เลือกเงื่อนไขชําระเงิน'],
+                        'options' => ['placeholder' => 'เลือกเงื่อนไขชําระเงิน (ตัวช่วย)'],
                         'pluginOptions' => [
                             'allowClear' => true
+                        ],
+                        'pluginEvents' => [
+                            "change" => "function() { 
+                                var data = $(this).select2('data');
+                                if (data && data.length > 0) {
+                                    $('#quotation-payment_term_text').val(data[0].text);
+                                }
+                            }",
                         ]
-                    ]) ?>
+                    ])->label('เลือกเงื่อนไขชำระเงิน (ตัวช่วย)') ?>
+                    <?= $form->field($model, 'delivery_day_text')->textInput([]) ?>
+                    <?= $form->field($model, 'payment_term_text')->textInput(['placeholder' => 'ระบุเงื่อนไขการชำระเงิน']) ?>
                     <?= $form->field($model, 'sale_emp_id')->widget(Select2::className(), [
                         'data' => ArrayHelper::map(\backend\models\Employee::find()->all(), 'id', function ($model) {
                             return $model->fname . ' ' . $model->lname;
