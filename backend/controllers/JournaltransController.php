@@ -117,13 +117,12 @@ class JournaltransController extends BaseController
                             $journalTransLine->journal_trans_id = $model->id;
                             $journalTransLine->status = 0;
                             if ($journalTransLine->save(false)) {
-                                $trans_type_id = 3;
-                                $this->calStock($journalTransLine->product_id, $journalTransLine->qty, $journalTransLine->warehouse_id, $trans_type_id);
+                                // Removed immediate stock deduction
                             } else {
                                 throw new \Exception('Failed to save journal trans line');
                             }
                         }
-                        $this->createStocktrans($journalTransLines,$trans_type_id,2);
+                        // Removed createStocktrans
                         $transaction->commit();
                         Yii::$app->session->setFlash('success', 'บันทึกข้อมูลเรียบร้อยแล้ว');
                         return $this->redirect(['view', 'id' => $model->id]);
@@ -833,14 +832,13 @@ class JournaltransController extends BaseController
                             $journalTransLine->journal_trans_id = $model->id;
                             $journalTransLine->status = 0;
                             if ($journalTransLine->save(false)) {
-                                $trans_type_id = 4;
-                                $this->calStock($journalTransLine->product_id, $journalTransLine->qty, $journalTransLine->warehouse_id, $trans_type_id);
+                                // Removed immediate stock deduction
                             } else {
                                 throw new \Exception('Failed to save journal trans line');
                             }
                         }
 
-                        $this->createStocktrans($journalTransLines,$trans_type_id,1);
+                        // Removed createStocktrans
 
 
                         $transaction->commit();

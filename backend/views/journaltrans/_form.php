@@ -918,7 +918,7 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                 <div class="row">
                     <div class="col-lg-12">
                         <label for="">เอกสารแนบ</label>
-                        <input type="file" name="file_doc" multiple>
+                        <input type="file" name="file_doc[]" multiple>
                     </div>
                 </div>
                 <br/>
