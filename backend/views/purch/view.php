@@ -156,6 +156,9 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                     'label' => 'สถานะใบสั่งซื้อ',
                                     'format' => 'raw',
                                     'value' => function ($model) {
+                                        if ($model->status == Purch::STATUS_COMPLETED) {
+                                            return '<span class="badge bg-success">สำเร็จ</span>';
+                                        }
                                         $po_remain = \backend\models\Purch::checkPoremain($model->id);
                                         if ($model->approve_status == Purch::APPROVE_STATUS_APPROVED && !empty($po_remain)) {
                                             return '<span class="badge bg-info">อนุมัติ</span>';
@@ -460,7 +463,13 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                         <tr>
                             <td><?= $index + 1 ?></td>
                             <td>
-                                <?= date('d-m-Y',strtotime($payment_date))?>
+                                <?php
+                                $showDate = $payment_date;
+                                if(!empty($line->trans_date)){
+                                    $showDate = $line->trans_date;
+                                }
+                                echo date('d-m-Y',strtotime($showDate));
+                                ?>
                             </td>
                             <td>
                                 <strong><?= Html::encode($line->bank_id) ?></strong>

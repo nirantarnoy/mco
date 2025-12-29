@@ -17,7 +17,15 @@ use yii\helpers\Url;
             <table class="table table-bordered table-sm">
                 <tr>
                     <th style="width: 40%;">วันที่โอน:</th>
-                    <td><?= date('d-m-Y H:i:s',strtotime($payment_date)) ?></td>
+                    <td>
+                        <?php
+                        $showDate = $payment_date;
+                        if(!empty($model->trans_date)){
+                            $showDate = $model->trans_date;
+                        }
+                        echo date('d-m-Y H:i:s',strtotime($showDate));
+                        ?>
+                    </td>
                 </tr>
                 <tr>
                     <th>ธนาคาร:</th>
@@ -58,13 +66,13 @@ use yii\helpers\Url;
 
                 <?php if (!empty($model->doc)): ?>
                     <?php
-                    // ตรวจสอบว่า doc เป็น URL หรือ path
                     $imageUrl = $model->doc;
-
-                    // ถ้าเป็น path ใน server ให้ปรับเป็น URL
                     if (!filter_var($imageUrl, FILTER_VALIDATE_URL)) {
-                        // สมมติว่าเก็บไฟล์ใน web/uploads/slips/
-                        $imageUrl = Yii::getAlias('@web/uploads/slips/' . $model->doc);
+                        if (strpos($model->doc, 'uploads/') === false) {
+                             $imageUrl = Yii::getAlias('@web/uploads/payment_slips/') . $model->doc;
+                        } else {
+                             $imageUrl = Yii::getAlias('@web/') . $model->doc;
+                        }
                     }
                     ?>
 

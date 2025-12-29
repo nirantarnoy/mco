@@ -114,6 +114,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'label' => 'เอกสารแนบ',
                 'headerOptions' => ['style' => 'width: 250px; text-align: center;'],
                 'contentOptions' => ['style' => 'text-align: center;'],
+
                 'format' => 'raw',
                 'value' => function ($model) {
                     $docs = $model->getAttachedDocuments();
@@ -140,6 +141,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     Purch::STATUS_CANCELLED => 'ไม่อนุมัติ',
                 ],
                 'value' => function ($model) {
+                    if ($model->status == Purch::STATUS_COMPLETED) {
+                        return '<span class="badge bg-success">สำเร็จ</span>';
+                    }
                     $po_remain = \backend\models\Purch::checkPoremain($model->id);
                     if ($model->approve_status == Purch::APPROVE_STATUS_APPROVED && !empty($po_remain)) {
                         return '<span class="badge bg-info">อนุมัติ</span>';

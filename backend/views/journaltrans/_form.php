@@ -18,6 +18,11 @@ use yii\helpers\Url;
 /* @var $lines common\models\JournalTransLineX[] */
 /* @var $form yii\widgets\ActiveForm */
 
+$isApproved = $model->status === JournalTrans::STATUS_APPROVED;
+$canEdit = $model->isNewRecord || ($model->status === JournalTrans::STATUS_DRAFT) ||
+           ($isApproved && in_array($model->trans_type_id, [JournalTrans::TRANS_TYPE_ISSUE_STOCK, JournalTrans::TRANS_TYPE_ISSUE_BORROW]));
+
+
 $this->registerJsFile('@web/js/journal-trans.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
 $damage_list = [['id' => 1, 'name' => 'สภาพปกติ'], ['id' => 2, 'name' => 'สภาพไม่ปกติ']];
@@ -716,8 +721,11 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
     ?>
     <hr>
     <div class="card mt-4">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0">รายละเอียดสินค้า</h5>
+            <?php if ($canEdit): ?>
+                <button type="button" class="add-item btn btn-success btn-sm"><i class="fa fa-plus"></i> เพิ่มรายการ</button>
+            <?php endif; ?>
         </div>
         <div class="card-body">
             <?php DynamicFormWidget::begin([
@@ -757,12 +765,13 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                         <th style="width: 80px;">หน่วยนับ</th>
                         <th style="width: 100px;">สภาพสินค้า</th>
                         <th style="width: 100px;">หมายเหตุ</th>
+                        <th style="width: 50px;">-</th>
                     </tr>
                     </thead>
                     <tbody class="container-items">
                     <?php if (empty($model->journalTransLines)): ?>
                         <tr class="item">
-                            <td colspan="9" class="text-center">กรุณาเลือกรายการที่ต้องการคืนก่อน</td>
+                            <td colspan="10" class="text-center">กรุณาเลือกรายการที่ต้องการคืนก่อน</td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($model->journalTransLines as $index => $journaltransline): ?>
@@ -787,7 +796,8 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                                             'data-index' => $index,
                                             'autocomplete' => 'off',
                                             'style' => 'width: 100%',
-                                            'value' => \backend\models\Product::findName($journaltransline->product_id)
+                                            'value' => \backend\models\Product::findName($journaltransline->product_id),
+                                            'readonly' => $isApproved
                                         ])->label(false) ?>
 
                                         <div class="autocomplete-dropdown" data-index="<?= $index ?>"></div>
@@ -802,6 +812,7 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                                             'class' => 'form-control warehouse-select',
                                             'data-index' => $index,
                                             'style' => 'width: 100%',
+                                            'disabled' => $isApproved
                                         ]
                                     )->label(false) ?>
                                 </td>
@@ -836,11 +847,16 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                                     ])->label(false) ?>
                                 </td>
                                 <td class="text-center">
-                                    <?= $form->field($journaltransline, "[{$index}]is_damage")->dropDownList(ArrayHelper::map($damage_list, 'id', 'name'), ['class' => 'form-control', 'data-index' => $index])->label(false) ?>
+                                    <?= $form->field($journaltransline, "[{$index}]is_damage")->dropDownList(ArrayHelper::map($damage_list, 'id', 'name'), ['class' => 'form-control', 'data-index' => $index, 'disabled' => $isApproved])->label(false) ?>
                                 </td>
                                 <td class="align-middle">
                                     <?= $form->field($journaltransline, "[{$index}]return_note")->textInput([
-                                        'class' => 'form-control note-input',])->label(false) ?>
+                                        'class' => 'form-control note-input', 'readonly' => $isApproved])->label(false) ?>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <?php if ($canEdit): ?>
+                                        <button type="button" class="remove-item btn btn-danger btn-sm"><i class="fa fa-minus"></i></button>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -855,7 +871,7 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
 
     <hr>
 
-    <?php if ($model->isNewRecord): ?>
+    <?php if ($canEdit): ?>
     <div class="form-group">
         <div class="form-group">
             <div class="col-sm-offset-3 col-sm-9">
