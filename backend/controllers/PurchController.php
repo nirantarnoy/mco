@@ -627,6 +627,9 @@ class PurchController extends BaseController
      */
     public function actionDelete($id)
     {
+        if (!Yii::$app->user->can('CanApprovePo')) {
+            throw new \yii\web\ForbiddenHttpException('You are not allowed to perform this action.');
+        }
         $model = $this->findModel($id);
 
         $transaction = Yii::$app->db->beginTransaction();
@@ -702,6 +705,9 @@ class PurchController extends BaseController
 
     public function actionCancel($id)
     {
+        if (!Yii::$app->user->can('CanApprovePo')) {
+            throw new \yii\web\ForbiddenHttpException('You are not allowed to perform this action.');
+        }
         $model = $this->findModel($id);
         $model->approve_status = Purch::STATUS_CANCELLED;
         $model->status = Purch::STATUS_CANCELLED;

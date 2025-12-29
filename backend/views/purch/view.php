@@ -76,7 +76,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                         'data-method' => 'post',
                     ]) ?>
                 <?php endif; ?>
-                <?php if ($model->status != Purch::STATUS_CANCELLED): ?>
+                <?php if ($model->status != Purch::STATUS_CANCELLED && \Yii::$app->user->can('CanApprovePo')): ?>
                     <?= Html::a('ยกเลิกใบสั่งซื้อ', ['cancel', 'id' => $model->id], [
                         'class' => 'btn btn-warning',
                         'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะยกเลิกใบสั่งซื้อนี้?',
@@ -112,7 +112,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
 
 
                 <?php endif; ?>
-                <?php if (\Yii::$app->user->can('purch/delete')): ?>
+                <?php if (\Yii::$app->user->can('CanApprovePo')): ?>
                     <?= Html::a('ลบ', ['delete', 'id' => $model->id], [
                         'class' => 'btn btn-danger',
                         'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะลบใบสั่งซื้อนี้?',
