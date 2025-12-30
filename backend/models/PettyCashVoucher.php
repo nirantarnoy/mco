@@ -113,15 +113,25 @@ class PettyCashVoucher extends ActiveRecord
      */
     public function generatePcvNo()
     {
-        $date = $this->date ? strtotime($this->date) : time();
+        $target_date = $this->date;
+        // Handle d/m/Y format if not yet converted
+        if (strpos($target_date, '/') !== false) {
+            $dateParts = explode('/', $target_date);
+            if (count($dateParts) == 3) {
+                $target_date = $dateParts[2] . '-' . $dateParts[1] . '-' . $dateParts[0];
+            }
+        }
+
+        $date = $target_date ? strtotime($target_date) : time();
         $prefix = 'PCV' . date('y', $date) . str_pad(date('m', $date), 2, '0', STR_PAD_LEFT);
+        
         $lastRecord = self::find()
-            ->where(['like', 'pcv_no', $prefix])
-            ->orderBy(['id' => SORT_DESC])
+            ->where(['like', 'pcv_no', $prefix . '%', false])
+            ->orderBy(['pcv_no' => SORT_DESC])
             ->one();
 
         if ($lastRecord) {
-            $lastNumber = intval(substr($lastRecord->pcv_no, -3));
+            $lastNumber = intval(substr($lastRecord->pcv_no, strlen($prefix)));
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;
@@ -136,20 +146,20 @@ class PettyCashVoucher extends ActiveRecord
     public function beforeSave($insert)
     {
         if (parent::beforeSave($insert)) {
+            // Convert date from d/m/Y to Y-m-d first so generatePcvNo can use it
+            if (!empty($this->date) && strpos($this->date, '/') !== false) {
+                $dateParts = explode('/', $this->date);
+                if (count($dateParts) == 3) {
+                    $this->date = $dateParts[2] . '-' . $dateParts[1] . '-' . $dateParts[0];
+                }
+            }
+
             if ($insert && empty($this->pcv_no)) {
                 $this->pcv_no = $this->generatePcvNo();
             }
             $this->company_id = \Yii::$app->session->get('company_id');
             if($this->approve_status ==1){
                 $this->approved_by = \backend\models\User::findEmployeeNameByUserId(5);
-            }
-
-            // Convert date from d/m/Y to Y-m-d
-            if (!empty($this->date) && strpos($this->date, '/') !== false) {
-                $dateParts = explode('/', $this->date);
-                if (count($dateParts) == 3) {
-                    $this->date = $dateParts[2] . '-' . $dateParts[1] . '-' . $dateParts[0];
-                }
             }
 
             return true;

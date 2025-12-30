@@ -167,7 +167,7 @@ class JournaltransController extends BaseController
         $transaction = JournalTrans::find()
             ->with(['journalTransLines.product.unit', 'journalTransLines.warehouse'])
             ->where(['id' => $transactionId])
-            ->andWhere(['status' => 'approved'])
+            ->andWhere(['status' => JournalTrans::STATUS_APPROVED])
             ->one();
 
         if (!$transaction) {
@@ -227,7 +227,7 @@ class JournaltransController extends BaseController
             ->where([
                 'journal_trans_line.product_id' => $productId,
                 'journal_trans.return_for_trans_id' => $originalTransId,
-                'journal_trans.status' => 'approved'
+                'journal_trans.status' => JournalTrans::STATUS_APPROVED
             ])
             ->sum('journal_trans_line.qty') ?: 0;
 

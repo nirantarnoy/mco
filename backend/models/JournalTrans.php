@@ -107,7 +107,7 @@ class JournalTrans extends ActiveRecord
             [['journal_no', 'customer_name',], 'string', 'max' => 255],
             //   [['status'], 'in', 'range' => [self::STATUS_DRAFT, self::STATUS_PENDING, self::STATUS_APPROVED, self::STATUS_CANCELLED, self::STATUS_ACTIVE, self::STATUS_INACTIVE]],
             //  [['status'], 'in', 'range' => [self::STATUS_ACTIVE]],
-            [['trans_ref_id'], 'validateRefTransaction'],
+            [['return_for_trans_id'], 'validateRefTransaction'],
             [['agency_id', 'employer_id', 'emp_trans_id', 'approve_by'], 'integer'],
         ];
     }
@@ -118,13 +118,13 @@ class JournalTrans extends ActiveRecord
     public function validateRefTransaction($attribute, $params)
     {
         if (in_array($this->trans_type_id, [self::TRANS_TYPE_RETURN_ISSUE, self::TRANS_TYPE_RETURN_BORROW])) {
-            if (empty($this->$attribute)) {
+            if (empty($this->return_for_trans_id)) {
                 $this->addError($attribute, 'Reference transaction is required for return transactions.');
                 return;
             }
 
             // Check if reference transaction exists and is approved
-            $refTrans = self::find()->where(['journal_no' => $this->$attribute])->one();
+            $refTrans = self::find()->where(['id' => $this->return_for_trans_id])->one();
             if (!$refTrans) {
                 $this->addError($attribute, 'Reference transaction not found.');
                 return;
@@ -155,8 +155,8 @@ class JournalTrans extends ActiveRecord
      */
     public function getRefTransaction()
     {
-        if ($this->trans_ref_id) {
-            return self::find()->where(['journal_no' => $this->trans_ref_id])->one();
+        if ($this->return_for_trans_id) {
+            return self::find()->where(['id' => $this->return_for_trans_id])->one();
         }
         return null;
     }
@@ -166,7 +166,7 @@ class JournalTrans extends ActiveRecord
      */
     public function getAvailableReturnQty($productId)
     {
-        if (!$this->trans_ref_id) {
+        if (!$this->return_for_trans_id) {
             return 0;
         }
 
@@ -186,7 +186,7 @@ class JournalTrans extends ActiveRecord
         // Get already returned quantity
         $returnedQty = 0;
         $returnTransactions = self::find()
-            ->where(['trans_ref_id' => $this->trans_ref_id])
+            ->where(['return_for_trans_id' => $this->return_for_trans_id])
             ->andWhere(['status' => self::STATUS_APPROVED])
             ->andWhere(['!=', 'id', $this->id]) // Exclude current transaction
             ->all();

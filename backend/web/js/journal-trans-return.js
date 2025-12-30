@@ -17,7 +17,7 @@ $(document).ready(function() {
 function initializeReturnTransaction() {
     var transType = $('#trans-type-select').val();
 
-    if (transType == '4' || transType == '5') {
+    if (transType == '4' || transType == '6') {
         enableReturnTransactionMode();
     } else {
         disableReturnTransactionMode();
@@ -36,7 +36,7 @@ function setupEventListeners() {
     $('#trans-type-select').off('change.returnTrans').on('change.returnTrans', function() {
         var transType = parseInt($(this).val());
 
-        if (transType === 4 || transType === 5) {
+        if (transType === 4 || transType === 6) {
             enableReturnTransactionMode();
         } else {
             disableReturnTransactionMode();
@@ -63,7 +63,7 @@ function setupEventListeners() {
         var transType = $('#trans-type-select').val();
 
         // Validate quantity for return transactions
-        if ((transType == '4' || transType == '5') && inputQty > availableQty) {
+        if ((transType == '4' || transType == '6') && inputQty > availableQty) {
             $(this).val(availableQty);
             showAlert('จำนวนที่คืนไม่สามารถเกินจำนวนที่สามารถคืนได้ (' + availableQty + ')', 'warning');
             inputQty = availableQty;

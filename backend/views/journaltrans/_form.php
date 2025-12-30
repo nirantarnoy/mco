@@ -681,7 +681,7 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                     'data' => ArrayHelper::map(
                         JournalTrans::find()
                             ->where(['trans_type_id' => [3, 5]]) // Issue Stock, Issue Borrow
-                            ->andWhere(['status' => 0])
+                            ->andWhere(['status' => JournalTrans::STATUS_APPROVED])
                             ->asArray()->all(),
                         'id', 'journal_no'
                     ),
