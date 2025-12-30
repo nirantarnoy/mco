@@ -73,6 +73,15 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                             ],
                         ]) ?>
                     <?php endif; ?>
+                    <?php if ($model->status === JournalTrans::STATUS_APPROVED): ?>
+                        <?= Html::a('<i class="fa fa-ban"></i> Cancel Transaction', ['cancel', 'id' => $model->id], [
+                            'class' => 'btn btn-danger',
+                            'data' => [
+                                'confirm' => 'Are you sure you want to cancel this entire transaction? All stock movements will be reversed.',
+                                'method' => 'post',
+                            ],
+                        ]) ?>
+                    <?php endif; ?>
                     <?= Html::a('<i class="fa fa-print"></i> Print', ['print', 'id' => $model->id], [
                         'class' => 'btn btn-info',
                         'target' => '_blank'
@@ -216,6 +225,12 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                 <?= GridView::widget([
                     'dataProvider' => $dataProvider,
                     'showHeader' => true,
+                    'rowOptions' => function ($model, $key, $index, $grid) {
+                        if ($model->status == JournalTrans::STATUS_CANCELLED) {
+                            return ['style' => 'text-decoration: line-through; color: #999; background-color: #f9f9f9;'];
+                        }
+                        return [];
+                    },
                     'columns' => [
                         ['class' => 'yii\grid\SerialColumn', 'headerOptions' => ['style' => 'width: 50px;', 'text-align' => 'center;']],
 
@@ -238,13 +253,6 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                             'headerOptions' => ['style' => 'width: 100px;'],
                         ],
 
-//                    [
-//                        'attribute' => 'sale_price',
-//                        'format' => ['currency', 'THB'],
-//                        'contentOptions' => ['class' => 'text-right'],
-//                        'headerOptions' => ['style' => 'width: 120px;'],
-//                    ],
-
                         [
                             'attribute' => 'line_price',
                             'format' => ['currency', 'THB'],
@@ -259,7 +267,7 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                                 if ($line->journalTrans->trans_type_id == JournalTrans::TRANS_TYPE_RETURN_BORROW) {
                                     $html = '';
                                     if ($line->return_to_type) {
-                                        $types = \common\models\JournalTransLineX::getReturnTypeOptions();
+                                        $types = \backend\models\JournalTransLine::getReturnTypeOptions();
                                         $class = '';
                                         switch ($line->return_to_type) {
                                             case 'complete':
@@ -293,6 +301,41 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                                 return $line->remark ?: '-';
                             },
                         ],
+                        [
+                            'attribute' => 'status',
+                            'label' => 'Status',
+                            'format' => 'raw',
+                            'headerOptions' => ['style' => 'width: 100px; text-align: center;'],
+                            'contentOptions' => ['class' => 'text-center'],
+                            'value' => function ($line) {
+                                if ($line->status == JournalTrans::STATUS_CANCELLED) {
+                                    return '<span class="label label-danger">Cancelled</span>';
+                                }
+                                return '<span class="label label-success">Active</span>';
+                            },
+                        ],
+                        [
+                            'class' => 'yii\grid\ActionColumn',
+                            'template' => '{cancel}',
+                            'header' => 'Action',
+                            'headerOptions' => ['style' => 'width: 100px; text-align: center;'],
+                            'contentOptions' => ['class' => 'text-center'],
+                            'buttons' => [
+                                'cancel' => function ($url, $line) {
+                                    if ($line->journalTrans->status === JournalTrans::STATUS_APPROVED && $line->status != JournalTrans::STATUS_CANCELLED) {
+                                        return Html::a('<i class="fa fa-times"></i> Cancel', ['cancel-line', 'id' => $line->id], [
+                                            'class' => 'btn btn-xs btn-danger',
+                                            'title' => 'Cancel this item',
+                                            'data' => [
+                                                'confirm' => 'Are you sure you want to cancel this item? Stock will be adjusted.',
+                                                'method' => 'post',
+                                            ],
+                                        ]);
+                                    }
+                                    return '';
+                                },
+                            ],
+                        ],
                     ],
                     'summary' => false,
                     'tableOptions' => ['class' => 'table table-striped table-bordered'],
@@ -306,13 +349,29 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                             <tr>
                                 <td><strong>Total Quantity:</strong></td>
                                 <td class="text-right">
-                                    <strong><?php echo number_format(array_sum(array_column($model->journalTransLines, 'qty')), 2) ?></strong>
+                                    <strong><?php 
+                                        $totalQty = 0;
+                                        foreach ($model->journalTransLines as $line) {
+                                            if ($line->status != JournalTrans::STATUS_CANCELLED) {
+                                                $totalQty += $line->qty;
+                                            }
+                                        }
+                                        echo number_format($totalQty, 2);
+                                    ?></strong>
                                 </td>
                             </tr>
                             <tr>
                                 <td><strong>Total Amount:</strong></td>
                                 <td class="text-right">
-                                    <strong><?php echo Yii::$app->formatter->asCurrency(array_sum(array_column($model->journalTransLines, 'line_price')), 'THB') ?></strong>
+                                    <strong><?php 
+                                        $totalAmount = 0;
+                                        foreach ($model->journalTransLines as $line) {
+                                            if ($line->status != JournalTrans::STATUS_CANCELLED) {
+                                                $totalAmount += $line->line_price;
+                                            }
+                                        }
+                                        echo Yii::$app->formatter->asCurrency($totalAmount, 'THB');
+                                    ?></strong>
                                 </td>
                             </tr>
                         </table>
@@ -570,6 +629,17 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                                 <h4>Transaction Approved</h4>
                                 <p>
                                     Stock movements have been processed and inventory updated.
+                                </p>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($model->status === JournalTrans::STATUS_CANCELLED): ?>
+                        <div class="timeline-item">
+                            <i class="fa fa-ban bg-red"></i>
+                            <div class="timeline-content">
+                                <h4>Transaction Cancelled</h4>
+                                <p>
+                                    Transaction has been cancelled and stock movements reversed.
                                 </p>
                             </div>
                         </div>

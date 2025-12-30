@@ -106,77 +106,37 @@ $autocompleteCSS = <<<CSS
 .bg-light {
     background-color: #f8f9fa !important;
 }
+
+/* Make inputs fit table cells */
+#details-table td {
+    padding: 0 !important;
+    vertical-align: middle;
+}
+#details-table .form-group {
+    margin-bottom: 0;
+}
+#details-table .form-control {
+    border: 1px solid transparent;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0.5rem;
+    height: 100%;
+}
+#details-table .form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    z-index: 2;
+    position: relative;
+}
+#details-table .btn-remove-row {
+    margin: 2px;
+}
 CSS;
 
 $this->registerCss($autocompleteCSS);
 
 // Register Font Awesome
 $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css');
-$this->registerJs("
-// Function to calculate row total
-function calculateRowTotal(row) {
-    var amount = parseFloat(row.find('.amount-input').val()) || 0;
-    var vat = parseFloat(row.find('.vat-input').val()) || 0;
-    var vatProhibit = parseFloat(row.find('.vat-prohibit-input').val()) || 0;
-    var wht = parseFloat(row.find('.wht-input').val()) || 0;
-    var other = parseFloat(row.find('.other-input').val()) || 0;
-    
-    var total = amount + vat + vatProhibit - wht + other;
-    row.find('.total-input').val(total.toFixed(2));
-    
-    calculateGrandTotal();
-}
-
-// Function to calculate grand total
-function calculateGrandTotal() {
-    var grandTotal = 0;
-    $('.total-input').each(function() {
-        grandTotal += parseFloat($(this).val()) || 0;
-    });
-    $('#pettycashvoucher-amount').val(grandTotal.toFixed(2));
-}
-
-// Remove row
-function removeDetailRow(button) {
-    var rowCount = $('#details-table tbody tr').length;
-    if (rowCount > 1) {
-        $(button).closest('tr').remove();
-        
-        // Re-index remaining rows
-        $('#details-table tbody tr').each(function(index) {
-            $(this).find('input, textarea, select').each(function() {
-                var name = $(this).attr('name');
-                if (name) {
-                    var newName = name.replace(/\[\d+\]/, '[' + index + ']');
-                    $(this).attr('name', newName);
-                }
-            });
-        });
-        
-        calculateGrandTotal();
-    } else {
-        alert('ต้องมีรายการอย่างน้อย 1 รายการ');
-    }
-}
-
-// Event handlers
-$(document).on('input', '.amount-input, .vat-input, .vat-prohibit-input, .wht-input, .other-input', function() {
-    calculateRowTotal($(this).closest('tr'));
-});
-
-$(document).on('click', '.btn-add-row', function() {
-    addDetailRow();
-});
-
-$(document).on('click', '.btn-remove-row', function() {
-    removeDetailRow(this);
-});
-
-// Initialize calculations on page load
-$(document).ready(function() {
-    calculateGrandTotal();
-});
-");
 ?>
 
 <div class="petty-cash-voucher-form">
@@ -293,8 +253,6 @@ $(document).ready(function() {
                     </td>
                 </tr>
             </table>
-
-
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -310,78 +268,49 @@ $(document).ready(function() {
                             <th width="10%">VAT ต้องห้าม</th>
                             <th width="8%">W/H</th>
                             <th width="8%">อื่นๆ</th>
-                            <th width="12%">TOTAL</th>
-                            <th width="5%"></th>
+                            <th width="10%">TOTAL</th>
+                            <th width="5%" class="text-center"><i class="fas fa-trash"></i></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($details as $index => $detail): ?>
+                            <?php
+                                if (!empty($detail->detail_date) && strpos($detail->detail_date, '-') !== false) {
+                                    $detail->detail_date = date('d/m/Y', strtotime($detail->detail_date));
+                                }
+                            ?>
                             <tr>
                                 <td>
-                                    <?= Html::textInput("PettyCashDetail[{$index}][ac_code]", $detail->ac_code, [
-                                        'rows' => 2,
-                                        'placeholder' => 'รายละเอียด'
-                                    ]) ?>
+                                    <?= $form->field($detail, "[$index]ac_code")->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'เลขที่บิล'])->label(false) ?>
                                 </td>
                                 <td>
-                                    <?= Html::textInput("PettyCashDetail[{$index}][job_ref_detail]", \backend\models\Job::findJobNo($detail->job_ref_id), [
-                                        'class' => 'form-control form-control-sm job-autocomplete',
-                                        'placeholder' => 'ใบงาน',
-                                        'data-index' => $index,
-                                        'autocomplete' => 'off',
-                                    ]) ?>
-                                    <?= Html::hiddenInput("PettyCashDetail[{$index}][job_ref_id]", $detail->job_ref_id, [
-                                        'class' => 'job-id-hidden',
-                                        'data-index' => $index
-                                    ]) ?>
+                                    <?= $form->field($detail, "[$index]detail_date")->textInput(['class' => 'form-control form-control-sm text-center detail-datepicker', 'placeholder' => 'dd/mm/yyyy', 'autocomplete' => 'off'])->label(false) ?>
+                                </td>
+                                <td>
+                                    <?= $form->field($detail, "[$index]detail")->textInput(['class' => 'form-control form-control-sm', 'placeholder' => 'รายละเอียด'])->label(false) ?>
+                                </td>
+                                <td>
+                                    <?= $form->field($detail, "[$index]job_ref_detail")->textInput(['class' => 'form-control form-control-sm job-autocomplete', 'placeholder' => 'ใบงาน', 'data-index' => $index, 'autocomplete' => 'off'])->label(false) ?>
+                                    <?= Html::activeHiddenInput($detail, "[$index]job_ref_id", ['class' => 'job-id-hidden', 'data-index' => $index]) ?>
                                     <div class="autocomplete-dropdown" data-index="<?= $index ?>"></div>
                                 </td>
                                 <td>
-                                    <?= Html::textInput("PettyCashDetail[{$index}][amount]", $detail->amount, [
-                                        'class' => 'form-control form-control-sm amount-input text-right',
-                                        'type' => 'number',
-                                        'step' => '0.01',
-                                        'placeholder' => '0.00'
-                                    ]) ?>
+                                    <?= $form->field($detail, "[$index]amount")->textInput(['class' => 'form-control form-control-sm amount-input text-right', 'type' => 'number', 'step' => '0.01', 'placeholder' => '0.00'])->label(false) ?>
                                 </td>
                                 <td>
-                                    <?= Html::textInput("PettyCashDetail[{$index}][vat]", $detail->vat, [
-                                        'class' => 'form-control form-control-sm vat-input text-right',
-                                        'type' => 'number',
-                                        'step' => '0.01',
-                                        'placeholder' => '0.00'
-                                    ]) ?>
+                                    <?= $form->field($detail, "[$index]vat")->textInput(['class' => 'form-control form-control-sm vat-input text-right', 'type' => 'number', 'step' => '0.01', 'placeholder' => '0.00'])->label(false) ?>
                                 </td>
                                 <td>
-                                    <?= Html::textInput("PettyCashDetail[{$index}][vat_prohibit]", $detail->vat_prohibit, [
-                                        'class' => 'form-control form-control-sm vat-prohibit-input text-right',
-                                        'type' => 'number',
-                                        'step' => '0.01',
-                                        'placeholder' => '0.00'
-                                    ]) ?>
+                                    <?= $form->field($detail, "[$index]vat_prohibit")->textInput(['class' => 'form-control form-control-sm vat-prohibit-input text-right', 'type' => 'number', 'step' => '0.01', 'placeholder' => '0.00'])->label(false) ?>
                                 </td>
                                 <td>
-                                    <?= Html::textInput("PettyCashDetail[{$index}][wht]", $detail->wht, [
-                                        'class' => 'form-control form-control-sm wht-input text-right',
-                                        'type' => 'number',
-                                        'step' => '0.01',
-                                        'placeholder' => '0.00'
-                                    ]) ?>
+                                    <?= $form->field($detail, "[$index]wht")->textInput(['class' => 'form-control form-control-sm wht-input text-right', 'type' => 'number', 'step' => '0.01', 'placeholder' => '0.00'])->label(false) ?>
                                 </td>
                                 <td>
-                                    <?= Html::textInput("PettyCashDetail[{$index}][other]", $detail->other, [
-                                        'class' => 'form-control form-control-sm other-input text-right',
-                                        'type' => 'number',
-                                        'step' => '0.01',
-                                        'placeholder' => '0.00'
-                                    ]) ?>
+                                    <?= $form->field($detail, "[$index]other")->textInput(['class' => 'form-control form-control-sm other-input text-right', 'type' => 'number', 'step' => '0.01', 'placeholder' => '0.00'])->label(false) ?>
                                 </td>
                                 <td>
-                                    <?= Html::textInput("PettyCashDetail[{$index}][total]", $detail->total, [
-                                        'class' => 'form-control form-control-sm total-input text-right',
-                                        'readonly' => true,
-                                        'style' => 'background-color: #f8f9fa;'
-                                    ]) ?>
+                                    <?= Html::textInput("PettyCashDetail[$index][total]", number_format($detail->amount + $detail->vat + $detail->vat_prohibit - $detail->wht + $detail->other, 2, '.', ''), ['class' => 'form-control form-control-sm total-input text-right', 'readonly' => true, 'style' => 'background-color: #f8f9fa;']) ?>
                                 </td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-sm btn-danger btn-remove-row" title="ลบรายการ">
@@ -401,8 +330,6 @@ $(document).ready(function() {
             <?= Html::submitButton($model->isNewRecord ? '<i class="fas fa-save"></i> บันทึก' : '<i class="fas fa-save"></i> แก้ไข', [
                 'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
             ]) ?>
-            <!--                --><?php //= Html::a('<i class="fas fa-times"></i> ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) 
-                                    ?>
             <?php if (!$model->isNewRecord): ?>
                 <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
                     'class' => 'btn btn-info',
@@ -411,42 +338,28 @@ $(document).ready(function() {
             <?php endif; ?>
         </div>
     </div>
-    <?php if ($model->isNewRecord): ?>
-        <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-            <div class="row">
-                <div class="col-lg-12">
-                    <label for="">อัพโหลดเอกสารแนบสลิป</label>
-                    <input type="file" name="file_doc_slip" multiple>
-                </div>
-            </div>
-        </div>
-        <br />
-        <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-            <div class="row">
-                <div class="col-lg-12">
-                    <label for="">อัพโหลดเอกสารค่าสินค้า</label>
-                    <input type="file" name="file_doc_bill" multiple>
-                </div>
-            </div>
-
-        </div>
-    <?php endif; ?>
-
     <?php ActiveForm::end(); ?>
 
-    <?php
-    $model_doc_slip = \common\models\PettyCashVoucherDocSlip::find()->where(['petty_cash_voucher_id' => $model->id])->all();
-    $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_cash_voucher_id' => $model->id])->all();
+    <?php if (!$model->isNewRecord): 
+        $model_doc_slip = \common\models\PettyCashVoucherDocSlip::find()->where(['petty_cash_voucher_id' => $model->id])->all();
+        $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_cash_voucher_id' => $model->id])->all();
     ?>
-    <hr>
-    <?php if (!$model->isNewRecord): ?>
-        <br />
-        <div class="label">
-            <h4>เอกสารแนบสลิป</h4>
-        </div>
-        <div class="row">
-            <div class="col-lg-12">
-                <table class="table table-bordered table-striped" style="width: 100%">
+        <div class="card mt-3">
+            <div class="card-header">
+                 <h5 class="card-title mb-0">เอกสารแนบสลิป</h5>
+            </div>
+            <div class="card-body">
+                <form action="<?= Url::to(['petty-cash-voucher/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="id" value="<?= $model->id ?>">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <input type="file" name="file_doc" multiple class="form-control mb-2">
+                            <button class="btn btn-info"><i class="fas fa-upload"></i> อัพโหลดเอกสารแนบสลิป</button>
+                        </div>
+                    </div>
+                </form>
+                <br>
+                <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
                             <th style="width: 5%;text-align: center">#</th>
@@ -457,21 +370,15 @@ $(document).ready(function() {
                     </thead>
                     <tbody>
                         <?php if ($model_doc_slip != null): ?>
-
                             <?php foreach ($model_doc_slip as $key => $value): ?>
                                 <tr>
                                     <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
                                     <td><?= $value->doc ?></td>
                                     <td style="text-align: center">
-                                        <a href="<?= Yii::$app->request->BaseUrl . '/uploads/pettycash_doc_slip/' . $value->doc ?>"
-                                            target="_blank">
-                                            ดูเอกสาร
-                                        </a>
+                                        <a href="<?= Yii::$app->request->BaseUrl . '/uploads/pettycash_doc_slip/' . $value->doc ?>" target="_blank">ดูเอกสาร</a>
                                     </td>
                                     <td style="text-align: center">
-                                        <div class="btn btn-danger" data-var="<?= trim($value->doc) ?>"
-                                            onclick="delete_doc($(this),1)">ลบ
-                                        </div>
+                                        <div class="btn btn-danger" data-var="<?= trim($value->doc) ?>" onclick="delete_doc($(this),1)">ลบ</div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -480,44 +387,23 @@ $(document).ready(function() {
                 </table>
             </div>
         </div>
-        <br />
 
-        <form action="<?= Url::to(['petty-cash-voucher/add-doc-file'], true) ?>" method="post"
-            enctype="multipart/form-data">
-            <input type="hidden" name="id" value="<?= $model->id ?>">
-            <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <label for="">เอกสารแนบ</label>
-                        <input type="file" name="file_doc" multiple>
-                    </div>
-                </div>
-                <br />
-                <div class="row">
-                    <div class="col-lg-12">
-                        <button class="btn btn-info">
-                            <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบสลิป
-                        </button>
-                    </div>
-                </div>
+        <div class="card mt-3">
+            <div class="card-header">
+                 <h5 class="card-title mb-0">เอกสารแนบใบเสร็จค่าสินค้า</h5>
             </div>
-        </form>
-        <!--            <form id="form-delete-doc-file" action="--><?php //= Url::to(['petty-cash-voucher/delete-doc-file'], true) 
-                                                                    ?><!--"-->
-        <!--                  method="post">-->
-        <!--                <input type="hidden" name="id" value="--><?php //= $model->id 
-                                                                        ?><!--">-->
-        <!--                <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">-->
-        <!--            </form>-->
-
-        <hr>
-        <br />
-        <div class="label">
-            <h4>เอกสารแนบใบเสร็จค่าสินค้า</h4>
-        </div>
-        <div class="row">
-            <div class="col-lg-12">
-                <table class="table table-bordered table-striped" style="width: 100%">
+            <div class="card-body">
+                <form action="<?= Url::to(['petty-cash-voucher/add-doc-file-bill'], true) ?>" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="id" value="<?= $model->id ?>">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <input type="file" name="file_doc" multiple class="form-control mb-2">
+                            <button class="btn btn-info"><i class="fas fa-upload"></i> อัพโหลดเอกสารใบเสร็จค่าสินค้า</button>
+                        </div>
+                    </div>
+                </form>
+                <br>
+                <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
                             <th style="width: 5%;text-align: center">#</th>
@@ -528,21 +414,15 @@ $(document).ready(function() {
                     </thead>
                     <tbody>
                         <?php if ($model_doc_bill != null): ?>
-
                             <?php foreach ($model_doc_bill as $key => $value): ?>
                                 <tr>
                                     <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
                                     <td><?= $value->doc ?></td>
                                     <td style="text-align: center">
-                                        <a href="<?= Yii::$app->request->BaseUrl . '/uploads/pettycash_doc_bill/' . $value->doc ?>"
-                                            target="_blank">
-                                            ดูเอกสาร
-                                        </a>
+                                        <a href="<?= Yii::$app->request->BaseUrl . '/uploads/pettycash_doc_bill/' . $value->doc ?>" target="_blank">ดูเอกสาร</a>
                                     </td>
                                     <td style="text-align: center">
-                                        <div class="btn btn-danger" data-var="<?= trim($value->doc) ?>"
-                                            onclick="delete_doc($(this),2)">ลบ
-                                        </div>
+                                        <div class="btn btn-danger" data-var="<?= trim($value->doc) ?>" onclick="delete_doc($(this),2)">ลบ</div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -551,48 +431,91 @@ $(document).ready(function() {
                 </table>
             </div>
         </div>
-        <br />
 
-        <form action="<?= Url::to(['petty-cash-voucher/add-doc-file-bill'], true) ?>" method="post"
-            enctype="multipart/form-data">
-            <input type="hidden" name="id" value="<?= $model->id ?>">
-            <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <label for="">เอกสารแนบ</label>
-                        <input type="file" name="file_doc" multiple>
-                    </div>
-                </div>
-                <br />
-                <div class="row">
-                    <div class="col-lg-12">
-                        <button class="btn btn-info">
-                            <i class="fas fa-upload"></i> อัพโหลดเอกสารใบเสร็จค่าสินค้า
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </form>
-        <form id="form-delete-doc-file" action="<?= Url::to(['petty-cash-voucher/delete-doc-file'], true) ?>"
-            method="post">
+        <form id="form-delete-doc-file" action="<?= Url::to(['petty-cash-voucher/delete-doc-file'], true) ?>" method="post">
             <input type="hidden" name="id" value="<?= $model->id ?>">
             <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
             <input type="hidden" class="delete-doc-type" name="doc_delete_type" value="">
         </form>
+    <?php elseif ($model->isNewRecord): ?>
+         <div class="card mt-3">
+            <div class="card-body" style="background-color: #f8f9fa;">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <label for="">อัพโหลดเอกสารแนบสลิป</label>
+                        <input type="file" name="file_doc_slip[]" multiple class="form-control">
+                    </div>
+                </div>
+                 <div class="row mt-2">
+                    <div class="col-lg-12">
+                        <label for="">อัพโหลดเอกสารแนบใบเสร็จ</label>
+                        <input type="file" name="file_doc_bill[]" multiple class="form-control">
+                    </div>
+                </div>
+            </div>
+        </div>
     <?php endif; ?>
 </div>
+
 <?php
-// URL สำหรับ AJAX
 $ajax_url = Url::to(['get-job-info']);
 $script = <<< JS
 // ตัวแปรเก็บข้อมูลสินค้า
 var productsData = [];
 var isProductsLoaded = false;
 
-// Function to add new row (แก้ไขในส่วนนี้)
+// ฟังก์ชัน initialize datepicker
+function initDatePickers() {
+    $('.detail-datepicker').each(function() {
+        if (!$(this).data('datepicker')) {
+            $(this).kvDatepicker({
+                format: 'dd/mm/yyyy',
+                autoclose: true,
+                todayHighlight: true,
+                orientation: 'bottom'
+            });
+        }
+    });
+}
+
+// Function to calculate row total
+function calculateRowTotal(row) {
+    var amount = parseFloat(row.find('.amount-input').val()) || 0;
+    var vat = parseFloat(row.find('.vat-input').val()) || 0;
+    var vatProhibit = parseFloat(row.find('.vat-prohibit-input').val()) || 0;
+    var wht = parseFloat(row.find('.wht-input').val()) || 0;
+    var other = parseFloat(row.find('.other-input').val()) || 0;
+    
+    var total = amount + vat + vatProhibit - wht + other;
+    row.find('.total-input').val(total.toFixed(2));
+    
+    calculateGrandTotal();
+}
+
+// Function to calculate grand total
+function calculateGrandTotal() {
+    var grandTotal = 0;
+    $('.total-input').each(function() {
+        grandTotal += parseFloat($(this).val()) || 0;
+    });
+    $('#pettycashvoucher-amount').val(grandTotal.toFixed(2));
+}
+
+// Function to add new row
 function addDetailRow() {
     var rowIndex = $('#details-table tbody tr').length;
     
+    var newRowHtml = `<tr>
+        <td>
+            <input type="text" name="PettyCashDetail[` + rowIndex + `][ac_code]" class="form-control form-control-sm" placeholder="เลขที่บิล">
+        </td>
+        <td>
+            <input type="text" name="PettyCashDetail[` + rowIndex + `][detail_date]" class="form-control form-control-sm text-center detail-datepicker" placeholder="dd/mm/yyyy" autocomplete="off">
+        </td>
+        <td>
+            <input type="text" name="PettyCashDetail[` + rowIndex + `][detail]" class="form-control form-control-sm" placeholder="รายละเอียด">
+        </td>
+        <td>
             <input type="text" name="PettyCashDetail[` + rowIndex + `][job_ref_detail]" class="form-control form-control-sm job-autocomplete" placeholder="ใบงาน" data-index="` + rowIndex + `" autocomplete="off">
             <input type="hidden" name="PettyCashDetail[` + rowIndex + `][job_ref_id]" class="job-id-hidden" data-index="` + rowIndex + `" value="">
             <div class="autocomplete-dropdown" data-index="` + rowIndex + `"></div>
@@ -623,7 +546,32 @@ function addDetailRow() {
     </tr>`;
     
     $('#details-table tbody').append(newRowHtml);
+    initDatePickers();
 }
+
+// Remove row
+function removeDetailRow(button) {
+    var rowCount = $('#details-table tbody tr').length;
+    if (rowCount > 1) {
+        $(button).closest('tr').remove();
+        
+        // Re-index remaining rows
+        $('#details-table tbody tr').each(function(index) {
+            $(this).find('input, textarea, select').each(function() {
+                var name = $(this).attr('name');
+                if (name) {
+                    var newName = name.replace(/\[\d+\]/, '[' + index + ']');
+                    $(this).attr('name', newName);
+                }
+            });
+        });
+        
+        calculateGrandTotal();
+    } else {
+        alert('ต้องมีรายการอย่างน้อย 1 รายการ');
+    }
+}
+
 // ฟังก์ชันโหลดข้อมูลสินค้า
 function loadProductsData() {
     if (isProductsLoaded) return;
@@ -655,12 +603,11 @@ function searchProducts(query) {
     }).slice(0, 10);
 }
 
-// ฟังก์ชันแสดงผลลัพธ์ (แก้ไขเล็กน้อย)
+// ฟังก์ชันแสดงผลลัพธ์
 function showAutocompleteResults(input, results) {
     var index = input.attr('data-index') || input.closest('tr').index();
     var dropdown = input.siblings('.autocomplete-dropdown');
     
-    // ถ้าไม่เจอ dropdown ที่เป็น sibling ให้หาจาก data-index
     if (dropdown.length === 0) {
         dropdown = $('.autocomplete-dropdown[data-index="' + index + '"]');
     }
@@ -680,7 +627,6 @@ function showAutocompleteResults(input, results) {
     });
     
     dropdown.show();
-    console.log('Showing dropdown with', results.length, 'results'); // Debug log
 }
 
 // ฟังก์ชันซ่อน dropdown
@@ -690,36 +636,67 @@ function hideAutocomplete(index) {
     }, 200);
 }
 
-// แก้ไขส่วนของ existing rows เพื่อให้มี data-index
+// ฟังก์ชันเลือกสินค้า
+function selectProduct(input, product) {
+    var index = input.attr('data-index');
+    input.val(product.job_no);
+    
+    var hiddenInput = input.siblings('.job-id-hidden');
+    if (hiddenInput.length === 0) {
+        hiddenInput = $('.job-id-hidden[data-index="' + index + '"]');
+    }
+    hiddenInput.val(product.id);
+    
+    input.siblings('.autocomplete-dropdown').hide();
+}
+
+function delete_doc(e,typeid){
+    var file_name = e.attr('data-var');
+    if(file_name != null){
+        $(".delete-doc-list").val(file_name);
+        $(".delete-doc-type").val(typeid);
+        $("#form-delete-doc-file").submit();
+    }
+}
+
 $(document).ready(function() {
-    // เพิ่ม data-index ให้กับแถวที่มีอยู่แล้ว
+    initDatePickers();
+    calculateGrandTotal();
+
+    // Event listeners for calculations
+    $(document).on('input', '.amount-input, .vat-input, .vat-prohibit-input, .wht-input, .other-input', function() {
+        calculateRowTotal($(this).closest('tr'));
+    });
+
+    // Event listeners for row manipulation
+    $(document).on('click', '.btn-add-row', function() {
+        addDetailRow();
+    });
+
+    $(document).on('click', '.btn-remove-row', function() {
+        removeDetailRow(this);
+    });
+
     $('#details-table tbody tr').each(function(index) {
         $(this).find('.job-autocomplete').attr('data-index', index);
         $(this).find('.autocomplete-dropdown').attr('data-index', index);
     });
     
-    // โหลดข้อมูลสินค้าตอนเริ่มต้น
     loadProductsData();
     
-    // Event สำหรับคลิกเลือกรายการจาก autocomplete
     $(document).on('click', '.autocomplete-item', function() {
         var product = $(this).data('product');
         var dropdown = $(this).parent('.autocomplete-dropdown');
         var index = dropdown.attr('data-index');
         var input = $('.job-autocomplete[data-index="' + index + '"]');
-        
         selectProduct(input, product);
     });
     
-    // Event สำหรับ autocomplete
     $(document).on('input', '.job-autocomplete', function() {
         var input = $(this);
         var query = input.val();
         
-        console.log('Input query:', query); // Debug log
-        
         if (!isProductsLoaded) {
-            console.log('Products not loaded yet'); // Debug log
             loadProductsData();
             return;
         }
@@ -748,7 +725,6 @@ $(document).ready(function() {
         }
     });
     
-    // Event navigation ด้วย keyboard
     $(document).on('keydown', '.job-autocomplete', function(e) {
         var input = $(this);
         var dropdown = input.siblings('.autocomplete-dropdown');
@@ -792,98 +768,6 @@ $(document).ready(function() {
         }
     });
 });
-
-// // แก้ไขฟังก์ชันเลือกสินค้า
-// function selectProduct(input, product) {
-//     // อัพเดตค่า
-//     input.val(product.display);
-//    
-//     // ซ่อน dropdown
-//     input.siblings('.autocomplete-dropdown').hide();
-//    
-//     // คำนวณยอดรวม (ถ้ามี)
-//     // calculateLineTotal(index);
-// }
-// ฟังก์ชันเลือกสินค้า - แสดง job_no แต่เก็บ id
-function selectProduct(input, product) {
-    var index = input.attr('data-index');
-    
-    // แสดง job_no ใน input (แทนที่จะเป็น display)
-    input.val(product.job_no);
-    
-    // บันทึก product.id ใน hidden input
-    var hiddenInput = input.siblings('.job-id-hidden');
-    if (hiddenInput.length === 0) {
-        hiddenInput = $('.job-id-hidden[data-index="' + index + '"]');
-    }
-    hiddenInput.val(product.id);
-    
-    // อัพเดตจำนวนเงิน (ถ้ามีข้อมูล)
-    if (product.job_amount) {
-       // var amountInput = input.closest('tr').find('.amount-input');
-      //  amountInput.val(parseFloat(product.job_amount).toFixed(2));
-        
-        // คำนวณยอดรวมใหม่
-      //  calculateRowTotal(input.closest('tr'));
-    }
-    
-    // ซ่อน dropdown
-    input.siblings('.autocomplete-dropdown').hide();
-    
-    console.log('Selected job:', product.job_no, 'ID:', product.id, 'Display in input:', product.job_no);
-}
-
-// ฟังก์ชันตรวจสอบการเลือก job โดยใช้ job_no
-function validateJobSelection(input) {
-    var hiddenInput = input.siblings('.job-id-hidden');
-    if (hiddenInput.length === 0) {
-        var index = input.attr('data-index');
-        hiddenInput = $('.job-id-hidden[data-index="' + index + '"]');
-    }
-    
-    var displayValue = input.val(); // ตอนนี้เป็น job_no
-    var jobId = hiddenInput.val();
-    
-    // ถ้ามี job_no แต่ไม่มี job_id แสดงว่าพิมพ์เอง ไม่ได้เลือกจาก dropdown
-    if (displayValue && !jobId) {
-        // ลองหา job ที่ตรงกับ job_no ที่พิมพ์
-        var matchedJob = productsData.find(function(product) {
-            return product.job_no.toLowerCase() === displayValue.toLowerCase();
-        });
-        
-        if (matchedJob) {
-            // ถ้าเจอ job ที่ตรงกัน ให้ set id อัตโนมัติ
-            hiddenInput.val(matchedJob.id);
-            console.log('Auto-matched job:', matchedJob.job_no, 'ID:', matchedJob.id);
-            return true;
-        } else {
-            // ถ้าไม่เจอ ให้แสดงเตือน
-            console.warn('Job "' + displayValue + '" not found. Please select from dropdown.');
-            
-            // อาจจะเปลี่ยนสีกรอบเป็นแดงเพื่อแสดงข้อผิดพลาด
-            input.addClass('is-invalid');
-            
-            // หรือล้างค่า
-            // input.val('');
-            // hiddenInput.val('');
-            
-            return false;
-        }
-    }
-    
-    // ถ้าทั้งคู่ว่าง หรือทั้งคู่มีค่า ถือว่าถูกต้อง
-    input.removeClass('is-invalid');
-    return true;
-}
-function delete_doc(e,typeid){
-    var file_name = e.attr('data-var');
-    if(file_name != null){
-       // alert();
-        $(".delete-doc-list").val(file_name);
-        $(".delete-doc-type").val(typeid);
-        $("#form-delete-doc-file").submit();
-    }
-}
 JS;
 $this->registerJs($script, static::POS_END);
 ?>

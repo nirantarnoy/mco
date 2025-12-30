@@ -40,6 +40,8 @@ class JournalTransLine extends ActiveRecord
     const CONDITION_DAMAGED = 'damaged';
     const CONDITION_MISSING = 'missing';
 
+    const STATUS_CANCELLED = 3;
+
     /**
      * {@inheritdoc}
      */

@@ -235,218 +235,14 @@ class JournaltransController extends BaseController
     }
 
     /**
-     * Updates an existing JournalTrans model.
-     * If update is successful, the browser will be redirected to the 'view' page.
-     * @param integer $id
+     * Creates a new JournalTrans model.
+     * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
-     * @throws NotFoundHttpException if the model cannot be found
-     */
-    public function actionUpdate($id)
-    {
-        $model = $this->findModel($id);
-
-        // Allow edit if draft OR (approved AND (issue OR borrow))
-        $isApprovedIssueOrBorrow = $model->status === JournalTrans::STATUS_APPROVED &&
-            in_array($model->trans_type_id, [JournalTrans::TRANS_TYPE_ISSUE_STOCK, JournalTrans::TRANS_TYPE_ISSUE_BORROW]);
-
-        if ($model->status !== JournalTrans::STATUS_DRAFT && !$isApprovedIssueOrBorrow) {
-            Yii::$app->session->setFlash('error', 'Cannot edit approved or processed transactions.');
-            return $this->redirect(['view', 'id' => $model->id]);
-        }
-
-        $oldLines = [];
-        if ($model->status === JournalTrans::STATUS_APPROVED) {
-            foreach ($model->journalTransLines as $line) {
-                $oldLines[$line->id] = [
-                    'qty' => $line->qty,
-                    'product_id' => $line->product_id,
-
-                    'warehouse_id' => $line->warehouse_id,
-                ];
-            }
-        }
-
-        $lines = $model->getJournalTransLines()->all();
-        if (empty($lines)) {
-            $lines = [new JournalTransLine()];
-        }
-
-        if ($model->load(Yii::$app->request->post())) {
-            $journalTransLines = [];
-            $valid = $model->validate();
-
-            if (isset($_POST['JournalTransLine'])) {
-                foreach ($_POST['JournalTransLine'] as $index => $journalTransLineData) {
-                    if (isset($journalTransLineData['id']) && !empty($journalTransLineData['id'])) {
-                        $journalTransLine = JournalTransLine::findOne($journalTransLineData['id']);
-                        if (!$journalTransLine) {
-                            $journalTransLine = new JournalTransLine();
-                        }
-                    } else {
-                        $journalTransLine = new JournalTransLine();
-                    }
-                    $journalTransLine->load($journalTransLineData, '');
-                    $journalTransLines[] = $journalTransLine;
-                    $valid = $journalTransLine->validate() && $valid;
-                }
-            }
-
-            if ($valid) {
-                $transaction = Yii::$app->db->beginTransaction();
-                try {
-                    if ($model->save()) {
-                        $existingLineIds = [];
-                        foreach ($journalTransLines as $journalTransLine) {
-                            if (!$journalTransLine->isNewRecord) {
-                                $existingLineIds[] = $journalTransLine->id;
-                            }
-                        }
-
-                        // Handle deleted lines for Approved transactions
-                        if ($model->status === JournalTrans::STATUS_APPROVED) {
-                            $deletedLines = JournalTransLine::find()
-                                ->where(['journal_trans_id' => $model->id])
-                                ->andWhere(['not in', 'id', $existingLineIds])
-                                ->all();
-                            foreach ($deletedLines as $deletedLine) {
-                                // Reverse stock (return items)
-                                $this->adjustStock($model, $deletedLine->product_id, $deletedLine->warehouse_id, -$deletedLine->qty);
-                            }
-                        }
-
-                        // Standard delete
-                        if (!empty($existingLineIds)) {
-                            JournalTransLine::deleteAll(['and', ['journal_trans_id' => $model->id], ['not in', 'id', $existingLineIds]]);
-                        } else {
-                            JournalTransLine::deleteAll(['journal_trans_id' => $model->id]);
-                        }
-
-                        foreach ($journalTransLines as $journalTransLine) {
-                            $journalTransLine->journal_trans_id = $model->id;
-                            
-                            // Calculate Diff for Approved
-                            $diff = 0;
-                            if ($model->status === JournalTrans::STATUS_APPROVED) {
-                                $oldQty = isset($oldLines[$journalTransLine->id]) ? $oldLines[$journalTransLine->id]['qty'] : 0;
-                                $diff = $journalTransLine->qty - $oldQty;
-
-                                // Validate Stock if increasing
-                                if ($diff > 0) {
-                                    $product = Product::findOne($journalTransLine->product_id);
-                                    $available = $product->getAvailableStockInWarehouse($journalTransLine->warehouse_id);
-                                    if ($available < $diff) {
-                                        throw new \Exception("สินค้า {$product->name} มีไม่พอ (ต้องการเพิ่ม {$diff}, คงเหลือ {$available})");
-                                    }
-                                }
-                            } else {
-                                $journalTransLine->status = 0;
-                            }
-
-                            if (!$journalTransLine->save()) {
-                                throw new \Exception('Failed to save journal trans line');
-                            }
-
-                            // Apply Diff
-                            if ($model->status === JournalTrans::STATUS_APPROVED && $diff != 0) {
-                                $this->adjustStock($model, $journalTransLine->product_id, $journalTransLine->warehouse_id, $diff);
-                            }
-                        }
-
-                        $transaction->commit();
-                        Yii::$app->session->setFlash('success', 'Transaction updated successfully.');
-                        return $this->redirect(['view', 'id' => $model->id]);
-                    }
-                } catch (\Exception $e) {
-                    $transaction->rollBack();
-                    Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
-                }
-            }
-        }
-
-        return $this->render('update', [
-            'model' => $model,
-            'lines' => (empty($journalTransLines)) ? $model->journalTransLines : $journalTransLines
-        ]);
-    }
-
-    protected function adjustStock($model, $productId, $warehouseId, $qtyDiff) {
-        // Create StockTrans for history
-        $stockTrans = new StockTrans();
-        $stockTrans->journal_trans_id = $model->id;
-        $stockTrans->trans_date = date('Y-m-d H:i:s');
-        $stockTrans->product_id = $productId;
-        $stockTrans->trans_type_id = $model->trans_type_id;
-        $stockTrans->qty = $qtyDiff; 
-        $stockTrans->created_at = date('Y-m-d H:i:s');
-        $stockTrans->created_by = Yii::$app->user->id;
-        $stockTrans->status = 'completed';
-        $stockTrans->remark = 'แก้ไขจำนวน (Adjustment)';
-        $stockTrans->stock_type_id = $model->stock_type_id;
-        $stockTrans->warehouse_id = $warehouseId;
-        $stockTrans->save(false);
-
-        // Update StockSum
-        $stockSum = StockSum::find()
-            ->where(['product_id' => $productId, 'warehouse_id' => $warehouseId])
-            ->one();
-
-        if (!$stockSum) {
-             $stockSum = new StockSum();
-             $stockSum->product_id = $productId;
-             $stockSum->warehouse_id = $warehouseId;
-             $stockSum->qty = 0;
-             $stockSum->save(false);
-        }
-        
-        $qtyChange = ($model->stock_type_id == JournalTrans::STOCK_TYPE_IN) ? $qtyDiff : -$qtyDiff;
-        $stockSum->qty += $qtyChange;
-        $stockSum->save(false);
-        
-        // Update Product Master Stock
-        $total_stock = StockSum::find()->where(['product_id' => $productId])->sum('qty');
-        Product::updateAll(['stock_qty' => $total_stock ?: 0], ['id' => $productId]);
-    }
-
-    /**
-     * Process return line data including condition information
-     * @param JournalTransLine $line
-     * @param array $data
-     */
-    protected function processReturnLineData($line, $data)
-    {
-        // บันทึกข้อมูลสภาพสินค้าสำหรับ return borrow
-        if (isset($data['good_qty'])) {
-            $line->good_qty = (float)$data['good_qty'];
-        }
-        if (isset($data['damaged_qty'])) {
-            $line->damaged_qty = (float)$data['damaged_qty'];
-        }
-        if (isset($data['missing_qty'])) {
-            $line->missing_qty = (float)$data['missing_qty'];
-        }
-        if (isset($data['condition_note'])) {
-            $line->condition_note = $data['condition_note'];
-        }
-        if (isset($data['return_note'])) {
-            $line->return_note = $data['return_note'];
-        }
-
-        // กำหนด return_to_type ตามสภาพสินค้า
-        if ($line->good_qty > 0 && $line->damaged_qty == 0 && $line->missing_qty == 0) {
-            $line->return_to_type = JournalTransLine::RETURN_TYPE_COMPLETE;
-        } elseif ($line->damaged_qty > 0) {
-            $line->return_to_type = JournalTransLine::RETURN_TYPE_DAMAGED;
-        } elseif ($line->missing_qty > 0) {
-            $line->return_to_type = JournalTransLine::RETURN_TYPE_INCOMPLETE;
-        }
-    }
-
-    /**
-     * Enhanced actionCreate with return transaction support
      */
     public function actionCreate()
     {
         $model = new JournalTrans();
+        $model->trans_date = date('Y-m-d');
         $lines = [new JournalTransLine()];
 
         if ($model->load(Yii::$app->request->post())) {
@@ -457,21 +253,6 @@ class JournaltransController extends BaseController
                 foreach ($_POST['JournalTransLine'] as $index => $journalTransLineData) {
                     $journalTransLine = new JournalTransLine();
                     $journalTransLine->load($journalTransLineData, '');
-
-                    // สำหรับ return transaction
-                    if (in_array($model->trans_type_id, [JournalTrans::TRANS_TYPE_RETURN_ISSUE, JournalTrans::TRANS_TYPE_RETURN_BORROW])) {
-                        $this->processReturnLineData($journalTransLine, $journalTransLineData);
-
-                        // ตรวจสอบจำนวนที่สามารถคืนได้
-                        if ($model->return_for_trans_id) {
-                            $availableQty = $this->getAvailableReturnQty($model->return_for_trans_id, $journalTransLine->product_id);
-                            if ($journalTransLine->qty > $availableQty) {
-                                $journalTransLine->addError('qty', "จำนวนที่คืน ({$journalTransLine->qty}) เกินจำนวนที่สามารถคืนได้ ({$availableQty})");
-                                $valid = false;
-                            }
-                        }
-                    }
-
                     $journalTransLines[] = $journalTransLine;
                     $valid = $journalTransLine->validate() && $valid;
                 }
@@ -486,9 +267,7 @@ class JournaltransController extends BaseController
                         foreach ($journalTransLines as $journalTransLine) {
                             $journalTransLine->journal_trans_id = $model->id;
                             $journalTransLine->status = 0;
-                            if ($journalTransLine->save(false)) {
-                                // Removed immediate stock deduction
-                            } else {
+                            if (!$journalTransLine->save(false)) {
                                 throw new \Exception('Failed to save journal trans line');
                             }
                         }
@@ -502,7 +281,7 @@ class JournaltransController extends BaseController
                     Yii::$app->session->setFlash('error', 'ไม่สามารถบันทึกข้อมูลได้: ' . $e->getMessage());
                 }
             } else {
-                // แสดง validation errors
+                 // แสดง validation errors
                 $errors = [];
                 if ($model->hasErrors()) {
                     foreach ($model->errors as $attribute => $attributeErrors) {
@@ -632,6 +411,158 @@ class JournaltransController extends BaseController
         }
 
         return $this->redirect(['view', 'id' => $id]);
+    }
+
+    /**
+     * Cancel the entire transaction and reverse all stock movements.
+     * @param integer $id
+     * @return mixed
+     */
+    public function actionCancel($id)
+    {
+        $model = $this->findModel($id);
+
+        if ($model->status !== JournalTrans::STATUS_APPROVED) {
+            Yii::$app->session->setFlash('error', 'Only approved transactions can be cancelled.');
+            return $this->redirect(['view', 'id' => $id]);
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            foreach ($model->journalTransLines as $line) {
+                if ($line->status != JournalTransLine::STATUS_CANCELLED) {
+                    $reverseStockType = ($model->stock_type_id == JournalTrans::STOCK_TYPE_IN) ? JournalTrans::STOCK_TYPE_OUT : JournalTrans::STOCK_TYPE_IN;
+                    
+                    $this->adjustStock($line->product_id, $line->warehouse_id, $line->qty, $reverseStockType, "Cancel Transaction: " . $model->journal_no);
+                    
+                    $stockTrans = new StockTrans();
+                    $stockTrans->journal_trans_id = $model->id;
+                    $stockTrans->product_id = $line->product_id;
+                    $stockTrans->warehouse_id = $line->warehouse_id;
+                    $stockTrans->qty = $line->qty;
+                    $stockTrans->stock_type_id = $reverseStockType;
+                    $stockTrans->trans_type_id = $model->trans_type_id; 
+                    $stockTrans->created_at = date('Y-m-d H:i:s');
+                    $stockTrans->created_by = Yii::$app->user->id;
+                    if (!$stockTrans->save(false)) {
+                        throw new \Exception("Failed to save stock transaction history.");
+                    }
+
+                    $line->status = JournalTransLine::STATUS_CANCELLED;
+                    if (!$line->save(false)) {
+                        throw new \Exception("Failed to update line status.");
+                    }
+                }
+            }
+
+            // Update main transaction status
+            $model->status = JournalTrans::STATUS_CANCELLED;
+            $model->updated_by = Yii::$app->user->id;
+            $model->updated_at = date('Y-m-d H:i:s');
+            if (!$model->save(false)) {
+                throw new \Exception("Failed to update transaction status.");
+            }
+
+            $transaction->commit();
+            Yii::$app->session->setFlash('success', 'Transaction cancelled successfully.');
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::$app->session->setFlash('error', 'Error cancelling transaction: ' . $e->getMessage());
+        }
+
+        return $this->redirect(['view', 'id' => $id]);
+    }
+
+    /**
+     * Cancel a single line item from a transaction.
+     * @param integer $id
+     * @return mixed
+     */
+    public function actionCancelLine($id)
+    {
+        $line = JournalTransLine::findOne($id);
+        if (!$line) {
+            throw new NotFoundHttpException('The requested page does not exist.');
+        }
+
+        $model = $line->journalTrans;
+        if ($model->status !== JournalTrans::STATUS_APPROVED) {
+             Yii::$app->session->setFlash('error', 'Only approved transactions can be cancelled.');
+             return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        if ($line->status == JournalTransLine::STATUS_CANCELLED) {
+             Yii::$app->session->setFlash('warning', 'This item is already cancelled.');
+             return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $reverseStockType = ($model->stock_type_id == JournalTrans::STOCK_TYPE_IN) ? JournalTrans::STOCK_TYPE_OUT : JournalTrans::STOCK_TYPE_IN;
+            
+            $this->adjustStock($line->product_id, $line->warehouse_id, $line->qty, $reverseStockType, "Cancel Line Item: " . $line->product->code);
+            
+            $stockTrans = new StockTrans();
+            $stockTrans->journal_trans_id = $model->id;
+            $stockTrans->product_id = $line->product_id;
+            $stockTrans->warehouse_id = $line->warehouse_id;
+            $stockTrans->qty = $line->qty;
+            $stockTrans->stock_type_id = $reverseStockType;
+            $stockTrans->trans_type_id = $model->trans_type_id;
+            $stockTrans->created_at = date('Y-m-d H:i:s');
+            $stockTrans->created_by = Yii::$app->user->id;
+            if (!$stockTrans->save(false)) {
+                throw new \Exception("Failed to save stock transaction history.");
+            }
+
+            $line->status = JournalTransLine::STATUS_CANCELLED;
+            if (!$line->save(false)) {
+                throw new \Exception("Failed to update line status.");
+            }
+
+            $transaction->commit();
+            Yii::$app->session->setFlash('success', 'Item cancelled successfully.');
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::$app->session->setFlash('error', 'Error cancelling item: ' . $e->getMessage());
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    /**
+     * Adjust stock quantity.
+     * @param int $product_id
+     * @param int $warehouse_id
+     * @param float $qty
+     * @param int $stock_type_id
+     * @param string $remark
+     * @throws \Exception
+     */
+    protected function adjustStock($product_id, $warehouse_id, $qty, $stock_type_id, $remark = null)
+    {
+        $stockSum = StockSum::find()->where(['product_id' => $product_id, 'warehouse_id' => $warehouse_id])->one();
+        if (!$stockSum) {
+            $stockSum = new StockSum();
+            $stockSum->product_id = $product_id;
+            $stockSum->warehouse_id = $warehouse_id;
+            $stockSum->qty = 0;
+        }
+
+        if ($stock_type_id == JournalTrans::STOCK_TYPE_IN) {
+            $stockSum->qty = ($stockSum->qty ?: 0) + $qty;
+        } elseif ($stock_type_id == JournalTrans::STOCK_TYPE_OUT) {
+             if (($stockSum->qty ?: 0) < $qty) {
+                 throw new \Exception("Insufficient stock for product ID $product_id in warehouse $warehouse_id to perform cancellation.");
+             }
+            $stockSum->qty = ($stockSum->qty ?: 0) - $qty;
+        }
+
+        if (!$stockSum->save()) {
+            throw new \Exception("Failed to update stock summary.");
+        }
+        
+        $this->updateProductStock($product_id);
     }
 
     public function createStocktrans($journalTransLines,$stock_trans_type,$stock_type_id)

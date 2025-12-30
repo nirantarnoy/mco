@@ -20,11 +20,15 @@ use yii\db\ActiveRecord;
  * @property float|null $other
  * @property float $total
  * @property int|null $sort_order
+ * @property float|null $vat_prohibit
+ * @property int|null $job_ref_id
  *
  * @property PettyCashVoucher $voucher
  */
 class PettyCashDetail extends ActiveRecord
 {
+    public $job_ref_detail;
+
     /**
      * {@inheritdoc}
      */
@@ -40,10 +44,10 @@ class PettyCashDetail extends ActiveRecord
     {
         return [
             [['voucher_id'], 'required'],
-            [['voucher_id', 'sort_order'], 'integer'],
-            [['detail_date','job_ref_id','other'], 'safe'],
+            [['voucher_id', 'sort_order', 'job_ref_id'], 'integer'],
+            [['detail_date', 'job_ref_detail'], 'safe'],
             [['detail'], 'string'],
-            [['amount', 'vat', 'vat_amount', 'wht', 'total','vat_prohibit'], 'number'],
+            [['amount', 'vat', 'vat_amount', 'wht', 'total', 'vat_prohibit', 'other'], 'number'],
             [['ac_code'], 'string', 'max' => 50],
             [['voucher_id'], 'exist', 'skipOnError' => true, 'targetClass' => PettyCashVoucher::class, 'targetAttribute' => ['voucher_id' => 'id']],
         ];
@@ -68,6 +72,7 @@ class PettyCashDetail extends ActiveRecord
             'total' => 'TOTAL',
             'sort_order' => 'Sort Order',
             'vat_prohibit' => 'VAT ต้องห้าม',
+            'job_ref_detail' => 'ใบงาน',
         ];
     }
 
@@ -79,6 +84,27 @@ class PettyCashDetail extends ActiveRecord
     public function getVoucher()
     {
         return $this->hasOne(PettyCashVoucher::class, ['id' => 'voucher_id']);
+    }
+
+    /**
+     * Gets query for [[Job]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getJob()
+    {
+        return $this->hasOne(\backend\models\Job::className(), ['id' => 'job_ref_id']);
+    }
+
+    public function afterFind()
+    {
+        parent::afterFind();
+        if ($this->job_ref_id) {
+            $job = \backend\models\Job::findOne($this->job_ref_id);
+            if ($job) {
+                $this->job_ref_detail = $job->job_no;
+            }
+        }
     }
 
     /**
