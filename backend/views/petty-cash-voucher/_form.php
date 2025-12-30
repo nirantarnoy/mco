@@ -325,6 +325,24 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
         </div>
     </div>
 
+    <div class="card mt-3">
+        <div class="card-header">
+            <h5 class="card-title mb-0"><i class="fas fa-paperclip"></i> อัพโหลดเอกสารแนบ</h5>
+        </div>
+        <div class="card-body" style="background-color: #f8f9fa;">
+            <div class="row">
+                <div class="col-lg-6">
+                    <label for="">อัพโหลดเอกสารแนบสลิป</label>
+                    <input type="file" name="file_doc_slip[]" multiple class="form-control">
+                </div>
+                <div class="col-lg-6">
+                    <label for="">อัพโหลดเอกสารแนบใบเสร็จ</label>
+                    <input type="file" name="file_doc_bill[]" multiple class="form-control">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="form-group mt-4">
         <div class="text-center">
             <?= Html::submitButton($model->isNewRecord ? '<i class="fas fa-save"></i> บันทึก' : '<i class="fas fa-save"></i> แก้ไข', [
@@ -346,7 +364,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
     ?>
         <div class="card mt-3">
             <div class="card-header">
-                 <h5 class="card-title mb-0">เอกสารแนบสลิป</h5>
+                 <h5 class="card-title mb-0">เอกสารแนบสลิป (ที่มีอยู่)</h5>
             </div>
             <div class="card-body">
                 <form action="<?= Url::to(['petty-cash-voucher/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
@@ -354,7 +372,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                     <div class="row">
                         <div class="col-lg-12">
                             <input type="file" name="file_doc" multiple class="form-control mb-2">
-                            <button class="btn btn-info"><i class="fas fa-upload"></i> อัพโหลดเอกสารแนบสลิป</button>
+                            <button class="btn btn-info"><i class="fas fa-upload"></i> อัพโหลดเอกสารแนบสลิปเพิ่ม</button>
                         </div>
                     </div>
                 </form>
@@ -390,7 +408,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
 
         <div class="card mt-3">
             <div class="card-header">
-                 <h5 class="card-title mb-0">เอกสารแนบใบเสร็จค่าสินค้า</h5>
+                 <h5 class="card-title mb-0">เอกสารแนบใบเสร็จค่าสินค้า (ที่มีอยู่)</h5>
             </div>
             <div class="card-body">
                 <form action="<?= Url::to(['petty-cash-voucher/add-doc-file-bill'], true) ?>" method="post" enctype="multipart/form-data">
@@ -398,7 +416,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                     <div class="row">
                         <div class="col-lg-12">
                             <input type="file" name="file_doc" multiple class="form-control mb-2">
-                            <button class="btn btn-info"><i class="fas fa-upload"></i> อัพโหลดเอกสารใบเสร็จค่าสินค้า</button>
+                            <button class="btn btn-info"><i class="fas fa-upload"></i> อัพโหลดเอกสารใบเสร็จค่าสินค้าเพิ่ม</button>
                         </div>
                     </div>
                 </form>
@@ -437,23 +455,6 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
             <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
             <input type="hidden" class="delete-doc-type" name="doc_delete_type" value="">
         </form>
-    <?php elseif ($model->isNewRecord): ?>
-         <div class="card mt-3">
-            <div class="card-body" style="background-color: #f8f9fa;">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <label for="">อัพโหลดเอกสารแนบสลิป</label>
-                        <input type="file" name="file_doc_slip[]" multiple class="form-control">
-                    </div>
-                </div>
-                 <div class="row mt-2">
-                    <div class="col-lg-12">
-                        <label for="">อัพโหลดเอกสารแนบใบเสร็จ</label>
-                        <input type="file" name="file_doc_bill[]" multiple class="form-control">
-                    </div>
-                </div>
-            </div>
-        </div>
     <?php endif; ?>
 </div>
 

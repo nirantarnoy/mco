@@ -112,46 +112,14 @@ class PettyCashVoucherController extends BaseController
             try {
                 $model->created_by = \Yii::$app->user->id;
                 $model->status = 0;
-                if ($model->save()) {
-                    // Handle details
-                    $detailsData = Yii::$app->request->post('PettyCashDetail', []);
-                    $this->saveDetails($model, $detailsData);
+                    if ($model->save()) {
+                        // Handle details
+                        $detailsData = Yii::$app->request->post('PettyCashDetail', []);
+                        $this->saveDetails($model, $detailsData);
 
-                    $uploaded = UploadedFile::getInstancesByName('file_doc_slip');
-                    if (!empty($uploaded)) {
-                        $loop = 0;
-                        foreach ($uploaded as $file) {
-                            $upfiles = "invoice_" . time() . "_" . $loop . "." . $file->getExtension();
-                            if ($file->saveAs('uploads/pettycash_doc_slip/' . $upfiles)) {
-                                $model_doc = new \common\models\PettyCashVoucherDocSlip();
-                                $model_doc->petty_cash_voucher_id = $model->id;
-                                $model_doc->doc = $upfiles;
-                                $model_doc->created_by = \Yii::$app->user->id;
-                                $model_doc->created_at = time();
-                                $model_doc->save(false);
-                            }
-                            $loop++;
-                        }
-                    }
+                        $this->saveUploadedFiles($model);
 
-                    $uploaded2 = UploadedFile::getInstancesByName('file_doc_bill');
-                    if (!empty($uploaded2)) {
-                        $loopx = 0;
-                        foreach ($uploaded2 as $file) {
-                            $upfiles = "invoice_" . time() . "_" . $loopx . "." . $file->getExtension();
-                            if ($file->saveAs('uploads/pettycash_doc_bill/' . $upfiles)) {
-                                $model_doc = new \common\models\PettyCashVoucherDocBill();
-                                $model_doc->petty_cash_voucher_id = $model->id;
-                                $model_doc->doc = $upfiles;
-                                $model_doc->created_by = \Yii::$app->user->id;
-                                $model_doc->created_at = time();
-                                $model_doc->save(false);
-                            }
-                            $loopx++;
-                        }
-                    }
-
-                    $transaction->commit();
+                        $transaction->commit();
                     Yii::$app->session->setFlash('success', 'บันทึกข้อมูลเรียบร้อยแล้ว');
                     return $this->redirect(['view', 'id' => $model->id]);
                 }
@@ -211,16 +179,18 @@ class PettyCashVoucherController extends BaseController
             $transaction = Yii::$app->db->beginTransaction();
             try {
                 $model->updated_by = \Yii::$app->user->id;
-                if ($model->save()) {
-                    // Delete existing details
-                    PettyCashDetail::deleteAll(['voucher_id' => $model->id]);
+                    if ($model->save()) {
+                        // Delete existing details
+                        PettyCashDetail::deleteAll(['voucher_id' => $model->id]);
 
-                    // Handle new details
-                    $detailsData = Yii::$app->request->post('PettyCashDetail', []);
-                   // print_r($detailsData);return;
-                    $this->saveDetails($model, $detailsData);
+                        // Handle new details
+                        $detailsData = Yii::$app->request->post('PettyCashDetail', []);
+                        // print_r($detailsData);return;
+                        $this->saveDetails($model, $detailsData);
 
-                    $transaction->commit();
+                        $this->saveUploadedFiles($model);
+
+                        $transaction->commit();
                     Yii::$app->session->setFlash('success', 'แก้ไขข้อมูลเรียบร้อยแล้ว');
                     return $this->redirect(['view', 'id' => $model->id]);
                 }
@@ -300,6 +270,46 @@ class PettyCashVoucherController extends BaseController
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
+    }
+
+    /**
+     * Save uploaded files
+     */
+    private function saveUploadedFiles($model)
+    {
+        $uploaded = UploadedFile::getInstancesByName('file_doc_slip');
+        if (!empty($uploaded)) {
+            $loop = 0;
+            foreach ($uploaded as $file) {
+                $upfiles = "invoice_" . time() . "_" . $loop . "." . $file->getExtension();
+                if ($file->saveAs('uploads/pettycash_doc_slip/' . $upfiles)) {
+                    $model_doc = new \common\models\PettyCashVoucherDocSlip();
+                    $model_doc->petty_cash_voucher_id = $model->id;
+                    $model_doc->doc = $upfiles;
+                    $model_doc->created_by = \Yii::$app->user->id;
+                    $model_doc->created_at = time();
+                    $model_doc->save(false);
+                }
+                $loop++;
+            }
+        }
+
+        $uploaded2 = UploadedFile::getInstancesByName('file_doc_bill');
+        if (!empty($uploaded2)) {
+            $loopx = 0;
+            foreach ($uploaded2 as $file) {
+                $upfiles = "invoice_" . time() . "_" . $loopx . "." . $file->getExtension();
+                if ($file->saveAs('uploads/pettycash_doc_bill/' . $upfiles)) {
+                    $model_doc = new \common\models\PettyCashVoucherDocBill();
+                    $model_doc->petty_cash_voucher_id = $model->id;
+                    $model_doc->doc = $upfiles;
+                    $model_doc->created_by = \Yii::$app->user->id;
+                    $model_doc->created_at = time();
+                    $model_doc->save(false);
+                }
+                $loopx++;
+            }
+        }
     }
 
     /**
