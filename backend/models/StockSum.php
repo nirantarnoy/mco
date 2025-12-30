@@ -77,8 +77,7 @@ class StockSum extends ActiveRecord
 
     public static function updateStockIn($productId, $warehouseId, $qty, $stockType)
     {
-        $company_id = \Yii::$app->session->get('company_id');
-        $stockSum = self::find()->where(['product_id' => $productId, 'warehouse_id' => $warehouseId, 'company_id' => $company_id])->one();
+        $stockSum = self::find()->where(['product_id' => $productId, 'warehouse_id' => $warehouseId])->one();
         if (!$stockSum) {
             $stockSum = new self();
             $stockSum->product_id = $productId;
@@ -102,8 +101,7 @@ class StockSum extends ActiveRecord
 
     public static function updateStockOut($productId, $warehouseId, $qty, $stockType)
     {
-        $company_id = \Yii::$app->session->get('company_id');
-        $stockSum = self::find()->where(['product_id' => $productId, 'warehouse_id' => $warehouseId, 'company_id' => $company_id])->one();
+        $stockSum = self::find()->where(['product_id' => $productId, 'warehouse_id' => $warehouseId])->one();
         if ($stockSum){
             $stockSum->qty -= $qty;
             $stockSum->updated_at = date('Y-m-d H:i:s');

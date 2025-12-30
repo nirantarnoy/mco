@@ -435,10 +435,12 @@ class JournalTrans extends ActiveRecord
             $stockTrans->status = 'completed';
             $stockTrans->remark = $line->remark;
             $stockTrans->stock_type_id = $this->stock_type_id;
-            $stockTrans->warehouse_id = $this->warehouse_id;
+            $stockTrans->warehouse_id = $line->warehouse_id; // Fixed: use line warehouse
             $stockTrans->line_price = $line->line_price;
             $stockTrans->updated_at = date('Y-m-d H:i:s');
-            $stockTrans->save();
+            if (!$stockTrans->save(false)) {
+                Yii::error("Failed to save StockTrans: " . print_r($stockTrans->errors, true));
+            }
 
             // Update stock summary
             $this->updateStockSummary($line->product_id, $line->warehouse_id, $line->qty);
@@ -450,6 +452,7 @@ class JournalTrans extends ActiveRecord
      */
     protected function updateStockSummary($productId, $warehouseId, $qty)
     {
+        $company_id = \Yii::$app->session->get('company_id');
         $stockSum = StockSum::find()
             ->where(['product_id' => $productId, 'warehouse_id' => $warehouseId])
             ->one();
@@ -459,15 +462,16 @@ class JournalTrans extends ActiveRecord
             $stockSum->product_id = $productId;
             $stockSum->warehouse_id = $warehouseId;
             $stockSum->qty = 0;
-            $stockSum->reserve_qty = 0;
+            $stockSum->reserv_qty = 0;
             $stockSum->created_at = date('Y-m-d H:i:s');
+            $stockSum->company_id = $company_id;
         }
 
         // Calculate quantity change based on stock type
         $qtyChange = ($this->stock_type_id == self::STOCK_TYPE_IN) ? $qty : -$qty;
         $stockSum->qty += $qtyChange;
         $stockSum->updated_at = date('Y-m-d H:i:s');
-        $stockSum->save();
+        $stockSum->save(false);
 
         // Update product total stock
         $this->updateProductTotalStock($productId);

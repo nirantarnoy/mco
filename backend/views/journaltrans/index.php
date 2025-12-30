@@ -23,6 +23,45 @@ $this->params['breadcrumbs'][] = $this->title;
     </p>
 
     <div class="row">
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="info-box">
+                <span class="info-box-icon bg-green"><i class="fa fa-arrow-up"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Total Stock In</span>
+                    <span class="info-box-number"><?= number_format((clone $dataProvider->query)->andWhere(['stock_type_id' => JournalTrans::STOCK_TYPE_IN])->sum('qty') ?: 0, 2) ?></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="info-box">
+                <span class="info-box-icon bg-red"><i class="fa fa-arrow-down"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Total Stock Out</span>
+                    <span class="info-box-number"><?= number_format((clone $dataProvider->query)->andWhere(['stock_type_id' => JournalTrans::STOCK_TYPE_OUT])->sum('qty') ?: 0, 2) ?></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="info-box">
+                <span class="info-box-icon bg-yellow"><i class="fa fa-minus-circle"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Total Issue</span>
+                    <span class="info-box-number"><?= number_format((clone $dataProvider->query)->andWhere(['trans_type_id' => JournalTrans::TRANS_TYPE_ISSUE_STOCK])->sum('qty') ?: 0, 2) ?></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-xs-12">
+            <div class="info-box">
+                <span class="info-box-icon bg-aqua"><i class="fa fa-share"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Total Borrow</span>
+                    <span class="info-box-number"><?= number_format((clone $dataProvider->query)->andWhere(['trans_type_id' => JournalTrans::TRANS_TYPE_ISSUE_BORROW])->sum('qty') ?: 0, 2) ?></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
         <div class="col-md-12">
             <?php Pjax::begin(); ?>
             <?php echo $this->render('_search', ['model' => $searchModel,'viewstatus'=>null]); ?>
