@@ -699,6 +699,7 @@ class JobController extends BaseController
             echo 'No job ID';
         }
     }
+
     /**
      * แสดง Timeline รายละเอียดของใบงาน
      * @param integer $id
@@ -743,13 +744,316 @@ class JobController extends BaseController
             'purchases' => $purchases,
             'journalTrans' => $journalTrans,
             'invoices' => $invoices,
-            'billingInvoices'=> $billinginvoices,
+            'billingInvoices' => $billinginvoices,
             'pettyCashVouchers' => $pettyCashVouchers,
             'paymentReceipts' => $paymentReceipts,
             'vehicleExpense' => $vehicleExpense,
-            'purchasesnonepr'=>$purchasesnonepr,
+            'purchasesnonepr' => $purchasesnonepr,
             'jobExpenses' => $jobExpenses, // ส่งข้อมูลไปที่ view
         ]);
+    }
+
+    /**
+     * รายงานสำหรับผู้บริหาร
+     * @param integer $id
+     * @return mixed
+     */
+    public function actionExecutiveReport($id)
+    {
+        $model = $this->findModel($id);
+
+        $purchReqs = $this->getPurchaseRequests($model->id);
+        $purchases = $this->getPurchaseOrders($model->id);
+        $purchasesnonepr = $this->getPurchaseOrdersNonePr($model->id);
+        $journalTrans = $this->getJournalTransactions($model->id);
+        $invoices = $this->getInvoices($model->id);
+        $billinginvoices = $this->getBillingInvoices($model->id);
+        $pettyCashVouchers = $this->getPettyCashVouchers($model->id);
+        $paymentReceipts = $this->getPaymentReceipts($model->id);
+        $vehicleExpense = $this->getJobVehicleExpense($model->job_no);
+        $jobExpenses = JobExpense::find()->where(['job_id' => $model->id])->all();
+
+        return $this->render('executive_report', [
+            'model' => $model,
+            'purchReqs' => $purchReqs,
+            'purchases' => $purchases,
+            'journalTrans' => $journalTrans,
+            'invoices' => $invoices,
+            'billingInvoices' => $billinginvoices,
+            'pettyCashVouchers' => $pettyCashVouchers,
+            'paymentReceipts' => $paymentReceipts,
+            'vehicleExpense' => $vehicleExpense,
+            'purchasesnonepr' => $purchasesnonepr,
+            'jobExpenses' => $jobExpenses,
+        ]);
+    }
+
+    /**
+     * รายงานสำหรับผู้บริหาร (PDF)
+     * @param integer $id
+     * @return mixed
+     */
+    public function actionExecutiveReportPdf($id)
+    {
+        $model = $this->findModel($id);
+
+        $purchReqs = $this->getPurchaseRequests($model->id);
+        $purchases = $this->getPurchaseOrders($model->id);
+        $purchasesnonepr = $this->getPurchaseOrdersNonePr($model->id);
+        $journalTrans = $this->getJournalTransactions($model->id);
+        $invoices = $this->getInvoices($model->id);
+        $billinginvoices = $this->getBillingInvoices($model->id);
+        $pettyCashVouchers = $this->getPettyCashVouchers($model->id);
+        $paymentReceipts = $this->getPaymentReceipts($model->id);
+        $vehicleExpense = $this->getJobVehicleExpense($model->job_no);
+        $jobExpenses = JobExpense::find()->where(['job_id' => $model->id])->all();
+
+        $content = $this->renderPartial('executive_report', [
+            'model' => $model,
+            'purchReqs' => $purchReqs,
+            'purchases' => $purchases,
+            'journalTrans' => $journalTrans,
+            'invoices' => $invoices,
+            'billingInvoices' => $billinginvoices,
+            'pettyCashVouchers' => $pettyCashVouchers,
+            'paymentReceipts' => $paymentReceipts,
+            'vehicleExpense' => $vehicleExpense,
+            'purchasesnonepr' => $purchasesnonepr,
+            'jobExpenses' => $jobExpenses,
+            'isPdf' => true,
+        ]);
+
+        $pdf = new \kartik\mpdf\Pdf([
+            'mode' => \kartik\mpdf\Pdf::MODE_UTF8,
+            'format' => \kartik\mpdf\Pdf::FORMAT_A4,
+            'orientation' => \kartik\mpdf\Pdf::ORIENT_PORTRAIT,
+            'destination' => \kartik\mpdf\Pdf::DEST_BROWSER,
+            'content' => $content,
+            'cssInline' => '
+                .no-print { display: none !important; }
+                body { font-family: "thsarabun", sans-serif; }
+                table { width: 100%; border-collapse: collapse; }
+                th, td { font-family: "thsarabun", sans-serif; }
+            ',
+            'options' => [
+                'title' => 'Executive Job Report - ' . $model->job_no,
+                'fontDir' => array_merge((new \Mpdf\Config\ConfigVariables())->getDefaults()['fontDir'], [
+                    Yii::getAlias('@backend') . '/web/fonts/'
+                ]),
+                'fontdata' => array_merge((new \Mpdf\Config\FontVariables())->getDefaults()['fontdata'], [
+                    'thsarabun' => [
+                        'R' => 'THSarabunNew.ttf',
+                        'B' => 'THSarabunNewBold.ttf',
+                    ],
+                ]),
+                'default_font' => 'thsarabun',
+            ],
+            'methods' => [
+                'SetHeader' => ['รายงานสรุปใบงานสำหรับผู้บริหาร || ' . $model->job_no],
+                'SetFooter' => ['พิมพ์เมื่อ: ' . date('d/m/Y H:i') . ' || หน้า {PAGENO}'],
+            ]
+        ]);
+
+        return $pdf->render();
+    }
+
+    /**
+     * Export รายงานผู้บริหารเป็น Excel
+     * @param integer $id
+     */
+    public function actionExportExecutiveReport($id)
+    {
+        $model = $this->findModel($id);
+        
+        $purchReqs = $this->getPurchaseRequests($model->id);
+        $purchases = $this->getPurchaseOrders($model->id);
+        $purchasesnonepr = $this->getPurchaseOrdersNonePr($model->id);
+        $journalTrans = $this->getJournalTransactions($model->id);
+        $invoices = $this->getInvoices($model->id);
+        $billinginvoices = $this->getBillingInvoices($model->id);
+        $pettyCashVouchers = $this->getPettyCashVouchers($model->id);
+        $paymentReceipts = $this->getPaymentReceipts($model->id);
+        $vehicleExpense = $this->getJobVehicleExpense($model->job_no);
+        $jobExpenses = JobExpense::find()->where(['job_id' => $model->id])->all();
+
+        $objPHPExcel = new \PHPExcel();
+        $sheet = $objPHPExcel->getActiveSheet();
+        $sheet->setTitle('Executive Report');
+
+        // Header
+        $sheet->setCellValue('A1', 'รายงานสรุปใบงานสำหรับผู้บริหาร');
+        $sheet->mergeCells('A1:H1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
+
+        $sheet->setCellValue('A2', 'เลขที่ใบงาน: ' . $model->job_no);
+        $sheet->setCellValue('A3', 'วันที่เริ่ม: ' . ($model->start_date ? date('d/m/Y', strtotime($model->start_date)) : '-'));
+        $sheet->setCellValue('C3', 'ถึงวันที่: ' . ($model->end_date ? date('d/m/Y', strtotime($model->end_date)) : '-'));
+        $sheet->setCellValue('A4', 'มูลค่างาน: ' . number_format($model->job_amount, 2) . ' บาท');
+
+        $row = 6;
+
+        // 1. Purchase Requests
+        $sheet->setCellValue('A' . $row, '1. ใบขอซื้อ (Purchase Request)');
+        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+        $row++;
+        $sheet->setCellValue('A' . $row, 'เลขที่');
+        $sheet->setCellValue('B' . $row, 'วันที่');
+        $sheet->setCellValue('C' . $row, 'ผู้ขอ');
+        $sheet->setCellValue('D' . $row, 'สถานะ');
+        $sheet->setCellValue('E' . $row, 'มูลค่า');
+        $sheet->getStyle('A' . $row . ':E' . $row)->getFont()->setBold(true);
+        $row++;
+        foreach ($purchReqs as $req) {
+            $status = $req['approve_status'] == 1 ? 'อนุมัติ' : ($req['approve_status'] == 2 ? 'ไม่อนุมัติ' : 'รอพิจารณา');
+            $sheet->setCellValue('A' . $row, $req['purch_req_no']);
+            $sheet->setCellValue('B' . $row, date('d/m/Y', strtotime($req['purch_req_date'])));
+            $sheet->setCellValue('C' . $row, $req['fname'] . ' ' . $req['lname']);
+            $sheet->setCellValue('D' . $row, $status);
+            $sheet->setCellValue('E' . $row, $req['total_amount']);
+            $row++;
+        }
+        $row += 2;
+
+        // 2. Purchase Orders
+        $sheet->setCellValue('A' . $row, '2. ใบสั่งซื้อ (Purchase Order)');
+        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+        $row++;
+        $sheet->setCellValue('A' . $row, 'เลขที่');
+        $sheet->setCellValue('B' . $row, 'วันที่');
+        $sheet->setCellValue('C' . $row, 'ผู้จำหน่าย');
+        $sheet->setCellValue('D' . $row, 'มูลค่าสุทธิ');
+        $sheet->getStyle('A' . $row . ':D' . $row)->getFont()->setBold(true);
+        $row++;
+        foreach ($purchases as $p) {
+            $sheet->setCellValue('A' . $row, $p['purch_no']);
+            $sheet->setCellValue('B' . $row, date('d/m/Y', strtotime($p['purch_date'])));
+            $sheet->setCellValue('C' . $row, $p['vendor_name']);
+            $sheet->setCellValue('D' . $row, $p['net_amount']);
+            $row++;
+        }
+        $row += 2;
+
+        // 3. Petty Cash
+        $sheet->setCellValue('A' . $row, '3. ใบเบิกเงินสดย่อย (Petty Cash)');
+        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+        $row++;
+        $sheet->setCellValue('A' . $row, 'เลขที่');
+        $sheet->setCellValue('B' . $row, 'วันที่');
+        $sheet->setCellValue('C' . $row, 'ผู้เบิก');
+        $sheet->setCellValue('D' . $row, 'วัตถุประสงค์');
+        $sheet->setCellValue('E' . $row, 'จำนวนเงิน');
+        $sheet->getStyle('A' . $row . ':E' . $row)->getFont()->setBold(true);
+        $row++;
+        foreach ($pettyCashVouchers as $v) {
+            $sheet->setCellValue('A' . $row, $v['pcv_no']);
+            $sheet->setCellValue('B' . $row, date('d/m/Y', strtotime($v['pcv_date'])));
+            $sheet->setCellValue('C' . $row, $v['issued_by']);
+            $sheet->setCellValue('D' . $row, $v['paid_for']);
+            $sheet->setCellValue('E' . $row, $v['amount']);
+            $row++;
+        }
+        $row += 2;
+
+        // 4. Invoices
+        $sheet->setCellValue('A' . $row, '4. ใบกำกับภาษี (Invoices)');
+        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+        $row++;
+        $sheet->setCellValue('A' . $row, 'เลขที่');
+        $sheet->setCellValue('B' . $row, 'วันที่');
+        $sheet->setCellValue('C' . $row, 'ลูกค้า');
+        $sheet->setCellValue('D' . $row, 'ยอดสุทธิ');
+        $sheet->getStyle('A' . $row . ':D' . $row)->getFont()->setBold(true);
+        $row++;
+        foreach ($invoices as $i) {
+            $sheet->setCellValue('A' . $row, $i['invoice_number']);
+            $sheet->setCellValue('B' . $row, date('d/m/Y', strtotime($i['invoice_date'])));
+            $sheet->setCellValue('C' . $row, $i['customer_name']);
+            $sheet->setCellValue('D' . $row, $i['total_amount']);
+            $row++;
+        }
+        $row += 2;
+
+        // 5. Billing Invoices
+        $sheet->setCellValue('A' . $row, '5. ใบวางบิล (Billing Invoices)');
+        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+        $row++;
+        $sheet->setCellValue('A' . $row, 'เลขที่');
+        $sheet->setCellValue('B' . $row, 'วันที่');
+        $sheet->setCellValue('C' . $row, 'ยอดรวม');
+        $sheet->getStyle('A' . $row . ':C' . $row)->getFont()->setBold(true);
+        $row++;
+        foreach ($billinginvoices as $bi) {
+            $sheet->setCellValue('A' . $row, $bi['billing_number']);
+            $sheet->setCellValue('B' . $row, date('d/m/Y', strtotime($bi['billing_date'])));
+            $sheet->setCellValue('C' . $row, $bi['total_amount']);
+            $row++;
+        }
+        $row += 2;
+
+        // 6. Payment Receipts
+        $sheet->setCellValue('A' . $row, '6. ใบเสร็จรับเงิน (Payment Receipts)');
+        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+        $row++;
+        $sheet->setCellValue('A' . $row, 'เลขที่');
+        $sheet->setCellValue('B' . $row, 'วันที่');
+        $sheet->setCellValue('C' . $row, 'ยอดรับเงิน');
+        $sheet->getStyle('A' . $row . ':C' . $row)->getFont()->setBold(true);
+        $row++;
+        foreach ($paymentReceipts as $pr) {
+            $sheet->setCellValue('A' . $row, $pr['receipt_number']);
+            $sheet->setCellValue('B' . $row, date('d/m/Y', strtotime($pr['payment_date'])));
+            $sheet->setCellValue('C' . $row, $pr['received_amount']);
+            $row++;
+        }
+        $row += 2;
+
+        // 7. Vehicle Expenses
+        $sheet->setCellValue('A' . $row, '7. ค่าใช้จ่ายรถ (Vehicle Expenses)');
+        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+        $row++;
+        $sheet->setCellValue('A' . $row, 'วันที่');
+        $sheet->setCellValue('B' . $row, 'ทะเบียนรถ');
+        $sheet->setCellValue('C' . $row, 'รายการ');
+        $sheet->setCellValue('D' . $row, 'จำนวนเงิน');
+        $sheet->getStyle('A' . $row . ':D' . $row)->getFont()->setBold(true);
+        $row++;
+        foreach ($vehicleExpense as $ve) {
+            $sheet->setCellValue('A' . $row, date('d/m/Y', strtotime($ve['trans_date'])));
+            $sheet->setCellValue('B' . $row, $ve['plate_no']);
+            $sheet->setCellValue('C' . $row, $ve['description']);
+            $sheet->setCellValue('D' . $row, $ve['amount']);
+            $row++;
+        }
+        $row += 2;
+
+        // 8. Job Expenses
+        $sheet->setCellValue('A' . $row, '8. ค่าใช้จ่ายอื่นๆ (Job Expenses)');
+        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+        $row++;
+        $sheet->setCellValue('A' . $row, 'วันที่');
+        $sheet->setCellValue('B' . $row, 'รายการ');
+        $sheet->setCellValue('C' . $row, 'จำนวนเงิน');
+        $sheet->getStyle('A' . $row . ':C' . $row)->getFont()->setBold(true);
+        $row++;
+        foreach ($jobExpenses as $je) {
+            $sheet->setCellValue('A' . $row, date('d/m/Y', strtotime($je->trans_date)));
+            $sheet->setCellValue('B' . $row, $je->description);
+            $sheet->setCellValue('C' . $row, $je->line_amount);
+            $row++;
+        }
+
+        // Auto size columns
+        foreach (range('A', 'H') as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment;filename="Executive_Report_' . $model->job_no . '.xls"');
+        header('Cache-Control: max-age=0');
+
+        $objWriter = \PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel5');
+        $objWriter->save('php://output');
+        exit;
     }
 
     /**

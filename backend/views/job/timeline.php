@@ -302,6 +302,9 @@ if($today > $end){
                                 <?= Html::a('<i class="fas fa-arrow-left"></i> กลับ', ['job-report/index'], [
                                     'class' => 'btn btn-light btn-sm'
                                 ]) ?>
+                                <?= Html::a('<i class="fas fa-chart-line"></i> รายงานผู้บริหาร', ['executive-report', 'id' => $model->id], [
+                                    'class' => 'btn btn-success btn-sm'
+                                ]) ?>
                                 <?= Html::a('<i class="fas fa-print"></i> พิมพ์', '#', [
                                     'class' => 'btn btn-info btn-sm',
                                     'onclick' => 'window.print(); return false;'
@@ -443,13 +446,13 @@ if($today > $end){
                                     <?php foreach ($purchases as $purchase): ?>
                                         <?php
                                         $line_status = '';
-                                        if ($req['approve_status'] == 0) {
+                                        if ($purchase['approve_status'] == 0) {
                                             $line_status = 'รอพิจารณา';
-                                        } else if ($req['approve_status'] == 1) {
+                                        } else if ($purchase['approve_status'] == 1) {
                                             $line_status = 'อนุมัติ';
-                                        } else if ($req['approve_status'] == 2) {
+                                        } else if ($purchase['approve_status'] == 2) {
                                             $line_status = 'ไม่อนุมัติ';
-                                        } else if ($req['approve_status'] == 3) {
+                                        } else if ($purchase['approve_status'] == 3) {
                                             $line_status = 'ยกเลิก';
                                         }
                                         ?>
@@ -482,7 +485,7 @@ if($today > $end){
                 </div>
             </div>
 
-            <!-- Purchase Order Section -->
+            <!-- Purchase Order None PR Section -->
             <div class="timeline-section">
                 <div class="card border-warning-light">
                     <div class="card-header bg-warning-light text-dark">
@@ -506,8 +509,7 @@ if($today > $end){
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <?php foreach ($purchases as $purchase): ?>
-
+                                    <?php foreach ($purchasesnonepr as $purchase): ?>
                                         <tr>
                                             <td style="text-align: center;"><?= Html::encode($purchase['purch_no']) ?></td>
                                             <td style="text-align: center;"><?= date('d/m/Y', strtotime($purchase['purch_date'])) ?></td>
@@ -723,7 +725,7 @@ if($today > $end){
                 </div>
             </div>
 
-            <!-- Journal Transaction Section -->
+            <!-- Vehicle Expense Section -->
             <div class="timeline-section">
                 <div class="card border-danger">
                     <div class="card-header bg-danger text-white">
@@ -764,7 +766,7 @@ if($today > $end){
                         <?php else: ?>
                             <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
-                                ไม่มีข้อมูลรายการรับ-เบิกของสำหรับใบงานนี้
+                                ไม่มีข้อมูลรายการค่าใช้จ่ายรถสำหรับใบงานนี้
                             </div>
                         <?php endif; ?>
                     </div>
@@ -891,75 +893,34 @@ if($today > $end){
                                                 <small class="text-muted">กำหนดชำระ: <?= $billing['payment_due_date'] ? date('d/m/Y', strtotime($billing['payment_due_date'])) : '-' ?></small>
                                             </div>
                                         </div>
-
-                                        <?php if (!empty($billing['notes'])): ?>
-                                            <div class="row mt-2">
-                                                <div class="col-md-12">
-                                                    <small class="text-muted"><strong>หมายเหตุ:</strong> <?= Html::encode($billing['notes']) ?></small>
-                                                </div>
-                                            </div>
-                                        <?php endif; ?>
                                     </div>
 
                                     <!-- รายการ Invoice ในใบวางบิล -->
-                                    <div class="invoice-list">
-                                        <h6 class="text-muted mb-2">
-                                            <i class="fas fa-list"></i>
-                                            รายการใบกำกับในใบวางบิลนี้ (<?= count($billing['invoices']) ?> รายการ)
-                                        </h6>
-                                        <div class="table-responsive">
-                                            <table class="table table-sm table-bordered">
-                                                <thead class="thead-light">
+                                    <div class="table-responsive pl-4">
+                                        <table class="table table-sm table-hover border-left">
+                                            <thead class="thead-light">
+                                            <tr>
+                                                <th>เลขใบกำกับ</th>
+                                                <th>วันที่</th>
+                                                <th style="text-align: right;">ยอดก่อนภาษี</th>
+                                                <th style="text-align: right;">VAT</th>
+                                                <th style="text-align: right;">ยอดสุทธิ</th>
+                                                <th style="text-align: right;">ยอดค้างชำระ</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <?php foreach ($billing['items'] as $item): ?>
                                                 <tr>
-                                                    <th width="15%">เลขใบกำกับ</th>
-                                                    <th width="8%">ประเภท</th>
-                                                    <th width="10%">วันที่</th>
-                                                    <th width="12%">รหัสลูกค้า</th>
-                                                    <th width="10%" class="text-right">ก่อนภาษี</th>
-                                                    <th width="8%" class="text-right">ส่วนลด</th>
-                                                    <th width="8%" class="text-right">VAT</th>
-                                                    <th width="10%" class="text-right">ยอดสุทธิ</th>
-                                                    <th width="8%" class="text-center">สถานะ</th>
-                                                    <th width="11%">หมายเหตุ</th>
+                                                    <td><?= Html::encode($item['invoice_number']) ?></td>
+                                                    <td><?= date('d/m/Y', strtotime($item['invoice_date'])) ?></td>
+                                                    <td class="text-right"><?= number_format($item['subtotal'], 2) ?></td>
+                                                    <td class="text-right"><?= number_format($item['vat_amount'], 2) ?></td>
+                                                    <td class="text-right"><?= number_format($item['total_amount'], 2) ?></td>
+                                                    <td class="text-right text-danger"><?= number_format($item['remaining_balance'], 2) ?></td>
                                                 </tr>
-                                                </thead>
-                                                <tbody>
-                                                <?php foreach ($billing['invoices'] as $invoice): ?>
-                                                    <tr>
-                                                        <td><?= Html::encode($invoice['invoice_number']) ?></td>
-                                                        <td>
-                                                            <?= Html::tag('span', $invoice['invoice_type'], [
-                                                                'class' => 'badge badge-' . ($invoice['invoice_type'] == 'TAX' ? 'primary' : 'info'),
-                                                                'style' => 'font-size: 0.7em;'
-                                                            ]) ?>
-                                                        </td>
-                                                        <td><?= date('d/m/Y', strtotime($invoice['invoice_date'])) ?></td>
-                                                        <td><?= Html::encode($invoice['customer_code']) ?></td>
-                                                        <td class="text-right"><?= number_format($invoice['subtotal'], 2) ?></td>
-                                                        <td class="text-right"><?= number_format($invoice['discount_amount'], 2) ?></td>
-                                                        <td class="text-right"><?= number_format($invoice['vat_amount'], 2) ?></td>
-                                                        <td class="text-right font-weight-bold"><?= number_format($invoice['total_amount'], 2) ?></td>
-                                                        <td class="text-center">
-                                                            <?= Html::tag('span', $invoice['status']==1?'completed':'draft', [
-                                                                'class' => 'badge badge-' . ($invoice['status'] == 1 ? 'success' : 'warning'),
-                                                                'style' => 'font-size: 0.7em;'
-                                                            ]) ?>
-                                                        </td>
-                                                        <td><small><?= Html::encode($invoice['notes']) ?></small></td>
-                                                    </tr>
-                                                <?php endforeach; ?>
-                                                </tbody>
-                                                <tfoot class="bg-light">
-                                                <tr>
-                                                    <td colspan="7" class="text-right font-weight-bold">รวมในใบวางบิลนี้:</td>
-                                                    <td class="text-right font-weight-bold text-success">
-                                                        <?= number_format(array_sum(array_column($billing['invoices'], 'total_amount')), 2) ?>
-                                                    </td>
-                                                    <td colspan="2"></td>
-                                                </tr>
-                                                </tfoot>
-                                            </table>
-                                        </div>
+                                            <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -975,11 +936,11 @@ if($today > $end){
 
             <!-- Payment Receipt Section -->
             <div class="timeline-section">
-                <div class="card border-teal">
-                    <div class="card-header bg-teal text-white" style="background-color: #20c997;">
+                <div class="card border-info">
+                    <div class="card-header bg-info text-white">
                         <h5 class="mb-0">
                             <i class="fas fa-receipt"></i>
-                            ใบเสร็จรับเงิน (Payment Receipt)
+                            ใบเสร็จรับเงิน (Payment Receipts)
                             <span class="badge badge-light text-dark ml-2"><?= count($paymentReceipts) ?> รายการ</span>
                         </h5>
                     </div>
@@ -989,146 +950,60 @@ if($today > $end){
                                 <table class="table table-striped table-sm">
                                     <thead class="thead-light">
                                     <tr>
-                                        <th style="text-align: center;">เลขที่ใบเสร็จ</th>
-                                        <th style="text-align: center;">วันที่รับเงิน</th>
-                                        <th style="text-align: center;">เลขที่ใบวางบิล</th>
-                                        <th style="text-align: center;">ลูกค้า</th>
-                                        <th style="text-align: center;">วิธีชำระ</th>
-                                        <th style="text-align: right;">ยอดรับ</th>
-                                        <th style="text-align: right;">ส่วนลด</th>
-                                        <th style="text-align: right;">หัก ณ ที่จ่าย</th>
+                                        <th>เลขที่ใบเสร็จ</th>
+                                        <th>วันที่รับชำระ</th>
+                                        <th>ลูกค้า</th>
+                                        <th>วิธีชำระ</th>
+                                        <th style="text-align: right;">ยอดรับจริง</th>
+                                        <th style="text-align: right;">VAT</th>
+                                        <th style="text-align: right;">WHT</th>
                                         <th style="text-align: right;">ยอดสุทธิ</th>
                                         <th style="text-align: center;">สถานะ</th>
-                                        <th style="text-align: center;">ผู้รับเงิน</th>
-                                        <th style="text-align: center;">เอกสาร</th>
+                                        <th>ผู้รับเงิน</th>
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <?php
-                                    $totalReceived = 0;
-                                    $totalDiscount = 0;
-                                    $totalWithholding = 0;
-                                    $totalNetReceived = 0;
-
-                                    foreach ($paymentReceipts as $receipt):
-                                        $totalReceived += $receipt['received_amount'];
-                                        $totalDiscount += $receipt['discount_amount'];
-                                        $totalWithholding += $receipt['withholding_tax'];
-                                        $totalNetReceived += $receipt['net_amount'];
-
-                                        $payment_method_text = '';
-                                        if ($receipt['payment_method'] == 'cash') {
-                                            $payment_method_text = 'เงินสด';
-                                        } else if ($receipt['payment_method'] == 'transfer') {
-                                            $payment_method_text = 'โอนเงิน';
-                                        } else if ($receipt['payment_method'] == 'cheque') {
-                                            $payment_method_text = 'เช็ค';
-                                        } else if ($receipt['payment_method'] == 'credit') {
-                                            $payment_method_text = 'บัตรเครดิต';
-                                        }
-
-                                        $status_text = '';
-                                        $status_color = '';
-                                        if ($receipt['payment_status'] == 'paid') {
-                                            $status_text = 'ชำระแล้ว';
-                                            $status_color = 'success';
-                                        } else if ($receipt['payment_status'] == 'partial') {
-                                            $status_text = 'ชำระบางส่วน';
-                                            $status_color = 'warning';
-                                        } else if ($receipt['payment_status'] == 'pending') {
-                                            $status_text = 'รอดำเนินการ';
-                                            $status_color = 'info';
-                                        } else if ($receipt['payment_status'] == 'cancelled') {
-                                            $status_text = 'ยกเลิก';
-                                            $status_color = 'danger';
-                                        }
-                                        ?>
+                                    <?php foreach ($paymentReceipts as $receipt): ?>
                                         <tr>
-                                            <td style="text-align: center;"><?= Html::encode($receipt['receipt_number']) ?></td>
-                                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($receipt['payment_date'])) ?></td>
-                                            <td style="text-align: center;">
-                                                <?= Html::encode($receipt['billing_number']) ?>
-                                                <?php if (!empty($receipt['billing_amount'])): ?>
-                                                    <br><small class="text-muted">(<?= number_format($receipt['billing_amount'], 2) ?>)</small>
+                                            <td class="font-weight-bold"><?= Html::encode($receipt['receipt_number']) ?></td>
+                                            <td><?= date('d/m/Y', strtotime($receipt['payment_date'])) ?></td>
+                                            <td><?= Html::encode($receipt['customer_name']) ?></td>
+                                            <td>
+                                                <span class="badge badge-secondary">
+                                                    <?= Html::encode($receipt['payment_method']) ?>
+                                                </span>
+                                                <?php if ($receipt['payment_method'] == 'Cheque'): ?>
+                                                    <br><small>No: <?= Html::encode($receipt['cheque_number']) ?></small>
                                                 <?php endif; ?>
                                             </td>
-                                            <td style="text-align: left;"><?= Html::encode($receipt['customer_name']) ?></td>
+                                            <td class="text-right"><?= number_format($receipt['received_amount'], 2) ?></td>
+                                            <td class="text-right"><?= number_format($receipt['vat_amount'], 2) ?></td>
+                                            <td class="text-right text-danger"><?= number_format($receipt['withholding_tax'], 2) ?></td>
+                                            <td class="text-right font-weight-bold text-success"><?= number_format($receipt['net_amount'], 2) ?></td>
                                             <td style="text-align: center;">
-                                                <?= Html::tag('span', $payment_method_text, [
-                                                    'class' => 'badge badge-info'
+                                                <?= Html::tag('span', $receipt['payment_status'], [
+                                                    'class' => 'badge badge-' . ($receipt['payment_status'] == 'completed' ? 'success' : 'warning')
                                                 ]) ?>
-                                                <?php if ($receipt['payment_method'] == 'cheque' && !empty($receipt['cheque_number'])): ?>
-                                                    <br><small>เช็คเลขที่: <?= Html::encode($receipt['cheque_number']) ?></small>
-                                                <?php endif; ?>
-                                                <?php if ($receipt['payment_method'] == 'transfer' && !empty($receipt['bank_name'])): ?>
-                                                    <br><small><?= Html::encode($receipt['bank_name']) ?></small>
-                                                <?php endif; ?>
                                             </td>
-                                            <td style="text-align: right;"><?= number_format($receipt['received_amount'], 2) ?></td>
-                                            <td style="text-align: right;"><?= number_format($receipt['discount_amount'], 2) ?></td>
-                                            <td style="text-align: right;"><?= number_format($receipt['withholding_tax'], 2) ?></td>
-                                            <td style="text-align: right;" class="font-weight-bold text-success">
-                                                <?= number_format($receipt['net_amount'], 2) ?>
-                                            </td>
-                                            <td style="text-align: center;">
-                                                <?= Html::tag('span', $status_text, [
-                                                    'class' => 'badge badge-' . $status_color
-                                                ]) ?>
-                                                <?php if ($receipt['remaining_balance'] > 0): ?>
-                                                    <br><small class="text-danger">คงเหลือ: <?= number_format($receipt['remaining_balance'], 2) ?></small>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td style="text-align: center;">
-                                                <?= Html::encode($receipt['receiver_name']) ?>
-                                            </td>
-                                            <td style="text-align: center;">
-                                                <a class="badge badge-info" href="<?=Url::to(['job/documents','id'=>$model->id,'type'=>'payment_receipt','activityId'=>$receipt['id']],true)?>">
-                                                    <i class="fa fa-eye"></i>
-                                                </a>
-                                                <?php if (!empty($receipt['attachment_name'])): ?>
-                                                    <br><a class="badge badge-secondary mt-1" href="<?=Url::to(['job/download-attachment','type'=>'payment_receipt','id'=>$receipt['id']],true)?>" target="_blank">
-                                                        <i class="fa fa-paperclip"></i>
-                                                    </a>
-                                                <?php endif; ?>
-                                            </td>
+                                            <td><?= Html::encode($receipt['receiver_name']) ?></td>
                                         </tr>
-
                                         <?php if (!empty($receipt['details'])): ?>
-                                        <tr class="bg-light">
-                                            <td colspan="12" style="padding-left: 50px;">
-                                                <small>
-                                                    <strong>รายละเอียดการชำระ:</strong>
-                                                    <?php foreach ($receipt['details'] as $detail): ?>
-                                                        <br>• <?= Html::encode($detail['description']) ?>
-                                                        <?php if (!empty($detail['invoice_number'])): ?>
-                                                            (ใบกำกับ: <?= Html::encode($detail['invoice_number']) ?>)
-                                                        <?php endif; ?>
-                                                        - <?= number_format($detail['amount'], 2) ?> บาท
-                                                    <?php endforeach; ?>
-                                                </small>
-                                            </td>
-                                        </tr>
-                                    <?php endif; ?>
-
-                                        <?php if (!empty($receipt['notes'])): ?>
-                                        <tr class="bg-light">
-                                            <td colspan="12" style="padding-left: 50px;">
-                                                <small><strong>หมายเหตุ:</strong> <?= Html::encode($receipt['notes']) ?></small>
-                                            </td>
-                                        </tr>
-                                    <?php endif; ?>
+                                            <tr class="bg-light">
+                                                <td colspan="10" style="padding-left: 40px;">
+                                                    <small>
+                                                        <strong>รายการที่ชำระ:</strong>
+                                                        <?php foreach ($receipt['details'] as $detail): ?>
+                                                            <span class="badge badge-outline-secondary ml-2">
+                                                                Invoice: <?= Html::encode($detail['invoice_number']) ?>
+                                                                (<?= number_format($detail['amount'], 2) ?>)
+                                                            </span>
+                                                        <?php endforeach; ?>
+                                                    </small>
+                                                </td>
+                                            </tr>
+                                        <?php endif; ?>
                                     <?php endforeach; ?>
                                     </tbody>
-                                    <tfoot class="bg-light">
-                                    <tr>
-                                        <td colspan="5" class="text-right font-weight-bold">รวมทั้งหมด:</td>
-                                        <td class="text-right font-weight-bold"><?= number_format($totalReceived, 2) ?></td>
-                                        <td class="text-right font-weight-bold"><?= number_format($totalDiscount, 2) ?></td>
-                                        <td class="text-right font-weight-bold"><?= number_format($totalWithholding, 2) ?></td>
-                                        <td class="text-right font-weight-bold text-success"><?= number_format($totalNetReceived, 2) ?></td>
-                                        <td colspan="3"></td>
-                                    </tr>
-                                    </tfoot>
                                 </table>
                             </div>
                         <?php else: ?>
@@ -1141,148 +1016,63 @@ if($today > $end){
                 </div>
             </div>
 
-            <!-- Financial Summary Section -->
-            <div class="timeline-section financial-summary">
-                <div class="card border-dark">
-                    <div class="card-header bg-dark text-white">
+            <!-- Job Expense Section -->
+            <div class="timeline-section">
+                <div class="card border-danger">
+                    <div class="card-header bg-danger text-white">
                         <h5 class="mb-0">
-                            <i class="fas fa-chart-pie"></i>
-                            สรุปการเงิน (Financial Summary)
+                            <i class="fas fa-coins"></i>
+                            ค่าใช้จ่ายอื่นๆ (Job Expenses)
+                            <span class="badge badge-light text-dark ml-2"><?= count($jobExpenses) ?> รายการ</span>
                         </h5>
                     </div>
                     <div class="card-body">
-                        <?php
-                        // คำนวณสรุปทางการเงิน
-                        $totalPurchaseAmount = array_sum(array_column($purchases, 'net_amount'));
-                        $totalPurchaseNonePrAmount = array_sum(array_column($purchasesnonepr, 'total_amount'));
-                        $totalPettyCashAmount = array_sum(array_column($pettyCashVouchers, 'amount'));
-                        $totalPaymentReceived = array_sum(array_column($paymentReceipts, 'net_amount')); // เพิ่มยอดรับชำระ
-                        $totalInvoiceAmount = array_sum(array_column($invoices, 'total_amount'));
-                        $totalVehicleExpenseAmount = array_sum(array_column($vehicleExpense,'total_wage'));
-                        $totalExpenses = $totalPurchaseAmount + $totalPurchaseNonePrAmount + $totalPettyCashAmount + $totalVehicleExpenseAmount;
-                        $totalRevenue = $totalPaymentReceived; // รายได้จากการรับชำระ
-                        $profitLoss = $totalRevenue - $totalExpenses; // คำนวณกำไรขาดทุนจากรายได้ - ค่าใช้จ่าย
-                        $profitLossPercentage = $model->job_amount > 0 ? ($profitLoss / $model->job_amount) * 100 : 0;
-                        ?>
-
-                        <div class="row mb-4">
-                            <div class="col-md-3">
-                                <div class="card bg-primary" style="color: black;">
-                                    <div class="card-body text-center" style="color: black;">
-                                        <h5>มูลค่างานทั้งหมด</h5>
-                                        <h3><?= number_format($model->job_amount, 2) ?></h3>
-                                        <small>บาท</small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-3">
-                                <div class="card bg-success text-white">
-                                    <div class="card-body text-center" style="color: black;">
-                                        <h5>รายได้รับชำระ</h5>
-                                        <h3><?= number_format($totalRevenue, 2) ?></h3>
-                                        <small>จากใบเสร็จ: <?= count($paymentReceipts) ?> ใบ</small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-3">
-                                <div class="card bg-danger text-black">
-                                    <div class="card-body text-center" style="color: black;">
-                                        <h5>ค่าใช้จ่ายรวม</h5>
-                                        <h3><?= number_format($totalExpenses, 2) ?></h3>
-                                        <small>ซื้อ: <?= number_format($totalPurchaseAmount, 2) ?><br>
-                                            เงินสดย่อย: <?= number_format($totalPettyCashAmount, 2) ?></small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-3">
-                                <div class="card <?= $profitLoss >= 0 ? 'bg-info' : 'bg-warning' ?> text-black">
-                                    <div class="card-body text-center" style="color: black;">
-                                        <h5><?= $profitLoss >= 0 ? 'กำไร' : 'ขาดทุน' ?></h5>
-                                        <h3><?= number_format(abs($profitLoss), 2) ?></h3>
-                                        <small>บาท (<?= number_format($profitLossPercentage, 2) ?>%)</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Progress Chart -->
-                        <div class="row mt-4">
-                            <div class="col-md-12">
-                                <h6>ความคืบหน้าของงาน</h6>
-                                <div class="progress-timeline">
-                                    <div class="progress mb-3">
-                                        <?php
-                                        $steps = [
-                                            'ใบขอซื้อ' => !empty($purchReqs),
-                                            'ใบสั่งซื้อ' => !empty($purchases),
-                                            'รับ-เบิกของ' => !empty($journalTrans),
-                                            'เงินสดย่อย' => !empty($voucher),
-                                            'ค่าใช้จ่ายรถ' => !empty($vehicleExpense),
-                                            'ใบกำกับ/ใบเสร็จ' => !empty($invoices),
-                                            'วางบิล' => !empty($billingInvoices),
-                                            'รับชำระเงิน' => !empty($paymentReceipts)
-                                        ];
-                                        $completedSteps = array_sum($steps);
-                                        $totalSteps = count($steps);
-                                        $progressPercentage = ($completedSteps / $totalSteps) * 100;
+                        <?php if (!empty($jobExpenses)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-sm">
+                                    <thead class="thead-light">
+                                    <tr>
+                                        <th>วันที่</th>
+                                        <th>รายการ</th>
+                                        <th style="text-align: right;">จำนวนเงิน</th>
+                                        <th>หมายเหตุ</th>
+                                        <th>ผู้บันทึก</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <?php
+                                    $totalOtherExpense = 0;
+                                    foreach ($jobExpenses as $expense):
+                                        $totalOtherExpense += $expense->amount;
                                         ?>
-                                        <div class="progress-bar <?= $progressPercentage == 100 ? 'bg-success' : 'bg-warning' ?>"
-                                             role="progressbar"
-                                             style="width: <?= $progressPercentage ?>%"
-                                             aria-valuenow="<?= $progressPercentage ?>"
-                                             aria-valuemin="0"
-                                             aria-valuemax="100">
-                                            <?= number_format($progressPercentage, 1) ?>% เสร็จสิ้น
-                                        </div>
-                                    </div>
-
-                                    <div class="row">
-                                        <?php foreach ($steps as $stepName => $isCompleted): ?>
-                                            <div class="col-md-1">
-                                                <div class="text-center">
-                                                    <i class="fas <?= $isCompleted ? 'fa-check-circle text-success' : 'fa-clock text-muted' ?> fa-2x"></i>
-                                                    <br>
-                                                    <small class="<?= $isCompleted ? 'text-success font-weight-bold' : 'text-muted' ?>">
-                                                        <?= $stepName ?>
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    </div>
-                                </div>
+                                        <tr>
+                                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($expense->expense_date)) ?></td>
+                                            <td><?= Html::encode($expense->description) ?></td>
+                                            <td style="text-align: right;" class="font-weight-bold"><?= number_format($expense->amount, 2) ?></td>
+                                            <td><?= Html::encode($expense->remark) ?></td>
+                                            <td style="text-align: center;"><?= $expense->createdBy ? Html::encode($expense->createdBy->username) : '-' ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                    <tfoot class="bg-light">
+                                    <tr>
+                                        <td colspan="2" class="text-right font-weight-bold">รวมค่าใช้จ่ายอื่นๆ:</td>
+                                        <td class="text-right font-weight-bold text-danger"><?= number_format($totalOtherExpense, 2) ?></td>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                    </tfoot>
+                                </table>
                             </div>
-                        </div>
+                        <?php else: ?>
+                            <div class="alert alert-teal mb-0">
+                                <i class="fas fa-info-circle"></i>
+                                ไม่มีข้อมูลค่าใช้จ่ายอื่นๆ สำหรับใบงานนี้
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
 
-        </div>
-    </div>
+        </div> <!-- End Timeline Container -->
 
-<?php
-// Register Simple JavaScript
-$this->registerJs('
-$(document).ready(function() {
-    console.log("Timeline loaded successfully - no animations");
-    
-    // Basic hover effects only
-    $(".table tbody tr").hover(
-        function() {
-            $(this).css("background-color", "#e3f2fd");
-        },
-        function() {
-            $(this).css("background-color", "");
-        }
-    );
-    
-    // Simple tooltips if available
-    if (typeof $.fn.tooltip !== "undefined") {
-        $("[title]").tooltip();
-    }
-});
-');
-?>
-                                        
+    </div> <!-- End Job Timeline View -->
