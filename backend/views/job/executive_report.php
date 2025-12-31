@@ -24,10 +24,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
 // Register CSS for Executive Report
 $this->registerCss('
+    @import url("https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap");
+    
     .executive-report {
         background-color: #f4f7f6;
         padding: 20px;
-        font-family: "thsarabun", sans-serif;
+        font-family: "Prompt", sans-serif;
     }
     .report-header {
         background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
