@@ -74,6 +74,72 @@ class JournaltransController extends BaseController
         ]);
     }
 
+    /**
+     * Updates an existing JournalTrans model.
+     * If update is successful, the browser will be redirected to the 'view' page.
+     * @param integer $id
+     * @return mixed
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionUpdate($id)
+    {
+        $model = $this->findModel($id);
+        $lines = $model->journalTransLines;
+
+        if ($model->status !== JournalTrans::STATUS_DRAFT) {
+            Yii::$app->session->setFlash('error', 'Only draft transactions can be updated.');
+            return $this->redirect(['view', 'id' => $id]);
+        }
+
+        if ($model->load(Yii::$app->request->post())) {
+            $journalTransLines = [];
+            $valid = $model->validate();
+
+            if (isset($_POST['JournalTransLine'])) {
+                foreach ($_POST['JournalTransLine'] as $index => $journalTransLineData) {
+                    $journalTransLine = new JournalTransLine();
+                    $journalTransLine->load($journalTransLineData, '');
+                    $journalTransLines[] = $journalTransLine;
+                    $valid = $journalTransLine->validate() && $valid;
+                }
+            }
+
+            if ($valid) {
+                $transaction = Yii::$app->db->beginTransaction();
+                try {
+                    $model->updated_at = date('Y-m-d H:i:s');
+                    $model->updated_by = \Yii::$app->user->id;
+                    if ($model->save()) {
+                        // Delete old lines
+                        JournalTransLine::deleteAll(['journal_trans_id' => $model->id]);
+
+                        foreach ($journalTransLines as $journalTransLine) {
+                            $journalTransLine->journal_trans_id = $model->id;
+                            $journalTransLine->status = 0;
+                            if (!$journalTransLine->save(false)) {
+                                throw new \Exception('Failed to save journal trans line');
+                            }
+                        }
+
+                        $transaction->commit();
+                        Yii::$app->session->setFlash('success', 'บันทึกข้อมูลเรียบร้อยแล้ว');
+                        return $this->redirect(['view', 'id' => $model->id]);
+                    }
+                } catch (\Exception $e) {
+                    $transaction->rollBack();
+                    Yii::$app->session->setFlash('error', 'ไม่สามารถบันทึกข้อมูลได้: ' . $e->getMessage());
+                }
+            }
+        }
+
+        $useOrigin = in_array($model->trans_type_id, [JournalTrans::TRANS_TYPE_ISSUE_STOCK, JournalTrans::TRANS_TYPE_ISSUE_BORROW]);
+
+        return $this->render($useOrigin ? 'updateorigin' : 'update', [
+            'model' => $model,
+            'lines' => $lines,
+        ]);
+    }
+
     public function actionGetProductInfo()
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
@@ -396,16 +462,35 @@ class JournaltransController extends BaseController
         try {
             // Validate stock availability for outbound transactions
             if ($model->stock_type_id == JournalTrans::STOCK_TYPE_OUT) {
+                $checkStock = [];
                 foreach ($model->journalTransLines as $line) {
-                    $availableStock = $line->product->getAvailableStockInWarehouse($line->warehouse_id);
-                    if ($availableStock < $line->qty) {
-                        throw new \Exception("Insufficient stock for product: {$line->product->name}. Available: {$availableStock}, Required: {$line->qty}");
+                    $key = $line->product_id . '_' . $line->warehouse_id;
+                    if (!isset($checkStock[$key])) {
+                        $checkStock[$key] = [
+                            'product_name' => $line->product->name ?? 'Unknown',
+                            'qty' => 0,
+                            'product_model' => $line->product,
+                            'warehouse_id' => $line->warehouse_id
+                        ];
+                    }
+                    $checkStock[$key]['qty'] += $line->qty;
+                }
+
+                foreach ($checkStock as $check) {
+                    if ($check['product_model']) {
+                        $availableStock = $check['product_model']->getAvailableStockInWarehouse($check['warehouse_id']);
+                        if ($availableStock < $check['qty']) {
+                            throw new \Exception("Insufficient stock for product: {$check['product_name']}. Available: {$availableStock}, Required: {$check['qty']}");
+                        }
                     }
                 }
             }
 
-            $model->approve();
-            Yii::$app->session->setFlash('success', 'Transaction approved successfully.');
+            if ($model->approve()) {
+                Yii::$app->session->setFlash('success', 'Transaction approved successfully.');
+            } else {
+                throw new \Exception("Failed to approve transaction.");
+            }
         } catch (\Exception $e) {
             Yii::$app->session->setFlash('error', 'Error approving transaction: ' . $e->getMessage());
         }

@@ -4,7 +4,7 @@ use yii\helpers\Html;
 
 /* @var $this yii\web\View */
 /* @var $model common\models\JournalTransX */
-/* @var $lines common\models\JournalTransLineX[] */
+/* @var $modelsLine common\models\JournalTransLineX[] */
 
 $this->title = 'แก้ไขรายการ: ' . $model->journal_no;
 $this->params['breadcrumbs'][] = ['label' => 'รายการ Stock Transaction', 'url' => ['index']];
@@ -13,7 +13,7 @@ $this->params['breadcrumbs'][] = 'แก้ไข';
 ?>
 <div class="journal-trans-update">
 
-    <?= $this->render('_form', [
+    <?= $this->render('_form_origin', [
         'model' => $model,
         'lines' => $lines,
     ]) ?>

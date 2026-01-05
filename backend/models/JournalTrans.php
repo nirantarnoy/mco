@@ -468,7 +468,12 @@ class JournalTrans extends ActiveRecord
         }
 
         // Calculate quantity change based on stock type
-        $qtyChange = ($this->stock_type_id == self::STOCK_TYPE_IN) ? $qty : -$qty;
+        $qtyChange = 0;
+        if ($this->stock_type_id == self::STOCK_TYPE_IN) {
+            $qtyChange = $qty;
+        } elseif ($this->stock_type_id == self::STOCK_TYPE_OUT) {
+            $qtyChange = -$qty;
+        }
         $stockSum->qty += $qtyChange;
         $stockSum->updated_at = date('Y-m-d H:i:s');
         $stockSum->save(false);
