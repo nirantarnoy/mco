@@ -594,6 +594,8 @@ class InvoiceController extends BaseController
 
                 // 2. Remove (service) case-insensitive
                 $description = str_ireplace('(service)', '', $description);
+                $description = str_ireplace('Service -', '', $description);
+                $description = str_ireplace('Serice -', '', $description);
 
                 // 3. Take text after the first hyphen if it exists
                 if (strpos($description, '-') !== false) {
