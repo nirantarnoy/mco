@@ -597,9 +597,10 @@ class InvoiceController extends BaseController
                 $description = str_ireplace('Service-', '', $description);
                 $description = str_ireplace('Service -', '', $description);
 
-                // 3. Take text after the first hyphen if it exists
-                if (strpos($description, '-') !== false) {
-                    $description = substr($description, strpos($description, '-') + 1);
+                // 3. Remove leading hyphen if it exists (often left over after Step 1 or 2)
+                $description = trim($description);
+                if (strpos($description, '-') === 0) {
+                    $description = substr($description, 1);
                 }
 
                 $description = trim($description);
