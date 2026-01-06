@@ -258,27 +258,24 @@ function loadJobItems(jobId) {
     
     $.ajax({
         url: '{$getJobItemsUrl}',
-        type: 'GET',
-        data: { job_id: jobId },
+        type: 'POST',
+        data: { id: jobId },
         dataType: 'json',
         success: function(data) {
-            if (data && data.length > 0) {
+            if (data.success && data.items && data.items.length > 0) {
                 clearAllItems();
                 
-                data.forEach(function(item) {
+                data.items.forEach(function(item) {
                     var table = $('#items-table tbody');
                     var rowCount = table.find('tr').length;
                     
-                    // หา unit id ที่ตรงกัน
-                    var unitId = '';
-                    // Logic to match unit name to id if needed, or if item has unit_id use it
-                    if (item.unit_id) unitId = item.unit_id;
+                    var unitId = item.unit_id || '';
                     
                     var newRow = '<tr>' +
                         '<td class="text-center">' + (rowCount + 1) + '</td>' +
                         '<td>' +
                             '<input type="hidden" name="InvoiceItem[' + rowCount + '][product_id]" class="product-id-input" value="' + (item.product_id || '') + '">' +
-                            '<input type="text" name="InvoiceItem[' + rowCount + '][item_description]" class="form-control form-control-sm item-description-input" value="' + (item.description || '') + '" autocomplete="off">' +
+                            '<input type="text" name="InvoiceItem[' + rowCount + '][item_description]" class="form-control form-control-sm item-description-input" value="' + (item.item_description || '') + '" autocomplete="off">' +
                             '<div class="autocomplete-dropdown"></div>' +
                         '</td>' +
                         '<td>' +
@@ -306,7 +303,7 @@ function loadJobItems(jobId) {
                 
                 calculateTotal();
             } else {
-                showMessage('warning', 'ไม่พบรายการสินค้าในใบงานนี้');
+                showMessage('warning', data.message || 'ไม่พบรายการสินค้าในใบเสนอราคานี้');
             }
         },
         error: function() {

@@ -549,7 +549,7 @@ class InvoiceController extends BaseController
         }
 
         try {
-            // ตรวจสอบว่าใบงานมีอยู่จริง
+            // ตรวจสอบว่าใบเสนอราคามีอยู่จริง
             $job = \backend\models\Quotation::findOne($jobId);
             if (!$job) {
                 return [
@@ -558,8 +558,7 @@ class InvoiceController extends BaseController
                 ];
             }
 
-            // ดึงรายการสินค้า/บริการจากใบงาน
-            // สมมติว่ามีตาราง job_items ที่เก็บรายการสินค้าของแต่ละงาน
+            // ดึงรายการสินค้า/บริการจากใบเสนอราคา
             $jobItems = \backend\models\QuotationLine::find()
                 ->where(['quotation_id' => $jobId])
                 ->orderBy(['id' => SORT_ASC])
@@ -575,14 +574,23 @@ class InvoiceController extends BaseController
             // จัดรูปแบบข้อมูลให้ตรงกับที่ฟอร์มต้องการ
             $items = [];
             foreach ($jobItems as $jobItem) {
+                $unitName = 'หน่วย';
+                $unitId = null;
+                
+                if ($jobItem->product) {
+                    $unitId = $jobItem->product->unit_id;
+                    if ($jobItem->product->unit) {
+                        $unitName = $jobItem->product->unit->name;
+                    }
+                }
+
                 $items[] = [
-                    'item_description' => $jobItem->product_name, // $jobItem->product->name,
-                    'quantity' => $jobItem->qty, // number_format($jobItem->qty, 2),
-                    'unit' => $jobItem->product->unit->name ?: 'หน่วย',
-                    'unit_id' => $jobItem->product->unit_id ?: null,  // เพิ่ม unit_id
-                    'unit_price' => $jobItem->line_price, //number_format($jobItem->line_price,2),
-                    'amount' => ($jobItem->qty * $jobItem->line_price), //number_format($jobItem->qty * $jobItem->line_price, 2),
-                    // ข้อมูลเพิ่มเติมที่อาจจำเป็น
+                    'item_description' => $jobItem->product_name,
+                    'quantity' => $jobItem->qty,
+                    'unit' => $unitName,
+                    'unit_id' => $unitId,
+                    'unit_price' => $jobItem->line_price,
+                    'amount' => ($jobItem->qty * $jobItem->line_price),
                     'product_id' => $jobItem->product_id,
                     'notes' => $jobItem->note,
                 ];
@@ -594,7 +602,6 @@ class InvoiceController extends BaseController
                 'job_info' => [
                     'job_no' => $job->quotation_no,
                     'job_name' => $job->quotation_no,
-                    'customer_name' => 'test',
                 ]
             ];
         } catch (\Exception $e) {
