@@ -440,7 +440,7 @@ class InvoiceController extends BaseController
             $cleanData = [
                 'item_seq' => $sortOrder - 1,
                 'product_id' => isset($itemData['product_id']) ? trim($itemData['product_id']) : '',
-                'item_description' => isset($itemData['item_description']) ? trim($itemData['item_description']) : '',
+                'item_description' => isset($itemData['item_description']) ? $this->cleanProductDescription($itemData['item_description']) : '',
                 'quantity' => !empty($itemData['quantity']) ? (float)$itemData['quantity'] : 1.000,
                 'unit_id' => isset($itemData['unit_id']) && !empty($itemData['unit_id']) ? (int)$itemData['unit_id'] : 0,
                 'unit' => $unitName,
@@ -456,6 +456,41 @@ class InvoiceController extends BaseController
 
         // Update total amounts
         $model->updateAmountsFromItems();
+    }
+
+    /**
+     * Clean product description by removing codes and common prefixes
+     */
+    private function cleanProductDescription($description)
+    {
+        if (empty($description)) return '';
+
+        // 1. Take text after the first space (removes product code prefix)
+        $firstSpace = strpos($description, ' ');
+        if ($firstSpace !== false) {
+            // Check if the part before space looks like a code (e.g. no Thai characters)
+            $prefix = substr($description, 0, $firstSpace);
+            if (!preg_match('/[ก-ฮ]/u', $prefix)) {
+                $description = substr($description, $firstSpace + 1);
+            }
+        }
+
+        // 2. Remove common prefixes and suffixes (case-insensitive)
+        $description = str_ireplace('(service)', '', $description);
+        $description = str_ireplace('Service -', '', $description);
+        $description = str_ireplace('Service-', '', $description);
+        $description = str_ireplace('Service', '', $description);
+        $description = str_ireplace('Serice -', '', $description);
+        $description = str_ireplace('Serice-', '', $description);
+        $description = str_ireplace('Serice', '', $description);
+
+        // 3. Remove leading hyphen if it exists
+        $description = trim($description);
+        if (strpos($description, '-') === 0) {
+            $description = substr($description, 1);
+        }
+
+        return trim($description);
     }
 
     /**
@@ -584,26 +619,7 @@ class InvoiceController extends BaseController
                     }
                 }
 
-                $description = $jobItem->product_name;
-
-                // 1. Take text after the first space
-                $firstSpace = strpos($description, ' ');
-                if ($firstSpace !== false) {
-                    $description = substr($description, $firstSpace + 1);
-                }
-
-                // 2. Remove (service) case-insensitive
-                $description = str_ireplace('(service)', '', $description);
-                $description = str_ireplace('Service-', '', $description);
-                $description = str_ireplace('Service -', '', $description);
-
-                // 3. Remove leading hyphen if it exists (often left over after Step 1 or 2)
-                $description = trim($description);
-                if (strpos($description, '-') === 0) {
-                    $description = substr($description, 1);
-                }
-
-                $description = trim($description);
+                $description = $this->cleanProductDescription($jobItem->product_name);
 
                 if (!empty($jobItem->note)) {
                     $description .= "\n" . $jobItem->note;
