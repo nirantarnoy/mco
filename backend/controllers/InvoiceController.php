@@ -584,8 +584,13 @@ class InvoiceController extends BaseController
                     }
                 }
 
+                $description = $jobItem->product_name;
+                if (!empty($jobItem->note)) {
+                    $description .= "\n" . $jobItem->note;
+                }
+
                 $items[] = [
-                    'item_description' => $jobItem->product_name,
+                    'item_description' => $description,
                     'quantity' => $jobItem->qty,
                     'unit' => $unitName,
                     'unit_id' => $unitId,
