@@ -17,6 +17,8 @@ use yii\helpers\Url;
 
 $this->registerJsFile('@web/js/journal-trans.js', ['depends' => [\yii\web\JqueryAsset::class]]);
 
+$model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' => $model->id])->all();
+
 // CSS สำหรับ autocomplete และ alerts
 $autocompleteCSS = <<<CSS
 .autocomplete-dropdown {
@@ -807,9 +809,9 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
                     </thead>
                     <tbody class="container-items">
                     <?php if (empty($model->journalTransLines)): ?>
-                        <?php $model->journalTransLinesline = [new \backend\models\JournalTransLine()]; ?>
+                        <?php $model->journalTransLines = [new \backend\models\JournalTransLine()]; ?>
                     <?php endif; ?>
-                    <?php foreach ($model->journalTransLinesline as $index => $journaltransline): ?>
+                    <?php foreach ($model->journalTransLines as $index => $journaltransline): ?>
                         <tr class="item">
                             <td class="text-center align-middle">
                                 <?= $form->field($journaltransline, "[{$index}]unit_id")->hiddenInput([
@@ -914,6 +916,85 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
 
 </div>
 
+<?php if (!$model->isNewRecord): ?>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">เอกสารแนบ</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <table class="table table-bordered">
+                                <thead>
+                                <tr>
+                                    <th style="width: 50px;text-align: center">#</th>
+                                    <th>ชื่อไฟล์</th>
+                                    <th style="width: 150px;text-align: center">ดูเอกสาร</th>
+                                    <th style="width: 100px;text-align: center">-</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <?php if (empty($model_doc)): ?>
+                                    <tr>
+                                        <td colspan="4" class="text-center">ไม่มีเอกสารแนบ</td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($model_doc as $key => $doc): ?>
+                                        <tr>
+                                            <td style="text-align: center"><?= $key + 1 ?></td>
+                                            <td><?= $doc->doc_name ?></td>
+                                            <td style="text-align: center">
+                                                <a href="<?= Yii::$app->request->BaseUrl . '/uploads/journal_trans_doc/' . $doc->doc_name ?>"
+                                                   target="_blank">
+                                                    ดูเอกสาร
+                                                </a>
+                                            </td>
+                                            <td style="text-align: center">
+                                                <div class="btn btn-danger btn-sm" data-var="<?= trim($doc->doc_name) ?>"
+                                                     onclick="delete_doc($(this))">
+                                                    <i class="fas fa-trash"></i> ลบ
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <br/>
+                    <form action="<?= Url::to(['journaltrans/add-doc-file'], true) ?>" method="post"
+                          enctype="multipart/form-data">
+                        <input type="hidden" name="id" value="<?= $model->id ?>">
+                        <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <label for="">อัพโหลดเอกสารแนบ</label>
+                                    <input type="file" name="file_doc[]" multiple>
+                                </div>
+                            </div>
+                            <br/>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <button class="btn btn-info">
+                                        <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <form id="form-delete-doc-file" action="<?= Url::to(['journaltrans/delete-doc-file'], true) ?>" method="post">
+                        <input type="hidden" name="id" value="<?= $model->id ?>">
+                        <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
 <script>
     // Transaction type to stock type mapping
     const transTypeStockTypeMap = {
@@ -941,6 +1022,16 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
             $('.return-borrow-fields').hide();
             $('.return-type-select').val('');
             $('.return-note-field').hide();
+        }
+    }
+
+    function delete_doc(e){
+        var file_name = e.attr('data-var');
+        if(file_name != null){
+            if(confirm('ต้องการลบไฟล์นี้ใช่หรือไม่?')){
+                $(".delete-doc-list").val(file_name);
+                $("#form-delete-doc-file").submit();
+            }
         }
     }
 
