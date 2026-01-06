@@ -713,9 +713,6 @@ window.addEventListener('afterprint', function() {
                     <?php
                     $companies = \backend\models\Company::find()->all();
                     foreach ($companies as $comp) {
-                        // Assuming MCO might be in DB, we skip it if we want to enforce the 'mco' value logic above, 
-                        // or just list them. If name matches MCO, we could exclude it to avoid duplicates, 
-                        // but simple appending is safer to ensure all other options are there.
                         if (strtoupper($comp->name) !== 'M.C.O. COMPANY LIMITED') {
                             echo '<option value="' . Html::encode($comp->name) . '">' . Html::encode($comp->name) . '</option>';
                         }
@@ -866,7 +863,7 @@ window.addEventListener('afterprint', function() {
                     <?php foreach ($model_line as $index => $item): ?>
                         <tr>
                             <td style="padding:8px;text-align: center"><?= $index + 1 ?></td>
-                            <td class="text-left" style="padding:8px;"><?= nl2br(Html::encode($item->item_description)) ?></td>
+                            <td class="text-left" style="padding:8px;"><?= nl2br(Html::encode(\backend\helpers\ProductHelper::cleanDescription($item->item_description))) ?></td>
                             <td style="padding:8px;text-align: center"><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
                             <td class="text-right" style="padding:8px;"><?= number_format($item->unit_price, 2) ?></td>
                             <td class="text-right" style="padding:8px;"><?= number_format($item->amount, 2) ?></td>

@@ -812,7 +812,7 @@ window.addEventListener('afterprint', function() {
                     <?php foreach ($model_line as $index => $item): ?>
                         <tr>
                             <td style=" padding:8px;text-align:center"><?= $index + 1 ?></td>
-                    <td class="text-left" style=" padding:8px;"><?= nl2br(Html::encode($item->item_description)) ?></td>
+                    <td class="text-left" style=" padding:8px;"><?= nl2br(Html::encode(\backend\helpers\ProductHelper::cleanDescription($item->item_description))) ?></td>
                     <td style="padding:8px;text-align:center"><?= number_format($item->quantity, 0) ?> <?= Html::encode(\backend\models\Unit::findName($item->unit_id)) ?></td>
                             <td class=" text-right" style="padding:8px;"><?= number_format($item->unit_price, 3) ?></td>
                     <td class="text-right" style="padding:8px;"><?= number_format($item->amount, 3) ?></td>
