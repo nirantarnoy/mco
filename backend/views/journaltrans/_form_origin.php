@@ -808,10 +808,13 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
                     </tr>
                     </thead>
                     <tbody class="container-items">
-                    <?php if (empty($model->journalTransLines)): ?>
-                        <?php $model->journalTransLines = [new \backend\models\JournalTransLine()]; ?>
-                    <?php endif; ?>
-                    <?php foreach ($model->journalTransLines as $index => $journaltransline): ?>
+                    <?php 
+                    $lines_to_show = $lines ?? $model->journalTransLines;
+                    if (empty($lines_to_show)) {
+                        $lines_to_show = [new \backend\models\JournalTransLine()];
+                    }
+                    ?>
+                    <?php foreach ($lines_to_show as $index => $journaltransline): ?>
                         <tr class="item">
                             <td class="text-center align-middle">
                                 <?= $form->field($journaltransline, "[{$index}]unit_id")->hiddenInput([

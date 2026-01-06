@@ -797,11 +797,11 @@ window.addEventListener('afterprint', function() {
         <table class="items-table">
             <thead>
                 <tr>
-                    <th style="width: 8%;border-left: 1px solid #000;text-align:center"">ลำดับ<br>Item</th>
-                    <th style=" width: 40%;text-align:center"">รายการ<br>Description</th>
-                    <th style="width: 12%;text-align:center"">จำนวน<br>Quantity</th>
-                    <th style=" width: 15%;text-align:center"">ราคาต่อหน่วย<br>Unit/Price</th>
-                    <th style="width: 15%;border-right: 1px solid #000;text-align:center"">จำนวนเงินรวม<br>Amount</th>
+                    <th style="width: 8%;border-left: 1px solid #000;text-align:center">ลำดับ<br>Item</th>
+                    <th style="width: 40%;text-align:center">รายการ<br>Description</th>
+                    <th style="width: 12%;text-align:center">จำนวน<br>Quantity</th>
+                    <th style="width: 15%;text-align:center">ราคาต่อหน่วย<br>Unit/Price</th>
+                    <th style="width: 15%;border-right: 1px solid #000;text-align:center">จำนวนเงินรวม<br>Amount</th>
                 </tr>
             </thead>
             <tbody>
@@ -813,7 +813,7 @@ window.addEventListener('afterprint', function() {
                         <tr>
                             <td style=" padding:8px;text-align:center"><?= $index + 1 ?></td>
                     <td class="text-left" style=" padding:8px;"><?= nl2br(Html::encode($item->item_description)) ?></td>
-                    <td style="padding:8px;text-align:center"><?= number_format($item->quantity, 0) ?> <?= Html::encode(\backend\models\Unit::findName($item->unit_id)) ?></td>
+                    <td style="padding:8px;text-align:center"><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
                             <td class=" text-right" style="padding:8px;"><?= number_format($item->unit_price, 3) ?></td>
                     <td class="text-right" style="padding:8px;"><?= number_format($item->amount, 3) ?></td>
                 </tr>

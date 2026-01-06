@@ -585,6 +585,23 @@ class InvoiceController extends BaseController
                 }
 
                 $description = $jobItem->product_name;
+
+                // 1. Take text after the first space
+                $firstSpace = strpos($description, ' ');
+                if ($firstSpace !== false) {
+                    $description = substr($description, $firstSpace + 1);
+                }
+
+                // 2. Remove (service) case-insensitive
+                $description = str_ireplace('(service)', '', $description);
+
+                // 3. Take text after the first hyphen if it exists
+                if (strpos($description, '-') !== false) {
+                    $description = substr($description, strpos($description, '-') + 1);
+                }
+
+                $description = trim($description);
+
                 if (!empty($jobItem->note)) {
                     $description .= "\n" . $jobItem->note;
                 }

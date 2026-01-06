@@ -5,7 +5,7 @@ use backend\models\JournalTrans;
 
 /* @var $this yii\web\View */
 /* @var $model common\models\JournalTransX */
-/* @var $modelsLine common\models\JournalTransLineX[] */
+/* @var $lines common\models\JournalTransLineX[] */
 
 $title = 'สร้างรายการ';
 if ($model->trans_type_id) {
