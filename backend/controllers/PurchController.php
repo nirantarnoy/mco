@@ -1530,11 +1530,12 @@ class PurchController extends BaseController
         return $this->redirect(['update', 'id' => $id]);
 
     }
-    public function actionShowdoc($filename){
-        $filePath = Yii::getAlias('@backend/web/uploads/purch_doc/') . $filename;
-
-        // Debug ดูว่า path ถูกไหม
-        // echo $filePath; exit;
+    public function actionShowdoc($filename, $group = 1){
+        $path = '@backend/web/uploads/purch_doc/';
+        if($group == 2){
+            $path = '@backend/web/uploads/purch_receive_doc/';
+        }
+        $filePath = Yii::getAlias($path) . $filename;
 
         if (file_exists($filePath)) {
             $extension = pathinfo($filePath, PATHINFO_EXTENSION);

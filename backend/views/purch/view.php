@@ -2,6 +2,7 @@
 
 use yii\bootstrap4\Modal;
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\widgets\DetailView;
 use kartik\grid\GridView;
 use backend\models\Purch;
@@ -378,7 +379,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                             <td><?= $value->doc_name ?></td>
                             <td><?= \backend\helpers\PurchDocType::getTypeById($value->doc_type_id) ?></td>
                             <td style="text-align: center">
-                                <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $value->doc_name ?>"
+                                <a href="<?= Url::to(['purch/showdoc', 'filename' => $value->doc_name, 'group' => 1]) ?>"
                                    target="_blank">
                                     ดูเอกสาร
                                 </a>
@@ -415,7 +416,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                             <td style="width: 10px;text-align: center"><?= $i + 1 ?></td>
                             <td><?= $model_rec_doc[$i] ?></td>
                             <td style="text-align: center">
-                                <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_receive_doc/' . $model_rec_doc[$i] ?>"
+                                <a href="<?= Url::to(['purch/showdoc', 'filename' => $model_rec_doc[$i], 'group' => 2]) ?>"
                                    target="_blank">
                                     ดูเอกสาร
                                 </a>
