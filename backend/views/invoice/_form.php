@@ -474,6 +474,19 @@ $(document).on('change', '#invoice-job-id', function() {
             data: {id: jobId},
             dataType: 'json',
             type: 'POST',
+            success: function(data) {
+                if (data != null && data.length > 0) {
+                    $('#invoice-customer-name').val(data[0].customer_name);
+                    $('#invoice-customer-address').val(data[0].customer_address);
+                    $('#invoice-customer-tax-id').val(data[0].customer_tax_id);
+                    $('#invoice-due-date').val(data[0].invoice_due_date);
+                }
+            }
+        });
+    } else {
+        $('#invoice-customer-name').val('');
+        $('#invoice-customer-address').val('');
+        $('#invoice-customer-tax-id').val('');
         $('#invoice-due-date').val('');
     }
 });
