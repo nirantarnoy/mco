@@ -813,6 +813,7 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
                     if (empty($lines_to_show)) {
                         $lines_to_show = [new \backend\models\JournalTransLine()];
                     }
+                    $warehouses = \yii\helpers\ArrayHelper::map(\common\models\Warehouse::find()->where(['status' => 1])->all(), 'id', 'name');
                     ?>
                     <?php foreach ($lines_to_show as $index => $journaltransline): ?>
                         <tr class="item">
@@ -837,7 +838,8 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
                                         'class' => 'form-control product-autocomplete',
                                         'placeholder' => 'พิมพ์ชื่อสินค้าหรือรหัสสินค้า...',
                                         'data-index' => $index,
-                                        'autocomplete' => 'off'
+                                        'autocomplete' => 'off',
+                                        'value' => $journaltransline->product_id ? \backend\models\Product::findName($journaltransline->product_id) : '',
                                     ])->label(false) ?>
 
                                     <div class="autocomplete-dropdown" data-index="<?= $index ?>"></div>
@@ -846,7 +848,7 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
 
                             <td>
                                 <?= $form->field($journaltransline, "[{$index}]warehouse_id")->dropDownList(
-                                    [], // Empty initially, will be populated by JavaScript
+                                    $warehouses,
                                     [
                                         'prompt' => '-- เลือกคลัง --',
                                         'class' => 'form-control warehouse-select',
@@ -887,6 +889,7 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
                                     'class' => 'form-control line-unit-name',
                                     'style' => 'background-color: #f8f9fa;',
                                     'data-index' => $index,
+                                    'value' => $journaltransline->unit_id ? \backend\models\Unit::findName($journaltransline->unit_id) : ($journaltransline->product_id ? \backend\models\Unit::findName(\backend\models\Product::findOne($journaltransline->product_id)->unit_id) : ''),
                                 ])->label(false) ?>
                             </td>
                             <td class="text-center align-middle" style="text-align: center">
@@ -1039,10 +1042,54 @@ $this->registerJs($calculationJs, \yii\web\View::POS_READY);
     }
 
     // Initialize on page load
-    // $(document).ready(function() {
-    //     const transType = $('#trans-type-select').val();
-    //     if (transType) {
-    //         updateStockType(transType);
-    //     }
-    // });
+    $(document).ready(function() {
+        const transType = $('#trans-type-select').val();
+        if (transType) {
+            updateStockType(transType);
+        }
+
+        // Load stock for existing items
+        $('.item').each(function() {
+            var index = $(this).find('.product-id-hidden').attr('data-index');
+            var productId = $(this).find('.product-id-hidden').val();
+            var warehouseId = $(this).find('.warehouse-select').val();
+            
+            if (productId) {
+                // Load warehouse options and stock info
+                $.ajax({
+                    url: '<?= $stock_url ?>',
+                    type: 'GET',
+                    data: { 
+                        action: 'get-product-stock',
+                        product_id: productId 
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        productStockData[productId] = data;
+                        
+                        // Update warehouse options but keep current selection
+                        var warehouseSelect = $('.warehouse-select[data-index="' + index + '"]');
+                        var currentWarehouseId = warehouseId;
+                        
+                        warehouseSelect.empty();
+                        warehouseSelect.append('<option value="">-- เลือกคลัง --</option>');
+                        
+                        data.forEach(function(stock) {
+                            var optionText = stock.warehouse_name + ' (คงเหลือ: ' + stock.qty + ' ' + stock.unit + ')';
+                            var selected = (stock.warehouse_id == currentWarehouseId) ? 'selected' : '';
+                            warehouseSelect.append('<option value="' + stock.warehouse_id + '" data-stock="' + stock.qty + '" ' + selected + '>' + optionText + '</option>');
+                        });
+                        
+                        // Update stock on hand display for the selected warehouse
+                        if (currentWarehouseId) {
+                            var selectedStock = data.find(s => s.warehouse_id == currentWarehouseId);
+                            if (selectedStock) {
+                                $('.line-product-onhand[data-index="' + index + '"]').val(selectedStock.qty);
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    });
 </script>

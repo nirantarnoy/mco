@@ -607,6 +607,44 @@ $(document).ready(function() {
     if (transType) {
         updateStockType(transType);
     }
+
+    // Load stock for existing items
+    $('.item').each(function() {
+        var index = $(this).find('.product-id-hidden').attr('data-index');
+        var productId = $(this).find('.product-id-hidden').val();
+        var warehouseId = $(this).find('.warehouse-select').val();
+        
+        if (productId) {
+            // Load warehouse options and stock info
+            $.ajax({
+                url: '$stock_url',
+                type: 'GET',
+                data: { 
+                    action: 'get-product-stock',
+                    product_id: productId 
+                },
+                dataType: 'json',
+                success: function(data) {
+                    productStockData[productId] = data;
+                    
+                    // Update warehouse options but keep current selection
+                    var warehouseSelect = $('.warehouse-select[data-index="' + index + '"]');
+                    var currentWarehouseId = warehouseId;
+                    
+                    // If it's not a return transaction, we might want to update options
+                    // But for returns, the warehouse is usually fixed from the original transaction
+                    
+                    // Update stock on hand display for the selected warehouse
+                    if (currentWarehouseId) {
+                        var selectedStock = data.find(s => s.warehouse_id == currentWarehouseId);
+                        if (selectedStock) {
+                            $('.line-product-onhand[data-index="' + index + '"]').val(selectedStock.qty);
+                        }
+                    }
+                }
+            });
+        }
+    });
 });
 
 
@@ -769,12 +807,13 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                     </tr>
                     </thead>
                     <tbody class="container-items">
-                    <?php if (empty($lines)): ?>
-                        <tr class="item">
-                            <td colspan="10" class="text-center">กรุณาเลือกรายการที่ต้องการคืนก่อน</td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($lines as $index => $journaltransline): ?>
+                    <?php 
+                    $lines_to_show = $lines;
+                    if (empty($lines_to_show)) {
+                        $lines_to_show = [new \backend\models\JournalTransLine()];
+                    }
+                    ?>
+                    <?php foreach ($lines_to_show as $index => $journaltransline): ?>
                             <tr class="item">
                                 <td class="text-center align-middle">
                                     <span class="item-number"><?= $index + 1 ?></span>
@@ -860,7 +899,6 @@ $this->registerJs($originalJs, \yii\web\View::POS_READY);
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-                    <?php endif; ?>
                     </tbody>
                 </table>
             </div>
