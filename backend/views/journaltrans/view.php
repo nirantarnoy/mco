@@ -254,6 +254,14 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                         ],
 
                         [
+                            'label' => 'Warehouse',
+                            'value' => function ($line) {
+                                return $line->warehouse ? $line->warehouse->name : '<span class="text-danger">Not Selected</span>';
+                            },
+                            'format' => 'raw',
+                        ],
+
+                        [
                             'attribute' => 'line_price',
                             'format' => ['currency', 'THB'],
                             'contentOptions' => ['class' => 'text-right'],
