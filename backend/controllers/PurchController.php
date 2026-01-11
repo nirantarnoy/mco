@@ -1602,4 +1602,29 @@ class PurchController extends BaseController
         ]);
     }
 
+    public function actionReportVendorPoList($vendor_id, $from_date = null, $to_date = null)
+    {
+        $query = \backend\models\Purch::find()->where(['vendor_id' => $vendor_id]);
+
+        if ($from_date && $to_date) {
+            $query->andFilterWhere(['between', 'purch_date', $from_date, $to_date]);
+        }
+
+        $dataProvider = new \yii\data\ActiveDataProvider([
+            'query' => $query,
+            'pagination' => [
+                'pageSize' => 50,
+            ],
+            'sort' => [
+                'defaultOrder' => ['purch_date' => SORT_DESC],
+            ],
+        ]);
+
+        return $this->render('report_vendor_po_list', [
+            'dataProvider' => $dataProvider,
+            'vendor_id' => $vendor_id,
+            'from_date' => $from_date,
+            'to_date' => $to_date,
+        ]);
+    }
 }

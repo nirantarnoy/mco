@@ -29,24 +29,24 @@ class StocksumController extends BaseController
                         'delete' => ['POST'],
                     ],
                 ],
-                'access' => [
-                    'class' => AccessControl::className(),
-                    'denyCallback' => function ($rule, $action) {
-                        throw new ForbiddenHttpException('คุณไม่ได้รับอนุญาติให้เข้าใช้งาน!');
-                    },
-                    'rules' => [
-                        [
-                            'allow' => true,
-                            'roles' => ['@'],
-                            'matchCallback' => function ($rule, $action) {
-                                $currentRoute = \Yii::$app->controller->getRoute();
-                                if (\Yii::$app->user->can($currentRoute)) {
-                                    return true;
-                                }
-                            }
-                        ]
-                    ]
-                ],
+                // 'access' => [
+                //     'class' => AccessControl::className(),
+                //     'denyCallback' => function ($rule, $action) {
+                //         throw new ForbiddenHttpException('คุณไม่ได้รับอนุญาติให้เข้าใช้งาน!');
+                //     },
+                //     'rules' => [
+                //         [
+                //             'allow' => true,
+                //             'roles' => ['@'],
+                //             'matchCallback' => function ($rule, $action) {
+                //                 $currentRoute = \Yii::$app->controller->getRoute();
+                //                 if (\Yii::$app->user->can($currentRoute)) {
+                //                     return true;
+                //                 }
+                //             }
+                //         ]
+                //     ]
+                // ],
             ]
         );
     }
@@ -134,6 +134,22 @@ class StocksumController extends BaseController
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
+    }
+
+    public function actionStockReport()
+    {
+        $query = \backend\models\Product::find()
+            ->with(['productGroup', 'unit'])
+            ->orderBy(['product_group_id' => SORT_ASC, 'code' => SORT_ASC]);
+
+        $dataProvider = new \yii\data\ActiveDataProvider([
+            'query' => $query,
+            'pagination' => false,
+        ]);
+
+        return $this->render('stock_report', [
+            'dataProvider' => $dataProvider,
+        ]);
     }
 
     /**

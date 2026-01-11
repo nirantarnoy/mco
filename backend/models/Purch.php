@@ -175,6 +175,7 @@ class Purch extends ActiveRecord
         $statuses = [
             self::STATUS_DRAFT => 'ร่าง',
             self::STATUS_ACTIVE => 'ใช้งาน',
+            self::STATUS_COMPLETED => 'รับสินค้าแล้ว',
             self::STATUS_CANCELLED => 'ยกเลิก',
         ];
         return $statuses[$this->status] ?? 'ไม่ระบุ';

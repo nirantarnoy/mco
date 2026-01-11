@@ -164,6 +164,14 @@
                                 </p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="index.php?r=stocksum/stock-report" class="nav-link stock-report">
+                                <i class="far fa-circlez nav-icon"></i>
+                                <p>
+                                    รายงานสินค้าคงเหลือ
+                                </p>
+                            </a>
+                        </li>
                         <?php endif;?>
                     </ul>
                 </li>

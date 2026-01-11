@@ -81,8 +81,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     [
                         'attribute' => 'vendor_id',
                         'label' => 'ผู้ขาย',
-                        'value' => function ($model) {
-                            return \backend\models\Vendor::findName($model['vendor_id']);
+                        'format' => 'raw',
+                        'value' => function ($model) use ($from_date, $to_date) {
+                            $vendor_name = \backend\models\Vendor::findName($model['vendor_id']);
+                            return Html::a($vendor_name, ['report-vendor-po-list', 'vendor_id' => $model['vendor_id'], 'from_date' => $from_date, 'to_date' => $to_date], ['target' => '_blank']);
                         },
                     ],
                     [

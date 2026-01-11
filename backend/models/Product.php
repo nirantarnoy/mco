@@ -116,6 +116,11 @@ class Product extends \common\models\Product
         return $this->hasOne(Unit::class, ['id' => 'unit_id']);
     }
 
+    public function getProductGroup()
+    {
+        return $this->hasOne(Productgroup::class, ['id' => 'product_group_id']);
+    }
+
     /**
      * @return \yii\db\ActiveQuery
      */
