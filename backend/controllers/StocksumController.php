@@ -152,6 +152,48 @@ class StocksumController extends BaseController
         ]);
     }
 
+    public function actionBorrowReturnReport()
+    {
+        $job_id = $this->request->get('job_id');
+        $from_date = $this->request->get('from_date');
+        $to_date = $this->request->get('to_date');
+
+        $query = \backend\models\JournalTransLine::find()
+            ->select([
+                'journal_trans.job_id',
+                'journal_trans_line.product_id',
+                'SUM(CASE WHEN journal_trans.trans_type_id IN (3, 5) THEN journal_trans_line.qty ELSE 0 END) as total_issued',
+                'SUM(CASE WHEN journal_trans.trans_type_id IN (4, 6) THEN journal_trans_line.qty ELSE 0 END) as total_returned',
+                'SUM(journal_trans_line.damaged_qty) as total_damaged',
+                'GROUP_CONCAT(DISTINCT journal_trans_line.condition_note SEPARATOR ", ") as remarks'
+            ])
+            ->joinWith('journalTrans')
+            ->where(['journal_trans.status' => \backend\models\JournalTrans::STATUS_APPROVED])
+            ->groupBy(['journal_trans.job_id', 'journal_trans_line.product_id']);
+
+        if ($job_id) {
+            $query->andWhere(['journal_trans.job_id' => $job_id]);
+        }
+        if ($from_date) {
+            $query->andWhere(['>=', 'journal_trans.trans_date', $from_date]);
+        }
+        if ($to_date) {
+            $query->andWhere(['<=', 'journal_trans.trans_date', $to_date]);
+        }
+
+        $dataProvider = new \yii\data\ActiveDataProvider([
+            'query' => $query,
+            'pagination' => false,
+        ]);
+
+        return $this->render('borrow_return_report', [
+            'dataProvider' => $dataProvider,
+            'job_id' => $job_id,
+            'from_date' => $from_date,
+            'to_date' => $to_date,
+        ]);
+    }
+
     /**
      * Finds the Stocksum model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

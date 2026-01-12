@@ -172,6 +172,14 @@
                                 </p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="index.php?r=stocksum/borrow-return-report" class="nav-link borrow-return-report">
+                                <i class="far fa-circlez nav-icon"></i>
+                                <p>
+                                    รายงานเบิก-คืนสินค้า
+                                </p>
+                            </a>
+                        </li>
                         <?php endif;?>
                     </ul>
                 </li>
