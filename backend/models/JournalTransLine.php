@@ -30,6 +30,8 @@ use yii\db\ActiveRecord;
 class JournalTransLine extends ActiveRecord
 {
     public $product_name,$unit_name;
+    public $job_id, $total_issued, $total_returned, $total_damaged, $remarks;
+
     // Return types for borrow returns
     const RETURN_TYPE_COMPLETE = 'complete';
     const RETURN_TYPE_DAMAGED = 'damaged';

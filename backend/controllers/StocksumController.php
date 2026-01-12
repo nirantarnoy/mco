@@ -29,24 +29,6 @@ class StocksumController extends BaseController
                         'delete' => ['POST'],
                     ],
                 ],
-                // 'access' => [
-                //     'class' => AccessControl::className(),
-                //     'denyCallback' => function ($rule, $action) {
-                //         throw new ForbiddenHttpException('คุณไม่ได้รับอนุญาติให้เข้าใช้งาน!');
-                //     },
-                //     'rules' => [
-                //         [
-                //             'allow' => true,
-                //             'roles' => ['@'],
-                //             'matchCallback' => function ($rule, $action) {
-                //                 $currentRoute = \Yii::$app->controller->getRoute();
-                //                 if (\Yii::$app->user->can($currentRoute)) {
-                //                     return true;
-                //                 }
-                //             }
-                //         ]
-                //     ]
-                // ],
             ]
         );
     }
@@ -160,7 +142,7 @@ class StocksumController extends BaseController
 
         $query = \backend\models\JournalTransLine::find()
             ->select([
-                'journal_trans.job_id',
+                'journal_trans.job_id AS job_id',
                 'journal_trans_line.product_id',
                 'SUM(CASE WHEN journal_trans.trans_type_id IN (3, 5) THEN journal_trans_line.qty ELSE 0 END) as total_issued',
                 'SUM(CASE WHEN journal_trans.trans_type_id IN (4, 6) THEN journal_trans_line.qty ELSE 0 END) as total_returned',
@@ -182,7 +164,7 @@ class StocksumController extends BaseController
         }
 
         $dataProvider = new \yii\data\ActiveDataProvider([
-            'query' => $query,
+            'query' => $query->asArray(),
             'pagination' => false,
         ]);
 

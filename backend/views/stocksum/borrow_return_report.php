@@ -102,21 +102,21 @@ $this->params['breadcrumbs'][] = $this->title;
                         <?php if ($dataProvider->getCount() > 0): ?>
                             <?php foreach ($dataProvider->getModels() as $model): ?>
                                 <?php 
-                                    $product = \backend\models\Product::findOne($model->product_id);
-                                    $job = \backend\models\Job::findOne($model->job_id);
-                                    $pending = $model->total_issued - $model->total_returned;
+                                    $product = \backend\models\Product::findOne($model['product_id']);
+                                    $job = \backend\models\Job::findOne($model['job_id']);
+                                    $pending = $model['total_issued'] - $model['total_returned'];
                                 ?>
                                 <tr>
                                     <td><?= $job ? $job->job_no : '-' ?></td>
                                     <td><?= $product ? $product->code : '-' ?></td>
                                     <td><?= $product ? $product->name : '-' ?></td>
-                                    <td class="text-center"><?= number_format($model->total_issued, 0) ?></td>
-                                    <td class="text-center"><?= number_format($model->total_returned, 0) ?></td>
+                                    <td class="text-center"><?= number_format($model['total_issued'], 0) ?></td>
+                                    <td class="text-center"><?= number_format($model['total_returned'], 0) ?></td>
                                     <td class="text-center" style="<?= $pending > 0 ? 'color: red; font-weight: bold;' : '' ?>">
                                         <?= number_format($pending, 0) ?>
                                     </td>
-                                    <td class="text-center"><?= number_format($model->total_damaged, 0) ?></td>
-                                    <td><?= Html::encode($model->remarks) ?></td>
+                                    <td class="text-center"><?= number_format($model['total_damaged'], 0) ?></td>
+                                    <td><?= Html::encode($model['remarks']) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
