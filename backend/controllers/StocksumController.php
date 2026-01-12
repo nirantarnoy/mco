@@ -137,6 +137,7 @@ class StocksumController extends BaseController
     public function actionBorrowReturnReport()
     {
         $job_id = $this->request->get('job_id');
+        $product_id = $this->request->get('product_id');
         $from_date = $this->request->get('from_date');
         $to_date = $this->request->get('to_date');
 
@@ -157,6 +158,9 @@ class StocksumController extends BaseController
         if ($job_id) {
             $query->andWhere(['journal_trans.job_id' => $job_id]);
         }
+        if ($product_id) {
+            $query->andWhere(['journal_trans_line.product_id' => $product_id]);
+        }
         if ($from_date) {
             $query->andWhere(['>=', 'journal_trans.trans_date', $from_date]);
         }
@@ -166,12 +170,15 @@ class StocksumController extends BaseController
 
         $dataProvider = new \yii\data\ActiveDataProvider([
             'query' => $query->asArray(),
-            'pagination' => false,
+            'pagination' => [
+                'pageSize' => 50,
+            ],
         ]);
 
         return $this->render('borrow_return_report', [
             'dataProvider' => $dataProvider,
             'job_id' => $job_id,
+            'product_id' => $product_id,
             'from_date' => $from_date,
             'to_date' => $to_date,
         ]);

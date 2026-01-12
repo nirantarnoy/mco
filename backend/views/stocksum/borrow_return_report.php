@@ -9,6 +9,7 @@ use kartik\date\DatePicker;
 /* @var $this yii\web\View */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 /* @var $job_id int */
+/* @var $product_id int */
 /* @var $from_date string */
 /* @var $to_date string */
 
@@ -28,7 +29,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 ]); ?>
 
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label>เลขที่ใบงาน</label>
                         <?= Select2::widget([
                             'name' => 'job_id',
@@ -41,6 +42,20 @@ $this->params['breadcrumbs'][] = $this->title;
                         ]); ?>
                     </div>
                     <div class="col-md-3">
+                        <label>สินค้า</label>
+                        <?= Select2::widget([
+                            'name' => 'product_id',
+                            'value' => $product_id,
+                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Product::find()->all(), 'id', function($model){
+                                return $model->code . ' ' . $model->name;
+                            }),
+                            'options' => ['placeholder' => 'เลือกสินค้า...'],
+                            'pluginOptions' => [
+                                'allowClear' => true
+                            ],
+                        ]); ?>
+                    </div>
+                    <div class="col-md-2">
                         <label>จากวันที่</label>
                         <?= DatePicker::widget([
                             'name' => 'from_date',
@@ -51,7 +66,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             ]
                         ]); ?>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label>ถึงวันที่</label>
                         <?= DatePicker::widget([
                             'name' => 'to_date',
@@ -64,9 +79,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                     <div class="col-md-2">
                         <label>&nbsp;</label>
-                        <div>
-                            <?= Html::submitButton('ค้นหา', ['class' => 'btn btn-primary']) ?>
-                            <?= Html::a('ล้าง', ['borrow-return-report'], ['class' => 'btn btn-outline-secondary']) ?>
+                        <div class="d-flex">
+                            <?= Html::submitButton('ค้นหา', ['class' => 'btn btn-primary mr-1']) ?>
+                            <?= Html::a('ล้าง', ['borrow-return-report'], ['class' => 'btn btn-outline-secondary mr-1']) ?>
                             <button type="button" class="btn btn-info" onclick="window.print()"><i class="fa fa-print"></i> พิมพ์</button>
                         </div>
                     </div>
@@ -80,6 +95,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     <h4>รายงานสรุปยอดการเบิก และ คืนสินค้า</h4>
                     <?php if ($job_id): ?>
                         <p>ใบงาน: <?= \backend\models\Job::findJobNo($job_id) ?></p>
+                    <?php endif; ?>
+                    <?php if ($product_id): ?>
+                        <?php $p = \backend\models\Product::findOne($product_id); ?>
+                        <p>สินค้า: <?= $p ? $p->code . ' ' . $p->name : '' ?></p>
                     <?php endif; ?>
                     <?php if ($from_date || $to_date): ?>
                         <p>วันที่: <?= $from_date ?> ถึง <?= $to_date ?></p>
@@ -126,6 +145,14 @@ $this->params['breadcrumbs'][] = $this->title;
                         <?php endif; ?>
                     </tbody>
                 </table>
+            </div>
+
+            <div class="row d-print-none">
+                <div class="col-md-12">
+                    <?= \yii\widgets\LinkPager::widget([
+                        'pagination' => $dataProvider->pagination,
+                    ]) ?>
+                </div>
             </div>
         </div>
     </div>
