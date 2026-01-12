@@ -46,16 +46,11 @@ class InvoiceController extends BaseController
      */
     public function actionIndex()
     {
-        $dataProvider = new ActiveDataProvider([
-            'query' => Invoice::find()->where(['status' => Invoice::STATUS_ACTIVE])->orderBy(['id' => SORT_DESC]),
-            'pagination' => [
-                'pageSize' => 20,
-            ],
-        ]);
-
-        $dataProvider->query->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')]);
+        $searchModel = new \backend\models\InvoiceSearch();
+        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
         return $this->render('index', [
+            'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }

@@ -7,6 +7,7 @@ use kartik\grid\GridView;
 use backend\models\Invoice;
 
 /* @var $this yii\web\View */
+/* @var $searchModel backend\models\InvoiceSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
 $this->title = 'จัดการเอกสาร';
@@ -24,6 +25,8 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <div class="card-body">
             <?php Pjax::begin(); ?>
+            
+            <?php echo $this->render('_search', ['model' => $searchModel]); ?>
 
             <?= GridView::widget([
                 'dataProvider' => $dataProvider,
