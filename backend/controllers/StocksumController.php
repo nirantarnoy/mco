@@ -142,11 +142,12 @@ class StocksumController extends BaseController
 
         $query = \backend\models\JournalTransLine::find()
             ->select([
+                'MAX(journal_trans_line.id) AS id',
                 'journal_trans.job_id AS job_id',
                 'journal_trans_line.product_id',
                 'SUM(CASE WHEN journal_trans.trans_type_id IN (3, 5) THEN journal_trans_line.qty ELSE 0 END) as total_issued',
                 'SUM(CASE WHEN journal_trans.trans_type_id IN (4, 6) THEN journal_trans_line.qty ELSE 0 END) as total_returned',
-                'SUM(journal_trans_line.damaged_qty) as total_damaged',
+                'SUM(COALESCE(journal_trans_line.damaged_qty, 0)) as total_damaged',
                 'GROUP_CONCAT(DISTINCT journal_trans_line.condition_note SEPARATOR ", ") as remarks'
             ])
             ->joinWith('journalTrans')
