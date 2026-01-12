@@ -13,12 +13,12 @@ class ProductHelper
     {
         if (empty($description)) return '';
 
-        // 1. Take text after the first space (removes product code prefix)
+        // 1. Check if the first word is a product code
         $firstSpace = strpos($description, ' ');
         if ($firstSpace !== false) {
-            // Check if the part before space looks like a code (e.g. no Thai characters)
-            $prefix = substr($description, 0, $firstSpace);
-            if (!preg_match('/[ก-ฮ]/u', $prefix)) {
+            $prefix = trim(substr($description, 0, $firstSpace));
+            // Check if the part before space is a valid product code in DB
+            if (\backend\models\Product::find()->where(['code' => $prefix])->exists()) {
                 $description = substr($description, $firstSpace + 1);
             }
         }
