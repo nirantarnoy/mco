@@ -1,7 +1,7 @@
 <?php
 
 use yii\helpers\Html;
-use yii\grid\GridView;
+use kartik\grid\GridView;
 use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
 use kartik\date\DatePicker;
