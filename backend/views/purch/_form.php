@@ -477,8 +477,8 @@ $this->registerJs($autocompleteJs);
                         <tr>
                             <th style="width: 50px;">ลำดับ</th>
                             <th style="width: 200px;">ชื่อสินค้า</th>
-                            <th style="width: 200px;">ชื่อสินค้า</th>
-                            <th style="width: 100px;">รายละเอียด</th>
+                            <th style="width: 200px;">รายละเอียด</th>
+                            <th style="width: 100px;">เลขที่อ้างอิง</th>
                             <th style="width: 100px;">จำนวน</th>
                             <th style="width: 120px;">ราคาต่อหน่วย</th>
                             <th style="width: 120px;">ราคารวม</th>
