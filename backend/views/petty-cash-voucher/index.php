@@ -20,9 +20,6 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?= Html::a('<i class="fas fa-plus"></i> สร้างใหม่', ['create'], [
                     'class' => 'btn btn-success'
                 ]) ?>
-                <?= Html::a('<i class="fas fa-chart-bar"></i> รายงาน', ['report'], [
-                    'class' => 'btn btn-info'
-                ]) ?>
                 <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#printSummaryModal">
                     <i class="fas fa-print"></i> พิมพ์ใบสรุปเบิกเงินสดย่อย
                 </button>

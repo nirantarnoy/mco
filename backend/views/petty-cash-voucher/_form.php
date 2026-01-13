@@ -367,16 +367,6 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                  <h5 class="card-title mb-0">เอกสารแนบสลิป (ที่มีอยู่)</h5>
             </div>
             <div class="card-body">
-                <form action="<?= Url::to(['petty-cash-voucher/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
-                    <input type="hidden" name="id" value="<?= $model->id ?>">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <input type="file" name="file_doc" multiple class="form-control mb-2">
-                            <button class="btn btn-info"><i class="fas fa-upload"></i> อัพโหลดเอกสารแนบสลิปเพิ่ม</button>
-                        </div>
-                    </div>
-                </form>
-                <br>
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
@@ -411,16 +401,6 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                  <h5 class="card-title mb-0">เอกสารแนบใบเสร็จค่าสินค้า (ที่มีอยู่)</h5>
             </div>
             <div class="card-body">
-                <form action="<?= Url::to(['petty-cash-voucher/add-doc-file-bill'], true) ?>" method="post" enctype="multipart/form-data">
-                    <input type="hidden" name="id" value="<?= $model->id ?>">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <input type="file" name="file_doc" multiple class="form-control mb-2">
-                            <button class="btn btn-info"><i class="fas fa-upload"></i> อัพโหลดเอกสารใบเสร็จค่าสินค้าเพิ่ม</button>
-                        </div>
-                    </div>
-                </form>
-                <br>
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
