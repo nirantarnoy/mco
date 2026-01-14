@@ -280,6 +280,9 @@ class Invoice extends ActiveRecord
                 ->execute();
         }
 
+        if ($this->invoice_type == self::TYPE_BILL_PLACEMENT) {
+            return $prefix . '-' . $year . '-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+        }
         return $prefix . substr($year, -2) . '-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
