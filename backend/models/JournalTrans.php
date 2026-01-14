@@ -370,11 +370,11 @@ class JournalTrans extends ActiveRecord
             if ($insert) {
                 $this->generateRunningNumber();
                 $this->created_by = Yii::$app->user->id;// Yii::$app->user->identity->username ?? 'system';
-                $this->emp_trans_id = Yii::$app->user->id;
+             //   $this->emp_trans_id = Yii::$app->user->id;
                 $this->status = self::STATUS_DRAFT;
             }
             $this->updated_by = Yii::$app->user->id;
-            $this->emp_trans_id = Yii::$app->user->id;
+           // $this->emp_trans_id = Yii::$app->user->id;
             $this->company_id = \Yii::$app->session->get('company_id');
             return true;
         }
