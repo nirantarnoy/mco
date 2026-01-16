@@ -42,3 +42,6 @@ phpunit.phar
 /backend/web/index-test.php
 /backend/web/robots.txt
 /backend/web/uploads
+/backups
+/scripts/*.sh
+/scripts/*.bat
