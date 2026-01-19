@@ -292,7 +292,7 @@ if (!$model->isNewRecord) {
         <?php ActiveForm::end(); ?>
 
     </div>
-    <div class="row" style="display: none;">
+    <div class="row" style="display: nonex;">
         <form action="<?= \yii\helpers\Url::to(['product/importproduct'], true) ?>" method="post"
               enctype="multipart/form-data">
             <input type="file" name="file_product" class="form-control">

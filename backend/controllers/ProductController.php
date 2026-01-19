@@ -552,103 +552,81 @@ class ProductController extends BaseController
     {
         $uploaded = UploadedFile::getInstanceByName('file_product');
         if (!empty($uploaded)) {
-            //echo "ok";return;
             $upfiles = time() . "." . $uploaded->getExtension();
-            // if ($uploaded->saveAs(Yii::$app->request->baseUrl . '/uploads/files/' . $upfiles)) {
             if ($uploaded->saveAs('../web/uploads/files/products/' . $upfiles)) {
-                //  echo "okk";return;
-                // $myfile = Yii::$app->request->baseUrl . '/uploads/files/' . $upfiles;
                 $myfile = '../web/uploads/files/products/' . $upfiles;
-                $file = fopen($myfile, "r+");
-                fwrite($file, "\xEF\xBB\xBF");
-
+                $file = fopen($myfile, "r");
+                
                 setlocale(LC_ALL, 'th_TH.TIS-620');
                 $i = -1;
                 $res = 0;
-                $data = [];
                 while (($rowData = fgetcsv($file, 10000, ",")) !== FALSE) {
                     $i += 1;
-                    $catid = 0;
-                    $qty = 0;
-                    $price = 0;
-                    $cost = 0;
-                    if ($rowData[2] == '' || $i == 0) {
+                    if ($i == 0 || empty($rowData[5])) {
                         continue;
                     }
 
-//                    print_r($rowData);
-//                    return;
+                    $product_name = trim($rowData[0]);
+                    $brand_name = trim($rowData[1]);
+                    $qty = (float)str_replace(",", "", $rowData[2]);
+                    $unit_name = trim($rowData[3]);
+                    $price = (float)str_replace(",", "", $rowData[4]);
+                    $warehouse_name = trim($rowData[5]);
+                    $product_code = trim($rowData[6]);
 
-                    $model_dup = \backend\models\Product::find()->where(['code' => trim($rowData[5])])->one();
+                    $new_unit = $this->checkUnit($unit_name);
+                    $new_warehouse = $this->checkWarehouse($warehouse_name);
+                    $new_brand = !empty($brand_name) ? $this->checkBrand($brand_name) : 0;
+
+                    $model_dup = \backend\models\Product::find()->where(['code' => $product_code])->one();
                     if ($model_dup != null) {
-                        $new_stock_qty = 0;
-
-                        $new_unit = $this->checkUnit(trim($rowData[3]));
-                        $new_warehouse = $this->checkWarehouse(trim($rowData[4]));
-                        if($rowData[2] != null || $rowData[2] != ''){
-                            $new_stock_qty = $rowData[2];
-                        }
-
-                        $model_dup->name = $rowData[1];
-                        $model_dup->description = '';// $rowData[1];
+                        $model_dup->name = $product_name;
+                        $model_dup->description = $product_name;
                         $model_dup->unit_id = $new_unit;
-                        $model_dup->stock_qty = $new_stock_qty;
-                        $model_dup->cost_price = str_replace(",","",$rowData[6]);
-                        $model_dup->sale_price = str_replace(",","",$rowData[6]);
-                     //   $model_dup->updated_at = date('Y-m-d H:i:s');
+                        $model_dup->brand_id = $new_brand;
+                        $model_dup->cost_price = $price;
+                        $model_dup->sale_price = $price;
                         if($model_dup->save(false)){
-                            $this->calStock($model_dup->id,1,$new_warehouse,$rowData[2]);
-                            $res+=1;
+                            $this->calStock($model_dup->id, 1, $new_warehouse, $qty);
+                            $res += 1;
                         }
-                        continue;
-                    }else{
-
-                        $new_unit = $this->checkUnit(trim($rowData[3]));
-                        $new_warehouse = $this->checkWarehouse(trim($rowData[4]));
-                        $new_brand = $this->checkBrand(trim($rowData[1]));
-                    //    echo "must new";
+                    } else {
                         $modelx = new \backend\models\Product();
-                        $modelx->code = trim($rowData[5]);
-                        $modelx->name = trim($rowData[1]);
-                        $modelx->description = trim($rowData[0]);
-                        $modelx->product_group_id = 0; // watch or phone or etc
+                        $modelx->code = $product_code;
+                        $modelx->name = $product_name;
+                        $modelx->description = $product_name;
+                        $modelx->product_group_id = 0;
                         $modelx->brand_id = $new_brand;
-                        $modelx->product_type_id = 1; // normal or custom
-                        $modelx->type_id = 1; // 1 = new 2 = second used
+                        $modelx->product_type_id = 1;
+                        $modelx->type_id = 1;
                         $modelx->unit_id = $new_unit;
                         $modelx->status = 1;
-                        $modelx->cost_price = str_replace(",","",$rowData[6]);
-                        $modelx->sale_price = str_replace(",","",$rowData[6]);
-                        $modelx->stock_qty = $rowData[2];
-                        $modelx->remark = '';
+                        $modelx->cost_price = $price;
+                        $modelx->sale_price = $price;
+                        $modelx->stock_qty = $qty;
                         $modelx->company_id = \Yii::$app->session->get('company_id');
-                        //
+                        
                         if ($modelx->save(false)) {
-                            $this->calStock($modelx->id,1,$new_warehouse,$rowData[2]);
+                            $this->calStock($modelx->id, 1, $new_warehouse, $qty);
                             $res += 1;
                         }
                     }
-
-
                 }
-                //    print_r($qty_text);return;
+                fclose($file);
 
                 if ($res > 0) {
                     $session = \Yii::$app->session;
-                    $session->setFlash('msg', 'นำเข้าข้อมูลเรียบร้อย');
+                    $session->setFlash('msg', 'นำเข้าข้อมูลเรียบร้อย ' . $res . ' รายการ');
                     return $this->redirect(['index']);
                 } else {
                     $session = \Yii::$app->session;
-                    $session->setFlash('msg-error', 'พบข้อมผิดพลาดนะ');
+                    $session->setFlash('msg-error', 'ไม่พบข้อมูลที่สามารถนำเข้าได้');
                     return $this->redirect(['index']);
                 }
-                // }
-                fclose($file);
-//            }
-//        }
             }
         }
     }
+
 
     public function checkUnit($name){
         $model = \common\models\Unit::find()->where(['name'=>$name])->one();
@@ -695,28 +673,12 @@ class ProductController extends BaseController
     }
 
     public function calStock($product_id,$stock_type_id,$warehouse_id,$qty){
-
-//        $warehouse_id = 0;
-//        if($warehouse_name!='' || $warehouse_name!=null){
-//            $warehouse = \common\models\Warehouse::find()->where(['name'=>trim($warehouse_name)])->one();
-//            if($warehouse){
-//                $warehouse_id = $warehouse->id;
-//            }else{
-//                    $warehouse = new \common\models\Warehouse();
-//                    $warehouse->name = trim($warehouse_name);
-//                    $warehouse->description = trim($warehouse_name);
-//                    $warehouse->status = 1;
-//                    if($warehouse->save(false)){
-//                        $warehouse_id = $warehouse->id;
-//                    }
-//            }
-//        }
-
-        if($product_id && $stock_type_id && $qty){
+        if($product_id && $stock_type_id){
             if($stock_type_id == 1){ // stock in
                 $model = \common\models\StockSum::find()->where(['product_id'=>$product_id,'warehouse_id'=>$warehouse_id])->one();
                 if($model){
-                    $model->qty = $qty; // initial stock
+                    $model->qty = (float)$qty; // initial stock
+                    $model->updated_at = date('Y-m-d H:i:s');
                     if($model->save(false)){
                         $this->calupdateproductStock($product_id);
                     }
@@ -724,7 +686,7 @@ class ProductController extends BaseController
                     $model = new \common\models\StockSum();
                     $model->product_id = $product_id;
                     $model->warehouse_id = $warehouse_id;
-                    $model->qty = $qty;
+                    $model->qty = (float)$qty;
                     $model->updated_at = date('Y-m-d H:i:s');
                     if($model->save(false)){
                         $this->calupdateproductStock($product_id);
@@ -733,6 +695,7 @@ class ProductController extends BaseController
             }
         }
     }
+
 
     public function calupdateproductStock($product_id){
         if($product_id){
