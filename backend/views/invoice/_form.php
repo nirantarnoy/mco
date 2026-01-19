@@ -33,10 +33,35 @@ usort($units, function ($a, $b) {
 $sortedUnits = ArrayHelper::map($units, 'id', 'name');
 $unitsData = json_encode($sortedUnits);
 
+$company_id = \Yii::$app->session->get('company_id');
+$quotationQuery = \backend\models\Quotation::find()
+    ->where(['status' => \backend\models\Quotation::STATUS_ACTIVE])
+    ->andWhere($company_id == 1 ? ['in', 'company_id', [1, 2]] : ['company_id' => $company_id]);
+
+// Filter quotations ONLY for Tax Invoices to prevent duplicate issuance
+if ($model->invoice_type == Invoice::TYPE_TAX_INVOICE) {
+    $usedQuotationIds = \backend\models\Invoice::find()
+        ->select('quotation_id')
+        ->where(['invoice_type' => Invoice::TYPE_TAX_INVOICE, 'status' => Invoice::STATUS_ACTIVE])
+        ->andWhere($company_id == 1 ? ['in', 'company_id', [1, 2]] : ['company_id' => $company_id])
+        ->andWhere(['not', ['quotation_id' => null]])
+        ->column();
+
+    if (!empty($usedQuotationIds)) {
+        if (!$model->isNewRecord && $model->quotation_id) {
+            $quotationQuery->andWhere(['or', ['not in', 'id', $usedQuotationIds], ['id' => $model->quotation_id]]);
+        } else {
+            $quotationQuery->andWhere(['not in', 'id', $usedQuotationIds]);
+        }
+    }
+}
+$quotationData = ArrayHelper::map($quotationQuery->all(), 'id', 'quotation_no');
+
 $js = <<<JS
 // ตัวแปรเก็บข้อมูลสินค้า
 var productsData = [];
 var isProductsLoaded = false;
+var isInitialLoad = true;
 
 // ตัวแปรเก็บข้อมูล units
 var unitsData = {$unitsData} || {};
@@ -140,7 +165,7 @@ function formatNumber(num) {
 }
 
 // ฟังก์ชันคำนวณยอดรวมทั้งใบ
-function calculateTotal() {
+function calculateTotal(source) {
     var subtotal = 0;
     
     // รวมยอดรายการ
@@ -154,8 +179,34 @@ function calculateTotal() {
     
     // คำนวณส่วนลด
     var discountPercent = parseFloat($('#invoice-discount_percent').val()) || 0;
-    var discountAmount = subtotal * (discountPercent / 100);
-    $('#invoice-discount_amount').val(formatNumber(discountAmount));
+    var discountAmount = parseFloat($('#invoice-discount_amount-hidden').val()) || 0;
+
+    if (isInitialLoad) {
+        if (discountPercent <= 0 && discountAmount > 0 && subtotal > 0) {
+            discountPercent = (discountAmount / subtotal) * 100;
+            $('#invoice-discount_percent').val(discountPercent.toFixed(2));
+        } else if (discountPercent > 0) {
+            discountAmount = subtotal * (discountPercent / 100);
+        }
+        isInitialLoad = false;
+    } else {
+        if (source === 'discount_percent') {
+            discountAmount = subtotal * (discountPercent / 100);
+            $('#invoice-discount_amount').val(formatNumber(discountAmount));
+        } else if (source === 'discount_amount') {
+            var rawAmount = $('#invoice-discount_amount').val().replace(/,/g, '');
+            discountAmount = parseFloat(rawAmount) || 0;
+            if (subtotal > 0) {
+                discountPercent = (discountAmount / subtotal) * 100;
+                $('#invoice-discount_percent').val(discountPercent.toFixed(2));
+            }
+        } else {
+            // Item change or other, default to percent-based
+            discountAmount = subtotal * (discountPercent / 100);
+            $('#invoice-discount_amount').val(formatNumber(discountAmount));
+        }
+    }
+    
     $('#invoice-discount_amount-hidden').val(discountAmount.toFixed(2));
     
     // ยอดหลังหักส่วนลด
@@ -434,7 +485,21 @@ $(document).on('input', '.quantity-input, .unit-price-input', function() {
 });
 
 $(document).on('input', '#invoice-discount_percent, #invoice-vat_percent', function() {
-    calculateTotal();
+    calculateTotal($(this).attr('id') === 'invoice-discount_percent' ? 'discount_percent' : '');
+});
+
+$(document).on('input', '#invoice-discount_amount', function() {
+    calculateTotal('discount_amount');
+});
+
+$(document).on('blur', '#invoice-discount_amount', function() {
+    var val = parseFloat($(this).val().replace(/,/g, '')) || 0;
+    $(this).val(formatNumber(val));
+});
+
+$(document).on('focus', '#invoice-discount_amount', function() {
+    var val = $(this).val().replace(/,/g, '');
+    $(this).val(val);
 });
 
 $(document).on('click', '.btn-add-item', function() {
@@ -553,7 +618,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                     ]) ?>
 
                     <?= $form->field($model, 'quotation_id')->widget(Select2::class, [
-                        'data' => ArrayHelper::map(\backend\models\Quotation::find()->where(\Yii::$app->session->get('company_id') == 1 ? ['in', 'company_id', [1, 2]] : ['company_id' => \Yii::$app->session->get('company_id')])->all(), 'id', 'quotation_no'),
+                        'data' => $quotationData,
                         'options' => [
                             'placeholder' => '...เลือกใบเสนอราคา...',
                             'id' => 'invoice-job-id',
@@ -687,13 +752,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                     <?= Html::hiddenInput("InvoiceItem[{$index}][product_id]", $item->product_id, [
                                         'class' => 'product-id-input'
                                     ]) ?>
-                                    <?php
-                                    // ถ้ามี product_id ให้ดึงรหัสสินค้ามาแสดง ถ้าไม่มีให้แสดง item_description เดิม
-                                    $displayValue = $item->product_id
-                                        ? \backend\models\Product::findCode($item->product_id)
-                                        : $item->item_description;
-                                    ?>
-                                    <?= Html::textInput("InvoiceItem[{$index}][item_description]", $displayValue, [
+                                    <?= Html::textInput("InvoiceItem[{$index}][item_description]", $item->item_description, [
                                         'class' => 'form-control form-control-sm item-description-input',
                                         'placeholder' => 'รายละเอียดสินค้า/บริการ',
                                         'autocomplete' => 'off',
@@ -799,14 +858,14 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                             ]) ?>
                         </div>
                         <div class="col-sm-6">
-                            <?= Html::hiddenInput('Invoice[discount_amount]', $model->discount_amount, ['id' => 'invoice-discount_amount-hidden']) ?>
                             <?= $form->field($model, 'discount_amount')->textInput([
-                                'type' => 'text',
-                                'readonly' => true,
-                                'disabled' => true,
+                                'id' => 'invoice-discount_amount',
                                 'class' => 'form-control text-right',
-                                'style' => 'background-color: #f8f9fa;'
+                                'readonly' => $isCopyReceipt,
+                                'name' => 'discount_amount_display',
+                                'value' => number_format($model->discount_amount, 2)
                             ]) ?>
+                            <?= Html::hiddenInput('Invoice[discount_amount]', $model->discount_amount, ['id' => 'invoice-discount_amount-hidden']) ?>
                         </div>
                     </div>
 

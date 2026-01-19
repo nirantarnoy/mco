@@ -38,7 +38,7 @@ $this->registerCss("
         margin: 0; 
         padding: 0; 
         font-family: 'THSarabunPSK' !important;
-        font-size: 13px;
+        font-size: 20px !important;
         color: #000;
     }
     .print-container { 
@@ -142,7 +142,7 @@ $this->registerCss("
 }
 
 .invoice-subtitle {
-    font-size: 12px;
+    font-size: 24px;
     margin-bottom: 5px;
     color: #666;
 }
@@ -165,7 +165,7 @@ $this->registerCss("
     right: 0;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 16px;
+    font-size: 20px;
     font-weight: bold;
     padding: 4px 8px;
     background-color: rgba(255, 255, 255, 0.9);
@@ -187,7 +187,7 @@ $this->registerCss("
     justify-content: space-between;
     margin: 10px 0;
     gap: 20px;
-    font-size: 16px !important;
+    font-size: 20px !important;
 }
 
 .customer-left, .customer-right {
@@ -250,7 +250,7 @@ $this->registerCss("
 .items-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px;
+    font-size: 18px;
 }
 
 /* เส้นรอบนอก */
@@ -316,7 +316,7 @@ $this->registerCss("
     justify-content: space-between;
     padding: 6px 8px;
     border-bottom: 1px solid #000;
-    font-size: 14px;
+    font-size: 18px;
     font-weight: 800;
     -webkit-text-stroke: 0.25px black;
 }
@@ -331,7 +331,7 @@ $this->registerCss("
 }
 
 .amount-text {
-    font-size: 14px;
+    font-size: 18px;
     margin-bottom: 5px;
     font-weight: 800;
     -webkit-text-stroke: 0.25px black;
@@ -340,7 +340,7 @@ $this->registerCss("
 /* Notes Section */
 .notes-section {
     margin: 10px 0;
-    font-size: 12px;
+    font-size: 16px;
     line-height: 1.3;
     font-weight: 800;
     -webkit-text-stroke: 0.15px black;
@@ -377,7 +377,7 @@ $this->registerCss("
 .signature-title {
     font-weight: 800;
     margin-bottom: 3px;
-    font-size: 12px;
+    font-size: 14px;
     -webkit-text-stroke: 0.25px black;
 }
 
@@ -387,7 +387,7 @@ $this->registerCss("
 }
 
 .signature-date {
-    font-size: 10px;
+    font-size: 14px;
     position: absolute;
     bottom: 5px;
     left: 50%;

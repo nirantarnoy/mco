@@ -239,7 +239,7 @@ class Invoice extends ActiveRecord
             self::TYPE_QUOTATION => 'QT',
             self::TYPE_BILL_PLACEMENT => 'BP',
             self::TYPE_TAX_INVOICE => 'IV',
-            self::TYPE_RECEIPT => 'RC',
+            self::TYPE_RECEIPT => 'RE',
         ];
 
         $prefix = $prefixes[$this->invoice_type] ?? 'DOC';
