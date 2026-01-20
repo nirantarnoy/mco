@@ -632,6 +632,23 @@ class PurchController extends BaseController
         }
         $model = $this->findModel($id);
 
+        // Check if status is completed
+        if ($model->status == Purch::STATUS_COMPLETED) {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถลบใบสั่งซื้อที่เสร็จสมบูรณ์แล้วได้');
+            return $this->redirect(['index']);
+        }
+
+        // Check if goods have been received (excluding cancelled receipts)
+        $hasReceive = \backend\models\JournalTrans::find()
+            ->where(['trans_ref_id' => $id, 'trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE])
+            ->andWhere(['!=', 'status', \backend\models\JournalTrans::STATUS_CANCELLED])
+            ->exists();
+
+        if ($hasReceive) {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถลบใบสั่งซื้อที่มีการรับสินค้าแล้วได้');
+            return $this->redirect(['index']);
+        }
+
         $transaction = Yii::$app->db->beginTransaction();
         try {
             // Delete all purch lines first

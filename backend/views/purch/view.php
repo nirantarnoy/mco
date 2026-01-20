@@ -113,7 +113,13 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
 
 
                 <?php endif; ?>
-                <?php if (\Yii::$app->user->can('CanApprovePo')): ?>
+                <?php
+                $hasReceive = \backend\models\JournalTrans::find()
+                    ->where(['trans_ref_id' => $model->id, 'trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE])
+                    ->andWhere(['!=', 'status', \backend\models\JournalTrans::STATUS_CANCELLED])
+                    ->exists();
+                ?>
+                <?php if (\Yii::$app->user->can('CanApprovePo') && $model->status != Purch::STATUS_COMPLETED && !$hasReceive): ?>
                     <?= Html::a('ลบ', ['delete', 'id' => $model->id], [
                         'class' => 'btn btn-danger',
                         'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะลบใบสั่งซื้อนี้?',
