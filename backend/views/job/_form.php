@@ -41,7 +41,7 @@ if(!$model->isNewRecord){
         <input type="hidden" class="removelist" name="removelist" value="">
         <input type="hidden" class="expense_removelist" name="expense_removelist" value="">
 
-        <!-- ส่วนฟอร์มหลัก (เหมือนเดิม) -->
+        <!-- ส่วนฟอร์มหลัก -->
         <div class="row">
             <div class="col-lg-3">
                 <?= $form->field($model, 'job_no')->textInput(['maxlength' => true]) ?>
@@ -223,20 +223,6 @@ if(!$model->isNewRecord){
                                 <td>
                                     <input type="date" class="form-control expense-date" name="expense_date[]"
                                            value="<?= date('Y-m-d',strtotime($expense->trans_date)) ?>">
-<!--                                    --><?php
-//                                    echo DatePicker::widget([
-//                                        'name' => 'expense_date[]',
-//                                        'type' => DatePicker::TYPE_INPUT,
-//                                        'value' => date('Y-m-d', strtotime($expense->trans_date)),
-//                                        'options' => [
-//                                             'class'=>'form-control expense-date'
-//                                        ],
-//                                        'pluginOptions' => [
-//                                            'autoclose' => true,
-//                                            'format' => 'dd-mm-yyyy'
-//                                        ]
-//                                    ])
-//                                    ?>
                                 </td>
                                 <td>
                                     <input type="text" class="form-control expense-desc" name="expense_desc[]"
@@ -315,7 +301,6 @@ if(!$model->isNewRecord){
             <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
         </div>
 
-        <!-- ส่วนที่เหลือเหมือนเดิม -->
         <br/>
         <div class="row">
             <div class="col-lg-12">
@@ -339,15 +324,25 @@ if(!$model->isNewRecord){
                     <?php if ($model_line != null): ?>
                         <?php foreach ($model_line as $key => $line): ?>
                             <tr>
-                                <td><?= $key + 1 ?></td>
+                                <td style="text-align: center">
+                                    <input type="hidden" name="job_line_id[]" value="<?= $line->id ?>">
+                                    <?= $key + 1 ?>
+                                </td>
                                 <td><?= \backend\models\Product::findName($line->product_id) ?></td>
-                                <td><?= $line->qty ?></td>
+                                <td>
+                                    <input type="number" class="form-control line-qty" name="line_qty[]" value="<?= $line->qty ?>" onchange="lineCalculate($(this))">
+                                </td>
                                 <td><?= \backend\models\Product::findUnitName($line->product_id) ?></td>
-                                <td><?= $line->line_price ?></td>
-                                <td><?= $line->line_total ?></td>
+                                <td>
+                                    <input type="number" step="0.01" class="form-control line-price" name="line_unit_price[]" value="<?= $line->line_price ?>" onchange="lineCalculate($(this))">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" class="form-control line-item-total" name="line_item_total[]" value="<?= $line->line_total ?>" readonly>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -603,6 +598,14 @@ function calculateTotal(){
         total += val;
     });
     $("#total-expense").text(total.toFixed(2).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ","));
+}
+
+function lineCalculate(e){
+    var row = e.closest("tr");
+    var qty = parseFloat(row.find(".line-qty").val()) || 0;
+    var price = parseFloat(row.find(".line-price").val()) || 0;
+    var total = qty * price;
+    row.find(".line-item-total").val(total.toFixed(2));
 }
 
 JS;

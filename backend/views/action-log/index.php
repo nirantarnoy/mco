@@ -128,7 +128,7 @@ $this->params['breadcrumbs'][] = $this->title;
 //
 //            'model_id',
             'controller',
-            'action',
+            'action_method',
             [
                 'attribute' => 'created_at',
               //  'format' => 'datetime',

@@ -381,9 +381,13 @@ class JobController extends BaseController
 
             // Contact info variables
             $line_name = \Yii::$app->request->post('line_name');
-            $line_description = \Yii::$app->request->post('line_description');
             $line_phone = \Yii::$app->request->post('line_phone');
             $line_email = \Yii::$app->request->post('line_email');
+
+            // Job line variables
+            $job_line_id = \Yii::$app->request->post('job_line_id');
+            $line_qty = \Yii::$app->request->post('line_qty');
+            $line_unit_price = \Yii::$app->request->post('line_unit_price');
 
             // Expense variables - เพิ่มใหม่
             $expense_id = \Yii::$app->request->post('expense_id');
@@ -450,6 +454,19 @@ class JobController extends BaseController
                             $model_dup->phone = $line_phone[$i];
                             $model_dup->email = $line_email[$i];
                             $model_dup->save(false);
+                        }
+                    }
+                }
+
+                // บันทึก job line
+                if($job_line_id != null){
+                    for($i=0;$i<=count($job_line_id)-1;$i++){
+                        $model_line_update = \common\models\JobLine::find()->where(['id'=>$job_line_id[$i]])->one();
+                        if($model_line_update != null){
+                            $model_line_update->qty = $line_qty[$i];
+                            $model_line_update->line_price = $line_unit_price[$i];
+                            $model_line_update->line_total = (float)$line_qty[$i] * (float)$line_unit_price[$i];
+                            $model_line_update->save(false);
                         }
                     }
                 }
