@@ -647,10 +647,10 @@ class PurchreqController extends BaseController
         $purchReqModel = $this->findModel($id);
 
         // Check if already converted
-        // if ($purchReqModel->purch_id) {
-        //     Yii::$app->session->setFlash('warning', 'ใบขอซื้อนี้ได้ถูกแปลงเป็นใบสั่งซื้อแล้ว (PO ID: ' . $purchReqModel->purch_id . ')');
-        //     return $this->redirect(['view', 'id' => $purchReqModel->id]);
-        // }
+        if ($purchReqModel->purch_id) {
+            Yii::$app->session->setFlash('warning', 'ใบขอซื้อนี้ได้ถูกแปลงเป็นใบสั่งซื้อแล้ว (PO ID: ' . $purchReqModel->purch_id . ')');
+            return $this->redirect(['view', 'id' => $purchReqModel->id]);
+        }
 
         // Check if approved
         if ($purchReqModel->approve_status != PurchReq::APPROVE_STATUS_APPROVED) {
