@@ -6,6 +6,9 @@ use kartik\grid\GridView;
 use kartik\grid\ActionColumn;
 use yii\widgets\Pjax;
 use backend\models\Quotation;
+use kartik\select2\Select2;
+use yii\helpers\ArrayHelper;
+use backend\models\Customer;
 
 /* @var $this yii\web\View */
 /* @var $searchModel backend\models\QuotationSearch */
@@ -100,6 +103,15 @@ $this->params['breadcrumbs'][] = $this->title;
                 'value' => function ($model) {
                     return $model->customer ? $model->customer->name : '';
                 },
+                'filter' => Select2::widget([
+                    'model' => $searchModel,
+                    'attribute' => 'customer_id',
+                    'data' => ArrayHelper::map(Customer::find()->where(['company_id' => \Yii::$app->session->get('company_id')])->all(), 'id', 'name'),
+                    'options' => ['placeholder' => 'เลือกลูกค้า'],
+                    'pluginOptions' => [
+                        'allowClear' => true
+                    ],
+                ]),
             ],
             [
                 'attribute' => 'total_amount',

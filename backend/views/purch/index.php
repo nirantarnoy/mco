@@ -179,13 +179,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         ]);
                     },
                     'delete' => function ($url, $model, $key) {
-                        return $model->approve_status == Purch::APPROVE_STATUS_PENDING && \Yii::$app->user->can('CanApprovePo') ? Html::a('<i class="fas fa-trash"></i>', $url, [
-                            'title' => 'ลบ',
-                            'class' => 'btn btn-sm btn-outline-danger',
-                            'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะลบรายการนี้?',
-                            'data-method' => 'post',
-                            'data-pjax' => '0'
-                        ]):'';
+                        return '';
                     },
                 ],
                 'urlCreator' => function ($action, $model, $key, $index) {

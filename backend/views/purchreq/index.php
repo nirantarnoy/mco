@@ -230,13 +230,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         ]);
                     },
                     'delete' => function ($url, $model, $key) {
-                        return $model->purch_id ==null && $model->approve_status == PurchReq::APPROVE_STATUS_PENDING ? Html::a('<i class="fas fa-trash"></i>', $url, [
-                            'title' => 'ลบ',
-                            'class' => 'btn btn-sm btn-outline-danger',
-                            'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะลบรายการนี้?',
-                            'data-method' => 'post',
-                            'data-pjax' => '0'
-                        ]):null;
+                        return null;
                     },
                 ],
                 'urlCreator' => function ($action, $model, $key, $index) {

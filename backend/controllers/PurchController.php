@@ -627,6 +627,8 @@ class PurchController extends BaseController
      */
     public function actionDelete($id)
     {
+        throw new \yii\web\ForbiddenHttpException('การลบรายการถูกระงับการใช้งาน');
+        /*
         if (!Yii::$app->user->can('CanApprovePo')) {
             throw new \yii\web\ForbiddenHttpException('You are not allowed to perform this action.');
         }
@@ -665,6 +667,7 @@ class PurchController extends BaseController
         }
 
         return $this->redirect(['index']);
+        */
     }
 
     /**

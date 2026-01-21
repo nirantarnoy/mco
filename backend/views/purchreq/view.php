@@ -98,7 +98,7 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
                         'data-method' => 'post',
                     ]) ?>
                 <?php endif; ?>
-                <?php if ($model->purch_id == null || $model->purch_id == ''): ?>
+                <?php /* if ($model->purch_id == null || $model->purch_id == ''): ?>
                     <?php if (\Yii::$app->user->can('purchreq/delete')): ?>
                         <?= Html::a('ลบ', ['delete', 'id' => $model->id], [
                             'class' => 'btn btn-danger',
@@ -106,7 +106,7 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
                             'data-method' => 'post',
                         ]) ?>
                     <?php endif; ?>
-                <?php endif; ?>
+                <?php endif; */ ?>
                 <?= Html::a('กลับ', ['index'], ['class' => 'btn btn-secondary']) ?>
             </div>
         </div>

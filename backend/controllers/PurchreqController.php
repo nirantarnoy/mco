@@ -466,6 +466,8 @@ class PurchreqController extends BaseController
      */
     public function actionDelete($id)
     {
+        throw new \yii\web\ForbiddenHttpException('การลบรายการถูกระงับการใช้งาน');
+        /*
         $model = $this->findModel($id);
 
         $transaction = Yii::$app->db->beginTransaction();
@@ -484,6 +486,7 @@ class PurchreqController extends BaseController
         }
 
         return $this->redirect(['index']);
+        */
     }
 
     /**
