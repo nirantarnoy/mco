@@ -265,26 +265,6 @@ body {
     -webkit-text-stroke: 0.25px black;
 }
 
-/* ป้องกัน tr ของ thead สร้างเส้นเอง */
-.items-table thead tr {
-    border: none !important;
-}
-
-/* Tbody: ไม่มีเส้นแนวนอนเลย */
-.items-table tbody td {
-    padding: 3px 6px;
-    border-top: none !important;
-    border-bottom: none !important;
-}
-
-/* แถวสุดท้ายของตารางให้มีเส้นล่างปิดท้าย */
-.items-table tbody tr:last-child td {
-    border-bottom: 1px solid #000 !important;
-}
-
-
-.items-table .text-left { text-align: left; padding-left: 8px; }
-.items-table .text-right { text-align: right; padding-right: 8px; }
 
 /* Empty rows */
 .empty-row {

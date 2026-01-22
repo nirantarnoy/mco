@@ -229,20 +229,6 @@ use yii\helpers\Html; ?>
     .receipt-items-table th,
     .receipt-items-table td {
         border: 1px solid #000;
-        padding: 4px 6px;
-        text-align: center;
-        vertical-align: middle;
-    }
-
-    .receipt-items-table th {
-        background: white;
-        color: black;
-        font-weight: 800;
-        height: 22px;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-    }
 
     .receipt-items-table td {
         height: 18px;
