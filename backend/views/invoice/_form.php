@@ -834,7 +834,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                     <div class="row">
                         <div class="col-sm-12">
                             <?= Html::hiddenInput('Invoice[subtotal]', $model->subtotal, ['id' => 'invoice-subtotal-hidden']) ?>
-                            <?= $form->field($model, 'subtotal')->textInput([
+                            <?= $form->field($model, 'subtotal', ['enableClientValidation' => false])->textInput([
                                 'type' => 'text',
                                 'readonly' => true,
                                 'disabled' => true,
@@ -858,7 +858,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                             ]) ?>
                         </div>
                         <div class="col-sm-6">
-                            <?= $form->field($model, 'discount_amount')->textInput([
+                            <?= $form->field($model, 'discount_amount', ['enableClientValidation' => false])->textInput([
                                 'id' => 'invoice-discount_amount',
                                 'class' => 'form-control text-right',
                                 'readonly' => $isCopyReceipt,
@@ -884,7 +884,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                         </div>
                         <div class="col-sm-6">
                             <?= Html::hiddenInput('Invoice[vat_amount]', $model->vat_amount, ['id' => 'invoice-vat_amount-hidden']) ?>
-                            <?= $form->field($model, 'vat_amount')->textInput([
+                            <?= $form->field($model, 'vat_amount', ['enableClientValidation' => false])->textInput([
                                 'type' => 'text',
                                 'readonly' => true,
                                 'disabled' => true,
@@ -900,7 +900,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                         </div>
                         <div class="col-sm-6">
                             <?= Html::hiddenInput('Invoice[total_amount]', $model->total_amount, ['id' => 'invoice-total_amount-hidden']) ?>
-                            <?= $form->field($model, 'total_amount')->textInput([
+                            <?= $form->field($model, 'total_amount', ['enableClientValidation' => false])->textInput([
                                 'type' => 'text',
                                 'readonly' => true,
                                 'disabled' => true,
