@@ -85,8 +85,12 @@ class InvoiceSearch extends Invoice
             'quotation_id' => $this->quotation_id,
             'pay_for_emp_id' => $this->pay_for_emp_id,
             'customer_id' => $this->customer_id,
-            'company_id' => \Yii::$app->session->get('company_id'),
         ]);
+
+        $company_id = \Yii::$app->session->get('company_id');
+        if ($company_id != 1) {
+            $query->andFilterWhere(['company_id' => $company_id]);
+        }
 
         $query->andFilterWhere(['like', 'invoice_type', $this->invoice_type])
             ->andFilterWhere(['like', 'invoice_number', $this->invoice_number])

@@ -81,7 +81,10 @@ class JournalTransSearch extends JournalTrans
             'status' => $this->status,
         ]);
 
-        $query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
+        $company_id = \Yii::$app->session->get('company_id');
+        if ($company_id != 1) {
+            $query->andFilterWhere(['company_id' => $company_id]);
+        }
 
         if($this->globalSearch !=''){
             $query->andFilterWhere(['like', 'journal_no', $this->globalSearch])

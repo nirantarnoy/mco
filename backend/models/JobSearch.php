@@ -73,7 +73,10 @@ class JobSearch extends Job
             'job.updated_by' => $this->updated_by,
         ]);
 
-        $query->andFilterWhere(['job.company_id'=> \Yii::$app->session->get('company_id')]);
+        $company_id = \Yii::$app->session->get('company_id');
+        if ($company_id != 1) {
+            $query->andFilterWhere(['job.company_id' => $company_id]);
+        }
 
         if($this->globalSearch != ''){
             $query->andFilterWhere(['or',
