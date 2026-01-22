@@ -44,7 +44,7 @@ class JobSearch extends Job
      */
     public function search($params, $formName = null)
     {
-        $query = Job::find();
+        $query = Job::find()->joinWith(['quotation']);
 
         // add conditions that should always apply here
 
@@ -62,21 +62,26 @@ class JobSearch extends Job
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'id' => $this->id,
-            'quotation_id' => $this->quotation_id,
-            'job_date' => $this->job_date,
-            'status' => $this->status,
-            'job_amount' => $this->job_amount,
-            'created_at' => $this->created_at,
-            'created_by' => $this->created_by,
-            'updated_at' => $this->updated_at,
-            'updated_by' => $this->updated_by,
+            'job.id' => $this->id,
+            'job.quotation_id' => $this->quotation_id,
+            'job.job_date' => $this->job_date,
+            'job.status' => $this->status,
+            'job.job_amount' => $this->job_amount,
+            'job.created_at' => $this->created_at,
+            'job.created_by' => $this->created_by,
+            'job.updated_at' => $this->updated_at,
+            'job.updated_by' => $this->updated_by,
         ]);
 
-        $query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
+        $query->andFilterWhere(['job.company_id'=> \Yii::$app->session->get('company_id')]);
 
         if($this->globalSearch != ''){
-            $query->orFilterWhere(['like', 'job_no', $this->globalSearch]);
+            $query->andFilterWhere(['or',
+                ['like', 'job.job_no', $this->globalSearch],
+                ['like', 'job.cus_po_no', $this->globalSearch],
+                ['like', 'quotation.quotation_no', $this->globalSearch],
+                ['like', 'quotation.customer_name', $this->globalSearch],
+            ]);
         }
 
         return $dataProvider;

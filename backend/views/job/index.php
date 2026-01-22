@@ -25,7 +25,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </p>
         </div>
         <div class="col-lg-2" style="text-align: right">
-            <form id="form-perpage" class="form-inline" action="<?= Url::to(['warehouse/index'], true) ?>"
+            <form id="form-perpage" class="form-inline" action="<?= Url::to(['job/index'], true) ?>"
                   method="post">
                 <div class="form-group">
                     <label>แสดง </label>
@@ -169,3 +169,27 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php Pjax::end(); ?>
 
 </div>
+<?php
+$script = <<< JS
+    $(function(){
+        $('#perpage').change(function(){
+            $('#form-perpage').submit();
+        });
+    });
+    function recDelete(e){
+        var url = e.attr('data-url');
+        var id = e.attr('data-var');
+        if(confirm('คุณต้องการลบรายการนี้ใช่หรือไม่?')){
+            $.ajax({
+                url: url,
+                type: 'post',
+                data: {id: id},
+                success: function(data){
+                    location.reload();
+                }
+            });
+        }
+    }
+JS;
+$this->registerJs($script);
+?>
