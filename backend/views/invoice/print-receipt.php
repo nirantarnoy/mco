@@ -499,15 +499,15 @@ use yii\helpers\Html; ?>
                 endif; 
             }
             ?>
-            <?php for ($i = 0; $i < 1; $i++): ?>
-                <tr>
+            <?php //for ($i = 0; $i < 1; $i++): ?>
+                <!-- <tr>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
-                </tr>
-            <?php endfor; ?>
+                </tr> -->
+            <?php //endfor; ?>
         </tbody>
         <tfoot>
             <tr>
