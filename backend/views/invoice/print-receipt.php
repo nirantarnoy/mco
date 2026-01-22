@@ -389,7 +389,7 @@ use yii\helpers\Html; ?>
             <strong id="taxIdLabel" style="font-size: 12px; margin-top: 10px; display: inline-block;">เลขประจำตัวผู้เสียภาษี: 0215543000985</strong>
         </div>
         <div class="receipt-col">
-            <div class="receipt-title">ใบเสร็จรับเงิน<br>RECEIPT</div>
+            <div class="receipt-title">ใบเสร็จรับเงิน<br>RECEIPTx</div>
         </div>
         <div class="receipt-col"></div>
     </div>
