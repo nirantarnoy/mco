@@ -229,6 +229,20 @@ use yii\helpers\Html; ?>
     .receipt-items-table th,
     .receipt-items-table td {
         border: 1px solid #000;
+        padding: 4px 6px;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .receipt-items-table th {
+        background: white;
+        color: black;
+        font-weight: 800;
+        height: 22px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
 
     .receipt-items-table td {
         height: 18px;
@@ -485,15 +499,15 @@ use yii\helpers\Html; ?>
                 endif; 
             }
             ?>
-            <?php //for ($i = 0; $i < 1; $i++): ?>
-                <!-- <tr>
+            <?php for ($i = 0; $i < 1; $i++): ?>
+                <tr>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
-                </tr> -->
-            <?php //endfor; ?>
+                </tr>
+            <?php endfor; ?>
         </tbody>
         <tfoot>
             <tr>
@@ -733,6 +747,20 @@ use yii\helpers\Html; ?>
             {
                 number: 'MCO-25-000044',
                 date: '10/5/2025',
+                customer: 'บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)',
+                amount: 89500.00
+            }
+        ];
+
+        const randomReceipt = receipts[Math.floor(Math.random() * receipts.length)];
+        console.log('Generated new receipt:', randomReceipt);
+    }
+
+    window.addEventListener('beforeprint', function() {
+        document.body.style.zoom = '1';
+    });
+</script>
+
                 customer: 'บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)',
                 amount: 89500.00
             }
