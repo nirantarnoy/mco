@@ -474,7 +474,7 @@ use yii\helpers\Html; ?>
                 // Display summary row for referenced document
                 ?>
                 <tr>
-                    <td style="text-align: center;"><b>1</b></td>
+                    <td style="text-align: center;border-top: none;border-bottom: none;"><b>1</b></td>
                     <td class="receipt-text-left">
                         <b>ใบกำกับภาษี เลขที่ <?= Html::encode($refNo) ?></b>
                     </td>
