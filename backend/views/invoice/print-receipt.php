@@ -760,17 +760,3 @@ use yii\helpers\Html; ?>
         document.body.style.zoom = '1';
     });
 </script>
-
-                customer: 'บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)',
-                amount: 89500.00
-            }
-        ];
-
-        const randomReceipt = receipts[Math.floor(Math.random() * receipts.length)];
-        console.log('Generated new receipt:', randomReceipt);
-    }
-
-    window.addEventListener('beforeprint', function() {
-        document.body.style.zoom = '1';
-    });
-</script>
