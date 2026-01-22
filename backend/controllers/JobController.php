@@ -2014,4 +2014,39 @@ class JobController extends BaseController
 
 
 
+    public function actionPullQuotationDetails()
+    {
+        $id = Yii::$app->request->post('id');
+        $quotation_id = Yii::$app->request->post('quotation_id');
+
+        if ($id && $quotation_id) {
+            $quotation_lines = \backend\models\QuotationLine::find()->where(['quotation_id' => $quotation_id])->all();
+            $job_lines = \common\models\JobLine::find()->where(['job_id' => $id])->all();
+            $existing_product_ids = ArrayHelper::map($job_lines, 'product_id', 'product_id');
+
+            foreach ($quotation_lines as $q_line) {
+                if (!isset($existing_product_ids[$q_line->product_id])) {
+                    $new_job_line = new \common\models\JobLine();
+                    $new_job_line->job_id = $id;
+                    $new_job_line->product_id = $q_line->product_id;
+                    $new_job_line->qty = $q_line->qty;
+                    $new_job_line->line_price = $q_line->line_price;
+                    $new_job_line->line_total = $q_line->line_total;
+                    $new_job_line->status = 1;
+                    $new_job_line->save(false);
+                }
+            }
+
+            // Recalculate job_amount
+            $total_amount = \common\models\JobLine::find()->where(['job_id' => $id])->sum('line_total');
+            $job = Job::findOne($id);
+            if ($job) {
+                $job->job_amount = $total_amount;
+                $job->save(false);
+            }
+
+            return true;
+        }
+        return false;
+    }
 }

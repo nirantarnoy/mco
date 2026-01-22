@@ -56,6 +56,9 @@ if(!$model->isNewRecord){
                             'allowClear' => true,
                         ]
                     ])->label('เลขที่ใบเสนอราคา') ?>
+                <?php if(!$model->isNewRecord): ?>
+                    <div class="btn btn-sm btn-info" onclick="pullQuotationDetails($(this))"><i class="fas fa-sync"></i> ดึงรายละเอียดจากใบเสนอราคา</div>
+                <?php endif; ?>
             </div>
             <div class="col-lg-3">
                 <label for="">ลูกค้า</label>
@@ -474,6 +477,7 @@ if(!$model->isNewRecord){
 
 <?php
 $url_to_getcustomerinfo = \yii\helpers\Url::to(['job/getcustomerinfo'], true);
+$url_to_pull_quotation_details = \yii\helpers\Url::to(['job/pull-quotation-details'], true);
 $js = <<<JS
 var removelist = [];
 var removeExpenseList = [];
@@ -606,6 +610,28 @@ function lineCalculate(e){
     var price = parseFloat(row.find(".line-price").val()) || 0;
     var total = qty * price;
     row.find(".line-item-total").val(total.toFixed(2));
+}
+
+function pullQuotationDetails(e){
+    var id = '$model->id';
+    var quotation_id = $("#job-quotation_id").val();
+    if(id && quotation_id){
+        if(confirm('คุณต้องการดึงรายละเอียดจากใบเสนอราคาใช่หรือไม่? (รายการที่ซ้ำจะถูกข้าม)')){
+            $.ajax({
+                url: '$url_to_pull_quotation_details',
+                type: 'POST',
+                data: {'id':id, 'quotation_id':quotation_id},
+                success: function(data) {
+                   location.reload();
+                },
+                error: function() {
+                    alert('Error pulling quotation details');
+                }
+            });
+        }
+    }else{
+        alert('กรุณาเลือกใบเสนอราคาก่อน');
+    }
 }
 
 JS;
