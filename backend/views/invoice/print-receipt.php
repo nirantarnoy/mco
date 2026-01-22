@@ -501,7 +501,7 @@ use yii\helpers\Html; ?>
             ?>
             <?php for ($i = 0; $i < 1; $i++): ?>
                 <tr>
-                    <td>&nbsp;</td>
+                    <td style="border-top: none;">&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
