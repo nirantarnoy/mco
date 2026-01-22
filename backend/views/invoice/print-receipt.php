@@ -479,7 +479,7 @@ use yii\helpers\Html; ?>
                         <b>ใบกำกับภาษี เลขที่ <?= Html::encode($refNo) ?></b>
                     </td>
                     <td style="border-top: none;border-bottom: none;">1 <?= Html::encode('job') ?></td>
-                    <td class="receipt-text-right" style="border-top: none;border-bottom: none;"><?= number_format($totalModel->subtotal, 2) ?></td>
+                    <td style="border-top: none;border-bottom: none;"><?= number_format($totalModel->subtotal, 2) ?></td>
                     <td class="receipt-text-right" style="border-top: none;border-bottom: none;"><?= number_format($totalModel->subtotal, 2) ?></td>
                 </tr>
                 <?php
