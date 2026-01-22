@@ -273,15 +273,13 @@ body {
 /* Tbody: ไม่มีเส้นแนวนอนเลย */
 .items-table tbody td {
     padding: 3px 6px;
-
     border-top: none !important;
     border-bottom: none !important;
-
 }
 
-/* ❗ แถวสุดท้ายก่อน footer ยังไม่ต้องมีเส้นล่าง */
+/* แถวสุดท้ายของตารางให้มีเส้นล่างปิดท้าย */
 .items-table tbody tr:last-child td {
-    border-bottom: none !important;
+    border-bottom: 1px solid #000 !important;
 }
 
 
