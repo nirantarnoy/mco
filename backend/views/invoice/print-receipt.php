@@ -389,7 +389,7 @@ use yii\helpers\Html; ?>
             <strong id="taxIdLabel" style="font-size: 12px; margin-top: 10px; display: inline-block;">เลขประจำตัวผู้เสียภาษี: 0215543000985</strong>
         </div>
         <div class="receipt-col">
-            <div class="receipt-title">ใบเสร็จรับเงิน<br>RECEIPTx</div>
+            <div class="receipt-title">ใบเสร็จรับเงิน<br>RECEIPT</div>
         </div>
         <div class="receipt-col"></div>
     </div>
@@ -489,7 +489,7 @@ use yii\helpers\Html; ?>
                 if (!empty($model_line)): 
                     foreach ($model_line as $index => $item): ?>
                         <tr>
-                            <td style="text-align: center;border-top: none;"><b><?= $index + 1 ?></b></td>
+                            <td style="text-align: center;border-top: none;border-bottom: none;"><b><?= $index + 1 ?></b></td>
                             <td class="receipt-text-left"><?= nl2br(Html::encode(\backend\helpers\ProductHelper::cleanDescription($item->item_description))) ?></td>
                             <td><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
                             <td class="receipt-text-right"><?= number_format($item->unit_price, 2) ?></td>
@@ -501,7 +501,7 @@ use yii\helpers\Html; ?>
             ?>
             <?php for ($i = 0; $i < 1; $i++): ?>
                 <tr>
-                    <td>&nbsp;</td>
+                    <td style="border-top: none;">&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
