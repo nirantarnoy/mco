@@ -475,12 +475,12 @@ use yii\helpers\Html; ?>
                 ?>
                 <tr>
                     <td style="text-align: center;border-top: none;border-bottom: none;"><b>1</b></td>
-                    <td class="receipt-text-left">
+                    <td class="receipt-text-left" style="border-top: none;border-bottom: none;">
                         <b>ใบกำกับภาษี เลขที่ <?= Html::encode($refNo) ?></b>
                     </td>
-                    <td>1 <?= Html::encode('job') ?></td>
-                    <td class="receipt-text-right"><?= number_format($totalModel->subtotal, 2) ?></td>
-                    <td class="receipt-text-right"><?= number_format($totalModel->subtotal, 2) ?></td>
+                    <td style="border-top: none;border-bottom: none;">1 <?= Html::encode('job') ?></td>
+                    <td class="receipt-text-right" style="border-top: none;border-bottom: none;"><?= number_format($totalModel->subtotal, 2) ?></td>
+                    <td class="receipt-text-right" style="border-top: none;border-bottom: none;"><?= number_format($totalModel->subtotal, 2) ?></td>
                 </tr>
                 <?php
             } else {
@@ -490,10 +490,10 @@ use yii\helpers\Html; ?>
                     foreach ($model_line as $index => $item): ?>
                         <tr>
                             <td style="text-align: center;border-top: none;border-bottom: none;"><b><?= $index + 1 ?></b></td>
-                            <td class="receipt-text-left"><?= nl2br(Html::encode(\backend\helpers\ProductHelper::cleanDescription($item->item_description))) ?></td>
-                            <td><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
-                            <td class="receipt-text-right"><?= number_format($item->unit_price, 2) ?></td>
-                            <td class="receipt-text-right"><?= number_format($item->amount, 2) ?></td>
+                            <td class="receipt-text-left" style="border-top: none;border-bottom: none;"><?= nl2br(Html::encode(\backend\helpers\ProductHelper::cleanDescription($item->item_description))) ?></td>
+                            <td style="border-top: none;border-bottom: none;"><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
+                            <td class="receipt-text-right" style="border-top: none;border-bottom: none;"><?= number_format($item->unit_price, 2) ?></td>
+                            <td class="receipt-text-right" style="border-top: none;border-bottom: none;"><?= number_format($item->amount, 2) ?></td>
                         </tr>
                     <?php endforeach; 
                 endif; 
