@@ -20,11 +20,11 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="row">
                 <div class="col-md-8">
                     <div class="btn-group" role="group">
-                        <?= Html::a('ทั้งหมด', ['index'], ['class' => 'btn btn-outline-secondary ' . (empty(Yii::$app->request->get('InvoiceSearch')['invoice_type']) ? 'active' : '')]) ?>
-                        <?= Html::a('ใบแจ้งหนี้', ['index', 'InvoiceSearch[invoice_type]' => Invoice::TYPE_QUOTATION], ['class' => 'btn btn-outline-primary ' . (Yii::$app->request->get('InvoiceSearch')['invoice_type'] == Invoice::TYPE_QUOTATION ? 'active' : '')]) ?>
-                        <?= Html::a('ใบวางบิล', ['index', 'InvoiceSearch[invoice_type]' => Invoice::TYPE_BILL_PLACEMENT], ['class' => 'btn btn-outline-info ' . (Yii::$app->request->get('InvoiceSearch')['invoice_type'] == Invoice::TYPE_BILL_PLACEMENT ? 'active' : '')]) ?>
-                        <?= Html::a('ใบกำกับภาษี', ['index', 'InvoiceSearch[invoice_type]' => Invoice::TYPE_TAX_INVOICE], ['class' => 'btn btn-outline-success ' . (Yii::$app->request->get('InvoiceSearch')['invoice_type'] == Invoice::TYPE_TAX_INVOICE ? 'active' : '')]) ?>
-                        <?= Html::a('ใบเสร็จ', ['index', 'InvoiceSearch[invoice_type]' => Invoice::TYPE_RECEIPT], ['class' => 'btn btn-outline-warning ' . (Yii::$app->request->get('InvoiceSearch')['invoice_type'] == Invoice::TYPE_RECEIPT ? 'active' : '')]) ?>
+                        <?= Html::a('ทั้งหมด', ['index'], ['class' => 'btn btn-outline-secondary ' . (empty($searchModel->invoice_type) ? 'active' : '')]) ?>
+                        <?= Html::a('ใบแจ้งหนี้', ['index', 'InvoiceSearch[invoice_type]' => Invoice::TYPE_QUOTATION], ['class' => 'btn btn-outline-primary ' . ($searchModel->invoice_type == Invoice::TYPE_QUOTATION ? 'active' : '')]) ?>
+                        <?= Html::a('ใบวางบิล', ['index', 'InvoiceSearch[invoice_type]' => Invoice::TYPE_BILL_PLACEMENT], ['class' => 'btn btn-outline-info ' . ($searchModel->invoice_type == Invoice::TYPE_BILL_PLACEMENT ? 'active' : '')]) ?>
+                        <?= Html::a('ใบกำกับภาษี', ['index', 'InvoiceSearch[invoice_type]' => Invoice::TYPE_TAX_INVOICE], ['class' => 'btn btn-outline-success ' . ($searchModel->invoice_type == Invoice::TYPE_TAX_INVOICE ? 'active' : '')]) ?>
+                        <?= Html::a('ใบเสร็จ', ['index', 'InvoiceSearch[invoice_type]' => Invoice::TYPE_RECEIPT], ['class' => 'btn btn-outline-warning ' . ($searchModel->invoice_type == Invoice::TYPE_RECEIPT ? 'active' : '')]) ?>
                     </div>
                 </div>
                 <div class="col-md-4 text-right">
