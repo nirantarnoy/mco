@@ -71,7 +71,7 @@ class InvoiceSearch extends Invoice
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'status' => Invoice::STATUS_ACTIVE,
+            'status' => $this->status,
             'subtotal' => $this->subtotal,
             'discount_percent' => $this->discount_percent,
             'discount_amount' => $this->discount_amount,

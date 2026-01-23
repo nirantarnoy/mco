@@ -16,11 +16,22 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="invoice-index">
 
     <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <div>
-                <?= Html::a('<i class="fas fa-plus"></i> สร้างเอกสารใหม่', ['select'], [
-                    'class' => 'btn btn-success'
-                ]) ?>
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="btn-group" role="group">
+                        <?= Html::a('ทั้งหมด', ['index'], ['class' => 'btn btn-outline-secondary ' . (empty(Yii::$app->request->get('InvoiceSearch')['invoice_type']) ? 'active' : '')]) ?>
+                        <?= Html::a('ใบแจ้งหนี้', ['index', 'InvoiceSearch[invoice_type]' => Invoice::TYPE_QUOTATION], ['class' => 'btn btn-outline-primary ' . (Yii::$app->request->get('InvoiceSearch')['invoice_type'] == Invoice::TYPE_QUOTATION ? 'active' : '')]) ?>
+                        <?= Html::a('ใบวางบิล', ['index', 'InvoiceSearch[invoice_type]' => Invoice::TYPE_BILL_PLACEMENT], ['class' => 'btn btn-outline-info ' . (Yii::$app->request->get('InvoiceSearch')['invoice_type'] == Invoice::TYPE_BILL_PLACEMENT ? 'active' : '')]) ?>
+                        <?= Html::a('ใบกำกับภาษี', ['index', 'InvoiceSearch[invoice_type]' => Invoice::TYPE_TAX_INVOICE], ['class' => 'btn btn-outline-success ' . (Yii::$app->request->get('InvoiceSearch')['invoice_type'] == Invoice::TYPE_TAX_INVOICE ? 'active' : '')]) ?>
+                        <?= Html::a('ใบเสร็จ', ['index', 'InvoiceSearch[invoice_type]' => Invoice::TYPE_RECEIPT], ['class' => 'btn btn-outline-warning ' . (Yii::$app->request->get('InvoiceSearch')['invoice_type'] == Invoice::TYPE_RECEIPT ? 'active' : '')]) ?>
+                    </div>
+                </div>
+                <div class="col-md-4 text-right">
+                    <?= Html::a('<i class="fas fa-plus"></i> สร้างเอกสารใหม่', ['select'], [
+                        'class' => 'btn btn-success'
+                    ]) ?>
+                </div>
             </div>
         </div>
         <div class="card-body">
@@ -106,6 +117,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 ]);
                             },
                             'update' => function ($url, $model, $key) {
+                                if ($model->status == Invoice::STATUS_CANCELLED) return '';
                                 return Html::a('<i class="fas fa-edit"></i>', $url, [
                                     'title' => 'แก้ไข',
                                     'class' => 'btn btn-sm btn-primary',
@@ -145,7 +157,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </div>';
                             },
                             'delete' => function ($url, $model, $key) {
-                                return Html::a('<i class="fas fa-trash"></i>', $url, [
+                                if ($model->status == Invoice::STATUS_CANCELLED) return '';
+                                return Html::a('<i class="fas fa-times"></i>', $url, [
                                     'title' => 'ยกเลิก',
                                     'class' => 'btn btn-sm btn-danger',
                                     'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะยกเลิกเอกสารนี้?',
