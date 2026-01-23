@@ -554,28 +554,45 @@ use yii\helpers\Html; ?>
     <!-- Payment and Signature Section -->
     <table class="receipt-payment-signature-table">
         <tr>
-            <td style="width: 35%; padding: 8px; min-height: 40px;">
-                <strong style="font-size: 11px;">ชำระโดย PAID BY</strong>
-                <span class="receipt-checkbox"></span> <strong style="font-size: 11px;">เงินสด CASH</strong>
-                <span class="receipt-checkbox"></span> <strong style="font-size: 11px;">เช็ค CHEQUE</strong>
+            <td style="width: 30%; padding: 10px; min-height: 60px;">
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <strong style="font-size: 11px;">ชำระโดย PAID BY</strong>
+                    <div style="margin-top: 2px;">
+                        <span class="receipt-checkbox"></span> <strong style="font-size: 11px;">เงินสด CASH</strong>
+                    </div>
+                    <div style="margin-top: 2px;">
+                        <span class="receipt-checkbox"></span> <strong style="font-size: 11px;">เช็ค CHEQUE</strong>
+                    </div>
+                </div>
             </td>
-            <td colspan="2" style="padding: 8px; min-height: 40px; font-size: 11px;">
-                <strong>ธนาคาร BANK:</strong> _____________________________________
-                <strong>เลขที่เช็ค CHEQUE NO.:</strong> ______________________________
-                <strong>ลงวันที่ DATE:</strong> _______________________________________
+            <td colspan="2" style="padding: 10px; min-height: 60px; font-size: 11px;">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; align-items: baseline;">
+                        <strong style="white-space: nowrap;">ธนาคาร BANK:</strong>
+                        <div style="flex-grow: 1; border-bottom: 1px solid #000; margin-left: 8px; height: 14px;"></div>
+                    </div>
+                    <div style="display: flex; align-items: baseline;">
+                        <strong style="white-space: nowrap;">เลขที่เช็ค CHEQUE NO.:</strong>
+                        <div style="flex-grow: 1; border-bottom: 1px solid #000; margin-left: 8px; height: 14px;"></div>
+                    </div>
+                    <div style="display: flex; align-items: baseline;">
+                        <strong style="white-space: nowrap;">ลงวันที่ DATE:</strong>
+                        <div style="flex-grow: 1; border-bottom: 1px solid #000; margin-left: 8px; height: 14px;"></div>
+                    </div>
+                </div>
             </td>
         </tr>
         <tr>
-            <td style="text-align: center; padding: 10px; height: 100px; vertical-align: bottom;">
+            <td style="text-align: center; width: 30%; padding: 10px; height: 100px; vertical-align: bottom;">
                 <div class="receipt-signature-line"></div>
                 <strong style="font-size: 10px;">จำนวนเงิน / AMOUNT</strong>
             </td>
-            <td style="text-align: center; width: 32.5%; padding: 10px; height: 100px; vertical-align: bottom;">
+            <td style="text-align: center; width: 35%; padding: 10px; height: 100px; vertical-align: bottom;">
                 <div class="receipt-signature-line"></div>
                 <strong style="font-size: 10px;">ผู้เก็บเงิน / COLLECTOR</strong><br>
                 <strong style="font-size: 10px;">วันที่ / DATE</strong>
             </td>
-            <td style="text-align: center; width: 32.5%; padding: 10px; height: 100px; vertical-align: bottom;">
+            <td style="text-align: center; width: 35%; padding: 10px; height: 100px; vertical-align: bottom;">
                 <div class="receipt-signature-line"></div>
                 <strong style="font-size: 10px;">ผู้จัดการ / ผู้มีอำนาจลงนาม</strong><br>
                 <strong style="font-size: 10px;">MANAGER / AUTHORIZED SIGNATURE</strong>
