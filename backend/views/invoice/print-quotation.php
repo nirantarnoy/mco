@@ -922,13 +922,13 @@ window.addEventListener('afterprint', function() {
             <div class="signature-date-label" style="text-align: center; font-size: 12px; font-weight: 900;">วันที่ / Date___/___/___</div>
         </div>
         <div class="signature-box">
-            <div style="height: 22px;"></div>
+            <div style="height: 21px;"></div>
             <div class="signature-line" style="margin-top: 30px;"></div>
             <div class="signature-title">ผู้ส่งสินค้า / Send By</div>
             <div class="signature-date-label" style="text-align: center; font-size: 12px; font-weight: 900;">วันที่ / Date___/___/___</div>
         </div>
         <div class="signature-box">
-            <div style="height: 22px;"></div>
+            <div style="height: 21px;"></div>
             <div class="signature-line" style="margin-top: 30px;"></div>
             <div class="signature-title">ผู้มีอำนาจลงนาม / Authorized Signature</div>
             <div class="signature-date-label" style="text-align: center; font-size: 12px; font-weight: 900;">วันที่ / Date___/___/___</div>
