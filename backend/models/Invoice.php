@@ -296,6 +296,20 @@ class Invoice extends ActiveRecord
                 $this->invoice_number = $this->generateInvoiceNumber();
             }
 
+            if ($this->quotation_id) {
+                if ($this->invoice_type === self::TYPE_RECEIPT) {
+                    $sourceInvoice = self::findOne($this->quotation_id);
+                    if ($sourceInvoice) {
+                        $this->customer_id = $sourceInvoice->customer_id;
+                    }
+                } else {
+                    $quotation = Quotation::findOne($this->quotation_id);
+                    if ($quotation) {
+                        $this->customer_id = $quotation->customer_id;
+                    }
+                }
+            }
+
             // Calculate amounts
             $this->calculateAmounts();
             $this->company_id = \Yii::$app->session->get('company_id');

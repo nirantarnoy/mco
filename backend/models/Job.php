@@ -780,9 +780,9 @@ class Job extends \common\models\Job
 
     public function beforeSave($insert)
     {
-        $this->company_id = \Yii::$app->session->get('company_id');
-        return true;
-    }
+            $this->company_id = \Yii::$app->session->get('company_id');
+            return true;
+        }
 
     private function cacheActivity($key, $callback)
     {
