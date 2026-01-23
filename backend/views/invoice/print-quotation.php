@@ -849,7 +849,7 @@ window.addEventListener('afterprint', function() {
                 <?php endif; ?>
 
                 <!-- Empty rows for spacing -->
-                <?php for ($i = count($model_line); $i < 12; $i++): ?>
+                <?php for ($i = count($model_line); $i < 10; $i++): ?>
                     <tr>
                         <td style="padding:8px;">&nbsp;</td>
                         <td style="padding:8px;">&nbsp;</td>
