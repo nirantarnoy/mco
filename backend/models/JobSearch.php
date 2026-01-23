@@ -79,6 +79,8 @@ class JobSearch extends Job
         // }
         $query->andFilterWhere(['job.company_id' => \Yii::$app->session->get('company_id')]);
 
+        $query->andFilterWhere(['!=','job.status', 500]);
+
         if($this->globalSearch != ''){
             $query->andFilterWhere(['or',
                 ['like', 'job.job_no', $this->globalSearch],
