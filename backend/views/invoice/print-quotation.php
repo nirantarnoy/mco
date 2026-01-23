@@ -830,32 +830,32 @@ window.addEventListener('afterprint', function() {
                 <?php if (!empty($model_line)): ?>
                     <?php foreach ($model_line as $index => $item): ?>
                         <tr>
-                            <td style="padding:8px;text-align: center"><?= $index + 1 ?></td>
-                            <td class="text-left" style="padding:8px;"><?= nl2br(Html::encode(\backend\helpers\ProductHelper::cleanDescription($item->item_description))) ?></td>
-                            <td style="padding:8px;text-align: center"><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
-                            <td class="text-right" style="padding:8px;"><?= number_format($item->unit_price, 2) ?></td>
-                            <td class="text-right" style="padding:8px;"><?= number_format($item->amount, 2) ?></td>
+                            <td style="padding:5px;text-align: center"><?= $index + 1 ?></td>
+                            <td class="text-left" style="padding:5px;"><?= nl2br(Html::encode(\backend\helpers\ProductHelper::cleanDescription($item->item_description))) ?></td>
+                            <td style="padding:5px;text-align: center"><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
+                            <td class="text-right" style="padding:5px;"><?= number_format($item->unit_price, 2) ?></td>
+                            <td class="text-right" style="padding:5px;"><?= number_format($item->amount, 2) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <!-- Default sample data -->
                     <tr>
-                        <td style="padding:8px;"></td>
-                        <td class="text-left" style="padding:8px;"></td>
-                        <td style="padding:8px;"></td>
-                        <td class="text-right" style="padding:8px;"></td>
-                        <td class="text-right" style="padding:8px;"></td>
+                        <td style="padding:5px;"></td>
+                        <td class="text-left" style="padding:5px;"></td>
+                        <td style="padding:5px;"></td>
+                        <td class="text-right" style="padding:5px;"></td>
+                        <td class="text-right" style="padding:5px;"></td>
                     </tr>
                 <?php endif; ?>
 
                 <!-- Empty rows for spacing -->
                 <?php for ($i = count($model_line); $i < 10; $i++): ?>
                     <tr>
-                        <td style="padding:8px;">&nbsp;</td>
-                        <td style="padding:8px;">&nbsp;</td>
-                        <td style="padding:8px;">&nbsp;</td>
-                        <td style="padding:8px;">&nbsp;</td>
-                        <td style="padding:8px;">&nbsp;</td>
+                        <td style="padding:5px;">&nbsp;</td>
+                        <td style="padding:5px;">&nbsp;</td>
+                        <td style="padding:5px;">&nbsp;</td>
+                        <td style="padding:5px;">&nbsp;</td>
+                        <td style="padding:5px;">&nbsp;</td>
                     </tr>
                 <?php endfor; ?>
             </tbody>
