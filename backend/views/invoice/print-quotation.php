@@ -10,8 +10,8 @@ $this->title = 'พิมพ์ใบแจ้งหนี้ - ' . $model->invo
 // Add print styles that match the original form exactly with multi-copy support
 $this->registerCss("
 @page {
-    size: A4;
-    margin: 8mm;
+    size: A4 portrait;
+    margin: 5mm 8mm;
 }
     @font-face {
         font-family: 'THSarabunPSK';
@@ -38,7 +38,7 @@ $this->registerCss("
         margin: 0; 
         padding: 0; 
         font-family: 'THSarabunPSK' !important;
-        font-size: 20px !important;
+        font-size: 18px !important;
         color: #000;
     }
     .print-container { 
@@ -63,7 +63,7 @@ $this->registerCss("
     max-width: 0 auto;
     margin: 0 auto;
     background: white;
-    padding: 15mm;
+    padding: 10mm;
     border: 1px solid #ddd;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
     margin-bottom: 20px;
@@ -79,50 +79,50 @@ $this->registerCss("
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 .company-logo {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .logo {
-    width: 300px;
-    height: 100px;
+    width: 280px;
+    height: 90px;
     border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bold;
 }
 
 .company-info {
     flex: 1;
-    margin-left: 12px;
+    margin-left: 10px;
     text-align: center;
 }
 
 .company-name-thai {
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 900;
     -webkit-text-stroke: 0.5px black;
 }
 
 .company-name-eng {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 900;
     margin-left: -135px;
-    margin-top: -10px;
+    margin-top: -8px;
     -webkit-text-stroke: 0.5px black;
 }
 
 .company-address {
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 13px;
+    line-height: 1.4;
     margin-bottom: 2px;
     font-weight: 900;
     -webkit-text-stroke: 0.3px black;
@@ -130,34 +130,34 @@ $this->registerCss("
 
 .invoice-info {
     text-align: center;
-    min-width: 200px;
+    min-width: 180px;
 }
 
 .invoice-title {
-    font-size: 30px;
+    font-size: 26px;
     font-weight: 900;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     position: relative;
     -webkit-text-stroke: 0.3px black;
 }
 
 .invoice-subtitle {
-    font-size: 24px;
-    margin-bottom: 5px;
+    font-size: 20px;
+    margin-bottom: 4px;
     color: #666;
 }
 
 .not-tax-invoice {
-    font-size: 12px;
+    font-size: 11px;
     color: #666;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 /* Copy Label Styles */
 .invoice-title-section {
     text-align: center;
     position: relative;
-    margin: 8px 0;
+    margin: 6px 0;
 }
 
 .copy-label {
@@ -165,9 +165,9 @@ $this->registerCss("
     right: 0;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bold;
-    padding: 4px 8px;
+    padding: 3px 6px;
     background-color: rgba(255, 255, 255, 0.9);
 }
 
@@ -185,9 +185,9 @@ $this->registerCss("
 .customer-section {
     display: flex;
     justify-content: space-between;
-    margin: 10px 0;
-    gap: 20px;
-    font-size: 20px !important;
+    margin: 8px 0;
+    gap: 15px;
+    font-size: 18px !important;
 }
 
 .customer-left, .customer-right {
@@ -195,62 +195,33 @@ $this->registerCss("
 }
 
 .field-group {
-    margin-bottom: 3px;
+    margin-bottom: 2px;
     display: flex;
     align-items: flex-start;
 }
 
 .field-label {
-    min-width: 100px;
+    min-width: 90px;
     font-weight: 800;
     -webkit-text-stroke: 0.25px black;
 }
 
 .field-value {
     flex: 1;
-    padding: 2px 5px;
-    min-height: 18px;
-    line-height: 1.3;
+    padding: 1px 4px;
+    min-height: 16px;
+    line-height: 1.2;
 }
 
 /* Items Table */
 .items-section {
-    margin: 20px 0;
+    margin: 12px 0;
 }
-
-// .items-table {
-//     width: 100%;
-//     border-collapse: collapse;
-//     border: 2px solid #000;
-//     font-size: 12px;
-// }
-
-// .items-table th,
-// .items-table td {
-//     border: 1px solid #000;
-//     padding: 8px 4px;
-//     text-align: center;
-//     vertical-align: middle;
-// }
-
-// .items-table th {
-//     background-color: #f8f9fa;
-//     font-weight: bold;
-//     height: 35px;
-//     font-size: 11px;
-// }
-
-// .items-table td {
-//     height: 30px;
-// }
-
-// .items-table .text-left { text-align: left; padding-left: 8px; }
-// .items-table .text-right { text-align: right; padding-right: 8px; }
 
 .items-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 18px;
+    font-size: 16px;
 }
 
 /* เส้นรอบนอก */
@@ -263,7 +234,7 @@ $this->registerCss("
 .items-table thead th {
     border-bottom: 1px solid #000;
     background-color: #f8f9fa;
-    padding: 4px;
+    padding: 3px;
     font-weight: 800;
     -webkit-text-stroke: 0.25px black;
 }
@@ -271,7 +242,7 @@ $this->registerCss("
 /* เนื้อหาแถว ไม่ต้องมีเส้นขอบ */
 .items-table tbody td {
     border: none !important;
-    padding: 3px;
+    padding: 2px;
 }
 
 /* ให้มีแค่เส้นระหว่าง head → tbody */
@@ -281,32 +252,29 @@ $this->registerCss("
 
 /* Footer (summary) */
 .items-table tfoot td {
-    padding: 4px;
+    padding: 3px;
 }
-
-
-
 
 /* Empty rows */
 .empty-row {
-    height: 35px;
+    height: 28px;
 }
 
 /* Summary Section */
 .summary-section {
-    margin-top: 10px;
+    margin-top: 8px;
     display: flex;
     justify-content: space-between;
-    gap: 20px;
+    gap: 15px;
 }
 
 .summary-left {
     flex: 1;
-    padding: 10px;
+    padding: 8px;
 }
 
 .summary-right {
-    width: 250px;
+    width: 240px;
     border: 1px solid #000;
     padding: 0;
 }
@@ -314,9 +282,9 @@ $this->registerCss("
 .summary-row {
     display: flex;
     justify-content: space-between;
-    padding: 6px 8px;
+    padding: 4px 6px;
     border-bottom: 1px solid #000;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 800;
     -webkit-text-stroke: 0.25px black;
 }
@@ -331,65 +299,65 @@ $this->registerCss("
 }
 
 .amount-text {
-    font-size: 18px;
-    margin-bottom: 5px;
+    font-size: 16px;
+    margin-bottom: 4px;
     font-weight: 800;
     -webkit-text-stroke: 0.25px black;
 }
 
 /* Notes Section */
 .notes-section {
-    margin: 10px 0;
-    font-size: 16px;
-    line-height: 1.3;
+    margin: 6px 0;
+    font-size: 14px;
+    line-height: 1.2;
     font-weight: 800;
     -webkit-text-stroke: 0.15px black;
 }
 
 .notes-title {
     font-weight: 800;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     -webkit-text-stroke: 0.25px black;
 }
 
 .note-item {
-    margin-bottom: 3px;
-    text-indent: 15px;
+    margin-bottom: 2px;
+    text-indent: 12px;
 }
 
 /* Signature Section */
 .signature-section {
-    margin-top: 10px;
+    margin-top: 8px;
     display: flex;
     justify-content: space-between;
-    gap: 10px;
+    gap: 8px;
 }
 
 .signature-box {
     flex: 1;
     border: 1px solid #000;
-    padding: 8px;
+    padding: 6px;
     text-align: center;
-    height: 120px;
+    height: 90px;
     position: relative;
 }
 
 .signature-title {
     font-weight: 800;
-    margin-bottom: 3px;
-    font-size: 14px;
+    margin-bottom: 2px;
+    font-size: 13px;
     -webkit-text-stroke: 0.25px black;
 }
 
 .signature-line {
     border-bottom: 1px solid #000;
-    margin: 20px 5px 8px;
+    margin: 15px 4px 6px;
 }
 
 .signature-date {
-    font-size: 14px;
+    font-size: 13px;
     position: absolute;
-    bottom: 5px;
+    bottom: 4px;
     left: 50%;
     transform: translateX(-50%);
 }
@@ -499,20 +467,20 @@ $this->registerCss("
 .taxid-box {
     text-align: right;
     max-width: 22%;
-    margin-top: 33px;
-    font-size: 20px;
+    margin-top: 28px;
+    font-size: 18px;
     font-weight: 900;
     -webkit-text-stroke: 0.5px black;
 }
 
 /* ป้องกันภาพดัน layout */
 .logo-box img {
-    max-width: 180px;
+    max-width: 160px;
     height: auto;
 }
 
 .field-label-group {
-    width: 80px; /* กำหนดความกว้าง label ทั้งก้อน */
+    width: 75px; /* กำหนดความกว้าง label ทั้งก้อน */
 }
 
 
