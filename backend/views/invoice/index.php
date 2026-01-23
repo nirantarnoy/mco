@@ -107,7 +107,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'class' => 'yii\grid\ActionColumn',
                         'headerOptions' => ['width' => '200px'],
                         'contentOptions' => ['class' => 'text-center'],
-                        'template' => '{view} {update} {print} {copy} {delete}',
+                        'template' => '{view} {update} {print} {copy} {cancel} {delete}',
                         'buttons' => [
                             'view' => function ($url, $model, $key) {
                                 return Html::a('<i class="fas fa-eye"></i>', $url, [
@@ -156,12 +156,21 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <div class="dropdown-menu">' . $dropdownItems . '</div>
                                 </div>';
                             },
-                            'delete' => function ($url, $model, $key) {
+                            'cancel' => function ($url, $model, $key) {
                                 if ($model->status == Invoice::STATUS_CANCELLED) return '';
-                                return Html::a('<i class="fas fa-times"></i>', $url, [
+                                return Html::a('<i class="fas fa-ban"></i>', ['cancel', 'id' => $model->id], [
                                     'title' => 'ยกเลิก',
-                                    'class' => 'btn btn-sm btn-danger',
+                                    'class' => 'btn btn-sm btn-warning',
                                     'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะยกเลิกเอกสารนี้?',
+                                    'data-method' => 'post',
+                                    'data-pjax' => '0'
+                                ]);
+                            },
+                            'delete' => function ($url, $model, $key) {
+                                return Html::a('<i class="fas fa-trash"></i>', ['delete', 'id' => $model->id], [
+                                    'title' => 'ลบถาวร',
+                                    'class' => 'btn btn-sm btn-danger',
+                                    'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะลบเอกสารนี้ถาวร? การกระทำนี้ไม่สามารถกู้คืนได้',
                                     'data-method' => 'post',
                                     'data-pjax' => '0'
                                 ]);

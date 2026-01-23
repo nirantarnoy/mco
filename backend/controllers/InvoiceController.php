@@ -35,6 +35,7 @@ class InvoiceController extends BaseController
                 'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['POST'],
+                    'cancel' => ['POST'],
                 ],
             ],
         ];
@@ -329,13 +330,29 @@ class InvoiceController extends BaseController
      * @return mixed
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionDelete($id)
+    public function actionCancel($id)
     {
         $model = $this->findModel($id);
         $model->status = Invoice::STATUS_CANCELLED;
         $model->save(false);
 
         Yii::$app->session->setFlash('success', 'ยกเลิกเอกสารเรียบร้อยแล้ว');
+        return $this->redirect(['index']);
+    }
+
+    /**
+     * Deletes an existing Invoice model.
+     * @param integer $id
+     * @return mixed
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionDelete($id)
+    {
+        Invoice::deleteAll(['id' => $id]);
+        // Optional: Delete related items if not handled by foreign key constraints
+        InvoiceItem::deleteAll(['invoice_id' => $id]);
+
+        Yii::$app->session->setFlash('success', 'ลบเอกสารเรียบร้อยแล้ว');
         return $this->redirect(['index']);
     }
 
