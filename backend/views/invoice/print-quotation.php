@@ -38,7 +38,7 @@ $this->registerCss("
         margin: 0; 
         padding: 0; 
         font-family: 'THSarabunPSK' !important;
-        font-size: 18px !important;
+        font-size: 20px !important;
         color: #000;
     }
     .print-container { 
@@ -96,7 +96,7 @@ $this->registerCss("
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: bold;
 }
 
@@ -107,13 +107,13 @@ $this->registerCss("
 }
 
 .company-name-thai {
-    font-size: 28px;
+    font-size: 30px;
     font-weight: 900;
     -webkit-text-stroke: 0.5px black;
 }
 
 .company-name-eng {
-    font-size: 24px;
+    font-size: 26px;
     font-weight: 900;
     margin-left: -135px;
     margin-top: -8px;
@@ -121,7 +121,7 @@ $this->registerCss("
 }
 
 .company-address {
-    font-size: 13px;
+    font-size: 15px;
     line-height: 1.4;
     margin-bottom: 2px;
     font-weight: 900;
@@ -134,7 +134,7 @@ $this->registerCss("
 }
 
 .invoice-title {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 900;
     margin-bottom: 4px;
     position: relative;
@@ -142,13 +142,13 @@ $this->registerCss("
 }
 
 .invoice-subtitle {
-    font-size: 20px;
+    font-size: 22px;
     margin-bottom: 4px;
     color: #666;
 }
 
 .not-tax-invoice {
-    font-size: 11px;
+    font-size: 13px;
     color: #666;
     margin-bottom: 8px;
 }
@@ -165,7 +165,7 @@ $this->registerCss("
     right: 0;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 18px;
+    font-size: 20px;
     font-weight: bold;
     padding: 3px 6px;
     background-color: rgba(255, 255, 255, 0.9);
@@ -187,7 +187,7 @@ $this->registerCss("
     justify-content: space-between;
     margin: 8px 0;
     gap: 15px;
-    font-size: 18px !important;
+    font-size: 20px !important;
 }
 
 .customer-left, .customer-right {
@@ -221,7 +221,7 @@ $this->registerCss("
 .items-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 16px;
+    font-size: 18px;
 }
 
 /* เส้นรอบนอก */
@@ -284,7 +284,7 @@ $this->registerCss("
     justify-content: space-between;
     padding: 4px 6px;
     border-bottom: 1px solid #000;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 800;
     -webkit-text-stroke: 0.25px black;
 }
@@ -299,7 +299,7 @@ $this->registerCss("
 }
 
 .amount-text {
-    font-size: 16px;
+    font-size: 18px;
     margin-bottom: 4px;
     font-weight: 800;
     -webkit-text-stroke: 0.25px black;
@@ -308,7 +308,7 @@ $this->registerCss("
 /* Notes Section */
 .notes-section {
     margin: 6px 0;
-    font-size: 14px;
+    font-size: 16px;
     line-height: 1.2;
     font-weight: 800;
     -webkit-text-stroke: 0.15px black;
@@ -345,7 +345,7 @@ $this->registerCss("
 .signature-title {
     font-weight: 800;
     margin-bottom: 2px;
-    font-size: 13px;
+    font-size: 15px;
     -webkit-text-stroke: 0.25px black;
 }
 
@@ -355,7 +355,7 @@ $this->registerCss("
 }
 
 .signature-date {
-    font-size: 13px;
+    font-size: 15px;
     position: absolute;
     bottom: 4px;
     left: 50%;
@@ -849,7 +849,7 @@ window.addEventListener('afterprint', function() {
                 <?php endif; ?>
 
                 <!-- Empty rows for spacing -->
-                <?php for ($i = count($model_line); $i < 10; $i++): ?>
+                <?php for ($i = count($model_line); $i < 12; $i++): ?>
                     <tr>
                         <td style="padding:5px;">&nbsp;</td>
                         <td style="padding:5px;">&nbsp;</td>
