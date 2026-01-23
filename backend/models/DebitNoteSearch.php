@@ -51,7 +51,7 @@ class DebitNoteSearch extends DebitNote
             'status' => $this->status,
         ]);
 
-        $query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
+        $query->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')]);
 
         $query->andFilterWhere(['like', 'document_no', $this->document_no])
             ->andFilterWhere(['like', 'reason', $this->reason]);

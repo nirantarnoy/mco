@@ -69,6 +69,8 @@ class ProductSearch extends Product
             'type_id' => $this->type_id,
             'status' => $this->status,
         ]);
+        
+        $query->andFilterWhere(['product.company_id' => \Yii::$app->session->get('company_id')]);
 
 //        if($this->party_id){
 //            $query->andFilterWhere(['watchmaker.id' => $this->party_id]);

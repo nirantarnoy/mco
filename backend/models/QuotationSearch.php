@@ -77,11 +77,11 @@ class QuotationSearch extends Quotation
             'updated_at' => $this->updated_at,
             'updated_by' => $this->updated_by,
         ]);
-
-        $company_id = \Yii::$app->session->get('company_id');
-        if ($company_id != 1) {
-            $query->andFilterWhere(['company_id' => $company_id]);
-        }
+    //    $company_id = \Yii::$app->session->get('company_id');
+    //     if ($company_id != 1) {
+    //         $query->andFilterWhere(['company_id' => $company_id]);
+    //     }
+        $query->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')]);
 
         $query->andFilterWhere(['like', 'quotation_no', $this->quotation_no])
             ->andFilterWhere(['like', 'customer_name', $this->customer_name])

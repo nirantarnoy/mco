@@ -71,6 +71,8 @@ class DeliveryNoteSearch extends DeliveryNote
             'updated_by' => $this->updated_by,
         ]);
 
+        $query->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')]);
+
         $query->andFilterWhere(['like', 'dn_no', $this->dn_no])
             ->andFilterWhere(['like', 'customer_name', $this->customer_name])
             ->andFilterWhere(['like', 'address', $this->address])
