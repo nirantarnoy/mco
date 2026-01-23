@@ -338,7 +338,7 @@ $this->registerCss("
     border: 1px solid #000;
     padding: 6px;
     text-align: center;
-    height: 90px;
+    height: 100px;
     position: relative;
 }
 
