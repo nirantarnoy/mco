@@ -919,19 +919,19 @@ window.addEventListener('afterprint', function() {
             <div id="verificationText" style="font-size: 12px; font-weight: 900; margin-bottom: 10px;">ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง</div>
             <div class="signature-line" style="margin-top: 30px;"></div>
             <div class="signature-title">ผู้รับสินค้า / Received By</div>
-            <div class="signature-date-label" style="text-align: center; font-size: 12px; font-weight: 900;">วันที่ / Date______/_____/_____</div>
+            <div class="signature-date-label" style="text-align: center; font-size: 10px; font-weight: 900;">วันที่ / Date___/___/___</div>
         </div>
         <div class="signature-box">
             <div style="height: 22px;"></div>
             <div class="signature-line" style="margin-top: 30px;"></div>
             <div class="signature-title">ผู้ส่งสินค้า / Send By</div>
-            <div class="signature-date-label" style="text-align: center; font-size: 12px; font-weight: 900;">วันที่ / Date______/_____/_____</div>
+            <div class="signature-date-label" style="text-align: center; font-size: 10px; font-weight: 900;">วันที่ / Date___/___/___</div>
         </div>
         <div class="signature-box">
             <div style="height: 22px;"></div>
             <div class="signature-line" style="margin-top: 30px;"></div>
             <div class="signature-title">ผู้มีอำนาจลงนาม / Authorized Signature</div>
-            <div class="signature-date-label" style="text-align: center; font-size: 12px; font-weight: 900;">วันที่ / Date______/_____/_____</div>
+            <div class="signature-date-label" style="text-align: center; font-size: 10px; font-weight: 900;">วันที่ / Date___/___/___</div>
         </div>
     </div>
 </div>
@@ -1113,8 +1113,8 @@ window.addEventListener('afterprint', function() {
         const dateLabels = document.querySelectorAll('.signature-date-label');
         dateLabels.forEach(label => {
             label.textContent = lang === 'en' ?
-                'Date______/_____/_____' :
-                'วันที่ / Date______/_____/_____';
+                'Date___/___/___' :
+                'วันที่ / Date___/___/___';
         });
     }
 </script>
