@@ -659,7 +659,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
             <?php $itemNo = 1; ?>
             <?php foreach ($purchaseLines as $line): ?>
                 <?php
-                  $product_line_des = str_replace("P/N :","",$line->product_description);
+                  $product_line_des = str_replace(["P/N :", "P/N:"], "", $line->product_description);
                 ?>
                 <tr>
                     <td><?= $itemNo++ ?></td>
