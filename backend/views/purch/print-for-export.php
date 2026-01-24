@@ -646,8 +646,8 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
         <tr>
             <th style="width: 5%;">ITEM</th>
             <th style="width: 12%;">CODE NO.</th>
-            <th style="width: 35%;">DESCRIPTION</th>
-            <th style="width: 10%;">P/N.</th>
+            <th style="width: 30%;">DESCRIPTION</th>
+            <th style="width: 15%;">P/N.</th>
             <th style="width: 8%;">Q'TY</th>
             <th style="width: 8%;">UNIT</th>
             <th style="width: 12%;">UNIT PRICE</th>
