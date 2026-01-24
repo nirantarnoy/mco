@@ -658,12 +658,15 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
         <?php if ($purchaseLines): ?>
             <?php $itemNo = 1; ?>
             <?php foreach ($purchaseLines as $line): ?>
+                <?php
+                  $product_line_des = str_replace("P/N :","",$line->product_description);
+                ?>
                 <tr>
                     <td><?= $itemNo++ ?></td>
                     <td><?= Html::encode($line->product->code ?? '') ?></td>
                     <!-- <td class="description-cell"><?php //echo Html::encode($line->product->name ?? $line->product_name) ?></td> -->
                     <td class="description-cell"><?= Html::encode($line->product_name) ?></td>
-                    <td><?= Html::encode($line->product_description) ?></td>
+                    <td><?= Html::encode($product_line_des) ?></td>
                     <td><?= number_format($line->qty, 0) ?></td>
                     <td><?= Html::encode(\backend\models\Unit::findName($line->unit_id)) ?></td>
                     <td class="number-cell"><?= number_format($line->line_price, 2) ?></td>
