@@ -2,6 +2,7 @@
 
 namespace backend\controllers;
 
+use backend\models\InvoicePaymentReceipt;
 use backend\models\Job;
 use backend\models\Quotation;
 use common\models\JobLine;
@@ -804,5 +805,61 @@ class InvoiceController extends BaseController
         } else {
             echo 0;
         }
+    }
+
+    public function actionPayment($id)
+    {
+        $invoice = Invoice::findOne($id);
+        if (!$invoice || $invoice->invoice_type !== Invoice::TYPE_RECEIPT) {
+            throw new \yii\web\NotFoundHttpException('ไม่พบข้อมูลใบเสร็จรับเงิน');
+        }
+
+        $model = new InvoicePaymentReceipt();
+        $model->invoice_id = $id;
+
+        if ($this->request->isPost && $model->load($this->request->post())) {
+            $model->file = \yii\web\UploadedFile::getInstance($model, 'file');
+            $model->company_id = \Yii::$app->session->get('company_id');
+
+            if ($model->save()) {
+                if ($model->file) {
+                    $fileName = 'pay_' . $model->id . '_' . time() . '.' . $model->file->extension;
+                    $path = 'uploads/payments/';
+                    if (!file_exists($path)) {
+                        mkdir($path, 0777, true);
+                    }
+                    if ($model->file->saveAs($path . $fileName)) {
+                        $model->attachment = $path . $fileName;
+                        $model->save(false);
+                    }
+                }
+                \Yii::$app->session->setFlash('success', 'บันทึกข้อมูลการรับเงินเรียบร้อยแล้ว');
+                return $this->redirect(['payment', 'id' => $id]);
+            }
+        }
+
+        // ดึงรายการประวัติการรับเงินของ Invoice นี้
+        $history = InvoicePaymentReceipt::find()->where(['invoice_id' => $id])->orderBy(['id' => SORT_DESC])->all();
+
+        return $this->render('payment', [
+            'model' => $model,
+            'invoice' => $invoice,
+            'history' => $history,
+        ]);
+    }
+
+    public function actionDeletePayment($id)
+    {
+        $model = InvoicePaymentReceipt::findOne($id);
+        if ($model) {
+            $invoice_id = $model->invoice_id;
+            if ($model->attachment && file_exists($model->attachment)) {
+                unlink($model->attachment);
+            }
+            $model->delete();
+            \Yii::$app->session->setFlash('success', 'ลบรายการรับเงินเรียบร้อยแล้ว');
+            return $this->redirect(['payment', 'id' => $invoice_id]);
+        }
+        return $this->redirect(['index']);
     }
 }

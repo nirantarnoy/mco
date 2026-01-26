@@ -107,8 +107,19 @@ $this->params['breadcrumbs'][] = $this->title;
                         'class' => 'yii\grid\ActionColumn',
                         'headerOptions' => ['width' => '200px'],
                         'contentOptions' => ['class' => 'text-center'],
-                        'template' => '{view} {update} {print} {copy} {cancel} {delete}',
+                        'template' => '{payment} {view} {update} {print} {copy} {cancel} {delete}',
                         'buttons' => [
+                                'payment' => function ($url, $model, $key) {
+                                    if ($model->invoice_type === \backend\models\Invoice::TYPE_RECEIPT) {
+                                        return Html::a('<i class="fas fa-money-bill-wave"></i>', ['payment', 'id' => $model->id], [
+                                                'title' => 'บันทึกรับเงิน',
+                                                'class' => 'btn btn-sm btn-outline-success',
+                                                'style' => 'margin-right: 3px;',
+                                                'data-pjax' => '0',
+                                        ]);
+                                    }
+                                    return '';
+                                },
                             'view' => function ($url, $model, $key) {
                                 return Html::a('<i class="fas fa-eye"></i>', $url, [
                                     'title' => 'ดูรายละเอียด',
