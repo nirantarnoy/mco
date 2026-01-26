@@ -47,7 +47,7 @@ class VendorController extends BaseController
      */
     public function actionIndex()
     {
-        $pageSize = \Yii::$app->request->post("perpage");
+        $pageSize = \Yii::$app->request->post("perpage") ?: \Yii::$app->request->get("perpage") ?: 20;
         $searchModel = new VendorSearch();
         $dataProvider = $searchModel->search(\Yii::$app->request->queryParams);
         $dataProvider->setSort(['defaultOrder' => ['id' => SORT_DESC]]);

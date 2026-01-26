@@ -72,10 +72,13 @@ class VendorSearch extends Vendor
 
         $query->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')]);
 
-        if($this->globalSearch != '') {
-            $query->orFilterWhere(['like', 'name', $this->globalSearch])
-                ->orFilterWhere(['like', 'code', $this->globalSearch])
-                ->orFilterWhere(['like', 'description', $this->globalSearch]);
+        if ($this->globalSearch != '') {
+            $query->andWhere([
+                'or',
+                ['like', 'name', $this->globalSearch],
+                ['like', 'code', $this->globalSearch],
+                ['like', 'description', $this->globalSearch],
+            ]);
         }
         return $dataProvider;
     }
