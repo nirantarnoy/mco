@@ -46,7 +46,7 @@ class ProductSearch extends Product
 
         // add conditions that should always apply here
 
-        $query->joinWith(['journaltransLine.journalTrans']);
+        // $query->joinWith(['journaltransLine.journalTrans']);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -77,7 +77,11 @@ class ProductSearch extends Product
 //        }
 
         if($this->warehouse_id){
-            $query->andFilterWhere(['journal_trans.warehouse_id' => $this->warehouse_id]);
+            // $query->andFilterWhere(['journal_trans.warehouse_id' => $this->warehouse_id]);
+            $query->joinWith(['stockSums' => function($q){ $q->alias('ss'); }]);
+            $query->andFilterWhere(['ss.warehouse_id' => $this->warehouse_id]);
+            $query->andFilterWhere(['>', 'ss.qty', 0]);
+            $query->groupBy('product.id');
         }
         if($this->stock_empty == 1){
             $query->andFilterWhere(['stock_qty'=>0]);
@@ -97,9 +101,6 @@ class ProductSearch extends Product
                     ['like', 'product.description', $word],
                 ]);
             }
-//            $query->orFilterWhere(['like', 'product.code', $this->globalSearch])
-//                ->orFilterWhere(['like', 'product.name', $this->globalSearch])
-//                ->orFilterWhere(['like', 'product.description', $this->globalSearch]);
         }
 
 
