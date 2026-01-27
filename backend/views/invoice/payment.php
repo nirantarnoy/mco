@@ -55,6 +55,11 @@ $this->title = 'บันทึกรับเงิน: ' . $invoice->invoice_n
                             <?= $form->field($model, 'file')->fileInput(['class' => 'form-control-file mt-2']) ?>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <?= $form->field($model, 'note')->textarea(['rows' => 2, 'placeholder' => 'ระบุหมายเหตุ (ถ้ามี)']) ?>
+                        </div>
+                    </div>
                     <div class="text-right">
                         <?= Html::submitButton('<i class="fas fa-save"></i> บันทึกรายการ', ['class' => 'btn btn-primary']) ?>
                     </div>
@@ -70,6 +75,7 @@ $this->title = 'บันทึกรับเงิน: ' . $invoice->invoice_n
                         <th width="60">#</th>
                         <th>วันที่รับเงิน</th>
                         <th>ช่องทางการชำระ</th>
+                        <th>หมายเหตุ</th>
                         <th class="text-right">ยอดเงิน (บาท)</th>
                         <th width="150">ไฟล์แนบ</th>
                         <th width="100">จัดการ</th>
@@ -82,6 +88,7 @@ $this->title = 'บันทึกรับเงิน: ' . $invoice->invoice_n
                                 <td class="text-center"><?= $index + 1 ?></td>
                                 <td class="text-center"><?= Yii::$app->formatter->asDate($item->payment_date) ?></td>
                                 <td class="text-center"><?= Html::encode($item->payment_method) ?></td>
+                                <td><?= Html::encode($item->note) ?></td>
                                 <td class="text-right font-weight-bold text-primary"><?= number_format($item->amount, 2) ?></td>
                                 <td class="text-center">
                                     <?php if ($item->attachment): ?>
@@ -102,18 +109,18 @@ $this->title = 'บันทึกรับเงิน: ' . $invoice->invoice_n
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr><td colspan="6" class="text-center text-muted p-4">ยังไม่มีข้อมูลการบันทึกรับเงิน</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted p-4">ยังไม่มีข้อมูลการบันทึกรับเงิน</td></tr>
                     <?php endif; ?>
                     </tbody>
                     <tfoot class="bg-light">
                     <tr style="font-size: 1.1em; font-weight: bold;">
-                        <td colspan="3" class="text-right">ยอดรับรวมทั้งสิ้น:</td>
+                        <td colspan="4" class="text-right">ยอดรับรวมทั้งสิ้น:</td>
                         <td class="text-right text-success"><?= number_format($total_paid, 2) ?></td>
                         <td colspan="2"></td>
                     </tr>
                     <?php if ($remaining > 0): ?>
                         <tr class="text-danger">
-                            <td colspan="3" class="text-right">คงเหลือค้างชำระ:</td>
+                            <td colspan="4" class="text-right">คงเหลือค้างชำระ:</td>
                             <td class="text-right"><?= number_format($remaining, 2) ?></td>
                             <td colspan="2"></td>
                         </tr>

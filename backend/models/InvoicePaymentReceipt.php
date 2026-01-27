@@ -32,7 +32,7 @@ class InvoicePaymentReceipt extends ActiveRecord
             [['invoice_id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'company_id'], 'integer'],
             [['amount'], 'number'],
             [['payment_date'], 'safe'],
-            [['payment_method', 'attachment'], 'string', 'max' => 255],
+            [['payment_method', 'attachment', 'note'], 'string', 'max' => 255],
             [['file'], 'file', 'skipOnEmpty' => true, 'extensions' => 'png, jpg, jpeg, pdf'],
         ];
     }
@@ -45,6 +45,7 @@ class InvoicePaymentReceipt extends ActiveRecord
             'payment_method' => 'ช่องทางการรับชำระ',
             'attachment' => 'เอกสารแนบ',
             'file' => 'แนบไฟล์เอกสาร',
+            'note' => 'หมายเหตุ',
         ];
     }
 
