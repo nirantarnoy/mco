@@ -67,7 +67,11 @@ class PettyCashVoucherSearch extends PettyCashVoucher
         $query->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')]);
 
         if($this->globalSearch != ''){
-            $query->orFilterWhere(['like', 'pcv_no', $this->globalSearch]);
+            $query->andWhere(['or',
+                ['like', 'pcv_no', $this->globalSearch],
+                ['like', 'name', $this->globalSearch],
+                ['like', 'paid_for', $this->globalSearch]
+            ]);
         }
 
         return $dataProvider;

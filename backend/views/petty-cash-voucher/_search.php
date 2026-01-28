@@ -19,8 +19,10 @@ use yii\widgets\ActiveForm;
     ]); ?>
 
     <div class="input-group">
-        <!--         <span class="input-group-addon" id="basic-addon1"><i class="fa fa-search"></i></span>-->
-        <?= $form->field($model, 'globalSearch')->textInput(['placeholder'=>'ค้นหา','class'=>'form-control','aria-describedby'=>'basic-addon1'])->label(false) ?>
+        <?= Html::activeTextInput($model, 'globalSearch', ['class' => 'form-control', 'placeholder' => 'ค้นหา...']) ?>
+        <div class="input-group-append">
+            <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> ค้นหา</button>
+        </div>
     </div>
 
     <?php ActiveForm::end(); ?>
