@@ -147,13 +147,13 @@ $this->params['breadcrumbs'][] = $this->title;
                         'contentOptions' => ['style' => 'text-align: center'],
                     ],
 
-//                    [
-//                        'attribute' => 'journal_no',
-//                        'label' => 'เลขที่เอกสาร',
-//                        'value' => function ($data) {
-//                            return \backend\models\JournalTrans::findJournalNoFromStockTransId($data->journal_trans_id);
-//                        }
-//                    ],
+                   [
+                       'attribute' => 'journal_no',
+                       'label' => 'เลขที่เอกสาร',
+                       'value' => function ($data) {
+                           return \backend\models\JournalTrans::findJournalNoFromStockTransId($data->journal_trans_id);
+                       }
+                   ],
                     [
                         'attribute' => 'trans_type_id',
                         'label' => 'ประเภทกิจกรรม',

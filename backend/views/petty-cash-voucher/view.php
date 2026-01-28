@@ -91,7 +91,7 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                             'name',
                             [
                                 'attribute' => 'amount',
-                                'value' => number_format($model->amount, 2) . ' บาท',
+                                'value' => number_format($model->amount - $model->getTotalVat() - $model->getTotalWht() - $model->getTotalVatProhibit(), 2) . ' บาท',
                             ],
                             [
                                 'attribute' => 'paid_for',

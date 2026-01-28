@@ -506,4 +506,13 @@ class JournalTrans extends ActiveRecord
     {
         return $this->hasOne(Job::class, ['id' => 'job_id']);
     }
+
+    public static function findJournalNoFromStockTransId($stockTransId)
+    {
+        $stockTrans = JournalTrans::findOne($stockTransId);
+        if ($stockTrans) {
+            return $stockTrans->journal_no;
+        }
+        return null;
+    }
 }

@@ -126,6 +126,7 @@ class PettyCashDetail extends ActiveRecord
             // Ensure all numeric fields are properly set
             $this->amount = $amount;
             $this->vat = $vat;
+            $this->vat_amount = $vat; // Sync vat_amount with vat
             $this->vat_prohibit = $vatProhibit;
             $this->wht = $wht;
             $this->other = $other;
