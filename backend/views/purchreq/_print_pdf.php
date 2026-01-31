@@ -292,5 +292,5 @@ $logoPath = Yii::getAlias('@webroot') . '/uploads/logo/mco_logo_2.png';
 </table>
 
 <div class="form-number" style="text-align: right; font-size: 12px; margin-top: 20px;">
-    F-WP-PMA-002-001 R.3
+    F-WP-FMA-002-001 R.3
 </div>

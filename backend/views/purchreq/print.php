@@ -360,7 +360,7 @@ $this->title = 'พิมพ์ใบขอซื้อ: ' . $model->purch_req_n
         <div class="signature-section">
             <div class="signature-line"></div>
             <strong>AUTHORIZED SIGNATURE</strong><br>
-            <small>F-WP-FMA-002-002 R.1</small>
+            <small>F-WP-FMA-002-001 R.3</small>
         </div>
     </div>
 </div>
