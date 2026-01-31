@@ -5,6 +5,7 @@ namespace backend\models;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use backend\models\Job;
+use yii\db\Expression;
 
 /**
  * JobSearch represents the model behind the search form of `backend\models\Job`.
@@ -79,7 +80,7 @@ class JobSearch extends Job
         }
 
         $query->andFilterWhere(['job.company_id' => \Yii::$app->session->get('company_id')]);
-        $query->andFilterWhere(['or', ['!=', 'job.status', 500], ['job.status' => null]]);
+        $query->andFilterWhere(['or', ['!=', 'job.status', 500], new Expression('job.status IS NULL')]);
 
         if($this->globalSearch != ''){
             $query->andFilterWhere(['or',
