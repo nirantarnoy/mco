@@ -45,9 +45,9 @@ class JobSearch extends Job
     public function search($params, $formName = null)
     {
         $query = Job::find()->alias('job');
-        $query->joinWith(['quotation'], true, 'LEFT JOIN');
-
-        // add conditions that should always apply here
+        
+        // Use leftJoin explicitly to ensure it doesn't get converted or affected by relation logic
+        $query->leftJoin('quotation', 'job.quotation_id = quotation.id');
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -72,8 +72,9 @@ class JobSearch extends Job
             'job.updated_by' => $this->updated_by,
         ]);
 
-        // handle quotation_id specifically if it's set
-        if ($this->quotation_id) {
+        // If quotation_id is '0' or specifies a value, filter it. 
+        // If it's empty/null, we don't filter to show everything.
+        if ($this->quotation_id !== null && $this->quotation_id !== '') {
              $query->andFilterWhere(['job.quotation_id' => $this->quotation_id]);
         }
 
