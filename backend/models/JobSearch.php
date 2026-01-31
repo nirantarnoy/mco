@@ -44,26 +44,25 @@ class JobSearch extends Job
      */
     public function search($params, $formName = null)
     {
-        $query = Job::find()->alias('job')->joinWith(['quotation'], true, 'LEFT JOIN');
+        $query = Job::find()->alias('job');
+        $query->joinWith(['quotation'], true, 'LEFT JOIN');
 
         // add conditions that should always apply here
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+            'sort' => ['defaultOrder' => ['id' => SORT_DESC]]
         ]);
 
         $this->load($params, $formName);
 
         if (!$this->validate()) {
-            // uncomment the following line if you do not want to return any records when validation fails
-            // $query->where('0=1');
             return $dataProvider;
         }
 
         // grid filtering conditions
         $query->andFilterWhere([
             'job.id' => $this->id,
-            'job.quotation_id' => $this->quotation_id,
             'job.job_date' => $this->job_date,
             'job.status' => $this->status,
             'job.job_amount' => $this->job_amount,
@@ -73,12 +72,12 @@ class JobSearch extends Job
             'job.updated_by' => $this->updated_by,
         ]);
 
-        //  $company_id = \Yii::$app->session->get('company_id');
-        // if ($company_id != 1) {
-        //     $query->andFilterWhere(['company_id' => $company_id]);
-        // }
-        $query->andFilterWhere(['job.company_id' => \Yii::$app->session->get('company_id')]);
+        // handle quotation_id specifically if it's set
+        if ($this->quotation_id) {
+             $query->andFilterWhere(['job.quotation_id' => $this->quotation_id]);
+        }
 
+        $query->andFilterWhere(['job.company_id' => \Yii::$app->session->get('company_id')]);
         $query->andFilterWhere(['!=','job.status', 500]);
 
         if($this->globalSearch != ''){
