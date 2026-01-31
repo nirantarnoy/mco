@@ -44,7 +44,7 @@ class JobSearch extends Job
      */
     public function search($params, $formName = null)
     {
-        $query = Job::find()->joinWith(['quotation']);
+        $query = Job::find()->alias('job')->joinWith(['quotation'], true, 'LEFT JOIN');
 
         // add conditions that should always apply here
 
