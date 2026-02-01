@@ -322,6 +322,12 @@
                                     </a>
                                 </li>
                             <?php endif; ?>
+                            <li class="nav-item">
+                                <a href="index.php?r=paymentvoucher/index" class="nav-link paymentvoucher">
+                                    <i class="far fa-circlez nav-icon"></i>
+                                    <p>Payment Voucher</p>
+                                </a>
+                            </li>
                             <?php if (\Yii::$app->user->can('purch/index')): ?>
                                 <li class="nav-item">
                                     <a href="index.php?r=purchasemaster" class="nav-link purchasemaster">
