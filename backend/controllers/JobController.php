@@ -573,17 +573,30 @@ class JobController extends BaseController
                         $loop++;
                     }
                 }
-                // จัดการไฟล์ cus_po_doc (โค้ดเดิม)
-                $uploaded = UploadedFile::getInstances($model, 'cus_po_doc');
+                // จัดการไฟล์ cus_po_doc - รองรับหลายไฟล์
+                $uploaded = UploadedFile::getInstancesByName('cus_po_doc');
                 if (!empty($uploaded)) {
-                    $loop = 0;
                     foreach ($uploaded as $file) {
-                        $upfiles = "cus_po_" . time()."_".$loop . "." . $file->getExtension();
-                        if ($file->saveAs('uploads/job/' . $upfiles)) {
-                            $model->cus_po_doc = $upfiles;
-                            $model->save(false);
+                        if ($file->error === UPLOAD_ERR_OK) {
+                            $fileName = 'cus_po_' . time() . '_' . uniqid() . '.' . $file->getExtension();
+                            $uploadPath = 'uploads/job/';
+                            
+                            if (!is_dir($uploadPath)) {
+                                mkdir($uploadPath, 0777, true);
+                            }
+                            
+                            if ($file->saveAs($uploadPath . $fileName)) {
+                                // บันทึกลงตาราง job_po_doc
+                                $poDoc = new \backend\models\JobPoDoc();
+                                $poDoc->job_id = $model->id;
+                                $poDoc->file_name = $file->baseName . '.' . $file->extension;
+                                $poDoc->file_path = $fileName;
+                                $poDoc->file_size = $file->size;
+                                $poDoc->uploaded_at = time();
+                                $poDoc->uploaded_by = Yii::$app->user->id ?? null;
+                                $poDoc->save(false);
+                            }
                         }
-                        $loop++;
                     }
                 }
 
@@ -1999,6 +2012,27 @@ class JobController extends BaseController
             $model->save(false);
         }
 
+        return $this->redirect(Yii::$app->request->referrer);
+    }
+
+    /**
+     * ลบไฟล์แนบคำสั่งซื้อลูกค้า
+     * @param int $id ID ของไฟล์
+     * @return Response
+     */
+    public function actionDeletePoDoc($id)
+    {
+        $model = \backend\models\JobPoDoc::findOne($id);
+
+        if ($model !== null) {
+            $jobId = $model->job_id;
+            $model->delete(); // จะลบไฟล์อัตโนมัติผ่าน beforeDelete()
+            
+            Yii::$app->session->setFlash('success', 'ลบไฟล์สำเร็จ');
+            return $this->redirect(['update', 'id' => $jobId]);
+        }
+
+        Yii::$app->session->setFlash('error', 'ไม่พบไฟล์ที่ต้องการลบ');
         return $this->redirect(Yii::$app->request->referrer);
     }
 

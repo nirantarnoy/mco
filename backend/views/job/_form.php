@@ -132,27 +132,49 @@ if(!$model->isNewRecord){
             <div class="col-lg-3">
                 <?= $form->field($model, 'job_amount')->textInput() ?>
             </div>
-            <div class="col-lg-3">
-                <?= $form->field($model, 'cus_po_doc')->fileInput() ?>
-                <?php if ($model->cus_po_doc): ?>
-                    <div class="alert alert-info">
-                        <strong>ไฟล์ปัจจุบัน:</strong><br>
-                        <?php
-                        $fileUrl = Yii::getAlias('@web/uploads/job/' . $model->cus_po_doc);
-                        ?>
-                        <?= Html::a('📂 เปิดไฟล์', $fileUrl, [
-                            'class' => 'btn btn-sm btn-outline-primary mt-2',
-                            'target' => '_blank',
-                            'data-pjax' => '0'
-                        ]) ?>
-                        <?= Html::a('🗑️ ลบไฟล์', ['delete-file', 'id' => $model->id], [
-                            'class' => 'btn btn-sm btn-outline-danger mt-2',
-                            'data' => [
-                                'confirm' => 'คุณแน่ใจหรือไม่ว่าต้องการลบไฟล์นี้?',
-                                'method' => 'post',
-                            ],
-                        ]) ?>
-                    </div>
+            <div class="col-lg-6">
+                <label for="">เอกสารคำสั่งซื้อลูกค้า (แนบได้หลายไฟล์)</label>
+                <input type="file" class="form-control" name="cus_po_doc[]" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                <small class="text-muted">รองรับไฟล์: PDF, JPG, PNG, DOC, DOCX (สามารถเลือกหลายไฟล์พร้อมกันได้)</small>
+                
+                <?php if (!$model->isNewRecord): ?>
+                    <?php 
+                    $poDocs = \backend\models\JobPoDoc::find()->where(['job_id' => $model->id])->all();
+                    if (!empty($poDocs)): 
+                    ?>
+                        <div class="alert alert-info mt-2">
+                            <strong>ไฟล์ที่แนบแล้ว:</strong>
+                            <ul class="list-unstyled mb-0 mt-2">
+                                <?php foreach ($poDocs as $doc): ?>
+                                    <li class="mb-2">
+                                        <i class="fas fa-file-alt"></i>
+                                        <?= Html::a($doc->file_name, 
+                                            Yii::getAlias('@web/uploads/job/' . $doc->file_path), 
+                                            [
+                                                'class' => 'text-primary',
+                                                'target' => '_blank',
+                                                'data-pjax' => '0'
+                                            ]) 
+                                        ?>
+                                        <small class="text-muted">
+                                            (<?= Yii::$app->formatter->asShortSize($doc->file_size) ?>, 
+                                            <?= date('d/m/Y H:i', $doc->uploaded_at) ?>)
+                                        </small>
+                                        <?= Html::a('<i class="fas fa-trash"></i>', 
+                                            ['delete-po-doc', 'id' => $doc->id], 
+                                            [
+                                                'class' => 'btn btn-danger btn-xs ms-2',
+                                                'data' => [
+                                                    'confirm' => 'ต้องการลบไฟล์ "' . $doc->file_name . '" หรือไม่?',
+                                                    'method' => 'post',
+                                                ],
+                                            ]) 
+                                        ?>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                    <?php endif; ?>
                 <?php endif; ?>
             </div>
 
