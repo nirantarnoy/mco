@@ -124,13 +124,18 @@ function pullMultipleData() {
     });
 }
 
-// แสดงปุ่มดึงข้อมูลเมื่อมีการเลือก PR/PO
+// แสดงปุ่มดึงข้อมูลเมื่อมีการเลือก PR/PO และดึงข้อมูลอัตโนมัติเมื่อเลือก PO
 $('#pr-select, #po-select').on('change', function() {
     var pr_ids = $('#pr-select').val() || [];
     var po_ids = $('#po-select').val() || [];
     
     if (pr_ids.length > 0 || po_ids.length > 0) {
         $('#pull-data-section').show();
+        
+        // ดึงข้อมูลอัตโนมัติเมื่อมีการเลือก PO
+        if (po_ids.length > 0) {
+            pullMultipleData();
+        }
     } else {
         $('#pull-data-section').hide();
     }

@@ -71,11 +71,12 @@ $this->params['breadcrumbs'][] = $this->title;
                 <thead class="table-light">
                     <tr>
                         <th class="text-center" style="width: 5%">#</th>
-                        <th style="width: 15%">Code Acc.</th>
-                        <th style="width: 15%">Code Bill</th>
-                        <th>Description</th>
-                        <th class="text-end" style="width: 15%">Debit</th>
-                        <th class="text-end" style="width: 15%">Credit</th>
+                        <th style="width: 12%">Code Acc.</th>
+                        <th style="width: 12%">Code Bill</th>
+                        <th style="width: 23%">Description</th>
+                        <th style="width: 23%"></th>
+                        <th class="text-end" style="width: 12%">Debit</th>
+                        <th class="text-end" style="width: 12%">Credit</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -85,12 +86,18 @@ $this->params['breadcrumbs'][] = $this->title;
                     foreach ($model->paymentVoucherLines as $index => $line): 
                         $total_debit += $line->debit;
                         $total_credit += $line->credit;
+                        
+                        // แยก description ออกเป็น 2 ช่อง
+                        $descriptions = explode('|||', $line->description);
+                        $desc1 = $descriptions[0] ?? '';
+                        $desc2 = $descriptions[1] ?? '';
                     ?>
                         <tr>
                             <td class="text-center"><?= $index + 1 ?></td>
                             <td><?= Html::encode($line->account_code) ?></td>
                             <td><?= Html::encode($line->bill_code) ?></td>
-                            <td><?= Html::encode($line->description) ?></td>
+                            <td><?= Html::encode($desc1) ?></td>
+                            <td><?= Html::encode($desc2) ?></td>
                             <td class="text-end"><?= number_format($line->debit, 2) ?></td>
                             <td class="text-end"><?= number_format($line->credit, 2) ?></td>
                         </tr>
@@ -98,7 +105,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </tbody>
                 <tfoot class="table-light fw-bold">
                     <tr>
-                        <td colspan="4" class="text-end">รวมทั้งสิ้น</td>
+                        <td colspan="5" class="text-end">รวมทั้งสิ้น</td>
                         <td class="text-end"><?= number_format($total_debit, 2) ?></td>
                         <td class="text-end"><?= number_format($total_credit, 2) ?></td>
                     </tr>

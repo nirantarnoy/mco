@@ -289,6 +289,8 @@ class PaymentvoucherController extends BaseController
         
         $lines = [];
         $total_amount = 0;
+        $total_before_vat = 0;
+        $total_vat = 0;
         $paid_for_items = [];
         
         // ดึงข้อมูลจาก PR
@@ -302,20 +304,10 @@ class PaymentvoucherController extends BaseController
                 $remaining = $pr->net_amount - $paidAmount;
                 $total_amount += $remaining;
                 $paid_for_items[] = 'PR: ' . $pr->purch_req_no;
-                
-                // เพิ่ม line สำหรับ PR นี้
-                $lines[] = [
-                    'account_code' => '',
-                    'bill_code' => $pr->purch_req_no,
-                    'description1' => 'PR: ' . $pr->purch_req_no,
-                    'description2' => '(คงเหลือ: ' . number_format($remaining, 2) . ')',
-                    'debit' => $remaining,
-                    'credit' => 0,
-                ];
             }
         }
         
-        // ดึงข้อมูลจาก PO
+        // ดึงข้อมูลจาก PO และคำนวณยอดรวมก่อน VAT และ VAT
         foreach ($po_ids as $po_id) {
             $po = Purch::findOne($po_id);
             if ($po) {
@@ -327,16 +319,57 @@ class PaymentvoucherController extends BaseController
                 $total_amount += $remaining;
                 $paid_for_items[] = 'PO: ' . $po->purch_no;
                 
-                // เพิ่ม line สำหรับ PO นี้
+                // คำนวณยอดก่อน VAT และ VAT จาก PO
+                // net_amount = total_amount - discount + vat_amount
+                // ดังนั้น amount before vat = net_amount - vat_amount
+                $po_vat = $po->vat_amount ?: 0;
+                $po_before_vat = $remaining - $po_vat;
+                
+                // สัดส่วนที่จ่าย (กรณีจ่ายบางส่วน)
+                if ($po->net_amount > 0) {
+                    $ratio = $remaining / $po->net_amount;
+                    $po_vat = $po_vat * $ratio;
+                    $po_before_vat = $remaining - $po_vat;
+                }
+                
+                $total_before_vat += $po_before_vat;
+                $total_vat += $po_vat;
+            }
+        }
+        
+        // สร้างแถวบัญชีอัตโนมัติ (เฉพาะเมื่อมี PO)
+        if (count($po_ids) > 0) {
+            // แถวที่ 1: สินค้า (Debit)
+            $lines[] = [
+                'account_code' => '1120',
+                'bill_code' => '',
+                'description1' => 'สินค้า',
+                'description2' => '',
+                'debit' => round($total_before_vat, 2),
+                'credit' => 0,
+            ];
+            
+            // แถวที่ 2: ภาษีมูลค่าเพิ่ม (Debit)
+            if ($total_vat > 0) {
                 $lines[] = [
-                    'account_code' => '',
-                    'bill_code' => $po->purch_no,
-                    'description1' => 'PO: ' . $po->purch_no,
-                    'description2' => '(คงเหลือ: ' . number_format($remaining, 2) . ')',
-                    'debit' => $remaining,
+                    'account_code' => '2200',
+                    'bill_code' => '',
+                    'description1' => 'ภาษีมูลค่าเพิ่ม',
+                    'description2' => '',
+                    'debit' => round($total_vat, 2),
                     'credit' => 0,
                 ];
             }
+            
+            // แถวที่ 3: เจ้าหนี้ (Credit)
+            $lines[] = [
+                'account_code' => '2017',
+                'bill_code' => '',
+                'description1' => '',
+                'description2' => 'เจ้าหนี้',
+                'debit' => 0,
+                'credit' => round($total_before_vat + $total_vat, 2),
+            ];
         }
         
         return [
