@@ -99,8 +99,9 @@ $logo = '/img/logo_mco.png'; // Update with actual path if known
     <thead>
         <tr>
             <th style="width: 10%;">Code Acc.</th>
-            <th style="width: 15%;">Code Bill</th>
-            <th>Description</th>
+            <th style="width: 10%;">Code Bill</th>
+            <th style="width: 25%;">Description</th>
+            <th style="width: 25%;"></th>
             <th style="width: 15%;">Debit</th>
             <th style="width: 15%;">Credit</th>
         </tr>
@@ -115,18 +116,26 @@ $logo = '/img/logo_mco.png'; // Update with actual path if known
             if($line) {
                 $total_debit += $line->debit;
                 $total_credit += $line->credit;
+                // แยก description ออกเป็น 2 ช่อง
+                $descriptions = explode('|||', $line->description);
+                $desc1 = $descriptions[0] ?? '';
+                $desc2 = $descriptions[1] ?? '';
+            } else {
+                $desc1 = '';
+                $desc2 = '';
             }
         ?>
         <tr>
             <td style="text-align: center;"><?= $line ? Html::encode($line->account_code) : '' ?></td>
             <td style="text-align: center;"><?= $line ? Html::encode($line->bill_code) : '' ?></td>
-            <td><?= $line ? Html::encode($line->description) : '' ?></td>
+            <td><?= Html::encode($desc1) ?></td>
+            <td><?= Html::encode($desc2) ?></td>
             <td style="text-align: right;"><?= ($line && $line->debit > 0) ? number_format($line->debit, 2) : '' ?></td>
             <td style="text-align: right;"><?= ($line && $line->credit > 0) ? number_format($line->credit, 2) : '' ?></td>
         </tr>
         <?php endfor; ?>
         <tr style="font-weight: bold; background-color: #eee;">
-            <td colspan="3" style="text-align: right;">Total</td>
+            <td colspan="4" style="text-align: right;">Total</td>
             <td style="text-align: right;"><?= number_format($total_debit, 2) ?></td>
             <td style="text-align: right;"><?= number_format($total_credit, 2) ?></td>
         </tr>

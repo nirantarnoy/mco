@@ -70,7 +70,7 @@ class PaymentVoucher extends ActiveRecord
     {
         return [
             [['trans_date'], 'safe'],
-            [['recipient_id', 'payment_method', 'ref_id', 'ref_type', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'company_id'], 'integer'],
+            [['recipient_id', 'vendor_id', 'payment_method', 'ref_id', 'ref_type', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'company_id'], 'integer'],
             [['amount'], 'number'],
             [['voucher_no', 'cheque_no'], 'string', 'max' => 50],
             [['recipient_name', 'paid_for'], 'string', 'max' => 255],
@@ -90,6 +90,7 @@ class PaymentVoucher extends ActiveRecord
             'trans_date' => 'Date',
             'recipient_id' => 'Recipient',
             'recipient_name' => 'Name',
+            'vendor_id' => 'Vendor',
             'payment_method' => 'By',
             'cheque_no' => 'Cheque No.',
             'cheque_date' => 'วันที่หน้าเช็ค',
@@ -114,6 +115,26 @@ class PaymentVoucher extends ActiveRecord
     public function getPaymentVoucherLines()
     {
         return $this->hasMany(PaymentVoucherLine::class, ['payment_voucher_id' => 'id']);
+    }
+
+    /**
+     * Gets query for [[PaymentVoucherRefs]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getPaymentVoucherRefs()
+    {
+        return $this->hasMany(PaymentVoucherRef::class, ['payment_voucher_id' => 'id']);
+    }
+
+    /**
+     * Gets query for [[Vendor]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getVendor()
+    {
+        return $this->hasOne(Vendor::class, ['id' => 'vendor_id']);
     }
 
     /**

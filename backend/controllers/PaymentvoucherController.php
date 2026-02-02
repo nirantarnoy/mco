@@ -76,33 +76,19 @@ class PaymentvoucherController extends BaseController
             $transaction = Yii::$app->db->beginTransaction();
             try {
                 if ($model->save()) {
-                    $line_account_codes = Yii::$app->request->post('line_account_code');
-                    $line_bill_codes = Yii::$app->request->post('line_bill_code');
-                    $line_descriptions = Yii::$app->request->post('line_description');
-                    $line_debits = Yii::$app->request->post('line_debit');
-                    $line_credits = Yii::$app->request->post('line_credit');
-
-                    if ($line_descriptions) {
-                        for ($i = 0; $i < count($line_descriptions); $i++) {
-                            if (empty($line_descriptions[$i])) continue;
-                            $line = new PaymentVoucherLine();
-                            $line->payment_voucher_id = $model->id;
-                            $line->account_code = $line_account_codes[$i] ?? '';
-                            $line->bill_code = $line_bill_codes[$i] ?? '';
-                            $line->description = $line_descriptions[$i];
-                            $line->debit = $line_debits[$i] ?? 0;
-                            $line->credit = $line_credits[$i] ?? 0;
-                            if (!$line->save()) {
-                                throw new \Exception('Failed to save line');
-                            }
-                        }
-                    }
+                    // บันทึก Lines
+                    $this->saveVoucherLines($model);
+                    
+                    // บันทึก Refs (PR/PO ที่เลือก)
+                    $this->saveVoucherRefs($model);
+                    
                     $transaction->commit();
+                    Yii::$app->session->setFlash('success', 'บันทึก Payment Voucher สำเร็จ');
                     return $this->redirect(['view', 'id' => $model->id]);
                 }
             } catch (\Exception $e) {
                 $transaction->rollBack();
-                Yii::$app->session->setFlash('error', $e->getMessage());
+                Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
             }
         }
 
@@ -126,35 +112,19 @@ class PaymentvoucherController extends BaseController
             $transaction = Yii::$app->db->beginTransaction();
             try {
                 if ($model->save()) {
-                    PaymentVoucherLine::deleteAll(['payment_voucher_id' => $model->id]);
+                    // บันทึก Lines
+                    $this->saveVoucherLines($model);
                     
-                    $line_account_codes = Yii::$app->request->post('line_account_code');
-                    $line_bill_codes = Yii::$app->request->post('line_bill_code');
-                    $line_descriptions = Yii::$app->request->post('line_description');
-                    $line_debits = Yii::$app->request->post('line_debit');
-                    $line_credits = Yii::$app->request->post('line_credit');
-
-                    if ($line_descriptions) {
-                        for ($i = 0; $i < count($line_descriptions); $i++) {
-                            if (empty($line_descriptions[$i])) continue;
-                            $line = new PaymentVoucherLine();
-                            $line->payment_voucher_id = $model->id;
-                            $line->account_code = $line_account_codes[$i] ?? '';
-                            $line->bill_code = $line_bill_codes[$i] ?? '';
-                            $line->description = $line_descriptions[$i];
-                            $line->debit = $line_debits[$i] ?? 0;
-                            $line->credit = $line_credits[$i] ?? 0;
-                            if (!$line->save()) {
-                                throw new \Exception('Failed to save line');
-                            }
-                        }
-                    }
+                    // บันทึก Refs (PR/PO ที่เลือก)
+                    $this->saveVoucherRefs($model);
+                    
                     $transaction->commit();
+                    Yii::$app->session->setFlash('success', 'อัปเดต Payment Voucher สำเร็จ');
                     return $this->redirect(['view', 'id' => $model->id]);
                 }
             } catch (\Exception $e) {
                 $transaction->rollBack();
-                Yii::$app->session->setFlash('error', $e->getMessage());
+                Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
             }
         }
 
@@ -235,6 +205,150 @@ class PaymentvoucherController extends BaseController
         return ['success' => false];
     }
 
+    /**
+     * ดึงรายการ PR ตาม Vendor (ที่ยังไม่จ่ายครบ)
+     */
+    public function actionGetPrByVendor($vendor_id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        
+        $prs = PurchReq::find()
+            ->where(['vendor_id' => $vendor_id, 'approve_status' => 1])
+            ->andWhere(['>', 'net_amount', 0])
+            ->all();
+        
+        $result = [];
+        foreach ($prs as $pr) {
+            // คำนวณยอดที่จ่ายไปแล้ว
+            $paidAmount = \backend\models\PaymentVoucherRef::find()
+                ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PR, 'ref_id' => $pr->id])
+                ->sum('amount') ?: 0;
+            
+            $remaining = $pr->net_amount - $paidAmount;
+            
+            // แสดงเฉพาะที่ยังมียอดคงเหลือ
+            if ($remaining > 0) {
+                $result[] = [
+                    'id' => $pr->id,
+                    'text' => $pr->purch_req_no . ' (คงเหลือ: ' . number_format($remaining, 2) . ')',
+                    'total_amount' => $pr->net_amount,
+                    'paid_amount' => $paidAmount,
+                    'remaining' => $remaining,
+                ];
+            }
+        }
+        
+        return $result;
+    }
+
+    /**
+     * ดึงรายการ PO ตาม Vendor (ที่ยังไม่จ่ายครบ)
+     */
+    public function actionGetPoByVendor($vendor_id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        
+        $pos = Purch::find()
+            ->where(['vendor_id' => $vendor_id, 'approve_status' => 1])
+            ->andWhere(['>', 'net_amount', 0])
+            ->all();
+        
+        $result = [];
+        foreach ($pos as $po) {
+            // คำนวณยอดที่จ่ายไปแล้ว
+            $paidAmount = \backend\models\PaymentVoucherRef::find()
+                ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PO, 'ref_id' => $po->id])
+                ->sum('amount') ?: 0;
+            
+            $remaining = $po->net_amount - $paidAmount;
+            
+            // แสดงเฉพาะที่ยังมียอดคงเหลือ
+            if ($remaining > 0) {
+                $result[] = [
+                    'id' => $po->id,
+                    'text' => $po->purch_no . ' (คงเหลือ: ' . number_format($remaining, 2) . ')',
+                    'total_amount' => $po->net_amount,
+                    'paid_amount' => $paidAmount,
+                    'remaining' => $remaining,
+                ];
+            }
+        }
+        
+        return $result;
+    }
+
+    /**
+     * ดึงข้อมูลจาก PR/PO หลายรายการ
+     */
+    public function actionPullMultiple()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        
+        $pr_ids = Yii::$app->request->post('pr_ids', []);
+        $po_ids = Yii::$app->request->post('po_ids', []);
+        
+        $lines = [];
+        $total_amount = 0;
+        $paid_for_items = [];
+        
+        // ดึงข้อมูลจาก PR
+        foreach ($pr_ids as $pr_id) {
+            $pr = PurchReq::findOne($pr_id);
+            if ($pr) {
+                $paidAmount = \backend\models\PaymentVoucherRef::find()
+                    ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PR, 'ref_id' => $pr->id])
+                    ->sum('amount') ?: 0;
+                
+                $remaining = $pr->net_amount - $paidAmount;
+                $total_amount += $remaining;
+                $paid_for_items[] = 'PR: ' . $pr->purch_req_no;
+                
+                // เพิ่ม line สำหรับ PR นี้
+                $lines[] = [
+                    'account_code' => '',
+                    'bill_code' => $pr->purch_req_no,
+                    'description1' => 'PR: ' . $pr->purch_req_no,
+                    'description2' => '(คงเหลือ: ' . number_format($remaining, 2) . ')',
+                    'debit' => $remaining,
+                    'credit' => 0,
+                ];
+            }
+        }
+        
+        // ดึงข้อมูลจาก PO
+        foreach ($po_ids as $po_id) {
+            $po = Purch::findOne($po_id);
+            if ($po) {
+                $paidAmount = \backend\models\PaymentVoucherRef::find()
+                    ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PO, 'ref_id' => $po->id])
+                    ->sum('amount') ?: 0;
+                
+                $remaining = $po->net_amount - $paidAmount;
+                $total_amount += $remaining;
+                $paid_for_items[] = 'PO: ' . $po->purch_no;
+                
+                // เพิ่ม line สำหรับ PO นี้
+                $lines[] = [
+                    'account_code' => '',
+                    'bill_code' => $po->purch_no,
+                    'description1' => 'PO: ' . $po->purch_no,
+                    'description2' => '(คงเหลือ: ' . number_format($remaining, 2) . ')',
+                    'debit' => $remaining,
+                    'credit' => 0,
+                ];
+            }
+        }
+        
+        return [
+            'success' => true,
+            'amount' => $total_amount,
+            'paid_for' => implode(', ', $paid_for_items),
+            'lines' => $lines,
+            'pr_ids' => $pr_ids,
+            'po_ids' => $po_ids,
+        ];
+    }
+
     public function actionPrint($id)
     {
         $model = $this->findModel($id);
@@ -242,6 +356,114 @@ class PaymentvoucherController extends BaseController
         return $this->render('print', [
             'model' => $model,
         ]);
+    }
+
+    /**
+     * บันทึก Voucher Lines
+     */
+    private function saveVoucherLines($model)
+    {
+        // ลบ lines เดิม
+        PaymentVoucherLine::deleteAll(['payment_voucher_id' => $model->id]);
+        
+        $account_codes = Yii::$app->request->post('line_account_code', []);
+        $bill_codes = Yii::$app->request->post('line_bill_code', []);
+        $descriptions1 = Yii::$app->request->post('line_description1', []);
+        $descriptions2 = Yii::$app->request->post('line_description2', []);
+        $debits = Yii::$app->request->post('line_debit', []);
+        $credits = Yii::$app->request->post('line_credit', []);
+        
+        // ใช้ description1 เป็น base สำหรับ loop
+        foreach ($descriptions1 as $i => $desc1) {
+            // ข้ามถ้าทั้ง 2 ช่องว่าง
+            if (empty($desc1) && empty($descriptions2[$i] ?? '')) continue;
+            
+            $line = new PaymentVoucherLine();
+            $line->payment_voucher_id = $model->id;
+            $line->account_code = $account_codes[$i] ?? '';
+            $line->bill_code = $bill_codes[$i] ?? '';
+            
+            // รวม description 2 ช่องด้วย |||
+            $desc2 = $descriptions2[$i] ?? '';
+            $line->description = $desc1 . '|||' . $desc2;
+            
+            $line->debit = $debits[$i] ?? 0;
+            $line->credit = $credits[$i] ?? 0;
+            $line->save(false);
+        }
+    }
+
+    /**
+     * บันทึก Voucher Refs (PR/PO ที่เลือก)
+     */
+    private function saveVoucherRefs($model)
+    {
+        $pr_ids_raw = Yii::$app->request->post('pr_ids', []);
+        $po_ids_raw = Yii::$app->request->post('po_ids', []);
+        
+        // รองรับทั้ง array และ JSON string
+        if (is_string($pr_ids_raw)) {
+            $pr_ids = json_decode($pr_ids_raw, true) ?: [];
+        } else {
+            $pr_ids = $pr_ids_raw;
+        }
+        
+        if (is_string($po_ids_raw)) {
+            $po_ids = json_decode($po_ids_raw, true) ?: [];
+        } else {
+            $po_ids = $po_ids_raw;
+        }
+        
+        // Debug log
+        Yii::info("PR IDs: " . print_r($pr_ids, true), 'payment_voucher');
+        Yii::info("PO IDs: " . print_r($po_ids, true), 'payment_voucher');
+        
+        // ลบ refs เดิม (กรณี update)
+        \backend\models\PaymentVoucherRef::deleteAll(['payment_voucher_id' => $model->id]);
+        
+        // บันทึก PR refs
+        foreach ($pr_ids as $pr_id) {
+            $pr = PurchReq::findOne($pr_id);
+            if ($pr) {
+                $paidAmount = \backend\models\PaymentVoucherRef::find()
+                    ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PR, 'ref_id' => $pr->id])
+                    ->andWhere(['!=', 'payment_voucher_id', $model->id])
+                    ->sum('amount') ?: 0;
+                
+                $remaining = $pr->net_amount - $paidAmount;
+                
+                $ref = new \backend\models\PaymentVoucherRef();
+                $ref->payment_voucher_id = $model->id;
+                $ref->ref_type = \backend\models\PaymentVoucherRef::REF_TYPE_PR;
+                $ref->ref_id = $pr->id;
+                $ref->ref_no = $pr->purch_req_no;
+                $ref->amount = $remaining;
+                $ref->created_at = time();
+                $ref->save(false);
+            }
+        }
+        
+        // บันทึก PO refs
+        foreach ($po_ids as $po_id) {
+            $po = Purch::findOne($po_id);
+            if ($po) {
+                $paidAmount = \backend\models\PaymentVoucherRef::find()
+                    ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PO, 'ref_id' => $po->id])
+                    ->andWhere(['!=', 'payment_voucher_id', $model->id])
+                    ->sum('amount') ?: 0;
+                
+                $remaining = $po->net_amount - $paidAmount;
+                
+                $ref = new \backend\models\PaymentVoucherRef();
+                $ref->payment_voucher_id = $model->id;
+                $ref->ref_type = \backend\models\PaymentVoucherRef::REF_TYPE_PO;
+                $ref->ref_id = $po->id;
+                $ref->ref_no = $po->purch_no;
+                $ref->amount = $remaining;
+                $ref->created_at = time();
+                $ref->save(false);
+            }
+        }
     }
 
     /**

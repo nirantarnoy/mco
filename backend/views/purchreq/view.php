@@ -382,6 +382,75 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
             </div>
         </div>
 
+        <?php
+        // ดึง Payment Vouchers ที่เกี่ยวข้อง
+        $pvRefs = \backend\models\PaymentVoucherRef::find()
+            ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PR, 'ref_id' => $model->id])
+            ->all();
+
+        if (!empty($pvRefs)):
+        ?>
+        <div class="card mt-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-money-check-alt"></i> Payment Vouchers ที่เกี่ยวข้อง</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 5%; text-align: center;">#</th>
+                            <th style="width: 20%;">PV No.</th>
+                            <th style="width: 15%;">วันที่</th>
+                            <th style="width: 20%; text-align: right;">จำนวนเงิน</th>
+                            <th style="width: 20%;">ผู้รับเงิน</th>
+                            <th style="width: 20%; text-align: center;">การดำเนินการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        $totalPaid = 0;
+                        foreach ($pvRefs as $i => $ref): 
+                            $totalPaid += $ref->amount;
+                        ?>
+                            <tr>
+                                <td style="text-align: center;"><?= $i + 1 ?></td>
+                                <td>
+                                    <?= Html::a($ref->paymentVoucher->voucher_no, ['/paymentvoucher/view', 'id' => $ref->payment_voucher_id], [
+                                        'class' => 'text-primary fw-bold',
+                                        'target' => '_blank'
+                                    ]) ?>
+                                </td>
+                                <td><?= Yii::$app->formatter->asDate($ref->paymentVoucher->trans_date, 'php:d/m/Y') ?></td>
+                                <td style="text-align: right;"><?= Yii::$app->formatter->asCurrency($ref->amount, 'THB') ?></td>
+                                <td><?= Html::encode($ref->paymentVoucher->recipient_name) ?></td>
+                                <td style="text-align: center;">
+                                    <?= Html::a('<i class="fas fa-eye"></i> ดูรายละเอียด', ['/paymentvoucher/view', 'id' => $ref->payment_voucher_id], [
+                                        'class' => 'btn btn-sm btn-info',
+                                        'target' => '_blank'
+                                    ]) ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <th colspan="3" style="text-align: right;">รวมจำนวนเงินที่จ่ายแล้ว:</th>
+                            <th style="text-align: right;"><?= Yii::$app->formatter->asCurrency($totalPaid, 'THB') ?></th>
+                            <th colspan="2"></th>
+                        </tr>
+                        <tr>
+                            <th colspan="3" style="text-align: right;">ยอดคงเหลือ:</th>
+                            <th style="text-align: right;" class="<?= ($model->net_amount - $totalPaid) > 0 ? 'text-danger' : 'text-success' ?>">
+                                <?= Yii::$app->formatter->asCurrency($model->net_amount - $totalPaid, 'THB') ?>
+                            </th>
+                            <th colspan="2"></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        <?php endif; ?>
+
     </div>
 
     <br/>
