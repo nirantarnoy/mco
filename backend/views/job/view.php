@@ -16,6 +16,11 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= Html::a('Update', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
         <?= Html::a('Print Invoice', ['print-invoice', 'id' => $model->id], ['class' => 'btn btn-info','target' => '_blank']) ?>
         <?= Html::a('<i class="fas fa-chart-line"></i> รายงานผู้บริหาร', ['executive-report', 'id' => $model->id], ['class' => 'btn btn-success']) ?>
+    <?php if(!Yii::$app->user->isGuest && Yii::$app->user->identity->username == 'mcoadmin'): ?>
+        <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#mergeJobModal" data-bs-toggle="modal" data-bs-target="#mergeJobModal">
+            <i class="fas fa-random"></i> รวมใบงาน
+        </button>
+    <?php endif; ?>
         <?= Html::a('Delete', ['delete', 'id' => $model->id], [
             'class' => 'btn btn-danger',
             'data' => [
@@ -118,3 +123,55 @@ $this->params['breadcrumbs'][] = $this->title;
     ]) ?>
 
 </div>
+
+<?php if(!Yii::$app->user->isGuest && Yii::$app->user->identity->username == 'mcoadmin'): ?>
+<!-- Modal for Merging Jobs -->
+<div class="modal fade" id="mergeJobModal" tabindex="-1" role="dialog" aria-labelledby="mergeJobModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form action="<?= \yii\helpers\Url::to(['merge-job']) ?>" method="post">
+                <input type="hidden" name="<?= Yii::$app->request->csrfParam ?>" value="<?= Yii::$app->request->csrfToken ?>">
+                <input type="hidden" name="current_job_id" value="<?= $model->id ?>">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mergeJobModalLabel">เลือกใบงานที่ต้องการนำมารวม</h5>
+                    <button type="button" class="close" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>เลือกใบงานที่จะรวมเข้ามา (ใบงานนี้จะถูกยกเลิก)</label>
+                        <?php 
+                            $jobs = \backend\models\Job::find()
+                                ->where(['status' => 1]) // Open only
+                                ->andWhere(['!=', 'id', $model->id])
+                                ->orderBy(['id' => SORT_DESC])
+                                ->all();
+                            $listData = \yii\helpers\ArrayHelper::map($jobs, 'id', 'job_no');
+                            
+                            echo \kartik\select2\Select2::widget([
+                                'name' => 'target_job_id',
+                                'data' => $listData,
+                                'options' => ['placeholder' => 'ค้นหาใบงาน...'],
+                                'pluginOptions' => [
+                                    'allowClear' => true,
+                                    'dropdownParent' => '#mergeJobModal'
+                                ],
+                            ]);
+                        ?>
+                    </div>
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle"></i> <b>คำเตือน:</b> <br>
+                        1. รายละเอียดสินค้าจากใบงานที่เลือก จะถูกเพิ่มต่อท้ายใบงานนี้ (เฉพาะสินค้าที่ไม่ซ้ำ)<br>
+                        2. ใบงานที่เลือกจะถูกเปลี่ยนสถานะเป็น <b>"ยกเลิก"</b> ทันที
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">ปิด</button>
+                    <button type="submit" class="btn btn-warning" onclick="return confirm('ยืนยันการรวมข้อมูล? ใบงานที่ถูกเลือกจะถูกยกเลิก');">ยืนยันการรวม</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<?php endif; ?>

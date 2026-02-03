@@ -120,9 +120,17 @@ class StocksumController extends BaseController
 
     public function actionStockReport()
     {
+        $filter_qty = \Yii::$app->request->get('filter_qty');
+
         $query = \backend\models\Product::find()
             ->with(['productGroup', 'unit'])
             ->orderBy(['product_group_id' => SORT_ASC, 'code' => SORT_ASC]);
+        
+        if ($filter_qty === 'gt0') {
+            $query->andWhere(['>', 'stock_qty', 0]);
+        } elseif ($filter_qty === 'eq0') {
+            $query->andWhere(['<=', 'stock_qty', 0]);
+        }
 
         $dataProvider = new \yii\data\ActiveDataProvider([
             'query' => $query,
@@ -131,6 +139,7 @@ class StocksumController extends BaseController
 
         return $this->render('stock_report', [
             'dataProvider' => $dataProvider,
+            'filter_qty' => $filter_qty,
         ]);
     }
 

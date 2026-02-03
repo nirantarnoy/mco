@@ -1,9 +1,11 @@
 <?php
 
 use yii\helpers\Html;
+use yii\helpers\Url;
 
 /* @var $this yii\web\View */
 /* @var $dataProvider yii\data\ActiveDataProvider */
+/* @var $filter_qty string */
 
 $this->title = 'รายงานแสดงยอดสินค้าคงเหลือ';
 $this->params['breadcrumbs'][] = ['label' => 'จัดการสต๊อกสินค้า', 'url' => ['index']];
@@ -35,6 +37,11 @@ $products = $dataProvider->getModels();
         <div class="card-header">
             <h3 class="card-title"><?= Html::encode($this->title) ?></h3>
             <div class="card-tools">
+                <select class="form-control" style="width: auto; display: inline-block; margin-right: 10px;" onchange="location.href=this.value">
+                    <option value="<?= Url::current(['filter_qty' => 'all']) ?>" <?= ($filter_qty ?? '') == 'all' ? 'selected' : '' ?>>แสดงทั้งหมด</option>
+                    <option value="<?= Url::current(['filter_qty' => 'gt0']) ?>" <?= ($filter_qty ?? '') == 'gt0' ? 'selected' : '' ?>>แสดงคงเหลือ > 0</option>
+                    <option value="<?= Url::current(['filter_qty' => 'eq0']) ?>" <?= ($filter_qty ?? '') == 'eq0' ? 'selected' : '' ?>>แสดงคงเหลือ = 0</option>
+                </select>
                 <button class="btn btn-default" onclick="window.print()"><i class="fas fa-print"></i> พิมพ์</button>
             </div>
         </div>

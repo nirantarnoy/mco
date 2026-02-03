@@ -55,13 +55,13 @@ $autocompleteCSS = <<<CSS
     position: absolute;
     top: 100%;
     left: 0;
-    right: 0;
     z-index: 1050;
     background: white;
     border: 1px solid #ccc;
     max-height: 200px;
     overflow-y: auto;
     width: 100%;
+    min-width: 300px;
     display: none;
 }
 
@@ -111,6 +111,7 @@ $autocompleteCSS = <<<CSS
 #details-table td {
     padding: 0 !important;
     vertical-align: middle;
+    position: relative;
 }
 #details-table .form-group {
     margin-bottom: 0;
@@ -628,7 +629,8 @@ function selectProduct(input, product) {
     }
     hiddenInput.val(product.id);
     
-    input.siblings('.autocomplete-dropdown').hide();
+    // Correctly hide the dropdown using data-index
+    $('.autocomplete-dropdown[data-index="' + index + '"]').hide();
 }
 
 function delete_doc(e,typeid){

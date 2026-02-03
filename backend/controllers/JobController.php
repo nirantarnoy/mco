@@ -2083,4 +2083,67 @@ class JobController extends BaseController
         }
         return false;
     }
+    /**
+     * Merge another job into current job
+     */
+    public function actionMergeJob()
+    {
+        $current_job_id = Yii::$app->request->post('current_job_id');
+        $target_job_id = Yii::$app->request->post('target_job_id');
+
+        if (!$current_job_id || !$target_job_id) {
+            Yii::$app->session->setFlash('error', 'ข้อมูลไม่ครบถ้วน');
+            return $this->redirect(['index']);
+        }
+
+        $currentJob = $this->findModel($current_job_id);
+        $targetJob = $this->findModel($target_job_id);
+
+        if ($currentJob && $targetJob) {
+            $transaction = Yii::$app->db->beginTransaction();
+            try {
+                // Get existing product IDs in current job to avoid duplicates
+                $existingProductIds = [];
+                foreach ($currentJob->jobLines as $line) {
+                    $existingProductIds[] = $line->product_id;
+                }
+
+                $count = 0;
+                foreach ($targetJob->jobLines as $line) {
+                    if (!in_array($line->product_id, $existingProductIds)) {
+                        $newLine = new JobLine();
+                        $newLine->job_id = $currentJob->id;
+                        $newLine->product_id = $line->product_id;
+                        $newLine->qty = $line->qty;
+                        $newLine->line_price = $line->line_price;
+                        $newLine->line_total = $line->line_total;
+                        $newLine->note = $line->note;
+                        $newLine->status = $line->status;
+                        
+                        if ($newLine->save()) {
+                            $count++;
+                        }
+                    }
+                }
+
+                // Recalculate job_amount
+                $total_amount = \common\models\JobLine::find()->where(['job_id' => $currentJob->id])->sum('line_total');
+                $currentJob->job_amount = $total_amount;
+                $currentJob->save(false);
+
+                // Cancel the target job
+                $targetJob->status = Job::JOB_STATUS_CANCELLED; 
+                $targetJob->save(false);
+
+                $transaction->commit();
+                Yii::$app->session->setFlash('success', "รวมใบงานสำเร็จ เพิ่มรายการใหม่ $count รายการ และยกเลิกใบงานต้นทางแล้ว");
+                
+            } catch (\Exception $e) {
+                $transaction->rollBack();
+                Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+            }
+        }
+
+        return $this->redirect(['view', 'id' => $current_job_id]);
+    }
 }

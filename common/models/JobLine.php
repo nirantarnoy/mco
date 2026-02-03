@@ -35,7 +35,7 @@ class JobLine extends \yii\db\ActiveRecord
     {
         return [
             [['job_id', 'product_id', 'qty', 'line_price', 'line_total', 'status', 'note'], 'default', 'value' => null],
-            [['job_id', 'product_id', 'status','unit_id'], 'integer'],
+            [['job_id', 'product_id', 'status'], 'integer'],
             [['qty', 'line_price', 'line_total'], 'number'],
             [['note'], 'string', 'max' => 255],
         ];
