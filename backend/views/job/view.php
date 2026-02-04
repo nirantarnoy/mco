@@ -16,7 +16,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= Html::a('Update', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
         <?= Html::a('Print Invoice', ['print-invoice', 'id' => $model->id], ['class' => 'btn btn-info','target' => '_blank']) ?>
         <?= Html::a('<i class="fas fa-chart-line"></i> รายงานผู้บริหาร', ['executive-report', 'id' => $model->id], ['class' => 'btn btn-success']) ?>
-    <?php if(!Yii::$app->user->isGuest && Yii::$app->user->identity->username == 'mcoadmin'): ?>
+    <?php if(!Yii::$app->user->isGuest && (Yii::$app->user->identity->username == 'mcoadmin' || Yii::$app->user->identity->username == 'sorakrit' || Yii::$app->user->identity->username == 'sirilak')): ?>
         <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#mergeJobModal" data-bs-toggle="modal" data-bs-target="#mergeJobModal">
             <i class="fas fa-random"></i> รวมใบงาน
         </button>
