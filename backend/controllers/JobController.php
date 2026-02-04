@@ -2132,6 +2132,8 @@ class JobController extends BaseController
                 $currentJob->save(false);
 
                 // Cancel the target job
+                \backend\models\Purch::updateAll(['job_id' => $currentJob->id], ['job_id' => $targetJob->id]);
+
                 $targetJob->status = Job::JOB_STATUS_CANCELLED; 
                 $targetJob->save(false);
 

@@ -60,6 +60,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <div class="col-md-3" style="padding-top: 30px;">
                                 <button type="submit" class="btn btn-primary">ค้นหา</button>
                                 <a href="<?= \yii\helpers\Url::to(['report-vendor-summary']) ?>" class="btn btn-default">รีเซ็ต</a>
+                                <button type="button" class="btn btn-warning" onclick="window.print()"><i class="fa fa-print"></i> พิมพ์</button>
                             </div>
                         </div>
                     </form>
