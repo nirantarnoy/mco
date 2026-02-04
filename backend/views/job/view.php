@@ -124,7 +124,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 </div>
 
-<?php if(!Yii::$app->user->isGuest && Yii::$app->user->identity->username == 'mcoadmin'): ?>
+<?php if(!Yii::$app->user->isGuest && (Yii::$app->user->identity->username == 'mcoadmin' || Yii::$app->user->identity->username == 'sorakrit' || Yii::$app->user->identity->username == 'sirilak')): ?>
 <!-- Modal for Merging Jobs -->
 <div class="modal fade" id="mergeJobModal" tabindex="-1" role="dialog" aria-labelledby="mergeJobModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
