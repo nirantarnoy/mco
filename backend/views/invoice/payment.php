@@ -35,24 +35,32 @@ $this->title = 'บันทึกรับเงิน: ' . $invoice->invoice_n
                 <div class="card-body">
                     <?php $form = ActiveForm::begin(['options' => ['enctype' => 'multipart/form-data']]); ?>
                     <div class="row">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <?= $form->field($model, 'payment_date')->widget(DatePicker::classname(), [
                                 'options' => ['placeholder' => 'เลือกวันที่', 'value' => date('Y-m-d')],
                                 'pluginOptions' => ['autoclose' => true, 'format' => 'yyyy-mm-dd', 'todayHighlight' => true]
                             ]) ?>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <?= $form->field($model, 'amount')->textInput(['type' => 'number', 'step' => '0.01', 'value' => $remaining > 0 ? $remaining : 0]) ?>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
+                            <?= $form->field($model, 'file')->fileInput(['class' => 'form-control-file mt-2']) ?>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
                             <?= $form->field($model, 'payment_method')->dropDownList([
                                 'เงินสด' => 'เงินสด',
                                 'โอนเงินธนาคาร' => 'โอนเงินธนาคาร',
                                 'เช็ค' => 'เช็ค',
                             ], ['prompt' => '-- เลือกช่องทาง --']) ?>
                         </div>
-                        <div class="col-md-3">
-                            <?= $form->field($model, 'file')->fileInput(['class' => 'form-control-file mt-2']) ?>
+                        <div class="col-md-4 bank-account-section" style="display: none;">
+                            <?= $form->field($model, 'bank_account')->textInput(['placeholder' => 'ระบุเลขที่บัญชีบริษัท']) ?>
+                        </div>
+                        <div class="col-md-4 cheque-number-section" style="display: none;">
+                            <?= $form->field($model, 'cheque_number')->textInput(['placeholder' => 'ระบุเลขที่เช็ค']) ?>
                         </div>
                     </div>
                     <div class="row">
@@ -87,7 +95,14 @@ $this->title = 'บันทึกรับเงิน: ' . $invoice->invoice_n
                             <tr>
                                 <td class="text-center"><?= $index + 1 ?></td>
                                 <td class="text-center"><?= Yii::$app->formatter->asDate($item->payment_date) ?></td>
-                                <td class="text-center"><?= Html::encode($item->payment_method) ?></td>
+                                <td class="text-center">
+                                    <?= Html::encode($item->payment_method) ?>
+                                    <?php if ($item->payment_method == 'โอนเงินธนาคาร' && $item->bank_account): ?>
+                                        <div class="small text-muted">บ/ช: <?= Html::encode($item->bank_account) ?></div>
+                                    <?php elseif ($item->payment_method == 'เช็ค' && $item->cheque_number): ?>
+                                        <div class="small text-muted">เช็ค: <?= Html::encode($item->cheque_number) ?></div>
+                                    <?php endif; ?>
+                                </td>
                                 <td><?= Html::encode($item->note) ?></td>
                                 <td class="text-right font-weight-bold text-primary"><?= number_format($item->amount, 2) ?></td>
                                 <td class="text-center">
@@ -139,3 +154,29 @@ $this->title = 'บันทึกรับเงิน: ' . $invoice->invoice_n
     .btn-xs { padding: 1px 5px; font-size: 12px; line-height: 1.5; border-radius: 3px; }
     .table td { vertical-align: middle !important; }
 </style>
+
+<?php
+$js = <<<JS
+    function checkPaymentMethod() {
+        let method = $('#invoicepaymentreceipt-payment_method').val();
+        if(method == 'โอนเงินธนาคาร'){
+            $('.bank-account-section').show();
+            $('.cheque-number-section').hide();
+        } else if(method == 'เช็ค'){
+            $('.bank-account-section').hide();
+            $('.cheque-number-section').show();
+        } else {
+            $('.bank-account-section').hide();
+            $('.cheque-number-section').hide();
+        }
+    }
+
+    $(document).on('change', '#invoicepaymentreceipt-payment_method', function(){
+        checkPaymentMethod();
+    });
+
+    // Check on load
+    checkPaymentMethod();
+JS;
+$this->registerJs($js);
+?>
