@@ -399,10 +399,39 @@ class JournalTrans extends ActiveRecord
         if ($this->canApprove()) {
             $transaction = Yii::$app->db->beginTransaction();
             try {
+                // Validate stock availability for outbound transactions
+                if ($this->stock_type_id == self::STOCK_TYPE_OUT) {
+                    $checkStock = [];
+                    foreach ($this->journalTransLines as $line) {
+                        if ($line->status == JournalTransLine::STATUS_CANCELLED) continue;
+                        $key = $line->product_id . '_' . $line->warehouse_id;
+                        if (!isset($checkStock[$key])) {
+                            $checkStock[$key] = [
+                                'product_name' => $line->product->name ?? 'Unknown',
+                                'qty' => 0,
+                                'product_model' => $line->product,
+                                'warehouse_id' => $line->warehouse_id
+                            ];
+                        }
+                        $checkStock[$key]['qty'] += $line->qty;
+                    }
+
+                    foreach ($checkStock as $check) {
+                        if ($check['product_model']) {
+                            $availableStock = $check['product_model']->getAvailableStockInWarehouse($check['warehouse_id']);
+                            if ($availableStock < $check['qty']) {
+                                throw new \Exception("Insufficient stock for product: {$check['product_name']}. Available: {$availableStock}, Required: {$check['qty']}");
+                            }
+                        }
+                    }
+                }
+
                 $this->status = self::STATUS_APPROVED;
                 $this->approve_by = \Yii::$app->user->id;
                 $this->approve_date = date('Y-m-d H:i:s');
-                $this->save(false);
+                if (!$this->save(false)) {
+                    throw new \Exception("Failed to save transaction status.");
+                }
 
                 // Process stock movements
                 $this->processStockMovements();
@@ -415,6 +444,100 @@ class JournalTrans extends ActiveRecord
             }
         }
         return false;
+    }
+
+    /**
+     * Cancel the entire transaction and reverse all stock movements.
+     */
+    public function cancel()
+    {
+        if ($this->status !== self::STATUS_APPROVED) {
+            return false;
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            foreach ($this->journalTransLines as $line) {
+                if ($line->status != JournalTransLine::STATUS_CANCELLED) {
+                    $this->cancelLineInternal($line);
+                }
+            }
+
+            // Update main transaction status
+            $this->status = self::STATUS_CANCELLED;
+            $this->updated_by = Yii::$app->user->id;
+            $this->updated_at = date('Y-m-d H:i:s');
+            if (!$this->save(false)) {
+                throw new \Exception("Failed to update transaction status.");
+            }
+
+            $transaction->commit();
+            return true;
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * Cancel a single line item.
+     */
+    public function cancelLine($lineId)
+    {
+        $line = JournalTransLine::findOne($lineId);
+        if (!$line || $line->journal_trans_id != $this->id) {
+            return false;
+        }
+
+        if ($this->status !== self::STATUS_APPROVED) {
+            return false;
+        }
+
+        if ($line->status == JournalTransLine::STATUS_CANCELLED) {
+            return true;
+        }
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $this->cancelLineInternal($line);
+            $transaction->commit();
+            return true;
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            throw $e;
+        }
+    }
+
+    protected function cancelLineInternal($line)
+    {
+        $reverseDirection = ($this->stock_type_id == self::STOCK_TYPE_IN) ? -1 : 1;
+        $reverseStockTypeId = ($this->stock_type_id == self::STOCK_TYPE_IN) ? self::STOCK_TYPE_OUT : self::STOCK_TYPE_IN;
+
+        // Update Stock Sum
+        StockSum::updateStock($line->product_id, $line->warehouse_id, $line->qty, $reverseDirection);
+
+        // Create reverse StockTrans for history
+        $stockTrans = new StockTrans();
+        $stockTrans->journal_trans_id = $this->id;
+        $stockTrans->product_id = $line->product_id;
+        $stockTrans->warehouse_id = $line->warehouse_id;
+        $stockTrans->qty = $line->qty;
+        $stockTrans->stock_type_id = $reverseStockTypeId;
+        $stockTrans->trans_type_id = $this->trans_type_id;
+        $stockTrans->trans_date = date('Y-m-d H:i:s');
+        $stockTrans->created_at = date('Y-m-d H:i:s');
+        $stockTrans->created_by = Yii::$app->user->id;
+        $stockTrans->status = 'cancelled';
+        $stockTrans->remark = "Cancel Item: " . ($line->product->code ?? '');
+        $stockTrans->line_price = $line->line_price;
+        if (!$stockTrans->save(false)) {
+            throw new \Exception("Failed to save stock transaction history.");
+        }
+
+        $line->status = JournalTransLine::STATUS_CANCELLED;
+        if (!$line->save(false)) {
+            throw new \Exception("Failed to update line status.");
+        }
     }
 
     /**
@@ -452,34 +575,8 @@ class JournalTrans extends ActiveRecord
      */
     protected function updateStockSummary($productId, $warehouseId, $qty)
     {
-        $company_id = \Yii::$app->session->get('company_id');
-        $stockSum = StockSum::find()
-            ->where(['product_id' => $productId, 'warehouse_id' => $warehouseId])
-            ->one();
-
-        if (!$stockSum) {
-            $stockSum = new StockSum();
-            $stockSum->product_id = $productId;
-            $stockSum->warehouse_id = $warehouseId;
-            $stockSum->qty = 0;
-            $stockSum->reserv_qty = 0;
-            $stockSum->created_at = date('Y-m-d H:i:s');
-            $stockSum->company_id = $company_id;
-        }
-
-        // Calculate quantity change based on stock type
-        $qtyChange = 0;
-        if ($this->stock_type_id == self::STOCK_TYPE_IN) {
-            $qtyChange = $qty;
-        } elseif ($this->stock_type_id == self::STOCK_TYPE_OUT) {
-            $qtyChange = -$qty;
-        }
-        $stockSum->qty += $qtyChange;
-        $stockSum->updated_at = date('Y-m-d H:i:s');
-        $stockSum->save(false);
-
-        // Update product total stock
-        $this->updateProductTotalStock($productId);
+        $direction = ($this->stock_type_id == self::STOCK_TYPE_IN) ? 1 : -1;
+        StockSum::updateStock($productId, $warehouseId, $qty, $direction);
     }
 
     /**

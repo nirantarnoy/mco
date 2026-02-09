@@ -11,6 +11,15 @@ date_default_timezone_set('Asia/Bangkok');
 
 class Product extends \common\models\Product
 {
+    public $is_adjust_stock;
+
+    public function rules()
+    {
+        return array_merge(parent::rules(), [
+            [['is_adjust_stock'], 'safe'],
+        ]);
+    }
+
     public function behaviors()
     {
         return [

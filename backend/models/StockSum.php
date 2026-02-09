@@ -75,42 +75,39 @@ class StockSum extends ActiveRecord
         return $this->qty - $this->reserv_qty;
     }
 
-    public static function updateStockIn($productId, $warehouseId, $qty, $stockType)
+    public static function updateStock($productId, $warehouseId, $qty, $direction)
     {
         $stockSum = self::find()->where(['product_id' => $productId, 'warehouse_id' => $warehouseId])->one();
         if (!$stockSum) {
             $stockSum = new self();
             $stockSum->product_id = $productId;
             $stockSum->warehouse_id = $warehouseId;
-            $stockSum->qty = $qty;
+            $stockSum->qty = 0;
             $stockSum->reserv_qty = 0;
             $stockSum->created_at = date('Y-m-d H:i:s');
-            if($stockSum->save(false)){
-                self::updateProductStock($productId);
-            }
-        }else{
-            $stockSum->qty += $qty;
-            $stockSum->updated_at = date('Y-m-d H:i:s');
-            if($stockSum->save(false)){
-                self::updateProductStock($productId);
-            }
         }
-        // Calculate quantity change based on stock type
+
+        if ($direction > 0) {
+            $stockSum->qty += $qty;
+        } else {
+            $stockSum->qty -= $qty;
+        }
+
+        $stockSum->updated_at = date('Y-m-d H:i:s');
+        if ($stockSum->save(false)) {
+            self::updateProductStock($productId);
+        }
         return $stockSum;
     }
 
-    public static function updateStockOut($productId, $warehouseId, $qty, $stockType)
+    public static function updateStockIn($productId, $warehouseId, $qty, $stockType = null)
     {
-        $stockSum = self::find()->where(['product_id' => $productId, 'warehouse_id' => $warehouseId])->one();
-        if ($stockSum){
-            $stockSum->qty -= $qty;
-            $stockSum->updated_at = date('Y-m-d H:i:s');
-            if($stockSum->save(false)){
-                self::updateProductStock($productId);
-            }
-        }
-        // Calculate quantity change based on stock type
-        return $stockSum;
+        return self::updateStock($productId, $warehouseId, $qty, 1);
+    }
+
+    public static function updateStockOut($productId, $warehouseId, $qty, $stockType = null)
+    {
+        return self::updateStock($productId, $warehouseId, $qty, -1);
     }
 
     protected static function updateProductStock($productId): bool

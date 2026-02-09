@@ -460,32 +460,6 @@ class JournaltransController extends BaseController
         }
 
         try {
-            // Validate stock availability for outbound transactions
-            if ($model->stock_type_id == JournalTrans::STOCK_TYPE_OUT) {
-                $checkStock = [];
-                foreach ($model->journalTransLines as $line) {
-                    $key = $line->product_id . '_' . $line->warehouse_id;
-                    if (!isset($checkStock[$key])) {
-                        $checkStock[$key] = [
-                            'product_name' => $line->product->name ?? 'Unknown',
-                            'qty' => 0,
-                            'product_model' => $line->product,
-                            'warehouse_id' => $line->warehouse_id
-                        ];
-                    }
-                    $checkStock[$key]['qty'] += $line->qty;
-                }
-
-                foreach ($checkStock as $check) {
-                    if ($check['product_model']) {
-                        $availableStock = $check['product_model']->getAvailableStockInWarehouse($check['warehouse_id']);
-                        if ($availableStock < $check['qty']) {
-                            throw new \Exception("Insufficient stock for product: {$check['product_name']}. Available: {$availableStock}, Required: {$check['qty']}");
-                        }
-                    }
-                }
-            }
-
             if ($model->approve()) {
                 Yii::$app->session->setFlash('success', 'Transaction approved successfully.');
             } else {
@@ -512,46 +486,13 @@ class JournaltransController extends BaseController
             return $this->redirect(['view', 'id' => $id]);
         }
 
-        $transaction = Yii::$app->db->beginTransaction();
         try {
-            foreach ($model->journalTransLines as $line) {
-                if ($line->status != JournalTransLine::STATUS_CANCELLED) {
-                    $reverseStockType = ($model->stock_type_id == JournalTrans::STOCK_TYPE_IN) ? JournalTrans::STOCK_TYPE_OUT : JournalTrans::STOCK_TYPE_IN;
-                    
-                    $this->adjustStock($line->product_id, $line->warehouse_id, $line->qty, $reverseStockType, "Cancel Transaction: " . $model->journal_no);
-                    
-                    $stockTrans = new StockTrans();
-                    $stockTrans->journal_trans_id = $model->id;
-                    $stockTrans->product_id = $line->product_id;
-                    $stockTrans->warehouse_id = $line->warehouse_id;
-                    $stockTrans->qty = $line->qty;
-                    $stockTrans->stock_type_id = $reverseStockType;
-                    $stockTrans->trans_type_id = $model->trans_type_id; 
-                    $stockTrans->created_at = date('Y-m-d H:i:s');
-                    $stockTrans->created_by = Yii::$app->user->id;
-                    if (!$stockTrans->save(false)) {
-                        throw new \Exception("Failed to save stock transaction history.");
-                    }
-
-                    $line->status = JournalTransLine::STATUS_CANCELLED;
-                    if (!$line->save(false)) {
-                        throw new \Exception("Failed to update line status.");
-                    }
-                }
+            if ($model->cancel()) {
+                Yii::$app->session->setFlash('success', 'Transaction cancelled successfully.');
+            } else {
+                throw new \Exception("Failed to cancel transaction.");
             }
-
-            // Update main transaction status
-            $model->status = JournalTrans::STATUS_CANCELLED;
-            $model->updated_by = Yii::$app->user->id;
-            $model->updated_at = date('Y-m-d H:i:s');
-            if (!$model->save(false)) {
-                throw new \Exception("Failed to update transaction status.");
-            }
-
-            $transaction->commit();
-            Yii::$app->session->setFlash('success', 'Transaction cancelled successfully.');
         } catch (\Exception $e) {
-            $transaction->rollBack();
             Yii::$app->session->setFlash('error', 'Error cancelling transaction: ' . $e->getMessage());
         }
 
@@ -571,44 +512,14 @@ class JournaltransController extends BaseController
         }
 
         $model = $line->journalTrans;
-        if ($model->status !== JournalTrans::STATUS_APPROVED) {
-             Yii::$app->session->setFlash('error', 'Only approved transactions can be cancelled.');
-             return $this->redirect(['view', 'id' => $model->id]);
-        }
-
-        if ($line->status == JournalTransLine::STATUS_CANCELLED) {
-             Yii::$app->session->setFlash('warning', 'This item is already cancelled.');
-             return $this->redirect(['view', 'id' => $model->id]);
-        }
-
-        $transaction = Yii::$app->db->beginTransaction();
+        
         try {
-            $reverseStockType = ($model->stock_type_id == JournalTrans::STOCK_TYPE_IN) ? JournalTrans::STOCK_TYPE_OUT : JournalTrans::STOCK_TYPE_IN;
-            
-            $this->adjustStock($line->product_id, $line->warehouse_id, $line->qty, $reverseStockType, "Cancel Line Item: " . $line->product->code);
-            
-            $stockTrans = new StockTrans();
-            $stockTrans->journal_trans_id = $model->id;
-            $stockTrans->product_id = $line->product_id;
-            $stockTrans->warehouse_id = $line->warehouse_id;
-            $stockTrans->qty = $line->qty;
-            $stockTrans->stock_type_id = $reverseStockType;
-            $stockTrans->trans_type_id = $model->trans_type_id;
-            $stockTrans->created_at = date('Y-m-d H:i:s');
-            $stockTrans->created_by = Yii::$app->user->id;
-            if (!$stockTrans->save(false)) {
-                throw new \Exception("Failed to save stock transaction history.");
+            if ($model->cancelLine($id)) {
+                Yii::$app->session->setFlash('success', 'Item cancelled successfully.');
+            } else {
+                Yii::$app->session->setFlash('error', 'Cannot cancel item. Ensure transaction is approved and item is not already cancelled.');
             }
-
-            $line->status = JournalTransLine::STATUS_CANCELLED;
-            if (!$line->save(false)) {
-                throw new \Exception("Failed to update line status.");
-            }
-
-            $transaction->commit();
-            Yii::$app->session->setFlash('success', 'Item cancelled successfully.');
         } catch (\Exception $e) {
-            $transaction->rollBack();
             Yii::$app->session->setFlash('error', 'Error cancelling item: ' . $e->getMessage());
         }
 

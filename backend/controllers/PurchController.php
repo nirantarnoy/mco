@@ -1000,30 +1000,12 @@ class PurchController extends BaseController
                 if (!$journalTransLine->save()) {
                     throw new \Exception('ไม่สามารถสร้าง Journal Transaction Line ได้: ' . implode(', ', $journalTransLine->getFirstErrors()));
                 }
+            }
 
-                if ($line_warehouse_id > 0 && !empty($productId)) {
-                    // Create Stock Transaction
-                    $stockTrans = new \backend\models\StockTrans();
-                    $stockTrans->journal_trans_id = $journalTrans->id;
-                    $stockTrans->trans_date = $journalTrans->trans_date;
-                    $stockTrans->product_id = $productId;
-                    $stockTrans->warehouse_id = $line_warehouse_id;
-                    $stockTrans->trans_type_id = \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE;
-                    $stockTrans->stock_type_id = \backend\models\JournalTrans::STOCK_TYPE_IN;
-                    $stockTrans->qty = $qty;
-                    $stockTrans->line_price = $poLine->line_price;
-                    $stockTrans->status = 1;
-                    $stockTrans->remark = $poLine->product_name;
-
-                    if (!$stockTrans->save()) {
-                        throw new \Exception('ไม่สามารถสร้าง Stock Transaction ได้: ' . implode(', ', $stockTrans->getFirstErrors()));
-                    }
-
-                    // Update Stock Summary
-                    if (!\backend\models\StockSum::updateStockIn($productId, $line_warehouse_id, $qty, 1)) {
-                        throw new \Exception("ไม่สามารถอัพเดทสต๊อกสินค้า ID: $productId ได้");
-                    }
-                }
+            // Approve the transaction to update stock and create stock history records
+            // This ensures logic is centralized and prevents double counting
+            if (!$journalTrans->approve()) {
+                 throw new \Exception('ไม่สามารถอนุมัติรายการสต็อกได้');
             }
 
             // Save Dynamic Checklist if data provided
@@ -1068,44 +1050,16 @@ class PurchController extends BaseController
      */
     private function processCancelReceive($journalTrans)
     {
-        $transaction = \Yii::$app->db->beginTransaction();
         try {
-            // Cancel Journal Transaction
-            $journalTrans->status = \backend\models\JournalTrans::STATUS_CANCELLED;
-            if (!$journalTrans->save()) {
-                throw new \Exception('ไม่สามารถยกเลิก Journal Transaction ได้' . implode(', ', $journalTrans->getFirstErrors()));
+            if ($journalTrans->cancel()) {
+                return [
+                    'success' => true,
+                    'message' => 'ยกเลิกการรับสินค้าเรียบร้อยแล้ว เลขที่เอกสาร: ' . $journalTrans->journal_no
+                ];
+            } else {
+                return ['success' => false, 'message' => 'ไม่สามารถยกเลิกรายการได้'];
             }
-
-            // Cancel all related Stock Transactions
-            \backend\models\StockTrans::updateAll(
-                ['status' => \backend\models\StockTrans::STATUS_CANCELLED],
-                ['journal_trans_id' => $journalTrans->id]
-            );
-
-            // Reverse stock quantities
-            // $journalTransLines = $journalTrans->journalTransLines;
-            $journalTransLines = \backend\models\JournalTransLine::find()
-                ->where(['journal_trans_id' => $journalTrans->id])->all();
-            foreach ($journalTransLines as $line) {
-                // Reverse stock by reducing the quantity (opposite of receive)
-                if (!\backend\models\StockSum::updateStockOut(
-                    $line->product_id,
-                    $line->warehouse_id,
-                    $line->qty,
-                    \backend\models\JournalTrans::STOCK_TYPE_OUT
-                )) {
-                    throw new \Exception("ไม่สามารถปรับปรุงสต๊อกสินค้า ID: {$line->product_id} ได้");
-                }
-            }
-
-            $transaction->commit();
-            return [
-                'success' => true,
-                'message' => 'ยกเลิกการรับสินค้าเรียบร้อยแล้ว เลขที่เอกสาร: ' . $journalTrans->journal_no
-            ];
-
         } catch (\Exception $e) {
-            $transaction->rollBack();
             return ['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()];
         }
     }

@@ -203,8 +203,25 @@ if (!$model->isNewRecord) {
             </div>
 
         </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card card-body bg-light">
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <?php echo $form->field($model, 'is_adjust_stock')->widget(\toxor88\switchery\Switchery::className(), [
+                                'options' => [
+                                    'label' => '',
+                                    'class' => 'form-control',
+                                    'onchange' => 'if($(this).is(":checked")){$(".stock-manage-section").show()}else{$(".stock-manage-section").hide()}'
+                                ]
+                            ])->label('ต้องการปรับปรุงยอดเงิน/สต๊อกสินค้า?') ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <br/>
-        <br/>
+        <div class="stock-manage-section" style="display: none;">
         <div class="row">
             <div class="col-lg-12">
                 <h4>จัดการสต๊อกสินค้า</h4>
@@ -283,6 +300,7 @@ if (!$model->isNewRecord) {
                     </tfoot>
                 </table>
             </div>
+        </div>
         </div>
         <br/>
         <div class="form-group">
