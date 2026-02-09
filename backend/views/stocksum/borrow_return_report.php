@@ -110,10 +110,13 @@ $this->params['breadcrumbs'][] = $this->title;
                             <th class="text-center">Job No</th>
                             <th class="text-center">รหัสเครื่องมือ</th>
                             <th class="text-center">รายการเครื่องมือ</th>
-                            <th class="text-center">เบิกทั้งหมด (ครั้ง)</th>
-                            <th class="text-center">คืนแล้ว (ครั้ง)</th>
-                            <th class="text-center">คงค้าง (ครั้ง)</th>
-                            <th class="text-center">รายการเสียหาย</th>
+                            <th class="text-center">เบิก</th>
+                            <th class="text-center">คืนเบิก</th>
+                            <th class="text-center">ยืม</th>
+                            <th class="text-center">คืนยืม</th>
+                            <th class="text-center">คงค้าง</th>
+                            <th class="text-center">เสียหาย</th>
+                            <th class="text-center">สูญหาย</th>
                             <th class="text-center">หมายเหตุ</th>
                         </tr>
                     </thead>
@@ -123,24 +126,29 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?php 
                                     $product = \backend\models\Product::findOne($model['product_id']);
                                     $job = \backend\models\Job::findOne($model['job_id']);
-                                    $pending = $model['total_issued'] - $model['total_returned'];
+                                    // Outstanding = (Withdraw + Borrow) - (Return Withdraw + Return Borrow + Damaged + Missing)
+                                    // Or depending on how they handle damage/missing. Usually they are counted as subtracted from outstanding.
+                                    $pending = ($model['total_withdraw'] + $model['total_borrow']) - ($model['total_return_withdraw'] + $model['total_return_borrow'] + $model['total_damaged'] + $model['total_missing']);
                                 ?>
                                 <tr>
                                     <td><?= $job ? $job->job_no : '-' ?></td>
                                     <td><?= $product ? $product->code : '-' ?></td>
                                     <td><?= $product ? $product->name : '-' ?></td>
-                                    <td class="text-center"><?= number_format($model['total_issued'], 0) ?></td>
-                                    <td class="text-center"><?= number_format($model['total_returned'], 0) ?></td>
+                                    <td class="text-center"><?= number_format($model['total_withdraw'], 0) ?></td>
+                                    <td class="text-center"><?= number_format($model['total_return_withdraw'], 0) ?></td>
+                                    <td class="text-center"><?= number_format($model['total_borrow'], 0) ?></td>
+                                    <td class="text-center"><?= number_format($model['total_return_borrow'], 0) ?></td>
                                     <td class="text-center" style="<?= $pending > 0 ? 'color: red; font-weight: bold;' : '' ?>">
                                         <?= number_format($pending, 0) ?>
                                     </td>
                                     <td class="text-center"><?= number_format($model['total_damaged'], 0) ?></td>
+                                    <td class="text-center"><?= number_format($model['total_missing'], 0) ?></td>
                                     <td><?= Html::encode($model['remarks']) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="8" class="text-center">ไม่พบข้อมูล</td>
+                                <td colspan="12" class="text-center">ไม่พบข้อมูล</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>

@@ -88,6 +88,17 @@ $this->params['breadcrumbs'][] = $this->title;
                 return \backend\helpers\CatType::getTypeById($data->type_id);
             }
         ],
+        [
+            'attribute' => 'stock_qty',
+            'format' => 'raw',
+            'value' => function ($model) {
+                if ($model->stock_qty < $model->minimum_stock) {
+                    return '<div style="color: red">' . number_format($model->stock_qty, 0) . '</div>';
+                } else {
+                    return number_format($model->stock_qty, 0);
+                }
+            }
+        ],
     ];
     if (\Yii::$app->user->can('ViewCostPrice')) {
         $attributes2[] = [

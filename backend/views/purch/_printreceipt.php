@@ -674,7 +674,7 @@ function getEmpRequestorId($userid){
             <div>ลงชื่อ</div>
             <div class="signature-line"></div>
             <div>(........................................)</div>
-            <div>&nbsp;</div>
+            <div>ตัวแทนผู้ขอซื้อ</div>
         </div>
     </div>
 

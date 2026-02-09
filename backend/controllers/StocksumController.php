@@ -155,9 +155,12 @@ class StocksumController extends BaseController
                 'MAX(journal_trans_line.id) AS id',
                 'journal_trans.job_id AS job_id',
                 'journal_trans_line.product_id',
-                'SUM(CASE WHEN journal_trans.trans_type_id IN (3, 5) THEN journal_trans_line.qty ELSE 0 END) as total_issued',
-                'SUM(CASE WHEN journal_trans.trans_type_id IN (4, 6) THEN journal_trans_line.qty ELSE 0 END) as total_returned',
+                'SUM(CASE WHEN journal_trans.trans_type_id = 3 THEN journal_trans_line.qty ELSE 0 END) as total_withdraw',
+                'SUM(CASE WHEN journal_trans.trans_type_id = 4 THEN journal_trans_line.qty ELSE 0 END) as total_return_withdraw',
+                'SUM(CASE WHEN journal_trans.trans_type_id = 5 THEN journal_trans_line.qty ELSE 0 END) as total_borrow',
+                'SUM(CASE WHEN journal_trans.trans_type_id = 6 THEN journal_trans_line.qty ELSE 0 END) as total_return_borrow',
                 'SUM(COALESCE(journal_trans_line.damaged_qty, 0)) as total_damaged',
+                'SUM(COALESCE(journal_trans_line.missing_qty, 0)) as total_missing',
                 'GROUP_CONCAT(DISTINCT journal_trans_line.condition_note SEPARATOR ", ") as remarks'
             ])
             ->joinWith('journalTrans')
