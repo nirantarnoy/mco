@@ -73,8 +73,23 @@ class CustomerSearch extends Customer
         $query->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')]);
 
         if($this->globalSearch != '') {
-            $query->orFilterWhere(['like', 'name', $this->globalSearch])
-                ->orFilterWhere(['like', 'description', $this->globalSearch]);
+            $query->andFilterWhere([
+                'or',
+                ['like', 'code', $this->globalSearch],
+                ['like', 'name', $this->globalSearch],
+                ['like', 'description', $this->globalSearch],
+                ['like', 'contact_name', $this->globalSearch],
+                ['like', 'phone', $this->globalSearch],
+                ['like', 'email', $this->globalSearch],
+                ['like', 'taxid', $this->globalSearch],
+                ['like', 'home_number', $this->globalSearch],
+                ['like', 'street', $this->globalSearch],
+                ['like', 'aisle', $this->globalSearch],
+                ['like', 'district_name', $this->globalSearch],
+                ['like', 'city_name', $this->globalSearch],
+                ['like', 'province_name', $this->globalSearch],
+                ['like', 'branch_name', $this->globalSearch],
+            ]);
         }
         return $dataProvider;
     }
