@@ -17,6 +17,9 @@ if ($purchaseLines) {
 $netAmount = $subtotal - $discount;
 $vat = $netAmount * 0.07;
 $total = $netAmount + $vat;
+
+$vendor_info = \backend\models\Vendor::findVendorInfo($purchase->vendor_id);
+$contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
 ?>
 
     <!DOCTYPE html>
@@ -288,7 +291,7 @@ $total = $netAmount + $vat;
                 <td>
                     <span class="info-label">CONTACT :</span>
                 </td>
-                <td class="info-value">&nbsp;</td>
+                <td class="info-value"><?= Html::encode($contact_name) ?></td>
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>
             </tr>
@@ -397,7 +400,7 @@ $total = $netAmount + $vat;
                 <td width="33%" class="signature-box">
                     <div class="signature-line"></div>
                     <div>AUTHORIZED SIGNATURE</div>
-                    <div>F-WP-FMA-002-002 R.1</div>
+                    <div>F-WP-FMA-002-002 R.2</div>
                 </td>
             </tr>
         </table>

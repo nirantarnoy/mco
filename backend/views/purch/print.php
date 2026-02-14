@@ -39,6 +39,7 @@ $vendor_info = \backend\models\Vendor::findVendorInfo($purchase->vendor_id);
 $vendor_address = $vendor_info !== null ? $vendor_info['home_number'].' '.$vendor_info['street'].' '.$vendor_info['aisle'].', '.$vendor_info['district_name'].', '.$vendor_info['city_name'].', '.$vendor_info['province_name'].', '.$vendor_info['zipcode'] : '';
 $phone = $vendor_info !== null ? $vendor_info['phone'] : '';
 $email = $vendor_info !== null ? $vendor_info['email'] : '';
+$contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
 ?>
 
 <style>
@@ -493,7 +494,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                 </div>
                 <div class="info-row">
                     <span class="info-label">CONTACT :</span>
-                    <span class="info-value"></span>
+                    <span class="info-value"><?= Html::encode($contact_name) ?></span>
                 </div>
             </div>
             <div class="column">
@@ -647,7 +648,7 @@ $email = $vendor_info !== null ? $vendor_info['email'] : '';
                 <?php endif; ?>
             </div>
             <div>AUTHORIZED SIGNATURE</div>
-            <div>F-WP-FMA-002-002 R.1</div>
+            <div>F-WP-FMA-002-002 R.2</div>
         </div>
     </div>
 </div>
