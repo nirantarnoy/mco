@@ -1,7 +1,11 @@
 <?php
+
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 use kartik\date\DatePicker;
+use kartik\select2\Select2;
+use yii\helpers\ArrayHelper;
+use backend\models\BankAccount;
 
 $this->title = 'บันทึกรับเงิน: ' . $invoice->invoice_number;
 ?>
@@ -57,7 +61,15 @@ $this->title = 'บันทึกรับเงิน: ' . $invoice->invoice_n
                             ], ['prompt' => '-- เลือกช่องทาง --']) ?>
                         </div>
                         <div class="col-md-4 bank-account-section" style="display: none;">
-                            <?= $form->field($model, 'bank_account')->textInput(['placeholder' => 'ระบุเลขที่บัญชีบริษัท']) ?>
+                            <?= $form->field($model, 'bank_account')->widget(Select2::classname(), [
+                                'data' => ArrayHelper::map(BankAccount::find()->where(['status' => 1])->all(), 'account_no', function($model) {
+                                    return $model->bank_name . ' (' . $model->account_no . ') ' . $model->account_name;
+                                }),
+                                'options' => ['placeholder' => '-- เลือกบัญชีธนาคาร --'],
+                                'pluginOptions' => [
+                                    'allowClear' => true
+                                ],
+                            ]) ?>
                         </div>
                         <div class="col-md-4 cheque-number-section" style="display: none;">
                             <?= $form->field($model, 'cheque_number')->textInput(['placeholder' => 'ระบุเลขที่เช็ค']) ?>

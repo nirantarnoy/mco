@@ -27,7 +27,7 @@
                 </li>
                 <?php endif;?>
 
-                <?php if(\Yii::$app->user->can('paymentterm/index') || \Yii::$app->user->can('paymentmethod/index') || \Yii::$app->user->can('employee/index')):?>
+                <?php if(\Yii::$app->user->can('paymentterm/index') || \Yii::$app->user->can('paymentmethod/index') || \Yii::$app->user->can('employee/index') || \Yii::$app->user->can('bankaccount/index')):?>
                 <li class="nav-item has-treeview has-sub">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-cogs"></i>
@@ -50,6 +50,14 @@
                                 <a href="index.php?r=paymentmethod/index" class="nav-link paymentmethod">
                                     <i class="far fa-circlez nav-icon"></i>
                                     <p>วิธีการชําระเงิน</p>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+                        <?php if (\Yii::$app->user->can('bankaccount/index')): ?>
+                            <li class="nav-item">
+                                <a href="index.php?r=bank-account/index" class="nav-link bank-account">
+                                    <i class="far fa-circlez nav-icon"></i>
+                                    <p>บัญชีธนาคาร</p>
                                 </a>
                             </li>
                         <?php endif; ?>
