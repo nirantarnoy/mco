@@ -5,6 +5,8 @@ namespace backend\controllers;
 use Yii;
 use backend\models\Authitem;
 use backend\models\AuthitemSearch;
+use backend\helpers\PermissionScanner;
+use backend\helpers\RoleTemplate;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -64,6 +66,14 @@ class AuthitemController extends BaseController
 
         if ($model->load(Yii::$app->request->post())) {
 
+            // ดึง permissions ผ่าน JSON เสมอ (เพื่อแก้ปัญหา max_input_vars)
+            $jsonPermissions = Yii::$app->request->post('permissions_json');
+            $receivedPermissions = !empty($jsonPermissions) ? json_decode($jsonPermissions, true) : [];
+            if (!is_array($receivedPermissions)) $receivedPermissions = [];
+
+            Yii::info('Processed permissions count: ' . count($receivedPermissions), 'authitem');
+            Yii::info('Received permissions: ' . json_encode($receivedPermissions), 'authitem');
+
             // อัพเดทข้อมูลพื้นฐาน
             if ($model->type == 1) {
                 $roleItem = $auth->getRole($model->name);
@@ -77,10 +87,24 @@ class AuthitemController extends BaseController
 
             // จัดการ permissions สำหรับ Role
             if ($model->type == 1) {
-                $this->updateRolePermissions($model->name, Yii::$app->request->post('permissions', []));
-            }
+                // ซิงค์สิทธิ์ใหม่ล่าสุดที่สแกนเจอเข้าไปใน DB ก่อน
+                $syncResult = PermissionScanner::syncPermissions();
+                
+                $stats = $this->updateRolePermissions($model->name, $receivedPermissions);
+                
+                // เคลียร์ PHP Cache
+                Yii::$app->cache->delete('permission_scanner_controllers');
 
-            Yii::$app->session->setFlash('success', 'บันทึกข้อมูลเรียบร้อยแล้ว');
+                $msg = 'บันทึกบทบาทเรียบร้อยแล้ว<br>';
+                $msg .= "- ได้รับสิทธิ์ที่เลือก: " . count($receivedPermissions) . " รายการ<br>";
+                $msg .= "- เพิ่มใหม่: {$stats['added']} รายการ, ลบออก: {$stats['removed']} รายการ";
+                if ($stats['errors'] > 0) $msg .= ", <span class='text-danger'>ผิดพลาด: {$stats['errors']} รายการ</span>";
+                $msg .= "<br>- ซิงค์ระบบ: สร้างใหม่ {$syncResult['created']}, อัพเดท {$syncResult['updated']}";
+                
+                Yii::$app->session->setFlash('success', $msg);
+            } else {
+                Yii::$app->session->setFlash('success', 'บันทึกข้อมูลพื้นฐานเรียบร้อยแล้ว');
+            }
             return $this->redirect(['index']);
         }
 
@@ -110,8 +134,11 @@ class AuthitemController extends BaseController
                 $newRole->description = $model->description;
                 $auth->add($newRole);
 
-                // กำหนด permissions สำหรับ Role ใหม่
-                $this->updateRolePermissions($model->name, Yii::$app->request->post('permissions', []));
+                // กำหนด permissions ผ่าน JSON
+                $jsonPermissions = Yii::$app->request->post('permissions_json');
+                $perms = !empty($jsonPermissions) ? json_decode($jsonPermissions, true) : [];
+                if (!is_array($perms)) $perms = [];
+                $this->updateRolePermissions($model->name, $perms);
 
             } else {
                 $newPermission = $auth->createPermission($model->name);
@@ -143,19 +170,87 @@ class AuthitemController extends BaseController
         $role = $auth->getRole($roleName);
 
         if (!$role) {
-            return;
+            return ['added' => 0, 'removed' => 0, 'errors' => 1];
         }
 
-        // ลบ permissions เดิมทั้งหมด
-        $auth->removeChildren($role);
-
-        // เพิ่ม permissions ใหม่
-        foreach ($selectedPermissions as $permissionName) {
-            $permission = $auth->getPermission($permissionName);
-            if ($permission) {
-                $auth->addChild($role, $permission);
+        // 1. ดึงสิทธิ์ที่ระดับ "Direct" ของบทบาทนี้ (เพื่อเทียบว่าต้องเพิ่มหรือลบจริง)
+        $directChildren = $auth->getChildren($roleName);
+        $currentDirectLowerMap = [];
+        foreach ($directChildren as $name => $child) {
+            if ($child->type == \yii\rbac\Item::TYPE_PERMISSION) {
+                $currentDirectLowerMap[strtolower($name)] = $name;
             }
         }
+        
+        // 2. เตรียมสิ่งที่ผู้ใช้เลือกมา (Lowercase เพื่อหาแมตช์)
+        $selectedLowerMap = [];
+        foreach ($selectedPermissions as $name) {
+            if (empty($name)) continue;
+            $selectedLowerMap[strtolower($name)] = $name;
+        }
+
+        $added = 0;
+        $removed = 0;
+        $errors = 0;
+
+        // 3. จัดการ "ลบออก" (มีอยู่ใน DB แต่ไม่ได้เลือกมา)
+        foreach ($currentDirectLowerMap as $lowerName => $originalName) {
+            if (!isset($selectedLowerMap[$lowerName])) {
+                $permission = $auth->getPermission($originalName);
+                if ($permission) {
+                    try {
+                        $auth->removeChild($role, $permission);
+                        $removed++;
+                    } catch (\Exception $e) {
+                        Yii::error("RBAC Remove Error: " . $e->getMessage());
+                        $errors++;
+                    }
+                }
+            }
+        }
+
+        // 4. จัดการ "เพิ่มเข้า" (เลือกมา แต่ยังไม่มีในระดับ Direct)
+        // ดึงสิทธิ์ "ทั้งหมด" ในระบบเพื่อเอามาเทียบกรณี Case ไม่ตรง
+        $allSystemPerms = $auth->getPermissions();
+        $systemLowerMap = [];
+        foreach ($allSystemPerms as $name => $p) {
+            $systemLowerMap[strtolower($name)] = $p;
+        }
+
+        foreach ($selectedLowerMap as $lowerName => $inputName) {
+            if (!isset($currentDirectLowerMap[$lowerName])) {
+                // หาสิทธิ์ในระบบมาผูก
+                $permission = $systemLowerMap[$lowerName] ?? null;
+
+                // กรณีพิเศษ: ถ้าไม่มีสิทธิ์นี้ในระบบเลย (แม้แต่ใน DB) ให้สร้างใหม่
+                if (!$permission) {
+                    try {
+                        $permission = $auth->createPermission($lowerName);
+                        $permission->description = "Auto-created: " . $lowerName;
+                        $auth->add($permission);
+                        Yii::info("Auto-created missing permission: " . $lowerName);
+                    } catch (\Exception $e) {
+                        Yii::error("RBAC Create Error: " . $e->getMessage());
+                    }
+                }
+
+                if ($permission) {
+                    try {
+                        if (!$auth->hasChild($role, $permission)) {
+                            $auth->addChild($role, $permission);
+                            $added++;
+                        }
+                    } catch (\Exception $e) {
+                        Yii::error("RBAC Add Error: " . $e->getMessage());
+                        $errors++;
+                    }
+                } else {
+                    $errors++;
+                }
+            }
+        }
+        
+        return ['added' => $added, 'removed' => $removed, 'errors' => $errors];
     }
 
     /**
@@ -166,10 +261,13 @@ class AuthitemController extends BaseController
     protected function getPermissionsTableData($model)
     {
         $auth = Yii::$app->authManager;
-        $allPermissions = $auth->getPermissions();
-
-        // จัดกลุ่ม permissions ตาม module
+        
+        // ใช้ PermissionScanner แทน
+        $controllers = PermissionScanner::scanAllControllers();
+        
+        // จัดกลุ่ม permissions ตาม module (เก็บไว้เพื่อ backward compatibility)
         $modules = [];
+        $allPermissions = $auth->getPermissions();
         foreach ($allPermissions as $permission) {
             $parts = explode('/', $permission->name);
             if (count($parts) == 2) {
@@ -187,12 +285,13 @@ class AuthitemController extends BaseController
         if ($model->type == 1 && !$model->isNewRecord) {
             $rolePermissions = $auth->getPermissionsByRole($model->name);
             foreach ($rolePermissions as $perm) {
-                $currentPermissions[] = $perm->name;
+                $currentPermissions[] = strtolower($perm->name);
             }
         }
 
         return [
             'modules' => $modules,
+            'controllers' => $controllers,
             'currentPermissions' => $currentPermissions,
             'standardActions' => ['index', 'view', 'create', 'update', 'delete']
         ];
@@ -415,5 +514,115 @@ class AuthitemController extends BaseController
         }
 
         throw new NotFoundHttpException('ไม่พบข้อมูลที่ต้องการ');
+    }
+    
+    /**
+     * สแกนและซิงค์ permissions อัตโนมัติ
+     */
+    public function actionSyncPermissions()
+    {
+        $result = PermissionScanner::syncPermissions();
+        
+        // เคลียร์ cache
+        Yii::$app->cache->delete('permission_scanner_controllers');
+        
+        Yii::$app->session->setFlash('success', 
+            "ซิงค์ permissions เรียบร้อยแล้ว<br>" .
+            "สร้างใหม่: {$result['created']} รายการ<br>" .
+            "อัพเดท: {$result['updated']} รายการ<br>" .
+            "รวมทั้งหมด: {$result['total']} รายการ"
+        );
+        
+        return $this->redirect(['index']);
+    }
+    
+    /**
+     * ดึงข้อมูล permissions จากเทมเพลต (Ajax)
+     */
+    public function actionGetTemplatePermissions()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        
+        $templateKey = Yii::$app->request->post('template');
+        $templates = RoleTemplate::getTemplates();
+        
+        if (!isset($templates[$templateKey])) {
+            return ['success' => false, 'message' => 'Template not found'];
+        }
+        
+        $template = $templates[$templateKey];
+        
+        // ดึง permissions ตามเทมเพลต
+        $permissions = [];
+        if ($template['permissions'] === 'all') {
+            $auth = Yii::$app->authManager;
+            $allPermissions = $auth->getPermissions();
+            $permissions = array_keys($allPermissions);
+        } else {
+            // ใช้ logic จาก RoleTemplate
+            $controllers = PermissionScanner::scanAllControllers();
+            
+            foreach ($controllers as $controller) {
+                // ตรวจสอบ category
+                if (isset($template['permissions']['categories'])) {
+                    if (!in_array($controller['category'], $template['permissions']['categories'])) {
+                        continue;
+                    }
+                }
+                
+                // ตรวจสอบ controller
+                if (isset($template['permissions']['controllers'])) {
+                    if (!in_array($controller['name'], $template['permissions']['controllers'])) {
+                        continue;
+                    }
+                }
+                
+                // เพิ่ม actions
+                foreach ($controller['actions'] as $action) {
+                    if (isset($template['permissions']['actions'])) {
+                        if (in_array($action['name'], $template['permissions']['actions'])) {
+                            $permissions[] = PermissionScanner::createPermissionName($controller['name'], $action['name']);
+                        }
+                    }
+                }
+            }
+        }
+        
+        return [
+            'success' => true,
+            'permissions' => $permissions,
+            'count' => count($permissions)
+        ];
+    }
+    
+    /**
+     * สร้าง role จากเทมเพลต
+     */
+    public function actionCreateFromTemplate($template)
+    {
+        try {
+            $role = RoleTemplate::createRoleFromTemplate($template);
+            
+            Yii::$app->session->setFlash('success', 
+                "สร้าง Role '{$role->name}' จากเทมเพลตเรียบร้อยแล้ว"
+            );
+            
+            return $this->redirect(['update', 'id' => $role->name]);
+        } catch (\Exception $e) {
+            Yii::$app->session->setFlash('error', $e->getMessage());
+            return $this->redirect(['index']);
+        }
+    }
+    
+    /**
+     * เคลียร์ cache
+     */
+    public function actionClearCache()
+    {
+        Yii::$app->cache->delete('permission_scanner_controllers');
+        
+        Yii::$app->session->setFlash('success', 'เคลียร์ cache เรียบร้อยแล้ว');
+        
+        return $this->redirect(['index']);
     }
 }

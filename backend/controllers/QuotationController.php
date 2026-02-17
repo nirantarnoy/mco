@@ -115,7 +115,7 @@ class QuotationController extends BaseController
                     $model->vat_percent = 7;
                     $model->vat_total_amount = $total_vat_amount;
                     $model->total_amount = $sum_total_amount;
-                    $model->total_amount_text = \backend\models\PurchReq::numtothai($model->total_amount);
+                    $model->total_amount_text = $model->numtothai($model->total_amount);
                     if ($model->save()) {
                         // Save quotation lines
                         foreach ($quotationLines as $quotationLine) {

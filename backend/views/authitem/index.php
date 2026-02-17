@@ -34,6 +34,32 @@ $this->registerJsFile(
                     <div class="col-lg-10">
                         <p>
                             <?= Html::a(Yii::t('app', '<i class="fa fa-plus"></i> สร้างใหม่'), ['create'], ['class' => 'btn btn-success']) ?>
+                            <?= Html::a('<i class="fa fa-sync"></i> ซิงค์ Permissions', ['sync-permissions'], [
+                                'class' => 'btn btn-info',
+                                'data-confirm' => 'คุณต้องการสแกนและซิงค์ permissions จาก controllers ทั้งหมดหรือไม่?'
+                            ]) ?>
+                            
+                            <?= Html::a('<i class="fa fa-trash"></i> เคลียร์ Cache', ['clear-cache'], [
+                                'class' => 'btn btn-warning btn-sm',
+                                'title' => 'เคลียร์ cache เพื่อโหลดข้อมูลใหม่'
+                            ]) ?>
+                            
+                            <!-- Template Dropdown -->
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                                    <i class="fa fa-magic"></i> สร้างจากเทมเพลต
+                                </button>
+                                <div class="dropdown-menu">
+                                    <?php
+                                    $templates = \backend\helpers\RoleTemplate::getTemplates();
+                                    foreach ($templates as $key => $template):
+                                    ?>
+                                    <a class="dropdown-item" href="<?= \yii\helpers\Url::to(['create-from-template', 'template' => $key]) ?>">
+                                        <i class="<?= $template['icon'] ?>"></i> <?= $template['name'] ?>
+                                    </a>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
                         </p>
                     </div>
                     <div class="col-lg-2" style="text-align: right">

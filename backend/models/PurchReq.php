@@ -306,28 +306,46 @@ class PurchReq extends ActiveRecord
 
     public static function numtothaistring($num)
     {
-        $txtnum1 = array('', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า');
+        $txtnum1 = array('ศูนย์', 'หนึ่ง', 'สอง', 'สาม', 'สี่', 'ห้า', 'หก', 'เจ็ด', 'แปด', 'เก้า');
         $txtnum2 = array('', 'สิบ', 'ร้อย', 'พัน', 'หมื่น', 'แสน', 'ล้าน');
 
+        $num = str_replace(',', '', $num);
         $num = ltrim($num, '0');
         if ($num == '') return 'ศูนย์';
 
         $return_str = '';
         $len = strlen($num);
+
         for ($i = 0; $i < $len; $i++) {
             $digit = intval($num[$i]);
             $position = $len - $i - 1;
+            $val = $position % 6;
 
-            if ($digit == 0) continue;
+            if ($digit == 0) {
+                if ($position > 0 && $position % 6 == 0) {
+                    $return_str .= 'ล้าน';
+                }
+                continue;
+            }
 
-            if ($position == 0 && $digit == 1 && $len > 1) {
-                $return_str .= 'เอ็ด';
-            } else if ($position == 1 && $digit == 2) {
-                $return_str .= 'ยี่' . $txtnum2[$position];
-            } else if ($position == 1 && $digit == 1) {
-                $return_str .= $txtnum2[$position];
+            if ($digit == 1 && $val == 0) {
+                if ($i == $len - 1 && $len > 1) {
+                    $return_str .= 'เอ็ด';
+                } elseif ($i != 0 && $position % 6 == 0) {
+                    $return_str .= 'เอ็ด';
+                } else {
+                    $return_str .= 'หนึ่ง';
+                }
+            } elseif ($digit == 2 && $val == 1) {
+                $return_str .= 'ยี่' . $txtnum2[$val];
+            } elseif ($digit == 1 && $val == 1) {
+                $return_str .= $txtnum2[$val];
             } else {
-                $return_str .= $txtnum1[$digit] . $txtnum2[$position];
+                $return_str .= $txtnum1[$digit] . $txtnum2[$val];
+            }
+
+            if ($position > 0 && $position % 6 == 0) {
+                $return_str .= 'ล้าน';
             }
         }
 
