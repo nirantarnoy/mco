@@ -90,9 +90,11 @@ class Product extends \common\models\Product
         $model = Product::find()
             ->where(['id' => $id])
             ->one();
-        if($model->unit_id != null){
-            $unit_name = $model->unit->name;
-        }
+            if($model){
+                if($model->unit_id != null){
+                    $unit_name = $model->unit->name;
+                }
+            }
         return $unit_name;
     }
 
