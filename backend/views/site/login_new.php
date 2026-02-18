@@ -62,7 +62,9 @@ $companies = \backend\models\Company::find()->all();
                 </div>
                 <div class="row">
                     <div class="col-lg-12">
-                        <?= $form->field($model, 'password')->passwordInput(['class' => 'form-control', 'placeholder' => 'Password']) ?>
+                        <?= $form->field($model, 'password', [
+                            'template' => '{label}<div class="input-group">{input}<div class="input-group-append"><div class="input-group-text"><span class="fas fa-eye" id="togglePassword" style="cursor: pointer"></span></div></div></div>{hint}{error}'
+                        ])->passwordInput(['class' => 'form-control', 'placeholder' => 'Password', 'id' => 'password-field']) ?>
                     </div>
                 </div>
                 <div class="row">
@@ -136,6 +138,16 @@ $companies = \backend\models\Company::find()->all();
             //$('#my-captcha-image').yiiCaptcha('refresh');
             $('#my-captcha-image').trigger('click');
         })
+        
+        $(document).on('click', '#togglePassword', function() {
+            $(this).toggleClass('fa-eye fa-eye-slash');
+            var input = $('#password-field');
+            if (input.attr('type') === 'password') {
+                input.attr('type', 'text');
+            } else {
+                input.attr('type', 'password');
+            }
+        });
     </script>
 
 </div>

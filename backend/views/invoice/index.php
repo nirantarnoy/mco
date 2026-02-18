@@ -28,6 +28,12 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                 </div>
                 <div class="col-md-4 text-right">
+                    <?= Html::a('<i class="fas fa-sync"></i> ย้ายข้อมูลใบวางบิลเดิม', ['migrate-billing'], [
+                        'class' => 'btn btn-warning',
+                        'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะย้ายข้อมูลจากระบบเดิม? ระบบจะข้ามใบวางบิลที่ถูกย้ายไปแล้ว',
+                        'data-method' => 'post',
+                        'style' => 'margin-right: 5px;'
+                    ]) ?>
                     <?= Html::a('<i class="fas fa-plus"></i> สร้างเอกสารใหม่', ['select'], [
                         'class' => 'btn btn-success'
                     ]) ?>

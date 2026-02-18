@@ -37,6 +37,7 @@ class InvoiceController extends BaseController
                 'actions' => [
                     'delete' => ['POST'],
                     'cancel' => ['POST'],
+                    'migrate-billing' => ['POST'],
                 ],
             ],
         ];
@@ -859,6 +860,103 @@ class InvoiceController extends BaseController
             $model->delete();
             \Yii::$app->session->setFlash('success', 'ลบรายการรับเงินเรียบร้อยแล้ว');
             return $this->redirect(['payment', 'id' => $invoice_id]);
+        }
+        return $this->redirect(['index']);
+    }
+
+    public function actionMigrateBilling()
+    {
+        $billingInvoices = \backend\models\BillingInvoice::find()->all();
+        $count = 0;
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            foreach ($billingInvoices as $billing) {
+                // Check if already migrated
+                $exists = Invoice::find()->where(['invoice_number' => $billing->billing_number, 'invoice_type' => Invoice::TYPE_BILL_PLACEMENT])->exists();
+                if ($exists) {
+                    continue;
+                }
+
+                $customer = \backend\models\Customer::findOne($billing->customer_id);
+
+                $newInvoice = new Invoice();
+                $newInvoice->invoice_type = Invoice::TYPE_BILL_PLACEMENT;
+                $newInvoice->invoice_number = $billing->billing_number;
+                $newInvoice->invoice_date = $billing->billing_date;
+                $newInvoice->customer_id = $billing->customer_id;
+
+                if ($customer) {
+                    $newInvoice->customer_code = $customer->code;
+                    $newInvoice->customer_name = $customer->name;
+                    $newInvoice->customer_address = \backend\models\Customer::findFullAddress($customer->id);
+                    $newInvoice->customer_tax_id = $customer->taxid;
+                }
+
+                $newInvoice->credit_terms = (string)$billing->credit_terms;
+                $newInvoice->due_date = $billing->payment_due_date;
+                $newInvoice->payment_due_date = $billing->payment_due_date;
+
+                $newInvoice->subtotal = $billing->subtotal;
+                $newInvoice->discount_percent = $billing->discount_percent;
+                $newInvoice->discount_amount = $billing->discount_amount;
+                $newInvoice->vat_percent = $billing->vat_percent;
+                $newInvoice->vat_amount = $billing->vat_amount;
+                $newInvoice->total_amount = $billing->total_amount;
+
+                $newInvoice->notes = $billing->notes;
+                $newInvoice->special_note = $billing->special_note;
+
+                // Map status
+                if ($billing->status === 'cancelled') {
+                    $newInvoice->status = Invoice::STATUS_CANCELLED;
+                } else {
+                    $newInvoice->status = Invoice::STATUS_ACTIVE;
+                }
+
+                $newInvoice->created_by = $billing->created_by;
+                $newInvoice->updated_by = $billing->updated_by;
+                $newInvoice->created_at = $billing->created_at;
+                $newInvoice->updated_at = $billing->updated_at;
+                
+                if ($newInvoice->hasAttribute('company_id')) {
+                    $newInvoice->company_id = $billing->hasAttribute('company_id') ? $billing->company_id : \Yii::$app->session->get('company_id');
+                }
+
+                if ($newInvoice->save(false)) {
+                    $items = \backend\models\BillingInvoiceItem::find()->where(['billing_invoice_id' => $billing->id])->all();
+                    foreach ($items as $item) {
+                        $billedInvoice = Invoice::findOne($item->invoice_id);
+
+                        $newItem = new InvoiceItem();
+                        $newItem->invoice_id = $newInvoice->id;
+                        $newItem->item_seq = $item->item_seq;
+                        if ($billedInvoice) {
+                            $newItem->item_description = "ใบแจ้งหนี้เลขที่ " . $billedInvoice->invoice_number . " (วันที่ " . date('d/m/Y', strtotime($billedInvoice->invoice_date)) . ")";
+                        } else {
+                            $newItem->item_description = "ใบแจ้งหนี้ (ID: " . $item->invoice_id . ")";
+                        }
+                        $newItem->quantity = 1;
+                        $newItem->unit = 'รายการ';
+                        $newItem->unit_price = $item->amount;
+                        $newItem->amount = $item->amount;
+                        $newItem->sort_order = $item->sort_order;
+                        $newItem->save(false);
+
+                        // Create relation
+                        $relation = new \backend\models\InvoiceRelation();
+                        $relation->parent_invoice_id = $newInvoice->id;
+                        $relation->child_invoice_id = $item->invoice_id;
+                        $relation->relation_type = 'bill_placement_to_invoice';
+                        $relation->save(false);
+                    }
+                    $count++;
+                }
+            }
+            $transaction->commit();
+            Yii::$app->session->setFlash('success', "ย้ายข้อมูลเรียบร้อยแล้ว $count รายการ");
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::$app->session->setFlash('error', "เกิดข้อผิดพลาด: " . $e->getMessage());
         }
         return $this->redirect(['index']);
     }
