@@ -117,6 +117,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <th class="text-center">คงค้าง</th>
                             <th class="text-center">เสียหาย</th>
                             <th class="text-center">สูญหาย</th>
+                            <th class="text-center">ยอดคงเหลือ</th>
                             <th class="text-center">หมายเหตุ</th>
                         </tr>
                     </thead>
@@ -126,9 +127,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?php 
                                     $product = \backend\models\Product::findOne($model['product_id']);
                                     $job = \backend\models\Job::findOne($model['job_id']);
-                                    // Outstanding = (Withdraw + Borrow) - (Return Withdraw + Return Borrow + Damaged + Missing)
-                                    // Or depending on how they handle damage/missing. Usually they are counted as subtracted from outstanding.
-                                    $pending = ($model['total_withdraw'] + $model['total_borrow']) - ($model['total_return_withdraw'] + $model['total_return_borrow'] + $model['total_damaged'] + $model['total_missing']);
+                                    // Outstanding (Gross) = (Withdraw + Borrow) - (Return Withdraw + Return Borrow)
+                                    $outstanding = ($model['total_withdraw'] + $model['total_borrow']) - ($model['total_return_withdraw'] + $model['total_return_borrow']);
+                                    // Balance (Net) = Outstanding - (Damaged + Missing)
+                                    $balance = $outstanding - ($model['total_damaged'] + $model['total_missing']);
                                 ?>
                                 <tr>
                                     <td><?= $job ? $job->job_no : '-' ?></td>
@@ -138,11 +140,14 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <td class="text-center"><?= number_format($model['total_return_withdraw'], 0) ?></td>
                                     <td class="text-center"><?= number_format($model['total_borrow'], 0) ?></td>
                                     <td class="text-center"><?= number_format($model['total_return_borrow'], 0) ?></td>
-                                    <td class="text-center" style="<?= $pending > 0 ? 'color: red; font-weight: bold;' : '' ?>">
-                                        <?= number_format($pending, 0) ?>
+                                    <td class="text-center" style="<?= $outstanding > 0 ? 'color: orange; font-weight: bold;' : '' ?>">
+                                        <?= number_format($outstanding, 0) ?>
                                     </td>
                                     <td class="text-center"><?= number_format($model['total_damaged'], 0) ?></td>
                                     <td class="text-center"><?= number_format($model['total_missing'], 0) ?></td>
+                                    <td class="text-center" style="<?= $balance > 0 ? 'color: red; font-weight: bold;' : '' ?>">
+                                        <?= number_format($balance, 0) ?>
+                                    </td>
                                     <td><?= Html::encode($model['remarks']) ?></td>
                                 </tr>
                             <?php endforeach; ?>

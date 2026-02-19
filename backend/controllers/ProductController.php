@@ -911,16 +911,72 @@ class ProductController extends BaseController
     public function actionBulkDelete()
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-
         $ids = \Yii::$app->request->post('ids', []);
         if (!empty($ids)) {
             Product::deleteAll(['id' => $ids]);
             return ['success' => true];
         }
-
         return ['success' => false, 'message' => 'No IDs received'];
     }
 
+    /**
+     * Recalculate stock balance from transaction history
+     * @param int $id
+     * @return Response
+     */
+    public function actionRecalculateStock($id)
+    {
+        $model = $this->findModel($id);
+        $transaction = \Yii::$app->db->beginTransaction();
+        try {
+            // 1. Reset all StockSum for this product to 0
+            \backend\models\StockSum::updateAll(['qty' => 0], ['product_id' => $id]);
+
+            // 2. Fetch all completed/approved StockTrans
+            $history = \backend\models\StockTrans::find()
+                ->where(['product_id' => $id])
+                ->all();
+
+            foreach ($history as $trans) {
+                $qty = $trans->qty;
+                $warehouse_id = $trans->warehouse_id;
+                
+                // Determine direction
+                $direction = 1; // Default to IN
+                if ($trans->stock_type_id == 2) {
+                    $direction = -1;
+                } else if (!$trans->stock_type_id) {
+                    // Fallback logic if stock_type_id is 0
+                    if (in_array($trans->trans_type_id, [2, 3, 5])) { // Cancel POR, Issue, Borrow
+                        $direction = -1;
+                    }
+                }
+
+                // Update StockSum
+                \backend\models\StockSum::updateStock($id, $warehouse_id, $qty, $direction);
+            }
+
+            // 3. Final sync for total product stock
+            $totalStock = \backend\models\StockSum::find()
+                ->where(['product_id' => $id])
+                ->sum('qty') ?: 0;
+            
+            $model->stock_qty = $totalStock;
+            $model->save(false);
+
+            $transaction->commit();
+            \Yii::$app->session->setFlash('success', 'Recalculated stock balance successfully. New stock: ' . $totalStock);
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            \Yii::$app->session->setFlash('error', 'Error recalculating stock: ' . $e->getMessage());
+        }
+
+        return $this->redirect(['view', 'id' => $id]);
+    }
+
+    /**
+     * Finds the Product model based on its primary key value.
+     */
     // In your controller
     public function actionPrintRepair($id = null)
     {

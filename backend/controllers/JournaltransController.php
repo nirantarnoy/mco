@@ -594,7 +594,7 @@ class JournaltransController extends BaseController
                 ->one();
 
             if ($stock_sum) {
-                if ($trans_type_id == 3 || $trans_type_id == 5) {
+                if ($trans_type_id == 3 || $trans_type_id == 5 || $trans_type_id == 2) { // 3: Issue, 5: Borrow, 2: Cancel PO Receive (All are OUT)
                     // ตัดสต็อก
                     if ($stock_sum->qty >= $qty) {
                         $stock_sum->qty = ($stock_sum->qty ?: 0) - $qty;
@@ -602,7 +602,7 @@ class JournaltransController extends BaseController
                         return 0; // ❗ สต็อกไม่พอ
                     }
                 } else {
-                    // เพิ่มสต็อก
+                    // เพิ่มสต็อก (e.g., PO Receive, Return Issue, Return Borrow)
                     $stock_sum->qty = ($stock_sum->qty ?: 0) + $qty;
                 }
 
@@ -611,7 +611,7 @@ class JournaltransController extends BaseController
                 }
             } else {
                 // ถ้าไม่มี record เดิม
-                if ($trans_type_id == 3 || $trans_type_id == 5) {
+                if ($trans_type_id == 3 || $trans_type_id == 5 || $trans_type_id == 2) {
                     $res = 0; // ❗ ไม่มีสินค้าให้ตัด
                 } else {
                     $stock_new = new \backend\models\StockSum();

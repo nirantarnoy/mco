@@ -26,6 +26,13 @@ $this->params['breadcrumbs'][] = $this->title;
                 'method' => 'post',
             ],
         ]) ?>
+        <?= Html::a('Recalculate Stock Balance', ['recalculate-stock', 'id' => $model->id], [
+            'class' => 'btn btn-warning',
+            'data' => [
+                'confirm' => 'This will recalculate the current stock balance from all transaction history. Continue?',
+                'method' => 'post',
+            ],
+        ]) ?>
     </p>
     <?php
     $attributes = [
@@ -205,11 +212,22 @@ $this->params['breadcrumbs'][] = $this->title;
                         'contentOptions' => ['style' => 'text-align: center'],
                         'format' => 'html',
                         'value' => function ($data) {
-                            if ($data->stock_type_id == 1) {
+                            $type = $data->stock_type_id;
+                            if (!$type) {
+                                // Fallback based on trans_type_id if stock_type_id is not set
+                                if (in_array($data->trans_type_id, [2, 3, 5])) { // Cancel POR, Issue, Borrow
+                                    $type = 2; // OUT
+                                } else if (in_array($data->trans_type_id, [1, 4, 6, 8])) {
+                                    $type = 1; // IN
+                                }
+                            }
+                            
+                            if ($type == 1) {
                                 return '<div class="btn btn-sm btn-success" style="text-align: center;">IN</div>';
-                            } else if ($data->stock_type_id == 2) {
+                            } else if ($type == 2) {
                                 return '<div class="btn btn-sm btn-danger" style="text-align: center;">OUT</div>';
                             }
+                            return '<span class="text-muted">N/A</span>';
                         }
                     ],
                     [
