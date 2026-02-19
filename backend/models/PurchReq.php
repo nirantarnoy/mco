@@ -239,20 +239,55 @@ class PurchReq extends ActiveRecord
      */
     private function generatePurchReqNo()
     {
-        $prefix = 'PR' . date('Ym');
+        $mainNumber = 1;
         $lastRecord = self::find()
-            ->where(['like', 'purch_req_no', $prefix])
             ->orderBy(['id' => SORT_DESC])
             ->one();
 
-        if ($lastRecord) {
-            $lastNumber = intval(substr($lastRecord->purch_req_no, -4));
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
+        if ($lastRecord && $lastRecord->purch_req_no) {
+            $parts = explode('-', $lastRecord->purch_req_no);
+            if (count($parts) >= 2) {
+                $mainNumber = intval($parts[1]) + 1;
+            }
         }
 
-        return $prefix . sprintf('%04d', $newNumber);
+        $new_job_no = '';
+        $subNumber = 1;
+
+        if ($this->job_id) {
+            $job = Job::findOne($this->job_id);
+            if ($job) {
+                $job_no = $job->job_no;
+                if ($job_no != null) {
+                    $xp = explode("-", $job_no);
+                    if (count($xp) >= 3) {
+                        $new_job_no = $xp[1] . '-' . $xp[2];
+                    } else if (count($xp) == 2) {
+                        $new_job_no = $job_no;
+                    } else {
+                        $new_job_no = $job_no;
+                    }
+                }
+
+                $lastSubPr = self::find()
+                    ->where(['job_id' => $this->job_id])
+                    ->orderBy(['id' => SORT_DESC])
+                    ->one();
+
+                if ($lastSubPr && $lastSubPr->purch_req_no) {
+                    $subParts = explode('.', $lastSubPr->purch_req_no);
+                    if (count($subParts) >= 2) {
+                        $subNumber = intval($subParts[count($subParts) - 1]) + 1;
+                    }
+                }
+            }
+        }
+
+        if (empty($new_job_no)) {
+            $new_job_no = date('Ym');
+        }
+
+        return 'PR-' . sprintf('%05d', $mainNumber) . '-' . $new_job_no . '.' . sprintf('%02d', $subNumber);
     }
 
     /**

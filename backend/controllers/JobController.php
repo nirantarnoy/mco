@@ -678,8 +678,6 @@ class JobController extends BaseController
     }
     public function actionGetJobNo(){
         $id = Yii::$app->request->post('id');
-        $prefix = 'PR-';
-
         if ($id) {
             $job = \backend\models\Job::findOne($id);
             if (!$job) {
@@ -688,26 +686,27 @@ class JobController extends BaseController
             }
 
             $job_no = $job->job_no;
+            $new_job_no = '';
+            if ($job_no != null) {
+                $xp = explode("-", $job_no);
+                if (count($xp) >= 3) {
+                    $new_job_no = $xp[1] . '-' . $xp[2];
+                } else {
+                    $new_job_no = $job_no;
+                }
+            }
 
             // หา PR ล่าสุดในระบบเพื่อรันเลขลำดับหลัก (PR-00001)
             $lastPr = \backend\models\PurchReq::find()
                 ->orderBy(['id' => SORT_DESC])
                 ->one();
 
-            $new_job_no ='';
-            if($job_no !=null){
-                $xp = explode("-", $job_no);
-                if(count($xp) == 3){
-                    $new_job_no = $xp[1].'-'.$xp[2];
-                }else{
-                    $new_job_no = $job_no;
-                }
-            }
-
             $mainNumber = 1;
-            if ($lastPr) {
+            if ($lastPr && $lastPr->purch_req_no) {
                 $prParts = explode('-', $lastPr->purch_req_no);
-                $mainNumber = isset($prParts[1]) ? ((int)$prParts[1]) + 1 : 1;
+                if (count($prParts) >= 2) {
+                    $mainNumber = intval($prParts[1]) + 1;
+                }
             }
 
             // หาจำนวน PR ที่มีใน job นี้ เพื่อรัน .01, .02, ...
@@ -716,11 +715,12 @@ class JobController extends BaseController
                 ->orderBy(['id' => SORT_DESC])
                 ->one();
 
-            if ($lastSubPr) {
+            $subNumber = 1;
+            if ($lastSubPr && $lastSubPr->purch_req_no) {
                 $subParts = explode('.', $lastSubPr->purch_req_no);
-                $subNumber = isset($subParts[1]) ? ((int)$subParts[1]) + 1 : 1;
-            } else {
-                $subNumber = 1;
+                if (count($subParts) >= 2) {
+                    $subNumber = intval($subParts[count($subParts) - 1]) + 1;
+                }
             }
 
             $fullCode = 'PR-' . sprintf('%05d', $mainNumber) . '-' . $new_job_no . '.' . sprintf('%02d', $subNumber);
