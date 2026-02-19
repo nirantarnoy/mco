@@ -165,7 +165,7 @@ class StocksumController extends BaseController
                 '(SELECT SUM(qty) FROM stock_sum WHERE product_id = journal_trans_line.product_id) as current_stock_qty'
             ])
             ->joinWith('journalTrans t')
-            ->where(['IN', 't.status', [1, 2]])
+            ->where(['IN', 't.status', [0, 1, 2]])
             ->groupBy(['t.job_id', 'journal_trans_line.product_id']);
 
         if ($job_id) {
