@@ -127,13 +127,17 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?php 
                                     $product = \backend\models\Product::findOne($model['product_id']);
                                     $job = \backend\models\Job::findOne($model['job_id']);
-                                    // Outstanding = (Withdraw + Borrow) - (Return Withdraw + Return Borrow) - (Damaged + Missing)
-                                    // represents items still held by the job.
+                                    // Outstanding = (Withdraw + Borrow) - (Return Withdraw + Return Borrow)
+                                    // net_returned already includes good_qty + damaged_qty + missing_qty
                                     $net_issued = ($model['total_withdraw'] + $model['total_borrow']);
                                     $net_returned = ($model['total_return_withdraw'] + $model['total_return_borrow']);
-                                    $losses = ($model['total_damaged'] + $model['total_missing']);
                                     
-                                    $outstanding = $net_issued - $net_returned - $losses;
+                                    $outstanding = $net_issued - $net_returned;
+                                    
+                                    // Ensure outstanding is not negative (in case of data inconsistency)
+                                    if ($outstanding < 0) {
+                                        $outstanding = 0;
+                                    }
                                     
                                     // Remaining balance from stock_sum (Inventory balance)
                                     $balance = $model['current_stock_qty'] ?: 0;
