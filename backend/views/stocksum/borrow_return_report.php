@@ -127,10 +127,16 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?php 
                                     $product = \backend\models\Product::findOne($model['product_id']);
                                     $job = \backend\models\Job::findOne($model['job_id']);
-                                    // Outstanding (Gross) = (Withdraw + Borrow) - (Return Withdraw + Return Borrow)
-                                    $outstanding = ($model['total_withdraw'] + $model['total_borrow']) - ($model['total_return_withdraw'] + $model['total_return_borrow']);
-                                    // Balance (Net) = Outstanding - (Damaged + Missing)
-                                    $balance = $outstanding - ($model['total_damaged'] + $model['total_missing']);
+                                    // Outstanding = (Withdraw + Borrow) - (Return Withdraw + Return Borrow) - (Damaged + Missing)
+                                    // represents items still held by the job.
+                                    $net_issued = ($model['total_withdraw'] + $model['total_borrow']);
+                                    $net_returned = ($model['total_return_withdraw'] + $model['total_return_borrow']);
+                                    $losses = ($model['total_damaged'] + $model['total_missing']);
+                                    
+                                    $outstanding = $net_issued - $net_returned - $losses;
+                                    
+                                    // Remaining balance from stock_sum (Inventory balance)
+                                    $balance = $model['current_stock_qty'] ?: 0;
                                 ?>
                                 <tr>
                                     <td><?= $job ? $job->job_no : '-' ?></td>
@@ -145,7 +151,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     </td>
                                     <td class="text-center"><?= number_format($model['total_damaged'], 0) ?></td>
                                     <td class="text-center"><?= number_format($model['total_missing'], 0) ?></td>
-                                    <td class="text-center" style="<?= $balance > 0 ? 'color: red; font-weight: bold;' : '' ?>">
+                                    <td class="text-center" style="<?= $balance > 0 ? 'color: blue; font-weight: bold;' : '' ?>">
                                         <?= number_format($balance, 0) ?>
                                     </td>
                                     <td><?= Html::encode($model['remarks']) ?></td>

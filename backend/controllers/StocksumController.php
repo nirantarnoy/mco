@@ -161,11 +161,12 @@ class StocksumController extends BaseController
                 'SUM(CASE WHEN journal_trans.trans_type_id = 6 THEN journal_trans_line.qty ELSE 0 END) as total_return_borrow',
                 'SUM(COALESCE(journal_trans_line.damaged_qty, 0)) as total_damaged',
                 'SUM(COALESCE(journal_trans_line.missing_qty, 0)) as total_missing',
-                'GROUP_CONCAT(DISTINCT journal_trans_line.condition_note SEPARATOR ", ") as remarks'
+                'GROUP_CONCAT(DISTINCT journal_trans_line.condition_note SEPARATOR ", ") as remarks',
+                '(SELECT SUM(qty) FROM stock_sum WHERE product_id = journal_trans_line.product_id) as current_stock_qty'
             ])
-            ->joinWith('journalTrans')
-            ->where(['IN', 'journal_trans.status', [1, \backend\models\JournalTrans::STATUS_APPROVED]])
-            ->groupBy(['journal_trans.job_id', 'journal_trans_line.product_id']);
+            ->joinWith('journalTrans t')
+            ->where(['IN', 't.status', [1, 2]])
+            ->groupBy(['t.job_id', 'journal_trans_line.product_id']);
 
         if ($job_id) {
             $query->andWhere(['journal_trans.job_id' => $job_id]);
