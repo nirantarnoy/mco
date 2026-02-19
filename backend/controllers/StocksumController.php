@@ -153,12 +153,12 @@ class StocksumController extends BaseController
         $query = \backend\models\JournalTransLine::find()
             ->select([
                 'MAX(journal_trans_line.id) AS id',
-                'journal_trans.job_id AS job_id',
+                't.job_id AS job_id',
                 'journal_trans_line.product_id',
-                'SUM(CASE WHEN journal_trans.trans_type_id = 3 THEN journal_trans_line.qty ELSE 0 END) as total_withdraw',
-                'SUM(CASE WHEN journal_trans.trans_type_id = 4 THEN journal_trans_line.qty ELSE 0 END) as total_return_withdraw',
-                'SUM(CASE WHEN journal_trans.trans_type_id = 5 THEN journal_trans_line.qty ELSE 0 END) as total_borrow',
-                'SUM(CASE WHEN journal_trans.trans_type_id = 6 THEN journal_trans_line.qty ELSE 0 END) as total_return_borrow',
+                'SUM(CASE WHEN t.trans_type_id = 3 THEN journal_trans_line.qty ELSE 0 END) as total_withdraw',
+                'SUM(CASE WHEN t.trans_type_id = 4 THEN journal_trans_line.qty ELSE 0 END) as total_return_withdraw',
+                'SUM(CASE WHEN t.trans_type_id = 5 THEN journal_trans_line.qty ELSE 0 END) as total_borrow',
+                'SUM(CASE WHEN t.trans_type_id = 6 THEN journal_trans_line.qty ELSE 0 END) as total_return_borrow',
                 'SUM(COALESCE(journal_trans_line.damaged_qty, 0)) as total_damaged',
                 'SUM(COALESCE(journal_trans_line.missing_qty, 0)) as total_missing',
                 'GROUP_CONCAT(DISTINCT journal_trans_line.condition_note SEPARATOR ", ") as remarks',
@@ -169,16 +169,16 @@ class StocksumController extends BaseController
             ->groupBy(['t.job_id', 'journal_trans_line.product_id']);
 
         if ($job_id) {
-            $query->andWhere(['journal_trans.job_id' => $job_id]);
+            $query->andWhere(['t.job_id' => $job_id]);
         }
         if ($product_id) {
             $query->andWhere(['journal_trans_line.product_id' => $product_id]);
         }
         if ($from_date) {
-            $query->andWhere(['>=', 'journal_trans.trans_date', $from_date]);
+            $query->andWhere(['>=', 't.trans_date', $from_date]);
         }
         if ($to_date) {
-            $query->andWhere(['<=', 'journal_trans.trans_date', $to_date]);
+            $query->andWhere(['<=', 't.trans_date', $to_date]);
         }
 
         $dataProvider = new \yii\data\ActiveDataProvider([
