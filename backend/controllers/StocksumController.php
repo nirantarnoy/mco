@@ -164,7 +164,7 @@ class StocksumController extends BaseController
                 'GROUP_CONCAT(DISTINCT journal_trans_line.condition_note SEPARATOR ", ") as remarks'
             ])
             ->joinWith('journalTrans')
-            ->where(['journal_trans.status' => \backend\models\JournalTrans::STATUS_APPROVED])
+            ->where(['IN', 'journal_trans.status', [1, \backend\models\JournalTrans::STATUS_APPROVED]])
             ->groupBy(['journal_trans.job_id', 'journal_trans_line.product_id']);
 
         if ($job_id) {
