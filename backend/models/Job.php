@@ -78,13 +78,14 @@ class Job extends \common\models\Job
         return $data;
     }
 
-    public static function calDueDate($payment_term_id)
+    public static function calDueDate($payment_term_id, $start_date = null)
     {
         $due_date = null;
         if ($payment_term_id) {
             $payment_term = \backend\models\Paymentterm::find()->where(['id' => $payment_term_id])->one();
             if ($payment_term) {
-                $due_date = $payment_term->day_count == 0 || $payment_term->day_count == null ? null : date('Y-m-d', strtotime('+' . $payment_term->day_count . ' day'));
+                $ref_date = $start_date ?: date('Y-m-d');
+                $due_date = $payment_term->day_count == 0 || $payment_term->day_count == null ? null : date('Y-m-d', strtotime($ref_date . ' +' . $payment_term->day_count . ' day'));
             }
         }
         return $due_date;

@@ -160,8 +160,9 @@ function calculateItemAmount(row) {
 }
 
 // ฟังก์ชันจัดรูปแบบตัวเลข
-function formatNumber(num) {
-    return num.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+function formatNumber(num, decimals) {
+    if (decimals === undefined) decimals = 2;
+    return parseFloat(num).toFixed(decimals).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
 }
 
 // ฟังก์ชันคำนวณยอดรวมทั้งใบ
@@ -175,7 +176,7 @@ function calculateTotal(source) {
     
     // แสดงยอดรวม
     $('#invoice-subtotal').val(formatNumber(subtotal));
-    $('#invoice-subtotal-hidden').val(subtotal.toFixed(2));
+    $('#invoice-subtotal-hidden').val(subtotal.toFixed(4));
     
     // คำนวณส่วนลด
     var discountPercent = parseFloat($('#invoice-discount_percent').val()) || 0;
@@ -184,7 +185,7 @@ function calculateTotal(source) {
     if (isInitialLoad) {
         if (discountPercent <= 0 && discountAmount > 0 && subtotal > 0) {
             discountPercent = (discountAmount / subtotal) * 100;
-            $('#invoice-discount_percent').val(discountPercent.toFixed(2));
+            $('#invoice-discount_percent').val(discountPercent.toFixed(4));
         } else if (discountPercent > 0) {
             discountAmount = subtotal * (discountPercent / 100);
         }
@@ -192,22 +193,22 @@ function calculateTotal(source) {
     } else {
         if (source === 'discount_percent') {
             discountAmount = subtotal * (discountPercent / 100);
-            $('#invoice-discount_amount').val(formatNumber(discountAmount));
+            $('#invoice-discount_amount').val(formatNumber(discountAmount, 2));
         } else if (source === 'discount_amount') {
             var rawAmount = $('#invoice-discount_amount').val().replace(/,/g, '');
             discountAmount = parseFloat(rawAmount) || 0;
             if (subtotal > 0) {
                 discountPercent = (discountAmount / subtotal) * 100;
-                $('#invoice-discount_percent').val(discountPercent.toFixed(2));
+                $('#invoice-discount_percent').val(discountPercent.toFixed(4));
             }
         } else {
             // Item change or other, default to percent-based
             discountAmount = subtotal * (discountPercent / 100);
-            $('#invoice-discount_amount').val(formatNumber(discountAmount));
+            $('#invoice-discount_amount').val(formatNumber(discountAmount, 2));
         }
     }
     
-    $('#invoice-discount_amount-hidden').val(discountAmount.toFixed(2));
+    $('#invoice-discount_amount-hidden').val(discountAmount.toFixed(4));
     
     // ยอดหลังหักส่วนลด
     var afterDiscount = subtotal - discountAmount;
@@ -215,13 +216,13 @@ function calculateTotal(source) {
     // คำนวณ VAT
     var vatPercent = parseFloat($('#invoice-vat_percent').val()) || 0;
     var vatAmount = afterDiscount * (vatPercent / 100);
-    $('#invoice-vat_amount').val(formatNumber(vatAmount));
-    $('#invoice-vat_amount-hidden').val(vatAmount.toFixed(2));
+    $('#invoice-vat_amount').val(formatNumber(vatAmount, 2));
+    $('#invoice-vat_amount-hidden').val(vatAmount.toFixed(4));
     
     // ยอดสุทธิ
     var totalAmount = afterDiscount + vatAmount;
-    $('#invoice-total_amount').val(formatNumber(totalAmount));
-    $('#invoice-total_amount-hidden').val(totalAmount.toFixed(2));
+    $('#invoice-total_amount').val(formatNumber(totalAmount, 2));
+    $('#invoice-total_amount-hidden').val(totalAmount.toFixed(4));
 
     // Calculate Remaining Amount for Copy Receipt
     var sourceTotalElem = $('#source-total-amount');
@@ -229,7 +230,7 @@ function calculateTotal(source) {
         var sourceTotal = parseFloat(sourceTotalElem.data('amount')) || 0;
         var totalPaid = parseFloat(sourceTotalElem.data('paid')) || 0;
         var remaining = sourceTotal - totalPaid - totalAmount;
-        $('#remaining-amount').text(formatNumber(remaining));
+        $('#remaining-amount').text(formatNumber(remaining, 2));
         
         if (remaining < 0) {
             $('#remaining-amount').addClass('text-danger').removeClass('text-success');
@@ -525,6 +526,10 @@ $(document).on('click', '.autocomplete-item', function() {
     var row = dropdown.closest('tr');
     var input = row.find('.item-description-input');
     selectProduct(input, product);
+});
+
+$(document).on('change', '#invoice-invoice_date', function() {
+    calculateDueDate($('#invoice-payment_term_id'));
 });
 
 $(document).on('change', '#invoice-customer_code', function() {
@@ -850,7 +855,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                 'template' => '{label}<div class="input-group"><div class="input-group-prepend"><span class="input-group-text">%</span></div>{input}</div>{error}'
                             ])->textInput([
                                 'type' => 'number',
-                                'step' => '0.01',
+                                'step' => 'any',
                                 'min' => '0',
                                 'max' => '100',
                                 'class' => 'form-control text-right',
@@ -1021,15 +1026,18 @@ function delete_doc(e){
 
 function calculateDueDate(e){
     var id = $(e).val();
-    if(id!=null || id!=''){
+    var invoiceDate = $('#invoice-invoice_date').val();
+    if(id!=null && id!=''){
         $.ajax({
             url: '$url_to_get_payment_term_day',
             type: 'post',
             dataType: 'html',
             data: {id: id},
             success: function(data){
-                 //alert(data);
                 var startDate = new Date();
+                if(invoiceDate != ''){
+                    startDate = new Date(invoiceDate);
+                }
                 var dueDate = new Date(startDate); // copy date object
                 dueDate.setDate(dueDate.getDate() + parseInt(data)); // เพิ่มจำนวนวัน
                 $("#invoice-due-date").val(
@@ -1043,8 +1051,6 @@ function calculateDueDate(e){
             }
             });
     }
-    
-   
 }
 JS;
 $this->registerJs($script, static::POS_END);
