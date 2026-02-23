@@ -71,7 +71,7 @@ class Quotation extends ActiveRecord
             [['customer_id', 'status', 'approve_status', 'approve_by', 'created_at', 'created_by', 'updated_at', 'updated_by', 'payment_term_id', 'payment_method_id', 'sale_emp_id'], 'integer'],
             [['total_amount', 'discount_amount', 'discount_percent', 'total_discount_amount', 'vat_percent', 'vat_total_amount'], 'number'],
             [['quotation_no', 'customer_name', 'total_amount_text', 'note', 'delivery_day_text', 'payment_term_text'], 'string', 'max' => 255],
-            [['quotation_no'], 'unique'],
+            [['quotation_no'], 'unique', 'filter' => ['status' => self::STATUS_ACTIVE]],
         ];
     }
 

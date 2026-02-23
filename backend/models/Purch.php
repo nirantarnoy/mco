@@ -97,7 +97,7 @@ class Purch extends ActiveRecord
             [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by','discount_percent','vat_percent','approve_by','currency_id'], 'integer'],
             [['total_amount', 'vat_amount', 'net_amount','vat_percent','discount_per','whd_tax_per','whd_tax_amount','discount_total_amount','currency_rate', 'value_amount'], 'number'],
             [['purch_no', 'vendor_name', 'note','delivery_note','payment_note','footer_delivery','footer_payment','ref_no'], 'string', 'max' => 255],
-            [['purch_no'], 'unique'],
+            [['purch_no'], 'unique', 'filter' => ['status' => self::STATUS_ACTIVE]],
             [['approve_date','discount_amount','fee_amount','exchange_rate'], 'safe'],
             [['is_vat','is_deposit'],'integer'],
             [['special_note'],'string','max'=>500]

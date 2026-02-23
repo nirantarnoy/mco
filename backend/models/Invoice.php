@@ -102,7 +102,7 @@ class Invoice extends ActiveRecord
             [['credit_terms'], 'string', 'max' => 100],
             [['total_amount_text','special_note'], 'string', 'max' => 500],
             [['invoice_type'], 'in', 'range' => [self::TYPE_QUOTATION, self::TYPE_BILL_PLACEMENT, self::TYPE_TAX_INVOICE, self::TYPE_RECEIPT]],
-            [['invoice_number'], 'unique', 'targetAttribute' => ['invoice_number', 'invoice_type']],
+            [['invoice_number'], 'unique', 'targetAttribute' => ['invoice_number', 'invoice_type'], 'filter' => ['status' => self::STATUS_ACTIVE]],
         ];
     }
 

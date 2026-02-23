@@ -38,7 +38,7 @@ class BillingInvoice extends ActiveRecord
         return [
             [['billing_number', 'billing_date', 'customer_id'], 'required'],
             [['billing_number'], 'string', 'max' => 50],
-            [['billing_number'], 'unique'],
+            [['billing_number'], 'unique', 'filter' => ['!=', 'status', 'cancelled']],
             [['billing_date', 'payment_due_date'], 'date', 'format' => 'php:Y-m-d'],
             [['customer_id', 'credit_terms'], 'integer'],
             [['subtotal', 'discount_amount', 'vat_amount', 'total_amount'], 'number'],
