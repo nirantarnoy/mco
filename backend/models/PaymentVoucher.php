@@ -118,6 +118,16 @@ class PaymentVoucher extends ActiveRecord
     }
 
     /**
+     * Gets query for [[PaymentVoucherDocs]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getPaymentVoucherDocs()
+    {
+        return $this->hasMany(PaymentVoucherDoc::class, ['payment_voucher_id' => 'id']);
+    }
+
+    /**
      * Gets query for [[PaymentVoucherRefs]].
      *
      * @return \yii\db\ActiveQuery

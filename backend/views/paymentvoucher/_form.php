@@ -7,6 +7,7 @@ use kartik\date\DatePicker;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 use backend\models\PaymentVoucher;
+use yii\web\JsExpression;
 
 /* @var $this yii\web\View */
 /* @var $model backend\models\PaymentVoucher */
@@ -22,6 +23,29 @@ $account_options = '<option value="">-- เลือก --</option>';
 foreach ($account_categories as $acc) {
     $acc_label = Html::encode($acc->code . ' - ' . $acc->name);
     $account_options .= '<option value="' . Html::encode($acc->code) . '">' . $acc_label . '</option>';
+}
+
+// เตรียมข้อมูล PR/PO ที่เลือกไว้เดิม (สำหรับกรณี update)
+$selectedPrIds = \backend\models\PaymentVoucherRef::find()
+    ->where(['payment_voucher_id' => $model->id, 'ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PR])
+    ->select('ref_id')
+    ->column();
+$selectedPrList = [];
+if (!empty($selectedPrIds)) {
+    $selectedPrList = ArrayHelper::map(\backend\models\PurchReq::find()->where(['id' => $selectedPrIds])->all(), 'id', function($m) {
+        return $m->purch_req_no;
+    });
+}
+
+$selectedPoIds = \backend\models\PaymentVoucherRef::find()
+    ->where(['payment_voucher_id' => $model->id, 'ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PO])
+    ->select('ref_id')
+    ->column();
+$selectedPoList = [];
+if (!empty($selectedPoIds)) {
+    $selectedPoList = ArrayHelper::map(\backend\models\Purch::find()->where(['id' => $selectedPoIds])->all(), 'id', function($m) {
+        return $m->purch_no;
+    });
 }
 ?>
 
@@ -64,44 +88,15 @@ function calculateTotal() {
     $('#paymentvoucher-amount').val(total_debit > 0 ? total_debit : total_credit);
 }
 
+var skip_clear = false;
 function loadPrPoByVendor(vendorId) {
-    if (!vendorId) {
-        $('#pr-po-section').hide();
-        $('#pull-data-section').hide();
-        $('#pr-select').empty().trigger('change');
-        $('#po-select').empty().trigger('change');
-        return;
+    var prevVal = $('#vendor-select').data('prev-val');
+    if (prevVal !== vendorId) {
+        // เมื่อมีการเปลี่ยน Vendor ให้ล้างรายการ PR/PO ที่เลือกไว้เดิม
+        $('#pr-select').val(null).trigger('change');
+        $('#po-select').val(null).trigger('change');
     }
-    
-    $('#pr-po-section').show();
-    
-    // โหลด PR
-    $.ajax({
-        url: '{$getPrByVendorUrl}',
-        data: {vendor_id: vendorId},
-        success: function(data) {
-            $('#pr-select').empty();
-            $.each(data, function(i, item) {
-                var option = new Option(item.text, item.id, false, false);
-                $('#pr-select').append(option);
-            });
-            $('#pr-select').trigger('change');
-        }
-    });
-    
-    // โหลด PO
-    $.ajax({
-        url: '{$getPoByVendorUrl}',
-        data: {vendor_id: vendorId},
-        success: function(data) {
-            $('#po-select').empty();
-            $.each(data, function(i, item) {
-                var option = new Option(item.text, item.id, false, false);
-                $('#po-select').append(option);
-            });
-            $('#po-select').trigger('change');
-        }
-    });
+    $('#vendor-select').data('prev-val', vendorId);
 }
 
 function pullMultipleData() {
@@ -124,8 +119,15 @@ function pullMultipleData() {
                 $('#paymentvoucher-amount').val(res.amount);
                 $('#paymentvoucher-paid_for').val(res.paid_for);
                 
-                // ดึงชื่อ vendor
-                var vendorName = $('#vendor-select option:selected').text();
+                // ดึงชื่อ vendor และเซ็ต vendor อัตโนมัติถ้ายังไม่ได้เลือก
+                if (res.vendor_id && !$('#vendor-select').val()) {
+                    var newOption = new Option(res.vendor_name, res.vendor_id, true, true);
+                    $('#vendor-select').append(newOption).trigger('change.select2');
+                    $('#vendor-select').val(res.vendor_id);
+                    $('#vendor-select').data('prev-val', res.vendor_id);
+                }
+
+                var vendorName = res.vendor_name || $('#vendor-select option:selected').text();
                 $('#paymentvoucher-recipient_name').val(vendorName);
                 
                 // บันทึก pr_ids และ po_ids ลง hidden inputs
@@ -162,6 +164,9 @@ $('#pr-select, #po-select').on('change', function() {
 $(document).ready(function() {
     calculateTotal();
     
+    // ตั้งค่า prev-val เริ่มต้น
+    $('#vendor-select').data('prev-val', $('#vendor-select').val());
+    
     // Event listener สำหรับปุ่มเพิ่มแถว
     $('#btn-add-line').on('click', function() {
         addLine();
@@ -188,6 +193,25 @@ $(document).ready(function() {
         var selectedPoIds = $(this).val() || [];
         $('#hidden-po-ids').val(JSON.stringify(selectedPoIds));
     });
+
+    // ลบไฟล์แนบ
+    $('.btn-delete-doc').on('click', function() {
+        var id = $(this).data('id');
+        if (confirm('คุณต้องการลบไฟล์นี้ใช่หรือไม่?')) {
+            $.ajax({
+                url: '<?= Url::to(['delete-attachment']) ?>',
+                type: 'GET',
+                data: {id: id},
+                success: function(res) {
+                    if (res.success) {
+                        $('#doc-row-' + id).remove();
+                    } else {
+                        alert('ไม่สามารถลบไฟล์ได้');
+                    }
+                }
+            });
+        }
+    });
 });
 JS;
 $this->registerJs($js);
@@ -197,7 +221,10 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
 
 <div class="payment-voucher-form">
 
-    <?php $form = ActiveForm::begin(['id' => 'payment-voucher-form']); ?>
+    <?php $form = ActiveForm::begin([
+        'id' => 'payment-voucher-form',
+        'options' => ['enctype' => 'multipart/form-data']
+    ]); ?>
 
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-primary text-white">
@@ -230,34 +257,58 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                 </div>
             </div>
 
-            <div class="row mb-3" id="pr-po-section" style="display:none;">
+            <div class="row mb-3" id="pr-po-section">
                 <div class="col-md-6">
                     <label class="form-label">เลือกใบขอซื้อ (PR) - เลือกได้หลายรายการ</label>
                     <?= Select2::widget([
                         'name' => 'pr_ids[]',
-                        'data' => [],
+                        'data' => $selectedPrList,
+                        'value' => array_keys($selectedPrList),
                         'options' => [
-                            'placeholder' => 'เลือก PR...',
+                            'placeholder' => 'ค้นหา/เลือก PR...',
                             'multiple' => true,
                             'id' => 'pr-select'
                         ],
-                        'pluginOptions' => ['allowClear' => true],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            'minimumInputLength' => 0,
+                            'ajax' => [
+                                'url' => $getPrByVendorUrl,
+                                'dataType' => 'json',
+                                'delay' => 250,
+                                'data' => new JsExpression('function(params) { return {q:params.term, vendor_id: $("#vendor-select").val()}; }'),
+                                'processResults' => new JsExpression('function(data) { return {results: data.results}; }'),
+                                'cache' => true
+                            ],
+                        ],
                     ]) ?>
-                    <small class="text-muted">กรุณาเลือก Vendor ก่อน</small>
+                    <small class="text-muted">ค้นหาได้ทันที หรือเลือก Vendor เพื่อกรองรายการ</small>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">เลือกใบสั่งซื้อ (PO) - เลือกได้หลายรายการ</label>
                     <?= Select2::widget([
                         'name' => 'po_ids[]',
-                        'data' => [],
+                        'data' => $selectedPoList,
+                        'value' => array_keys($selectedPoList),
                         'options' => [
-                            'placeholder' => 'เลือก PO...',
+                            'placeholder' => 'ค้นหา/เลือก PO...',
                             'multiple' => true,
                             'id' => 'po-select'
                         ],
-                        'pluginOptions' => ['allowClear' => true],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            'minimumInputLength' => 0,
+                            'ajax' => [
+                                'url' => $getPoByVendorUrl,
+                                'dataType' => 'json',
+                                'delay' => 250,
+                                'data' => new JsExpression('function(params) { return {q:params.term, vendor_id: $("#vendor-select").val()}; }'),
+                                'processResults' => new JsExpression('function(data) { return {results: data.results}; }'),
+                                'cache' => true
+                            ],
+                        ],
                     ]) ?>
-                    <small class="text-muted">กรุณาเลือก Vendor ก่อน</small>
+                    <small class="text-muted">ค้นหาได้ทันที หรือเลือก Vendor เพื่อกรองรายการ</small>
                 </div>
             </div>
 
@@ -314,6 +365,57 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
             <?= Html::activeHiddenInput($model, 'ref_type') ?>
             <input type="hidden" id="hidden-pr-ids" name="pr_ids" value="">
             <input type="hidden" id="hidden-po-ids" name="po_ids" value="">
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">ไฟล์แนบเอกสาร</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label class="control-label">แนบไฟล์เพิ่มเติม (เลือกได้หลายไฟล์)</label>
+                        <?= Html::fileInput('upload_files[]', null, ['multiple' => true, 'class' => 'form-control', 'accept' => 'image/*,application/pdf,.doc,.docx,.xls,.xlsx']) ?>
+                    </div>
+                </div>
+            </div>
+            
+            <?php if (!$model->isNewRecord && !empty($model->paymentVoucherDocs)): ?>
+                <div class="mt-3">
+                    <h6>รายการไฟล์แนบเดิม:</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>ชื่อไฟล์</th>
+                                    <th style="width: 15rem;">ผู้อัปโหลด</th>
+                                    <th style="width: 10rem;">วันที่อัปโหลด</th>
+                                    <th class="text-center" style="width: 10rem;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($model->paymentVoucherDocs as $doc): ?>
+                                    <tr id="doc-row-<?= $doc->id ?>">
+                                        <td>
+                                            <?= Html::a($doc->file_name, Yii::getAlias('@web/uploads/payment_voucher/') . $doc->file_path, ['target' => '_blank']) ?>
+                                            <small class="text-muted">(<?= round($doc->file_size / 1024, 2) ?> KB)</small>
+                                        </td>
+                                        <td><?= $doc->uploaded_by ? \common\models\User::findOne($doc->uploaded_by)->username : '-' ?></td>
+                                        <td><?= date('Y-m-d H:i', $doc->uploaded_at) ?></td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-danger btn-xs btn-delete-doc" data-id="<?= $doc->id ?>">
+                                                <i class="fa fa-trash"></i> ลบ
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 

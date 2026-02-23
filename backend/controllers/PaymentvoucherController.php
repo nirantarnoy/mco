@@ -8,10 +8,13 @@ use backend\models\PaymentVoucherSearch;
 use backend\models\PaymentVoucherLine;
 use backend\models\PurchReq;
 use backend\models\Purch;
+use backend\models\PaymentVoucherDoc;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
+use yii\web\UploadedFile;
+use yii\helpers\FileHelper;
 
 /**
  * PaymentVoucherController implements the CRUD actions for PaymentVoucher model.
@@ -82,6 +85,9 @@ class PaymentvoucherController extends BaseController
                     // บันทึก Refs (PR/PO ที่เลือก)
                     $this->saveVoucherRefs($model);
                     
+                    // อัปโหลดไฟล์แนบ
+                    $this->uploadAttachments($model);
+
                     $transaction->commit();
                     Yii::$app->session->setFlash('success', 'บันทึก Payment Voucher สำเร็จ');
                     return $this->redirect(['view', 'id' => $model->id]);
@@ -118,6 +124,9 @@ class PaymentvoucherController extends BaseController
                     // บันทึก Refs (PR/PO ที่เลือก)
                     $this->saveVoucherRefs($model);
                     
+                    // อัปโหลดไฟล์แนบ
+                    $this->uploadAttachments($model);
+
                     $transaction->commit();
                     Yii::$app->session->setFlash('success', 'อัปเดต Payment Voucher สำเร็จ');
                     return $this->redirect(['view', 'id' => $model->id]);
@@ -208,14 +217,23 @@ class PaymentvoucherController extends BaseController
     /**
      * ดึงรายการ PR ตาม Vendor (ที่ยังไม่จ่ายครบ)
      */
-    public function actionGetPrByVendor($vendor_id)
+    public function actionGetPrByVendor($vendor_id = null, $q = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         
-        $prs = PurchReq::find()
-            ->where(['vendor_id' => $vendor_id, 'approve_status' => 1])
-            ->andWhere(['>', 'net_amount', 0])
-            ->all();
+        $query = PurchReq::find()
+            ->where(['approve_status' => 1])
+            ->andWhere(['>', 'net_amount', 0]);
+            
+        if ($vendor_id) {
+            $query->andWhere(['vendor_id' => $vendor_id]);
+        }
+        
+        if ($q) {
+            $query->andWhere(['like', 'purch_req_no', $q]);
+        }
+        
+        $prs = $query->limit(20)->all();
         
         $result = [];
         foreach ($prs as $pr) {
@@ -230,7 +248,7 @@ class PaymentvoucherController extends BaseController
             if ($remaining > 0) {
                 $result[] = [
                     'id' => $pr->id,
-                    'text' => $pr->purch_req_no . ' (คงเหลือ: ' . number_format($remaining, 2) . ')',
+                    'text' => $pr->purch_req_no . ' (คงเหลือ: ' . number_format($remaining, 2) . ( !empty($pr->vendor_name) ? ' - ' . $pr->vendor_name : '' ) . ')',
                     'total_amount' => $pr->net_amount,
                     'paid_amount' => $paidAmount,
                     'remaining' => $remaining,
@@ -238,20 +256,29 @@ class PaymentvoucherController extends BaseController
             }
         }
         
-        return $result;
+        return ['results' => $result];
     }
 
     /**
      * ดึงรายการ PO ตาม Vendor (ที่ยังไม่จ่ายครบ)
      */
-    public function actionGetPoByVendor($vendor_id)
+    public function actionGetPoByVendor($vendor_id = null, $q = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         
-        $pos = Purch::find()
-            ->where(['vendor_id' => $vendor_id, 'approve_status' => 1])
-            ->andWhere(['>', 'net_amount', 0])
-            ->all();
+        $query = Purch::find()
+            ->where(['approve_status' => 1])
+            ->andWhere(['>', 'net_amount', 0]);
+            
+        if ($vendor_id) {
+            $query->andWhere(['vendor_id' => $vendor_id]);
+        }
+        
+        if ($q) {
+            $query->andWhere(['like', 'purch_no', $q]);
+        }
+        
+        $pos = $query->limit(20)->all();
         
         $result = [];
         foreach ($pos as $po) {
@@ -266,7 +293,7 @@ class PaymentvoucherController extends BaseController
             if ($remaining > 0) {
                 $result[] = [
                     'id' => $po->id,
-                    'text' => $po->purch_no . ' (คงเหลือ: ' . number_format($remaining, 2) . ')',
+                    'text' => $po->purch_no . ' (คงเหลือ: ' . number_format($remaining, 2) . ( !empty($po->vendor_name) ? ' - ' . $po->vendor_name : '' ) . ')',
                     'total_amount' => $po->net_amount,
                     'paid_amount' => $paidAmount,
                     'remaining' => $remaining,
@@ -274,7 +301,7 @@ class PaymentvoucherController extends BaseController
             }
         }
         
-        return $result;
+        return ['results' => $result];
     }
 
     /**
@@ -292,6 +319,7 @@ class PaymentvoucherController extends BaseController
         $total_before_vat = 0;
         $total_vat = 0;
         $paid_for_items = [];
+        $vendor_id = null;
         
         // ดึงข้อมูลจาก PR
         foreach ($pr_ids as $pr_id) {
@@ -304,6 +332,10 @@ class PaymentvoucherController extends BaseController
                 $remaining = $pr->net_amount - $paidAmount;
                 $total_amount += $remaining;
                 $paid_for_items[] = 'PR: ' . $pr->purch_req_no;
+                if (!$vendor_id) {
+                    $vendor_id = $pr->vendor_id;
+                    $vendor_name = $pr->vendor_name;
+                }
             }
         }
         
@@ -318,6 +350,10 @@ class PaymentvoucherController extends BaseController
                 $remaining = $po->net_amount - $paidAmount;
                 $total_amount += $remaining;
                 $paid_for_items[] = 'PO: ' . $po->purch_no;
+                if (!$vendor_id) {
+                    $vendor_id = $po->vendor_id;
+                    $vendor_name = $po->vendor_name;
+                }
                 
                 // คำนวณยอดก่อน VAT และ VAT จาก PO
                 // net_amount = total_amount - discount + vat_amount
@@ -379,6 +415,8 @@ class PaymentvoucherController extends BaseController
             'lines' => $lines,
             'pr_ids' => $pr_ids,
             'po_ids' => $po_ids,
+            'vendor_id' => $vendor_id ?? null,
+            'vendor_name' => $vendor_name ?? null,
         ];
     }
 
@@ -513,5 +551,46 @@ class PaymentvoucherController extends BaseController
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    /**
+     * จัดการอัปโหลดไฟล์แนบ
+     */
+    private function uploadAttachments($model)
+    {
+        $files = UploadedFile::getInstancesByName('upload_files');
+        if ($files) {
+            $uploadPath = Yii::getAlias('@backend/web/uploads/payment_voucher/');
+            if (!file_exists($uploadPath)) {
+                FileHelper::createDirectory($uploadPath, 0777);
+            }
+
+            foreach ($files as $file) {
+                $newName = time() . '_' . Yii::$app->security->generateRandomString(10) . '.' . $file->extension;
+                if ($file->saveAs($uploadPath . $newName)) {
+                    $doc = new PaymentVoucherDoc();
+                    $doc->payment_voucher_id = $model->id;
+                    $doc->file_name = $file->baseName . '.' . $file->extension;
+                    $doc->file_path = $newName;
+                    $doc->file_size = $file->size;
+                    $doc->uploaded_at = time();
+                    $doc->uploaded_by = Yii::$app->user->id;
+                    $doc->save(false);
+                }
+            }
+        }
+    }
+
+    /**
+     * ลบไฟล์แนบ (AJAX)
+     */
+    public function actionDeleteAttachment($id)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $doc = PaymentVoucherDoc::findOne($id);
+        if ($doc && $doc->delete()) {
+            return ['success' => true];
+        }
+        return ['success' => false];
     }
 }

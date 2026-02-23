@@ -62,6 +62,45 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-paperclip me-2"></i>ไฟล์แนบเอกสาร</h5>
+        </div>
+        <div class="card-body">
+            <?php if (!empty($model->paymentVoucherDocs)): ?>
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>ชื่อไฟล์</th>
+                                <th style="width: 15rem;">ผู้อัปโหลด</th>
+                                <th style="width: 10rem;">วันที่อัปโหลด</th>
+                                <th class="text-center" style="width: 8rem;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($model->paymentVoucherDocs as $doc): ?>
+                                <tr>
+                                    <td>
+                                        <?= Html::a($doc->file_name, Yii::getAlias('@web/uploads/payment_voucher/') . $doc->file_path, ['target' => '_blank']) ?>
+                                        <small class="text-muted">(<?= round($doc->file_size / 1024, 2) ?> KB)</small>
+                                    </td>
+                                    <td><?= $doc->uploaded_by ? \common\models\User::findOne($doc->uploaded_by)->username : '-' ?></td>
+                                    <td><?= date('Y-m-d H:i', $doc->uploaded_at) ?></td>
+                                    <td class="text-center">
+                                        <?= Html::a('<i class="fas fa-download"></i>', Yii::getAlias('@web/uploads/payment_voucher/') . $doc->file_path, ['class' => 'btn btn-outline-primary btn-sm', 'target' => '_blank', 'download' => $doc->file_name]) ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <p class="text-muted mb-0">ไม่มีไฟล์แนบ</p>
+            <?php endif; ?>
+        </div>
+    </div>
+
     <div class="card shadow-sm">
         <div class="card-header bg-light">
             <h5 class="mb-0">รายละเอียดรายการ</h5>
