@@ -89,9 +89,7 @@ function calculateTotal() {
     $('#paymentvoucher-amount').val(total_debit > 0 ? total_debit : total_credit);
 }
 
-var skip_clear = false;
 function loadPrPoByVendor(vendorId) {
-    if (skip_clear) return;
     var prevVal = $('#vendor-select').data('prev-val');
     if (prevVal !== vendorId) {
         // เมื่อมีการเปลี่ยน Vendor ให้ล้างรายการ PR/PO ที่เลือกไว้เดิม
@@ -121,14 +119,6 @@ function pullMultipleData() {
                 $('#paymentvoucher-amount').val(res.amount);
                 $('#paymentvoucher-paid_for').val(res.paid_for);
                 
-                // ดึงชื่อ vendor และเซ็ต vendor อัตโนมัติถ้ายังไม่ได้เลือก
-                if (res.vendor_id && !$('#vendor-select').val()) {
-                    skip_clear = true;
-                    var newOption = new Option(res.vendor_name, res.vendor_id, true, true);
-                    $('#vendor-select').append(newOption).trigger('change');
-                    $('#vendor-select').data('prev-val', res.vendor_id);
-                    skip_clear = false;
-                }
 
                 var vendorName = res.vendor_name || $('#vendor-select option:selected').text();
                 $('#paymentvoucher-recipient_name').val(vendorName);
