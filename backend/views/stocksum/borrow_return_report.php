@@ -104,74 +104,113 @@ $this->params['breadcrumbs'][] = $this->title;
                         <p>วันที่: <?= $from_date ?> ถึง <?= $to_date ?></p>
                     <?php endif; ?>
                 </div>
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr style="background-color: #f4f6f9;">
-                            <th class="text-center">Job No</th>
-                            <th class="text-center">รหัสเครื่องมือ</th>
-                            <th class="text-center">รายการเครื่องมือ</th>
-                            <th class="text-center">เบิก</th>
-                            <th class="text-center">คืนเบิก</th>
-                            <th class="text-center">ยืม</th>
-                            <th class="text-center">คืนยืม</th>
-                            <th class="text-center">คงค้าง</th>
-                            <th class="text-center">เสียหาย</th>
-                            <th class="text-center">สูญหาย</th>
-                            <th class="text-center">ยอดคงเหลือ</th>
-                            <th class="text-center">หมายเหตุ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if ($dataProvider->getCount() > 0): ?>
-                            <?php foreach ($dataProvider->getModels() as $model): ?>
-                                <?php 
-                                    $product = \backend\models\Product::findOne($model['product_id']);
-                                    $job = \backend\models\Job::findOne($model['job_id']);
-                                    // Outstanding = Borrow - Return Borrow (Ignore Withdraw)
-                                    $outstanding = $model['total_borrow'] - $model['total_return_borrow'];
-                                    
-                                    // Ensure outstanding is not negative
-                                    if ($outstanding < 0) {
-                                        $outstanding = 0;
-                                    }
-                                    
-                                    // Remaining balance from stock_sum (Inventory balance)
-                                    $balance = $model['current_stock_qty'] ?: 0;
-                                ?>
-                                <tr>
-                                    <td><?= $job ? $job->job_no : '-' ?></td>
-                                    <td><?= $product ? $product->code : '-' ?></td>
-                                    <td><?= $product ? $product->name : '-' ?></td>
-                                    <td class="text-center"><?= number_format($model['total_withdraw'], 0) ?></td>
-                                    <td class="text-center"><?= number_format($model['total_return_withdraw'], 0) ?></td>
-                                    <td class="text-center"><?= number_format($model['total_borrow'], 0) ?></td>
-                                    <td class="text-center"><?= number_format($model['total_return_borrow'], 0) ?></td>
-                                    <td class="text-center" style="<?= $outstanding > 0 ? 'color: orange; font-weight: bold;' : '' ?>">
-                                        <?= number_format($outstanding, 0) ?>
-                                    </td>
-                                    <td class="text-center"><?= number_format($model['total_damaged'], 0) ?></td>
-                                    <td class="text-center"><?= number_format($model['total_missing'], 0) ?></td>
-                                    <td class="text-center" style="<?= $balance > 0 ? 'color: blue; font-weight: bold;' : '' ?>">
-                                        <?= number_format($balance, 0) ?>
-                                    </td>
-                                    <td><?= Html::encode($model['remarks']) ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="12" class="text-center">ไม่พบข้อมูล</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
 
-            <div class="row d-print-none">
-                <div class="col-md-12">
-                    <?= \yii\widgets\LinkPager::widget([
-                        'pagination' => $dataProvider->pagination,
-                    ]) ?>
-                </div>
+                <?= GridView::widget([
+                    'dataProvider' => $dataProvider,
+                    'responsive' => true,
+                    'hover' => true,
+                    'striped' => true,
+                    'bordered' => true,
+                    'pjax' => true,
+                    'summary' => "แสดง {begin} - {end} จากทั้งหมด {totalCount} รายการ",
+                    'columns' => [
+                        [
+                            'label' => 'Job No',
+                            'value' => function ($model) {
+                                $job = \backend\models\Job::findOne($model['job_id']);
+                                return $job ? $job->job_no : '-';
+                            },
+                            'headerOptions' => ['class' => 'text-center'],
+                        ],
+                        [
+                            'label' => 'รหัสเครื่องมือ',
+                            'value' => function ($model) {
+                                $product = \backend\models\Product::findOne($model['product_id']);
+                                return $product ? $product->code : '-';
+                            },
+                        ],
+                        [
+                            'label' => 'รายการเครื่องมือ',
+                            'value' => function ($model) {
+                                $product = \backend\models\Product::findOne($model['product_id']);
+                                return $product ? $product->name : '-';
+                            },
+                        ],
+                        [
+                            'label' => 'เบิก',
+                            'value' => function ($model) {
+                                return number_format($model['total_withdraw'], 0);
+                            },
+                            'contentOptions' => ['class' => 'text-center'],
+                            'headerOptions' => ['class' => 'text-center'],
+                        ],
+                        [
+                            'label' => 'คืนเบิก',
+                            'value' => function ($model) {
+                                return number_format($model['total_return_withdraw'], 0);
+                            },
+                            'contentOptions' => ['class' => 'text-center'],
+                            'headerOptions' => ['class' => 'text-center'],
+                        ],
+                        [
+                            'label' => 'ยืม',
+                            'value' => function ($model) {
+                                return number_format($model['total_borrow'], 0);
+                            },
+                            'contentOptions' => ['class' => 'text-center'],
+                            'headerOptions' => ['class' => 'text-center'],
+                        ],
+                        [
+                            'label' => 'คืนยืม',
+                            'value' => function ($model) {
+                                return number_format($model['total_return_borrow'], 0);
+                            },
+                            'contentOptions' => ['class' => 'text-center'],
+                            'headerOptions' => ['class' => 'text-center'],
+                        ],
+                        [
+                            'label' => 'คงค้าง',
+                            'format' => 'raw',
+                            'value' => function ($model) {
+                                $outstanding = $model['total_borrow'] - $model['total_return_borrow'];
+                                if ($outstanding < 0) $outstanding = 0;
+                                return $outstanding > 0 ? '<span style="color: orange; font-weight: bold;">' . number_format($outstanding, 0) . '</span>' : number_format($outstanding, 0);
+                            },
+                            'contentOptions' => ['class' => 'text-center'],
+                            'headerOptions' => ['class' => 'text-center'],
+                        ],
+                        [
+                            'label' => 'เสียหาย',
+                            'value' => function ($model) {
+                                return number_format($model['total_damaged'], 0);
+                            },
+                            'contentOptions' => ['class' => 'text-center'],
+                            'headerOptions' => ['class' => 'text-center'],
+                        ],
+                        [
+                            'label' => 'สูญหาย',
+                            'value' => function ($model) {
+                                return number_format($model['total_missing'], 0);
+                            },
+                            'contentOptions' => ['class' => 'text-center'],
+                            'headerOptions' => ['class' => 'text-center'],
+                        ],
+                        [
+                            'label' => 'ยอดคงเหลือ',
+                            'format' => 'raw',
+                            'value' => function ($model) {
+                                $balance = $model['current_stock_qty'] ?: 0;
+                                return $balance > 0 ? '<span style="color: blue; font-weight: bold;">' . number_format($balance, 0) . '</span>' : number_format($balance, 0);
+                            },
+                            'contentOptions' => ['class' => 'text-center'],
+                            'headerOptions' => ['class' => 'text-center'],
+                        ],
+                        [
+                            'label' => 'หมายเหตุ',
+                            'attribute' => 'remarks',
+                        ],
+                    ],
+                ]); ?>
             </div>
         </div>
     </div>
