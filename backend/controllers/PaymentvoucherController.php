@@ -225,7 +225,7 @@ class PaymentvoucherController extends BaseController
             ->where(['approve_status' => 1])
             ->andWhere(['>', 'net_amount', 0]);
             
-        if ($vendor_id) {
+        if ($vendor_id && $vendor_id !== 'null' && $vendor_id !== '') {
             $query->andWhere(['vendor_id' => $vendor_id]);
         }
         
@@ -270,7 +270,7 @@ class PaymentvoucherController extends BaseController
             ->where(['approve_status' => 1])
             ->andWhere(['>', 'net_amount', 0]);
             
-        if ($vendor_id) {
+        if ($vendor_id && $vendor_id !== 'null' && $vendor_id !== '') {
             $query->andWhere(['vendor_id' => $vendor_id]);
         }
         
