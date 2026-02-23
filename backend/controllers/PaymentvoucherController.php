@@ -584,7 +584,7 @@ class PaymentvoucherController extends BaseController
     /**
      * ลบไฟล์แนบ (AJAX)
      */
-    public function actionDeleteAttachment($id)
+    public function actionRemoveAttachment($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $doc = PaymentVoucherDoc::findOne($id);

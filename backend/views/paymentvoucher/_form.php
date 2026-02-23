@@ -17,6 +17,7 @@ use yii\web\JsExpression;
 $pullMultipleUrl = Url::to(['pull-multiple']);
 $getPrByVendorUrl = Url::to(['get-pr-by-vendor']);
 $getPoByVendorUrl = Url::to(['get-po-by-vendor']);
+$removeAttachmentUrl = Url::to(['remove-attachment']);
 
 $account_categories = \backend\models\AccountCategory::find()->where(['status' => 1])->all();
 $account_options = '<option value="">-- เลือก --</option>';
@@ -195,11 +196,11 @@ $(document).ready(function() {
     });
 
     // ลบไฟล์แนบ
-    $('.btn-delete-doc').on('click', function() {
+    $('.btn-remove-doc').on('click', function() {
         var id = $(this).data('id');
         if (confirm('คุณต้องการลบไฟล์นี้ใช่หรือไม่?')) {
             $.ajax({
-                url: '<?= Url::to(['delete-attachment']) ?>',
+                url: '{$removeAttachmentUrl}',
                 type: 'GET',
                 data: {id: id},
                 success: function(res) {
@@ -405,7 +406,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                                         <td><?= $doc->uploaded_by ? \common\models\User::findOne($doc->uploaded_by)->username : '-' ?></td>
                                         <td><?= date('Y-m-d H:i', $doc->uploaded_at) ?></td>
                                         <td class="text-center">
-                                            <button type="button" class="btn btn-danger btn-xs btn-delete-doc" data-id="<?= $doc->id ?>">
+                                            <button type="button" class="btn btn-danger btn-xs btn-remove-doc" data-id="<?= $doc->id ?>">
                                                 <i class="fa fa-trash"></i> ลบ
                                             </button>
                                         </td>
