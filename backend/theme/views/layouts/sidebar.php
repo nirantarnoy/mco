@@ -61,6 +61,12 @@
                                 </a>
                             </li>
                         <?php endif; ?>
+                        <li class="nav-item">
+                            <a href="index.php?r=account-category/index" class="nav-link account-category">
+                                <i class="far fa-circlez nav-icon"></i>
+                                <p>หมวดบัญชี</p>
+                            </a>
+                        </li>
                         <?php //if (\Yii::$app->user->can('currency/index')): ?>
                             <li class="nav-item">
                                 <a href="index.php?r=currency/index" class="nav-link currency">

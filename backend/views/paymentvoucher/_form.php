@@ -17,12 +17,30 @@ $pullMultipleUrl = Url::to(['pull-multiple']);
 $getPrByVendorUrl = Url::to(['get-pr-by-vendor']);
 $getPoByVendorUrl = Url::to(['get-po-by-vendor']);
 
+$account_categories = \backend\models\AccountCategory::find()->where(['status' => 1])->all();
+$account_options = '<option value="">-- เลือก --</option>';
+foreach ($account_categories as $acc) {
+    $acc_label = Html::encode($acc->code . ' - ' . $acc->name);
+    $account_options .= '<option value="' . Html::encode($acc->code) . '">' . $acc_label . '</option>';
+}
+?>
+
+<?php
 $js = <<<JS
 var line_count = 0;
+var account_options = '{$account_options}';
 
 function addLine(data = null) {
     var tr = $('<tr class="line-item">');
-    tr.append('<td><input type="text" name="line_account_code[]" class="form-control" value="' + (data ? data.account_code : '') + '"></td>');
+    
+    var acc_select = $('<select name="line_account_code[]" class="form-control">').append(account_options);
+    if (data && data.account_code) {
+        acc_select.val(data.account_code);
+    }
+    
+    var td_acc = $('<td>').append(acc_select);
+    tr.append(td_acc);
+    
     tr.append('<td><input type="text" name="line_bill_code[]" class="form-control" value="' + (data ? data.bill_code : '') + '"></td>');
     tr.append('<td><input type="text" name="line_description1[]" class="form-control" value="' + (data ? data.description1 : '') + '"></td>');
     tr.append('<td><input type="text" name="line_description2[]" class="form-control" value="' + (data ? data.description2 : '') + '"></td>');
@@ -332,7 +350,16 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                                 $desc2 = $descriptions[1] ?? '';
                                 ?>
                                 <tr class="line-item">
-                                    <td><input type="text" name="line_account_code[]" class="form-control" value="<?= Html::encode($line->account_code) ?>"></td>
+                                    <td>
+                                        <select name="line_account_code[]" class="form-control">
+                                            <option value="">-- เลือก --</option>
+                                            <?php foreach ($account_categories as $acc): ?>
+                                                <option value="<?= Html::encode($acc->code) ?>" <?= $acc->code == $line->account_code ? 'selected' : '' ?>>
+                                                    <?= Html::encode($acc->code . ' - ' . $acc->name) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </td>
                                     <td><input type="text" name="line_bill_code[]" class="form-control" value="<?= Html::encode($line->bill_code) ?>"></td>
                                     <td><input type="text" name="line_description1[]" class="form-control" value="<?= Html::encode($desc1) ?>"></td>
                                     <td><input type="text" name="line_description2[]" class="form-control" value="<?= Html::encode($desc2) ?>"></td>
