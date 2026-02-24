@@ -73,14 +73,24 @@ class Purch extends ActiveRecord
                 'attributes'=>[
                     ActiveRecord::EVENT_BEFORE_INSERT=>'created_by',
                 ],
-                'value'=> Yii::$app->user->id,
+                'value'=> function ($event) {
+                    if (Yii::$app instanceof \yii\console\Application) {
+                        return 1;
+                    }
+                    return Yii::$app->user->id;
+                },
             ],
             'timestamuby'=>[
                 'class'=> \yii\behaviors\AttributeBehavior::className(),
                 'attributes'=>[
                     ActiveRecord::EVENT_BEFORE_UPDATE=>'updated_by',
                 ],
-                'value'=> Yii::$app->user->id,
+                'value'=> function ($event) {
+                    if (Yii::$app instanceof \yii\console\Application) {
+                        return 1;
+                    }
+                    return Yii::$app->user->id;
+                },
             ],
 
         ];
