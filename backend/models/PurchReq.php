@@ -256,11 +256,28 @@ class PurchReq extends ActiveRecord
     {
         $mainNumber = 1;
         
-        $maxNum = Yii::$app->db->createCommand("
-            SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
-            FROM purch_req 
-            WHERE company_id = :company_id
-        ", [':company_id' => $this->company_id])->queryScalar();
+        // Ensure company_id is set. If not set, use the same logic as beforeSave
+        if ($this->company_id == null) {
+            if (!\Yii::$app->request->isConsoleRequest) {
+                $this->company_id = \Yii::$app->session->get('company_id') == null ? 1 : \Yii::$app->session->get('company_id');
+            } else {
+                $this->company_id = 1;
+            }
+        }
+
+        if (in_array($this->company_id, [1, 2])) {
+            $maxNum = Yii::$app->db->createCommand("
+                SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
+                FROM purch_req 
+                WHERE company_id IN (1, 2)
+            ")->queryScalar();
+        } else {
+            $maxNum = Yii::$app->db->createCommand("
+                SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
+                FROM purch_req 
+                WHERE company_id = :company_id
+            ", [':company_id' => $this->company_id])->queryScalar();
+        }
 
         if ($maxNum) {
             $mainNumber = (int)$maxNum + 1;
