@@ -306,7 +306,7 @@ use yii\helpers\Html; ?>
         as $key => $line): ?>
         <tr>
             <td><?= $key + 1 ?></td>
-            <td class="desc-col"><?= \backend\models\Product::findName($line->product_id) ?></td>
+            <td class="desc-col"><?= $line->product_name ?: \backend\models\Product::findName($line->product_id) ?></td>
             <td><?= $line->qty ?></td>
             <td class="amount-col"><?= number_format($line->line_price, 2) ?></td>
             <td class="amount-col"><?= number_format($line->line_total, 2) ?></td>

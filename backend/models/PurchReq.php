@@ -215,6 +215,16 @@ class PurchReq extends ActiveRecord
     public function beforeSave($insert)
     {
         if (parent::beforeSave($insert)) {
+            if (!\Yii::$app->request->isConsoleRequest) {
+                if ($this->company_id == null) {
+                    $this->company_id = \Yii::$app->session->get('company_id') == null ? 1 : \Yii::$app->session->get('company_id');
+                }
+            } else {
+                if ($this->company_id == null) {
+                    $this->company_id = 1;
+                }
+            }
+
             if ($insert && empty($this->purch_req_no)) {
                 $this->purch_req_no = $this->generatePurchReqNo();
             }
@@ -222,11 +232,6 @@ class PurchReq extends ActiveRecord
             // Convert amount to Thai text
             if (!empty($this->net_amount)) {
                 $this->total_text = $this->convertAmountToThaiText($this->net_amount);
-            }
-            if (!\Yii::$app->request->isConsoleRequest) {
-                $this->company_id = \Yii::$app->session->get('company_id') == null ? 1 : \Yii::$app->session->get('company_id');
-            } else {
-                $this->company_id = 1;
             }
             return true;
         }
@@ -240,15 +245,15 @@ class PurchReq extends ActiveRecord
     private function generatePurchReqNo()
     {
         $mainNumber = 1;
-        $lastRecord = self::find()
-            ->orderBy(['id' => SORT_DESC])
-            ->one();
+        
+        $maxNum = Yii::$app->db->createCommand("
+            SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
+            FROM purch_req 
+            WHERE company_id = :company_id
+        ", [':company_id' => $this->company_id])->queryScalar();
 
-        if ($lastRecord && $lastRecord->purch_req_no) {
-            $parts = explode('-', $lastRecord->purch_req_no);
-            if (count($parts) >= 2) {
-                $mainNumber = intval($parts[1]) + 1;
-            }
+        if ($maxNum) {
+            $mainNumber = (int)$maxNum + 1;
         }
 
         $new_job_no = '';

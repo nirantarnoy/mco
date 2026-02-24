@@ -122,6 +122,48 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
     ]) ?>
 
+    <div class="card mt-3">
+        <div class="card-header">
+            <h3 class="card-title">รายละเอียดสินค้า/บริการ</h3>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr style="background-color: #f8f9fa;">
+                        <th style="width: 50px; text-align: center;">#</th>
+                        <th>รายการ</th>
+                        <th style="width: 100px; text-align: center;">จำนวน</th>
+                        <th style="width: 150px; text-align: right;">ราคาต่อหน่วย</th>
+                        <th style="width: 150px; text-align: right;">จำนวนเงินรวม</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php 
+                    $job_lines = \common\models\JobLine::find()->where(['job_id' => $model->id])->all();
+                    if ($job_lines): 
+                        foreach ($job_lines as $index => $line): ?>
+                            <tr>
+                                <td style="text-align: center;"><?= $index + 1 ?></td>
+                                <td><?= Html::encode($line->product_name ?: \backend\models\Product::findName($line->product_id)) ?></td>
+                                <td style="text-align: center;"><?= number_format($line->qty, 2) ?></td>
+                                <td style="text-align: right;"><?= number_format($line->line_price, 2) ?></td>
+                                <td style="text-align: right; font-weight: bold;"><?= number_format($line->line_total, 2) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <tr style="background-color: #f8f9fa;">
+                            <td colspan="4" style="text-align: right; font-weight: bold;">รวมเงินทั้งสิ้น</td>
+                            <td style="text-align: right; font-weight: bold; color: #007bff;"><?= number_format($model->job_amount, 2) ?></td>
+                        </tr>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: #6c757d;">ไม่มีข้อมูลรายละเอียด</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
 <?php if(!Yii::$app->user->isGuest && (Yii::$app->user->identity->username == 'mcoadmin' || Yii::$app->user->identity->username == 'sorakrit' || Yii::$app->user->identity->username == 'sirilak')): ?>

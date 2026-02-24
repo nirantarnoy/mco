@@ -386,6 +386,7 @@ class JobController extends BaseController
 
             // Job line variables
             $job_line_id = \Yii::$app->request->post('job_line_id');
+            $line_product_name = \Yii::$app->request->post('line_product_name');
             $line_qty = \Yii::$app->request->post('line_qty');
             $line_unit_price = \Yii::$app->request->post('line_unit_price');
 
@@ -463,6 +464,7 @@ class JobController extends BaseController
                     for($i=0;$i<=count($job_line_id)-1;$i++){
                         $model_line_update = \common\models\JobLine::find()->where(['id'=>$job_line_id[$i]])->one();
                         if($model_line_update != null){
+                            $model_line_update->product_name = $line_product_name[$i] ?? '';
                             $model_line_update->qty = $line_qty[$i];
                             $model_line_update->line_price = $line_unit_price[$i];
                             $model_line_update->line_total = (float)$line_qty[$i] * (float)$line_unit_price[$i];
@@ -2063,6 +2065,7 @@ class JobController extends BaseController
                     $new_job_line = new \common\models\JobLine();
                     $new_job_line->job_id = $id;
                     $new_job_line->product_id = $q_line->product_id;
+                    $new_job_line->product_name = $q_line->product_name;
                     $new_job_line->qty = $q_line->qty;
                     $new_job_line->line_price = $q_line->line_price;
                     $new_job_line->line_total = $q_line->line_total;
@@ -2114,6 +2117,7 @@ class JobController extends BaseController
                         $newLine = new JobLine();
                         $newLine->job_id = $currentJob->id;
                         $newLine->product_id = $line->product_id;
+                        $newLine->product_name = $line->product_name;
                         $newLine->qty = $line->qty;
                         $newLine->line_price = $line->line_price;
                         $newLine->line_total = $line->line_total;

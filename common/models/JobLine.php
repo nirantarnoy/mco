@@ -10,6 +10,7 @@ use Yii;
  * @property int $id
  * @property int|null $job_id
  * @property int|null $product_id
+ * @property string|null $product_name
  * @property float|null $qty
  * @property float|null $line_price
  * @property float|null $line_total
@@ -37,7 +38,7 @@ class JobLine extends \yii\db\ActiveRecord
             [['job_id', 'product_id', 'qty', 'line_price', 'line_total', 'status', 'note'], 'default', 'value' => null],
             [['job_id', 'product_id', 'status'], 'integer'],
             [['qty', 'line_price', 'line_total'], 'number'],
-            [['note'], 'string', 'max' => 255],
+            [['product_name', 'note'], 'string', 'max' => 255],
         ];
     }
 

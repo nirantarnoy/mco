@@ -362,6 +362,7 @@ class QuotationController extends BaseController
                     $model_job_line = new JobLine();
                     $model_job_line->job_id = $model_job->id;
                     $model_job_line->product_id = $line->product_id;
+                    $model_job_line->product_name = $line->product_name;
                     $model_job_line->qty = $line->qty;
                     $model_job_line->line_price = $line->line_price;
                     $model_job_line->line_total = $line->line_total;

@@ -353,7 +353,9 @@ if(!$model->isNewRecord){
                                     <input type="hidden" name="job_line_id[]" value="<?= $line->id ?>">
                                     <?= $key + 1 ?>
                                 </td>
-                                <td><?= \backend\models\Product::findName($line->product_id) ?></td>
+                                <td>
+                                    <input type="text" class="form-control" name="line_product_name[]" value="<?= $line->product_name ?: \backend\models\Product::findName($line->product_id) ?>">
+                                </td>
                                 <td>
                                     <input type="number" class="form-control line-qty" name="line_qty[]" value="<?= $line->qty ?>" onchange="lineCalculate($(this))">
                                 </td>
