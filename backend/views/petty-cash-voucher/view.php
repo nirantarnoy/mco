@@ -54,7 +54,7 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                 'target' => '_blank'
             ]) ?>
             <?php if ($model->approve_status !=1): ?>
-                <?php if (\Yii::$app->user->can('CanApprovePettyCash')): ?>
+                <?php if (\Yii::$app->user->can('pettycashvoucher/approve')): ?>
                     <?= Html::a('อนุมัติ', ['approve', 'id' => $model->id], [
                         'class' => 'btn btn-success',
                         'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบจ่ายเงินสดย่อย ?',
