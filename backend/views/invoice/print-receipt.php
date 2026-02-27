@@ -436,13 +436,30 @@ use yii\helpers\Html; ?>
             $refDate = '';
             
             if ($model->invoice_type == 'receipt' || $model->invoice_type == 'bill_placement') {
+                 // Try finding in Invoice table (Reference to Tax Invoice)
                  $refInvoice = \backend\models\Invoice::findOne($model->quotation_id);
                  if($refInvoice){
-                     // $totalModel = $refInvoice;
                      $refNo = $refInvoice->invoice_number;
                      $refDate = $refInvoice->invoice_date;
+                 } else {
+                     // Try finding in Quotation table if not found in Invoice table
+                     $refQuotation = \backend\models\Quotation::findOne($model->quotation_id);
+                     if($refQuotation){
+                         $refNo = $refQuotation->quotation_no;
+                         $refDate = $refQuotation->quotation_date;
+                     }
+                 }
+
+                 // If still not found, try to find through InvoiceRelation table
+                 if (empty($refNo)) {
+                    $relation = \backend\models\InvoiceRelation::find()->where(['child_invoice_id' => $model->id])->one();
+                    if ($relation && $relation->parentInvoice) {
+                        $refNo = $relation->parentInvoice->invoice_number;
+                        $refDate = $relation->parentInvoice->invoice_date;
+                    }
                  }
             } else {
+                 // For Quotation / Tax Invoice types, usually reference is a Quotation record
                  $refQuotation = \backend\models\Quotation::findOne($model->quotation_id);
                  if($refQuotation){
                      $refNo = $refQuotation->quotation_no;
