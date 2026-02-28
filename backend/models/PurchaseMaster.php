@@ -154,17 +154,27 @@ class PurchaseMaster extends \yii\db\ActiveRecord
      */
     public function calculateTotals()
     {
-        $this->vatpr0 = 0;
-
+        $sum_amount = 0;
         foreach ($this->purchaseDetails as $detail) {
-            $this->vatpr0 += $detail->amount;
+            $sum_amount += $detail->amount;
         }
 
-        // คำนวณ VAT
-        $this->vat_amount = ($this->vatpr0 * $this->vat_percent) / 100;
+        $calc_vatpr0 = $sum_amount - (float)$this->disc;
+        if($calc_vatpr0 < 0) $calc_vatpr0 = 0;
+        
+        $this->vatpr0 = $calc_vatpr0;
 
-        // คำนวณ TAX
-        $this->tax_amount = ($this->vatpr0 * $this->tax_percent) / 100;
+        // If amount is not set or 0, calculate it. Otherwise respect the loaded value.
+        // We can add a flag or check if it was loaded from post, but it's simpler to just trust the value if it's there.
+        // However, if the user changes the percent but not the amount, we might want to recalculate.
+        // For now, let's just make sure it calculates if it's 0.
+        if ($this->vat_amount == 0 || $this->vat_amount == null) {
+            $this->vat_amount = ($this->vatpr0 * $this->vat_percent) / 100;
+        }
+
+        if ($this->tax_amount == 0 || $this->tax_amount == null) {
+            $this->tax_amount = ($this->vatpr0 * $this->tax_percent) / 100;
+        }
 
         // คำนวณรวมสุทธิ
         $this->total_amount = $this->vatpr0 + $this->vat_amount - $this->tax_amount;

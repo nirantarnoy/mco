@@ -581,4 +581,13 @@ class PurchasemasterController extends BaseController
         }
         return null;
     }
+    public function actionGetPaymentDays($id)
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $model = \backend\models\Paymentterm::findOne($id);
+        if ($model) {
+            return $model->day_count;
+        }
+        return 0;
+    }
 }

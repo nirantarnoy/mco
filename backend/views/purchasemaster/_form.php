@@ -32,11 +32,15 @@ $this->registerCss("
 .autocomplete-suggestion:hover {
     background: #e8e8e8;
 }
+.bg-blue-light {
+    background-color: #e3f2fd !important;
+}
 ");
 $model_doc = \common\models\PurchNonePrDoc::find()->where(['purchase_master_id' => $model->id])->all();
 
 $urlSearchProduct = Url::to(['search-product']);
 $urlGetVendor = Url::to(['get-vendor']);
+$urlGetPaymentDays = Url::to(['get-payment-days']);
 
 $this->registerJs(<<<JS
 var detailRowIndex = 0;
@@ -132,16 +136,31 @@ function calculateTotal() {
     
     var vatAmount = (afterDiscount * vatPercent) / 100;
     var taxAmount = (afterDiscount * taxPercent) / 100;
-    var total = afterDiscount + vatAmount - taxAmount;
     
     $('#purchasemaster-vatpr0').val(afterDiscount.toFixed(2));
     $('#purchasemaster-vat_amount').val(vatAmount.toFixed(2));
     $('#purchasemaster-tax_amount').val(taxAmount.toFixed(2));
-    $('#purchasemaster-total_amount').val(total.toFixed(2));
     
-    $('#display-subtotal').text(subtotal.toFixed(2));
-    $('#display-vat').text(vatAmount.toFixed(2));
-    $('#display-tax').text(taxAmount.toFixed(2));
+    calculateGrandTotal();
+    
+    $('#display-subtotal').text(afterDiscount.toFixed(2));
+}
+
+// คำนวณยอดสุทธิสุดท้าย (Grand Total) แยกออกมาเพื่อให้เรียกใช้ตอนคีย์ VAT/TAX เองได้
+function calculateGrandTotal() {
+    var subtotal = 0;
+    $('.amount-input').each(function() {
+        subtotal += parseFloat($(this).val()) || 0;
+    });
+    var discount = parseFloat($('#purchasemaster-disc').val()) || 0;
+    var afterDiscount = subtotal - discount;
+    
+    var vatAmount = parseFloat($('#purchasemaster-vat_amount').val()) || 0;
+    var taxAmount = parseFloat($('#purchasemaster-tax_amount').val()) || 0;
+    
+    var total = afterDiscount + vatAmount - taxAmount;
+    
+    $('#purchasemaster-total_amount').val(total.toFixed(2));
     $('#display-total').text(total.toFixed(2));
 }
 
@@ -151,6 +170,10 @@ $(document).on('input', '#purchasemaster-disc', function() {
 
 $(document).on('input', '#purchasemaster-vat_percent, #purchasemaster-tax_percent', function() {
     calculateTotal();
+});
+
+$(document).on('input', '#purchasemaster-vat_amount, #purchasemaster-tax_amount', function() {
+    calculateGrandTotal();
 });
 
 // Autocomplete สำหรับสินค้า
@@ -262,6 +285,31 @@ $(document).ready(function() {
         }
     });
     
+    // คำนวณวันครบกำหนด
+    $('#purchasemaster-paytrm').on('change', function() {
+        var termId = $(this).val();
+        var docDate = $('#purchasemaster-docdat').val();
+        if (termId && docDate) {
+            $.ajax({
+                url: '$urlGetPaymentDays',
+                data: { id: termId },
+                dataType: 'json',
+                success: function(days) {
+                    var date = new Date(docDate);
+                    date.setDate(date.getDate() + parseInt(days));
+                    var year = date.getFullYear();
+                    var month = ('0' + (date.getMonth() + 1)).slice(-2);
+                    var day = ('0' + date.getDate()).slice(-2);
+                    $('#purchasemaster-duedat').val(year + '-' + month + '-' + day);
+                }
+            });
+        }
+    });
+
+    $('#purchasemaster-docdat').on('change', function() {
+        $('#purchasemaster-paytrm').trigger('change');
+    });
+
     initAutocomplete();
     calculateTotal();
 });
@@ -325,39 +373,24 @@ JS
                                 </div>
                             </div>
                             
-                            <div class="form-group row mb-2">
-                                <label class="col-sm-4 col-form-label">ที่อยู่</label>
-                                <div class="col-sm-8">
-                                    <?= $form->field($model, 'addr01')->textInput(['placeholder'=>'ที่อยู่ 1', 'class' => 'form-control form-control-sm mb-1'])->label(false) ?>
-                                    <?= $form->field($model, 'addr02')->textInput(['placeholder'=>'ที่อยู่ 2', 'class' => 'form-control form-control-sm mb-1'])->label(false) ?>
-                                    <?= $form->field($model, 'addr03')->textInput(['placeholder'=>'ที่อยู่ 3', 'class' => 'form-control form-control-sm'])->label(false) ?>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group row mb-2">
-                                <label class="col-sm-4 col-form-label">รหัสไปรษณีย์</label>
-                                <div class="col-sm-3">
-                                    <?= $form->field($model, 'zipcod')->textInput(['placeholder'=>'รหัสไปรษณีย์', 'class' => 'form-control form-control-sm'])->label(false) ?>
-                                </div>
-                                <label class="col-sm-2 col-form-label text-right" style="padding-right: 5px;">เบอร์โทร</label>
-                                <div class="col-sm-3">
-                                    <?= $form->field($model, 'telnum')->textInput(['placeholder'=>'เบอร์โทร', 'class' => 'form-control form-control-sm'])->label(false) ?>
-                                </div>
+                            <div style="display: none;">
+                                <?= $form->field($model, 'addr01')->hiddenInput()->label(false) ?>
+                                <?= $form->field($model, 'addr02')->hiddenInput()->label(false) ?>
+                                <?= $form->field($model, 'addr03')->hiddenInput()->label(false) ?>
+                                <?= $form->field($model, 'zipcod')->hiddenInput()->label(false) ?>
+                                <?= $form->field($model, 'telnum')->hiddenInput()->label(false) ?>
+                                <?= $form->field($model, 'orgnum')->hiddenInput()->label(false) ?>
                             </div>
 
                             <div class="form-group row mb-2">
                                 <label class="col-sm-4 col-form-label">เลขผู้เสียภาษี</label>
-                                <div class="col-sm-3">
+                                <div class="col-sm-8">
                                     <?= $form->field($model, 'taxid')->textInput(['placeholder'=>'เลขประจำตัวผู้เสียภาษี', 'class' => 'form-control form-control-sm'])->label(false) ?>
-                                </div>
-                                <label class="col-sm-2 col-form-label text-right" style="padding-right: 5px;">สาขา</label>
-                                <div class="col-sm-3">
-                                    <?= $form->field($model, 'orgnum')->textInput(['placeholder'=>'ลำดับสาขา', 'class' => 'form-control form-control-sm'])->label(false) ?>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Right Column -->
+                         <!-- Right Column -->
                         <div class="col-md-6">
                             <div class="form-group row mb-2">
                                 <label class="col-sm-4 col-form-label">เลขที่บิล</label>
@@ -552,8 +585,7 @@ JS
                                 <strong>%</strong>
                             </td>
                             <td class="text-right">
-                                <span id="display-vat">0.00</span>
-                                <?= $form->field($model, 'vat_amount')->hiddenInput()->label(false) ?>
+                                <?= $form->field($model, 'vat_amount')->textInput(['id' => 'purchasemaster-vat_amount', 'class' => 'form-control form-control-sm text-right bg-blue-light', 'placeholder' => 'VAT'])->label(false) ?>
                             </td>
                         </tr>
                         <tr>
@@ -565,8 +597,7 @@ JS
                                 <strong>%</strong>
                             </td>
                             <td class="text-right">
-                                <span id="display-tax">0.00</span>
-                                <?= $form->field($model, 'tax_amount')->hiddenInput()->label(false) ?>
+                                <?= $form->field($model, 'tax_amount')->textInput(['id' => 'purchasemaster-tax_amount', 'class' => 'form-control form-control-sm text-right bg-blue-light', 'placeholder' => 'TAX'])->label(false) ?>
                             </td>
                         </tr>
                         <tr class="table-active">
