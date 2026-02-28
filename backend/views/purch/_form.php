@@ -322,6 +322,11 @@ $this->registerJs($autocompleteJs);
             'options' => ['class' => 'form-horizontal', 'enctype' => 'multipart/form-data'],
         ]); ?>
 
+        <?= $form->field($model, 'total_amount')->hiddenInput(['id' => 'purch-total_amount'])->label(false) ?>
+        <?= $form->field($model, 'vat_amount')->hiddenInput(['id' => 'purch-vat_amount'])->label(false) ?>
+        <?= $form->field($model, 'net_amount')->hiddenInput(['id' => 'purch-net_amount'])->label(false) ?>
+        <?= $form->field($model, 'discount_total_amount')->hiddenInput(['id' => 'purch-discount_total_amount'])->label(false) ?>
+
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title mb-0">ข้อมูลใบสั่งซื้อ</h5>
@@ -362,7 +367,8 @@ $this->registerJs($autocompleteJs);
                             'min' => 0,
                             'id' => 'purch-discount_per',
                             'onchange' => 'calculateGrandTotal2();',
-
+                            'onkeyup' => 'calculateGrandTotal2();',
+                            'oninput' => 'calculateGrandTotal2();',
                         ]) ?>
 
                         <?= $form->field($model, 'status')->dropDownList([
@@ -395,8 +401,9 @@ $this->registerJs($autocompleteJs);
                             'min' => 0,
                             'step' => '0.01',
                             'id' => 'purch-discount_amount',
-                            'onchange' => 'calculateGrandTotal2();'
-
+                            'onchange' => 'calculateGrandTotal2();',
+                            'onkeyup' => 'calculateGrandTotal2();',
+                            'oninput' => 'calculateGrandTotal2();',
                         ]) ?>
                         <?= $form->field($model, 'note')->textarea([
                             'rows' => 4,
@@ -608,7 +615,7 @@ $this->registerJs($autocompleteJs);
                                     <div class="col-8">ส่วนลด:</div>
                                     <div class="col-4 text-end">
                                         <span id="summary-discount"
-                                              class="fw-bold"><?= $model->discount_amount ?></span> บาท
+                                              class="fw-bold"><?= number_format($model->discount_total_amount, 2) ?></span> บาท
                                     </div>
                                 </div>
                                 <div class="row mb-2">
@@ -1073,9 +1080,10 @@ function calculateGrandTotal() {
     var netAmount = afterDiscount + vat - tax_amount;
     
     // Update Hidden Fields
-    $('#purchreq-total_amount').val(subtotal.toFixed(2));
-    $('#purchreq-vat_amount').val(vat.toFixed(2));
-    $('#purchreq-net_amount').val(netAmount.toFixed(2));
+    $('#purch-total_amount').val(subtotal.toFixed(2));
+    $('#purch-vat_amount').val(vat.toFixed(2));
+    $('#purch-net_amount').val(netAmount.toFixed(2));
+    $('#purch-discount_total_amount').val(discount.toFixed(2));
     
     // Update Display Fields
     $('#summary-subtotal').text(subtotal.toFixed(2));
@@ -1115,9 +1123,10 @@ function calculateGrandTotalManual() {
     
     var netAmount = afterDiscount + vat - tax_amount;
     
-    $('#purchreq-total_amount').val(subtotal.toFixed(2));
-    $('#purchreq-vat_amount').val(vat.toFixed(2));
-    $('#purchreq-net_amount').val(netAmount.toFixed(2));
+    $('#purch-total_amount').val(subtotal.toFixed(2));
+    $('#purch-vat_amount').val(vat.toFixed(2));
+    $('#purch-net_amount').val(netAmount.toFixed(2));
+    $('#purch-discount_total_amount').val(discount.toFixed(2));
     
     $('#summary-subtotal').text(subtotal.toFixed(2));
     $('#summary-discount').text(discount.toFixed(2));
@@ -1143,7 +1152,10 @@ function calculateLineTotal(index) {
 }
 
 $(document).ready(function() {
-    $(document).on('change keyup', '.qty-input, .price-input', function() {
+    // Initial calculation on load
+    calculateGrandTotal();
+
+    $(document).on('change keyup input', '.qty-input, .price-input', function() {
         var index = $(this).attr('data-index');
         calculateLineTotal(index);
     });

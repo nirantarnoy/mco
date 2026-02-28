@@ -147,7 +147,7 @@ class Purch extends ActiveRecord
             'discount_per' => 'ส่วนลด %',
             'whd_tax_per' => 'หัก ณ ที่จ่าย %',
             'whd_tax_amount' => 'หัก ณ ที่จ่าย (บาท)',
-            'discount_tatal_amount' => 'ยอดส่วนลดรวม',
+            'discount_total_amount' => 'ยอดส่วนลดรวม',
             'currency_id' => 'สกุลเงิน',
             'currency_rate' => 'อัตราแลกเปลี่ยน',
             'special_note' => 'บันทึกอื่นๆ',

@@ -59,14 +59,7 @@ class Product extends \common\models\Product
                 ],
                 'value' => Yii::$app->session->get('company_id'),
             ],
-            'timestampbranch' => [
-                'class' => \yii\behaviors\AttributeBehavior::className(),
-                'attributes' => [
-                    ActiveRecord::EVENT_BEFORE_INSERT => 'branch_id',
-                    ActiveRecord::EVENT_BEFORE_UPDATE => 'branch_id',
-                ],
-                'value' => Yii::$app->session->get('branch_id'),
-            ],
+         
             'timestampupdate' => [
                 'class' => \yii\behaviors\AttributeBehavior::className(),
                 'attributes' => [
