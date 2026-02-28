@@ -513,25 +513,49 @@ class JournalTrans extends ActiveRecord
         $reverseDirection = ($this->stock_type_id == self::STOCK_TYPE_IN) ? -1 : 1;
         $reverseStockTypeId = ($this->stock_type_id == self::STOCK_TYPE_IN) ? self::STOCK_TYPE_OUT : self::STOCK_TYPE_IN;
 
-        // Update Stock Sum
-        StockSum::updateStock($line->product_id, $line->warehouse_id, $line->qty, $reverseDirection);
+        $qtyToReverse = $line->qty;
+        // สำหรับรายการคืน จะต้อง reverse เฉพาะยอดดีที่รับเข้าไปจริง
+        if (in_array($this->trans_type_id, [self::TRANS_TYPE_RETURN_ISSUE, self::TRANS_TYPE_RETURN_BORROW])) {
+            if ($line->good_qty !== null) {
+                $qtyToReverse = (float)$line->good_qty;
+            } elseif ($line->is_damage == 2) { // 2 = สภาพไม่ปกติ
+                $qtyToReverse = 0;
+            }
+        }
+
+        if ($qtyToReverse > 0) {
+            // ตรวจสอบสต็อกก่อนหักออก (กรณี reverseDirection เป็น -1 คือการรับเข้าแล้วจะกดยกเลิกเพื่อถอนออก)
+            if ($reverseDirection == -1) {
+                $stockSum = StockSum::find()->where(['product_id' => $line->product_id, 'warehouse_id' => $line->warehouse_id])->one();
+                $available = $stockSum ? $stockSum->qty : 0;
+                if ($available < $qtyToReverse) {
+                    throw new \Exception("ไม่สามารถยกเลิกรายการได้: สินค้า " . ($line->product->name ?? '') . " ในคลังมีไม่เพียงพอสำหรับการหักออก (ต้องการ: {$qtyToReverse}, คงเหลือ: {$available})");
+                }
+            }
+
+            // Update Stock Sum
+            StockSum::updateStock($line->product_id, $line->warehouse_id, $qtyToReverse, $reverseDirection);
+        }
 
         // Create reverse StockTrans for history
         $stockTrans = new StockTrans();
         $stockTrans->journal_trans_id = $this->id;
         $stockTrans->product_id = $line->product_id;
         $stockTrans->warehouse_id = $line->warehouse_id;
-        $stockTrans->qty = $line->qty;
+        $stockTrans->qty = $qtyToReverse;
         $stockTrans->stock_type_id = $reverseStockTypeId;
         $stockTrans->trans_type_id = $this->trans_type_id;
         $stockTrans->trans_date = date('Y-m-d H:i:s');
         $stockTrans->created_at = date('Y-m-d H:i:s');
         $stockTrans->created_by = Yii::$app->user->id;
-        $stockTrans->status = 'cancelled';
-        $stockTrans->remark = "Cancel Item: " . ($line->product->code ?? '');
+        $stockTrans->status = StockTrans::STATUS_CANCELLED;
+        $stockTrans->remark = "ยกเลิกรายการ: " . ($line->product->code ?? '');
         $stockTrans->line_price = $line->line_price;
-        if (!$stockTrans->save(false)) {
-            throw new \Exception("Failed to save stock transaction history.");
+        
+        if ($qtyToReverse > 0) {
+            if (!$stockTrans->save(false)) {
+                throw new \Exception("Failed to save stock transaction history.");
+            }
         }
 
         $line->status = JournalTransLine::STATUS_CANCELLED;
@@ -546,27 +570,72 @@ class JournalTrans extends ActiveRecord
     protected function processStockMovements()
     {
         foreach ($this->journalTransLines as $line) {
-            // Create stock transaction
-            $stockTrans = new StockTrans();
-            $stockTrans->journal_trans_id = $this->id;
-            $stockTrans->trans_date = $this->trans_date;
-            $stockTrans->product_id = $line->product_id;
-            $stockTrans->trans_type_id = $this->trans_type_id;
-            $stockTrans->qty = $line->qty;
-            $stockTrans->created_at = date('Y-m-d H:i:s');
-            $stockTrans->created_by = $this->created_by;
-            $stockTrans->status = 'completed';
-            $stockTrans->remark = $line->remark;
-            $stockTrans->stock_type_id = $this->stock_type_id;
-            $stockTrans->warehouse_id = $line->warehouse_id; // Fixed: use line warehouse
-            $stockTrans->line_price = $line->line_price;
-            $stockTrans->updated_at = date('Y-m-d H:i:s');
-            if (!$stockTrans->save(false)) {
-                Yii::error("Failed to save StockTrans: " . print_r($stockTrans->errors, true));
+            $qtyToUpdate = $line->qty;
+
+            // สำหรับรายการคืน (คืนจากการเบิก หรือ คืนจากการยืม)
+            // ให้รับคืนเข้าคลังเฉพาะยอด "ของดี" (good_qty) เท่านั้น
+            if (in_array($this->trans_type_id, [self::TRANS_TYPE_RETURN_ISSUE, self::TRANS_TYPE_RETURN_BORROW])) {
+                if ($line->good_qty !== null) {
+                    $qtyToUpdate = (float)$line->good_qty;
+                } elseif ($line->is_damage == 2) { // 2 = สภาพไม่ปกติ (ตามที่ระบุใน _form.php)
+                    $qtyToUpdate = 0;
+                }
             }
 
-            // Update stock summary
-            $this->updateStockSummary($line->product_id, $line->warehouse_id, $line->qty);
+            if ($qtyToUpdate > 0) {
+                // Create stock transaction for the actual stock increase (Good items)
+                $stockTrans = new StockTrans();
+                $stockTrans->journal_trans_id = $this->id;
+                $stockTrans->trans_date = $this->trans_date;
+                $stockTrans->product_id = $line->product_id;
+                $stockTrans->trans_type_id = $this->trans_type_id;
+                $stockTrans->qty = $qtyToUpdate;
+                $stockTrans->created_at = date('Y-m-d H:i:s');
+                $stockTrans->created_by = $this->created_by;
+                $stockTrans->status = 3; // Completed
+                $stockTrans->remark = $line->remark;
+                $stockTrans->stock_type_id = $this->stock_type_id;
+                $stockTrans->warehouse_id = $line->warehouse_id; 
+                $stockTrans->line_price = $line->line_price;
+                $stockTrans->updated_at = date('Y-m-d H:i:s');
+                if (!$stockTrans->save(false)) {
+                    Yii::error("Failed to save StockTrans: " . print_r($stockTrans->errors, true));
+                }
+
+                // Update stock summary
+                $this->updateStockSummary($line->product_id, $line->warehouse_id, $qtyToUpdate);
+            }
+            
+            // กรณีมีของเสีย หรือ ของหาย ให้บันทึกเป็น StockTrans เฉพาะรายการ (ถ้าต้องการเก็บประวัติ)
+            // แต่จะไม่ไปยุ่งกับ StockSum (เพราะของเสีย/หาย ไม่ควรเป็นสต็อกที่ใช้ได้)
+            if (in_array($this->trans_type_id, [self::TRANS_TYPE_RETURN_ISSUE, self::TRANS_TYPE_RETURN_BORROW])) {
+                if ($line->damaged_qty > 0) {
+                    $damagedTrans = new StockTrans();
+                    $damagedTrans->journal_trans_id = $this->id;
+                    $damagedTrans->trans_date = $this->trans_date;
+                    $damagedTrans->product_id = $line->product_id;
+                    $damagedTrans->trans_type_id = $this->trans_type_id;
+                    $damagedTrans->qty = $line->damaged_qty;
+                    $damagedTrans->status = 0; // Draft or a specific status for non-stock items
+                    $damagedTrans->remark = "[ของเสีย] " . $line->remark;
+                    $damagedTrans->stock_type_id = $this->stock_type_id;
+                    $damagedTrans->warehouse_id = $line->warehouse_id;
+                    $damagedTrans->save(false);
+                }
+                if ($line->missing_qty > 0) {
+                    $missingTrans = new StockTrans();
+                    $missingTrans->journal_trans_id = $this->id;
+                    $missingTrans->trans_date = $this->trans_date;
+                    $missingTrans->product_id = $line->product_id;
+                    $missingTrans->trans_type_id = $this->trans_type_id;
+                    $missingTrans->qty = $line->missing_qty;
+                    $missingTrans->status = 0; // Draft or a specific status for non-stock items
+                    $missingTrans->remark = "[ของหาย] " . $line->remark;
+                    $missingTrans->stock_type_id = $this->stock_type_id;
+                    $missingTrans->warehouse_id = $line->warehouse_id;
+                    $missingTrans->save(false);
+                }
+            }
         }
     }
 
