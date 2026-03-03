@@ -27,7 +27,7 @@
                 </li>
                 <?php endif;?>
 
-                <?php if(\Yii::$app->user->can('paymentterm/index') || \Yii::$app->user->can('paymentmethod/index') || \Yii::$app->user->can('employee/index') || \Yii::$app->user->can('bankaccount/index')):?>
+                <?php if(\Yii::$app->user->can('paymentterm/index') || \Yii::$app->user->can('paymentmethod/index') || \Yii::$app->user->can('employee/index') || \Yii::$app->user->can('bankaccount/index') || \Yii::$app->user->can('chart-of-account/index')):?>
                 <li class="nav-item has-treeview has-sub">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-cogs"></i>
@@ -65,6 +65,12 @@
                             <a href="index.php?r=account-category/index" class="nav-link account-category">
                                 <i class="far fa-circlez nav-icon"></i>
                                 <p>หมวดบัญชี</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="index.php?r=chart-of-account/index" class="nav-link chart-of-account">
+                                <i class="far fa-circlez nav-icon"></i>
+                                <p>ผังบัญชี</p>
                             </a>
                         </li>
                         <?php //if (\Yii::$app->user->can('currency/index')): ?>
