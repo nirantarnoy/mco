@@ -245,9 +245,9 @@ $(document).ready(function() {
         detailRowIndex = existingRows;
     }
     
-    // เพิ่มแถวเริ่มต้น 5 แถว (กรณี create)
+    // เพิ่มแถวเริ่มต้น 1 แถว (กรณี create)
     if (existingRows === 0) {
-        for (var i = 0; i < 5; i++) {
+        for (var i = 0; i < 1; i++) {
             addDetailRow();
         }
     }
@@ -286,28 +286,41 @@ $(document).ready(function() {
     });
     
     // คำนวณวันครบกำหนด
-    $('#purchasemaster-paytrm').on('change', function() {
-        var termId = $(this).val();
+    function calculateDueDate() {
+        var termId = $('#purchasemaster-paytrm').val();
         var docDate = $('#purchasemaster-docdat').val();
+        
         if (termId && docDate) {
             $.ajax({
                 url: '$urlGetPaymentDays',
                 data: { id: termId },
                 dataType: 'json',
                 success: function(days) {
-                    var date = new Date(docDate);
-                    date.setDate(date.getDate() + parseInt(days));
-                    var year = date.getFullYear();
-                    var month = ('0' + (date.getMonth() + 1)).slice(-2);
-                    var day = ('0' + date.getDate()).slice(-2);
-                    $('#purchasemaster-duedat').val(year + '-' + month + '-' + day);
+                    if (days !== undefined) {
+                        // Split date string to avoid timezone issues with new Date()
+                        var parts = docDate.split('-');
+                        if (parts.length === 3) {
+                            var date = new Date(parts[0], parts[1] - 1, parts[2]);
+                            date.setDate(date.getDate() + parseInt(days));
+                            
+                            var year = date.getFullYear();
+                            var month = ('0' + (date.getMonth() + 1)).slice(-2);
+                            var day = ('0' + date.getDate()).slice(-2);
+                            
+                            $('#purchasemaster-duedat').val(year + '-' + month + '-' + day);
+                        }
+                    }
                 }
             });
         }
+    }
+
+    $('#purchasemaster-paytrm').on('change', function() {
+        calculateDueDate();
     });
 
     $('#purchasemaster-docdat').on('change', function() {
-        $('#purchasemaster-paytrm').trigger('change');
+        calculateDueDate();
     });
 
     initAutocomplete();
@@ -360,7 +373,9 @@ JS
                                 <label class="col-sm-4 col-form-label">รหัสผู้จำหน่าย</label>
                                 <div class="col-sm-8">
                                     <?= $form->field($model, 'supcod')->widget(\kartik\select2\Select2::className(),[
-                                        'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Vendor::find()->all(),'id','code'),
+                                        'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Vendor::find()->all(),'id', function($model){
+                                            return $model->code . ' ' . $model->name;
+                                        }),
                                         'options'=>['placeholder'=>'เลือกรหัสผู้ขาย'],
                                         'pluginOptions' => ['allowClear' => true]
                                     ])->label(false) ?>
