@@ -47,10 +47,17 @@ var detailRowIndex = 0;
 
 // เพิ่มแถวรายละเอียด
 function addDetailRow() {
-    detailRowIndex++;
+    // Determine the next index based on existing rows to avoid skipping indices
+    var maxIndex = -1;
+    $('.detail-row').each(function() {
+        var idx = parseInt($(this).data('index'));
+        if (idx > maxIndex) maxIndex = idx;
+    });
+    detailRowIndex = maxIndex + 1;
+
     var row = `
         <tr class='detail-row' data-index='` + detailRowIndex + `'>
-            <td class='text-center'>` + (detailRowIndex + 1) + `</td>
+            <td class='text-center'></td>
             <td>
                 <input type='text' class='form-control form-control-sm product-autocomplete' 
                     name='PurchaseDetail[` + detailRowIndex + `][stkcod]' 
@@ -94,6 +101,11 @@ function addDetailRow() {
     updateRowNumbers();
     initAutocomplete();
 }
+
+// Event listener for Add Row button
+$(document).on('click', '.btn-add-row', function() {
+    addDetailRow();
+});
 
 // ลบแถว
 $(document).on('click', '.btn-remove-row', function() {
@@ -463,7 +475,7 @@ JS
         <div class="card-header">
             <h5 class="card-title">รายละเอียดสินค้า</h5>
             <div class="card-tools">
-                <button type="button" class="btn btn-primary btn-sm" onclick="addDetailRow()">
+                <button type="button" class="btn btn-primary btn-sm btn-add-row">
                     <i class="fas fa-plus"></i> เพิ่มแถว
                 </button>
             </div>
