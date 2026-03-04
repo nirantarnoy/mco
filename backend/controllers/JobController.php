@@ -681,51 +681,8 @@ class JobController extends BaseController
     public function actionGetJobNo(){
         $id = Yii::$app->request->post('id');
         if ($id) {
-            $job = \backend\models\Job::findOne($id);
-            if (!$job) {
-                echo 'Job not found';
-                return;
-            }
-
-            $job_no = $job->job_no;
-            $new_job_no = '';
-            if ($job_no != null) {
-                $xp = explode("-", $job_no);
-                if (count($xp) >= 3) {
-                    $new_job_no = $xp[1] . '-' . $xp[2];
-                } else {
-                    $new_job_no = $job_no;
-                }
-            }
-
-            // หา PR ล่าสุดในระบบเพื่อรันเลขลำดับหลัก (PR-00001)
-            $lastPr = \backend\models\PurchReq::find()
-                ->orderBy(['id' => SORT_DESC])
-                ->one();
-
-            $mainNumber = 1;
-            if ($lastPr && $lastPr->purch_req_no) {
-                $prParts = explode('-', $lastPr->purch_req_no);
-                if (count($prParts) >= 2) {
-                    $mainNumber = intval($prParts[1]) + 1;
-                }
-            }
-
-            // หาจำนวน PR ที่มีใน job นี้ เพื่อรัน .01, .02, ...
-            $lastSubPr = \backend\models\PurchReq::find()
-                ->where(['job_id' => $id])
-                ->orderBy(['id' => SORT_DESC])
-                ->one();
-
-            $subNumber = 1;
-            if ($lastSubPr && $lastSubPr->purch_req_no) {
-                $subParts = explode('.', $lastSubPr->purch_req_no);
-                if (count($subParts) >= 2) {
-                    $subNumber = intval($subParts[count($subParts) - 1]) + 1;
-                }
-            }
-
-            $fullCode = 'PR-' . sprintf('%05d', $mainNumber) . '-' . $new_job_no . '.' . sprintf('%02d', $subNumber);
+            $company_id = \Yii::$app->session->get('company_id') == null ? 1 : \Yii::$app->session->get('company_id');
+            $fullCode = \backend\models\PurchReq::getNextPurchReqNo($id, $company_id);
             echo $fullCode;
         } else {
             echo 'No job ID';

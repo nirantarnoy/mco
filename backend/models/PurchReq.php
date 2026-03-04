@@ -249,23 +249,18 @@ class PurchReq extends ActiveRecord
         return false;
     }
 
-    /**
-     * Generate purchase request number
-     */
-    private function generatePurchReqNo()
+    public static function getNextPurchReqNo($job_id = null, $company_id = null)
     {
-        $mainNumber = 1;
-        
-        // Ensure company_id is set. If not set, use the same logic as beforeSave
-        if ($this->company_id == null) {
+        if ($company_id == null) {
             if (!\Yii::$app->request->isConsoleRequest) {
-                $this->company_id = \Yii::$app->session->get('company_id') == null ? 1 : \Yii::$app->session->get('company_id');
+                $company_id = \Yii::$app->session->get('company_id') == null ? 1 : \Yii::$app->session->get('company_id');
             } else {
-                $this->company_id = 1;
+                $company_id = 1;
             }
         }
 
-        if (in_array($this->company_id, [1, 2])) {
+        $maxNum = 0;
+        if (in_array($company_id, [1, 2])) {
             $maxNum = Yii::$app->db->createCommand("
                 SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
                 FROM purch_req 
@@ -276,9 +271,10 @@ class PurchReq extends ActiveRecord
                 SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
                 FROM purch_req 
                 WHERE company_id = :company_id
-            ", [':company_id' => $this->company_id])->queryScalar();
+            ", [':company_id' => $company_id])->queryScalar();
         }
 
+        $mainNumber = 1;
         if ($maxNum) {
             $mainNumber = (int)$maxNum + 1;
         }
@@ -286,23 +282,21 @@ class PurchReq extends ActiveRecord
         $new_job_no = '';
         $subNumber = 1;
 
-        if ($this->job_id) {
-            $job = Job::findOne($this->job_id);
+        if ($job_id) {
+            $job = Job::findOne($job_id);
             if ($job) {
                 $job_no = $job->job_no;
                 if ($job_no != null) {
                     $xp = explode("-", $job_no);
                     if (count($xp) >= 3) {
                         $new_job_no = $xp[1] . '-' . $xp[2];
-                    } else if (count($xp) == 2) {
-                        $new_job_no = $job_no;
                     } else {
                         $new_job_no = $job_no;
                     }
                 }
 
                 $lastSubPr = self::find()
-                    ->where(['job_id' => $this->job_id])
+                    ->where(['job_id' => $job_id])
                     ->orderBy(['id' => SORT_DESC])
                     ->one();
 
@@ -320,6 +314,11 @@ class PurchReq extends ActiveRecord
         }
 
         return 'PR-' . sprintf('%05d', $mainNumber) . '-' . $new_job_no . '.' . sprintf('%02d', $subNumber);
+    }
+
+    private function generatePurchReqNo()
+    {
+        return self::getNextPurchReqNo($this->job_id, $this->company_id);
     }
 
     /**
