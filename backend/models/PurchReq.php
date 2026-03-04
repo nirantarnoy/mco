@@ -251,37 +251,16 @@ class PurchReq extends ActiveRecord
 
     public static function getNextPurchReqNo($job_id = null, $company_id = null)
     {
-        if ($company_id == null) {
+        if ($company_id === null) {
             if (!\Yii::$app->request->isConsoleRequest) {
-                $company_id = \Yii::$app->session->get('company_id') == null ? 1 : \Yii::$app->session->get('company_id');
-            } else {
-                $company_id = 1;
+                $company_id = \Yii::$app->user->isGuest ? 1 : \Yii::$app->session->get('company_id');
             }
         }
-
-        $maxNum = 0;
-        if (in_array($company_id, [1, 2])) {
-            $maxNum = Yii::$app->db->createCommand("
-                SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
-                FROM purch_req 
-                WHERE company_id IN (1, 2)
-            ")->queryScalar();
-        } else {
-            $maxNum = Yii::$app->db->createCommand("
-                SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
-                FROM purch_req 
-                WHERE company_id = :company_id
-            ", [':company_id' => $company_id])->queryScalar();
-        }
-
-        $mainNumber = 1;
-        if ($maxNum) {
-            $mainNumber = (int)$maxNum + 1;
-        }
+        
+        if ($company_id === null) $company_id = 1;
 
         $new_job_no = '';
-        $subNumber = 1;
-
+        $yearPart = '';
         if ($job_id) {
             $job = Job::findOne($job_id);
             if ($job) {
@@ -289,21 +268,11 @@ class PurchReq extends ActiveRecord
                 if ($job_no != null) {
                     $xp = explode("-", $job_no);
                     if (count($xp) >= 3) {
+                        $yearPart = $xp[1]; // Get "QT26" or "QT25"
                         $new_job_no = $xp[1] . '-' . $xp[2];
                     } else {
                         $new_job_no = $job_no;
-                    }
-                }
-
-                $lastSubPr = self::find()
-                    ->where(['job_id' => $job_id])
-                    ->orderBy(['id' => SORT_DESC])
-                    ->one();
-
-                if ($lastSubPr && $lastSubPr->purch_req_no) {
-                    $subParts = explode('.', $lastSubPr->purch_req_no);
-                    if (count($subParts) >= 2) {
-                        $subNumber = intval($subParts[count($subParts) - 1]) + 1;
+                        $yearPart = explode('-', $job_no)[0];
                     }
                 }
             }
@@ -311,6 +280,41 @@ class PurchReq extends ActiveRecord
 
         if (empty($new_job_no)) {
             $new_job_no = date('Ym');
+            $yearPart = date('Y');
+        }
+
+        // Group companies 1, 2, and legacy 0
+        $targetCompanies = in_array((int)$company_id, [1, 2]) ? [1, 2, 0] : [(int)$company_id];
+        $companyCondition = "company_id IN (" . implode(',', $targetCompanies) . ") OR company_id IS NULL";
+
+        // Query MAX number SCOPED TO THE YEAR PART (e.g., only QT26)
+        $maxNum = Yii::$app->db->createCommand("
+            SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
+            FROM purch_req 
+            WHERE ({$companyCondition})
+            AND purch_req_no LIKE 'PR-%-{$yearPart}-%'
+            AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
+        ")->queryScalar();
+
+        $mainNumber = ($maxNum) ? (int)$maxNum + 1 : 1;
+
+        $subNumber = 1;
+        if ($job_id) {
+            // Sub-number remains specific to this job
+            $lastSubPr = self::find()
+                ->where(['job_id' => $job_id])
+                ->orderBy(['id' => SORT_DESC])
+                ->one();
+
+            if ($lastSubPr && $lastSubPr->purch_req_no) {
+                $subParts = explode('.', $lastSubPr->purch_req_no);
+                if (count($subParts) >= 2) {
+                    $lastSubStr = $subParts[count($subParts) - 1];
+                    if (is_numeric($lastSubStr)) {
+                        $subNumber = intval($lastSubStr) + 1;
+                    }
+                }
+            }
         }
 
         return 'PR-' . sprintf('%05d', $mainNumber) . '-' . $new_job_no . '.' . sprintf('%02d', $subNumber);
