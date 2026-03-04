@@ -3,9 +3,9 @@
 // This script will find records with PR numbers starting from 400 and renumber them
 // sequentially starting from the correct next number.
 
-$dsn = 'mysql:host=localhost;dbname=mco_db';
-$username = 'root';
-$password = '';
+$dsn = 'mysql:host=localhost;dbname=zrpszwh5_mco_group_db';
+$username = 'zrpszwh5_admin_root';
+$password = 's7vH?YxZ]4%hdc?O';
 
 try {
     $pdo = new PDO($dsn, $username, $password);
