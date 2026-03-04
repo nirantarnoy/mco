@@ -283,20 +283,25 @@ class PurchReq extends ActiveRecord
             $yearPart = date('Y');
         }
 
-        // Group companies 1, 2, and legacy 0
-        $targetCompanies = in_array((int)$company_id, [1, 2]) ? [1, 2, 0] : [(int)$company_id];
-        $companyCondition = "company_id IN (" . implode(',', $targetCompanies) . ") OR company_id IS NULL";
-
-        // Query MAX number SCOPED TO THE YEAR PART (e.g., only QT26)
-        $maxNum = Yii::$app->db->createCommand("
-            SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
-            FROM purch_req 
-            WHERE ({$companyCondition})
-            AND purch_req_no LIKE 'PR-%-{$yearPart}-%'
-            AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
-        ")->queryScalar();
-
-        $mainNumber = ($maxNum) ? (int)$maxNum + 1 : 1;
+        // New Logic for Company 1 and 2: find max id and plus 1
+        if (in_array((int)$company_id, [1, 2])) {
+            $maxId = Yii::$app->db->createCommand("
+                SELECT MAX(id) 
+                FROM purch_req 
+                WHERE company_id IN (1, 2, 0) OR company_id IS NULL
+            ")->queryScalar();
+            $mainNumber = ($maxId) ? (int)$maxId + 1 : 1;
+        } else {
+            // Keep original logic for other companies: scoped to year/prefix
+            $maxNum = Yii::$app->db->createCommand("
+                SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
+                FROM purch_req 
+                WHERE company_id = " . (int)$company_id . "
+                AND purch_req_no LIKE 'PR-%-{$yearPart}-%'
+                AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
+            ")->queryScalar();
+            $mainNumber = ($maxNum) ? (int)$maxNum + 1 : 1;
+        }
 
         $subNumber = 1;
         if ($job_id) {
