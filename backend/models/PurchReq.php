@@ -283,14 +283,24 @@ class PurchReq extends ActiveRecord
             $yearPart = date('Y');
         }
 
-        // New Logic for Company 1 and 2: find max id and plus 1
+        // New Logic for Company 1 and 2: Find record with max id, then extract sequence from its purch_req_no
         if (in_array((int)$company_id, [1, 2])) {
-            $maxId = Yii::$app->db->createCommand("
-                SELECT MAX(id) 
+            $latestNo = Yii::$app->db->createCommand("
+                SELECT purch_req_no 
                 FROM purch_req 
-                WHERE company_id IN (1, 2, 0) OR company_id IS NULL
+                WHERE (company_id IN (1, 2, 0) OR company_id IS NULL)
+                AND purch_req_no LIKE 'PR-%'
+                ORDER BY id DESC LIMIT 1
             ")->queryScalar();
-            $mainNumber = ($maxId) ? (int)$maxId + 1 : 1;
+            
+            $lastNum = 0;
+            if ($latestNo) {
+                $parts = explode('-', $latestNo);
+                if (count($parts) >= 2) {
+                    $lastNum = (int)$parts[1];
+                }
+            }
+            $mainNumber = $lastNum + 1;
         } else {
             // Keep original logic for other companies: scoped to year/prefix
             $maxNum = Yii::$app->db->createCommand("
