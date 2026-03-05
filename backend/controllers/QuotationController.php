@@ -347,18 +347,32 @@ class QuotationController extends BaseController
         $model->approve_by = Yii::$app->user->id;
         $model->status = Quotation::STATUS_ACTIVE;
 
-        if ($model->save()) {
-            // create new job
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            if ($model->save()) {
+                // Check if a job already exists for this quotation to avoid duplicates
+                $model_job = Job::find()->where(['quotation_id' => $model->id])->one();
+                if (!$model_job) {
+                    $model_job = new Job();
+                    $model_job->quotation_id = $model->id;
+                    $model_job->job_no = $model->quotation_no;
+                    $model_job->job_date = date('Y-m-d');
+                    $model_job->status = Job::JOB_STATUS_OPEN;
+                    $model_job->job_amount = $model->total_amount;
+                    if (!$model_job->save(false)) {
+                        throw new \Exception('Failed to save job');
+                    }
+                } else {
+                   // Update existing job amount if needed
+                   $model_job->job_amount = $model->total_amount;
+                   $model_job->save(false);
+                }
 
-            $model_job = new Job();
-            $model_job->quotation_id = $model->id;
-            $model_job->job_no = $model->quotation_no; //Job::generateJobNo();
-            $model_job->job_date = date('Y-m-d');
-            $model_job->status = Job::JOB_STATUS_OPEN;
-            $model_job->job_amount = $model->total_amount;
-            if($model_job->save(false)){
-                $model_line = QuotationLine::find()->where(['quotation_id' => $model->id])->all();
-                foreach ($model_line as $line) {
+                // Sync job lines (re-create them to ensure they match quotation lines)
+                JobLine::deleteAll(['job_id' => $model_job->id]);
+                
+                $model_lines = QuotationLine::find()->where(['quotation_id' => $model->id])->all();
+                foreach ($model_lines as $line) {
                     $model_job_line = new JobLine();
                     $model_job_line->job_id = $model_job->id;
                     $model_job_line->product_id = $line->product_id;
@@ -366,13 +380,19 @@ class QuotationController extends BaseController
                     $model_job_line->qty = $line->qty;
                     $model_job_line->line_price = $line->line_price;
                     $model_job_line->line_total = $line->line_total;
-                    $model_job_line->save(false);
+                    if (!$model_job_line->save(false)) {
+                        throw new \Exception('Failed to save job line');
+                    }
                 }
-            }
 
-            Yii::$app->session->setFlash('success', 'อนุมัติใบเสนอราคาเรียบร้อยแล้ว');
-        } else {
-            Yii::$app->session->setFlash('error', 'ไม่สามารถอนุมัติใบเสนอราคาได้');
+                $transaction->commit();
+                Yii::$app->session->setFlash('success', 'อนุมัติใบเสนอราคาเรียบร้อยแล้ว');
+            } else {
+                throw new \Exception('Failed to approve quotation');
+            }
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::$app->session->setFlash('error', 'ไม่สามารถอนุมัติใบเสนอราคาได้: ' . $e->getMessage());
         }
 
         return $this->redirect(['view', 'id' => $model->id]);
