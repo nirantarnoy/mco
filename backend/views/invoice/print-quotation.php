@@ -126,6 +126,9 @@ $this->registerCss("
     margin-bottom: 2px;
     font-weight: 900;
     -webkit-text-stroke: 0.3px black;
+    word-break: normal;
+    overflow-wrap: break-word;
+    line-break: loose;
 }
 
 .invoice-info {
@@ -190,7 +193,11 @@ $this->registerCss("
     font-size: 20px !important;
 }
 
-.customer-left, .customer-right {
+.customer-left {
+    flex: 1.5;
+}
+
+.customer-right {
     flex: 1;
 }
 
@@ -211,6 +218,10 @@ $this->registerCss("
     padding: 1px 4px;
     min-height: 16px;
     line-height: 1.2;
+    word-break: normal;
+    overflow-wrap: break-word;
+    line-break: loose;
+    text-align: justify;
 }
 
 /* Items Table */

@@ -154,6 +154,9 @@ body {
     margin-bottom: 0px;
     font-weight: 800;
     -webkit-text-stroke: 0.25px black;
+    word-break: normal;
+    overflow-wrap: break-word;
+    line-break: loose;
 }
 
 .invoice-info {
@@ -227,6 +230,10 @@ body {
     margin-top: 0; 
     padding-top: 0;
     margin-left: 10px;
+    word-break: normal;
+    overflow-wrap: break-word;
+    line-break: loose;
+    text-align: justify;
 }
 
 
@@ -712,9 +719,9 @@ window.addEventListener('afterprint', function() {
 
     <!-- Customer Information -->
     <div class="customer-section">
-        <table style="width: 100%;">
+        <table style="width: 100%; table-layout: fixed;">
             <tr>
-                <td style="width: 50%; vertical-align: top;">
+                <td style="width: 60%; vertical-align: top;">
                     <table style="width: 100%;">
                         <tr>
                             <td class="field-label" style="width: 180px; vertical-align: top;">เลขประจำตัวผู้เสียภาษี:</td>
@@ -741,7 +748,7 @@ window.addEventListener('afterprint', function() {
                         </tr>
                     </table>
                 </td>
-                <td style="width: 50%; vertical-align: top; padding-left: 60px;">
+                <td style="width: 40%; vertical-align: top; padding-left: 20px;">
                     <table style="width: 100%;">
                         <tr>
                             <td class="field-label" style="width: 250px;">วันที่ / Date:</td>

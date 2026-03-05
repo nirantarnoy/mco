@@ -238,7 +238,7 @@ class Invoice extends ActiveRecord
         $prefixes = [
             self::TYPE_QUOTATION => 'QT',
             self::TYPE_BILL_PLACEMENT => 'BP',
-            self::TYPE_TAX_INVOICE => 'IV',
+            self::TYPE_TAX_INVOICE => 'INV',
             self::TYPE_RECEIPT => 'RE',
         ];
 
@@ -283,6 +283,11 @@ class Invoice extends ActiveRecord
         if ($this->invoice_type == self::TYPE_BILL_PLACEMENT) {
             return $prefix . '-' . $year . '-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
         }
+
+        if ($this->invoice_type == self::TYPE_TAX_INVOICE) {
+            return $prefix . substr($year, -2) . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        }
+
         return $prefix . substr($year, -2) . '-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 

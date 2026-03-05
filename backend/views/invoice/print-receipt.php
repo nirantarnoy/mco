@@ -167,6 +167,9 @@ use yii\helpers\Html; ?>
         line-height: 1.1;
         color: #333;
         font-weight: 700;
+        word-break: normal;
+        overflow-wrap: break-word;
+        line-break: loose;
     }
 
     .receipt-row {
@@ -215,6 +218,10 @@ use yii\helpers\Html; ?>
 
     .receipt-data-cell {
         font-weight: 600;
+        word-break: normal;
+        overflow-wrap: break-word;
+        line-break: loose;
+        text-align: justify;
     }
 
     /* Items Table */

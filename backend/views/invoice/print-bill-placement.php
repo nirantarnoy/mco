@@ -151,12 +151,12 @@ body {
 }
 
 .customer-details {
-    width: 55%;
+    width: 65%;
 }
 
 .billing-numbers {
     margin-left: 30px;
-    width: 40%;
+    width: 30%;
     font-size: 18px;
     line-height: 2.5;
     font-weight: 800;
@@ -173,6 +173,10 @@ body {
 .customer-details td {
     padding: 2px 0;
     vertical-align: top;
+    word-break: normal;
+    overflow-wrap: break-word;
+    line-break: loose;
+    text-align: justify;
 }
 
 .customer-details td:first-child {
