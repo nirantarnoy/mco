@@ -175,8 +175,8 @@ body {
     vertical-align: top;
     word-break: normal;
     overflow-wrap: break-word;
-    line-break: loose;
-    text-align: justify;
+    line-break: normal;
+    text-align: left;
 }
 
 .customer-details td:first-child {

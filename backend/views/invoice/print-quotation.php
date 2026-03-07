@@ -221,7 +221,7 @@ $this->registerCss("
     word-break: normal;
     overflow-wrap: break-word;
     line-break: loose;
-    text-align: justify;
+    text-align: left;
 }
 
 /* Items Table */

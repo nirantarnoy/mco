@@ -232,9 +232,6 @@ class Invoice extends ActiveRecord
     public function generateInvoiceNumber()
     {
         $year = date('Y');
-        $month = date('n');
-
-        // Get prefix based on type
         $prefixes = [
             self::TYPE_QUOTATION => 'QT',
             self::TYPE_BILL_PLACEMENT => 'BP',
@@ -244,51 +241,63 @@ class Invoice extends ActiveRecord
 
         $prefix = $prefixes[$this->invoice_type] ?? 'DOC';
 
-        // Get or create sequence
-        $sequence = Yii::$app->db->createCommand("
+        $db = Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+            // Get current sequence with FOR UPDATE to prevent race conditions
+            $sequence = $db->createCommand("
                 SELECT last_number 
                 FROM invoice_sequences 
                 WHERE invoice_type = :type AND year = :year AND month = 0
+                FOR UPDATE
             ")->bindValues([
                 ':type' => $this->invoice_type,
                 ':year' => $year,
-            ])
-            ->queryOne();
+            ])->queryOne();
 
-        if (!$sequence) {
-            // Insert new sequence
-            Yii::$app->db->createCommand()
-                ->insert('invoice_sequences', [
+            if (!$sequence) {
+                $nextNumber = 1;
+                $db->createCommand()->insert('invoice_sequences', [
                     'invoice_type' => $this->invoice_type,
                     'year' => $year,
                     'month' => 0,
-                    'last_number' => 1,
+                    'last_number' => $nextNumber,
                     'prefix' => $prefix
-                ])
-                ->execute();
-            $nextNumber = 1;
-        } else {
-            $nextNumber = $sequence['last_number'] + 1;
-            Yii::$app->db->createCommand()
-                ->update('invoice_sequences',
-                    ['last_number' => $nextNumber],
-                    [
-                        'invoice_type' => $this->invoice_type,
-                        'year' => $year,
-                        'month' => 0
-                    ])
-                ->execute();
-        }
+                ])->execute();
+            } else {
+                $nextNumber = $sequence['last_number'] + 1;
+            }
 
-        if ($this->invoice_type == self::TYPE_BILL_PLACEMENT) {
-            return $prefix . '-' . $year . '-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
-        }
+            // --- SAFETY NET: Ensure the number doesn't already exist in the invoices table ---
+            while (true) {
+                $generatedNumber = '';
+                if ($this->invoice_type == self::TYPE_BILL_PLACEMENT) {
+                    $generatedNumber = $prefix . '-' . $year . '-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+                } else if ($this->invoice_type == self::TYPE_TAX_INVOICE) {
+                    $generatedNumber = $prefix . substr($year, -2) . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+                } else {
+                    $generatedNumber = $prefix . substr($year, -2) . '-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+                }
 
-        if ($this->invoice_type == self::TYPE_TAX_INVOICE) {
-            return $prefix . substr($year, -2) . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
-        }
+                $exists = self::find()->where(['invoice_number' => $generatedNumber, 'invoice_type' => $this->invoice_type, 'status' => self::STATUS_ACTIVE])->exists();
+                if (!$exists) {
+                    break;
+                }
+                $nextNumber++;
+            }
 
-        return $prefix . substr($year, -2) . '-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+            // Update sequence with the final number used
+            $db->createCommand()->update('invoice_sequences', 
+                ['last_number' => $nextNumber], 
+                ['invoice_type' => $this->invoice_type, 'year' => $year, 'month' => 0]
+            )->execute();
+
+            $transaction->commit();
+            return $generatedNumber;
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            throw $e;
+        }
     }
 
     /**

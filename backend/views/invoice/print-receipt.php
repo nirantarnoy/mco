@@ -220,8 +220,8 @@ use yii\helpers\Html; ?>
         font-weight: 600;
         word-break: normal;
         overflow-wrap: break-word;
-        line-break: loose;
-        text-align: justify;
+        line-break: normal;
+        text-align: left;
     }
 
     /* Items Table */

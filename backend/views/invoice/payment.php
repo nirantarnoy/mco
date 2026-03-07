@@ -6,6 +6,9 @@ use kartik\date\DatePicker;
 use kartik\select2\Select2;
 use yii\helpers\ArrayHelper;
 use backend\models\BankAccount;
+use backend\models\PaymentExtraOption;
+
+$extraOptions = ArrayHelper::map(PaymentExtraOption::find()->where(['status' => 1])->all(), 'id', 'name');
 
 $this->title = 'บันทึกรับเงิน: ' . $invoice->invoice_number;
 ?>
@@ -80,6 +83,37 @@ $this->title = 'บันทึกรับเงิน: ' . $invoice->invoice_n
                             <?= $form->field($model, 'note')->textarea(['rows' => 2, 'placeholder' => 'ระบุหมายเหตุ (ถ้ามี)']) ?>
                         </div>
                     </div>
+
+                    <div class="card card-outline card-info">
+                        <div class="card-header">
+                            <h3 class="card-title text-info"><i class="fas fa-plus-circle"></i> รายการเพิ่มเติม (ปรับปรุงยอด)</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-info btn-xs" id="add-extra-row"><i class="fas fa-plus"></i> เพิ่มรายการ</button>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-sm table-bordered" id="table-extras">
+                                <thead class="bg-info text-white">
+                                    <tr>
+                                        <th width="60%">หัวข้อ</th>
+                                        <th width="30%">จำนวนเงิน (บาท)</th>
+                                        <th width="10%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="extra-rows">
+                                    <!-- Dynamic Rows -->
+                                </tbody>
+                                <tfoot>
+                                    <tr class="bg-light">
+                                        <td class="text-right font-weight-bold">รวมยอดรับสุทธิ (รวมรายการเพิ่มเติม):</td>
+                                        <td class="text-right"><span id="net-total-display" class="h5 font-weight-bold text-primary">0.00</span></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
                     <div class="text-right">
                         <?= Html::submitButton('<i class="fas fa-save"></i> บันทึกรายการ', ['class' => 'btn btn-primary']) ?>
                     </div>
@@ -115,8 +149,21 @@ $this->title = 'บันทึกรับเงิน: ' . $invoice->invoice_n
                                         <div class="small text-muted">เช็ค: <?= Html::encode($item->cheque_number) ?></div>
                                     <?php endif; ?>
                                 </td>
-                                <td><?= Html::encode($item->note) ?></td>
-                                <td class="text-right font-weight-bold text-primary"><?= number_format($item->amount, 2) ?></td>
+                                    <td><?= Html::encode($item->note) ?></td>
+                                    <td class="text-right font-weight-bold text-primary">
+                                        <?= number_format($item->amount, 2) ?>
+                                        <?php 
+                                        $extras = \backend\models\InvoicePaymentExtra::find()->where(['payment_receipt_id' => $item->id])->all();
+                                        if ($extras): 
+                                        ?>
+                                            <div class="small mt-1 pt-1 border-top">
+                                                <?php foreach ($extras as $ex): ?>
+                                                    <div class="text-muted"><?= Html::encode($ex->extraOption->name) ?>: <?= number_format($ex->amount, 2) ?></div>
+                                                <?php endforeach; ?>
+                                                <div class="text-success font-weight-bold">รวมสุทธิ: <?= number_format($item->amount + array_sum(array_column($extras, 'amount')), 2) ?></div>
+                                            </div>
+                                        <?php endif; ?>
+                                    </td>
                                 <td class="text-center">
                                     <?php if ($item->attachment): ?>
                                         <?= Html::a('<i class="fas fa-paperclip"></i> ดูไฟล์', ['/' . $item->attachment], ['target' => '_blank', 'class' => 'btn btn-outline-info btn-xs']) ?>
@@ -189,6 +236,65 @@ $js = <<<JS
 
     // Check on load
     checkPaymentMethod();
+
+    // Extra Rows Logic
+    $('#add-extra-row').on('click', function() {
+        let options = '';
+        <?php foreach ($extraOptions as $id => $name): ?>
+            options += '<option value="<?= $id ?>"><?= Html::encode($name) ?></option>';
+        <?php endforeach; ?>
+
+        let row = `
+            <tr>
+                <td>
+                    <select class="form-control form-control-sm extra-option-select" name="extras_option_id[]">
+                        <option value="">-- เลือกหัวข้อ --</option>
+                        ${options}
+                    </select>
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="form-control form-control-sm text-right extra-amount" name="extras_amount[]" disabled>
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-danger btn-xs btn-remove-row"><i class="fas fa-times"></i></button>
+                </td>
+            </tr>
+        `;
+        $('#extra-rows').append(row);
+    });
+
+    $(document).on('click', '.btn-remove-row', function() {
+        $(this).closest('tr').remove();
+        calculateNetTotal();
+    });
+
+    $(document).on('change', '.extra-option-select', function() {
+        let amountInput = $(this).closest('tr').find('.extra-amount');
+        if ($(this).val()) {
+            amountInput.prop('disabled', false);
+        } else {
+            amountInput.prop('disabled', true).val('');
+        }
+        calculateNetTotal();
+    });
+
+    $(document).on('input', '#invoicepaymentreceipt-amount, .extra-amount', function() {
+        calculateNetTotal();
+    });
+
+    function calculateNetTotal() {
+        let baseAmount = parseFloat($('#invoicepaymentreceipt-amount').val()) || 0;
+        let extraTotal = 0;
+        $('.extra-amount').each(function() {
+            let val = parseFloat($(this).val()) || 0;
+            extraTotal += val;
+        });
+        let netTotal = baseAmount + extraTotal;
+        $('#net-total-display').text(netTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+    }
+
+    // Initial calc
+    calculateNetTotal();
 JS;
 $this->registerJs($js);
 ?>

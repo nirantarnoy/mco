@@ -823,6 +823,20 @@ class InvoiceController extends BaseController
             $model->company_id = \Yii::$app->session->get('company_id');
 
             if ($model->save()) {
+                // Save extra items
+                $extrasOptionIds = Yii::$app->request->post('extras_option_id', []);
+                $extrasAmounts = Yii::$app->request->post('extras_amount', []);
+                
+                foreach ($extrasOptionIds as $index => $optionId) {
+                    if ($optionId && isset($extrasAmounts[$index]) && $extrasAmounts[$index] != 0) {
+                        $extra = new \backend\models\InvoicePaymentExtra();
+                        $extra->payment_receipt_id = $model->id;
+                        $extra->extra_option_id = $optionId;
+                        $extra->amount = $extrasAmounts[$index];
+                        $extra->save(false);
+                    }
+                }
+
                 if ($model->file) {
                     $fileName = 'pay_' . $model->id . '_' . time() . '.' . $model->file->extension;
                     $path = 'uploads/payments/';

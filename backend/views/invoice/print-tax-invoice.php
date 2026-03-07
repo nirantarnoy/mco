@@ -231,9 +231,15 @@ body {
     padding-top: 0;
     margin-left: 10px;
     word-break: normal;
-    overflow-wrap: break-word;
-    line-break: loose;
-    text-align: justify;
+    overflow-wrap: anywhere;
+    line-break: normal;
+    text-align: left;
+}
+
+.field-value-right {
+    display: block;
+    text-align: right;
+    font-weight: 800;
 }
 
 
@@ -721,10 +727,10 @@ window.addEventListener('afterprint', function() {
     <div class="customer-section">
         <table style="width: 100%; table-layout: fixed;">
             <tr>
-                <td style="width: 60%; vertical-align: top;">
+                <td style="width: 65%; vertical-align: top;">
                     <table style="width: 100%;">
                         <tr>
-                            <td class="field-label" style="width: 180px; vertical-align: top;">เลขประจำตัวผู้เสียภาษี:</td>
+                            <td class="field-label" style="width: 160px; vertical-align: top;">เลขประจำตัวผู้เสียภาษี:</td>
                             <td class="field-value">0215543000985</td>
                         </tr>
                         <tr>
@@ -748,10 +754,10 @@ window.addEventListener('afterprint', function() {
                         </tr>
                     </table>
                 </td>
-                <td style="width: 40%; vertical-align: top; padding-left: 20px;">
+                <td style="width: 35%; vertical-align: top; padding-left: 15px;">
                     <table style="width: 100%;">
                         <tr>
-                            <td class="field-label" style="width: 250px;">วันที่ / Date:</td>
+                            <td class="field-label" style="width: 180px;">วันที่ / Date:</td>
                             <td class="field-value-right"><?= Yii::$app->formatter->asDate($model->invoice_date, 'php:d/m/Y') ?></td>
                         </tr>
                         <tr>
