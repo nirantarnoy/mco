@@ -215,6 +215,11 @@ $this->title = 'บันทึกรับเงิน: ' . $invoice->invoice_n
 </style>
 
 <?php
+$optionsHtml = '';
+foreach ($extraOptions as $id => $name) {
+    $optionsHtml .= '<option value="' . $id . '">' . Html::encode($name) . '</option>';
+}
+
 $js = <<<JS
     function checkPaymentMethod() {
         let method = $('#invoicepaymentreceipt-payment_method').val();
@@ -239,17 +244,14 @@ $js = <<<JS
 
     // Extra Rows Logic
     $('#add-extra-row').on('click', function() {
-        let options = '';
-        <?php foreach ($extraOptions as $id => $name): ?>
-            options += '<option value="<?= $id ?>"><?= Html::encode($name) ?></option>';
-        <?php endforeach; ?>
+        let optionsHtml = '{$optionsHtml}';
 
         let row = `
             <tr>
                 <td>
                     <select class="form-control form-control-sm extra-option-select" name="extras_option_id[]">
                         <option value="">-- เลือกหัวข้อ --</option>
-                        ${options}
+                        \${optionsHtml}
                     </select>
                 </td>
                 <td>
