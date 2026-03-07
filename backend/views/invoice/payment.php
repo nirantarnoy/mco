@@ -166,7 +166,7 @@ $this->title = 'บันทึกรับเงิน: ' . $invoice->invoice_n
                                     </td>
                                 <td class="text-center">
                                     <?php if ($item->attachment): ?>
-                                        <?= Html::a('<i class="fas fa-paperclip"></i> ดูไฟล์', ['/' . $item->attachment], ['target' => '_blank', 'class' => 'btn btn-outline-info btn-xs']) ?>
+                                        <?= Html::a('<i class="fas fa-paperclip"></i> ดูไฟล์', Yii::getAlias('@web') . '/' . $item->attachment, ['target' => '_blank', 'class' => 'btn btn-outline-info btn-xs']) ?>
                                     <?php else: ?>
                                         <span class="text-muted small">ไม่มีไฟล์</span>
                                     <?php endif; ?>
