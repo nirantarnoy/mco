@@ -81,6 +81,12 @@
                                 </a>
                             </li>
                         <?php //endif; ?>
+                        <li class="nav-item">
+                            <a href="index.php?r=payment-extra-option/index" class="nav-link payment-extra-option">
+                                <i class="far fa-circlez nav-icon"></i>
+                                <p>หัวข้อรับเงินอื่นๆ</p>
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <?php endif;?>
