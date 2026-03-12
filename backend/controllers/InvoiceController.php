@@ -819,14 +819,33 @@ class InvoiceController extends BaseController
         $model->invoice_id = $id;
 
         if ($this->request->isPost && $model->load($this->request->post())) {
+            $extrasOptionIds = Yii::$app->request->post('extras_option_id', []);
+            $extrasAmounts = Yii::$app->request->post('extras_amount', []);
+            
+            $hasExtras = false;
+            foreach ($extrasOptionIds as $oid) {
+                if ($oid) {
+                    $hasExtras = true;
+                    break;
+                }
+            }
+
+            // Validation: Must have at least one part
+            if ($model->amount == 0 && !$hasExtras) {
+                \Yii::$app->session->setFlash('error', 'กรุณาระบุยอดเงิน หรือเลือกรายการเพิ่มเติมอย่างน้อย 1 รายการ');
+                return $this->redirect(['payment', 'id' => $id]);
+            }
+
+            // Default payment method for adjustment-only entries
+            if ($model->amount == 0 && $hasExtras && empty($model->payment_method)) {
+                $model->payment_method = 'รายการปรับปรุงยอด';
+            }
+
             $model->file = \yii\web\UploadedFile::getInstance($model, 'file');
             $model->company_id = \Yii::$app->session->get('company_id');
 
             if ($model->save()) {
                 // Save extra items
-                $extrasOptionIds = Yii::$app->request->post('extras_option_id', []);
-                $extrasAmounts = Yii::$app->request->post('extras_amount', []);
-                
                 foreach ($extrasOptionIds as $index => $optionId) {
                     if ($optionId && isset($extrasAmounts[$index]) && $extrasAmounts[$index] != 0) {
                         $extra = new \backend\models\InvoicePaymentExtra();

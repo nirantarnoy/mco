@@ -28,96 +28,140 @@ $this->title = 'บันทึกรับเงิน: ' . $invoice->invoice_n
                 </div>
                 <div class="col-md-6">
                     <?php
-                    $total_paid = array_sum(array_column($history, 'amount'));
+                    $total_received = 0;
+                    $total_extras = 0;
+                    foreach ($history as $item) {
+                        $total_received += $item->amount;
+                        $extras_sum = \backend\models\InvoicePaymentExtra::find()->where(['payment_receipt_id' => $item->id])->sum('amount') ?: 0;
+                        $total_extras += $extras_sum;
+                    }
+                    $total_paid = $total_received + $total_extras;
                     $remaining = $invoice->total_amount - $total_paid;
                     ?>
                     <div class="text-right p-3" style="background: #f8f9fa; border-radius: 8px;">
-                        <span class="text-muted">ยอดรับแล้ว:</span> <span class="text-success h4 font-weight-bold"><?= number_format($total_paid, 2) ?></span><br>
-                        <span class="text-muted">ยอดคงค้าง:</span> <span class="text-danger h4 font-weight-bold"><?= number_format($remaining, 2) ?></span>
+                        <span class="text-muted">ยอดรับรวม (ไม่รวมรายการเพิ่มเติม):</span> <span class="text-success h5 font-weight-bold"><?= number_format($total_received, 2) ?></span><br>
+                        <?php if ($total_extras > 0): ?>
+                            <span class="text-muted">ยอดปรับปรุงเพิ่ม:</span> <span class="text-info h5 font-weight-bold"><?= number_format($total_extras, 2) ?></span><br>
+                        <?php endif; ?>
+                        <div class="mt-2 pt-2 border-top">
+                            <span class="text-muted">ยอดคงค้างสุทธิ:</span> <span class="<?= $remaining > 0 ? 'text-danger' : 'text-success' ?> h4 font-weight-bold"><?= number_format($remaining, 2) ?></span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card bg-light">
-                <div class="card-body">
-                    <?php $form = ActiveForm::begin(['options' => ['enctype' => 'multipart/form-data']]); ?>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <?= $form->field($model, 'payment_date')->widget(DatePicker::classname(), [
-                                'options' => ['placeholder' => 'เลือกวันที่', 'value' => date('Y-m-d')],
-                                'pluginOptions' => ['autoclose' => true, 'format' => 'yyyy-mm-dd', 'todayHighlight' => true]
-                            ]) ?>
-                        </div>
-                        <div class="col-md-4">
-                            <?= $form->field($model, 'amount')->textInput(['type' => 'number', 'step' => '0.01', 'value' => $remaining > 0 ? $remaining : 0]) ?>
-                        </div>
-                        <div class="col-md-4">
-                            <?= $form->field($model, 'file')->fileInput(['class' => 'form-control-file mt-2']) ?>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <?= $form->field($model, 'payment_method')->dropDownList([
-                                'เงินสด' => 'เงินสด',
-                                'โอนเงินธนาคาร' => 'โอนเงินธนาคาร',
-                                'เช็ค' => 'เช็ค',
-                            ], ['prompt' => '-- เลือกช่องทาง --']) ?>
-                        </div>
-                        <div class="col-md-4 bank-account-section" style="display: none;">
-                            <?= $form->field($model, 'bank_account')->widget(Select2::classname(), [
-                                'data' => ArrayHelper::map(BankAccount::find()->where(['status' => 1])->all(), 'account_no', function($model) {
-                                    return $model->bank_name . ' (' . $model->account_no . ') ' . $model->account_name;
-                                }),
-                                'options' => ['placeholder' => '-- เลือกบัญชีธนาคาร --'],
-                                'pluginOptions' => [
-                                    'allowClear' => true
-                                ],
-                            ]) ?>
-                        </div>
-                        <div class="col-md-4 cheque-number-section" style="display: none;">
-                            <?= $form->field($model, 'cheque_number')->textInput(['placeholder' => 'ระบุเลขที่เช็ค']) ?>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <?= $form->field($model, 'note')->textarea(['rows' => 2, 'placeholder' => 'ระบุหมายเหตุ (ถ้ามี)']) ?>
-                        </div>
-                    </div>
-
-                    <div class="card card-outline card-info">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card card-info card-outline">
                         <div class="card-header">
-                            <h3 class="card-title text-info"><i class="fas fa-plus-circle"></i> รายการเพิ่มเติม (ปรับปรุงยอด)</h3>
-                            <div class="card-tools">
-                                <button type="button" class="btn btn-info btn-xs" id="add-extra-row"><i class="fas fa-plus"></i> เพิ่มรายการ</button>
-                            </div>
+                            <h3 class="card-title"><i class="fas fa-money-bill-wave"></i> ส่วนที่ 1: บันทึกรับเงิน (Payment Details)</h3>
                         </div>
-                        <div class="card-body p-0">
-                            <table class="table table-sm table-bordered" id="table-extras">
-                                <thead class="bg-info text-white">
-                                    <tr>
-                                        <th width="60%">หัวข้อ</th>
-                                        <th width="30%">จำนวนเงิน (บาท)</th>
-                                        <th width="10%"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="extra-rows">
-                                    <!-- Dynamic Rows -->
-                                </tbody>
-                                <tfoot>
-                                    <tr class="bg-light">
-                                        <td class="text-right font-weight-bold">รวมยอดรับสุทธิ (รวมรายการเพิ่มเติม):</td>
-                                        <td class="text-right"><span id="net-total-display" class="h5 font-weight-bold text-primary">0.00</span></td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
+                        <div class="card-body">
+                            <?php $form = ActiveForm::begin([
+                                'id' => 'payment-form',
+                                'options' => ['enctype' => 'multipart/form-data']
+                            ]); ?>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <?= $form->field($model, 'payment_date')->widget(DatePicker::classname(), [
+                                        'options' => ['placeholder' => 'เลือกวันที่', 'id' => 'payment-date-1', 'value' => date('Y-m-d')],
+                                        'pluginOptions' => ['autoclose' => true, 'format' => 'yyyy-mm-dd', 'todayHighlight' => true]
+                                    ]) ?>
+                                </div>
+                                <div class="col-md-3">
+                                    <?= $form->field($model, 'amount')->textInput(['type' => 'number', 'step' => '0.01', 'id' => 'payment-amount-field', 'value' => $remaining > 0 ? $remaining : 0]) ?>
+                                </div>
+                                <div class="col-md-3">
+                                    <?= $form->field($model, 'payment_method')->dropDownList([
+                                        'เงินสด' => 'เงินสด',
+                                        'โอนเงินธนาคาร' => 'โอนเงินธนาคาร',
+                                        'เช็ค' => 'เช็ค',
+                                    ], ['prompt' => '-- เลือกช่องทาง --', 'id' => 'payment-method-select']) ?>
+                                </div>
+                                <div class="col-md-3">
+                                    <?= $form->field($model, 'file')->fileInput(['class' => 'form-control-file mt-1']) ?>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 bank-account-section" style="display: none;">
+                                    <?= $form->field($model, 'bank_account')->widget(Select2::classname(), [
+                                        'data' => ArrayHelper::map(BankAccount::find()->where(['status' => 1])->all(), 'account_no', function($model) {
+                                            return $model->bank_name . ' (' . $model->account_no . ') ' . $model->account_name;
+                                        }),
+                                        'options' => ['placeholder' => '-- เลือกบัญชีธนาคาร --', 'id' => 'bank-account-1'],
+                                        'pluginOptions' => ['allowClear' => true],
+                                    ]) ?>
+                                </div>
+                                <div class="col-md-6 cheque-number-section" style="display: none;">
+                                    <?= $form->field($model, 'cheque_number')->textInput(['placeholder' => 'ระบุเลขที่เช็ค', 'id' => 'cheque-no-1']) ?>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <?= $form->field($model, 'note')->textInput(['placeholder' => 'ระบุหมายเหตุ (ถ้ามี)', 'id' => 'note-1']) ?>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <?= Html::submitButton('<i class="fas fa-save"></i> บันทึกข้อมูลการรับเงิน', ['class' => 'btn btn-primary']) ?>
+                            </div>
+                            <?php ActiveForm::end(); ?>
                         </div>
                     </div>
 
-                    <div class="text-right">
-                        <?= Html::submitButton('<i class="fas fa-save"></i> บันทึกรายการ', ['class' => 'btn btn-primary']) ?>
+                    <div class="card card-teal card-outline">
+                        <div class="card-header">
+                            <h3 class="card-title text-teal"><i class="fas fa-plus-circle"></i> ส่วนที่ 2: รายการเพิ่มเติม (ปรับปรุงยอด / Adjustment)</h3>
+                        </div>
+                        <div class="card-body">
+                            <?php $form2 = ActiveForm::begin([
+                                'id' => 'adjustment-form',
+                                'options' => ['enctype' => 'multipart/form-data']
+                            ]); ?>
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <?= $form2->field($model, 'payment_date')->widget(DatePicker::classname(), [
+                                        'options' => ['placeholder' => 'เลือกวันที่', 'id' => 'payment-date-2', 'value' => date('Y-m-d')],
+                                        'pluginOptions' => ['autoclose' => true, 'format' => 'yyyy-mm-dd', 'todayHighlight' => true]
+                                    ])->label('วันที่บันทึกรายการปรับปรุง') ?>
+                                </div>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered" id="table-extras">
+                                    <thead class="bg-teal text-white">
+                                        <tr>
+                                            <th width="60%">หัวข้อ</th>
+                                            <th width="30%">จำนวนเงิน (บาท)</th>
+                                            <th width="10%"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="extra-rows">
+                                        <!-- Dynamic Rows -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="bg-light">
+                                            <td class="text-right font-weight-bold">รวมยอดปรับปรุงเพิ่มเติม:</td>
+                                            <td class="text-right"><span id="net-total-display" class="h5 font-weight-bold text-teal">0.00</span></td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                                <div class="text-left mb-3">
+                                    <button type="button" class="btn btn-teal btn-xs" id="add-extra-row"><i class="fas fa-plus"></i> เพิ่มรายการปรับปรุง</button>
+                                </div>
+                            </div>
+
+                            <?= $form2->field($model, 'note')->textarea(['rows' => 2, 'placeholder' => 'ระบุหมายเหตุรายการปรับปรุง (ถ้ามี)', 'id' => 'note-2']) ?>
+                            
+                            <!-- Hidden default amount for adjustment form -->
+                            <?= Html::hiddenInput('InvoicePaymentReceipt[amount]', 0) ?>
+
+                            <div class="text-right mt-3">
+                                <?= Html::submitButton('<i class="fas fa-save"></i> บันทึกรายการปรับปรุงยอด', ['class' => 'btn btn-teal']) ?>
+                            </div>
+                            <?php ActiveForm::end(); ?>
+                        </div>
                     </div>
-                    <?php ActiveForm::end(); ?>
                 </div>
             </div>
 
@@ -166,7 +210,7 @@ $this->title = 'บันทึกรับเงิน: ' . $invoice->invoice_n
                                     </td>
                                 <td class="text-center">
                                     <?php if ($item->attachment): ?>
-                                        <?= Html::a('<i class="fas fa-paperclip"></i> ดูไฟล์', Yii::getAlias('@web') . '/' . $item->attachment, ['target' => '_blank', 'class' => 'btn btn-outline-info btn-xs']) ?>
+                                        <?= Html::a('<i class="fas fa-paperclip"></i> ดูไฟล์', Yii::$app->request->baseUrl . '/' . $item->attachment, ['target' => '_blank', 'class' => 'btn btn-outline-info btn-xs']) ?>
                                     <?php else: ?>
                                         <span class="text-muted small">ไม่มีไฟล์</span>
                                     <?php endif; ?>
@@ -188,17 +232,15 @@ $this->title = 'บันทึกรับเงิน: ' . $invoice->invoice_n
                     </tbody>
                     <tfoot class="bg-light">
                     <tr style="font-size: 1.1em; font-weight: bold;">
-                        <td colspan="4" class="text-right">ยอดรับรวมทั้งสิ้น:</td>
+                        <td colspan="4" class="text-right">ยอดรับรวมทั้งสิ้น (รวมรายการปรับปรุง):</td>
                         <td class="text-right text-success"><?= number_format($total_paid, 2) ?></td>
                         <td colspan="2"></td>
                     </tr>
-                    <?php if ($remaining > 0): ?>
-                        <tr class="text-danger">
-                            <td colspan="4" class="text-right">คงเหลือค้างชำระ:</td>
-                            <td class="text-right"><?= number_format($remaining, 2) ?></td>
-                            <td colspan="2"></td>
-                        </tr>
-                    <?php endif; ?>
+                    <tr class="<?= $remaining > 0 ? 'text-danger' : 'text-success' ?>" style="font-size: 1.1em; font-weight: bold;">
+                        <td colspan="4" class="text-right">คงเหลือยอดค้างชำระสุทธิ:</td>
+                        <td class="text-right"><?= number_format($remaining, 2) ?></td>
+                        <td colspan="2"></td>
+                    </tr>
                     </tfoot>
                 </table>
             </div>
@@ -222,7 +264,7 @@ foreach ($extraOptions as $id => $name) {
 
 $js = <<<JS
     function checkPaymentMethod() {
-        let method = $('#invoicepaymentreceipt-payment_method').val();
+        let method = $('#payment-method-select').val();
         if(method == 'โอนเงินธนาคาร'){
             $('.bank-account-section').show();
             $('.cheque-number-section').hide();
@@ -235,7 +277,7 @@ $js = <<<JS
         }
     }
 
-    $(document).on('change', '#invoicepaymentreceipt-payment_method', function(){
+    $(document).on('change', '#payment-method-select', function(){
         checkPaymentMethod();
     });
 
@@ -249,13 +291,13 @@ $js = <<<JS
         let row = `
             <tr>
                 <td>
-                    <select class="form-control form-control-sm extra-option-select" name="extras_option_id[]">
+                    <select class="form-control form-control-sm extra-option-select" name="extras_option_id[]" required>
                         <option value="">-- เลือกหัวข้อ --</option>
                         \${optionsHtml}
                     </select>
                 </td>
                 <td>
-                    <input type="number" step="0.01" class="form-control form-control-sm text-right extra-amount" name="extras_amount[]" disabled>
+                    <input type="number" step="0.01" class="form-control form-control-sm text-right extra-amount" name="extras_amount[]" required>
                 </td>
                 <td class="text-center">
                     <button type="button" class="btn btn-danger btn-xs btn-remove-row"><i class="fas fa-times"></i></button>
@@ -271,28 +313,20 @@ $js = <<<JS
     });
 
     $(document).on('change', '.extra-option-select', function() {
-        let amountInput = $(this).closest('tr').find('.extra-amount');
-        if ($(this).val()) {
-            amountInput.prop('disabled', false);
-        } else {
-            amountInput.prop('disabled', true).val('');
-        }
         calculateNetTotal();
     });
 
-    $(document).on('input', '#invoicepaymentreceipt-amount, .extra-amount', function() {
+    $(document).on('input', '.extra-amount', function() {
         calculateNetTotal();
     });
 
     function calculateNetTotal() {
-        let baseAmount = parseFloat($('#invoicepaymentreceipt-amount').val()) || 0;
         let extraTotal = 0;
         $('.extra-amount').each(function() {
             let val = parseFloat($(this).val()) || 0;
             extraTotal += val;
         });
-        let netTotal = baseAmount + extraTotal;
-        $('#net-total-display').text(netTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+        $('#net-total-display').text(extraTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
     }
 
     // Initial calc

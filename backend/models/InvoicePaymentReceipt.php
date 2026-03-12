@@ -28,9 +28,15 @@ class InvoicePaymentReceipt extends ActiveRecord
     public function rules()
     {
         return [
-            [['invoice_id', 'payment_date', 'amount', 'payment_method'], 'required'],
-            [['invoice_id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'company_id'], 'integer'],
+            [['invoice_id', 'payment_date'], 'required'],
+            [['amount'], 'default', 'value' => 0],
             [['amount'], 'number'],
+            [['payment_method'], 'required', 'when' => function($model) {
+                return $model->amount > 0;
+            }, 'whenClient' => "function (attribute, value) {
+                return parseFloat($('#invoicepaymentreceipt-amount').val()) > 0;
+            }"],
+            [['invoice_id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'company_id'], 'integer'],
             [['payment_date'], 'safe'],
             [['payment_method', 'attachment', 'note', 'bank_account', 'cheque_number'], 'string', 'max' => 255],
             [['file'], 'file', 'skipOnEmpty' => true, 'extensions' => 'png, jpg, jpeg, pdf'],

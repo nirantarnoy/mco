@@ -185,7 +185,7 @@ class PurchaseMaster extends \yii\db\ActiveRecord
      */
     public static function generateDocnum()
     {
-        $prefix = 'PO';
+        $prefix = 'NPR';
         $date = date('Ymd');
 
         $lastDoc = self::find()
