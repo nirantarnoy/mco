@@ -302,14 +302,16 @@ $(document).ready(function() {
         var termId = $('#purchasemaster-paytrm').val();
         var docDate = $('#purchasemaster-docdat').val();
         
+        console.log('Calculating due date for term: ' + termId + ', date: ' + docDate);
+        
         if (termId && docDate) {
             $.ajax({
                 url: '$urlGetPaymentDays',
                 data: { id: termId },
                 dataType: 'json',
                 success: function(days) {
-                    if (days !== undefined) {
-                        // Split date string to avoid timezone issues with new Date()
+                    console.log('Payment days received: ' + days);
+                    if (days !== undefined && days !== null) {
                         var parts = docDate.split('-');
                         if (parts.length === 3) {
                             var date = new Date(parts[0], parts[1] - 1, parts[2]);
@@ -319,24 +321,26 @@ $(document).ready(function() {
                             var month = ('0' + (date.getMonth() + 1)).slice(-2);
                             var day = ('0' + date.getDate()).slice(-2);
                             
-                            $('#purchasemaster-duedat').val(year + '-' + month + '-' + day);
+                            var calculatedDate = year + '-' + month + '-' + day;
+                            console.log('Calculated due date: ' + calculatedDate);
+                            $('#purchasemaster-duedat').val(calculatedDate);
                         }
                     }
+                },
+                error: function(err) {
+                    console.error('Error fetching payment days:', err);
                 }
             });
         }
     }
 
-    $('#purchasemaster-paytrm').on('change', function() {
-        calculateDueDate();
-    });
-
-    $('#purchasemaster-docdat').on('change', function() {
+    $(document).on('change', '#purchasemaster-paytrm, #purchasemaster-docdat', function() {
         calculateDueDate();
     });
 
     initAutocomplete();
     calculateTotal();
+    calculateDueDate();
 });
 JS
 );
@@ -753,28 +757,8 @@ JS
                 <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
                     <div class="row">
                         <div class="col-lg-12">
-                            <label for="">เอกสารแนบ PO Acknowledge</label>
-                            <input type="file" name="file_acknowledge_doc" multiple>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-                    <div class="row">
-                        <div class="col-lg-12">
                             <label for="">เอกสารแนบ ใบกำกับภาษี</label>
                             <input type="file" name="file_invoice_doc" multiple>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <label for="">เอกสารแนบ เอกสารจ่ายเงิน</label>
-                            <input type="file" name="file_slip_doc" multiple>
                         </div>
                     </div>
                 </div>
