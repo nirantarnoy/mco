@@ -130,6 +130,13 @@ class PurchasemasterController extends BaseController
 
                         // คำนวณยอดรวม
                         $model->calculateTotals();
+                        
+                        // Explicitly capture duedat from post
+                        $postData = Yii::$app->request->post('PurchaseMaster');
+                        if (isset($postData['duedat'])) {
+                            $model->duedat = $postData['duedat'];
+                        }
+
                         $model->save(false);
 
                         // upload
@@ -229,6 +236,13 @@ class PurchasemasterController extends BaseController
 
                         // คำนวณยอดรวม
                         $model->calculateTotals();
+
+                        // Explicitly capture duedat from post
+                        $postData = Yii::$app->request->post('PurchaseMaster');
+                        if (isset($postData['duedat'])) {
+                            $model->duedat = $postData['duedat'];
+                        }
+
                         $model->save(false);
 
                         // upload
