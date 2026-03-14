@@ -91,6 +91,48 @@ $this->params['breadcrumbs'][] = $this->title;
                         }
                     ],
                     [
+                        'label' => 'เอกสารแนบ',
+                        'format' => 'raw',
+                        'value' => function($model) {
+                            $html = '';
+                            
+                            // 1. ใบกำกับ/ใบเสร็จ (doc_type_id = 2)
+                            $hasInvoice = \common\models\PurchNonePrDoc::find()
+                                ->where(['purchase_master_id' => $model->id, 'doc_type_id' => 2])
+                                ->exists();
+                            if ($hasInvoice) {
+                                $html .= '<span class="badge badge-info mr-1" style="margin-bottom:2px;">ใบกำกับ/ใบเสร็จ</span><br/>';
+                            }
+                            
+                            // 2. สลิป/เอกสารจ่ายเงิน (doc_type_id = 3)
+                            $hasSlip = \common\models\PurchNonePrDoc::find()
+                                ->where(['purchase_master_id' => $model->id, 'doc_type_id' => 3])
+                                ->exists();
+                            if ($hasSlip) {
+                                $html .= '<span class="badge badge-warning mr-1" style="margin-bottom:2px;">สลิป</span><br/>';
+                            }
+                            
+                            // 3. มัดจำ
+                            $deposit = \backend\models\PurchNonePrDeposit::find()
+                                ->where(['purchase_master_id' => $model->id])
+                                ->one();
+                            $hasDeposit = false;
+                            if ($deposit) {
+                                $depositLine = \backend\models\PurchNonePrDepositLine::find()
+                                    ->where(['purch_none_pr_deposit_id' => $deposit->id])
+                                    ->one();
+                                if ($depositLine && (!empty($depositLine->deposit_doc) || !empty($depositLine->receive_doc))) {
+                                    $hasDeposit = true;
+                                }
+                            }
+                            if ($hasDeposit) {
+                                $html .= '<span class="badge badge-secondary mr-1" style="margin-bottom:2px;">มัดจำ</span><br/>';
+                            }
+
+                            return $html !== '' ? $html : '<span class="text-muted">-</span>';
+                        }
+                    ],
+                    [
                         'attribute' => 'total_amount',
                         'label' => 'ยอดรวม',
                         'format' => ['decimal', 2],

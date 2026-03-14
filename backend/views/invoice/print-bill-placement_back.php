@@ -564,7 +564,7 @@ window.addEventListener('afterprint', function() {
                 ]) ?>
             </div>
             <div class="company-info">
-                <div class="company-name">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
+                <div class="company-name">บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)</div>
                 <div class="company-address">
                     8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมืองจังหวัดระยอง 21000
                 </div>

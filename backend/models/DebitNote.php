@@ -160,19 +160,23 @@ class DebitNote extends \yii\db\ActiveRecord
      */
     public function generateDocumentNo()
     {
-        $year = date('y');
-        $sequence = DocumentSequence::findOne(['document_type' => 'debit_note']);
+        $year = date('Y');
+        $month = date('m');
+        $prefix = 'DB';
+        
+        $lastDoc = self::find()
+            ->where(['like', 'document_no', $prefix . $year . $month . '%', false])
+            ->orderBy(['document_no' => SORT_DESC])
+            ->one();
 
-        if ($sequence->last_year != date('Y')) {
-            $sequence->last_number = 0;
-            $sequence->last_year = date('Y');
+        if ($lastDoc) {
+            $lastNumber = (int)substr($lastDoc->document_no, -3);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
         }
 
-        $sequence->last_number += 1;
-        $sequence->save();
-
-        $running = str_pad($sequence->last_number, $sequence->running_length, '0', STR_PAD_LEFT);
-        $this->document_no = $sequence->prefix . '-' . $year . '-' . $running;
+        $this->document_no = $prefix . $year . $month . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
     }
 
     /**

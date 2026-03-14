@@ -614,7 +614,7 @@ window.addEventListener('afterprint', function() {
             <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 180px;" alt="">
         </div>
         <div class="company-details">
-            <p style="font-size: 24px;font-family: 'THSarabunPSK' !important;font-weight: bold;" id="companyNameHeader">บริษัท เอ็ม.ซี.โอ. จำกัด</p>
+            <p style="font-size: 24px;font-family: 'THSarabunPSK' !important;font-weight: bold;" id="companyNameHeader">บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)</p>
             <p style="margin-top: -1px;" id="companyAddress">8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000</p>
             <p id="companyContact"><strong>Tel :</strong> (038) 875258-9, &nbsp; <strong>Fax :</strong> (038) 619559</p>
         </div>
@@ -828,7 +828,7 @@ window.addEventListener('afterprint', function() {
         const companyNameHeader = document.getElementById('companyNameHeader');
         if (companyNameHeader) {
             if (selectedValue === 'mco') {
-                companyNameHeader.textContent = 'บริษัท เอ็ม.ซี.โอ. จำกัด';
+                companyNameHeader.textContent = 'บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)';
             } else {
                 companyNameHeader.textContent = selectedValue;
             }

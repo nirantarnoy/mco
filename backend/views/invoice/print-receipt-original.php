@@ -404,7 +404,7 @@ use yii\helpers\Html; ?>
                 <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 190px;" alt="">
             </div>
             <div class="receipt-company-info">
-                <div class="receipt-company-name-thai" id="companyNameThai">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
+                <div class="receipt-company-name-thai" id="companyNameThai">บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)</div>
                 <div class="receipt-company-name-eng" id="companyNameEng">M.C.O. COMPANY LIMITED</div>
                 <div class="receipt-company-address" style="margin-top: -12px;" id="addressThai">
                     8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 &nbsp;
@@ -587,7 +587,7 @@ use yii\helpers\Html; ?>
             // Restore MCO Layout
             if (companyNameThai) {
                 companyNameThai.style.display = 'block';
-                companyNameThai.textContent = 'บริษัท เอ็ม.ซี.โอ. จำกัด';
+                companyNameThai.textContent = 'บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)';
             }
             if (companyNameEng) {
                 companyNameEng.style.display = 'block';

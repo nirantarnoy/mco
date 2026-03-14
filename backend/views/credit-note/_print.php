@@ -320,7 +320,7 @@ $formatter = Yii::$app->formatter;
             const companyData = {
                 mco: {
                     logo: '../../backend/web/uploads/logo/mco_logo_2.png',
-                    nameThai: 'บริษัท เอ็ม.ซี.โอ. จำกัด',
+                    nameThai: 'บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)',
                     nameEng: 'M.C.O. CO.,LTD.',
                     address: '8/18 Koh-Kloy Rd., Tambon Cherngnoen, Amphur Muang, Rayong 21000<br>8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000',
                     contact: 'Tel : (038) 875258-9 Fax : (038) 619559<br>e-mail: info@thai-mco.com www.thai-mco.com<br>'
@@ -466,7 +466,7 @@ $formatter = Yii::$app->formatter;
                 if (headerSelect && headerSelect.value !== 'mco') {
                     sigComName.textContent = headerSelect.value;
                 } else {
-                    sigComName.textContent = lang === 'en' ? 'M.C.O. CO.,LTD.' : 'บริษัท เอ็ม.ซี.โอ. จำกัด';
+                    sigComName.textContent = lang === 'en' ? 'M.C.O. CO.,LTD.' : 'บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)';
                 }
             }
         }
@@ -545,7 +545,7 @@ $formatter = Yii::$app->formatter;
                     </td>
                     <td class="text-right">
                         <div class="company-name" style="margin-top: 25px;" id="companyNameThai">
-                            บริษัท เอ็ม.ซี.โอ. จำกัด
+                            บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)
                         </div>
                         <div class="company-name" style="font-size: 20px;" id="companyNameEng">
                             M.C.O. CO.,LTD.
@@ -737,7 +737,7 @@ $formatter = Yii::$app->formatter;
         <!-- Signature Section -->
         <div class="signature-section">
             <div class="signature-box">
-                <div id="sigComName" style="font-weight: 800; -webkit-text-stroke: 0.25px black;">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
+                <div id="sigComName" style="font-weight: 800; -webkit-text-stroke: 0.25px black;">บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)</div>
                 <div class="signature-line"></div>
                 <div style="font-weight: 800; -webkit-text-stroke: 0.25px black;">ผู้มีอำนาจลงนาม / ผู้รับมอบอำนาจ</div>
                 <div style="margin-top: 10px; font-weight: 800;">_____/_____/_____</div>
@@ -771,7 +771,7 @@ $formatter = Yii::$app->formatter;
             // Restore MCO Layout
             if (companyNameThai) {
                 companyNameThai.style.display = 'block';
-                companyNameThai.textContent = 'บริษัท เอ็ม.ซี.โอ. จำกัด';
+                companyNameThai.textContent = 'บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)';
             }
             if (companyNameEng) {
                 companyNameEng.style.display = 'block';
@@ -779,7 +779,7 @@ $formatter = Yii::$app->formatter;
             }
             // Restore Sig Name based on current language
             if (sigComName) {
-                sigComName.textContent = currentLang === 'en' ? 'M.C.O. CO.,LTD.' : 'บริษัท เอ็ม.ซี.โอ. จำกัด';
+                sigComName.textContent = currentLang === 'en' ? 'M.C.O. CO.,LTD.' : 'บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)';
             }
         } else {
             // Other Company
