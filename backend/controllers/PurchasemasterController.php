@@ -158,6 +158,67 @@ class PurchasemasterController extends BaseController
                             }
                         }
 
+                        $deposit_date = \Yii::$app->request->post('deposit_date');
+                        $receive_date = \Yii::$app->request->post('deposit_receive_date');
+                        $deposit_amount = \Yii::$app->request->post('deposit_amount');
+                        $deposit_doc = UploadedFile::getInstanceByName('deposit_doc');
+
+                        if($model->is_deposit ==1){ // มีมัดจำ
+                            if($deposit_amount >= 0){
+                                $model_purch_deposit = new \backend\models\PurchNonePrDeposit();
+                                $model_purch_deposit->trans_date = date('Y-m-d H:i:s',strtotime($deposit_date));
+                                $model_purch_deposit->purchase_master_id = $model->id;
+                                $model_purch_deposit->status = 0;
+                                $model_purch_deposit->created_by = \Yii::$app->user->id;
+                                $model_purch_deposit->created_at = time();
+                                if($model_purch_deposit->save(false)){
+                                    if(!empty($deposit_doc)){
+                                        $file = 'purch_none_pr_deposit_'.time().'_'.($deposit_doc->getExtension());
+                                        $deposit_doc->saveAs('uploads/purch_doc/' .$file);
+
+                                        $model_purch_deposit_line = new \backend\models\PurchNonePrDepositLine();
+                                        $model_purch_deposit_line->purch_none_pr_deposit_id = $model_purch_deposit->id;
+                                        $model_purch_deposit_line->deposit_date = date('Y-m-d H:i:s',strtotime($deposit_date));
+                                        $model_purch_deposit_line->deposit_amount = (double)$deposit_amount;
+                                        $model_purch_deposit_line->deposit_doc = $file;
+                                        
+                                        $receive_amount = \Yii::$app->request->post('deposit_receive_amount');
+                                        $receive_doc = UploadedFile::getInstanceByName('deposit_receive_doc');
+                                        
+                                        if($receive_amount > 0){
+                                            $model_purch_deposit_line->receive_date = date('Y-m-d H:i:s',strtotime($receive_date));
+                                            if(!empty($receive_doc)){
+                                                $rec_file = 'purch_none_pr_receive_'.time().'_'.($receive_doc->getExtension());
+                                                $receive_doc->saveAs('uploads/purch_doc/' .$rec_file);
+                                                $model_purch_deposit_line->receive_doc = $rec_file;
+                                            }
+                                        }
+
+                                        $model_purch_deposit_line->save(false);
+                                    }else {
+                                        $model_purch_deposit_line = new \backend\models\PurchNonePrDepositLine();
+                                        $model_purch_deposit_line->purch_none_pr_deposit_id = $model_purch_deposit->id;
+                                        $model_purch_deposit_line->deposit_date = date('Y-m-d H:i:s',strtotime($deposit_date));
+                                        $model_purch_deposit_line->deposit_amount = (double)$deposit_amount;
+                                        
+                                        $receive_amount = \Yii::$app->request->post('deposit_receive_amount');
+                                        $receive_doc = UploadedFile::getInstanceByName('deposit_receive_doc');
+                                        
+                                        if($receive_amount > 0){
+                                            $model_purch_deposit_line->receive_date = date('Y-m-d H:i:s',strtotime($receive_date));
+                                            if(!empty($receive_doc)){
+                                                $rec_file = 'purch_none_pr_receive_'.time().'_'.($receive_doc->getExtension());
+                                                $receive_doc->saveAs('uploads/purch_doc/' .$rec_file);
+                                                $model_purch_deposit_line->receive_doc = $rec_file;
+                                            }
+                                        }
+
+                                        $model_purch_deposit_line->save(false);
+                                    }
+                                }
+                            }
+                        }
+
                         $transaction->commit();
 
                         Yii::$app->session->setFlash('success', 'บันทึกข้อมูลเรียบร้อยแล้ว');
@@ -288,6 +349,38 @@ class PurchasemasterController extends BaseController
                                         $model_purch_deposit_line->deposit_date = date('Y-m-d H:i:s',strtotime($deposit_date));
                                         $model_purch_deposit_line->deposit_amount = (double)$deposit_amount;
                                         $model_purch_deposit_line->deposit_doc = $file;
+                                        
+                                        $receive_amount = \Yii::$app->request->post('deposit_receive_amount');
+                                        $receive_doc = UploadedFile::getInstanceByName('deposit_receive_doc');
+                                        
+                                        if($receive_amount > 0){
+                                            $model_purch_deposit_line->receive_date = date('Y-m-d H:i:s',strtotime($receive_date));
+                                            if(!empty($receive_doc)){
+                                                $rec_file = 'purch_none_pr_receive_'.time().'_'.($receive_doc->getExtension());
+                                                $receive_doc->saveAs('uploads/purch_doc/' .$rec_file);
+                                                $model_purch_deposit_line->receive_doc = $rec_file;
+                                            }
+                                        }
+
+                                        $model_purch_deposit_line->save(false);
+                                    }else {
+                                        $model_purch_deposit_line = new \backend\models\PurchNonePrDepositLine();
+                                        $model_purch_deposit_line->purch_none_pr_deposit_id = $model_purch_deposit->id;
+                                        $model_purch_deposit_line->deposit_date = date('Y-m-d H:i:s',strtotime($deposit_date));
+                                        $model_purch_deposit_line->deposit_amount = (double)$deposit_amount;
+                                        
+                                        $receive_amount = \Yii::$app->request->post('deposit_receive_amount');
+                                        $receive_doc = UploadedFile::getInstanceByName('deposit_receive_doc');
+                                        
+                                        if($receive_amount > 0){
+                                            $model_purch_deposit_line->receive_date = date('Y-m-d H:i:s',strtotime($receive_date));
+                                            if(!empty($receive_doc)){
+                                                $rec_file = 'purch_none_pr_receive_'.time().'_'.($receive_doc->getExtension());
+                                                $receive_doc->saveAs('uploads/purch_doc/' .$rec_file);
+                                                $model_purch_deposit_line->receive_doc = $rec_file;
+                                            }
+                                        }
+
                                         $model_purch_deposit_line->save(false);
                                     }
                                 }

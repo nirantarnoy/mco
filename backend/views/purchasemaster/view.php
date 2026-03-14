@@ -92,6 +92,67 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
             </div>
 
+            <?php
+            $model_deposit = \backend\models\PurchNonePrDeposit::find()->where(['purchase_master_id' => $model->id])->one();
+            if ($model_deposit):
+                $model_deposit_line = \backend\models\PurchNonePrDepositLine::find()->where(['purch_none_pr_deposit_id' => $model_deposit->id])->one();
+            ?>
+                <h5 class="mt-4 mb-3">ข้อมูลมัดจำ</h5>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="25%">วันที่เอกสารมัดจำ</th>
+                                <th width="25%">วันที่จ่ายมัดจำ</th>
+                                <th class="text-right" width="25%">จำนวนเงินมัดจำ</th>
+                                <th class="text-center" width="25%">เอกสารแนบ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><?= date('d/m/Y', strtotime($model_deposit->trans_date)) ?></td>
+                                <td><?= ($model_deposit_line && $model_deposit_line->deposit_date) ? date('d/m/Y', strtotime($model_deposit_line->deposit_date)) : '-' ?></td>
+                                <td class="text-right"><?= $model_deposit_line ? Yii::$app->formatter->asDecimal($model_deposit_line->deposit_amount, 2) : '0.00' ?> บาท</td>
+                                <td class="text-center">
+                                    <?php if ($model_deposit_line && $model_deposit_line->deposit_doc): ?>
+                                        <?= Html::a('<i class="fas fa-file-download"></i> ดูเอกสาร', Yii::$app->request->baseUrl . '/uploads/purch_doc/' . $model_deposit_line->deposit_doc, ['target' => '_blank', 'class' => 'btn btn-outline-info btn-sm', 'data-pjax' => '0']) ?>
+                                    <?php else: ?>
+                                        <span class="text-muted">ไม่มีเอกสารแนบ</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- ข้อมูลการรับมัดจำคืน -->
+                <h6 class="mt-3 mb-2 font-weight-bold">ข้อมูลการรับมัดจำคืน</h6>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="33%">วันที่รับมัดจำคืน</th>
+                                <th class="text-right" width="33%">จำนวนเงินมัดจำที่รับคืน</th>
+                                <th class="text-center" width="34%">เอกสารแนบ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><?= ($model_deposit_line && $model_deposit_line->receive_date) ? date('d/m/Y', strtotime($model_deposit_line->receive_date)) : '-' ?></td>
+                                <td class="text-right"><?= ($model_deposit_line && $model_deposit_line->receive_doc != null && $model_deposit_line->deposit_amount) ? Yii::$app->formatter->asDecimal($model_deposit_line->deposit_amount, 2) : '0.00' ?> บาท</td>
+                                <td class="text-center">
+                                    <?php if ($model_deposit_line && $model_deposit_line->receive_doc): ?>
+                                        <?= Html::a('<i class="fas fa-file-download"></i> ดูเอกสาร', Yii::$app->request->baseUrl . '/uploads/purch_doc/' . $model_deposit_line->receive_doc, ['target' => '_blank', 'class' => 'btn btn-outline-info btn-sm', 'data-pjax' => '0']) ?>
+                                    <?php else: ?>
+                                        <span class="text-muted">ไม่มีเอกสารแนบ</span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
+
             <h5 class="mt-4 mb-3">รายละเอียดสินค้า</h5>
             <div class="table-responsive">
                 <table class="table table-bordered table-striped">
