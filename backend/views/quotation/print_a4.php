@@ -24,6 +24,7 @@ $customer_name = $customer_info !== null ? $customer_info['name'] : '';
 $customer_address = $customer_info !== null ? $customer_info['home_number'].' '.$customer_info['street'].' '.$customer_info['aisle'].', '.$customer_info['district_name'].', '.$customer_info['city_name'].', '.$customer_info['province_name'].', '.$customer_info['zipcode'] : '';
 $phone = $customer_info !== null ? $customer_info['phone'] : '';
 $email = $customer_info !== null ? $customer_info['email'] : '';
+$currencyCode = $quotation->currency ? $quotation->currency->code : 'Baht';
 ?>
 
 <style>
@@ -382,7 +383,7 @@ $email = $customer_info !== null ? $customer_info['email'] : '';
     <div class="summary-section">
         <div class="terms-section">
             <div><strong>EXCLUDES VAT AND SEPARATED PURCHASING IS NOT ALLOWED.</strong></div>
-            <div><strong>CURRENCY :</strong> Baht &nbsp;&nbsp; <strong>DELIVERY :</strong> &nbsp;&nbsp; <strong>PAYMENT :</strong> Cash</div>
+            <div><strong>CURRENCY :</strong> <?= Html::encode($currencyCode) ?> &nbsp;&nbsp; <strong>DELIVERY :</strong> &nbsp;&nbsp; <strong>PAYMENT :</strong> Cash</div>
             <div><strong>VALIDITY :</strong> 7 day after today.</div>
         </div>
 

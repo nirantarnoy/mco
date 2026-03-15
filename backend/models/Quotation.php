@@ -129,6 +129,11 @@ class Quotation extends ActiveRecord
         return $this->hasMany(QuotationLine::class, ['quotation_id' => 'id']);
     }
 
+    public function getCurrency()
+    {
+        return $this->hasOne(Currency::class, ['id' => 'currency_id']);
+    }
+
     /**
      * Get status label
      */
@@ -259,14 +264,26 @@ class Quotation extends ActiveRecord
             $number[1] = str_pad(substr($number[1], 0, 2), 2, "0", STR_PAD_RIGHT);
         }
 
-        $return .= $this->numtothaistring($number[0]) . "บาท";
+        $currencyName = 'บาท';
+        $subUnitName = 'สตางค์';
+        $fullText = 'ถ้วน';
+
+        if ($this->currency_id && $this->currency) {
+            if ($this->currency->code == 'USD') {
+                $currencyName = 'ดอลลาร์สหรัฐ';
+                $subUnitName = 'เซนต์';
+                $fullText = '';
+            }
+        }
+
+        $return .= $this->numtothaistring($number[0]) . $currencyName;
 
         $stang = intval($number[1]);
 
         if ($stang > 0) {
-            $return .= $this->numtothaistring($number[1]) . "สตางค์";
+            $return .= $this->numtothaistring($number[1]) . $subUnitName;
         } else {
-            $return .= "ถ้วน";
+            $return .= $fullText;
         }
 
         return $return;

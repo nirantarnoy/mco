@@ -118,7 +118,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 'label' => 'ยอดรวม',
                 'headerOptions' => ['style' => 'width: 120px; text-align: right;'],
                 'contentOptions' => ['style' => 'text-align: right;'],
-                'format' => ['currency', 'THB'],
+                'value' => function ($model) {
+                    $currencyCode = $model->currency ? $model->currency->code : 'THB';
+                    return Yii::$app->formatter->asCurrency($model->total_amount, $currencyCode);
+                },
             ],
             [
                 'attribute' => 'approve_status',

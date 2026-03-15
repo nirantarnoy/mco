@@ -43,6 +43,7 @@ $customer_address = implode(', ', $address_parts);
 $phone = $customer_info !== null && count($customer_info) > 0 ? $customer_info['phone'] : '';
 $email = $customer_info !== null && count($customer_info) > 0 ? $customer_info['email'] : '';
 $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $customer_info['taxid'] : '';
+$currencyCode = $quotation->currency ? $quotation->currency->code : 'Baht';
 ?>
 
 <style>
@@ -511,7 +512,7 @@ $customer_taxid = $customer_info !== null && count($customer_info) > 0 ? $custom
         <div style="width: 70%;">
             <div class="terms-section">
                 <div class="label-font" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">EXCLUDES VAT AND SEPARATED PURCHASING IS NOT ALLOWED.</div>
-                <div class="label-font"><span style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">CURRENCY :</span> Baht</div>
+                <div class="label-font"><span style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">CURRENCY :</span> <?= Html::encode($currencyCode) ?></div>
                 <div class="label-font"><span style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">DELIVERY : <?= $quotation->delivery_day_text ?></span></div>
                 <div class="label-font"><span style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">PAYMENT :</span> <?= $quotation->payment_term_text ?></div>
                 <div class="label-font"><span style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">VALIDITY :</span> 7 day after today.</div>

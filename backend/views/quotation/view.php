@@ -16,6 +16,7 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 
 <?php
+$currencyCode = $model->currency ? $model->currency->code : 'THB';
 $sub_total_amount = 0;
 $modelline = \backend\models\QuotationLine::find()->where(['quotation_id' => $model->id])->all();
 foreach ($modelline as $line) {
@@ -182,7 +183,7 @@ foreach ($modelline as $line) {
                         'label' => 'ราคา/หน่วย',
                         'headerOptions' => ['style' => 'width: 120px; text-align: right;'],
                         'contentOptions' => ['style' => 'text-align: right;'],
-                        'format' => ['currency', 'THB'],
+                        'format' => ['currency', $currencyCode],
 
                     ],
                     [
@@ -190,7 +191,7 @@ foreach ($modelline as $line) {
                         'label' => 'ส่วนลด',
                         'headerOptions' => ['style' => 'width: 100px; text-align: right;'],
                         'contentOptions' => ['style' => 'text-align: right;'],
-                        'format' => ['currency', 'THB'],
+                        'format' => ['currency', $currencyCode],
                         'pageSummary' => true,
                         'pageSummaryFunc' => GridView::F_SUM,
                         'pageSummaryOptions' => ['style' => 'text-align: right;'],
@@ -200,7 +201,7 @@ foreach ($modelline as $line) {
                         'label' => 'รวมเงิน',
                         'headerOptions' => ['style' => 'width: 120px; text-align: right;'],
                         'contentOptions' => ['style' => 'text-align: right;'],
-                        'format' => ['currency', 'THB'],
+                        'format' => ['currency', $currencyCode],
                         'pageSummary' => true,
                         'pageSummaryFunc' => GridView::F_SUM,
                         'pageSummaryOptions' => ['style' => 'text-align: right;'],
@@ -230,26 +231,26 @@ foreach ($modelline as $line) {
                             <div class="row mb-2">
                                 <div class="col-8">ยอดรวม:</div>
                                 <div class="col-4 text-end">
-                                    <span class="fw-bold"><?= Yii::$app->formatter->asCurrency($sub_total_amount, 'THB') ?></span>
+                                    <span class="fw-bold"><?= Yii::$app->formatter->asCurrency($sub_total_amount, $currencyCode) ?></span>
                                 </div>
                             </div>
                             <div class="row mb-2">
                                 <div class="col-8">ส่วนลด:</div>
                                 <div class="col-4 text-end">
-                                    <span class="fw-bold"><?= Yii::$app->formatter->asCurrency($model->total_discount_amount, 'THB') ?></span>
+                                    <span class="fw-bold"><?= Yii::$app->formatter->asCurrency($model->total_discount_amount, $currencyCode) ?></span>
                                 </div>
                             </div>
                             <div class="row mb-2">
                                 <div class="col-8">VAT (7%):</div>
                                 <div class="col-4 text-end">
-                                    <span class="fw-bold"><?= Yii::$app->formatter->asCurrency($model->vat_total_amount, 'THB') ?></span>
+                                    <span class="fw-bold"><?= Yii::$app->formatter->asCurrency($model->vat_total_amount, $currencyCode) ?></span>
                                 </div>
                             </div>
                             <hr>
                             <div class="row">
                                 <div class="col-8"><strong>ยอดรวมทั้งสิ้น:</strong></div>
                                 <div class="col-4 text-end">
-                                    <span class="fw-bold text-primary h5"><?= Yii::$app->formatter->asCurrency($model->total_amount, 'THB') ?></span>
+                                    <span class="fw-bold text-primary h5"><?= Yii::$app->formatter->asCurrency($model->total_amount, $currencyCode) ?></span>
                                 </div>
                             </div>
                         </div>

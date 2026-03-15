@@ -432,10 +432,20 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                     ]) ?>
 
                     <?= $form->field($model, 'currency_id')->widget(Select2::className(), [
-                        'data' => ArrayHelper::map(\backend\models\Currency::find()->all(), 'id', 'name'),
+                        'data' => ArrayHelper::map(\backend\models\Currency::find()->all(), 'id', 'code'),
                         'options' => ['placeholder' => 'เลือกสกุลเงิน'],
                         'pluginOptions' => [
                             'allowClear' => true
+                        ],
+                        'pluginEvents' => [
+                            "change" => "function() { 
+                                var data = $(this).select2('data');
+                                if (data && data.length > 0) {
+                                    $('.currency-label').text(data[0].text);
+                                } else {
+                                    $('.currency-label').text('บาท');
+                                }
+                            }",
                         ]
                     ]) ?>
 
@@ -653,19 +663,19 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                             <div class="row">
                                 <div class="col-8"><strong>ยอดรวม:</strong></div>
                                 <div class="col-4 text-end">
-                                    <span id="sub-total" class="fw-bold text-primary h5">0.00</span> บาท
+                                    <span id="sub-total" class="fw-bold text-primary h5">0.00</span> <span class="currency-label"><?= $model->currency ? $model->currency->code : 'บาท' ?></span>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-8"><strong>ส่วนลด:</strong></div>
                                 <div class="col-4 text-end">
-                                    <span id="discount-total" class="fw-bold text-primary h5">0.00</span> บาท
+                                    <span id="discount-total" class="fw-bold text-primary h5">0.00</span> <span class="currency-label"><?= $model->currency ? $model->currency->code : 'บาท' ?></span>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-8"><strong>ยอดรวมทั้งสิ้น:</strong></div>
                                 <div class="col-4 text-end">
-                                    <span id="summary-total" class="fw-bold text-primary h5">0.00</span> บาท
+                                    <span id="summary-total" class="fw-bold text-primary h5">0.00</span> <span class="currency-label"><?= $model->currency ? $model->currency->code : 'บาท' ?></span>
                                 </div>
                             </div>
                         </div>

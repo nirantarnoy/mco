@@ -16,6 +16,7 @@ if ($quotationLines) {
 // คำนวณ VAT 7%
 $vat = $subtotal * 0.07;
 $grandTotal = $subtotal + $vat - $discount;
+$currencyCode = $quotation->currency ? $quotation->currency->code : 'Baht';
 ?>
 
 <!DOCTYPE html>
@@ -331,7 +332,7 @@ $grandTotal = $subtotal + $vat - $discount;
                 <td width="70%">
                     <div class="terms-section">
                         <div><strong>EXCLUDES VAT AND SEPARATED PURCHASING IS NOT ALLOWED.</strong></div>
-                        <div><strong>CURRENCY :</strong> Baht</div>
+                        <div><strong>CURRENCY :</strong> <?= Html::encode($currencyCode) ?></div>
                         <div><strong>DELIVERY :</strong></div>
                         <div><strong>PAYMENT :</strong> <?= $quotation->payment_term_text ?></div>
                         <div><strong>VALIDITY :</strong> 7 day after today.</div>
