@@ -19,12 +19,16 @@ $getPrByVendorUrl = Url::to(['get-pr-by-vendor']);
 $getPoByVendorUrl = Url::to(['get-po-by-vendor']);
 $removeAttachmentUrl = Url::to(['remove-attachment']);
 
-$account_categories = \backend\models\AccountCategory::find()->where(['status' => 1])->all();
+$chart_of_accounts = \backend\models\ChartOfAccount::find()->where(['status' => 1])->all();
 $account_options = '<option value="">-- เลือก --</option>';
-foreach ($account_categories as $acc) {
-    $acc_label = Html::encode($acc->code . ' - ' . $acc->name);
-    $account_options .= '<option value="' . Html::encode($acc->code) . '">' . $acc_label . '</option>';
+$account_data = [];
+foreach ($chart_of_accounts as $acc) {
+    if ($acc->account_type == 1) continue; // ข้ามบัญชีคุม ให้เลือกได้เฉพาะบัญชีย่อย
+    $acc_label = Html::encode($acc->account_code . ' - ' . $acc->account_name);
+    $account_options .= '<option value="' . Html::encode($acc->account_code) . '">' . $acc_label . '</option>';
+    $account_data[$acc->account_code] = $acc->account_name;
 }
+$account_data_json = json_encode($account_data);
 
 // เตรียมข้อมูล PR/PO ที่เลือกไว้เดิม (สำหรับกรณี update)
 $selectedPrIds = \backend\models\PaymentVoucherRef::find()
@@ -54,6 +58,7 @@ if (!empty($selectedPoIds)) {
 $js = <<<JS
 var line_count = 0;
 var account_options = '{$account_options}';
+var account_data = {$account_data_json};
 
 function addLine(data = null) {
     var tr = $('<tr class="line-item">');
@@ -174,6 +179,13 @@ $(document).ready(function() {
     $('#voucher-lines tbody').on('click', '.btn-remove-line', function() {
         $(this).closest('tr').remove();
         calculateTotal();
+    });
+
+    // อัตโนมัติ: ดึงชื่อบัญชีมาแสดงในช่อง Description เมื่อเลือกผังบัญชี
+    $('#voucher-lines tbody').on('change', 'select[name="line_account_code[]"]', function() {
+        var code = $(this).val();
+        var name = account_data[code] || '';
+        $(this).closest('tr').find('input[name="line_description1[]"]').val(name);
     });
     
     // อัปเดต hidden inputs เมื่อ PR/PO select เปลี่ยน
@@ -448,9 +460,10 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                                     <td>
                                         <select name="line_account_code[]" class="form-control">
                                             <option value="">-- เลือก --</option>
-                                            <?php foreach ($account_categories as $acc): ?>
-                                                <option value="<?= Html::encode($acc->code) ?>" <?= $acc->code == $line->account_code ? 'selected' : '' ?>>
-                                                    <?= Html::encode($acc->code . ' - ' . $acc->name) ?>
+                                            <?php foreach ($chart_of_accounts as $acc): ?>
+                                                <?php if($acc->account_type == 1) continue; ?>
+                                                <option value="<?= Html::encode($acc->account_code) ?>" <?= $acc->account_code == $line->account_code ? 'selected' : '' ?>>
+                                                    <?= Html::encode($acc->account_code . ' - ' . $acc->account_name) ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
