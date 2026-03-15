@@ -161,26 +161,33 @@ class CreditNote extends \yii\db\ActiveRecord
     /**
      * Generate document number
      */
-    public function generateDocumentNo()
-    {
-        $year = date('Y');
-        $month = date('m');
-        $prefix = 'CN';
-        
-        $lastDoc = self::find()
-            ->where(['like', 'document_no', $prefix . $year . $month . '%', false])
-            ->orderBy(['document_no' => SORT_DESC])
-            ->one();
+     public function generateDocumentNo()
+     {
+         $year = date('Y');
+         $month = date('m');
+         
+         $Sequence = DocumentSequence::findOne(['document_type' => 'credit_note']);
+         
+         if (!$Sequence) {
+             // Fallback if sequence record is missing
+             $Sequence = new DocumentSequence();
+             $Sequence->document_type = 'credit_note';
+             $Sequence->prefix = 'CN';
+             $Sequence->last_year = $year;
+             $Sequence->last_number = 0;
+         }
 
-        if ($lastDoc) {
-            $lastNumber = (int)substr($lastDoc->document_no, -3);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
+         if ($Sequence->last_year != $year) {
+              $Sequence->last_number = 0;
+              $Sequence->last_year = $year;
+         }
 
-        $this->document_no = $prefix . $year . $month . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
-    }
+         $Sequence->last_number += 1;
+         $Sequence->save();
+
+         $prefix = $Sequence->prefix ?: 'CN';
+         $this->document_no = $prefix . $year . $month . str_pad($Sequence->last_number, 3, '0', STR_PAD_LEFT);
+     }
 
     /**
      * Calculate totals

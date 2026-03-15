@@ -404,7 +404,7 @@ use yii\helpers\Html; ?>
                 <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 190px;" alt="">
             </div>
             <div class="receipt-company-info">
-                <div class="receipt-company-name-thai" id="companyNameThai">บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)</div>
+                <div class="receipt-company-name-thai" id="companyNameThai">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
                 <div class="receipt-company-name-eng" id="companyNameEng">M.C.O. COMPANY LIMITED</div>
                 <div class="receipt-company-address" style="margin-top: -12px;" id="addressThai">
                     8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 &nbsp;
@@ -418,7 +418,7 @@ use yii\helpers\Html; ?>
     <!-- Title and Receipt Info -->
     <div class="receipt-row receipt-compact-row">
         <div class="receipt-col" style="text-align: left; padding-left: 10px;">
-            <strong id="taxIdLabel" style="font-size: 12px; margin-top: 10px; display: inline-block;">เลขประจำตัวผู้เสียภาษี: 0215543000985</strong>
+            <strong id="taxIdLabel" style="font-size: 12px; margin-top: 10px; display: inline-block;">เลขประจำตัวผู้เสียภาษี: 0215543000985<br>(สำนักงานใหญ่)</strong>
         </div>
         <div class="receipt-col">
             <div class="receipt-title">ใบเสร็จรับเงิน<br>RECEIPT</div>
@@ -587,7 +587,7 @@ use yii\helpers\Html; ?>
             // Restore MCO Layout
             if (companyNameThai) {
                 companyNameThai.style.display = 'block';
-                companyNameThai.textContent = 'บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)';
+                companyNameThai.textContent = 'บริษัท เอ็ม.ซี.โอ. จำกัด';
             }
             if (companyNameEng) {
                 companyNameEng.style.display = 'block';
@@ -610,7 +610,7 @@ use yii\helpers\Html; ?>
         // Tax ID label
         const taxIdLabel = document.getElementById('taxIdLabel');
         if (taxIdLabel) {
-            taxIdLabel.textContent = lang === 'en' ? 'Tax ID: 0215543000985' : 'เลขประจำตัวผู้เสียภาษี: 0215543000985';
+            taxIdLabel.innerHTML = lang === 'en' ? 'Tax ID: 0215543000985<br>(Head Office)' : 'เลขประจำตัวผู้เสียภาษี: 0215543000985<br>(สำนักงานใหญ่)';
         }
 
         // Receipt title
