@@ -589,19 +589,27 @@ $formatter = Yii::$app->formatter;
                     </div>
                     <div class="section-row">
                         <div class="label">ที่อยู่</div>
-                        <div class="value"><?= $model->customer_id != null ? Html::encode(Html::encode(\backend\models\Customer::findFullAddress($model->customer_id))) : Html::encode(Html::encode(\backend\models\Vendor::findFullAddress($model->vendor_id))) ?><br>
-                            <?php if ($model->customer_id != null): ?>
-                                <?php if ($model->customer->taxid): ?>
-                                    <div class="section-row">
-                                        <div class="value">เลขประจำตัวผู้เสียภาษี <?= Html::encode($model->customer->taxid) ?></div>
-                                    </div>
-                                <?php endif; ?>
-                            <?php else: ?>
-                                <?php if ($model->vendor->taxid): ?>
-                                    <div class="section-row">
-                                        <div class="value">เลขประจำตัวผู้เสียภาษี <?= Html::encode($model->vendor->taxid) ?></div>
-                                    </div>
-                                <?php endif; ?>
+                        <div class="value">
+                            <?php 
+                                if ($model->customer_id) {
+                                    echo Html::encode(\backend\models\Customer::findFullAddress($model->customer_id));
+                                } else {
+                                    echo Html::encode(\backend\models\Vendor::findFullAddress($model->vendor_id));
+                                }
+                            ?>
+                            <br>
+                            <?php 
+                                $taxId = '';
+                                if ($model->customer_id && $model->customer) {
+                                    $taxId = $model->customer->taxid;
+                                } elseif ($model->vendor_id && $model->vendor) {
+                                    $taxId = $model->vendor->taxid;
+                                }
+                            ?>
+                            <?php if ($taxId): ?>
+                                <div class="section-row">
+                                    <div class="value">เลขประจำตัวผู้เสียภาษี <?= Html::encode($taxId) ?></div>
+                                </div>
                             <?php endif; ?>
                         </div>
                     </div>
