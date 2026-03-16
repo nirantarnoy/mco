@@ -745,7 +745,7 @@ $this->registerJs($js);
                 <div class="row">
                     <div class="col-md-3">
                         <?= $form->field($model, 'invoice_id')->widget(Select2::class, [
-                            'data' => ArrayHelper::map(Invoice::find()->where(\Yii::$app->session->get('company_id') == 1 ? ['in', 'company_id', [1, 2]] : ['company_id' => \Yii::$app->session->get('company_id')])->orderBy('invoice_number DESC')->all(), 'id', 'invoice_number'),
+                            'data' => ArrayHelper::map(Invoice::find()->where(in_array(\Yii::$app->session->get('company_id'), [1, 2]) ? ['in', 'company_id', [1, 2]] : ['company_id' => \Yii::$app->session->get('company_id')])->orderBy('invoice_number DESC')->all(), 'id', 'invoice_number'),
                             'options' => [
                                 'placeholder' => 'เลือกใบแจ้งหนี้...',
                                 'id' => 'credit-note-invoice_id'

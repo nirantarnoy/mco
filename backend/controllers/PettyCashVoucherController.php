@@ -486,7 +486,7 @@ class PettyCashVoucherController extends BaseController
 //                ->where(['status' => 1]) // approved
 //                ->all();
             $jobs = \backend\models\Job::find()// approved
-                ->where(\Yii::$app->session->get('company_id') == 1 ? ['in', 'company_id', [1, 2]] : ['company_id' => \Yii::$app->session->get('company_id')])
+                ->where(in_array(\Yii::$app->session->get('company_id'), [1, 2]) ? ['in', 'company_id', [1, 2]] : ['company_id' => \Yii::$app->session->get('company_id')])
                 ->all();
 
             $result = [];
@@ -508,7 +508,7 @@ class PettyCashVoucherController extends BaseController
         if ($id) {
             $job = \backend\models\Job::find()
                 ->where(['id' => $id])
-                ->andWhere(\Yii::$app->session->get('company_id') == 1 ? ['in', 'company_id', [1, 2]] : ['company_id' => \Yii::$app->session->get('company_id')])
+                ->andWhere(in_array(\Yii::$app->session->get('company_id'), [1, 2]) ? ['in', 'company_id', [1, 2]] : ['company_id' => \Yii::$app->session->get('company_id')])
                 ->one();
             if ($job) {
                 return [
@@ -539,7 +539,7 @@ class PettyCashVoucherController extends BaseController
                 ->where(['>=', 'request_date', $from_date])
                 ->andWhere(['<=', 'request_date', $to_date])
                 ->andWhere(['status' => [PettyCashAdvance::STATUS_APPROVED]])
-                ->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')])
+                ->andFilterWhere(['in', 'company_id', [1, 2]])
                 ->orderBy(['request_date' => SORT_ASC, 'id' => SORT_ASC])
                 ->all();
         } else {
@@ -552,7 +552,7 @@ class PettyCashVoucherController extends BaseController
                 ->where(['>=', 'request_date', $from_date])
                 ->andWhere(['<=', 'request_date', $to_date])
                 ->andWhere(['status' => [PettyCashAdvance::STATUS_APPROVED]])
-                ->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')])
+                ->andFilterWhere(['in', 'company_id', [1, 2]])
                 ->orderBy(['request_date' => SORT_ASC, 'id' => SORT_ASC])
                 ->all();
         }
@@ -593,7 +593,7 @@ class PettyCashVoucherController extends BaseController
         $query = PettyCashVoucher::find()
             ->where(['>=', 'date', $from_date])
             ->andWhere(['<=', 'date', $to_date])
-            ->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')])
+            ->andFilterWhere(['in', 'company_id', [1, 2]])
             ->orderBy(['date' => SORT_ASC, 'pcv_no' => SORT_ASC]);
 
         $vouchers = $query->all();

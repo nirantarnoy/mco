@@ -536,7 +536,7 @@ class DebitNoteController extends BaseController
         $query = Invoice::find()
             ->where(['customer_id' => $customer_id]);
 
-        if (\Yii::$app->session->get('company_id') == 1) {
+        if (in_array(\Yii::$app->session->get('company_id'), [1, 2])) {
             $query->andWhere(['in', 'company_id', [1, 2]]);
         } else {
             $query->andWhere(['company_id' => \Yii::$app->session->get('company_id')]);
@@ -568,7 +568,7 @@ class DebitNoteController extends BaseController
         $query = \backend\models\Purch::find()
             ->where(['vendor_id' => $vendor_id]);
 
-        if (\Yii::$app->session->get('company_id') == 1) {
+        if (in_array(\Yii::$app->session->get('company_id'), [1, 2])) {
             $query->andWhere(['in', 'company_id', [1, 2]]);
         } else {
             $query->andWhere(['company_id' => \Yii::$app->session->get('company_id')]);
