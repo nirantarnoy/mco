@@ -1153,7 +1153,7 @@ function calculateLineTotal(index) {
 
 $(document).ready(function() {
     // Initial calculation on load
-    calculateGrandTotal();
+    calculateGrandTotalManual();
 
     $(document).on('change keyup input', '.qty-input, .price-input', function() {
         var index = $(this).attr('data-index');
