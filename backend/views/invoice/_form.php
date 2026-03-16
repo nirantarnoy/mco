@@ -36,14 +36,14 @@ $unitsData = json_encode($sortedUnits);
 $company_id = \Yii::$app->session->get('company_id');
 $quotationQuery = \backend\models\Quotation::find()
     ->where(['status' => \backend\models\Quotation::STATUS_ACTIVE])
-    ->andWhere($company_id == 1 ? ['in', 'company_id', [1, 2]] : ['company_id' => $company_id]);
+    ->andWhere(in_array($company_id, [1, 2]) ? ['in', 'company_id', [1, 2]] : ['company_id' => $company_id]);
 
 // Filter quotations ONLY for Tax Invoices to prevent duplicate issuance
 if ($model->invoice_type == Invoice::TYPE_TAX_INVOICE) {
     $usedQuotationIds = \backend\models\Invoice::find()
         ->select('quotation_id')
         ->where(['invoice_type' => Invoice::TYPE_TAX_INVOICE, 'status' => Invoice::STATUS_ACTIVE])
-        ->andWhere($company_id == 1 ? ['in', 'company_id', [1, 2]] : ['company_id' => $company_id])
+        ->andWhere(in_array($company_id, [1, 2]) ? ['in', 'company_id', [1, 2]] : ['company_id' => $company_id])
         ->andWhere(['not', ['quotation_id' => null]])
         ->column();
 
