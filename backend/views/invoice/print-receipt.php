@@ -613,7 +613,7 @@ use yii\helpers\Html; ?>
             </td>
             <td style="text-align: center; width: 32.5%; padding: 10px; height: 100px; vertical-align: bottom;">
                 <div class="receipt-signature-line"></div>
-                <strong style="font-size: 10px;">ผู้เก็บเงิน / COLLECTOR</strong><br>
+                <strong style="font-size: 10px;">ผู้รับเงิน / COLLECTOR</strong><br>
                 <strong style="font-size: 10px;">วันที่ / DATE</strong>
             </td>
             <td style="text-align: center; width: 32.5%; padding: 10px; height: 100px; vertical-align: bottom;">
@@ -772,7 +772,7 @@ use yii\helpers\Html; ?>
             if (paymentLabels[4]) paymentLabels[4].textContent = 'เลขที่เช็ค CHEQUE NO.:';
             if (paymentLabels[5]) paymentLabels[5].textContent = 'ลงวันที่ DATE:';
             if (paymentLabels[6]) paymentLabels[6].textContent = 'จำนวนเงิน / AMOUNT';
-            if (paymentLabels[7]) paymentLabels[7].innerHTML = 'ผู้เก็บเงิน / COLLECTOR';
+            if (paymentLabels[7]) paymentLabels[7].innerHTML = 'ผู้รับเงิน / COLLECTOR';
             if (paymentLabels[8]) paymentLabels[8].textContent = 'วันที่ / DATE';
             if (paymentLabels[9]) paymentLabels[9].innerHTML = 'ผู้จัดการ / ผู้มีอำนาจลงนาม';
             if (paymentLabels[10]) paymentLabels[10].textContent = 'MANAGER / AUTHORIZED SIGNATURE';
