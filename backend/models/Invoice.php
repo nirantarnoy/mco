@@ -231,7 +231,7 @@ class Invoice extends ActiveRecord
      */
     public function generateInvoiceNumber()
     {
-        $year = date('Y');
+        $year = $this->invoice_date ? date('Y', strtotime($this->invoice_date)) : date('Y');
         $prefixes = [
             self::TYPE_QUOTATION => 'QT',
             self::TYPE_BILL_PLACEMENT => 'BP',
