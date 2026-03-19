@@ -35,10 +35,14 @@ AppAsset::register($this);
         ],
     ]);
     $menuItems = [
-        ['label' => 'Home', 'url' => ['/site/index']],
+        ['label' => 'หน้าแรก', 'url' => ['/site/index']],
+        ['label' => 'สินค้า', 'url' => ['/product/index']],
+        ['label' => 'รายงานคลัง', 'items' => [
+            ['label' => 'รายงานสต็อกการ์ด', 'url' => ['/inventory-report/stock-card']],
+        ]],
     ];
     if (Yii::$app->user->isGuest) {
-        $menuItems[] = ['label' => 'Login', 'url' => ['/site/login']];
+        $menuItems[] = ['label' => 'เข้าสู่ระบบ', 'url' => ['/site/login']];
     }     
     echo Nav::widget([
         'options' => ['class' => 'navbar-nav me-auto mb-2 mb-md-0'],

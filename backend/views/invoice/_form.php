@@ -35,8 +35,17 @@ $unitsData = json_encode($sortedUnits);
 
 $company_id = \Yii::$app->session->get('company_id');
 $quotationQuery = \backend\models\Quotation::find()
-    ->where(['status' => \backend\models\Quotation::STATUS_ACTIVE])
-    ->andWhere(in_array($company_id, [1, 2]) ? ['in', 'company_id', [1, 2]] : ['company_id' => $company_id]);
+    ->where(in_array($company_id, [1, 2]) ? ['in', 'company_id', [1, 2]] : ['company_id' => $company_id]);
+
+// Always show the currently selected quotation when editing, even if its status is no longer active
+if (!$model->isNewRecord && $model->quotation_id) {
+    $quotationQuery->andWhere(['or', 
+        ['status' => \backend\models\Quotation::STATUS_ACTIVE], 
+        ['id' => $model->quotation_id]
+    ]);
+} else {
+    $quotationQuery->andWhere(['status' => \backend\models\Quotation::STATUS_ACTIVE]);
+}
 
 // Filter quotations ONLY for Tax Invoices to prevent duplicate issuance
 if ($model->invoice_type == Invoice::TYPE_TAX_INVOICE) {
