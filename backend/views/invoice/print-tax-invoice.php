@@ -135,8 +135,6 @@ body {
     font-size: 32px;
     font-weight: 900;
     margin-bottom: 0px;
-
-    -webkit-text-stroke: 0.5px black;
 }
 
 .company-name-eng {
@@ -145,7 +143,6 @@ body {
     margin-bottom: 3px;
     margin-left: 80px;
     margin-top: -5px;
-    -webkit-text-stroke: 0.5px black;
 }
 
 .company-address {
@@ -153,7 +150,6 @@ body {
     line-height: 1.2;
     margin-bottom: 0px;
     font-weight: 800;
-    -webkit-text-stroke: 0.25px black;
     word-break: normal;
     overflow-wrap: break-word;
     line-break: loose;
@@ -169,14 +165,12 @@ body {
     font-weight: 900;
     margin-bottom: 5px;
     position: relative;
-    -webkit-text-stroke: 0.3px black;
 }
 
 .invoice-subtitle {
     font-size: 24px;
     margin-bottom: 10px;
     font-weight: 800;
-    -webkit-text-stroke: 0.25px black;
 }
 
 /* Copy Label Styles */
@@ -198,8 +192,8 @@ body {
 }
 
 .copy-label.original {
-    color: #0066cc;
-    border: 2px solid #0066cc;
+    color: #000;
+    border: 2px solid #000;
 }
 
 .copy-label.copy {
@@ -238,16 +232,14 @@ body {
 
 .field-value-right {
     display: block;
-    text-align: right;
-    font-weight: 800;
+    text-align: left;
+    font-weight: normal;
+    padding-left: 10px;
 }
-
-
 
 .field-label {
     min-width: 100px;
-    font-weight: 800;
-    -webkit-text-stroke: 0.25px black;
+    font-weight: bold;
 }
 
 
@@ -757,7 +749,7 @@ window.addEventListener('afterprint', function() {
                 <td style="width: 35%; vertical-align: top; padding-left: 15px;">
                     <table style="width: 100%;">
                         <tr>
-                            <td class="field-label" style="width: 180px;">วันที่ / Date:</td>
+                            <td class="field-label" style="width: 220px;">วันที่ / Date:</td>
                             <td class="field-value-right"><?= Yii::$app->formatter->asDate($model->invoice_date, 'php:d/m/Y') ?></td>
                         </tr>
                         <tr>
