@@ -47,17 +47,17 @@ class StockCardSearch extends Model
         $initialBalance = 0;
         if ($this->from_date && $this->product_id) {
             $inbound = StockTrans::find()
-                ->where(['product_id' => $this->product_id])
-                ->andWhere(['stock_type_id' => 1]) // Stock In
-                ->andWhere(['<', 'trans_date', $this->from_date])
-                ->andWhere(['company_id' => $company_id])
+                ->where(['stock_trans.product_id' => $this->product_id])
+                ->andWhere(['stock_trans.stock_type_id' => 1]) // Stock In
+                ->andWhere(['<', 'stock_trans.trans_date', $this->from_date])
+                ->andWhere(['stock_trans.company_id' => $company_id])
                 ->sum('qty') ?: 0;
 
             $outbound = StockTrans::find()
-                ->where(['product_id' => $this->product_id])
-                ->andWhere(['stock_type_id' => 2]) // Stock Out
-                ->andWhere(['<', 'trans_date', $this->from_date])
-                ->andWhere(['company_id' => $company_id])
+                ->where(['stock_trans.product_id' => $this->product_id])
+                ->andWhere(['stock_trans.stock_type_id' => 2]) // Stock Out
+                ->andWhere(['<', 'stock_trans.trans_date', $this->from_date])
+                ->andWhere(['stock_trans.company_id' => $company_id])
                 ->sum('qty') ?: 0;
 
             $initialBalance = $inbound - $outbound;
@@ -77,14 +77,14 @@ class StockCardSearch extends Model
         }
 
         if ($this->from_date) {
-            $query->andWhere(['>=', 'trans_date', $this->from_date]);
+            $query->andWhere(['>=', 'stock_trans.trans_date', $this->from_date]);
         }
 
         if ($this->to_date) {
-            $query->andWhere(['<=', 'trans_date', $this->to_date]);
+            $query->andWhere(['<=', 'stock_trans.trans_date', $this->to_date]);
         }
 
-        $transData = $query->orderBy(['trans_date' => SORT_ASC, 'stock_trans.id' => SORT_ASC])->all();
+        $transData = $query->orderBy(['stock_trans.trans_date' => SORT_ASC, 'stock_trans.id' => SORT_ASC])->all();
 
         return [
             'initialBalance' => $initialBalance,
