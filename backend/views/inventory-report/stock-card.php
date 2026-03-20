@@ -20,14 +20,15 @@ $this->registerCss("
         vertical-align: middle !important;
         text-align: center;
         border: 1px solid #dee2e6;
+        font-weight: bold;
     }
     .report-table td {
         border: 1px solid #dee2e6;
         padding: 5px 8px;
     }
-    .header-purch { background-color: #28a745; color: white; }
-    .header-sales { background-color: #ffc107; color: #212529; }
-    .header-balance { background-color: #007bff; color: white; }
+    .header-purch { background-color: #28a745 !important; color: #ffffff !important; }
+    .header-sales { background-color: #ffc107 !important; color: #212529 !important; }
+    .header-balance { background-color: #007bff !important; color: #ffffff !important; }
     .text-right { text-align: right; }
     .text-center { text-align: center; }
 ");
@@ -75,7 +76,8 @@ $this->registerCss("
                     ]) ?>
                 </div>
                 <div class="col-md-2" style="padding-top: 30px;">
-                    <?= Html::submitButton('<i class="fas fa-search"></i> ค้นหา', ['class' => 'btn btn-primary btn-block']) ?>
+                    <?= Html::submitButton('<i class="fas fa-search"></i> ค้นหา', ['class' => 'btn btn-primary']) ?>
+                    <?= Html::a('<i class="fas fa-file-excel"></i> Export', array_merge(['export-excel'], Yii::$app->request->queryParams), ['class' => 'btn btn-success']) ?>
                 </div>
             </div>
 
@@ -98,7 +100,7 @@ $this->registerCss("
                             
                             <!-- Yellow Section: Outbound/Sales -->
                             <th rowspan="2" class="header-sales">Ref No.</th>
-                            <th colspan="5" class="header-sales">ขาย/จ่ายออก</th>
+                            <th colspan="4" class="header-sales">ขาย/จ่ายออก</th>
                             
                             <th rowspan="2" class="header-sales">ราคาต่อหน่วย</th>
                             <th rowspan="2" class="header-sales">รวมขาย/ของแถม</th>
