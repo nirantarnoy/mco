@@ -37,9 +37,6 @@ AppAsset::register($this);
     $menuItems = [
         ['label' => 'หน้าแรก', 'url' => ['/site/index']],
         ['label' => 'สินค้า', 'url' => ['/product/index']],
-        ['label' => 'รายงานคลัง', 'items' => [
-            ['label' => 'รายงานสต็อกการ์ด', 'url' => ['/inventory-report/stock-card']],
-        ]],
     ];
     if (Yii::$app->user->isGuest) {
         $menuItems[] = ['label' => 'เข้าสู่ระบบ', 'url' => ['/site/login']];

@@ -207,6 +207,12 @@
                             </a>
                         </li>
                         <?php endif;?>
+                        <li class="nav-item">
+                            <a href="index.php?r=inventory-report/stock-card" class="nav-link inventory-report">
+                                <i class="far fa-circlez nav-icon"></i>
+                                <p>รายงานสต็อกการ์ด</p>
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <?php endif;?>
