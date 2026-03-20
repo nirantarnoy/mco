@@ -110,9 +110,9 @@ class InventoryReportController extends BaseController
             }
 
             fputcsv($output, [
-                $trans->product->code . ' - ' . $trans->product->name,
+                $trans->product ? ($trans->product->code . ' - ' . $trans->product->name) : '-',
                 date('d/m/Y', strtotime($trans->trans_date)),
-                $trans->product->unit->name ?? 'ชิ้น',
+                $trans->product ? ($trans->product->unit->name ?? 'ชิ้น') : '-',
                 $colBuy, $colReturnPurch, $colPurchPrice, $colPurchTotal,
                 $trans->journalTrans->journal_no ?? '-',
                 $colSale, $colFree, $colReturnSale, $colReturnFree, $colSalePrice, $colSaleTotal,
