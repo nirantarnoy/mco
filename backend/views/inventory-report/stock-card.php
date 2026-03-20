@@ -189,9 +189,9 @@ $this->registerCss("
                             }
                         ?>
                             <tr>
-                                <td><?= Html::encode($trans->product->code . ' - ' . $trans->product->name) ?></td>
+                                <td><?= $trans->product ? Html::encode($trans->product->code . ' - ' . $trans->product->name) : '-' ?></td>
                                 <td class="text-center"><?= date('d/m/Y', strtotime($trans->trans_date)) ?></td>
-                                <td class="text-center"><?= $trans->product->unit->name ?? 'ชิ้น' ?></td>
+                                <td class="text-center"><?= $trans->product ? ($trans->product->unit->name ?? 'ชิ้น') : '-' ?></td>
                                 
                                 <!-- Purch Section -->
                                 <td class="text-right"><?= $colBuy ?></td>
