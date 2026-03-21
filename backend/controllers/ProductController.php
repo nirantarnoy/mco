@@ -6,6 +6,7 @@ use backend\models\Product;
 use backend\models\ProductSearch;
 use backend\models\StockTrans;
 use backend\models\WarehouseSearch;
+use backend\models\ActionLogModel;
 use common\models\JournalTrans;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;

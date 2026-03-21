@@ -137,7 +137,7 @@ $this->registerCss("
                             
                             // Initialize columns
                             $colBuy = ''; $colReturnPurch = ''; $colPurchPrice = ''; $colPurchTotal = '';
-                            $colRef = $trans->journalTrans->journal_no ?? '-';
+                            $colRef = ($trans->journalTrans && $trans->journalTrans->journal_no) ? $trans->journalTrans->journal_no : '-';
                             $colSale = ''; $colFree = ''; $colReturnSale = ''; $colReturnFree = ''; $colSalePrice = ''; $colSaleTotal = '';
                             
                             $isIncoming = ($trans->stock_type_id == 1);
@@ -191,7 +191,7 @@ $this->registerCss("
                             <tr>
                                 <td><?= $trans->product ? Html::encode($trans->product->code . ' - ' . $trans->product->name) : '-' ?></td>
                                 <td class="text-center"><?= date('d/m/Y', strtotime($trans->trans_date)) ?></td>
-                                <td class="text-center"><?= $trans->product ? ($trans->product->unit->name ?? 'ชิ้น') : '-' ?></td>
+                                <td class="text-center"><?= ($trans->product && $trans->product->unit) ? $trans->product->unit->name : ($trans->product ? 'ชิ้น' : '-') ?></td>
                                 
                                 <!-- Purch Section -->
                                 <td class="text-right"><?= $colBuy ?></td>
