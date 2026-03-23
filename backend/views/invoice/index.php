@@ -102,9 +102,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         'headerOptions' => ['width' => '100px'],
                         'contentOptions' => ['class' => 'text-center'],
                         'value' => function($model) {
-                            return $model->status == Invoice::STATUS_ACTIVE
-                                ? '<span class="badge badge-success">ใช้งาน</span>'
-                                : '<span class="badge badge-danger">ยกเลิก</span>';
+                            return $model->getPaymentStatusLabel();
                         },
                         'format' => 'raw',
                     ],
