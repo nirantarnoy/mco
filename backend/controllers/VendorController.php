@@ -272,22 +272,34 @@ class VendorController extends BaseController
 
             if ($uploaded->saveAs($filePath)) {
                 try {
-                    $spreadsheet = IOFactory::load($filePath);
+                    ini_set('memory_limit', '1024M'); // Increase memory limit
+                    
+                    $reader = IOFactory::createReaderForFile($filePath);
+                    $reader->setReadDataOnly(true); // Read only data (skip styles)
+                    $spreadsheet = $reader->load($filePath);
+                    
                     $res = 0;
                     $dup = 0;
                     $companyId = \Yii::$app->session->get('company_id');
 
                     // Loop through all sheets
-                    foreach ($spreadsheet->getSheetIterator() as $worksheet) {
-                        $rows = $worksheet->toArray();
-                        
-                        foreach ($rows as $index => $rowData) {
-                            if ($index == 0) continue; // Skip header
+                    foreach ($spreadsheet->getWorksheetIterator() as $worksheet) {
+                        foreach ($worksheet->getRowIterator() as $index => $row) {
+                            if ($index == 1) continue; // Skip header
+
+                            $cellIterator = $row->getCellIterator();
+                            $cellIterator->setIterateOnlyExistingCells(false); // Enable for empty cells
+                            
+                            $rowData = [];
+                            foreach ($cellIterator as $cell) {
+                                $rowData[] = $cell->getValue();
+                            }
+
                             if (empty($rowData[0])) continue; // Skip empty names
 
-                            $name = trim($rowData[0]);
-                            $addressStr = isset($rowData[1]) ? trim($rowData[1]) : '';
-                            $taxId = isset($rowData[2]) ? trim($rowData[2]) : '';
+                            $name = trim($rowData[0] . "");
+                            $addressStr = isset($rowData[1]) ? trim($rowData[1] . "") : '';
+                            $taxId = isset($rowData[2]) ? trim($rowData[2] . "") : '';
 
                             // Check duplicate name for this company
                             $exists = Vendor::find()->where(['name' => $name, 'company_id' => $companyId])->exists();
