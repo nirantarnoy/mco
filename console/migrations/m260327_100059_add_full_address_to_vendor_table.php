@@ -9,7 +9,7 @@ class m260327_100059_add_full_address_to_vendor_table extends Migration
      */
     public function safeUp()
     {
-
+        $this->addColumn('{{%vendor}}', 'full_address', $this->text());
     }
 
     /**
@@ -17,9 +17,7 @@ class m260327_100059_add_full_address_to_vendor_table extends Migration
      */
     public function safeDown()
     {
-        echo "m260327_100059_add_full_address_to_vendor_table cannot be reverted.\n";
-
-        return false;
+        $this->dropColumn('{{%vendor}}', 'full_address');
     }
 
     /*

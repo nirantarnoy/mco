@@ -40,8 +40,9 @@ class Vendor extends \yii\db\ActiveRecord
             [['code'], 'unique'],
             [['code', 'name', 'description', 'status', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'default', 'value' => null],
             [['vendor_group_id', 'status', 'created_at', 'created_by', 'updated_at', 'updated_by','is_head'], 'integer'],
-            [['code', 'name', 'description','home_number', 'street', 'aisle', 'district_name', 'city_name', 'province_name', 'zipcode','contact_name','phone','branch_name', 'email'], 'string', 'max' => 255],
+            [['code', 'name', 'description','home_number', 'street', 'aisle', 'district_name', 'city_name', 'province_name', 'zipcode','contact_name','phone','branch_name', 'email', 'full_address'], 'string', 'max' => 255],
             [['taxid'],'string','max'=>13],
+            [['full_address'], 'string'],
         ];
     }
 
@@ -70,6 +71,7 @@ class Vendor extends \yii\db\ActiveRecord
             'contact_name' => 'ชื่อผู้ติดต่อ',
             'phone' => 'โทรศัพท์',
             'email' => 'อีเมล',
+            'full_address' => 'ที่อยู่',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
             'updated_at' => 'Updated At',

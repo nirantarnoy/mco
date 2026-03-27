@@ -312,7 +312,7 @@ class VendorController extends BaseController
                             $model->code = Vendor::getlastno();
                             $model->name = $name;
                             $model->taxid = $taxId;
-                            $model->description = $addressStr; // Use description for full address if needed
+                            $model->full_address = $addressStr; // Use description for full address if needed
                             $model->status = 1;
                             $model->company_id = $companyId;
 
