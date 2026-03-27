@@ -9,6 +9,14 @@ date_default_timezone_set('Asia/Bangkok');
 
 class Vendor extends \common\models\Vendor
 {
+    public function rules()
+    {
+        return array_merge(parent::rules(), [
+            [['name'], 'required'],
+            [['name'], 'unique', 'targetAttribute' => ['name', 'company_id'], 'message' => 'ชื่อผู้ขายนี้มีอยู่ในระบบแล้ว'],
+        ]);
+    }
+
     public function behaviors()
     {
         return [
@@ -113,10 +121,13 @@ class Vendor extends \common\models\Vendor
         return $data;
     }
 
-    public function beforeSave($insert)
+    public function beforeValidate()
     {
-        $this->company_id = \Yii::$app->session->get('company_id');
-        return true;
+        if (parent::beforeValidate()) {
+            $this->company_id = \Yii::$app->session->get('company_id');
+            return true;
+        }
+        return false;
     }
 
 

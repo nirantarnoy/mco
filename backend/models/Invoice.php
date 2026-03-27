@@ -235,6 +235,19 @@ class Invoice extends ActiveRecord
             return '<span class="badge badge-danger">ยกเลิก</span>';
         }
 
+        if ($this->invoice_type == self::TYPE_TAX_INVOICE) {
+            // Check if any receipt has been issued for this tax invoice
+            $has_receipt = InvoicePaymentHistory::find()
+                ->where(['invoice_id' => $this->id])
+                ->exists();
+            
+            if ($has_receipt) {
+                return '<span class="badge badge-success">ออกใบเสร็จแล้ว</span>';
+            } else {
+                return '<span class="badge badge-info">ใช้งาน</span>';
+            }
+        }
+
         if ($this->invoice_type == self::TYPE_RECEIPT) {
             // Check payments recorded specifically for this receipt
             $total_paid = InvoicePaymentReceipt::find()
@@ -248,20 +261,7 @@ class Invoice extends ActiveRecord
             }
         }
 
-        if ($this->invoice_type == self::TYPE_TAX_INVOICE) {
-            // Check receipts created for this tax invoice
-            $total_paid = InvoicePaymentHistory::find()
-                ->where(['invoice_id' => $this->id])
-                ->sum('amount') ?: 0;
-            
-            if ($total_paid >= $this->total_amount && $this->total_amount > 0) {
-                return '<span class="badge badge-success">ชำระครบ</span>';
-            } else {
-                return '<span class="badge badge-warning">ค้างชำระ</span>';
-            }
-        }
-
-        return '<span class="badge badge-success">ใช้งาน</span>';
+        return '<span class="badge badge-info">ใช้งาน</span>';
     }
 
     /**

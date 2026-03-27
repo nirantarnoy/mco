@@ -19,29 +19,39 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?php Pjax::begin(); ?>
     <div class="row">
-        <div class="col-lg-10">
-            <div class="btn-group">
-                <?= Html::a(Yii::t('app', '<i class="fa fa-plus"></i> สร้างใหม่'), ['create'], ['class' => 'btn btn-success']) ?>
-            <form action="<?= Url::to(['vendor/export-vendors'], true) ?>" method="post"
-                  style="margin-left: 10px">
-                <button class="btn btn-info"><i class="fa fa-download"></i> Export vendors</button>
-            </form>
-            </div>
-        </div>
-
-        <div class="col-lg-2" style="text-align: right">
-            <form id="form-perpage" class="form-inline" action="<?= Url::to(['position/index'], true) ?>"
-                  method="post">
-                <div class="form-group">
-                    <label>แสดง </label>
-                    <select class="form-control" name="perpage" id="perpage">
-                        <option value="20" <?= $perpage == '20' ? 'selected' : '' ?>>20</option>
-                        <option value="50" <?= $perpage == '50' ? 'selected' : '' ?> >50</option>
-                        <option value="100" <?= $perpage == '100' ? 'selected' : '' ?>>100</option>
-                    </select>
-                    <label> รายการ</label>
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="btn-group">
+                                <?= Html::a(Yii::t('app', '<i class="fa fa-plus"></i> สร้างใหม่'), ['create'], ['class' => 'btn btn-success']) ?>
+                                <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseImport" aria-expanded="false" aria-controls="collapseImport">
+                                    <i class="fa fa-upload"></i> นำเข้าข้อมูล
+                                </button>
+                                <?= Html::a(Yii::t('app', '<i class="fa fa-download"></i> Export vendors'), ['export-vendors'], ['class' => 'btn btn-info']) ?>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="collapse" id="collapseImport">
+                        <div class="card card-body mt-3">
+                            <form action="<?= \yii\helpers\Url::to(['vendor/importvendor'], true) ?>" method="post" enctype="multipart/form-data">
+                                <div class="row">
+                                    <div class="col-lg-4">
+                                        <input type="file" name="file_vendor" class="form-control" required>
+                                    </div>
+                                    <div class="col-lg-2">
+                                        <button class="btn btn-success"><i class="fa fa-check"></i> ยืนยันนำเข้า</button>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <small class="text-muted">รูปแบบไฟล์: COMPANY, ADDRESS, TAXID (ข้ามแถวแรก)</small>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
     <br />
@@ -138,14 +148,4 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?php Pjax::end(); ?>
 
-</div>
-<br/>
-<div class="row" style="display: nonex;">
-    <form action="<?= \yii\helpers\Url::to(['vendor/importvendor'], true) ?>" method="post"
-          enctype="multipart/form-data">
-
-        <input type="file" name="file_product" class="form-control">
-        <br/>
-        <button class="btn btn-success">Import</button>
-    </form>
 </div>

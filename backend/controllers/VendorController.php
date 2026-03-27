@@ -10,6 +10,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -95,7 +96,7 @@ class VendorController extends BaseController
                 $party_type_id = 1;
               //  $model->code = $model::getLastno();
                 $model->vendor_group_id = 0;
-                if($model->save(false)){
+                if($model->save()){
                     if($address != null || $address != '') {
 
                             $model_address = new \common\models\AddressInfo();
@@ -147,7 +148,7 @@ class VendorController extends BaseController
 
             $party_type_id = 1;
 
-            if($model->save(false)){
+            if($model->save()){
                 if($address != null || $address != '') {
                   $model_address_check = \common\models\AddressInfo::find()->where(['party_id' => $id,'party_type_id' => $party_type_id])->one();
                   if($model_address_check) {
@@ -259,114 +260,78 @@ class VendorController extends BaseController
 
     public function actionImportvendor()
     {
-        $uploaded = UploadedFile::getInstanceByName('file_product');
+        $uploaded = UploadedFile::getInstanceByName('file_vendor');
         if (!empty($uploaded)) {
-            //echo "ok";return;
-            $upfiles = time() . "." . $uploaded->getExtension();
-            // if ($uploaded->saveAs(Yii::$app->request->baseUrl . '/uploads/files/' . $upfiles)) {
-            if ($uploaded->saveAs('../web/uploads/files/products/' . $upfiles)) {
-                //  echo "okk";return;
-                // $myfile = Yii::$app->request->baseUrl . '/uploads/files/' . $upfiles;
-                $myfile = '../web/uploads/files/products/' . $upfiles;
-                $file = fopen($myfile, "r+");
-                fwrite($file, "\xEF\xBB\xBF");
+            $path = '../web/uploads/files/vendors/';
+            if (!file_exists($path)) {
+                mkdir($path, 0777, true);
+            }
+            
+            $fileName = time() . "." . $uploaded->getExtension();
+            $filePath = $path . $fileName;
 
-                setlocale(LC_ALL, 'th_TH.TIS-620');
-                $i = -1;
-                $res = 0;
-                $data = [];
-                while (($rowData = fgetcsv($file, 10000, ",")) !== FALSE) {
-                    $i += 1;
-                    $catid = 0;
-                    $qty = 0;
-                    $price = 0;
-                    $cost = 0;
-                    if ($rowData[0] == '' || $i == 0) {
-                        continue;
-                    }
+            if ($uploaded->saveAs($filePath)) {
+                try {
+                    $spreadsheet = IOFactory::load($filePath);
+                    $res = 0;
+                    $dup = 0;
+                    $companyId = \Yii::$app->session->get('company_id');
 
-                    $model_dup = \backend\models\Vendor::find()->where(['code' => trim($rowData[0])])->one();
-                    if ($model_dup != null) {
-                        $new_stock_qty = 0;
+                    // Loop through all sheets
+                    foreach ($spreadsheet->getSheetIterator() as $worksheet) {
+                        $rows = $worksheet->toArray();
+                        
+                        foreach ($rows as $index => $rowData) {
+                            if ($index == 0) continue; // Skip header
+                            if (empty($rowData[0])) continue; // Skip empty names
 
-//                        $new_unit = $this->checkUnit(trim($rowData[3]));
-//                        $new_warehouse = $this->checkWarehouse(trim($rowData[4]));
-//                        if($rowData[2] != null || $rowData[2] != ''){
-//                            $new_stock_qty = $rowData[2];
-//                        }
+                            $name = trim($rowData[0]);
+                            $addressStr = isset($rowData[1]) ? trim($rowData[1]) : '';
+                            $taxId = isset($rowData[2]) ? trim($rowData[2]) : '';
 
-                        $model_dup->code = trim($rowData[0]);
-                        $model_dup->name = trim($rowData[1]);
-                        $model_dup->description = '';// $rowData[1];
-                        $model_dup->vendor_group_id = 0;
-                        $model_dup->home_number = trim($rowData[2]);
-                        $model_dup->street = trim($rowData[3]);
-                        $model_dup->aisle = trim($rowData[4]);
-                        $model_dup->district_name = trim($rowData[5]);
-                        $model_dup->city_name = trim($rowData[6]);
-                        $model_dup->province_name = trim($rowData[7]);
-                        $model_dup->zipcode = trim($rowData[8]);
-                        $model_dup->taxid = trim($rowData[9]);
-                        $model_dup->is_head = 1;// trim($rowData[10]);
-                        $model_dup->branch_name = trim($rowData[11]);
-                        $model_dup->contact_name = trim($rowData[12]);
-                        $model_dup->phone = trim($rowData[13]);
-                        $model_dup->email = trim($rowData[14]);
-                        $model_dup->status = 1;
-                        //   $model_dup->updated_at = date('Y-m-d H:i:s');
-                        if($model_dup->save(false)){
-                           // $this->calStock($model_dup->id,1,$new_warehouse,$rowData[2]);
-                            $res+=1;
-                        }
-                        continue;
-                    }else{
+                            // Check duplicate name for this company
+                            $exists = Vendor::find()->where(['name' => $name, 'company_id' => $companyId])->exists();
+                            if ($exists) {
+                                $dup++;
+                                continue;
+                            }
 
-//                        $new_unit = $this->checkUnit(trim($rowData[3]));
-//                        $new_warehouse = $this->checkWarehouse(trim($rowData[4]));
-                        //    echo "must new";
-                        $modelx = new \backend\models\Vendor();
-                        $modelx->code = trim($rowData[0]);
-                        $modelx->name = trim($rowData[1]);
-                        $modelx->description = '';// $rowData[1];
-                        $modelx->vendor_group_id = 0;
-                        $modelx->home_number = trim($rowData[2]);
-                        $modelx->street = trim($rowData[3]);
-                        $modelx->aisle = trim($rowData[4]);
-                        $modelx->district_name = trim($rowData[5]);
-                        $modelx->city_name = trim($rowData[6]);
-                        $modelx->province_name = trim($rowData[7]);
-                        $modelx->zipcode = trim($rowData[8]);
-                        $modelx->taxid = trim($rowData[9]);
-                        $modelx->is_head = 1;// trim($rowData[10]);
-                        $modelx->branch_name = trim($rowData[11]);
-                        $modelx->contact_name = trim($rowData[12]);
-                        $modelx->phone = trim($rowData[13]);
-                        $modelx->email = trim($rowData[14]);
-                        $modelx->status = 1;
-                        //
-                        if ($modelx->save(false)) {
-                          //  $this->calStock($modelx->id,1,$new_warehouse,$rowData[2]);
-                            $res += 1;
+                            $model = new Vendor();
+                            $model->code = Vendor::getlastno();
+                            $model->name = $name;
+                            $model->taxid = $taxId;
+                            $model->description = $addressStr; // Use description for full address if needed
+                            $model->status = 1;
+                            $model->company_id = $companyId;
+
+                            if ($model->save()) {
+                                // Create address entry
+                                if (!empty($addressStr)) {
+                                    $model_address = new \common\models\AddressInfo();
+                                    $model_address->party_id = $model->id;
+                                    $model_address->party_type_id = 1; // Vendor type
+                                    $model_address->address = $addressStr;
+                                    $model_address->save(false);
+                                }
+                                $res++;
+                            }
                         }
                     }
-                }
-                //    print_r($qty_text);return;
 
-                if ($res > 0) {
-                    $session = \Yii::$app->session;
-                    $session->setFlash('msg', 'นำเข้าข้อมูลเรียบร้อย');
-                    return $this->redirect(['index']);
-                } else {
-                    $session = \Yii::$app->session;
-                    $session->setFlash('msg-error', 'พบข้อมผิดพลาดนะ');
-                    return $this->redirect(['index']);
+                    unlink($filePath); // Delete file after processing
+
+                    if ($res > 0) {
+                        \Yii::$app->session->setFlash('success', "นำเข้าข้อมูลสำเร็จ $res รายการ" . ($dup > 0 ? " (ข้ามรายการซ้ำ $dup รายการ)" : ""));
+                    } else {
+                        \Yii::$app->session->setFlash('warning', "ไม่มีข้อมูลใหม่ถูกนำเข้า" . ($dup > 0 ? " ($dup รายการซ้ำ)" : ""));
+                    }
+
+                } catch (\Exception $e) {
+                    \Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการอ่านไฟล์: ' . $e->getMessage());
                 }
-                // }
-                fclose($file);
-//            }
-//        }
             }
         }
+        return $this->redirect(['index']);
     }
     public function actionExportVendors()
     {
