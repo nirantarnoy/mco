@@ -253,8 +253,21 @@ class Invoice extends ActiveRecord
             $total_paid = InvoicePaymentReceipt::find()
                 ->where(['invoice_id' => $this->id])
                 ->sum('amount') ?: 0;
+
+            // Include extras/adjustments
+            $receipt_ids = InvoicePaymentReceipt::find()
+                ->select('id')
+                ->where(['invoice_id' => $this->id])
+                ->column();
+
+            if (!empty($receipt_ids)) {
+                $total_extras = InvoicePaymentExtra::find()
+                    ->where(['payment_receipt_id' => $receipt_ids])
+                    ->sum('amount') ?: 0;
+                $total_paid += $total_extras;
+            }
             
-            if ($total_paid >= $this->total_amount && $this->total_amount > 0) {
+            if ($total_paid >= ($this->total_amount - 0.1) && $this->total_amount > 0) {
                 return '<span class="badge badge-success">ชำระครบ</span>';
             } else {
                 return '<span class="badge badge-warning">ค้างชำระ</span>';

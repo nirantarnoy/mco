@@ -247,7 +247,7 @@ class PaymentReceipt extends ActiveRecord
                 $this->remaining_balance = $this->billingInvoice->total_amount - ($totalPaid + $this->net_amount);
 
                 // Update payment status
-                if ($this->remaining_balance <= 0) {
+                if ($this->remaining_balance <= 0.1) {
                     $this->payment_status = self::STATUS_FULL;
                 } elseif ($this->remaining_balance < $this->billingInvoice->total_amount) {
                     $this->payment_status = self::STATUS_PARTIAL;
@@ -270,7 +270,7 @@ class PaymentReceipt extends ActiveRecord
                 ->where(['billing_invoice_id' => $this->billing_invoice_id])
                 ->sum('net_amount') ?? 0;
 
-            if ($totalPaid >= $this->billingInvoice->total_amount) {
+            if ($totalPaid >= ($this->billingInvoice->total_amount - 0.1)) {
                 $this->billingInvoice->updateAttributes(['status' => 'paid']);
             } else {
                 $this->billingInvoice->updateAttributes(['status' => 'partial_paid']);
