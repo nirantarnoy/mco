@@ -51,6 +51,9 @@ use yii\behaviors\BlameableBehavior;
  */
 class PurchaseMaster extends \yii\db\ActiveRecord
 {
+    const STATUS_CANCELLED = 0;
+    const STATUS_OPEN = 1;
+    const STATUS_APPROVED = 2;
     /**
      * {@inheritdoc}
      */

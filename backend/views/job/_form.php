@@ -640,7 +640,7 @@ function pullQuotationDetails(e){
     var id = '$model->id';
     var quotation_id = $("#job-quotation_id").val();
     if(id && quotation_id){
-        if(confirm('คุณต้องการดึงรายละเอียดจากใบเสนอราคาใช่หรือไม่? (รายการที่ซ้ำจะถูกข้าม)')){
+        if(confirm('คุณต้องการดึงรายละเอียดจากใบเสนอราคาใช่หรือไม่? (รายการเดิมจะถูกแทนที่ด้วยข้อมูลล่าสุด)')){
             $.ajax({
                 url: '$url_to_pull_quotation_details',
                 type: 'POST',

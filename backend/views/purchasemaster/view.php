@@ -17,7 +17,16 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card-header">
             <h3 class="card-title">ใบซื้อเลขที่: <?= Html::encode($this->title) ?></h3>
             <div class="card-tools">
-                <?= Html::a('<i class="fas fa-edit"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-warning btn-sm']) ?>
+                <?php if ($model->status == \backend\models\PurchaseMaster::STATUS_OPEN): ?>
+                    <?= Html::a('<i class="fas fa-check"></i> อนุมัติ', ['approve', 'id' => $model->id], [
+                        'class' => 'btn btn-success btn-sm',
+                        'data' => [
+                            'confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบซื้อนี้?',
+                            'method' => 'post',
+                        ],
+                    ]) ?>
+                    <?= Html::a('<i class="fas fa-edit"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-warning btn-sm']) ?>
+                <?php endif; ?>
                 <?= Html::a('<i class="fas fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
                     'class' => 'btn btn-danger btn-sm',
                     'data' => [
@@ -236,7 +245,15 @@ $this->params['breadcrumbs'][] = $this->title;
                         [
                             'attribute' => 'status',
                             'format' => 'raw',
-                            'value' => $model->status == 1 ? '<span class="badge badge-success">ใช้งาน</span>' : '<span class="badge badge-danger">ยกเลิก</span>',
+                            'value' => function($model) {
+                                if($model->status == \backend\models\PurchaseMaster::STATUS_APPROVED) {
+                                    return '<span class="badge badge-success">อนุมัติแล้ว</span>';
+                                } else if($model->status == \backend\models\PurchaseMaster::STATUS_OPEN) {
+                                    return '<span class="badge badge-info">รอดำเนินการ</span>';
+                                } else {
+                                    return '<span class="badge badge-danger">ยกเลิก</span>';
+                                }
+                            },
                         ],
                         'created_at:datetime:สร้างเมื่อ',
                         'updated_at:datetime:แก้ไขเมื่อ',

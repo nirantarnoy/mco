@@ -45,10 +45,23 @@ class PurchasemasterController extends BaseController
                     'class' => VerbFilter::class,
                     'actions' => [
                         'delete' => ['POST'],
+                        'approve' => ['POST'],
                     ],
                 ],
             ]
         );
+    }
+
+    public function actionApprove($id)
+    {
+        $model = $this->findModel($id);
+        $model->status = 2; // Approved
+        if ($model->save(false)) {
+            Yii::$app->session->setFlash('success', 'อนุมัติใบซื้อเรียบร้อยแล้ว');
+        } else {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถอนุมัติได้');
+        }
+        return $this->redirect(['view', 'id' => $id]);
     }
 
     /**

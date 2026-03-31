@@ -142,13 +142,15 @@ $this->params['breadcrumbs'][] = $this->title;
                         'attribute' => 'status',
                         'format' => 'raw',
                         'value' => function($model) {
-                            if ($model->status == 1) {
-                                return '<span class="badge badge-success">ใช้งาน</span>';
+                            if ($model->status == \backend\models\PurchaseMaster::STATUS_APPROVED) {
+                                return '<span class="badge badge-success">อนุมัติแล้ว</span>';
+                            } else if ($model->status == \backend\models\PurchaseMaster::STATUS_OPEN) {
+                                return '<span class="badge badge-info">รอดำเนินการ</span>';
                             } else {
                                 return '<span class="badge badge-danger">ยกเลิก</span>';
                             }
                         },
-                        'filter' => [1 => 'ใช้งาน', 0 => 'ยกเลิก'],
+                        'filter' => [\backend\models\PurchaseMaster::STATUS_OPEN => 'รอดำเนินการ', \backend\models\PurchaseMaster::STATUS_APPROVED => 'อนุมัติแล้ว', \backend\models\PurchaseMaster::STATUS_CANCELLED => 'ยกเลิก'],
                     ],
                     [
                         'class' => ActionColumn::class,

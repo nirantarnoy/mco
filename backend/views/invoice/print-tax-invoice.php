@@ -719,54 +719,56 @@ window.addEventListener('afterprint', function() {
     <div class="customer-section">
         <table style="width: 100%; table-layout: fixed;">
             <tr>
-                <td style="width: 65%; vertical-align: top;">
+                <td style="width: 60%; vertical-align: top;">
                     <table style="width: 100%;">
                         <tr>
-                            <td class="field-label" style="width: 160px; vertical-align: top;">เลขประจำตัวผู้เสียภาษี:</td>
-                            <td class="field-value">0215543000985</td>
+                            <td class="field-label" style="width: 160px; vertical-align: top; padding: 2px 0;">เลขประจำตัวผู้เสียภาษี:</td>
+                            <td class="field-value" style="padding: 2px 0;">0215543000985</td>
                         </tr>
                         <tr>
-                            <td class="field-label" style="vertical-align: top;">รหัสลูกค้า :<br>Code</td>
-                            <td class="field-value"><?= $customer_code ?></td>
+                            <td class="field-label" style="vertical-align: top; padding: 2px 0;">รหัสลูกค้า : Code</td>
+                            <td class="field-value" style="padding: 2px 0;"><?= $customer_code ?></td>
                         </tr>
                         <tr>
-                            <td class="field-label" style="vertical-align: top;">ขายให้ :<br>Sold To</td>
-                            <td class="field-value">
-                                <?= Html::encode($model->customer_name ?: '') ?><br>
-                                <?php
-                                // Clean up address by removing empty fields like "ซอย -", "ถนน -", etc.
-                                $address = $model->customer_address ?: '';
-                                $address = preg_replace('/\s*(ซอย|ถนน|ตำบล|อำเภอ|จังหวัด|แขวง|เขต|หมู่|Soi|Road|Sub-district|District|Province)\s*-\s*/u', '', $address);
-                                $address = preg_replace('/\s+/', ' ', $address); // Remove extra spaces
-                                $address = trim($address);
-                                echo Html::encode($address);
-                                ?><br>
-                                TAX ID: <?= Html::encode($model->customer_tax_id ?: '') ?>
+                            <td class="field-label" style="vertical-align: top; padding: 2px 0;">ขายให้ : Sold To</td>
+                            <td class="field-value" style="padding: 2px 0;">
+                                <div style="font-weight: bold; font-size: 20px;"><?= Html::encode($model->customer_name ?: '') ?></div>
+                                <div style="margin-top: 4px;">
+                                    <?php
+                                    // Clean up address by removing empty fields like "ซอย -", "ถนน -", etc.
+                                    $address = $model->customer_address ?: '';
+                                    $address = preg_replace('/\s*(ซอย|ถนน|ตำบล|อำเภอ|จังหวัด|แขวง|เขต|หมู่|Soi|Road|Sub-district|District|Province)\s*-\s*/u', '', $address);
+                                    $address = preg_replace('/\s+/', ' ', $address); // Remove extra spaces
+                                    $address = trim($address);
+                                    echo Html::encode($address);
+                                    ?>
+                                </div>
+                                <div style="margin-top: 4px;">TAX ID: <?= Html::encode($model->customer_tax_id ?: '') ?></div>
                             </td>
                         </tr>
                     </table>
                 </td>
-                <td style="width: 35%; vertical-align: top; padding-left: 15px;">
+                <td style="width: 40%; vertical-align: top; padding-left: 15px;">
                     <table style="width: 100%;">
                         <tr>
-                            <td class="field-label" style="width: 220px;">วันที่ / Date:</td>
-                            <td class="field-value-right"><?= Yii::$app->formatter->asDate($model->invoice_date, 'php:d/m/Y') ?></td>
+                            <td class="field-label" style="width: 180px; vertical-align: top; padding: 2px 0;">วันที่ / Date:</td>
+                            <td class="field-value-right" style="padding: 2px 0;"><?= Yii::$app->formatter->asDate($model->invoice_date, 'php:d/m/Y') ?></td>
                         </tr>
                         <tr>
-                            <td class="field-label">เลขที่ / Inv.No.:</td>
-                            <td class="field-value-right"><?= Html::encode($model->invoice_number) ?></td>
+                            <td class="field-label" style="vertical-align: top; padding: 2px 0;">เลขที่ / Inv.No.:</td>
+                            <td class="field-value-right" style="padding: 2px 0;"><?= Html::encode($model->invoice_number) ?></td>
                         </tr>
                         <tr>
-                            <td class="field-label">ใบสั่งซื้อเลขที่ / P/O No.:</td>
-                            <td class="field-value-right"><?= Html::encode($po_no ?: '') ?></td>
+                            <td class="field-label" style="vertical-align: top; padding: 2px 0;">ใบสั่งซื้อเลขที่ / P/O No.:</td>
+                            <td class="field-value-right" style="padding: 2px 0;"><?= Html::encode($po_no ?: '') ?></td>
                         </tr>
                         <tr>
-                            <td class="field-label">วันที่สั่งซื้อ / P/O Date:</td>
-                            <td class="field-value-right"><?= $po_date ? Yii::$app->formatter->asDate($po_date, 'php:d/m/Y') : '' ?></td>
+                            <td class="field-label" style="vertical-align: top; padding: 2px 0;">วันที่สั่งซื้อ / P/O Date:</td>
+                            <td class="field-value-right" style="padding: 2px 0;"><?= $po_date ? Yii::$app->formatter->asDate($po_date, 'php:d/m/Y') : '' ?></td>
                         </tr>
                         <tr>
-                            <td class="field-label">เงื่อนไข / กำหนดชำระ / Credit, Due:</td>
-                            <td class="field-value-right"><?= Html::encode($model->paymentTerm ? $model->paymentTerm->name : '') ?> <?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'php:d/m/Y') : '' ?></td>
+                            <td class="field-label" style="vertical-align: top; padding: 2px 0;">เงื่อนไข / กำหนดชำระ / Credit, Due:</td>
+                            <td class="field-value-right" style="padding: 2px 0;"><?= Html::encode($model->paymentTerm ? $model->paymentTerm->name : '') ?> <?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'php:d/m/Y') : '' ?></td>
                         </tr>
                     </table>
                 </td>
