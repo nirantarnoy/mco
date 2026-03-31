@@ -21,6 +21,7 @@ class PaymentVoucherRef extends \yii\db\ActiveRecord
 {
     const REF_TYPE_PR = 1;
     const REF_TYPE_PO = 2;
+    const REF_TYPE_NONE_PR = 3;
 
     /**
      * {@inheritdoc}

@@ -17,6 +17,7 @@ use yii\web\JsExpression;
 $pullMultipleUrl = Url::to(['pull-multiple']);
 $getPrByVendorUrl = Url::to(['get-pr-by-vendor']);
 $getPoByVendorUrl = Url::to(['get-po-by-vendor']);
+$getNonePrByVendorUrl = Url::to(['get-none-pr-by-vendor']);
 $removeAttachmentUrl = Url::to(['remove-attachment']);
 
 $chart_of_accounts = \backend\models\ChartOfAccount::find()->where(['status' => 1])->all();
@@ -50,6 +51,17 @@ $selectedPoList = [];
 if (!empty($selectedPoIds)) {
     $selectedPoList = ArrayHelper::map(\backend\models\Purch::find()->where(['id' => $selectedPoIds])->all(), 'id', function($m) {
         return $m->purch_no;
+    });
+}
+
+$selectedNonePrIds = \backend\models\PaymentVoucherRef::find()
+    ->where(['payment_voucher_id' => $model->id, 'ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR])
+    ->select('ref_id')
+    ->column();
+$selectedNonePrList = [];
+if (!empty($selectedNonePrIds)) {
+    $selectedNonePrList = ArrayHelper::map(\backend\models\PurchaseMaster::find()->where(['id' => $selectedNonePrIds])->all(), 'id', function($m) {
+        return $m->docnum;
     });
 }
 ?>
@@ -97,9 +109,10 @@ function calculateTotal() {
 function loadPrPoByVendor(vendorId) {
     var prevVal = $('#vendor-select').data('prev-val');
     if (prevVal !== vendorId) {
-        // เมื่อมีการเปลี่ยน Vendor ให้ล้างรายการ PR/PO ที่เลือกไว้เดิม
+        // เมื่อมีการเปลี่ยน Vendor ให้ล้างรายการ PR/PO/None PR ที่เลือกไว้เดิม
         $('#pr-select').val(null).trigger('change');
         $('#po-select').val(null).trigger('change');
+        $('#none-pr-select').val(null).trigger('change');
     }
     $('#vendor-select').data('prev-val', vendorId);
 }
@@ -107,9 +120,10 @@ function loadPrPoByVendor(vendorId) {
 function pullMultipleData() {
     var pr_ids = $('#pr-select').val() || [];
     var po_ids = $('#po-select').val() || [];
+    var none_pr_ids = $('#none-pr-select').val() || [];
     
-    if (pr_ids.length === 0 && po_ids.length === 0) {
-        alert('กรุณาเลือก PR หรือ PO อย่างน้อย 1 รายการ');
+    if (pr_ids.length === 0 && po_ids.length === 0 && none_pr_ids.length === 0) {
+        alert('กรุณาเลือก PR, PO หรือ None PR อย่างน้อย 1 รายการ');
         return;
     }
     
@@ -118,7 +132,7 @@ function pullMultipleData() {
     $.ajax({
         url: '{$pullMultipleUrl}',
         type: 'POST',
-        data: {pr_ids: pr_ids, po_ids: po_ids},
+        data: {pr_ids: pr_ids, po_ids: po_ids, none_pr_ids: none_pr_ids},
         success: function(res) {
             if(res.success) {
                 $('#paymentvoucher-amount').val(res.amount);
@@ -128,9 +142,10 @@ function pullMultipleData() {
                 var vendorName = res.vendor_name || $('#vendor-select option:selected').text();
                 $('#paymentvoucher-recipient_name').val(vendorName);
                 
-                // บันทึก pr_ids และ po_ids ลง hidden inputs
+                // บันทึก pr_ids, po_ids และ none_pr_ids ลง hidden inputs
                 $('#hidden-pr-ids').val(JSON.stringify(res.pr_ids));
                 $('#hidden-po-ids').val(JSON.stringify(res.po_ids));
+                $('#hidden-none-pr-ids').val(JSON.stringify(res.none_pr_ids));
                 
                 $('#voucher-lines tbody').empty();
                 res.lines.forEach(function(line) {
@@ -142,16 +157,17 @@ function pullMultipleData() {
     });
 }
 
-// แสดงปุ่มดึงข้อมูลเมื่อมีการเลือก PR/PO และดึงข้อมูลอัตโนมัติเมื่อเลือก PO
-$('#pr-select, #po-select').on('change', function() {
+// แสดงปุ่มดึงข้อมูลเมื่อมีการเลือก PR/PO/None PR และดึงข้อมูลอัตโนมัติเมื่อเลือก PO/None PR
+$('#pr-select, #po-select, #none-pr-select').on('change', function() {
     var pr_ids = $('#pr-select').val() || [];
     var po_ids = $('#po-select').val() || [];
+    var none_pr_ids = $('#none-pr-select').val() || [];
     
-    if (pr_ids.length > 0 || po_ids.length > 0) {
+    if (pr_ids.length > 0 || po_ids.length > 0 || none_pr_ids.length > 0) {
         $('#pull-data-section').show();
         
-        // ดึงข้อมูลอัตโนมัติเมื่อมีการเลือก PO
-        if (po_ids.length > 0) {
+        // ดึงข้อมูลอัตโนมัติเมื่อมีการเลือก PO หรือ None PR
+        if (po_ids.length > 0 || none_pr_ids.length > 0) {
             pullMultipleData();
         }
     } else {
@@ -197,6 +213,11 @@ $(document).ready(function() {
     $('#po-select').on('change', function() {
         var selectedPoIds = $(this).val() || [];
         $('#hidden-po-ids').val(JSON.stringify(selectedPoIds));
+    });
+
+    $('#none-pr-select').on('change', function() {
+        var selectedNonePrIds = $(this).val() || [];
+        $('#hidden-none-pr-ids').val(JSON.stringify(selectedNonePrIds));
     });
 
     // ลบไฟล์แนบ
@@ -263,7 +284,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
             </div>
 
             <div class="row mb-3" id="pr-po-section">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label class="form-label">เลือกใบขอซื้อ (PR) - เลือกได้หลายรายการ</label>
                     <?= Select2::widget([
                         'name' => 'pr_ids[]',
@@ -289,7 +310,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                     ]) ?>
                     <small class="text-muted">ค้นหาได้ทันที หรือเลือก Vendor เพื่อกรองรายการ</small>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label class="form-label">เลือกใบสั่งซื้อ (PO) - เลือกได้หลายรายการ</label>
                     <?= Select2::widget([
                         'name' => 'po_ids[]',
@@ -305,6 +326,32 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                             'minimumInputLength' => 0,
                             'ajax' => [
                                 'url' => $getPoByVendorUrl,
+                                'dataType' => 'json',
+                                'delay' => 250,
+                                'data' => new JsExpression('function(params) { return {q:params.term, vendor_id: $("#vendor-select").val()}; }'),
+                                'processResults' => new JsExpression('function(data) { return {results: data.results}; }'),
+                                'cache' => true
+                            ],
+                        ],
+                    ]) ?>
+                    <small class="text-muted">ค้นหาได้ทันที หรือเลือก Vendor เพื่อกรองรายการ</small>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">เลือกใบสั่งซื้อ (None PR) - เลือกได้หลายรายการ</label>
+                    <?= Select2::widget([
+                        'name' => 'none_pr_ids[]',
+                        'data' => $selectedNonePrList,
+                        'value' => array_keys($selectedNonePrList),
+                        'options' => [
+                            'placeholder' => 'ค้นหา/เลือก None PR...',
+                            'multiple' => true,
+                            'id' => 'none-pr-select'
+                        ],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                            'minimumInputLength' => 0,
+                            'ajax' => [
+                                'url' => $getNonePrByVendorUrl,
                                 'dataType' => 'json',
                                 'delay' => 250,
                                 'data' => new JsExpression('function(params) { return {q:params.term, vendor_id: $("#vendor-select").val()}; }'),
@@ -368,8 +415,9 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
 
             <?= Html::activeHiddenInput($model, 'ref_id') ?>
             <?= Html::activeHiddenInput($model, 'ref_type') ?>
-            <input type="hidden" id="hidden-pr-ids" name="pr_ids" value="">
-            <input type="hidden" id="hidden-po-ids" name="po_ids" value="">
+            <input type="hidden" id="hidden-pr-ids" name="pr_ids" value='<?= json_encode($selectedPrIds) ?>'>
+            <input type="hidden" id="hidden-po-ids" name="po_ids" value='<?= json_encode($selectedPoIds) ?>'>
+            <input type="hidden" id="hidden-none-pr-ids" name="none_pr_ids" value='<?= json_encode($selectedNonePrIds) ?>'>
         </div>
     </div>
 

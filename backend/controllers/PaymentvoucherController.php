@@ -305,6 +305,51 @@ class PaymentvoucherController extends BaseController
     }
 
     /**
+     * ดึงรายการ None PR ตาม Vendor (ที่ยังไม่จ่ายครบ)
+     */
+    public function actionGetNonePrByVendor($vendor_id = null, $q = null)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        
+        $query = \backend\models\PurchaseMaster::find()
+            ->where(['status' => \backend\models\PurchaseMaster::STATUS_APPROVED])
+            ->andWhere(['>', 'total_amount', 0]);
+            
+        if ($vendor_id && $vendor_id !== 'null' && $vendor_id !== '') {
+            $query->andWhere(['supcod' => $vendor_id]);
+        }
+        
+        if ($q) {
+            $query->andWhere(['like', 'docnum', $q]);
+        }
+        
+        $none_prs = $query->limit(20)->all();
+        
+        $result = [];
+        foreach ($none_prs as $none_pr) {
+            // คำนวณยอดที่จ่ายไปแล้ว
+            $paidAmount = \backend\models\PaymentVoucherRef::find()
+                ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, 'ref_id' => $none_pr->id])
+                ->sum('amount') ?: 0;
+            
+            $remaining = $none_pr->total_amount - $paidAmount;
+            
+            // แสดงเฉพาะที่ยังมียอดคงเหลือ
+            if ($remaining > 0) {
+                $result[] = [
+                    'id' => $none_pr->id,
+                    'text' => $none_pr->docnum . ' (คงเหลือ: ' . number_format($remaining, 2) . ( !empty($none_pr->supnam) ? ' - ' . $none_pr->supnam : '' ) . ')',
+                    'total_amount' => $none_pr->total_amount,
+                    'paid_amount' => $paidAmount,
+                    'remaining' => $remaining,
+                ];
+            }
+        }
+        
+        return ['results' => $result];
+    }
+
+    /**
      * ดึงข้อมูลจาก PR/PO หลายรายการ
      */
     public function actionPullMultiple()
@@ -313,6 +358,7 @@ class PaymentvoucherController extends BaseController
         
         $pr_ids = Yii::$app->request->post('pr_ids', []);
         $po_ids = Yii::$app->request->post('po_ids', []);
+        $none_pr_ids = Yii::$app->request->post('none_pr_ids', []);
         
         $lines = [];
         $total_amount = 0;
@@ -372,9 +418,41 @@ class PaymentvoucherController extends BaseController
                 $total_vat += $po_vat;
             }
         }
+
+        // ดึงข้อมูลจาก None PR
+        foreach ($none_pr_ids as $none_pr_id) {
+            $none_pr = \backend\models\PurchaseMaster::findOne($none_pr_id);
+            if ($none_pr) {
+                $paidAmount = \backend\models\PaymentVoucherRef::find()
+                    ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, 'ref_id' => $none_pr->id])
+                    ->sum('amount') ?: 0;
+                
+                $remaining = $none_pr->total_amount - $paidAmount;
+                $total_amount += $remaining;
+                $paid_for_items[] = 'None PR: ' . $none_pr->docnum;
+                if (!$vendor_id) {
+                    $vendor_id = $none_pr->supcod;
+                    $vendor_name = $none_pr->supnam;
+                }
+
+                // คำนวณยอดก่อน VAT และ VAT จาก None PR
+                $none_pr_vat = $none_pr->vat_amount ?: 0;
+                $none_pr_before_vat = $remaining - $none_pr_vat;
+                
+                // สัดส่วนที่จ่าย (กรณีจ่ายบางส่วน)
+                if ($none_pr->total_amount > 0) {
+                    $ratio = $remaining / $none_pr->total_amount;
+                    $none_pr_vat = $none_pr_vat * $ratio;
+                    $none_pr_before_vat = $remaining - $none_pr_vat;
+                }
+                
+                $total_before_vat += $none_pr_before_vat;
+                $total_vat += $none_pr_vat;
+            }
+        }
         
-        // สร้างแถวบัญชีอัตโนมัติ (เฉพาะเมื่อมี PO)
-        if (count($po_ids) > 0) {
+        // สร้างแถวบัญชีอัตโนมัติ (เฉพาะเมื่อมี PO หรือ None PR)
+        if (count($po_ids) > 0 || count($none_pr_ids) > 0) {
             // แถวที่ 1: สินค้า (Debit)
             $lines[] = [
                 'account_code' => '1120',
@@ -415,6 +493,7 @@ class PaymentvoucherController extends BaseController
             'lines' => $lines,
             'pr_ids' => $pr_ids,
             'po_ids' => $po_ids,
+            'none_pr_ids' => $none_pr_ids,
             'vendor_id' => $vendor_id ?? null,
             'vendor_name' => $vendor_name ?? null,
         ];
@@ -471,6 +550,7 @@ class PaymentvoucherController extends BaseController
     {
         $pr_ids_raw = Yii::$app->request->post('pr_ids', []);
         $po_ids_raw = Yii::$app->request->post('po_ids', []);
+        $none_pr_ids_raw = Yii::$app->request->post('none_pr_ids', []);
         
         // รองรับทั้ง array และ JSON string
         if (is_string($pr_ids_raw)) {
@@ -484,10 +564,17 @@ class PaymentvoucherController extends BaseController
         } else {
             $po_ids = $po_ids_raw;
         }
+
+        if (is_string($none_pr_ids_raw)) {
+            $none_pr_ids = json_decode($none_pr_ids_raw, true) ?: [];
+        } else {
+            $none_pr_ids = $none_pr_ids_raw;
+        }
         
         // Debug log
         Yii::info("PR IDs: " . print_r($pr_ids, true), 'payment_voucher');
         Yii::info("PO IDs: " . print_r($po_ids, true), 'payment_voucher');
+        Yii::info("None PR IDs: " . print_r($none_pr_ids, true), 'payment_voucher');
         
         // ลบ refs เดิม (กรณี update)
         \backend\models\PaymentVoucherRef::deleteAll(['payment_voucher_id' => $model->id]);
@@ -530,6 +617,28 @@ class PaymentvoucherController extends BaseController
                 $ref->ref_type = \backend\models\PaymentVoucherRef::REF_TYPE_PO;
                 $ref->ref_id = $po->id;
                 $ref->ref_no = $po->purch_no;
+                $ref->amount = $remaining;
+                $ref->created_at = time();
+                $ref->save(false);
+            }
+        }
+
+        // บันทึก None PR refs
+        foreach ($none_pr_ids as $none_pr_id) {
+            $none_pr = \backend\models\PurchaseMaster::findOne($none_pr_id);
+            if ($none_pr) {
+                $paidAmount = \backend\models\PaymentVoucherRef::find()
+                    ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, 'ref_id' => $none_pr->id])
+                    ->andWhere(['!=', 'payment_voucher_id', $model->id])
+                    ->sum('amount') ?: 0;
+                
+                $remaining = $none_pr->total_amount - $paidAmount;
+                
+                $ref = new \backend\models\PaymentVoucherRef();
+                $ref->payment_voucher_id = $model->id;
+                $ref->ref_type = \backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR;
+                $ref->ref_id = $none_pr->id;
+                $ref->ref_no = $none_pr->docnum;
                 $ref->amount = $remaining;
                 $ref->created_at = time();
                 $ref->save(false);
