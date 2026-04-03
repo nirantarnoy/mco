@@ -278,12 +278,12 @@
                                 </li>
                             <?php endif; ?>
                             <?php //if (\Yii::$app->user->can('billing-invoice/index')): ?>
-                                <li class="nav-item">
+                                <!-- <li class="nav-item">
                                     <a href="index.php?r=billing-invoice/index" class="nav-link billing-invoice">
                                         <i class="far fa-circlez nav-icon"></i>
                                         <p>วางบิล</p>
                                     </a>
-                                </li>
+                                </li> -->
                             <?php //endif; ?>
                             <?php //if (\Yii::$app->user->can('invoice/index')): ?>
                                 <li class="nav-item">
@@ -512,6 +512,14 @@
                         </ul>
                     </li>
                 <?php //endif;?>
+                <li class="nav-item">
+                    <a href="index.php?r=ocr/index" class="nav-link ocr">
+                        <i class="nav-icon fas fa-file-invoice"></i>
+                        <p>
+                            อ่าน OCR
+                        </p>
+                    </a>
+                </li>
                 <?php // if (isset($_SESSION['user_group_id'])): ?>
                 <?php //if ($_SESSION['user_group_id'] == 1): ?>
                 <?php  if (\backend\models\User::findName(\Yii::$app->user->id) == 'mcoadmin' || \backend\models\User::findName(\Yii::$app->user->id) == 'sorakrit'): ?>

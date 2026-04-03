@@ -45,3 +45,4 @@ phpunit.phar
 /backups
 /scripts/*.sh
 /scripts/*.bat
+/common/config/google-vision-key.json
