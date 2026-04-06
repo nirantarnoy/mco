@@ -20,7 +20,7 @@ class PurchaseMasterSearch extends PurchaseMaster
     public function rules()
     {
         return [
-            [['id', 'status', 'created_by', 'updated_by'], 'integer'],
+            [['id', 'status', 'approve_status', 'created_by', 'updated_by'], 'integer'],
             [['docnum', 'docdat', 'supcod', 'supnam', 'job_no', 'paytrm', 'duedat', 'taxid', 'discod', 'addr01', 'addr02', 'addr03', 'zipcod', 'telnum', 'orgnum', 'refnum', 'vatdat', 'disc', 'remark', 'date_from', 'date_to'], 'safe'],
             [['vatpr0', 'amount', 'unitpr', 'vat_percent', 'vat_amount', 'tax_percent', 'tax_amount', 'total_amount'], 'number'],
         ];
@@ -80,6 +80,7 @@ class PurchaseMasterSearch extends PurchaseMaster
             'tax_amount' => $this->tax_amount,
             'total_amount' => $this->total_amount,
             'status' => $this->status,
+            'approve_status' => $this->approve_status,
             'created_by' => $this->created_by,
             'updated_by' => $this->updated_by,
         ]);

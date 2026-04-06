@@ -51,9 +51,13 @@ use yii\behaviors\BlameableBehavior;
  */
 class PurchaseMaster extends \yii\db\ActiveRecord
 {
-    const STATUS_CANCELLED = 0;
-    const STATUS_OPEN = 1;
-    const STATUS_APPROVED = 2;
+    const STATUS_DRAFT = 0;
+    const STATUS_ACTIVE = 1;
+    const STATUS_CANCELLED = 3;
+
+    const APPROVE_STATUS_PENDING = 0;
+    const APPROVE_STATUS_APPROVED = 1;
+    const APPROVE_STATUS_REJECTED = 2;
     /**
      * {@inheritdoc}
      */
@@ -83,10 +87,10 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             [['docdat', 'duedat', 'vatdat'], 'safe'],
             [['vatpr0', 'amount', 'unitpr', 'vat_percent', 'vat_amount', 'tax_percent', 'tax_amount', 'total_amount'], 'number'],
             [['remark'], 'string'],
-            [['status', 'created_at', 'updated_at', 'created_by', 'updated_by','is_deposit', 'department_id'], 'integer'],
-            [['docnum', 'job_no', 'discod', 'orgnum', 'refnum', 'disc'], 'string', 'max' => 50],
+            [['status', 'approve_status', 'created_at', 'updated_at', 'created_by', 'updated_by','is_deposit', 'department_id'], 'integer'],
+            [['docnum', 'job_no', 'discod', 'orgnum', 'disc'], 'string', 'max' => 50],
             [['supcod', 'taxid'], 'string', 'max' => 20],
-            [['supnam', 'addr01', 'addr02', 'addr03', 'invoice_no', 'vat_period', 'additional_note'], 'string', 'max' => 255],
+            [['supnam', 'addr01', 'addr02', 'addr03', 'invoice_no', 'vat_period', 'additional_note', 'refnum'], 'string', 'max' => 255],
             [['paytrm'], 'string', 'max' => 100],
             [['zipcod'], 'string', 'max' => 10],
             [['telnum'], 'string', 'max' => 50],
@@ -131,6 +135,7 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             'total_amount' => 'รวมสุทธิ',
             'remark' => 'หมายเหตุ',
             'status' => 'สถานะ',
+            'approve_status' => 'สถานะอนุมัติ',
             'created_at' => 'สร้างเมื่อ',
             'updated_at' => 'แก้ไขเมื่อ',
             'created_by' => 'สร้างโดย',
@@ -140,6 +145,47 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             'vat_period' => 'ยื่นภาษีรวมในงวด',
             'additional_note' => 'อื่นเพิ่มเติม',
         ];
+    }
+
+    /**
+     * Get status label
+     */
+    public function getStatusLabel()
+    {
+        $statuses = [
+            self::STATUS_DRAFT => 'ร่าง',
+            self::STATUS_ACTIVE => 'ใช้งาน',
+            self::STATUS_CANCELLED => 'ยกเลิก',
+        ];
+        return $statuses[$this->status] ?? 'ไม่ระบุ';
+    }
+
+    /**
+     * Get approve status label
+     */
+    public function getApproveStatusLabel()
+    {
+        $statuses = [
+            self::APPROVE_STATUS_PENDING => 'รอพิจารณา',
+            self::APPROVE_STATUS_APPROVED => 'อนุมัติแล้ว',
+            self::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
+            self::STATUS_CANCELLED => 'ยกเลิก',
+        ];
+        return $statuses[$this->approve_status] ?? 'ไม่ระบุ';
+    }
+
+    /**
+     * Get approve status badge
+     */
+    public function getApproveStatusBadge()
+    {
+        $badges = [
+            self::APPROVE_STATUS_PENDING => '<span class="badge badge-warning">รอพิจารณา</span>',
+            self::APPROVE_STATUS_APPROVED => '<span class="badge badge-success">อนุมัติแล้ว</span>',
+            self::APPROVE_STATUS_REJECTED => '<span class="badge badge-danger">ไม่อนุมัติ</span>',
+            self::STATUS_CANCELLED => '<span class="badge badge-danger">ยกเลิก</span>',
+        ];
+        return $badges[$this->approve_status] ?? '<span class="badge badge-secondary">ไม่ระบุ</span>';
     }
 
     /**

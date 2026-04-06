@@ -55,7 +55,7 @@ class PurchasemasterController extends BaseController
     public function actionApprove($id)
     {
         $model = $this->findModel($id);
-        $model->status = 2; // Approved
+        $model->approve_status = \backend\models\PurchaseMaster::APPROVE_STATUS_APPROVED;
         if ($model->save(false)) {
             Yii::$app->session->setFlash('success', 'อนุมัติใบซื้อเรียบร้อยแล้ว');
         } else {

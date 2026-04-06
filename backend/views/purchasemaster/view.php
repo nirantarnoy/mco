@@ -17,14 +17,16 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card-header">
             <h3 class="card-title">ใบซื้อเลขที่: <?= Html::encode($this->title) ?></h3>
             <div class="card-tools">
-                <?php if ($model->status == \backend\models\PurchaseMaster::STATUS_OPEN): ?>
-                    <?= Html::a('<i class="fas fa-check"></i> อนุมัติ', ['approve', 'id' => $model->id], [
-                        'class' => 'btn btn-success btn-sm',
-                        'data' => [
-                            'confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบซื้อนี้?',
-                            'method' => 'post',
-                        ],
-                    ]) ?>
+                <?php if ($model->status != \backend\models\PurchaseMaster::STATUS_CANCELLED): ?>
+                    <?php if ($model->approve_status == \backend\models\PurchaseMaster::APPROVE_STATUS_PENDING): ?>
+                        <?= Html::a('<i class="fas fa-check"></i> อนุมัติ', ['approve', 'id' => $model->id], [
+                            'class' => 'btn btn-success btn-sm',
+                            'data' => [
+                                'confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบซื้อนี้?',
+                                'method' => 'post',
+                            ],
+                        ]) ?>
+                    <?php endif; ?>
                     <?= Html::a('<i class="fas fa-edit"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-warning btn-sm']) ?>
                 <?php endif; ?>
                 <?= Html::a('<i class="fas fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
@@ -246,13 +248,14 @@ $this->params['breadcrumbs'][] = $this->title;
                             'attribute' => 'status',
                             'format' => 'raw',
                             'value' => function($model) {
-                                if($model->status == \backend\models\PurchaseMaster::STATUS_APPROVED) {
-                                    return '<span class="badge badge-success">อนุมัติแล้ว</span>';
-                                } else if($model->status == \backend\models\PurchaseMaster::STATUS_OPEN) {
-                                    return '<span class="badge badge-info">รอดำเนินการ</span>';
-                                } else {
-                                    return '<span class="badge badge-danger">ยกเลิก</span>';
-                                }
+                                return $model->getStatusLabel();
+                            },
+                        ],
+                        [
+                            'attribute' => 'approve_status',
+                            'format' => 'raw',
+                            'value' => function($model) {
+                                return $model->getApproveStatusBadge();
                             },
                         ],
                         'created_at:datetime:สร้างเมื่อ',

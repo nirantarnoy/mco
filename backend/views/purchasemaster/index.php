@@ -142,15 +142,25 @@ $this->params['breadcrumbs'][] = $this->title;
                         'attribute' => 'status',
                         'format' => 'raw',
                         'value' => function($model) {
-                            if ($model->status == \backend\models\PurchaseMaster::STATUS_APPROVED) {
-                                return '<span class="badge badge-success">อนุมัติแล้ว</span>';
-                            } else if ($model->status == \backend\models\PurchaseMaster::STATUS_OPEN) {
-                                return '<span class="badge badge-info">รอดำเนินการ</span>';
-                            } else {
-                                return '<span class="badge badge-danger">ยกเลิก</span>';
-                            }
+                            return $model->getStatusLabel();
                         },
-                        'filter' => [\backend\models\PurchaseMaster::STATUS_OPEN => 'รอดำเนินการ', \backend\models\PurchaseMaster::STATUS_APPROVED => 'อนุมัติแล้ว', \backend\models\PurchaseMaster::STATUS_CANCELLED => 'ยกเลิก'],
+                        'filter' => [
+                            \backend\models\PurchaseMaster::STATUS_DRAFT => 'ร่าง',
+                            \backend\models\PurchaseMaster::STATUS_ACTIVE => 'ใช้งาน',
+                            \backend\models\PurchaseMaster::STATUS_CANCELLED => 'ยกเลิก',
+                        ],
+                    ],
+                    [
+                        'attribute' => 'approve_status',
+                        'format' => 'raw',
+                        'value' => function($model) {
+                            return $model->getApproveStatusBadge();
+                        },
+                        'filter' => [
+                            \backend\models\PurchaseMaster::APPROVE_STATUS_PENDING => 'รอพิจารณา',
+                            \backend\models\PurchaseMaster::APPROVE_STATUS_APPROVED => 'อนุมัติแล้ว',
+                            \backend\models\PurchaseMaster::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
+                        ],
                     ],
                     [
                         'class' => ActionColumn::class,
