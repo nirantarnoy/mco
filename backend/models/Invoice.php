@@ -236,9 +236,13 @@ class Invoice extends ActiveRecord
         }
 
         if ($this->invoice_type == self::TYPE_TAX_INVOICE) {
-            // Check if any receipt has been issued for this tax invoice
+            // Check if any receipt has been issued for this tax invoice and it's NOT cancelled
             $has_receipt = InvoicePaymentHistory::find()
-                ->where(['invoice_id' => $this->id])
+                ->alias('h')
+                ->innerJoin('invoices r', 'h.receipt_id = r.id')
+                ->where(['h.invoice_id' => $this->id])
+                ->andWhere(['r.status' => self::STATUS_ACTIVE])
+                ->andWhere(['r.invoice_type' => self::TYPE_RECEIPT])
                 ->exists();
             
             if ($has_receipt) {

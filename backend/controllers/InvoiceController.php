@@ -226,14 +226,18 @@ class InvoiceController extends BaseController
                             Yii::error('Failed to save invoice relation: ' . json_encode($relation->errors), __METHOD__);
                         }
 
-                        // Save Payment History
-                        $history = new \backend\models\InvoicePaymentHistory();
-                        $history->invoice_id = $copy_from;
-                        $history->receipt_id = $model->id;
-                        $history->amount = $model->total_amount;
-                        $history->payment_date = $model->invoice_date ?: date('Y-m-d');
-                        $history->company_id = $model->company_id;
-                        $history->save();
+                        // Save Payment History ONLY if the new document is a RECEIPT
+                        if ($type === Invoice::TYPE_RECEIPT) {
+                            $history = new \backend\models\InvoicePaymentHistory();
+                            $history->invoice_id = $copy_from;
+                            $history->receipt_id = $model->id;
+                            $history->amount = $model->total_amount;
+                            $history->payment_date = $model->invoice_date ?: date('Y-m-d');
+                            $history->company_id = $model->company_id;
+                            if (!$history->save()) {
+                                Yii::error('Failed to save payment history: ' . json_encode($history->errors), __METHOD__);
+                            }
+                        }
                     }
 
                     $transaction->commit();
