@@ -47,20 +47,43 @@ if (!$model->isNewRecord && $model->quotation_id) {
     $quotationQuery->andWhere(['status' => \backend\models\Quotation::STATUS_ACTIVE]);
 }
 
-// Filter quotations ONLY for Tax Invoices to prevent duplicate issuance
+// Filter quotations for Tax Invoices: Only hide if all items from the quotation have been invoiced
 if ($model->invoice_type == Invoice::TYPE_TAX_INVOICE) {
-    $usedQuotationIds = \backend\models\Invoice::find()
+    $activeTaxInvoicesQuery = \backend\models\Invoice::find()
         ->select('quotation_id')
         ->where(['invoice_type' => Invoice::TYPE_TAX_INVOICE, 'status' => Invoice::STATUS_ACTIVE])
         ->andWhere(in_array($company_id, [1, 2]) ? ['in', 'company_id', [1, 2]] : ['company_id' => $company_id])
         ->andWhere(['not', ['quotation_id' => null]])
-        ->column();
+        ->distinct();
 
-    if (!empty($usedQuotationIds)) {
+    $quotationIdsInTaxInvoices = $activeTaxInvoicesQuery->column();
+
+    $fullyUsedQuotationIds = [];
+    foreach ($quotationIdsInTaxInvoices as $qId) {
+        $totalQuotationLines = \backend\models\QuotationLine::find()
+            ->where(['quotation_id' => $qId])
+            ->count();
+
+        $totalInvoiceItems = \backend\models\InvoiceItem::find()
+            ->alias('ii')
+            ->innerJoin('invoices i', 'ii.invoice_id = i.id')
+            ->where([
+                'i.quotation_id' => $qId,
+                'i.invoice_type' => Invoice::TYPE_TAX_INVOICE,
+                'i.status' => Invoice::STATUS_ACTIVE
+            ])
+            ->count();
+
+        if ($totalQuotationLines > 0 && $totalInvoiceItems >= $totalQuotationLines) {
+            $fullyUsedQuotationIds[] = $qId;
+        }
+    }
+
+    if (!empty($fullyUsedQuotationIds)) {
         if (!$model->isNewRecord && $model->quotation_id) {
-            $quotationQuery->andWhere(['or', ['not in', 'id', $usedQuotationIds], ['id' => $model->quotation_id]]);
+            $quotationQuery->andWhere(['or', ['not in', 'id', $fullyUsedQuotationIds], ['id' => $model->quotation_id]]);
         } else {
-            $quotationQuery->andWhere(['not in', 'id', $usedQuotationIds]);
+            $quotationQuery->andWhere(['not in', 'id', $fullyUsedQuotationIds]);
         }
     }
 }

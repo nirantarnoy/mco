@@ -595,9 +595,42 @@ class InvoiceController extends BaseController
                 ];
             }
 
+            // Get already invoiced items from other active Tax Invoices for this quotation
+            $alreadyInvoicedItems = \backend\models\InvoiceItem::find()
+                ->alias('ii')
+                ->innerJoin('invoices i', 'ii.invoice_id = i.id')
+                ->where([
+                    'i.quotation_id' => $jobId,
+                    'i.invoice_type' => Invoice::TYPE_TAX_INVOICE,
+                    'i.status' => Invoice::STATUS_ACTIVE
+                ])
+                ->all();
+
+            // Create a pool of already invoiced items to match against
+            $invoicedPool = [];
+            foreach ($alreadyInvoicedItems as $invItem) {
+                $key = ($invItem->product_id ?: 0) . '|' . trim($invItem->item_description) . '|' . (float)$invItem->quantity . '|' . (float)$invItem->unit_price;
+                $invoicedPool[] = $key;
+            }
+
             // จัดรูปแบบข้อมูลให้ตรงกับที่ฟอร์มต้องการ
             $items = [];
             foreach ($jobItems as $jobItem) {
+                $description = $this->cleanProductDescription($jobItem->product_name);
+                if (!empty($jobItem->note)) {
+                    $description .= "\n" . $jobItem->note;
+                }
+
+                // Try to see if this item has already been invoiced
+                $itemKey = ($jobItem->product_id ?: 0) . '|' . trim($description) . '|' . (float)$jobItem->qty . '|' . (float)$jobItem->line_price;
+                
+                $poolIndex = array_search($itemKey, $invoicedPool);
+                if ($poolIndex !== false) {
+                    // This item was already invoiced, remove from pool and skip
+                    array_splice($invoicedPool, $poolIndex, 1);
+                    continue;
+                }
+
                 $unitName = 'หน่วย';
                 $unitId = null;
                 
@@ -606,12 +639,6 @@ class InvoiceController extends BaseController
                     if ($jobItem->product->unit) {
                         $unitName = $jobItem->product->unit->name;
                     }
-                }
-
-                $description = $this->cleanProductDescription($jobItem->product_name);
-
-                if (!empty($jobItem->note)) {
-                    $description .= "\n" . $jobItem->note;
                 }
 
                 $items[] = [
