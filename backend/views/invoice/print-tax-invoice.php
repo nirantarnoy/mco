@@ -683,10 +683,10 @@ window.addEventListener('afterprint', function() {
             <div class="company-info">
                 <div class="company-name-thai">บริษัท <span id="companyNameThai">เอ็ม. ซี. โอ.</span> จำกัด (สำนักงานใหญ่)</div>
                 <div class="company-name-eng"><span id="companyNameEng">M. C. O. COMPANY LIMITED</span></div>
-                <div class="company-address" style="margin-left:80px;" id="addressThai">
+                <div class="company-address" id="addressThai">
                     8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์ 66-(0)-3861-9559
                 </div>
-                <div class="company-address" style="margin-left: 80px;" id="addressEng">
+                <div class="company-address" id="addressEng">
                     8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559
                 </div>
             </div>
@@ -748,7 +748,7 @@ window.addEventListener('afterprint', function() {
                         </tr>
                     </table>
                 </td>
-                <td style="width: 40%; vertical-align: top; padding-left: 15px;">
+                <td style="width: 45%; vertical-align: top; padding-left: 0;">
                     <table style="width: 100%;">
                         <tr>
                             <td class="field-label" style="width: 180px; vertical-align: top; padding: 2px 0;">วันที่ / Date:</td>

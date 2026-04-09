@@ -469,15 +469,15 @@ $this->registerCss("
 
 /* กล่องข้อมูลบริษัท */
 .company-info-box {
-    text-align: center;
-    max-width: 56%;
+    text-align: left;
+    max-width: 65%;
     text-size: 6px;
 }
 
 /* กล่อง TAXID */
 .taxid-box {
     text-align: right;
-    max-width: 22%;
+    max-width: 20%;
     margin-top: 28px;
     font-size: 18px;
     font-weight: 900;
@@ -733,12 +733,12 @@ window.addEventListener('afterprint', function() {
         </div>
 
         <div class="company-info-box">
-            <div class="company-name-thai">บริษัท <span id="companyNameThai">เอ็ม. ซี. โอ.</span> จำกัด (สำนักงานใหญ่)</div>
-            <div class="company-name-eng"><span id="companyNameEng">M.C.O. COMPANY LIMITED</span></div>
-            <div class="company-address" style="margin-left: 48px" id="addressThai">
+            <div class="company-name-thai" style="text-align: center;">บริษัท <span id="companyNameThai">เอ็ม. ซี. โอ.</span> จำกัด (สำนักงานใหญ่)</div>
+            <div class="company-name-eng" style="text-align: center; margin-left: -50px;"><span id="companyNameEng">M.C.O. COMPANY LIMITED</span></div>
+            <div class="company-address" id="addressThai">
                 8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์66-(0)-3861-9559
             </div>
-            <div class="company-address" style="margin-left: 82px" id="addressEng">
+            <div class="company-address" id="addressEng">
                 8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559
             </div>
         </div>
@@ -798,26 +798,26 @@ window.addEventListener('afterprint', function() {
                 </span>
             </div>
         </div>
-        <div class="customer-right" style="margin-left: 85px;">
+        <div class="customer-right" style="margin-left: 30px;">
             <div class="field-group">
-                <span class="field-label">วันที่ / Date:</span>
+                <span class="field-label" style="min-width: 100px;">วันที่ / Date:</span>
                 <span class="field-value"><?= Yii::$app->formatter->asDate($model->invoice_date, 'php:d/m/Y') ?></span>
             </div>
             <div class="field-group">
-                <span class="field-label">เลขที่ / In.No.:</span>
+                <span class="field-label" style="min-width: 100px;">เลขที่ / In.No.:</span>
                 <span class="field-value"><?= Html::encode($model->invoice_number) ?></span>
             </div>
             <div class="field-group">
-                <span class="field-label">ใบสั่งซื้อเลขที่ / P/O No.:</span>
+                <span class="field-label" style="min-width: 100px;">ใบสั่งซื้อเลขที่ / P/O No.:</span>
                 <span class="field-value"><?= Html::encode($model->po_number ?: '') ?></span>
             </div>
             <div class="field-group">
-                <span class="field-label">วันที่สั่งซื้อ / P/O Date:</span>
+                <span class="field-label" style="min-width: 100px;">วันที่สั่งซื้อ / P/O Date:</span>
                 <span class="field-value"><?= $model->po_date ? Yii::$app->formatter->asDate($model->po_date, 'php:d/m/Y') : '' ?></span>
             </div>
             <div class="field-group">
-                <span class="field-label">เงื่อนไข / กำหนดชำระ / Credit, Due:</span>
-                <span class="field-value"><?= Html::encode(\backend\models\Paymentterm::findName($model->payment_term_id)) ?></span>
+                <span class="field-label" style="min-width: 160px;">เงื่อนไข / กำหนดชำระ / Credit, Due:</span>
+                <span class="field-value" style="font-size: 18px;"><?= Html::encode(\backend\models\Paymentterm::findName($model->payment_term_id)) ?></span>
             </div>
         </div>
     </div>
