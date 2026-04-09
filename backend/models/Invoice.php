@@ -287,6 +287,7 @@ class Invoice extends ActiveRecord
     public function generateInvoiceNumber()
     {
         $year = $this->invoice_date ? date('Y', strtotime($this->invoice_date)) : date('Y');
+        $month = $this->invoice_date ? date('m', strtotime($this->invoice_date)) : date('m');
         $prefixes = [
             self::TYPE_QUOTATION => 'QT',
             self::TYPE_BILL_PLACEMENT => 'BP',
@@ -299,15 +300,21 @@ class Invoice extends ActiveRecord
         $db = Yii::$app->db;
         $transaction = $db->beginTransaction();
         try {
+            // Apply monthly sequence only for Quotation (ใบแจ้งหนี้)
+            // For other types, keep using yearly sequence (month = 0)
+            $isQuotation = ($this->invoice_type == self::TYPE_QUOTATION);
+            $queryMonth = $isQuotation ? $month : 0;
+
             // Get current sequence with FOR UPDATE to prevent race conditions
             $sequence = $db->createCommand("
                 SELECT last_number 
                 FROM invoice_sequences 
-                WHERE invoice_type = :type AND year = :year AND month = 0
+                WHERE invoice_type = :type AND year = :year AND month = :month
                 FOR UPDATE
             ")->bindValues([
                 ':type' => $this->invoice_type,
                 ':year' => $year,
+                ':month' => $queryMonth,
             ])->queryOne();
 
             if (!$sequence) {
@@ -315,7 +322,7 @@ class Invoice extends ActiveRecord
                 $db->createCommand()->insert('invoice_sequences', [
                     'invoice_type' => $this->invoice_type,
                     'year' => $year,
-                    'month' => 0,
+                    'month' => $queryMonth,
                     'last_number' => $nextNumber,
                     'prefix' => $prefix
                 ])->execute();
@@ -326,7 +333,10 @@ class Invoice extends ActiveRecord
             // --- SAFETY NET: Ensure the number doesn't already exist in the invoices table ---
             while (true) {
                 $generatedNumber = '';
-                if ($this->invoice_type == self::TYPE_BILL_PLACEMENT) {
+                if ($isQuotation) {
+                    // NEW FORMAT for ใบแจ้งหนี้: Year(4) + Month(2) + Running(3)
+                    $generatedNumber = $year . $month . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+                } else if ($this->invoice_type == self::TYPE_BILL_PLACEMENT) {
                     $generatedNumber = $prefix . '-' . $year . '-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
                 } else if ($this->invoice_type == self::TYPE_TAX_INVOICE) {
                     $generatedNumber = $prefix . substr($year, -2) . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
@@ -344,7 +354,7 @@ class Invoice extends ActiveRecord
             // Update sequence with the final number used
             $db->createCommand()->update('invoice_sequences', 
                 ['last_number' => $nextNumber], 
-                ['invoice_type' => $this->invoice_type, 'year' => $year, 'month' => 0]
+                ['invoice_type' => $this->invoice_type, 'year' => $year, 'month' => $queryMonth]
             )->execute();
 
             $transaction->commit();
