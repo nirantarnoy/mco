@@ -829,7 +829,7 @@ window.addEventListener('afterprint', function() {
             </div>
             <div class="field-group">
                 <span class="field-label" style="min-width: 160px;">เงื่อนไข / วันที่ครบกำหนด / Credit, Due:</span>
-                <span class="field-value" style="font-size: 18px;"><?= $displayDueDate ? Yii::$app->formatter->asDate($displayDueDate, 'php:d/m/Y') : '' ?></span>
+                <span class="field-value" style="font-size: 18px;padding: 2px 0;"><?= $displayDueDate ? Yii::$app->formatter->asDate($displayDueDate, 'php:d/m/Y') : '' ?></span>
             </div>
         </div>
     </div>
