@@ -140,7 +140,11 @@ use yii\helpers\Html; ?>
     }
 
     .receipt-company-info {
-        text-align: left;
+        flex: 1;
+        border: 2.2px solid #000;
+        padding: 8px 12px;
+        margin: 0 20px;
+        text-align: center;
     }
 
     .receipt-company-name-thai {
@@ -378,27 +382,26 @@ use yii\helpers\Html; ?>
 
 <div class="receipt-container">
     <!-- Header Section -->
-    <div class="receipt-header-section">
-        <div class="receipt-header-left">
-            <div class="receipt-logo-section">
-                <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 190px;" alt="">
+    <div class="receipt-header-section" style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="receipt-logo-section" style="min-width: 180px;">
+            <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 190px;" alt="">
+        </div>
+        <div class="receipt-company-info">
+            <div class="receipt-company-name-thai" id="companyNameThai" style="text-decoration: none; font-size: 32px;">บริษัท เอ็ม. ซี. โอ. จำกัด (สำนักงานใหญ่)</div>
+            <div class="receipt-company-name-eng" id="companyNameEng" style="font-size: 26px; margin-top: -5px;">M.C.O. COMPANY LIMITED</div>
+            <div class="receipt-company-address" id="addressThai" style="font-size: 13px; line-height: 1.2;">
+                8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)3887-5258-59 แฟกซ์ 66-(0)3861-9559
             </div>
-            <div class="receipt-company-info">
-                <div class="receipt-company-name-thai" id="companyNameThai">บริษัท เอ็ม.ซี.โอ. จำกัด</div>
-                <div class="receipt-company-name-eng" id="companyNameEng">M.C.O. COMPANY LIMITED</div>
-                <div class="receipt-company-address" style="margin-top: -12px;" id="addressThai">
-                    8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 &nbsp;
-                    โทร. 66-(0) 3887-5258-59 แฟกซ์ 66-(0)3861-9559
-                </div>
-                <div class="receipt-company-address" id="addressEng">8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 &nbsp; Tel. 66-(0)3887-5258-59 &nbsp; Fax. 66-(0)3861-9559</div>
-            </div>
+        </div>
+        <div class="tax-info" style="min-width: 180px; text-align: right; font-weight: bold; font-size: 16px;">
+            TAXID: 0215543000985
         </div>
     </div>
 
     <!-- Title and Receipt Info -->
     <div class="receipt-row receipt-compact-row">
         <div class="receipt-col" style="text-align: left; padding-left: 10px;">
-            <strong id="taxIdLabel" style="font-size: 12px; margin-top: 10px; display: inline-block;">เลขประจำตัวผู้เสียภาษี: 0215543000985<br>(สำนักงานใหญ่)</strong>
+            <strong id="taxIdLabel" style="font-size: 12px; margin-top: 10px; display: inline-block;">(สำนักงานใหญ่)</strong>
         </div>
         <div class="receipt-col">
             <div class="receipt-title">ใบเสร็จรับเงิน<br>RECEIPT</div>

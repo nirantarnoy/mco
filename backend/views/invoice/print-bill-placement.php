@@ -106,10 +106,11 @@ body {
 }
 
 .company-details {
-    margin-top: 8px;
-    text-align: right;
-    font-size: 14px;
-    line-height: 1;
+    flex: 1;
+    border: 2.2px solid #000;
+    padding: 8px 12px;
+    margin: 0 20px;
+    text-align: center;
 }
 
 .invoice-title-section {
@@ -489,14 +490,17 @@ window.addEventListener('afterprint', function() {
 </div>
 
 <div class="print-container original">
-    <div class="header-section">
-        <div class="mco-logo">
+    <div class="header-section" style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="mco-logo" style="min-width: 180px;">
             <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 180px;" alt="">
         </div>
         <div class="company-details">
-            <p style="font-size: 24px;font-family: 'THSarabunPSK' !important;font-weight: bold;" id="companyNameHeader">บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)</p>
-            <p style="margin-top: -1px;" id="companyAddress">8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000</p>
-            <p id="companyContact"><strong>Tel :</strong> (038) 875258-9, &nbsp; <strong>Fax :</strong> (038) 619559</p>
+            <div id="companyNameHeader" style="font-size: 28px; font-weight: 900; -webkit-text-stroke: 0.3px black;">บริษัท เอ็ม. ซี. โอ. จำกัด (สำนักงานใหญ่)</div>
+            <div id="companyNameEngHeader" style="font-size: 24px; font-weight: 900; margin-top: -3px; -webkit-text-stroke: 0.3px black;">M.C.O. COMPANY LIMITED</div>
+            <div id="companyAddress" style="font-size: 14px; line-height: 1.2; font-weight: 900;">8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์ 66-(0)-3861-9559</div>
+        </div>
+        <div class="tax-info" style="min-width: 180px; text-align: right; font-weight: bold; font-size: 18px;">
+            TAXID: 0215543000985
         </div>
     </div>
 

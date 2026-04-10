@@ -102,22 +102,21 @@ $this->registerCss("
 
 .company-info {
     flex: 1;
-    margin-left: 10px;
+    border: 2px solid #000;
+    padding: 8px 12px;
+    margin: 0 20px;
     text-align: center;
 }
 
 .company-name-thai {
-    font-size: 30px;
+    font-size: 28px;
     font-weight: 900;
-    -webkit-text-stroke: 0.5px black;
 }
 
 .company-name-eng {
-    font-size: 26px;
+    font-size: 24px;
     font-weight: 900;
-    margin-left: -135px;
-    margin-top: -8px;
-    -webkit-text-stroke: 0.5px black;
+    margin-top: -5px;
 }
 
 .company-address {
@@ -726,27 +725,23 @@ window.addEventListener('afterprint', function() {
 
 <div class="print-container original">
     <!-- Header -->
-    <div class="header-flex">
-
-        <div class="logo-box">
-            <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width:180px;" alt="">
+    <div class="header" style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="logox" style="min-width: 180px;">
+            <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 180px;" alt="">
         </div>
-
-        <div class="company-info-box">
-            <div class="company-name-thai" style="text-align: center;">บริษัท <span id="companyNameThai">เอ็ม. ซี. โอ.</span> จำกัด (สำนักงานใหญ่)</div>
-            <div class="company-name-eng" style="text-align: center; margin-left: -50px;"><span id="companyNameEng">M.C.O. COMPANY LIMITED</span></div>
+        <div class="company-info">
+            <div class="company-name-thai">บริษัท <span id="companyNameThai">เอ็ม. ซี. โอ.</span> จำกัด (สำนักงานใหญ่)</div>
+            <div class="company-name-eng"><span id="companyNameEng">M.C.O. COMPANY LIMITED</span></div>
             <div class="company-address" id="addressThai">
-                8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์66-(0)-3861-9559
+                8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์ 66-(0)-3861-9559
             </div>
-            <div class="company-address" id="addressEng">
+            <div class="company-address" id="addressEng" style="margin-top: -5px;">
                 8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559
             </div>
         </div>
-
-        <div class="taxid-box">
-            <div style="font-weight: bold; margin: 3px 0;">TAXID: <span id="companyTaxId">0215543000985</span></div>
+        <div class="tax-info" style="min-width: 180px; text-align: right; font-weight: bold; font-size: 18px;">
+            TAXID: <span id="companyTaxId">0215543000985</span>
         </div>
-
     </div>
 
     <br>
@@ -816,7 +811,7 @@ window.addEventListener('afterprint', function() {
                 <span class="field-value"><?= $model->po_date ? Yii::$app->formatter->asDate($model->po_date, 'php:d/m/Y') : '' ?></span>
             </div>
             <div class="field-group">
-                <span class="field-label" style="min-width: 160px;">เงื่อนไข / กำหนดชำระ / Credit, Due:</span>
+                <span class="field-label" style="min-width: 160px;">เงื่อนไข / วันที่ครบกำหนด / Credit, Due:</span>
                 <span class="field-value" style="font-size: 18px;"><?= Html::encode(\backend\models\Paymentterm::findName($model->payment_term_id)) ?></span>
             </div>
         </div>
@@ -1020,7 +1015,7 @@ window.addEventListener('afterprint', function() {
                 else if (text.includes('เลขที่ / In.No.:')) label.textContent = 'In.No.:';
                 else if (text.includes('ใบสั่งซื้อเลขที่ / P/O No.:')) label.textContent = 'P/O No.:';
                 else if (text.includes('วันที่สั่งซื้อ / P/O Date:')) label.textContent = 'P/O Date:';
-                else if (text.includes('เงื่อนไข / กำหนดชำระ / Credit, Due:')) label.textContent = 'Credit, Due:';
+                else if (text.includes('เงื่อนไข / วันที่ครบกำหนด / Credit, Due:')) label.textContent = 'Credit, Due:';
             } else {
                 if (text === 'รหัสลูกค้า :') label.style.display = 'block';
                 else if (text === 'Code:') {
@@ -1034,7 +1029,7 @@ window.addEventListener('afterprint', function() {
                 else if (text === 'In.No.:') label.textContent = 'เลขที่ / In.No.:';
                 else if (text === 'P/O No.:') label.textContent = 'ใบสั่งซื้อเลขที่ / P/O No.:';
                 else if (text === 'P/O Date:') label.textContent = 'วันที่สั่งซื้อ / P/O Date:';
-                else if (text === 'Credit, Due:') label.textContent = 'เงื่อนไข / กำหนดชำระ / Credit, Due:';
+                else if (text === 'Credit, Due:') label.textContent = 'เงื่อนไข / วันที่ครบกำหนด / Credit, Due:';
             }
         });
 
