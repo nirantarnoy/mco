@@ -127,21 +127,22 @@ body {
 
 .company-info {
     flex: 1;
-    // margin-left: 12px;
+    border: 2px solid #000;
+    padding: 8px 12px;
+    margin: 0 20px;
+    text-align: center;
 }
 
 .company-name-thai {
-    text-align: center;
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 900;
     margin-bottom: 0px;
 }
 
 .company-name-eng {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 900;
     margin-bottom: 3px;
-    margin-left: 80px;
     margin-top: -5px;
 }
 
@@ -675,21 +676,22 @@ window.addEventListener('afterprint', function() {
 
 <div class="print-container original">
     <!-- Header -->
-    <div class="header">
-        <div class="company-logo">
-            <div class="logox">
-                <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 180px;" alt="">
+    <div class="header" style="display: flex; align-items: center; justify-content: space-between;">
+        <div class="logox" style="min-width: 180px;">
+            <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 180px;" alt="">
+        </div>
+        <div class="company-info">
+            <div class="company-name-thai">บริษัท <span id="companyNameThai">เอ็ม. ซี. โอ.</span> จำกัด (สำนักงานใหญ่)</div>
+            <div class="company-name-eng"><span id="companyNameEng">M.C.O. COMPANY LIMITED</span></div>
+            <div class="company-address" id="addressThai">
+                8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์ 66-(0)-3861-9559
             </div>
-            <div class="company-info">
-                <div class="company-name-thai">บริษัท <span id="companyNameThai">เอ็ม. ซี. โอ.</span> จำกัด (สำนักงานใหญ่)</div>
-                <div class="company-name-eng"><span id="companyNameEng">M. C. O. COMPANY LIMITED</span></div>
-                <div class="company-address" id="addressThai">
-                    8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์ 66-(0)-3861-9559
-                </div>
-                <div class="company-address" id="addressEng">
-                    8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559
-                </div>
+            <div class="company-address" id="addressEng">
+                8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559
             </div>
+        </div>
+        <div class="company-tax-id" style="min-width: 180px; text-align: right; font-weight: bold; font-size: 18px;">
+            TAXID: 0215543000985
         </div>
     </div>
     <div class="row">
@@ -721,10 +723,6 @@ window.addEventListener('afterprint', function() {
             <tr>
                 <td style="width: 60%; vertical-align: top;">
                     <table style="width: 100%;">
-                        <tr>
-                            <td class="field-label" style="width: 160px; vertical-align: top; padding: 2px 0;">เลขประจำตัวผู้เสียภาษี:</td>
-                            <td class="field-value" style="padding: 2px 0;">0215543000985</td>
-                        </tr>
                         <tr>
                             <td class="field-label" style="vertical-align: top; padding: 2px 0;">รหัสลูกค้า : Code</td>
                             <td class="field-value" style="padding: 2px 0;"><?= $customer_code ?></td>
@@ -767,7 +765,7 @@ window.addEventListener('afterprint', function() {
                             <td class="field-value-right" style="padding: 2px 0;"><?= $po_date ? Yii::$app->formatter->asDate($po_date, 'php:d/m/Y') : '' ?></td>
                         </tr>
                         <tr>
-                            <td class="field-label" style="vertical-align: top; padding: 2px 0;">เงื่อนไข / กำหนดชำระ / Credit, Due:</td>
+                            <td class="field-label" style="vertical-align: top; padding: 2px 0;">เงื่อนไข / วันที่ครบกำหนด / Credit, Due:</td>
                             <td class="field-value-right" style="padding: 2px 0;"><?= Html::encode($model->paymentTerm ? $model->paymentTerm->name : '') ?> <?= $model->due_date ? Yii::$app->formatter->asDate($model->due_date, 'php:d/m/Y') : '' ?></td>
                         </tr>
                     </table>
@@ -1009,7 +1007,7 @@ window.addEventListener('afterprint', function() {
                 else if (text.includes('เลขที่ / Inv.No.:')) label.textContent = 'Inv.No.:';
                 else if (text.includes('ใบสั่งซื้อเลขที่ / P/O No.:')) label.textContent = 'P/O No.:';
                 else if (text.includes('วันที่สั่งซื้อ / P/O Date:')) label.textContent = 'P/O Date:';
-                else if (text.includes('เงื่อนไข / กำหนดชำระ / Credit, Due:')) label.textContent = 'Credit, Due:';
+                else if (text.includes('เงื่อนไข / วันที่ครบกำหนด / Credit, Due:')) label.textContent = 'Credit, Due:';
             } else {
                 if (text === 'Tax ID:') label.textContent = 'เลขประจำตัวผู้เสียภาษี:';
                 else if (text === 'Code') label.innerHTML = 'รหัสลูกค้า :<br>Code';
@@ -1018,7 +1016,7 @@ window.addEventListener('afterprint', function() {
                 else if (text === 'Inv.No.:') label.textContent = 'เลขที่ / Inv.No.:';
                 else if (text === 'P/O No.:') label.textContent = 'ใบสั่งซื้อเลขที่ / P/O No.:';
                 else if (text === 'P/O Date:') label.textContent = 'วันที่สั่งซื้อ / P/O Date:';
-                else if (text === 'Credit, Due:') label.textContent = 'เงื่อนไข / กำหนดชำระ / Credit, Due:';
+                else if (text === 'Credit, Due:') label.textContent = 'เงื่อนไข / วันที่ครบกำหนด / Credit, Due:';
             }
         });
 
