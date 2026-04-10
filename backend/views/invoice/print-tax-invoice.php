@@ -675,11 +675,11 @@ window.addEventListener('afterprint', function() {
 
 <div class="print-container original">
     <!-- Header -->
-    <div class="header" style="display: flex; align-items: center; justify-content: center; position: relative; min-height: 100px;">
-        <div class="logox" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%);">
+    <div class="header" style="display: flex; align-items: center; justify-content: space-between; min-height: 100px;">
+        <div class="logox" style="min-width: 180px;">
             <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 180px;" alt="">
         </div>
-        <div class="company-info" style="text-align: left;">
+        <div class="company-info" style="flex: 1; text-align: left; padding-left: 80px;">
             <div class="company-name-thai" style="text-align: left;">บริษัท <span id="companyNameThai">เอ็ม. ซี. โอ.</span> จำกัด (สำนักงานใหญ่)</div>
             <div class="company-name-eng"><span id="companyNameEng">M.C.O. COMPANY LIMITED</span></div>
             <div class="company-address" id="addressThai">
@@ -689,7 +689,7 @@ window.addEventListener('afterprint', function() {
                 8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559
             </div>
         </div>
-        <div class="company-tax-id" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); text-align: right; font-weight: bold; font-size: 18px;">
+        <div class="company-tax-id" style="min-width: 180px; text-align: right; font-weight: bold; font-size: 18px;">
             TAXID: 0215543000985
         </div>
     </div>
