@@ -783,7 +783,7 @@ window.addEventListener('afterprint', function() {
                         </tr>
                         <tr>
                             <td class="field-label" style="vertical-align: top; padding: 2px 0;">เงื่อนไข / วันที่ครบกำหนด / Credit, Due:</td>
-                            <td class="field-value-right" style="padding: 2px 0;"><?= Html::encode($model->paymentTerm ? $model->paymentTerm->name : ($model->credit_terms ?? '')) ?> / <?= $displayDueDate ? Yii::$app->formatter->asDate($displayDueDate, 'php:d/m/Y') : '' ?></td>
+                            <td class="field-value-right" style="padding: 2px 0;"><?= $displayDueDate ? Yii::$app->formatter->asDate($displayDueDate, 'php:d/m/Y') : '' ?></td>
                         </tr>
                     </table>
                 </td>
