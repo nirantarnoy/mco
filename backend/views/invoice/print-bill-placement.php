@@ -490,15 +490,13 @@ window.addEventListener('afterprint', function() {
 
 <div class="print-container original">
     <div class="header-section" style="display: flex; align-items: center; justify-content: center; position: relative; min-height: 100px;">
-        <div class="header-main" style="display: flex; align-items: center; gap: 15px;">
-            <div class="mco-logo">
-                <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 180px;" alt="">
-            </div>
-            <div class="company-details" style="text-align: left;">
-                <div id="companyNameHeader" style="font-size: 28px; font-weight: 900; -webkit-text-stroke: 0.3px black;">บริษัท เอ็ม. ซี. โอ. จำกัด (สำนักงานใหญ่)</div>
-                <div id="companyNameEngHeader" style="font-size: 24px; font-weight: 900; margin-top: -3px; -webkit-text-stroke: 0.3px black;">M.C.O. COMPANY LIMITED</div>
-                <div id="companyAddress" style="font-size: 14px; line-height: 1.2; font-weight: 900;">8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์ 66-(0)-3861-9559</div>
-            </div>
+        <div class="mco-logo" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%);">
+            <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 180px;" alt="">
+        </div>
+        <div class="company-details" style="text-align: center;">
+            <div id="companyNameHeader" style="font-size: 28px; font-weight: 900; -webkit-text-stroke: 0.3px black;">บริษัท เอ็ม. ซี. โอ. จำกัด (สำนักงานใหญ่)</div>
+            <div id="companyNameEngHeader" style="font-size: 24px; font-weight: 900; margin-top: -3px; -webkit-text-stroke: 0.3px black;">M.C.O. COMPANY LIMITED</div>
+            <div id="companyAddress" style="font-size: 14px; line-height: 1.2; font-weight: 900;">8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์ 66-(0)-3861-9559</div>
         </div>
         <div class="tax-info" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); text-align: right; font-weight: bold; font-size: 18px;">
             TAXID: 0215543000985
