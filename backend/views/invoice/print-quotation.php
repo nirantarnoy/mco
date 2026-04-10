@@ -7,6 +7,24 @@ use yii\helpers\Html;
 
 $this->title = 'พิมพ์ใบแจ้งหนี้ - ' . $model->invoice_number;
 
+// Calculate Due Date based on Credit Terms if due_date is empty
+$displayDueDate = $model->due_date;
+if (empty($displayDueDate) && !empty($model->invoice_date)) {
+    $creditDays = 0;
+    if ($model->paymentTerm && $model->paymentTerm->day_count > 0) {
+        $creditDays = (int)$model->paymentTerm->day_count;
+    } elseif (!empty($model->credit_terms)) {
+        preg_match('/\d+/', $model->credit_terms, $matches);
+        if (!empty($matches)) {
+            $creditDays = (int)$matches[0];
+        }
+    }
+    
+    if ($creditDays > 0) {
+        $displayDueDate = date('Y-m-d', strtotime($model->invoice_date . " + $creditDays days"));
+    }
+}
+
 // Add print styles that match the original form exactly with multi-copy support
 $this->registerCss("
 @page {
@@ -811,7 +829,7 @@ window.addEventListener('afterprint', function() {
             </div>
             <div class="field-group">
                 <span class="field-label" style="min-width: 160px;">เงื่อนไข / วันที่ครบกำหนด / Credit, Due:</span>
-                <span class="field-value" style="font-size: 18px;"><?= Html::encode(\backend\models\Paymentterm::findName($model->payment_term_id)) ?></span>
+                <span class="field-value" style="font-size: 18px;"><?= Html::encode($model->paymentTerm ? $model->paymentTerm->name : ($model->credit_terms ?? '')) ?> / <?= $displayDueDate ? Yii::$app->formatter->asDate($displayDueDate, 'php:d/m/Y') : '' ?></span>
             </div>
         </div>
     </div>
