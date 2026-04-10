@@ -381,18 +381,20 @@ use yii\helpers\Html; ?>
 
 <div class="receipt-container">
     <!-- Header Section -->
-    <div class="receipt-header-section" style="display: flex; align-items: center; justify-content: space-between;">
-        <div class="receipt-logo-section" style="min-width: 180px;">
-            <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 190px;" alt="">
-        </div>
-        <div class="receipt-company-info" style="text-align: left;">
-            <div class="receipt-company-name-thai" id="companyNameThai" style="text-decoration: none; font-size: 32px; text-align: left;">บริษัท เอ็ม. ซี. โอ. จำกัด (สำนักงานใหญ่)</div>
-            <div class="receipt-company-name-eng" id="companyNameEng" style="font-size: 26px; margin-top: -5px;">M.C.O. COMPANY LIMITED</div>
-            <div class="receipt-company-address" id="addressThai" style="font-size: 13px; line-height: 1.2;">
-                8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)3887-5258-59 แฟกซ์ 66-(0)3861-9559
+    <div class="receipt-header-section" style="display: flex; align-items: center; justify-content: center; position: relative; min-height: 100px;">
+        <div class="receipt-header-main" style="display: flex; align-items: center; gap: 15px;">
+            <div class="receipt-logo-section">
+                <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 190px;" alt="">
+            </div>
+            <div class="receipt-company-info" style="text-align: left;">
+                <div class="receipt-company-name-thai" id="companyNameThai" style="text-decoration: none; font-size: 32px; text-align: left;">บริษัท เอ็ม. ซี. โอ. จำกัด (สำนักงานใหญ่)</div>
+                <div class="receipt-company-name-eng" id="companyNameEng" style="font-size: 26px; margin-top: -5px;">M.C.O. COMPANY LIMITED</div>
+                <div class="receipt-company-address" id="addressThai" style="font-size: 13px; line-height: 1.2;">
+                    8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)3887-5258-59 แฟกซ์ 66-(0)3861-9559
+                </div>
             </div>
         </div>
-        <div class="tax-info" style="min-width: 180px; text-align: right; font-weight: bold; font-size: 16px;">
+        <div class="tax-info" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); text-align: right; font-weight: bold; font-size: 16px;">
             TAXID: 0215543000985
         </div>
     </div>
