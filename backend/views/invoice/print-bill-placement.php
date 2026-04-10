@@ -107,10 +107,9 @@ body {
 
 .company-details {
     flex: 1;
-    border: 2.2px solid #000;
-    padding: 8px 12px;
-    margin: 0 20px;
-    text-align: center;
+    padding: 2px 12px;
+    margin: 0 10px;
+    text-align: left;
 }
 
 .invoice-title-section {
@@ -494,7 +493,7 @@ window.addEventListener('afterprint', function() {
         <div class="mco-logo" style="min-width: 180px;">
             <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 180px;" alt="">
         </div>
-        <div class="company-details">
+        <div class="company-details" style="text-align: left;">
             <div id="companyNameHeader" style="font-size: 28px; font-weight: 900; -webkit-text-stroke: 0.3px black;">บริษัท เอ็ม. ซี. โอ. จำกัด (สำนักงานใหญ่)</div>
             <div id="companyNameEngHeader" style="font-size: 24px; font-weight: 900; margin-top: -3px; -webkit-text-stroke: 0.3px black;">M.C.O. COMPANY LIMITED</div>
             <div id="companyAddress" style="font-size: 14px; line-height: 1.2; font-weight: 900;">8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์ 66-(0)-3861-9559</div>

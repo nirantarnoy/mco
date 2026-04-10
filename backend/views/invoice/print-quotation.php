@@ -102,10 +102,9 @@ $this->registerCss("
 
 .company-info {
     flex: 1;
-    border: 2px solid #000;
-    padding: 8px 12px;
-    margin: 0 20px;
-    text-align: center;
+    padding: 2px 12px;
+    margin: 0 10px;
+    text-align: left;
 }
 
 .company-name-thai {
@@ -729,7 +728,7 @@ window.addEventListener('afterprint', function() {
         <div class="logox" style="min-width: 180px;">
             <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 180px;" alt="">
         </div>
-        <div class="company-info">
+        <div class="company-info" style="text-align: left;">
             <div class="company-name-thai">บริษัท <span id="companyNameThai">เอ็ม. ซี. โอ.</span> จำกัด (สำนักงานใหญ่)</div>
             <div class="company-name-eng"><span id="companyNameEng">M.C.O. COMPANY LIMITED</span></div>
             <div class="company-address" id="addressThai">
