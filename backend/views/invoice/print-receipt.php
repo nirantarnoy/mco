@@ -385,8 +385,8 @@ use yii\helpers\Html; ?>
         <div class="receipt-logo-section" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%);">
             <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 190px;" alt="">
         </div>
-        <div class="receipt-company-info" style="text-align: center;">
-            <div class="receipt-company-name-thai" id="companyNameThai" style="text-decoration: none; font-size: 32px; text-align: center;">บริษัท เอ็ม. ซี. โอ. จำกัด (สำนักงานใหญ่)</div>
+        <div class="receipt-company-info" style="text-align: left;">
+            <div class="receipt-company-name-thai" id="companyNameThai" style="text-decoration: none; font-size: 32px; text-align: left;">บริษัท เอ็ม. ซี. โอ. จำกัด (สำนักงานใหญ่)</div>
             <div class="receipt-company-name-eng" id="companyNameEng" style="font-size: 26px; margin-top: -5px;">M.C.O. COMPANY LIMITED</div>
             <div class="receipt-company-address" id="addressThai" style="font-size: 13px; line-height: 1.2;">
                 8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)3887-5258-59 แฟกซ์ 66-(0)3861-9559

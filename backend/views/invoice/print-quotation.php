@@ -728,7 +728,7 @@ window.addEventListener('afterprint', function() {
         <div class="logox" style="position: absolute; left: 0; top: 50%; transform: translateY(-50%);">
             <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 180px;" alt="">
         </div>
-        <div class="company-info" style="text-align: center;">
+        <div class="company-info" style="text-align: left;">
             <div class="company-name-thai">บริษัท <span id="companyNameThai">เอ็ม. ซี. โอ.</span> จำกัด (สำนักงานใหญ่)</div>
             <div class="company-name-eng"><span id="companyNameEng">M.C.O. COMPANY LIMITED</span></div>
             <div class="company-address" id="addressThai">
