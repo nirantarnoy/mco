@@ -143,10 +143,19 @@ $('#btn-scan').on('click', function() {
                     Swal.fire({
                         icon: 'success',
                         title: 'สแกนสำเร็จ',
-                        text: 'ระบบดึงข้อมูลจากรูปภาพเรียบร้อยแล้ว'
+                        text: response.message || 'ระบบดึงข้อมูลและบันทึกเรียบร้อยแล้ว',
+                        showCancelButton: true,
+                        confirmButtonText: 'ดูรายละเอียด',
+                        cancelButtonText: 'สแกนต่อ'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                             window.location.href = 'index.php?r=temp-invoice/view&id=' + response.model.id;
+                        }
                     });
                 } else {
-                    alert('สแกนสำเร็จ!');
+                    if(confirm('สแกนสำเร็จ! ต้องการดูรายละเอียดหรือไม่?')) {
+                        window.location.href = 'index.php?r=temp-invoice/view&id=' + response.model.id;
+                    }
                 }
             } else {
                 alert('เกิดข้อผิดพลาด: ' + response.message);

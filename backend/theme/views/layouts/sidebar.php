@@ -514,9 +514,25 @@
                 <?php //endif;?>
                 <li class="nav-item">
                     <a href="index.php?r=ocr/index" class="nav-link ocr">
-                        <i class="nav-icon fas fa-file-invoice"></i>
+                        <i class="nav-icon fas fa-scan"></i>
                         <p>
-                            อ่าน OCR
+                            สแกนเอกสารใหม่
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.php?r=temp-invoice/index" class="nav-link temp-invoice">
+                        <i class="nav-icon fas fa-list"></i>
+                        <p>
+                            รายการสแกน OCR
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="index.php?r=ocr-pattern/index" class="nav-link ocr-pattern">
+                        <i class="nav-icon fas fa-microchip"></i>
+                        <p>
+                            จัดการ OCR Pattern
                         </p>
                     </a>
                 </li>

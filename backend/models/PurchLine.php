@@ -46,7 +46,8 @@ class PurchLine extends ActiveRecord
         return [
             [['purch_id', 'product_id', 'migrate'], 'integer'],
             [['qty', 'line_price', 'line_total', 'value_amount'], 'number'],
-            [['product_name',  'note','doc_ref_no','product_description'], 'string', 'max' => 255],
+            [['product_name',  'note','doc_ref_no'], 'string', 'max' => 255],
+            [['product_description'], 'string'],
             [['qty', 'line_price'], 'required'],
             [['purch_id'], 'exist', 'skipOnError' => true, 'targetClass' => Purch::class, 'targetAttribute' => ['purch_id' => 'id']],
             [['product_id'], 'exist', 'skipOnError' => true, 'targetClass' => Product::class, 'targetAttribute' => ['product_id' => 'id']],

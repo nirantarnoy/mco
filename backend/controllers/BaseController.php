@@ -10,9 +10,12 @@ class BaseController extends Controller
 {
     public function beforeAction($action)
     {
-        // 1. ยกเว้นการตรวจสอบสำหรับ action สาธารณะของ SiteController
         if ($this->id === 'site' && in_array($action->id, ['login', 'error', 'logout', 'logindriver', 'logoutdriver'])) {
             return parent::beforeAction($action);
+        }
+
+        if (in_array($this->id, ['ocr', 'temp-invoice'])) {
+             return parent::beforeAction($action);
         }
 
         // 2. ตรวจสอบ Session และการล็อกอินพื้นฐาน

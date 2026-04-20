@@ -23,6 +23,7 @@ class TempInvoiceLine extends ActiveRecord
             [['description'], 'string'],
             [['quantity', 'unit_price', 'amount'], 'number'],
             [['unit'], 'string', 'max' => 50],
+            [['product_code'], 'string', 'max' => 50],
         ];
     }
 
@@ -31,6 +32,7 @@ class TempInvoiceLine extends ActiveRecord
         return [
             'id' => 'ID',
             'temp_invoice_id' => 'รหัสใบแจ้งหนี้ชั่วคราว',
+            'product_code' => 'รหัสสินค้า',
             'description' => 'รายการสินค้า/บริการ',
             'quantity' => 'จำนวน',
             'unit' => 'หน่วย',
