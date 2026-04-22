@@ -858,16 +858,26 @@ window.addEventListener('afterprint', function() {
         </div>
         <div class="summary-right" style="border: 1px solid #000;">
             <div class="summary-row" style="border-bottom: 1px solid #000;">
-                <span>รวมเงิน<br>Total</span>
-                <span><?= number_format($model->subtotal, 2) ?></span>
+                <span class="label-subtotal">รวมเงิน<br>Total</span>
+                <span class="value-subtotal"><?= number_format($model->subtotal, 2) ?></span>
+            </div>
+            <?php if($model->discount_amount > 0): ?>
+            <div class="summary-row" style="border-bottom: 1px solid #000;">
+                <span class="label-discount">ส่วนลด<br>Discount</span>
+                <span class="value-discount"><?= number_format($model->discount_amount, 2) ?></span>
             </div>
             <div class="summary-row" style="border-bottom: 1px solid #000;">
-                <span>ภาษีมูลค่าเพิ่ม<br>VAT <?= $model->vat_percent ?>%</span>
-                <span><?= number_format($model->vat_amount, 2) ?></span>
+                <span class="label-net-total">รวมเงินหลังหักส่วนลด<br>Net Total</span>
+                <span class="value-net-total"><?= number_format($model->subtotal - $model->discount_amount, 2) ?></span>
+            </div>
+            <?php endif; ?>
+            <div class="summary-row" style="border-bottom: 1px solid #000;">
+                <span class="label-vat">ภาษีมูลค่าเพิ่ม<br>VAT <?= $model->vat_percent ?>%</span>
+                <span class="value-vat"><?= number_format($model->vat_amount, 2) ?></span>
             </div>
             <div class="summary-row total" style="background-color: #f0f0f0;">
-                <span>รวมเงินทั้งสิ้น<br>TOTAL</span>
-                <span><?= number_format($model->total_amount, 2) ?></span>
+                <span class="label-grand-total">รวมเงินทั้งสิ้น<br>TOTAL</span>
+                <span class="value-grand-total"><?= number_format($model->total_amount, 2) ?></span>
             </div>
         </div>
     </div>
@@ -967,17 +977,24 @@ window.addEventListener('afterprint', function() {
         }
 
         // Summary section labels
-        const summaryRows = document.querySelectorAll('.summary-row span:first-child');
-        if (summaryRows.length >= 3) {
-            if (lang === 'en') {
-                summaryRows[0].innerHTML = 'Total';
-                summaryRows[1].innerHTML = 'VAT <?= $model->vat_percent ?>%';
-                summaryRows[2].innerHTML = 'TOTAL';
-            } else {
-                summaryRows[0].innerHTML = 'รวมเงิน<br>Total';
-                summaryRows[1].innerHTML = 'ภาษีมูลค่าเพิ่ม<br>VAT <?= $model->vat_percent ?>%';
-                summaryRows[2].innerHTML = 'รวมเงินทั้งสิ้น<br>TOTAL';
-            }
+        const labelSubtotal = document.querySelector('.label-subtotal');
+        const labelDiscount = document.querySelector('.label-discount');
+        const labelNetTotal = document.querySelector('.label-net-total');
+        const labelVat = document.querySelector('.label-vat');
+        const labelGrandTotal = document.querySelector('.label-grand-total');
+
+        if (lang === 'en') {
+            if (labelSubtotal) labelSubtotal.innerHTML = 'Sub Total';
+            if (labelDiscount) labelDiscount.innerHTML = 'Discount';
+            if (labelNetTotal) labelNetTotal.innerHTML = 'Net Total';
+            if (labelVat) labelVat.innerHTML = 'VAT <?= $model->vat_percent ?>%';
+            if (labelGrandTotal) labelGrandTotal.innerHTML = 'TOTAL';
+        } else {
+            if (labelSubtotal) labelSubtotal.innerHTML = 'รวมเงิน<br>Total';
+            if (labelDiscount) labelDiscount.innerHTML = 'ส่วนลด<br>Discount';
+            if (labelNetTotal) labelNetTotal.innerHTML = 'รวมเงินหลังหักส่วนลด<br>Net Total';
+            if (labelVat) labelVat.innerHTML = 'ภาษีมูลค่าเพิ่ม<br>VAT <?= $model->vat_percent ?>%';
+            if (labelGrandTotal) labelGrandTotal.innerHTML = 'รวมเงินทั้งสิ้น<br>TOTAL';
         }
 
         // Discount label in summary-left

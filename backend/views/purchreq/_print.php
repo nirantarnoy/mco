@@ -33,7 +33,7 @@ if($model_line !=null){
             'unit' => $value->unit_id,
             'estimated_price' => $value->line_price,
             'budget' => $value->line_price,
-
+            'brand_name' => \backend\models\Product::findBrand($value->product_id),
         ];
         $items[] = $item;
     }
@@ -496,7 +496,7 @@ $approverDate = '';
             <tr>
                 <td><?= $index + 1 ?></td>
                 <td><?= Html::encode($item['stock_no']) ?></td>
-                <td class="description"><?= Html::encode($item['description']).'<br />'.Html::encode($item['product_description']) ?></td>
+                <td class="description"><?= Html::encode($item['description']).(!empty($item['brand_name']) ? ' ('.Html::encode($item['brand_name']).')' : '').'<br />'.Html::encode($item['product_description']) ?></td>
                 <td><?= $item['qty'] ?></td>
                 <td><?= Html::encode(\backend\models\Unit::findName($item['unit'])) ?></td>
                 <td class="number"><?= number_format($item['estimated_price'], 2) ?></td>

@@ -481,13 +481,19 @@ window.onload = function() {
         </div>
         <div class="summary-right">
             <div class="summary-row">
-                <span>ส่วนลด / Discount</span>
+                <span>รวมเงิน<br>Total</span>
+                <span><?= number_format($model->subtotal, 2) ?></span>
+            </div>
+            <?php if($model->discount_amount > 0): ?>
+            <div class="summary-row">
+                <span>ส่วนลด<br>Discount</span>
                 <span><?= number_format($model->discount_amount, 2) ?></span>
             </div>
             <div class="summary-row">
-                <span>รวมเงิน / Total</span>
-                <span><?= number_format($model->subtotal, 2) ?></span>
+                <span>รวมเงินหลังหักส่วนลด<br>Total after discount</span>
+                <span><?= number_format($model->subtotal - $model->discount_amount, 2) ?></span>
             </div>
+            <?php endif; ?>
             <div class="summary-row">
                 <span>ภาษีมูลค่าเพิ่ม / VAT <?= $model->vat_percent ?>%</span>
                 <span><?= number_format($model->vat_amount, 2) ?></span>
