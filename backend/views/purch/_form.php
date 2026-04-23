@@ -852,7 +852,7 @@ $this->registerJs($autocompleteJs);
 
 
         <div class="d-flex justify-content-between">
-            <?php if ($model->status != 3 || $model->isNewRecord || \Yii::$app->user->can('CanApprovePo')): ?>
+            <?php if ($model->status != 3 || $model->isNewRecord || \Yii::$app->user->can('purch/approve')): ?>
                 <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
                     'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
                 ]) ?>

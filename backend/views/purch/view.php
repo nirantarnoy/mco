@@ -55,63 +55,82 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <?= Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+                <?php if (\Yii::$app->user->can('purch/update')): ?>
+                    <?= Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+                <?php endif; ?>
 
-                <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
-                    'class' => 'btn btn-info',
-                    'target' => '_blank'
-                ]) ?>
-                <?= Html::a('<i class="fas fa-print"></i> พิมพ์ ตปท.', ['print-for-export', 'id' => $model->id], [
-                    'class' => 'btn btn-info',
-                    'target' => '_blank'
-                ]) ?>
-                <?php if (\Yii::$app->user->can('CanApprovePo') && $model->approve_status == Purch::APPROVE_STATUS_PENDING): ?>
-                    <?= Html::a('อนุมัติ', ['approve', 'id' => $model->id], [
-                        'class' => 'btn btn-success',
-                        'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบสั่งซื้อนี้?',
-                        'data-method' => 'post',
-                    ]) ?>
-                    <?= Html::a('ไม่อนุมัติ', ['reject', 'id' => $model->id], [
-                        'class' => 'btn btn-warning',
-                        'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะไม่อนุมัติใบสั่งซื้อนี้?',
-                        'data-method' => 'post',
+                <?php if (\Yii::$app->user->can('purch/print')): ?>
+                    <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
+                        'class' => 'btn btn-info',
+                        'target' => '_blank'
                     ]) ?>
                 <?php endif; ?>
-                <?php if ($model->status != Purch::STATUS_CANCELLED && \Yii::$app->user->can('CanApprovePo')): ?>
-                    <?= Html::a('ยกเลิกใบสั่งซื้อ', ['cancel', 'id' => $model->id], [
-                        'class' => 'btn btn-warning',
-                        'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะยกเลิกใบสั่งซื้อนี้?',
-                        'data-method' => 'post',
+                <?php if (\Yii::$app->user->can('purch/printforexport')): ?>
+                    <?= Html::a('<i class="fas fa-print"></i> พิมพ์ ตปท.', ['print-for-export', 'id' => $model->id], [
+                        'class' => 'btn btn-info',
+                        'target' => '_blank'
                     ]) ?>
+                <?php endif; ?>
+                <?php if ($model->approve_status == Purch::APPROVE_STATUS_PENDING): ?>
+                    <?php if (\Yii::$app->user->can('purch/approve')): ?>
+                        <?= Html::a('อนุมัติ', ['approve', 'id' => $model->id], [
+                            'class' => 'btn btn-success',
+                            'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบสั่งซื้อนี้?',
+                            'data-method' => 'post',
+                        ]) ?>
+                    <?php endif; ?>
+                    <?php if (\Yii::$app->user->can('purch/reject')): ?>
+                        <?= Html::a('ไม่อนุมัติ', ['reject', 'id' => $model->id], [
+                            'class' => 'btn btn-warning',
+                            'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะไม่อนุมัติใบสั่งซื้อนี้?',
+                            'data-method' => 'post',
+                        ]) ?>
+                    <?php endif; ?>
+                <?php endif; ?>
+                <?php if ($model->status != Purch::STATUS_CANCELLED): ?>
+                    <?php if (\Yii::$app->user->can('purch/cancel')): ?>
+                        <?= Html::a('ยกเลิกใบสั่งซื้อ', ['cancel', 'id' => $model->id], [
+                            'class' => 'btn btn-warning',
+                            'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะยกเลิกใบสั่งซื้อนี้?',
+                            'data-method' => 'post',
+                        ]) ?>
+                    <?php endif; ?>
                 <?php endif; ?>
                 <?php if ($model->approve_status == Purch::APPROVE_STATUS_APPROVED): ?>
-                    <?= Html::a('<i class="fas fa-file-pdf"></i> PDF', ['pdf', 'id' => $model->id], [
-                        'class' => 'btn btn-warning',
-                        'target' => '_blank'
-                    ]) ?>
+                    <?php if (\Yii::$app->user->can('purch/pdf')): ?>
+                        <?= Html::a('<i class="fas fa-file-pdf"></i> PDF', ['pdf', 'id' => $model->id], [
+                            'class' => 'btn btn-warning',
+                            'target' => '_blank'
+                        ]) ?>
+                    <?php endif; ?>
 
-                    <?= Html::a('<i class="fas fa-list-alt"></i> พิมพ์ใบรับสินค้า', ['printreceipt', 'id' => $model->id], [
-                        'class' => 'btn btn-success',
-                        'target' => '_blank'
-                    ]) ?>
+                    <?php if (\Yii::$app->user->can('purch/printreceipt')): ?>
+                        <?= Html::a('<i class="fas fa-list-alt"></i> พิมพ์ใบรับสินค้า', ['printreceipt', 'id' => $model->id], [
+                            'class' => 'btn btn-success',
+                            'target' => '_blank'
+                        ]) ?>
+                    <?php endif; ?>
+
                     <?php $po_remain = \backend\models\Purch::checkPoremain($model->id); ?>
-                    <?php if (!empty($po_remain)): ?>
+                    <?php if (!empty($po_remain) && \Yii::$app->user->can('purch/receive')): ?>
                         <?= Html::a('<i class="fas fa-download"></i> รับสินค้าเข้าคลัง', ['receive', 'id' => $model->id], [
                             'class' => 'btn btn-success'
                         ]) ?>
                     <?php endif; ?>
-                    <?php if ($model->status != Purch::STATUS_COMPLETED): ?>
+
+                    <?php if ($model->status != Purch::STATUS_COMPLETED && \Yii::$app->user->can('purch/confirmservicereceive')): ?>
                         <?= Html::a('<i class="fas fa-check-circle"></i> ยืนยันรับบริการ/ปิดจบ', ['confirm-service-receive', 'id' => $model->id], [
                             'class' => 'btn btn-primary',
                             'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะยืนยันการรับบริการ/ปิดจบใบสั่งซื้อนี้? สถานะจะถูกปรับเป็น Completed โดยไม่มีการบันทึกสต็อก',
                             'data-method' => 'post',
                         ]) ?>
                     <?php endif; ?>
-                    <?= Html::a('<i class="fas fa-history"></i> ประวัติการรับสินค้า', ['receive-history', 'id' => $model->id], [
-                        'class' => 'btn btn-info'
-                    ]) ?>
 
-
+                    <?php if (\Yii::$app->user->can('purch/receivehistory')): ?>
+                        <?= Html::a('<i class="fas fa-history"></i> ประวัติการรับสินค้า', ['receive-history', 'id' => $model->id], [
+                            'class' => 'btn btn-info'
+                        ]) ?>
+                    <?php endif; ?>
                 <?php endif; ?>
                 <?php
                 $hasReceive = \backend\models\JournalTrans::find()
@@ -119,7 +138,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                     ->andWhere(['!=', 'status', \backend\models\JournalTrans::STATUS_CANCELLED])
                     ->exists();
                 ?>
-                <?php /* if (\Yii::$app->user->can('CanApprovePo') && $model->status != Purch::STATUS_COMPLETED && !$hasReceive): ?>
+                <?php /* if (\Yii::$app->user->can('purch/delete') && $model->status != Purch::STATUS_COMPLETED && !$hasReceive): ?>
                     <?= Html::a('ลบ', ['delete', 'id' => $model->id], [
                         'class' => 'btn btn-danger',
                         'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะลบใบสั่งซื้อนี้?',
