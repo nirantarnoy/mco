@@ -61,7 +61,7 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
                 ]) ?>
 
                 <?php if ($model->approve_status == PurchReq::APPROVE_STATUS_APPROVED && !$model->purch_id): ?>
-                    <?php if (\Yii::$app->user->can('CanConvertPo')): ?>
+                    <?php if (\Yii::$app->user->can('purchreq/converttopurchaseorder')): ?>
                         <?= Html::a('<i class="fas fa-exchange-alt"></i> แปลงเป็นใบสั่งซื้อ', ['convert-to-purchase-order', 'id' => $model->id], [
                             'class' => 'btn btn-success',
                             'data-confirm' => 'คุณต้องการแปลงใบขอซื้อนี้เป็นใบสั่งซื้อหรือไม่?',
@@ -77,26 +77,29 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
 
                 <?= Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
                 <?php if ($model->approve_status == PurchReq::APPROVE_STATUS_PENDING): ?>
-                    <?php if (\Yii::$app->user->can('CanApprovePr')): ?>
+                    <?php if (\Yii::$app->user->can('purchreq/reject')): ?>
                         <?= Html::a('ไม่อนุมัติ', ['reject', 'id' => $model->id], [
                             'class' => 'btn btn-warning',
                             'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะไม่อนุมัติใบขอซื้อนี้?',
                             'data-method' => 'post',
                         ]) ?>
+                    <?php endif; ?>
+                    <?php if (\Yii::$app->user->can('purchreq/approve')): ?>
                         <?= Html::a('อนุมัติ', ['approve', 'id' => $model->id], [
                             'class' => 'btn btn-success',
                             'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบขอซื้อนี้?',
                             'data-method' => 'post',
                         ]) ?>
-
                     <?php endif; ?>
                 <?php endif; ?>
                 <?php if ($model->status != PurchReq::STATUS_CANCELLED): ?>
-                    <?= Html::a('ยกเลิกใบขอซื้อ', ['cancel', 'id' => $model->id], [
-                        'class' => 'btn btn-warning',
-                        'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะยกเลิกใบสั่งซื้อนี้?',
-                        'data-method' => 'post',
-                    ]) ?>
+                    <?php if (\Yii::$app->user->can('purchreq/cancel')): ?>
+                        <?= Html::a('ยกเลิกใบขอซื้อ', ['cancel', 'id' => $model->id], [
+                            'class' => 'btn btn-warning',
+                            'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะยกเลิกใบสั่งซื้อนี้?',
+                            'data-method' => 'post',
+                        ]) ?>
+                    <?php endif; ?>
                 <?php endif; ?>
                 <?php /* if ($model->purch_id == null || $model->purch_id == ''): ?>
                     <?php if (\Yii::$app->user->can('purchreq/delete')): ?>
