@@ -312,6 +312,15 @@ class PurchreqController extends BaseController
                                 $purchModel->job_id = $model->job_id;
                                 $purchModel->special_note = $model->special_note;
                                 if ($purchModel->save(false)) {
+                                    // บันทึก Action Log เมื่อมีการเปลี่ยนตามไปแก้ PO
+                                    \backend\models\ActionLogModel::logModelAction(
+                                        'Sync PO from PR Update',
+                                        $purchModel,
+                                        ['purch_req_no' => $model->purch_req_no, 'purch_no' => $purchModel->purch_no],
+                                        \backend\models\ActionLogModel::STATUS_SUCCESS,
+                                        'ระบบปรับปรุงใบสั่งซื้อ ' . $purchModel->purch_no . ' อัตโนมัติ เนื่องจากการแก้ไขใบขอซื้อ ' . $model->purch_req_no
+                                    );
+
                                     // Sync lines
                                     \backend\models\PurchLine::deleteAll(['purch_id' => $purchModel->id]);
                                     $purch_req_lines = \backend\models\PurchReqLine::find()->where(['purch_req_id' => $model->id])->all();
