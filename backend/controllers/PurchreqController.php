@@ -294,7 +294,48 @@ class PurchreqController extends BaseController
                         $model->total_text = PurchReq::numtothai($netAmount);
                         $model->save(false);
 
-
+                        // Sync with PO if exists
+                        if ($model->purch_id) {
+                            $purchModel = \backend\models\Purch::findOne($model->purch_id);
+                            if ($purchModel) {
+                                $purchModel->purch_date = $model->purch_req_date;
+                                $purchModel->vendor_id = $model->vendor_id;
+                                $purchModel->vendor_name = $model->vendor_name;
+                                $purchModel->total_amount = $model->total_amount;
+                                $purchModel->discount_amount = $model->discount_amount;
+                                $purchModel->vat_amount = $model->vat_amount;
+                                $purchModel->net_amount = $model->net_amount;
+                                $purchModel->discount_percent = $model->discount_percent;
+                                $purchModel->vat_percent = $model->vat_percent;
+                                $purchModel->total_text = $model->total_text;
+                                $purchModel->is_vat = $model->is_vat;
+                                $purchModel->job_id = $model->job_id;
+                                $purchModel->special_note = $model->special_note;
+                                if ($purchModel->save(false)) {
+                                    // Sync lines
+                                    \backend\models\PurchLine::deleteAll(['purch_id' => $purchModel->id]);
+                                    $purch_req_lines = \backend\models\PurchReqLine::find()->where(['purch_req_id' => $model->id])->all();
+                                    if ($purch_req_lines) {
+                                        foreach ($purch_req_lines as $reqLine) {
+                                            $purchLine = new \backend\models\PurchLine();
+                                            $purchLine->purch_id = $purchModel->id;
+                                            $purchLine->product_id = $reqLine->product_id;
+                                            $purchLine->product_name = $reqLine->product_name;
+                                            $purchLine->product_description = $reqLine->product_description;
+                                            $purchLine->product_type = $reqLine->product_type;
+                                            $purchLine->qty = $reqLine->qty;
+                                            $purchLine->line_price = $reqLine->line_price;
+                                            $purchLine->line_total = $reqLine->line_total;
+                                            $purchLine->unit_id = $reqLine->unit_id;
+                                            $purchLine->status = \backend\models\PurchLine::STATUS_ACTIVE;
+                                            $purchLine->note = $reqLine->note . ($reqLine->product_name ? ' - ' . $reqLine->product_name : '');
+                                            $purchLine->doc_ref_no = $reqLine->doc_ref_no;
+                                            $purchLine->save(false);
+                                        }
+                                    }
+                                }
+                            }
+                        }
 
                         $transaction->commit();
                         Yii::$app->session->setFlash('success', 'แก้ไขข้อมูลเรียบร้อยแล้ว');
