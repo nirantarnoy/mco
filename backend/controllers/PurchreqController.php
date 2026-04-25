@@ -10,6 +10,7 @@ use backend\models\Product;
 use yii\db\Exception;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\web\ForbiddenHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
 use yii\web\UploadedFile;
@@ -516,27 +517,7 @@ class PurchreqController extends BaseController
      */
     public function actionDelete($id)
     {
-        throw new \yii\web\ForbiddenHttpException('การลบรายการถูกระงับการใช้งาน');
-        /*
-        $model = $this->findModel($id);
-
-        $transaction = Yii::$app->db->beginTransaction();
-        try {
-            // Delete all purch req lines first
-            PurchReqLine::deleteAll(['purch_req_id' => $id]);
-
-            // Delete the purch req record
-            $model->delete();
-
-            $transaction->commit();
-            Yii::$app->session->setFlash('success', 'ลบข้อมูลเรียบร้อยแล้ว');
-        } catch (\Exception $e) {
-            $transaction->rollBack();
-            Yii::$app->session->setFlash('error', 'ไม่สามารถลบข้อมูลได้: ' . $e->getMessage());
-        }
-
-        return $this->redirect(['index']);
-        */
+        throw new ForbiddenHttpException('คุณไม่ได้รับอนุญาตให้ใช้ส่วนนี้ (purchreq/delete)');
     }
 
     /**
@@ -556,6 +537,9 @@ class PurchreqController extends BaseController
      */
     public function actionApprove($id)
     {
+        if (!\Yii::$app->user->can('purchreq/approve')) {
+            throw new ForbiddenHttpException('คุณไม่ได้รับอนุญาตให้ใช้ส่วนนี้ (purchreq/approve)');
+        }
         $model = $this->findModel($id);
         $model->approve_status = PurchReq::APPROVE_STATUS_APPROVED;
         $model->approve_by = Yii::$app->user->id;
@@ -595,6 +579,9 @@ class PurchreqController extends BaseController
      */
     public function actionReject($id)
     {
+        if (!\Yii::$app->user->can('purchreq/reject')) {
+            throw new ForbiddenHttpException('คุณไม่ได้รับอนุญาตให้ใช้ส่วนนี้ (purchreq/reject)');
+        }
         $model = $this->findModel($id);
         $model->approve_status = PurchReq::APPROVE_STATUS_REJECTED;
         $model->status = PurchReq::STATUS_CANCELLED;
@@ -610,6 +597,9 @@ class PurchreqController extends BaseController
 
     public function actionCancel($id)
     {
+        if (!\Yii::$app->user->can('purchreq/cancel')) {
+            throw new ForbiddenHttpException('คุณไม่ได้รับอนุญาตให้ใช้ส่วนนี้ (purchreq/cancel)');
+        }
         $model = $this->findModel($id);
         $model->approve_status = PurchReq::STATUS_CANCELLED;
         $model->status = PurchReq::STATUS_CANCELLED;
@@ -697,6 +687,9 @@ class PurchreqController extends BaseController
      */
     public function actionConvertToPurchaseOrder($id)
     {
+        if (!\Yii::$app->user->can('purchreq/converttopurchaseorder')) {
+            throw new ForbiddenHttpException('คุณไม่ได้รับอนุญาตให้ใช้ส่วนนี้ (purchreq/converttopurchaseorder)');
+        }
         $purchReqModel = $this->findModel($id);
 
         // Check if already converted

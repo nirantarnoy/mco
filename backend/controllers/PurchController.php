@@ -12,6 +12,7 @@ use backend\models\PurchSearch;
 use backend\models\PurchLine;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
+use yii\web\ForbiddenHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
 use yii\db\Transaction;
@@ -627,47 +628,7 @@ class PurchController extends BaseController
      */
     public function actionDelete($id)
     {
-        throw new \yii\web\ForbiddenHttpException('การลบรายการถูกระงับการใช้งาน');
-        /*
-        if (!Yii::$app->user->can('CanApprovePo')) {
-            throw new \yii\web\ForbiddenHttpException('You are not allowed to perform this action.');
-        }
-        $model = $this->findModel($id);
-
-        // Check if status is completed
-        if ($model->status == Purch::STATUS_COMPLETED) {
-            Yii::$app->session->setFlash('error', 'ไม่สามารถลบใบสั่งซื้อที่เสร็จสมบูรณ์แล้วได้');
-            return $this->redirect(['index']);
-        }
-
-        // Check if goods have been received (excluding cancelled receipts)
-        $hasReceive = \backend\models\JournalTrans::find()
-            ->where(['trans_ref_id' => $id, 'trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE])
-            ->andWhere(['!=', 'status', \backend\models\JournalTrans::STATUS_CANCELLED])
-            ->exists();
-
-        if ($hasReceive) {
-            Yii::$app->session->setFlash('error', 'ไม่สามารถลบใบสั่งซื้อที่มีการรับสินค้าแล้วได้');
-            return $this->redirect(['index']);
-        }
-
-        $transaction = Yii::$app->db->beginTransaction();
-        try {
-            // Delete all purch lines first
-            PurchLine::deleteAll(['purch_id' => $id]);
-
-            // Delete the purch record
-            $model->delete();
-
-            $transaction->commit();
-            Yii::$app->session->setFlash('success', 'ลบข้อมูลเรียบร้อยแล้ว');
-        } catch (\Exception $e) {
-            $transaction->rollBack();
-            Yii::$app->session->setFlash('error', 'ไม่สามารถลบข้อมูลได้: ' . $e->getMessage());
-        }
-
-        return $this->redirect(['index']);
-        */
+        throw new ForbiddenHttpException('คุณไม่ได้รับอนุญาตให้ใช้ส่วนนี้ (purch/delete)');
     }
 
     /**
@@ -687,6 +648,9 @@ class PurchController extends BaseController
      */
     public function actionApprove($id)
     {
+        if (!\Yii::$app->user->can('purch/approve')) {
+            throw new ForbiddenHttpException('คุณไม่ได้รับอนุญาตให้ใช้ส่วนนี้ (purch/approve)');
+        }
         $model = $this->findModel($id);
         $model->approve_status = Purch::APPROVE_STATUS_APPROVED;
         $model->status = Purch::STATUS_ACTIVE;
@@ -710,6 +674,9 @@ class PurchController extends BaseController
      */
     public function actionReject($id)
     {
+        if (!\Yii::$app->user->can('purch/reject')) {
+            throw new ForbiddenHttpException('คุณไม่ได้รับอนุญาตให้ใช้ส่วนนี้ (purch/reject)');
+        }
         $model = $this->findModel($id);
         $model->approve_status = Purch::APPROVE_STATUS_REJECTED;
         $model->status = Purch::STATUS_CANCELLED;
@@ -725,8 +692,8 @@ class PurchController extends BaseController
 
     public function actionCancel($id)
     {
-        if (!Yii::$app->user->can('CanApprovePo')) {
-            throw new \yii\web\ForbiddenHttpException('You are not allowed to perform this action.');
+        if (!Yii::$app->user->can('purch/cancel')) {
+            throw new ForbiddenHttpException('คุณไม่ได้รับอนุญาตให้ใช้ส่วนนี้ (purch/cancel)');
         }
         $model = $this->findModel($id);
         $model->approve_status = Purch::STATUS_CANCELLED;
