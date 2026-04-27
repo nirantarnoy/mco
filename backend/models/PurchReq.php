@@ -112,11 +112,11 @@ class PurchReq extends ActiveRecord
             [['purch_req_date'], 'safe'],
             [['vendor_id', 'status', 'approve_status', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by', 'job_id', 'discount_percent', 'vat_percent', 'approve_by', 'reason_title_id', 'req_for_dep_id'], 'integer'],
             [['total_amount', 'discount_amount', 'vat_amount', 'net_amount', 'vat_percent', 'discount_total_amount', 'discount_percent'], 'number'],
-            [['purch_req_no', 'vendor_name', 'note', 'total_text', 'reason'], 'string', 'max' => 255],
+            [['purch_req_no', 'vendor_name', 'total_text'], 'string', 'max' => 255],
+            [['note', 'reason', 'special_note'], 'string'],
             [['purch_req_no'], 'unique', 'filter' => ['status' => self::STATUS_ACTIVE]],
             [['required_date', 'approve_date'], 'safe'],
             [['is_vat'], 'integer'],
-            [['special_note'], 'string', 'max' => 500]
         ];
     }
 
