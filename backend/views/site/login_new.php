@@ -133,6 +133,18 @@ $companies = \backend\models\Company::find()->all();
 
 
     <script>
+        $(function() {
+            var msg_error = '<?= \Yii::$app->session->getFlash('msg-error') ?>';
+            if (msg_error != '') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อผิดพลาด',
+                    text: msg_error,
+                    confirmButtonText: 'ตกลง'
+                });
+            }
+        });
+
         $("#refresh_captcha").click(function (event) {
           //  alert();
             // event.preventDefault();

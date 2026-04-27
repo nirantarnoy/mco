@@ -139,9 +139,9 @@ class SiteController extends BaseController
             $user_info = \backend\models\User::find()->where(['id' => \Yii::$app->user->id])->one();
 
             if ($login_company == 100) {
-                if ($user_info && $user_info->user_group_id != 1) {
+                if ($user_info && $user_info->user_group_id != 1) { // 1 is System Administrator
                     \Yii::$app->user->logout();
-                    \Yii::$app->session->setFlash('error', 'คุณไม่ได้รับอนุญาตให้เข้าถึงทุกบริษัท');
+                    \Yii::$app->session->setFlash('msg-error', 'คุณไม่ได้รับอนุญาตให้เข้าถึงทุกบริษัท กรุณาเลือกบริษัทที่คุณสังกัด');
                     return $this->redirect(['site/login']);
                 }
                 $com_name = 'ทุกบริษัท';
