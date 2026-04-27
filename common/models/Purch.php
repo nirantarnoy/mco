@@ -44,7 +44,8 @@ class Purch extends \yii\db\ActiveRecord
             [['purch_date'], 'safe'],
             [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
             [['total_amount'], 'number'],
-            [['purch_no', 'vendor_name', 'note', 'total_text'], 'string', 'max' => 255],
+            [['purch_no', 'vendor_name', 'total_text'], 'string', 'max' => 255],
+            [['note'], 'string'],
         ];
     }
 

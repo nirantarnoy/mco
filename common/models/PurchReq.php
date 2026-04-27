@@ -45,7 +45,8 @@ class PurchReq extends \yii\db\ActiveRecord
             [['purch_req_date'], 'safe'],
             [['vendor_id', 'status', 'approve_status', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
             [['total_amount','discount_percent','discount_amount','discount_total_amount'], 'number'],
-            [['purch_req_no', 'vendor_name', 'note', 'total_text'], 'string', 'max' => 255],
+            [['purch_req_no', 'vendor_name', 'total_text'], 'string', 'max' => 255],
+            [['note'], 'string'],
         ];
     }
 
