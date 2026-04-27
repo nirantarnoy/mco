@@ -114,7 +114,7 @@ class PettyCashAdvance extends ActiveRecord
     public function beforeSave($insert){
         $this->created_at = time();
         $this->created_by = Yii::$app->user->id;
-        $this->company_id = \Yii::$app->session->get('company_id');
+        $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
         return true;
     }
 }

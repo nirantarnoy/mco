@@ -47,7 +47,7 @@ class BillingInvoiceSearch extends BillingInvoice
             'status' => $this->status,
         ]);
         
-        $query->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')]);
+        $query->andFilterWhere(['company_id' => (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'))]);
 
         $query->andFilterWhere(['like', 'billing_number', $this->billing_number]);
 

@@ -375,7 +375,7 @@ class JournalTrans extends ActiveRecord
             }
             $this->updated_by = Yii::$app->user->id;
            // $this->emp_trans_id = Yii::$app->user->id;
-            $this->company_id = \Yii::$app->session->get('company_id');
+            $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
             return true;
         }
 

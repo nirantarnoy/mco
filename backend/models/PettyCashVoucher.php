@@ -157,7 +157,7 @@ class PettyCashVoucher extends ActiveRecord
             if ($insert && empty($this->pcv_no)) {
                 $this->pcv_no = $this->generatePcvNo();
             }
-            $this->company_id = \Yii::$app->session->get('company_id');
+            $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
             if($this->approve_status ==1){
                 $this->approved_by = \backend\models\User::findEmployeeNameByUserId(5);
             }

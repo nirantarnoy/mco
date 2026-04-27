@@ -131,7 +131,7 @@ class StockTrans extends ActiveRecord
     }
 
     public function beforeSave($insert){
-        $this->company_id = \Yii::$app->session->get('company_id');
+        $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
         $this->created_by = \Yii::$app->user->id;
         return true;
     }

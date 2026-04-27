@@ -126,7 +126,7 @@ class DeliveryNote extends ActiveRecord
             if ($insert && empty($this->dn_no)) {
                 $this->dn_no = $this->generateDnNo();
             }
-            $this->company_id = \Yii::$app->session->get('company_id');
+            $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
             return true;
         }
         return false;

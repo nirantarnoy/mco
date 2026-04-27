@@ -57,7 +57,7 @@ class Product extends \common\models\Product
                     ActiveRecord::EVENT_BEFORE_INSERT => 'company_id',
                     ActiveRecord::EVENT_BEFORE_UPDATE => 'company_id',
                 ],
-                'value' => Yii::$app->session->get('company_id'),
+                'value' => (Yii::$app->session->get('company_id') == 100 ? null : Yii::$app->session->get('company_id')),
             ],
          
             'timestampupdate' => [

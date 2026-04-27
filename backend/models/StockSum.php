@@ -123,7 +123,7 @@ class StockSum extends ActiveRecord
         return true;
     }
     public function beforeSave($insert){
-        $this->company_id = \Yii::$app->session->get('company_id');
+        $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
         return true;
     }
 }

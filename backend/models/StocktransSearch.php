@@ -44,7 +44,7 @@ class StocktransSearch extends StockTrans
         $query = StockTrans::find();
 
         // add conditions that should always apply here
-        $query->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')]);
+        $query->andFilterWhere(['company_id' => (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'))]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,

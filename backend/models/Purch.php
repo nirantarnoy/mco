@@ -257,7 +257,7 @@ class Purch extends ActiveRecord
     {
         if (parent::beforeSave($insert)) {
             if (!\Yii::$app->request->isConsoleRequest) {
-                $this->company_id = \Yii::$app->session->get('company_id') == null ? 1 : \Yii::$app->session->get('company_id');
+                $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id')) == null ? 1 : (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
             } else {
                 $this->company_id = 1;
             }
@@ -322,7 +322,7 @@ class Purch extends ActiveRecord
         ";
 
         // Use session company_id or default to 1
-        $companyId = \Yii::$app->session->get('company_id') ?: 1;
+        $companyId = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id')) ?: 1;
 
         return \Yii::$app->db->createCommand($sql, [
             ':purchId' => $purchId,

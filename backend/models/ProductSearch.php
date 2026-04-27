@@ -70,7 +70,7 @@ class ProductSearch extends Product
             'status' => $this->status,
         ]);
         
-        $query->andFilterWhere(['product.company_id' => \Yii::$app->session->get('company_id')]);
+        $query->andFilterWhere(['product.company_id' => (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'))]);
 
 //        if($this->party_id){
 //            $query->andFilterWhere(['watchmaker.id' => $this->party_id]);

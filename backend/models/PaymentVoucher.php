@@ -175,7 +175,7 @@ class PaymentVoucher extends ActiveRecord
                 $this->voucher_no = $this->generateVoucherNo();
             }
             if (!\Yii::$app->request->isConsoleRequest) {
-                $this->company_id = \Yii::$app->session->get('company_id') ?: 1;
+                $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id')) ?: 1;
             } else {
                 $this->company_id = 1;
             }

@@ -64,7 +64,7 @@ class PettyCashVoucherSearch extends PettyCashVoucher
             'updated_by' => $this->updated_by,
         ]);
 
-        $query->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')]);
+        $query->andFilterWhere(['company_id' => (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'))]);
 
         if($this->globalSearch != ''){
             $query->andWhere(['or',

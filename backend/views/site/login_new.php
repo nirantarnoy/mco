@@ -72,6 +72,7 @@ $companies = \backend\models\Company::find()->all();
                         <label for="">Company</label>
                         <select name="login_company" id="" class="form-control" required>
                             <option value="">เลือกบริษัท</option>
+                            <option value="100">ทั้งหมด (เฉพาะสิทธิ์ผู้ดูแลระบบ)</option>
                             <?php foreach ($companies as $company): ?>
                                 <option value="<?= $company->id ?>"><?= $company->name ?></option>
                             <?php endforeach; ?>

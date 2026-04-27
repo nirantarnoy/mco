@@ -227,7 +227,7 @@ class PurchReq extends ActiveRecord
         if (parent::beforeSave($insert)) {
             if (!\Yii::$app->request->isConsoleRequest) {
                 if ($this->company_id == null) {
-                    $this->company_id = \Yii::$app->session->get('company_id') == null ? 1 : \Yii::$app->session->get('company_id');
+                    $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id')) == null ? 1 : (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
                 }
             } else {
                 if ($this->company_id == null) {
@@ -253,7 +253,7 @@ class PurchReq extends ActiveRecord
     {
         if ($company_id === null) {
             if (!\Yii::$app->request->isConsoleRequest) {
-                $company_id = \Yii::$app->user->isGuest ? 1 : \Yii::$app->session->get('company_id');
+                $company_id = \Yii::$app->user->isGuest ? 1 : (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
             }
         }
         

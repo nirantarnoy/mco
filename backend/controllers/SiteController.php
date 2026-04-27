@@ -135,8 +135,21 @@ class SiteController extends BaseController
             }
         //    return $this->redirect(['site/index']);
             // เก็บบริษัทไว้ใน session หลังจาก login สำเร็จ
-            $com_name = \backend\models\Company::findName(\Yii::$app->request->post('login_company'));
-            Yii::$app->session->set('company_id', \Yii::$app->request->post('login_company'));
+            $login_company = \Yii::$app->request->post('login_company');
+            $user_info = \backend\models\User::find()->where(['id' => \Yii::$app->user->id])->one();
+
+            if ($login_company == 100) {
+                if ($user_info && $user_info->user_group_id != 1) {
+                    \Yii::$app->user->logout();
+                    \Yii::$app->session->setFlash('error', 'คุณไม่ได้รับอนุญาตให้เข้าถึงทุกบริษัท');
+                    return $this->redirect(['site/login']);
+                }
+                $com_name = 'ทุกบริษัท';
+            } else {
+                $com_name = \backend\models\Company::findName($login_company);
+            }
+
+            Yii::$app->session->set('company_id', $login_company);
             Yii::$app->session->set('company_name', $com_name);
             return $this->redirect(['search/index']);
         }
