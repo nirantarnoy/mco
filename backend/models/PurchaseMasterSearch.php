@@ -20,7 +20,7 @@ class PurchaseMasterSearch extends PurchaseMaster
     public function rules()
     {
         return [
-            [['id', 'status', 'approve_status', 'created_by', 'updated_by'], 'integer'],
+            [['id', 'status', 'approve_status', 'created_by', 'updated_by', 'company_id'], 'integer'],
             [['docnum', 'docdat', 'supcod', 'supnam', 'job_no', 'paytrm', 'duedat', 'taxid', 'discod', 'addr01', 'addr02', 'addr03', 'zipcod', 'telnum', 'orgnum', 'refnum', 'vatdat', 'disc', 'remark', 'date_from', 'date_to'], 'safe'],
             [['vatpr0', 'amount', 'unitpr', 'vat_percent', 'vat_amount', 'tax_percent', 'tax_amount', 'total_amount'], 'number'],
         ];
@@ -101,6 +101,12 @@ class PurchaseMasterSearch extends PurchaseMaster
             ->andFilterWhere(['like', 'refnum', $this->refnum])
             ->andFilterWhere(['like', 'disc', $this->disc])
             ->andFilterWhere(['like', 'remark', $this->remark]);
+
+        if (\Yii::$app->session->get('company_id') == 100) {
+            $query->andFilterWhere(['company_id' => $this->company_id]);
+        } else {
+            $query->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')]);
+        }
 
         // ค้นหาตามช่วงวันที่
         if ($this->date_from) {

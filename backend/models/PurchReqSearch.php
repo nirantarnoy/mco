@@ -16,7 +16,7 @@ class PurchReqSearch extends PurchReq
     public function rules()
     {
         return [
-            [['id', 'vendor_id', 'status', 'approve_status', 'purch_id', 'created_by', 'updated_by'], 'integer'],
+            [['id', 'vendor_id', 'status', 'approve_status', 'purch_id', 'created_by', 'updated_by', 'company_id'], 'integer'],
             [['purch_req_no', 'purch_req_date', 'vendor_name', 'note', 'total_text'], 'safe'],
             [['total_amount', 'discount_amount', 'vat_amount', 'net_amount'], 'number'],
         ];
@@ -81,7 +81,11 @@ class PurchReqSearch extends PurchReq
             'pr.updated_by' => $this->updated_by,
         ]);
 
-        $query->andFilterWhere(['pr.company_id' => (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'))]);
+        if (\Yii::$app->session->get('company_id') == 100) {
+            $query->andFilterWhere(['pr.company_id' => $this->company_id]);
+        } else {
+            $query->andFilterWhere(['pr.company_id' => \Yii::$app->session->get('company_id')]);
+        }
 
         // Handle purch_id filter for converted status
         if (isset($params['PurchReqSearch']['purch_id'])) {

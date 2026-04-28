@@ -87,7 +87,7 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             [['docdat', 'duedat', 'vatdat'], 'safe'],
             [['vatpr0', 'amount', 'unitpr', 'vat_percent', 'vat_amount', 'tax_percent', 'tax_amount', 'total_amount'], 'number'],
             [['remark'], 'string'],
-            [['status', 'approve_status', 'created_at', 'updated_at', 'created_by', 'updated_by','is_deposit', 'department_id'], 'integer'],
+            [['status', 'approve_status', 'created_at', 'updated_at', 'created_by', 'updated_by','is_deposit', 'department_id', 'company_id'], 'integer'],
             [['docnum', 'job_no', 'discod', 'orgnum', 'disc'], 'string', 'max' => 50],
             [['supcod', 'taxid'], 'string', 'max' => 20],
             [['supnam', 'addr01', 'addr02', 'addr03', 'invoice_no', 'vat_period', 'additional_note', 'refnum'], 'string', 'max' => 255],
@@ -144,6 +144,7 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             'invoice_no' => 'เลขที่ใบกำกับ',
             'vat_period' => 'ยื่นภาษีรวมในงวด',
             'additional_note' => 'อื่นเพิ่มเติม',
+            'company_id' => 'เว็บไซต์/บริษัท',
         ];
     }
 
@@ -230,17 +231,45 @@ class PurchaseMaster extends \yii\db\ActiveRecord
     }
 
     /**
+     * Before save
+     */
+    public function beforeSave($insert)
+    {
+        if (parent::beforeSave($insert)) {
+            if (!\Yii::$app->request->isConsoleRequest) {
+                if ($this->company_id == null) {
+                    $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id')) == null ? 1 : (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
+                }
+            } else {
+                if ($this->company_id == null) {
+                    $this->company_id = 1;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * สร้างเลขที่เอกสารอัตโนมัติ
      */
-    public static function generateDocnum()
+    public static function generateDocnum($company_id = null)
     {
+        if ($company_id === null) {
+            if (!\Yii::$app->request->isConsoleRequest) {
+                $company_id = \Yii::$app->user->isGuest ? 1 : (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
+            }
+        }
+        if ($company_id === null) $company_id = 1;
+
         $prefix = 'NPR';
         $date = date('Ymd');
 
-        $lastDoc = self::find()
-            ->where(['like', 'docnum', $prefix . $date])
-            ->orderBy(['docnum' => SORT_DESC])
-            ->one();
+        $query = self::find()
+            ->where(['like', 'docnum', $prefix . $date . '%', false])
+            ->andWhere(['company_id' => $company_id]);
+        
+        $lastDoc = $query->orderBy(['docnum' => SORT_DESC])->one();
 
         if ($lastDoc) {
             $lastNumber = (int)substr($lastDoc->docnum, -4);

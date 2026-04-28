@@ -283,35 +283,15 @@ class PurchReq extends ActiveRecord
             $yearPart = date('Y');
         }
 
-        // New Logic for Company 1 and 2: Find record with max id, then extract sequence from its purch_req_no
-        if (in_array((int)$company_id, [1, 2])) {
-            $latestNo = Yii::$app->db->createCommand("
-                SELECT purch_req_no 
-                FROM purch_req 
-                WHERE (company_id IN (1, 2, 0) OR company_id IS NULL)
-                AND purch_req_no LIKE 'PR-%'
-                ORDER BY id DESC LIMIT 1
-            ")->queryScalar();
-            
-            $lastNum = 0;
-            if ($latestNo) {
-                $parts = explode('-', $latestNo);
-                if (count($parts) >= 2) {
-                    $lastNum = (int)$parts[1];
-                }
-            }
-            $mainNumber = $lastNum + 1;
-        } else {
-            // Keep original logic for other companies: scoped to year/prefix
-            $maxNum = Yii::$app->db->createCommand("
-                SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
-                FROM purch_req 
-                WHERE company_id = " . (int)$company_id . "
-                AND purch_req_no LIKE 'PR-%-{$yearPart}-%'
-                AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
-            ")->queryScalar();
-            $mainNumber = ($maxNum) ? (int)$maxNum + 1 : 1;
-        }
+        // Keep original logic for other companies: scoped to year/prefix
+        $maxNum = Yii::$app->db->createCommand("
+            SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
+            FROM purch_req 
+            WHERE company_id = " . (int)$company_id . "
+            AND purch_req_no LIKE 'PR-%-{$yearPart}-%'
+            AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
+        ")->queryScalar();
+        $mainNumber = ($maxNum) ? (int)$maxNum + 1 : 1;
 
         $subNumber = 1;
         if ($job_id) {

@@ -79,6 +79,17 @@ $this->params['breadcrumbs'][] = $this->title;
                         }
                     ],
                     [
+                        'attribute' => 'company_id',
+                        'label' => 'บริษัท',
+                        'headerOptions' => ['style' => 'width: 150px; text-align: center;'],
+                        'contentOptions' => ['style' => 'text-align: center;'],
+                        'filter' => \yii\helpers\ArrayHelper::map(\backend\models\Company::find()->all(), 'id', 'name'),
+                        'value' => function ($model) {
+                            return $model->company_id ? \backend\models\Company::findName($model->company_id) : 'ไม่ระบุ';
+                        },
+                        'visible' => \Yii::$app->session->get('company_id') == 100,
+                    ],
+                    [
                         'attribute' => 'supcod',
                         'value' => function ($model) {
                             return \backend\models\Vendor::findCode($model->supcod);
