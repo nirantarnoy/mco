@@ -150,6 +150,19 @@ $this->params['breadcrumbs'][] = $this->title;
                 'format' => ['currency', 'THB'],
             ],
             [
+                'label' => 'เอกสารแนบ',
+                'headerOptions' => ['style' => 'width: 250px; text-align: center;'],
+                'contentOptions' => ['style' => 'text-align: center;'],
+                'format' => 'raw',
+                'value' => function ($model) {
+                    $docs = $model->getAttachedDocuments();
+                    $html = '';
+                    if ($docs['has_doc']) $html .= '<span class="badge bg-primary me-1" title="มีเอกสารแนบ">มีเอกสาร</span>';
+                    
+                    return $html ?: '<span class="text-muted">-</span>';
+                },
+            ],
+            [
                 'attribute' => 'purch_id',
                 'label' => 'สถานะ PO',
                 'headerOptions' => ['style' => 'width: 100px; text-align: center;'],

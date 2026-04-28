@@ -422,5 +422,21 @@ class PurchReq extends ActiveRecord
         return $this->hasOne(\backend\models\Vendor::className(), ['id' => 'vendor_id']);
     }
 
-    
+    public function getPurchReqDocs()
+    {
+        return $this->hasMany(\common\models\PurchReqDoc::class, ['purch_req_id' => 'id']);
+    }
+
+    public function getAttachedDocuments()
+    {
+        $docs = [
+            'has_doc' => false,
+        ];
+
+        if (!empty($this->purchReqDocs)) {
+            $docs['has_doc'] = true;
+        }
+
+        return $docs;
+    }
 }
