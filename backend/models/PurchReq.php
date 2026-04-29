@@ -290,12 +290,24 @@ class PurchReq extends ActiveRecord
 
         // Adjusted logic: global running number for the first part
         // We look at the maximum across all year parts for the given company to continue the sequence
+        // User request: calculate from current year's QT sequence even if entering for old QT
+        $currentYearQT = 'QT' . date('y');
         $maxNum = Yii::$app->db->createCommand("
             SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
             FROM purch_req 
             WHERE company_id = " . (int)$company_id . "
+            AND purch_req_no LIKE '%-" . $currentYearQT . "-%'
             AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
         ")->queryScalar();
+
+        if (!$maxNum) {
+            $maxNum = Yii::$app->db->createCommand("
+                SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
+                FROM purch_req 
+                WHERE company_id = " . (int)$company_id . "
+                AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
+            ")->queryScalar();
+        }
         
         // Ensure we start from at least 183 if requested, or continue from the global max
         $mainNumber = ($maxNum) ? (int)$maxNum + 1 : 183;
