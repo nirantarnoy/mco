@@ -104,7 +104,7 @@ class Purch extends ActiveRecord
         return [
             [['vendor_id'], 'required'],
             [['purch_date'], 'safe'],
-            [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by','discount_percent','vat_percent','approve_by','currency_id'], 'integer'],
+            [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by','discount_percent','vat_percent','approve_by','currency_id', 'company_id'], 'integer'],
             [['total_amount', 'vat_amount', 'net_amount','vat_percent','discount_per','whd_tax_per','whd_tax_amount','discount_total_amount','currency_rate', 'value_amount'], 'number'],
             [['purch_no', 'vendor_name', 'footer_delivery','footer_payment','ref_no'], 'string', 'max' => 255],
             [['note','delivery_note','payment_note', 'special_note'], 'string'],
@@ -257,10 +257,24 @@ class Purch extends ActiveRecord
     {
         if (parent::beforeSave($insert)) {
             if (!\Yii::$app->request->isConsoleRequest) {
-                $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id')) == null ? 1 : (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
+                $session_company_id = \Yii::$app->session->get('company_id');
+                if ($this->company_id == null || $this->company_id == '') {
+                    if ($session_company_id != 100) {
+                        $this->company_id = $session_company_id ?: 1;
+                    } else {
+                        $this->company_id = 1;
+                    }
+                }
             } else {
-                $this->company_id = 1;
+                if ($this->company_id == null) {
+                    $this->company_id = 1;
+                }
             }
+
+            if ($insert && empty($this->purch_no)) {
+                $this->purch_no = $this->generatePurchNo();
+            }
+
             return true;
         }
 

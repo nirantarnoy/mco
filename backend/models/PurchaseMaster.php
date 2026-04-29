@@ -237,8 +237,15 @@ class PurchaseMaster extends \yii\db\ActiveRecord
     {
         if (parent::beforeSave($insert)) {
             if (!\Yii::$app->request->isConsoleRequest) {
-                if ($this->company_id == null) {
-                    $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id')) == null ? 1 : (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
+                $session_company_id = \Yii::$app->session->get('company_id');
+                if ($this->company_id == null || $this->company_id == '') {
+                    if ($session_company_id != 100) {
+                        $this->company_id = $session_company_id ?: 1;
+                    } else {
+                         // If all companies selected, we might want to default to 1 or leave null
+                         // Standard practice is to default to 1 if no specific company chosen
+                        $this->company_id = 1;
+                    }
                 }
             } else {
                 if ($this->company_id == null) {

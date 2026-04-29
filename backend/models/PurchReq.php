@@ -110,7 +110,7 @@ class PurchReq extends ActiveRecord
         return [
             [['vendor_id', 'job_id'], 'required'],
             [['purch_req_date'], 'safe'],
-            [['vendor_id', 'status', 'approve_status', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by', 'job_id', 'discount_percent', 'vat_percent', 'approve_by', 'reason_title_id', 'req_for_dep_id'], 'integer'],
+            [['vendor_id', 'status', 'approve_status', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by', 'job_id', 'discount_percent', 'vat_percent', 'approve_by', 'reason_title_id', 'req_for_dep_id', 'company_id'], 'integer'],
             [['total_amount', 'discount_amount', 'vat_amount', 'net_amount', 'vat_percent', 'discount_total_amount', 'discount_percent'], 'number'],
             [['purch_req_no', 'vendor_name', 'total_text'], 'string', 'max' => 255],
             [['note', 'reason', 'special_note'], 'string'],
@@ -226,8 +226,13 @@ class PurchReq extends ActiveRecord
     {
         if (parent::beforeSave($insert)) {
             if (!\Yii::$app->request->isConsoleRequest) {
-                if ($this->company_id == null) {
-                    $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id')) == null ? 1 : (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
+                $session_company_id = \Yii::$app->session->get('company_id');
+                if ($this->company_id == null || $this->company_id == '') {
+                    if ($session_company_id != 100) {
+                        $this->company_id = $session_company_id ?: 1;
+                    } else {
+                        $this->company_id = 1;
+                    }
                 }
             } else {
                 if ($this->company_id == null) {
@@ -283,15 +288,18 @@ class PurchReq extends ActiveRecord
             $yearPart = date('Y');
         }
 
-        // Keep original logic for other companies: scoped to year/prefix
+        // Adjusted logic: global running number for the first part
+        // We look at the maximum across all year parts for the given company to continue the sequence
         $maxNum = Yii::$app->db->createCommand("
             SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
             FROM purch_req 
             WHERE company_id = " . (int)$company_id . "
-            AND purch_req_no LIKE 'PR-%-{$yearPart}-%'
             AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
         ")->queryScalar();
-        $mainNumber = ($maxNum) ? (int)$maxNum + 1 : 1;
+        
+        // Ensure we start from at least 183 if requested, or continue from the global max
+        $mainNumber = ($maxNum) ? (int)$maxNum + 1 : 183;
+        if ($mainNumber < 183) $mainNumber = 183;
 
         $subNumber = 1;
         if ($job_id) {
