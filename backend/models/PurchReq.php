@@ -256,13 +256,17 @@ class PurchReq extends ActiveRecord
 
     public static function getNextPurchReqNo($job_id = null, $company_id = null)
     {
-        if ($company_id === null) {
+        if ($company_id === null || $company_id == 100) {
             if (!\Yii::$app->request->isConsoleRequest) {
-                $company_id = \Yii::$app->user->isGuest ? 1 : (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
+                $session_company_id = \Yii::$app->session->get('company_id');
+                if ($session_company_id != 100) {
+                    $company_id = $session_company_id ?: 1;
+                } else {
+                    $company_id = 1;
+                }
             }
         }
-        
-        if ($company_id === null) $company_id = 1;
+        if ($company_id === null || $company_id == 100) $company_id = 1;
 
         $new_job_no = '';
         $yearPart = '';
@@ -288,19 +292,27 @@ class PurchReq extends ActiveRecord
             $yearPart = date('Y');
         }
 
-        // Adjusted logic: global running number for the first part
-        // We look at the maximum across all year parts for the given company to continue the sequence
-        // User request: calculate from current year's QT sequence even if entering for old QT
-        $maxNum = Yii::$app->db->createCommand("
+        // Check both tables for the max running number to ensure they stay in sync
+        $maxPr = Yii::$app->db->createCommand("
             SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
             FROM purch_req 
             WHERE company_id = " . (int)$company_id . "
+            AND purch_req_no LIKE 'PR-%'
             AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
         ")->queryScalar();
 
+        $maxPo = Yii::$app->db->createCommand("
+            SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_no, '-', 2), '-', -1) AS UNSIGNED)) 
+            FROM purch 
+            WHERE company_id = " . (int)$company_id . "
+            AND purch_no LIKE 'PO-%'
+            AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
+        ")->queryScalar();
+
+        $maxNum = max((int)$maxPr, (int)$maxPo);
         
         // Ensure we start from at least 183 if requested, or continue from the global max
-        $mainNumber = ($maxNum) ? (int)$maxNum + 1 : 183;
+        $mainNumber = ($maxNum > 0) ? $maxNum + 1 : 183;
         if ($mainNumber < 183) $mainNumber = 183;
 
         $subNumber = 1;

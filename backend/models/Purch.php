@@ -272,7 +272,7 @@ class Purch extends ActiveRecord
             }
 
             if ($insert && empty($this->purch_no)) {
-                $this->purch_no = $this->generatePurchNo();
+                $this->purch_no = self::getNextPurchNo($this->job_id, $this->company_id);
             }
 
             return true;
@@ -284,22 +284,65 @@ class Purch extends ActiveRecord
     /**
      * Generate purchase number
      */
-    private function generatePurchNo()
+    public static function getNextPurchNo($job_id = null, $company_id = null)
     {
-        $prefix = 'PO' . date('Ym');
-        $lastRecord = self::find()
-            ->where(['like', 'purch_no', $prefix])
-            ->orderBy(['id' => SORT_DESC])
-            ->one();
+        if ($company_id === null || $company_id == 100) {
+            if (!\Yii::$app->request->isConsoleRequest) {
+                $session_company_id = \Yii::$app->session->get('company_id');
+                if ($session_company_id != 100) {
+                    $company_id = $session_company_id ?: 1;
+                } else {
+                    $company_id = 1;
+                }
+            }
+        }
+        if ($company_id === null || $company_id == 100) $company_id = 1;
 
-        if ($lastRecord) {
-            $lastNumber = intval(substr($lastRecord->purch_no, -4));
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
+        $new_job_no = '';
+        if ($job_id) {
+            $job = Job::findOne($job_id);
+            if ($job && $job->job_no) {
+                $xp = explode("-", $job->job_no);
+                if (count($xp) >= 3) {
+                    $new_job_no = $xp[1] . '-' . $xp[2];
+                } else {
+                    $new_job_no = $job->job_no;
+                }
+            }
         }
 
-        return $prefix . sprintf('%04d', $newNumber);
+        if (empty($new_job_no)) {
+            $new_job_no = date('Ym');
+        }
+
+        // Use the same global sequence as PR
+        $maxPr = Yii::$app->db->createCommand("
+            SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
+            FROM purch_req 
+            WHERE company_id = " . (int)$company_id . "
+            AND purch_req_no LIKE 'PR-%'
+            AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
+        ")->queryScalar();
+
+        $maxPo = Yii::$app->db->createCommand("
+            SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_no, '-', 2), '-', -1) AS UNSIGNED)) 
+            FROM purch 
+            WHERE company_id = " . (int)$company_id . "
+            AND purch_no LIKE 'PO-%'
+            AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
+        ")->queryScalar();
+
+        $maxNum = max((int)$maxPr, (int)$maxPo);
+        
+        $mainNumber = ($maxNum > 0) ? $maxNum + 1 : 183;
+        if ($mainNumber < 183) $mainNumber = 183;
+
+        $subNumber = 1;
+        // In PO, we usually don't have sub-numbers like PR unless it's converted
+        // But for consistency in the format, we add it. 
+        // If this is a direct PO, we can check if other POs exist for this job_id.
+
+        return 'PO-' . sprintf('%05d', $mainNumber) . '-' . $new_job_no . '.01';
     }
 
     /**
