@@ -438,8 +438,15 @@ JS
                             <div class="form-group row mb-2">
                                 <label class="col-sm-4 col-form-label">JOB No.</label>
                                 <div class="col-sm-8">
+                                    <?php
+                                    $session_company_id = Yii::$app->session->get('company_id');
+                                    $job_query = \backend\models\Job::find();
+                                    if ($session_company_id != 100) {
+                                        $job_query->andWhere(['company_id' => $session_company_id]);
+                                    }
+                                    ?>
                                     <?= $form->field($model, 'job_no')->widget(\kartik\select2\Select2::className(),[
-                                        'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(),'id','job_no'),
+                                        'data'=>\yii\helpers\ArrayHelper::map($job_query->all(),'id','job_no'),
                                         'options'=>['placeholder'=>'ดึงมาจากฐานข้อมูลใบงาน'],
                                         'pluginOptions' => ['allowClear' => true]
                                     ])->label(false) ?>
