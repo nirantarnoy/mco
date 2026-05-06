@@ -273,8 +273,7 @@ class PurchaseMaster extends \yii\db\ActiveRecord
         $date = date('Ymd');
 
         $query = self::find()
-            ->where(['like', 'docnum', $prefix . $date . '%', false])
-            ->andWhere(['company_id' => $company_id]);
+            ->where(['like', 'docnum', $prefix . $date . '%', false]);
         
         $lastDoc = $query->orderBy(['docnum' => SORT_DESC])->one();
 
