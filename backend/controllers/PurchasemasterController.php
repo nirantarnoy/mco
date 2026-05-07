@@ -692,7 +692,8 @@ class PurchasemasterController extends BaseController
         // Data starts at Row 7
         $row = 7;
         foreach ($models as $model) {
-            foreach ($model->purchaseDetails as $detail) {
+            $details = $model->purchaseDetails ?: [];
+            foreach ($details as $detail) {
                 $colIndex = 1;
 
                 // DEPCOD - Truncate to 4

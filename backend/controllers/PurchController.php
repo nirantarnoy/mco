@@ -631,7 +631,8 @@ class PurchController extends BaseController
 
         $query = Purch::find()
             ->alias('p')
-            ->joinWith(['vendor v', 'purchLines pl'])
+            ->joinWith(['vendor v'])
+            ->with(['purchLines'])
             ->orderBy(['p.purch_date' => SORT_ASC, 'p.purch_no' => SORT_ASC]);
 
         if ($date_from) {
@@ -705,7 +706,8 @@ class PurchController extends BaseController
                 $depcod = $dep ? mb_substr($dep->name, 0, 4) : '';
             }
 
-            foreach ($model->purchLines as $detail) {
+            $details = $model->purchLines ?: [];
+            foreach ($details as $detail) {
                 $colIndex = 1;
 
                 // DEPCOD
