@@ -58,6 +58,13 @@ $this->params['breadcrumbs'][] = $this->title;
                             ],
                             ['class' => 'btn btn-success', 'target' => '_blank']
                         ) ?>
+                        <?= Html::a('<i class="fas fa-file-excel"></i> Export PO (Express)',
+                            ['export-express',
+                                'date_from' => $searchModel->date_from,
+                                'date_to' => $searchModel->date_to
+                            ],
+                            ['class' => 'btn btn-info', 'target' => '_blank']
+                        ) ?>
                     </div>
                 </div>
 

@@ -619,6 +619,206 @@ class PurchasemasterController extends BaseController
         exit;
     }
 
+    public function actionExportExpress()
+    {
+        $date_from = Yii::$app->request->get('date_from');
+        $date_to = Yii::$app->request->get('date_to');
+
+        $query = PurchaseMaster::find()
+            ->with('purchaseDetails')
+            ->orderBy(['docdat' => SORT_ASC, 'docnum' => SORT_ASC]);
+
+        if ($date_from) {
+            $query->andWhere(['>=', 'docdat', $date_from]);
+        }
+
+        if ($date_to) {
+            $query->andWhere(['<=', 'docdat', $date_to]);
+        }
+
+        $models = $query->all();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Express Columns Mapping from Image
+        $columns = [
+            'DEPCOD', 'DOCNUM', 'DOCDAT', 'SUPCOD', 'SUPNAM', 'STKCOD', 'STKDES',
+            'TRNQTY', 'UNITPR', 'DISC', 'AMOUNT', 'PAYTRM', 'DUEDAT', 'TAXID',
+            'DISCOUNT', 'ADDR01', 'ADDR02', 'ADDR03', 'ZIPCOD', 'TELNUM', 'ORGNUM',
+            'REFNUM', 'VATDAT', 'VATPRD', 'LATE'
+        ];
+
+        // Set Headers (Row 1)
+        $colIndex = 1;
+        foreach ($columns as $header) {
+            $sheet->setCellValueByColumnAndRow($colIndex, 1, $header);
+            $colIndex++;
+        }
+
+        // Set Thai Labels (Row 2 - as in image)
+        $labels = [
+            'แผนก', 'เลขที่บิล', 'วันที่บิล', 'รหัสผู้จำหน่าย', 'ชื่อผู้จำหน่าย', 'รหัสสินค้า', 'ชื่อสินค้า',
+            'จำนวน', 'ราคาต่อหน่วย', 'ส่วนลดแต่ละรายการ', 'จำนวนเงิน', 'เครดิต', 'วันครบกำหนด', 'เลขประจำตัวผู้เสียภาษี',
+            'ส่วนลดท้ายบิล', 'ที่อยู่บรรทัดที่ 1', 'ที่อยู่บรรทัดที่ 2', 'ที่อยู่บรรทัดที่ 3', 'รหัสไปรษณีย์', 'เบอร์โทร', 'ลำดับสาขา',
+            'เลขที่ใบกำกับ', 'ลวท.', 'ยื่นภาษีรวมในงวด', 'ยื่นเพิ่มเติม'
+        ];
+        $colIndex = 1;
+        foreach ($labels as $label) {
+            $sheet->setCellValueByColumnAndRow($colIndex, 2, $label);
+            $colIndex++;
+        }
+
+        // Set Comments/Constraints (Row 3 - as in image)
+        $constraints = [
+            'ห้ามเกิน 4 ตัว', 'ห้ามเกิน 30 ตัว', 'DD/MM/YYYY', 'ห้ามเกิน 10 ตัว ห้ามเว้นวรรค,ห้ามใช้เครื่องหมาย /,",\' **กรณีรหัสเป็นภาษาอังกฤษ จะต้องใช้อักษรตัวใหญ่', 'ห้ามเกิน 60 ตัว **ห้ามใส่เครื่องหมาย " ', 'ห้ามเกิน 20 ตัว ห้ามเว้นวรรค,ห้ามใช้เครื่องหมาย /,",\'', 'ห้ามเกิน 50 ตัว **ห้ามใส่เครื่องหมาย "',
+            'ตัวเลข', 'ตัวเลข', 'ห้ามเกิน 10 ตัว', 'ตัวเลข', 'ห้ามเกิน 3 ตัว', 'DD/MM/YYYY', 'ห้ามเกิน 15 ตัว',
+            'ห้ามเกิน 10 ตัว', 'ห้ามเกิน 50 ตัว', 'ห้ามเกิน 50 ตัว', 'ห้ามเกิน 30 ตัว', 'ห้ามเกิน 5 ตัว', 'ห้ามเกิน 50 ตัว', 'สำนักงานใหญ่ กรอก 0 สาขา เช่น สาขาที่ 00011 ให้กรอก 11 เท่านั้น',
+            'ห้ามเกิน 15 ตัว', 'DD/MM/YYYY', 'MM/YYYY', 'ถ้ายื่นเพิ่มเติม กรอก Y , ถ้าไม่ยื่นเพิ่มเติม ปล่อยว่าง'
+        ];
+        $colIndex = 1;
+        foreach ($constraints as $constraint) {
+            $sheet->setCellValueByColumnAndRow($colIndex, 3, $constraint);
+            $sheet->getStyleByColumnAndRow($colIndex, 3)->getFont()->getColor()->setARGB('FFFF0000'); // Red color
+            $colIndex++;
+        }
+
+        // Row 6 Message in image
+        $sheet->mergeCells('A6:Y6');
+        $sheet->setCellValue('A6', 'ถ้าใส่ข้อมูลครบแล้วให้ลบบรรทัดที่ 2 ถึง บรรทัดที่ 6 ออก แล้วนำไฟล์นี้ไปใช้ใน EXPRESS PLATFORM');
+        $sheet->getStyle('A6')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFFFFF00'); // Yellow background
+        $sheet->getStyle('A6')->getFont()->setBold(true);
+
+        // Data starts at Row 7
+        $row = 7;
+        foreach ($models as $model) {
+            foreach ($model->purchaseDetails as $detail) {
+                $colIndex = 1;
+
+                // DEPCOD - Truncate to 4
+                $depcod = '';
+                if ($model->department_id) {
+                    $dep = \backend\models\Department::findOne($model->department_id);
+                    $depcod = $dep ? mb_substr($dep->name, 0, 4) : '';
+                }
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $depcod);
+
+                // DOCNUM - Truncate to 30
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($model->docnum, 0, 30));
+
+                // DOCDAT - DD/MM/YYYY
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->docdat ? date('d/m/Y', strtotime($model->docdat)) : '');
+
+                // SUPCOD - Max 10, Uppercase, No space, No /, ", '
+                $supcod = strtoupper(preg_replace('/[\s\/\x22\x27]/', '', $model->supcod));
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($supcod, 0, 10));
+
+                // SUPNAM - Max 60, No "
+                $supnam = str_replace('"', '', $model->supnam);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($supnam, 0, 60));
+
+                // STKCOD - Max 20, Uppercase, No space, No /, ", '
+                $stkcod = strtoupper(preg_replace('/[\s\/\x22\x27]/', '', $detail->stkcod));
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($stkcod, 0, 20));
+
+                // STKDES - Max 50, No "
+                $stkdes = str_replace('"', '', $detail->stkdes);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($stkdes, 0, 50));
+
+                // TRNQTY
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->uqnty);
+
+                // UNITPR
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->unitpr);
+
+                // DISC (Item Discount) - Max 10
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($detail->disc, 0, 10));
+
+                // AMOUNT
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->amount);
+
+                // PAYTRM - Max 3
+                $paytrm_val = '';
+                if ($model->paytrm) {
+                    $term = \backend\models\Paymentterm::findOne($model->paytrm);
+                    $paytrm_val = $term ? $term->day_count : preg_replace('/[^0-9]/', '', $model->paytrm);
+                }
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($paytrm_val, 0, 3));
+
+                // DUEDAT - DD/MM/YYYY
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->duedat ? date('d/m/Y', strtotime($model->duedat)) : '');
+
+                // TAXID - Max 15
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($model->taxid, 0, 15));
+
+                // DISCOUNT (Header Discount) - Max 10
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($model->disc, 0, 10));
+
+                // ADDR01 - Max 50
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($model->addr01, 0, 50));
+
+                // ADDR02 - Max 50
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($model->addr02, 0, 50));
+
+                // ADDR03 - Max 30
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($model->addr03, 0, 30));
+
+                // ZIPCOD - Max 5
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($model->zipcod, 0, 5));
+
+                // TELNUM - Max 50
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($model->telnum, 0, 50));
+
+                // ORGNUM - Head = 0, Branch = number
+                $orgnum = $model->orgnum;
+                if ($orgnum == '00000' || strtolower($orgnum) == 'head' || $orgnum == '') {
+                    $orgnum = '0';
+                } else {
+                    $orgnum = ltrim($orgnum, '0');
+                    if ($orgnum == '') $orgnum = '0';
+                }
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $orgnum);
+
+                // REFNUM (Invoice No) - Max 15
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($model->invoice_no, 0, 15));
+
+                // VATDAT - DD/MM/YYYY
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->vatdat ? date('d/m/Y', strtotime($model->vatdat)) : '');
+
+                // VATPRD - MM/YYYY
+                $vatprd = $model->vat_period; 
+                if (strtotime($vatprd)) {
+                    $vatprd = date('m/Y', strtotime($vatprd));
+                }
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($vatprd, 0, 7));
+
+                // LATE - Y or empty
+                $late = (strpos($model->additional_note, 'ยื่นเพิ่มเติม') !== false || $model->additional_note == 'Y') ? 'Y' : '';
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $late);
+
+                $row++;
+            }
+        }
+
+        // Auto size columns
+        foreach (range(1, count($columns)) as $col) {
+            $sheet->getColumnDimensionByColumn($col)->setAutoSize(true);
+        }
+
+        // ตั้งชื่อไฟล์
+        $filename = 'PO_EXPRESS_' . date('Ymd_His') . '.xlsx';
+
+        // ส่งออกไฟล์
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
+
     /**
      * Search product by autocomplete
      */

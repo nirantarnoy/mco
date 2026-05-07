@@ -16,6 +16,11 @@ use yii\web\ForbiddenHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
 use yii\db\Transaction;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 use yii\web\UploadedFile;
 
 /**
@@ -618,6 +623,205 @@ class PurchController extends BaseController
         }
         return $total;
     }
+
+    public function actionExportExpress()
+    {
+        $date_from = Yii::$app->request->get('date_from');
+        $date_to = Yii::$app->request->get('date_to');
+
+        $query = Purch::find()
+            ->alias('p')
+            ->joinWith(['vendor v', 'purchLines pl'])
+            ->orderBy(['p.purch_date' => SORT_ASC, 'p.purch_no' => SORT_ASC]);
+
+        if ($date_from) {
+            $query->andWhere(['>=', 'p.purch_date', $date_from]);
+        }
+
+        if ($date_to) {
+            $query->andWhere(['<=', 'p.purch_date', $date_to]);
+        }
+
+        $models = $query->all();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Express Columns Mapping from Image
+        $columns = [
+            'DEPCOD', 'DOCNUM', 'DOCDAT', 'SUPCOD', 'SUPNAM', 'STKCOD', 'STKDES',
+            'TRNQTY', 'UNITPR', 'DISC', 'AMOUNT', 'PAYTRM', 'DUEDAT', 'TAXID',
+            'DISCOUNT', 'ADDR01', 'ADDR02', 'ADDR03', 'ZIPCOD', 'TELNUM', 'ORGNUM',
+            'REFNUM', 'VATDAT', 'VATPRD', 'LATE'
+        ];
+
+        // Set Headers (Row 1)
+        $colIndex = 1;
+        foreach ($columns as $header) {
+            $sheet->setCellValueByColumnAndRow($colIndex, 1, $header);
+            $colIndex++;
+        }
+
+        // Set Thai Labels (Row 2)
+        $labels = [
+            'แผนก', 'เลขที่บิล', 'วันที่บิล', 'รหัสผู้จำหน่าย', 'ชื่อผู้จำหน่าย', 'รหัสสินค้า', 'ชื่อสินค้า',
+            'จำนวน', 'ราคาต่อหน่วย', 'ส่วนลดแต่ละรายการ', 'จำนวนเงิน', 'เครดิต', 'วันครบกำหนด', 'เลขประจำตัวผู้เสียภาษี',
+            'ส่วนลดท้ายบิล', 'ที่อยู่บรรทัดที่ 1', 'ที่อยู่บรรทัดที่ 2', 'ที่อยู่บรรทัดที่ 3', 'รหัสไปรษณีย์', 'เบอร์โทร', 'ลำดับสาขา',
+            'เลขที่ใบกำกับ', 'ลวท.', 'ยื่นภาษีรวมในงวด', 'ยื่นเพิ่มเติม'
+        ];
+        $colIndex = 1;
+        foreach ($labels as $label) {
+            $sheet->setCellValueByColumnAndRow($colIndex, 2, $label);
+            $colIndex++;
+        }
+
+        // Set Comments/Constraints (Row 3)
+        $constraints = [
+            'ห้ามเกิน 4 ตัว', 'ห้ามเกิน 30 ตัว', 'DD/MM/YYYY', 'ห้ามเกิน 10 ตัว ห้ามเว้นวรรค,ห้ามใช้เครื่องหมาย /,",\' **กรณีรหัสเป็นภาษาอังกฤษ จะต้องใช้อักษรตัวใหญ่', 'ห้ามเกิน 60 ตัว **ห้ามใส่เครื่องหมาย " ', 'ห้ามเกิน 20 ตัว ห้ามเว้นวรรค,ห้ามใช้เครื่องหมาย /,",\'', 'ห้ามเกิน 50 ตัว **ห้ามใส่เครื่องหมาย "',
+            'ตัวเลข', 'ตัวเลข', 'ห้ามเกิน 10 ตัว', 'ตัวเลข', 'ห้ามเกิน 3 ตัว', 'DD/MM/YYYY', 'ห้ามเกิน 15 ตัว',
+            'ห้ามเกิน 10 ตัว', 'ห้ามเกิน 50 ตัว', 'ห้ามเกิน 50 ตัว', 'ห้ามเกิน 30 ตัว', 'ห้ามเกิน 5 ตัว', 'ห้ามเกิน 50 ตัว', 'สำนักงานใหญ่ กรอก 0 สาขา เช่น สาขาที่ 00011 ให้กรอก 11 เท่านั้น',
+            'ห้ามเกิน 15 ตัว', 'DD/MM/YYYY', 'MM/YYYY', 'ถ้ายื่นเพิ่มเติม กรอก Y , ถ้าไม่ยื่นเพิ่มเติม ปล่อยว่าง'
+        ];
+        $colIndex = 1;
+        foreach ($constraints as $constraint) {
+            $sheet->setCellValueByColumnAndRow($colIndex, 3, $constraint);
+            $sheet->getStyleByColumnAndRow($colIndex, 3)->getFont()->getColor()->setARGB('FFFF0000');
+            $colIndex++;
+        }
+
+        // Row 6 Message
+        $sheet->mergeCells('A6:Y6');
+        $sheet->setCellValue('A6', 'ถ้าใส่ข้อมูลครบแล้วให้ลบบรรทัดที่ 2 ถึง บรรทัดที่ 6 ออก แล้วนำไฟล์นี้ไปใช้ใน EXPRESS PLATFORM');
+        $sheet->getStyle('A6')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFFFFF00');
+        $sheet->getStyle('A6')->getFont()->setBold(true);
+
+        $row = 7;
+        foreach ($models as $model) {
+            // Find department from related PR if possible
+            $depcod = '';
+            $purchReq = $model->getPurchReqs()->one();
+            if ($purchReq && $purchReq->req_for_dep_id) {
+                $dep = \backend\models\Department::findOne($purchReq->req_for_dep_id);
+                $depcod = $dep ? mb_substr($dep->name, 0, 4) : '';
+            }
+
+            foreach ($model->purchLines as $detail) {
+                $colIndex = 1;
+
+                // DEPCOD
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $depcod);
+
+                // DOCNUM
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($model->purch_no, 0, 30));
+
+                // DOCDAT
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->purch_date ? date('d/m/Y', strtotime($model->purch_date)) : '');
+
+                // SUPCOD
+                $supcod = strtoupper(preg_replace('/[\s\/\x22\x27]/', '', $model->vendor ? $model->vendor->code : ''));
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($supcod, 0, 10));
+
+                // SUPNAM
+                $supnam = str_replace('"', '', $model->vendor_name);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($supnam, 0, 60));
+
+                // STKCOD
+                $productCode = '';
+                if ($detail->product_id) {
+                    $product = \backend\models\Product::findOne($detail->product_id);
+                    $productCode = $product ? $product->code : '';
+                }
+                $stkcod = strtoupper(preg_replace('/[\s\/\x22\x27]/', '', $productCode));
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($stkcod, 0, 20));
+
+                // STKDES
+                $stkdes = str_replace('"', '', $detail->product_name);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($stkdes, 0, 50));
+
+                // TRNQTY
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->qty);
+
+                // UNITPR
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->line_price);
+
+                // DISC (Line item discount - assume 0 if not present)
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, '');
+
+                // AMOUNT
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->line_total);
+
+                // PAYTRM
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, ''); // Purch model doesn't have paytrm
+
+                // DUEDAT
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, ''); // Purch model doesn't have duedat
+
+                // TAXID
+                $taxid = $model->vendor ? $model->vendor->taxid : '';
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($taxid, 0, 15));
+
+                // DISCOUNT (Header discount)
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->discount_total_amount);
+
+                // ADDR01-03
+                $addr1 = ''; $addr2 = ''; $addr3 = '';
+                if ($model->vendor) {
+                    $addr1 = $model->vendor->home_number . ' ' . $model->vendor->street;
+                    $addr2 = $model->vendor->district_name . ' ' . $model->vendor->city_name;
+                    $addr3 = $model->vendor->province_name;
+                }
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($addr1, 0, 50));
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($addr2, 0, 50));
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($addr3, 0, 30));
+
+                // ZIPCOD
+                $zipcod = $model->vendor ? $model->vendor->zipcode : '';
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($zipcod, 0, 5));
+
+                // TELNUM
+                $telnum = $model->vendor ? $model->vendor->phone : '';
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($telnum, 0, 50));
+
+                // ORGNUM
+                $orgnum = '0';
+                if ($model->vendor && $model->vendor->branch_name) {
+                    $orgnum = preg_replace('/[^0-9]/', '', $model->vendor->branch_name);
+                    $orgnum = ltrim($orgnum, '0');
+                    if ($orgnum == '') $orgnum = '0';
+                }
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $orgnum);
+
+                // REFNUM (REF NO)
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($model->ref_no, 0, 15));
+
+                // VATDAT
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->purch_date ? date('d/m/Y', strtotime($model->purch_date)) : '');
+
+                // VATPRD
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->purch_date ? date('m/Y', strtotime($model->purch_date)) : '');
+
+                // LATE
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, '');
+
+                $row++;
+            }
+        }
+
+        foreach (range(1, count($columns)) as $col) {
+            $sheet->getColumnDimensionByColumn($col)->setAutoSize(true);
+        }
+
+        $filename = 'PURCH_EXPRESS_' . date('Ymd_His') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
 
     /**
      * Deletes an existing Purch model.
