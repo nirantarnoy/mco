@@ -630,17 +630,15 @@ class PurchController extends BaseController
         $date_to = Yii::$app->request->get('date_to');
 
         $query = Purch::find()
-            ->alias('p')
-            ->joinWith(['vendor v'])
-            ->with(['purchLines'])
-            ->orderBy(['p.purch_date' => SORT_ASC, 'p.purch_no' => SORT_ASC]);
+            ->with(['vendor', 'purchLines'])
+            ->orderBy(['purch_date' => SORT_ASC, 'purch_no' => SORT_ASC]);
 
         if ($date_from) {
-            $query->andWhere(['>=', 'p.purch_date', $date_from]);
+            $query->andWhere(['>=', 'purch_date', $date_from]);
         }
 
         if ($date_to) {
-            $query->andWhere(['<=', 'p.purch_date', $date_to]);
+            $query->andWhere(['<=', 'purch_date', $date_to]);
         }
 
         $models = $query->all();
@@ -706,8 +704,9 @@ class PurchController extends BaseController
                 $depcod = $dep ? mb_substr($dep->name, 0, 4) : '';
             }
 
-            $details = $model->purchLines ?: [];
-            foreach ($details as $detail) {
+            $details = $model->getPurchLines()->all();
+            if ($details) {
+                foreach ($details as $detail) {
                 $colIndex = 1;
 
                 // DEPCOD
