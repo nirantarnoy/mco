@@ -807,6 +807,7 @@ class PurchController extends BaseController
                 $row++;
             }
         }
+    }
 
         foreach (range(1, count($columns)) as $col) {
             $sheet->getColumnDimensionByColumn($col)->setAutoSize(true);
