@@ -8,6 +8,7 @@ use yii\helpers\ArrayHelper;
 use backend\models\Customer;
 use backend\models\Invoice;
 use backend\models\Unit;
+use backend\models\Vendor;
 use yii\helpers\Url;
 
 /* @var $this yii\web\View */
