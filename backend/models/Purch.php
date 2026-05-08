@@ -297,7 +297,7 @@ class Purch extends ActiveRecord
             if ($company_id == 100) $company_id = 1;
 
             $new_job_no = '';
-            $year_filter = '';
+            $year_part = '';
             if ($job_id) {
                 $job = \backend\models\Job::findOne($job_id);
                 if ($job && $job->job_no) {
@@ -306,7 +306,7 @@ class Purch extends ActiveRecord
                         $new_job_no = implode('-', array_slice($xp, 1));
                         foreach ($xp as $p) {
                             if (strpos($p, 'QT') !== false || strpos($p, 'ข๐ธ') !== false) {
-                                $year_filter = " AND (purch_req_no LIKE '%" . $p . "%' OR purch_no LIKE '%" . $p . "%')";
+                                $year_part = $p;
                                 break;
                             }
                         }
@@ -325,7 +325,7 @@ class Purch extends ActiveRecord
                 FROM purch_req 
                 WHERE (company_id = " . (int)$company_id . " OR company_id IS NULL OR company_id = 0)
                 AND purch_req_no LIKE 'PR-%'
-                " . $year_filter . "
+                " . ($year_part ? " AND purch_req_no LIKE '%" . $year_part . "%'" : "") . "
                 AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
             ")->queryScalar();
 
@@ -334,7 +334,7 @@ class Purch extends ActiveRecord
                 FROM purch 
                 WHERE (company_id = " . (int)$company_id . " OR company_id IS NULL OR company_id = 0)
                 AND purch_no LIKE 'PO-%'
-                " . $year_filter . "
+                " . ($year_part ? " AND purch_no LIKE '%" . $year_part . "%'" : "") . "
                 AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
             ")->queryScalar();
 
