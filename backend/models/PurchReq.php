@@ -256,7 +256,19 @@ class PurchReq extends ActiveRecord
 
     public static function getNextPurchReqNo($job_id = null, $company_id = null)
     {
-        return "TEST-ID-".$job_id;
+        $new_job_no = '';
+        if ($job_id) {
+            $job = \backend\models\Job::findOne($job_id);
+            if ($job && $job->job_no) {
+                $xp = explode('-', $job->job_no);
+                if (count($xp) > 1) {
+                    $new_job_no = implode('-', array_slice($xp, 1));
+                } else {
+                    $new_job_no = $job->job_no;
+                }
+            }
+        }
+        return "JOB-" . $new_job_no;
     }
 
 
