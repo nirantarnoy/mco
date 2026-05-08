@@ -296,7 +296,7 @@ class PurchReq extends ActiveRecord
         $maxPr = Yii::$app->db->createCommand("
             SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
             FROM purch_req 
-            WHERE company_id = " . (int)$company_id . "
+            WHERE (company_id = " . (int)$company_id . " OR company_id IS NULL OR company_id = 0)
             AND purch_req_no LIKE 'PR-%'
             AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
         ")->queryScalar();
@@ -304,7 +304,7 @@ class PurchReq extends ActiveRecord
         $maxPo = Yii::$app->db->createCommand("
             SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_no, '-', 2), '-', -1) AS UNSIGNED)) 
             FROM purch 
-            WHERE company_id = " . (int)$company_id . "
+            WHERE (company_id = " . (int)$company_id . " OR company_id IS NULL OR company_id = 0)
             AND purch_no LIKE 'PO-%'
             AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
         ")->queryScalar();

@@ -104,7 +104,7 @@ class Purch extends ActiveRecord
         return [
             [['vendor_id'], 'required'],
             [['purch_date'], 'safe'],
-            [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by','discount_percent','vat_percent','approve_by','currency_id', 'company_id'], 'integer'],
+            [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by','discount_percent','vat_percent','approve_by','currency_id', 'company_id', 'job_id'], 'integer'],
             [['total_amount', 'vat_amount', 'net_amount','vat_percent','discount_per','whd_tax_per','whd_tax_amount','discount_total_amount','currency_rate', 'value_amount'], 'number'],
             [['purch_no', 'vendor_name', 'footer_delivery','footer_payment','ref_no'], 'string', 'max' => 255],
             [['note','delivery_note','payment_note', 'special_note'], 'string'],
@@ -319,7 +319,7 @@ class Purch extends ActiveRecord
         $maxPr = Yii::$app->db->createCommand("
             SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
             FROM purch_req 
-            WHERE company_id = " . (int)$company_id . "
+            WHERE (company_id = " . (int)$company_id . " OR company_id IS NULL OR company_id = 0)
             AND purch_req_no LIKE 'PR-%'
             AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
         ")->queryScalar();
@@ -327,7 +327,7 @@ class Purch extends ActiveRecord
         $maxPo = Yii::$app->db->createCommand("
             SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_no, '-', 2), '-', -1) AS UNSIGNED)) 
             FROM purch 
-            WHERE company_id = " . (int)$company_id . "
+            WHERE (company_id = " . (int)$company_id . " OR company_id IS NULL OR company_id = 0)
             AND purch_no LIKE 'PO-%'
             AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
         ")->queryScalar();
@@ -338,11 +338,25 @@ class Purch extends ActiveRecord
         if ($mainNumber < 183) $mainNumber = 183;
 
         $subNumber = 1;
-        // In PO, we usually don't have sub-numbers like PR unless it's converted
-        // But for consistency in the format, we add it. 
-        // If this is a direct PO, we can check if other POs exist for this job_id.
+        if ($job_id) {
+            // Check for existing POs for this job to increment sub-number
+            $lastSubPo = self::find()
+                ->where(['job_id' => $job_id])
+                ->orderBy(['id' => SORT_DESC])
+                ->one();
 
-        return 'PO-' . sprintf('%05d', $mainNumber) . '-' . $new_job_no . '.01';
+            if ($lastSubPo && $lastSubPo->purch_no) {
+                $subParts = explode('.', $lastSubPo->purch_no);
+                if (count($subParts) >= 2) {
+                    $lastSubStr = $subParts[count($subParts) - 1];
+                    if (is_numeric($lastSubStr)) {
+                        $subNumber = intval($lastSubStr) + 1;
+                    }
+                }
+            }
+        }
+
+        return 'PO-' . sprintf('%05d', $mainNumber) . '-' . $new_job_no . '.' . sprintf('%02d', $subNumber);
     }
 
     /**
