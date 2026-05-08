@@ -478,40 +478,65 @@ class CreditNoteController extends BaseController
 
         return [];
     }
-    public function actionAddDocFile(){
+    public function actionAddDocFile()
+    {
         $id = \Yii::$app->request->post('id');
-        if($id){
+        if ($id) {
             $uploaded = UploadedFile::getInstancesByName('file_doc');
             if (!empty($uploaded)) {
                 $loop = 0;
+                $successCount = 0;
+                $uploadPath = 'uploads/creditnote_doc/';
+                
+                if (!is_dir($uploadPath)) {
+                    mkdir($uploadPath, 0777, true);
+                }
+
                 foreach ($uploaded as $file) {
-                    $upfiles = "invoice_" . time()."_".$loop . "." . $file->getExtension();
-                    if ($file->saveAs('uploads/creditnote_doc/' . $upfiles)) {
+                    $upfiles = "cn_" . $id . "_" . time() . "_" . $loop . "." . $file->getExtension();
+                    if ($file->saveAs($uploadPath . $upfiles)) {
                         $model_doc = new \common\models\CreditNoteDoc();
                         $model_doc->credit_note_id = $id;
                         $model_doc->doc = $upfiles;
                         $model_doc->created_by = \Yii::$app->user->id;
                         $model_doc->created_at = time();
-                        $model_doc->save(false);
+                        if ($model_doc->save(false)) {
+                            $successCount++;
+                        }
                     }
                     $loop++;
                 }
-            }
 
+                if ($successCount > 0) {
+                    Yii::$app->session->setFlash('success', "อัพโหลดไฟล์สำเร็จ {$successCount} ไฟล์");
+                } else {
+                    Yii::$app->session->setFlash('error', "ไม่สามารถอัพโหลดไฟล์ได้");
+                }
+            } else {
+                Yii::$app->session->setFlash('warning', "กรุณาเลือกไฟล์ที่ต้องการอัพโหลด");
+            }
         }
         return $this->redirect(['update', 'id' => $id]);
     }
-    public function actionDeleteDocFile(){
+    public function actionDeleteDocFile()
+    {
         $id = \Yii::$app->request->post('id');
         $doc_delete_list = trim(\Yii::$app->request->post('doc_delete_list'));
-        if($id){
-            $model_doc = \common\models\CreditNoteDoc::find()->where(['credit_note_id' => $id,'doc' => $doc_delete_list])->one();
-            if($model_doc){
-                if($model_doc->delete()){
-                    if(file_exists('uploads/creditnote_doc/'.$model_doc->doc)){
-                        unlink('uploads/creditnote_doc/'.$model_doc->doc);
+        if ($id && $doc_delete_list) {
+            $model_doc = \common\models\CreditNoteDoc::find()->where(['credit_note_id' => $id, 'doc' => $doc_delete_list])->one();
+            if ($model_doc) {
+                $docName = $model_doc->doc;
+                if ($model_doc->delete()) {
+                    $filePath = 'uploads/creditnote_doc/' . $docName;
+                    if (file_exists($filePath)) {
+                        unlink($filePath);
                     }
+                    Yii::$app->session->setFlash('success', 'ลบเอกสารแนบเรียบร้อยแล้ว');
+                } else {
+                    Yii::$app->session->setFlash('error', 'ไม่สามารถลบข้อมูลเอกสารแนบได้');
                 }
+            } else {
+                Yii::$app->session->setFlash('warning', 'ไม่พบข้อมูลเอกสารแนบที่ต้องการลบ');
             }
         }
         return $this->redirect(['update', 'id' => $id]);

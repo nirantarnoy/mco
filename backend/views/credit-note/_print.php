@@ -434,15 +434,23 @@ $formatter = Yii::$app->formatter;
             // Amount text label & content
             const amountLabel = document.querySelector('td[width="20%"]');
             if (amountLabel) {
-                // Check content or just set based on lang strictly
-                const text = amountLabel.textContent.trim();
-                // Simple toggle logic or direct set
                 amountLabel.textContent = lang === 'en' ? '(In Words)' : '(ตัวอักษร)';
             }
 
-            const amountTextSpan = document.getElementById('amountText');
-            if (amountTextSpan) {
-                amountTextSpan.innerHTML = lang === 'en' ? amountTextSpan.getAttribute('data-en') : amountTextSpan.getAttribute('data-th');
+            for (let i = 0; i < 2; i++) {
+                const amountTextSpan = document.getElementById('amountText_' + i);
+                if (amountTextSpan) {
+                    amountTextSpan.innerHTML = lang === 'en' ? amountTextSpan.getAttribute('data-en') : amountTextSpan.getAttribute('data-th');
+                }
+
+                const copyText = document.getElementById('copyText_' + i);
+                if (copyText) {
+                    if (lang === 'en') {
+                        copyText.textContent = i === 0 ? 'Original' : 'Copy';
+                    } else {
+                        copyText.textContent = i === 0 ? 'ต้นฉบับ' : 'สำเนา';
+                    }
+                }
             }
 
             // Signature labels
@@ -459,16 +467,15 @@ $formatter = Yii::$app->formatter;
             });
 
             // Signature company name
-            const sigComName = document.getElementById('sigComName');
+            const sigComNames = document.querySelectorAll('.sigComName');
             const headerSelect = document.getElementById('headerSelect');
-            if (sigComName) {
-                // If not MCO, keep the selected company name
+            sigComNames.forEach(sigComName => {
                 if (headerSelect && headerSelect.value !== 'mco') {
                     sigComName.textContent = headerSelect.value;
                 } else {
                     sigComName.textContent = lang === 'en' ? 'M.C.O. CO.,LTD.' : 'บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)';
                 }
-            }
+            });
         }
     </script>
 </head>
@@ -529,7 +536,8 @@ $formatter = Yii::$app->formatter;
             </div> -->
         </div>
     </div>
-    <div class="container">
+    <?php for ($i = 0; $i < 2; $i++): ?>
+    <div class="container <?= $i == 0 ? 'original-copy' : 'copy-copy' ?>" style="<?= $i > 0 ? 'margin-top: 50px; border-top: 1px dashed #ccc; padding-top: 50px;' : '' ?>">
         <!-- Header -->
         <div class="header">
             <div class="company-info">
@@ -544,13 +552,13 @@ $formatter = Yii::$app->formatter;
                         </div>
                     </td>
                     <td class="text-right">
-                        <div class="company-name" style="margin-top: 25px;" id="companyNameThai">
+                        <div class="company-name companyNameThai" style="margin-top: 25px;">
                             บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)
                         </div>
-                        <div class="company-name" style="font-size: 20px;" id="companyNameEng">
+                        <div class="company-name companyNameEng" style="font-size: 20px;">
                             M.C.O. CO.,LTD.
                         </div>
-                        <div class="company-details" id="companyAddress">
+                        <div class="company-details companyAddress">
                             8/18 Koh-Kloy Rd., Tambon Cherngnoen, Amphur Muang, Rayong 21000<br>
                             8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จังหวัดระยอง 21000
                         </div>
@@ -560,14 +568,11 @@ $formatter = Yii::$app->formatter;
         </div>
 
         <div class="document-info">
-
             <div class="document-title">ใบลดหนี้ / ใบกำกับภาษี</div>
-
             <div class="title-row">
                 <div class="document-title-en">CREDIT NOTE / TAX INVOICE</div>
-                <div class="document-copy">Copy</div>
+                <div class="document-copy" id="copyText_<?= $i ?>"><?= $i == 0 ? 'Original' : 'Copy' ?></div>
             </div>
-
         </div>
 
 
@@ -581,11 +586,27 @@ $formatter = Yii::$app->formatter;
                     </div>
                     <div class="section-row">
                         <div class="label">รหัสลูกค้า</div>
-                        <div class="value"><?= $model->customer_id != null ? Html::encode(\backend\models\Customer::findCode($model->customer_id)) : Html::encode(\backend\models\Vendor::findCode($model->vendor_id)) ?></div>
+                        <div class="value">
+                            <?php 
+                                if ($model->customer_id) {
+                                    echo Html::encode(\backend\models\Customer::findCode($model->customer_id));
+                                } elseif ($model->vendor_id) {
+                                    echo Html::encode(\backend\models\Vendor::findCode($model->vendor_id));
+                                }
+                            ?>
+                        </div>
                     </div>
                     <div class="section-row">
                         <div class="label">ชื่อลูกค้า</div>
-                        <div class="value"><?= $model->customer_id != null ? Html::encode(\backend\models\Customer::findName($model->customer_id)) : Html::encode(\backend\models\Vendor::findName($model->vendor_id)) ?></div>
+                        <div class="value">
+                            <?php 
+                                if ($model->customer_id) {
+                                    echo Html::encode(\backend\models\Customer::findName($model->customer_id));
+                                } elseif ($model->vendor_id) {
+                                    echo Html::encode(\backend\models\Vendor::findName($model->vendor_id));
+                                }
+                            ?>
+                        </div>
                     </div>
                     <div class="section-row">
                         <div class="label">ที่อยู่</div>
@@ -593,7 +614,7 @@ $formatter = Yii::$app->formatter;
                             <?php 
                                 if ($model->customer_id) {
                                     echo Html::encode(\backend\models\Customer::findFullAddress($model->customer_id));
-                                } else {
+                                } elseif ($model->vendor_id) {
                                     echo Html::encode(\backend\models\Vendor::findFullAddress($model->vendor_id));
                                 }
                             ?>
@@ -627,8 +648,6 @@ $formatter = Yii::$app->formatter;
                     </div>
                 </td>
             </table>
-
-
         </div>
 
         <!-- Items Table -->
@@ -668,73 +687,56 @@ $formatter = Yii::$app->formatter;
             </tbody>
             <tfoot>
                 <tr>
-                    <!-- ช่องซ้าย (รวม 5 แถว) -->
                     <td colspan="2" rowspan="5" style="border:1px solid #000; padding:8px; vertical-align: top;">
-                        <!-- แถวบน (2 คอลัมน์) -->
                         <div style="display: flex; justify-content: space-between;">
-                            <!-- คอลัมน์ซ้าย -->
                             <div>
                                 <div class="label">ใบกำกับภาษีเดิมเลขที่</div>
                                 <div><?= Html::encode($model->original_invoice_no) ?></div>
                             </div>
-                            <!-- คอลัมน์ขวา -->
                             <div>
                                 <div class="label">ลงวันที่</div>
                                 <div><?= $model->original_invoice_date ? $formatter->asDate($model->original_invoice_date, 'php:d/m/Y') : '' ?></div>
                             </div>
                         </div>
-
-                        <!-- เว้นบรรทัดเล็กน้อย -->
                         <div style="height: 6px;"></div>
-
-                        <!-- เหตุผล -->
                         <div>
                             <div style="font-weight: 500; margin-bottom: 5px;">เหตุผลที่ต้องลดหนี้:</div>
                             <?= nl2br(Html::encode($model->reason)) ?>
                         </div>
                     </td>
-
-                    <!-- แถวที่ 1 -->
                     <td colspan="2" style="border:1px solid #000; font-weight: 800; -webkit-text-stroke: 0.25px black;">มูลค่าสินค้าตามใบกำกับฯเดิม</td>
                     <td style="border:1px solid #000; text-align:right; font-weight: 800;"><?= $formatter->asDecimal($model->original_amount, 2) ?></td>
                 </tr>
                 <tr>
-                    <!-- แถวที่ 2 -->
                     <td colspan="2" style="border:1px solid #000; font-weight: 800; -webkit-text-stroke: 0.25px black;">มูลค่าสินค้าตามจริง</td>
                     <td style="border:1px solid #000; text-align:right; font-weight: 800;"><?= $formatter->asDecimal($model->actual_amount, 2) ?></td>
                 </tr>
                 <tr>
-                    <!-- แถวที่ 3 -->
                     <td colspan="2" style="border:1px solid #000; font-weight: 800; -webkit-text-stroke: 0.25px black;">รวมมูลค่าสินค้า</td>
                     <td style="border:1px solid #000; text-align:right; font-weight: 800;"><?= $formatter->asDecimal($model->adjust_amount, 2) ?></td>
                 </tr>
                 <tr>
-                    <!-- แถวที่ 4 -->
                     <td colspan="2" style="border:1px solid #000; font-weight: 800; -webkit-text-stroke: 0.25px black;">ภาษีมูลค่าเพิ่ม <?= $formatter->asDecimal($model->vat_percent, 0) ?>%</td>
                     <td style="border:1px solid #000; text-align:right; font-weight: 800;"><?= $formatter->asDecimal($model->vat_amount, 2) ?></td>
                 </tr>
                 <tr>
-                    <!-- แถวที่ 5 -->
                     <td colspan="2" style="border:1px solid #000; font-weight: 800; -webkit-text-stroke: 0.25px black;">รวมเป็นเงินทั้งสิ้น</td>
                     <td style="border:1px solid #000; font-weight: 800; text-align:right; -webkit-text-stroke: 0.25px black;"><?= $formatter->asDecimal($model->total_amount, 2) ?></td>
                 </tr>
             </tfoot>
         </table>
 
-
         <!-- Amount in Text -->
         <table width="100%">
             <tr>
-                <td width="20%">
-                    (ตัวอักษร)
-                </td>
+                <td width="20%">(ตัวอักษร)</td>
                 <td width="80%">
                     <div class="amount-text">
                         <?php
-                        $textThai = $model->amount_text; // Assuming this is correct from DB/Model
+                        $textThai = $model->amount_text;
                         $textEng = \backend\helpers\NumberToText::convert($model->total_amount);
                         ?>
-                        <span id="amountText" data-th="<?= Html::encode($textThai) ?>" data-en="<?= Html::encode($textEng) ?>">
+                        <span id="amountText_<?= $i ?>" data-th="<?= Html::encode($textThai) ?>" data-en="<?= Html::encode($textEng) ?>">
                             <?= nl2br(Html::encode($textThai)) ?>
                         </span>
                     </div>
@@ -745,12 +747,11 @@ $formatter = Yii::$app->formatter;
         <!-- Signature Section -->
         <div class="signature-section">
             <div class="signature-box">
-                <div id="sigComName" style="font-weight: 800; -webkit-text-stroke: 0.25px black;">บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)</div>
+                <div class="sigComName" style="font-weight: 800; -webkit-text-stroke: 0.25px black;">บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)</div>
                 <div class="signature-line"></div>
                 <div style="font-weight: 800; -webkit-text-stroke: 0.25px black;">ผู้มีอำนาจลงนาม / ผู้รับมอบอำนาจ</div>
                 <div style="margin-top: 10px; font-weight: 800;">_____/_____/_____</div>
             </div>
-
             <div class="signature-box">
                 <div>&nbsp;</div>
                 <div class="signature-line"></div>
@@ -759,6 +760,10 @@ $formatter = Yii::$app->formatter;
             </div>
         </div>
     </div>
+    <?php if ($i == 0): ?>
+        <div style="page-break-after: always;"></div>
+    <?php endif; ?>
+    <?php endfor; ?>
 </body>
 
 </html>
@@ -769,37 +774,37 @@ $formatter = Yii::$app->formatter;
         const headerSelect = document.getElementById('headerSelect');
         const selectedValue = headerSelect.value;
 
-        const companyNameThai = document.getElementById('companyNameThai');
-        const companyNameEng = document.getElementById('companyNameEng');
-        const sigComName = document.getElementById('sigComName');
+        const companyNameThais = document.querySelectorAll('.companyNameThai');
+        const companyNameEngs = document.querySelectorAll('.companyNameEng');
+        const sigComNames = document.querySelectorAll('.sigComName');
         const langSelect = document.getElementById('languageSelect');
         const currentLang = langSelect ? langSelect.value : 'th';
 
         if (selectedValue === 'mco') {
             // Restore MCO Layout
-            if (companyNameThai) {
-                companyNameThai.style.display = 'block';
-                companyNameThai.textContent = 'บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)';
-            }
-            if (companyNameEng) {
-                companyNameEng.style.display = 'block';
-                companyNameEng.textContent = 'M.C.O. CO.,LTD.';
-            }
+            companyNameThais.forEach(el => {
+                el.style.display = 'block';
+                el.textContent = 'บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)';
+            });
+            companyNameEngs.forEach(el => {
+                el.style.display = 'block';
+                el.textContent = 'M.C.O. CO.,LTD.';
+            });
             // Restore Sig Name based on current language
-            if (sigComName) {
-                sigComName.textContent = currentLang === 'en' ? 'M.C.O. CO.,LTD.' : 'บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)';
-            }
+            sigComNames.forEach(el => {
+                el.textContent = currentLang === 'en' ? 'M.C.O. CO.,LTD.' : 'บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)';
+            });
         } else {
             // Other Company
-            if (companyNameThai) companyNameThai.style.display = 'none';
+            companyNameThais.forEach(el => el.style.display = 'none');
 
-            if (companyNameEng) {
-                companyNameEng.style.display = 'block';
-                companyNameEng.textContent = selectedValue;
-            }
+            companyNameEngs.forEach(el => {
+                el.style.display = 'block';
+                el.textContent = selectedValue;
+            });
 
             // Update Sig Name to selected company name
-            if (sigComName) sigComName.textContent = selectedValue;
+            sigComNames.forEach(el => el.textContent = selectedValue);
         }
     }
 </script>

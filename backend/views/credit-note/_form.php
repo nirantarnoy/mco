@@ -464,7 +464,7 @@ $("#credit-note-invoice_id").on("change", function() {
                 $("#credit-note-original_invoice_no").val(data.invoice_number);
                 $("#credit-note-original_invoice_date").val(data.invoice_date);
                 $("#credit-note-original_amount").val(data.total_amount);
-              //  $("#credit-note-customer_id").val(data.customer_id).trigger("change");
+                $("#credit-note-customer_id").val(data.customer_id).trigger("change");
             }
         });
     }
@@ -741,6 +741,51 @@ $this->registerJs($js);
 
             <div class="form-section">
                 <h4 class="section-title">ข้อมูลเอกสาร</h4>
+                <div class="row">
+                    <div class="col-md-4">
+                        <?= $form->field($model, 'document_no')->textInput(['maxlength' => true, 'readonly' => true]) ?>
+                    </div>
+                    <div class="col-md-4">
+                        <?= $form->field($model, 'document_date')->widget(DatePicker::class, [
+                            'pluginOptions' => [
+                                'autoclose' => true,
+                                'format' => 'yyyy-mm-dd'
+                            ]
+                        ]) ?>
+                    </div>
+                    <div class="col-md-4">
+                        <?= $form->field($model, 'status')->dropDownList($model->getStatusList(), ['prompt' => 'เลือกสถานะ...']) ?>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <?= $form->field($model, 'customer_id')->widget(Select2::class, [
+                            'data' => ArrayHelper::map(Customer::find()->where(['status' => 1])->all(), 'id', 'name'),
+                            'options' => [
+                                'placeholder' => 'เลือกลูกค้า...',
+                                'id' => 'credit-note-customer_id'
+                            ],
+                            'pluginOptions' => [
+                                'allowClear' => true
+                            ],
+                        ]) ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?= $form->field($model, 'vendor_id')->widget(Select2::class, [
+                            'data' => ArrayHelper::map(Vendor::find()->where(['status' => 1])->all(), 'id', 'name'),
+                            'options' => [
+                                'placeholder' => 'เลือกผู้ขาย...',
+                                'id' => 'credit-note-vendor_id'
+                            ],
+                            'pluginOptions' => [
+                                'allowClear' => true
+                            ],
+                        ]) ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
                 <h4 class="section-title">ข้อมูลใบกำกับภาษีเดิม</h4>
                 <div class="row">
                     <div class="col-md-3">
@@ -1027,13 +1072,14 @@ $this->registerJs($js);
     </div>
     <br />
 
+    <?php if (!$model->isNewRecord): ?>
     <form action="<?= Url::to(['credit-note/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
         <input type="hidden" name="id" value="<?= $model->id ?>">
         <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
             <div class="row">
                 <div class="col-lg-12">
                     <label for="">เอกสารแนบ</label>
-                    <input type="file" name="file_doc" multiple>
+                    <input type="file" name="file_doc[]" multiple>
                 </div>
             </div>
             <br />
@@ -1050,6 +1096,7 @@ $this->registerJs($js);
         <input type="hidden" name="id" value="<?= $model->id ?>">
         <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
     </form>
+    <?php endif; ?>
 
 </div>
 
