@@ -307,9 +307,9 @@ class Purch extends ActiveRecord
                 $xp = explode('-', $job->job_no);
                 if (count($xp) > 1) {
                     $new_job_no = implode('-', array_slice($xp, 1));
-                    // Identify the year part for filtering (e.g., QT26)
+                    // Identify the year part for filtering (e.g., QT26 or ข๐ธ26)
                     foreach ($xp as $p) {
-                        if (strpos($p, 'QT') !== false) {
+                        if (strpos($p, 'QT') !== false || strpos($p, 'ข๐ธ') !== false) {
                             $year_filter = " AND (purch_req_no LIKE '%" . $p . "%' OR purch_no LIKE '%" . $p . "%')";
                             break;
                         }
