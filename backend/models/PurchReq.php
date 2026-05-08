@@ -270,18 +270,22 @@ class PurchReq extends ActiveRecord
 
         $new_job_no = '';
         $year_filter = '';
-        $current_year_part = '';
         if ($job_id) {
-            $job = Job::findOne($job_id);
-            if ($job) {
-                $new_job_no = $job->job_no; // Use full job number e.g. RY-QT26-000009
+            $job = \backend\models\Job::findOne($job_id);
+            if ($job && $job->job_no) {
+                // Strip the first part of the job number (e.g., RY-QT26-000009 -> QT26-000009)
                 $xp = explode('-', $job->job_no);
-                foreach ($xp as $p) {
-                    if (strpos($p, 'QT') !== false) {
-                        $current_year_part = $p;
-                        $year_filter = " AND (purch_req_no LIKE '%" . $p . "%' OR purch_no LIKE '%" . $p . "%')";
-                        break;
+                if (count($xp) > 1) {
+                    $new_job_no = implode('-', array_slice($xp, 1));
+                    // Identify the year part for filtering (e.g., QT26)
+                    foreach ($xp as $p) {
+                        if (strpos($p, 'QT') !== false) {
+                            $year_filter = " AND (purch_req_no LIKE '%" . $p . "%' OR purch_no LIKE '%" . $p . "%')";
+                            break;
+                        }
                     }
+                } else {
+                    $new_job_no = $job->job_no;
                 }
             }
         }
@@ -290,13 +294,13 @@ class PurchReq extends ActiveRecord
             $new_job_no = date('Ym');
         }
 
-        // Check both tables for the max running number within the same year
+        // Check both tables for the max running number within the same year context
         $maxPr = Yii::$app->db->createCommand("
             SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
             FROM purch_req 
             WHERE company_id = " . (int)$company_id . "
             AND purch_req_no LIKE 'PR-%'
-            $year_filter
+            " . $year_filter . "
             AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
         ")->queryScalar();
 
@@ -305,40 +309,13 @@ class PurchReq extends ActiveRecord
             FROM purch 
             WHERE company_id = " . (int)$company_id . "
             AND purch_no LIKE 'PO-%'
-            $year_filter
+            " . $year_filter . "
             AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
         ")->queryScalar();
 
         $maxNum = max((int)$maxPr, (int)$maxPo);
         
-        // Fallback to previous year if no records found for current year (to continue from 2025)
-        if ($maxNum == 0 && !empty($current_year_part)) {
-             // Extract year e.g. 26 from QT26
-             $year_val = (int)preg_replace('/[^0-9]/', '', $current_year_part);
-             if ($year_val > 0) {
-                 $prev_year_part = str_replace($year_val, $year_val - 1, $current_year_part);
-                 $prev_year_filter = " AND (purch_req_no LIKE '%" . $prev_year_part . "%' OR purch_no LIKE '%" . $prev_year_part . "%')";
-                 
-                 $maxPrPrev = Yii::$app->db->createCommand("
-                    SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
-                    FROM purch_req 
-                    WHERE (company_id = " . (int)$company_id . " OR company_id IS NULL OR company_id = 0)
-                    AND purch_req_no LIKE 'PR-%'
-                    $prev_year_filter
-                ")->queryScalar();
-
-                $maxPoPrev = Yii::$app->db->createCommand("
-                    SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_no, '-', 2), '-', -1) AS UNSIGNED)) 
-                    FROM purch 
-                    WHERE (company_id = " . (int)$company_id . " OR company_id IS NULL OR company_id = 0)
-                    AND purch_no LIKE 'PO-%'
-                    $prev_year_filter
-                ")->queryScalar();
-                
-                $maxNum = max((int)$maxPrPrev, (int)$maxPoPrev);
-             }
-        }
-
+        // Ensure the sequence starts at 183 or higher if it's the first record of the year/company
         $mainNumber = ($maxNum > 0) ? $maxNum + 1 : 183;
         if ($mainNumber < 183) $mainNumber = 183;
 
