@@ -256,19 +256,87 @@ class PurchReq extends ActiveRecord
 
     public static function getNextPurchReqNo($job_id = null, $company_id = null)
     {
-        $new_job_no = '';
-        if ($job_id) {
-            $job = \backend\models\Job::findOne($job_id);
-            if ($job && $job->job_no) {
-                $xp = explode('-', $job->job_no);
-                if (count($xp) > 1) {
-                    $new_job_no = implode('-', array_slice($xp, 1));
+        try {
+            if ($company_id === null || $company_id == 100) {
+                if (isset(Yii::$app->session) && Yii::$app->session->get('company_id')) {
+                    $company_id = Yii::$app->session->get('company_id');
                 } else {
-                    $new_job_no = $job->job_no;
+                    $company_id = 1;
                 }
             }
+            if ($company_id == 100) $company_id = 1;
+
+            $new_job_no = '';
+            $year_filter = '';
+            if ($job_id) {
+                $job = \backend\models\Job::findOne($job_id);
+                if ($job && $job->job_no) {
+                    $xp = explode('-', $job->job_no);
+                    if (count($xp) > 1) {
+                        $new_job_no = implode('-', array_slice($xp, 1));
+                        foreach ($xp as $p) {
+                            if (strpos($p, 'QT') !== false || strpos($p, 'ข๐ธ') !== false) {
+                                $year_filter = " AND (purch_req_no LIKE '%" . $p . "%' OR purch_no LIKE '%" . $p . "%')";
+                                break;
+                            }
+                        }
+                    } else {
+                        $new_job_no = $job->job_no;
+                    }
+                }
+            }
+
+            if (empty($new_job_no)) {
+                $new_job_no = date('Ym');
+            }
+
+            $maxPr = Yii::$app->db->createCommand("
+                SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
+                FROM purch_req 
+                WHERE (company_id = " . (int)$company_id . " OR company_id IS NULL OR company_id = 0)
+                AND purch_req_no LIKE 'PR-%'
+                " . $year_filter . "
+                AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
+            ")->queryScalar();
+
+            $maxPo = Yii::$app->db->createCommand("
+                SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_no, '-', 2), '-', -1) AS UNSIGNED)) 
+                FROM purch 
+                WHERE (company_id = " . (int)$company_id . " OR company_id IS NULL OR company_id = 0)
+                AND purch_no LIKE 'PO-%'
+                " . $year_filter . "
+                AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
+            ")->queryScalar();
+
+            $maxNum = max((int)$maxPr, (int)$maxPo);
+            
+            $mainNumber = ($maxNum > 0) ? $maxNum + 1 : 183;
+            if ($mainNumber < 183) $mainNumber = 183;
+
+            $subNumber = 1;
+            if ($job_id) {
+                $lastSubPr = self::find()
+                    ->where(['job_id' => $job_id])
+                    ->orderBy(['id' => SORT_DESC])
+                    ->one();
+
+                if ($lastSubPr && $lastSubPr->purch_req_no) {
+                    $subParts = explode('.', $lastSubPr->purch_req_no);
+                    if (count($subParts) >= 2) {
+                        $lastSubStr = $subParts[count($subParts) - 1];
+                        if (is_numeric($lastSubStr)) {
+                            $subNumber = intval($lastSubStr) + 1;
+                        }
+                    }
+                }
+            }
+
+            return 'PR-' . sprintf('%05d', $mainNumber) . '-' . $new_job_no . '.' . sprintf('%02d', $subNumber);
+        } catch (\Exception $e) {
+            return "ERROR: " . $e->getMessage();
+        } catch (\Throwable $e) {
+            return "THROWABLE: " . $e->getMessage();
         }
-        return "JOB-" . $new_job_no;
     }
 
 
