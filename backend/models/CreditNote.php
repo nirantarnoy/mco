@@ -13,6 +13,7 @@ use yii\db\Expression;
  * @property int $id
  * @property string $document_no
  * @property string $document_date
+ * @property string|null $issue_date
  * @property int $customer_id
  * @property int|null $invoice_id
  * @property string|null $original_invoice_no
@@ -74,7 +75,7 @@ class CreditNote extends \yii\db\ActiveRecord
     {
         return [
             [['document_no', 'document_date', 'reason'], 'required'],
-            [['document_date', 'original_invoice_date', 'approved_date', 'created_at', 'updated_at'], 'safe'],
+            [['document_date', 'original_invoice_date', 'approved_date', 'created_at', 'updated_at', 'issue_date'], 'safe'],
             [['customer_id', 'invoice_id', 'approved_by', 'created_by', 'updated_by','quotation_id','vendor_id'], 'integer'],
             [['original_amount', 'actual_amount', 'adjust_amount', 'vat_percent', 'vat_amount', 'total_amount'], 'number'],
             [['reason'], 'string'],
@@ -100,6 +101,7 @@ class CreditNote extends \yii\db\ActiveRecord
             'id' => 'ID',
             'document_no' => 'เลขที่เอกสาร',
             'document_date' => 'วันที่',
+            'issue_date' => 'วันที่ออกเอกสาร',
             'customer_id' => 'ลูกค้า',
             'invoice_id' => 'ใบแจ้งหนี้',
             'original_invoice_no' => 'เลขที่ใบกำกับภาษีเดิม',

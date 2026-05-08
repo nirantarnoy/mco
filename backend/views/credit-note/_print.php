@@ -642,8 +642,8 @@ $formatter = Yii::$app->formatter;
                             <div class="value"><?= Html::encode($model->document_no) ?></div>
                         </div>
                         <div class="section-row">
-                            <div class="label-right" style="margin-left: 150px;">วันที่</div>
-                            <div class="value"><?= $formatter->asDate($model->document_date, 'php:d/m/Y') ?></div>
+                            <div class="label-right" style="margin-left: 150px;">วันที่ออกเอกสาร</div>
+                            <div class="value"><?= $formatter->asDate($model->issue_date ?: $model->document_date, 'php:d/m/Y') ?></div>
                         </div>
                     </div>
                 </td>

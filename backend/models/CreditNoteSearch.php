@@ -10,7 +10,7 @@ class CreditNoteSearch extends CreditNote
     {
         return [
             [['id', 'customer_id', 'invoice_id'], 'integer'],
-            [['document_no', 'document_date', 'status', 'reason'], 'safe'],
+            [['document_no', 'document_date', 'issue_date', 'status', 'reason'], 'safe'],
             [['adjust_amount', 'vat_amount', 'total_amount'], 'number'],
         ];
     }
@@ -60,6 +60,11 @@ class CreditNoteSearch extends CreditNote
         if (!empty($this->document_date) && strpos($this->document_date, ' - ') !== false) {
             list($start_date, $end_date) = explode(' - ', $this->document_date);
             $query->andFilterWhere(['between', 'document_date', $start_date, $end_date]);
+        }
+
+        if (!empty($this->issue_date) && strpos($this->issue_date, ' - ') !== false) {
+            list($start_date, $end_date) = explode(' - ', $this->issue_date);
+            $query->andFilterWhere(['between', 'issue_date', $start_date, $end_date]);
         }
 
         return $dataProvider;

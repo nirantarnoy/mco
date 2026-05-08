@@ -90,6 +90,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'format' => ['date', 'php:d/m/Y']
                             ],
                             [
+                                'attribute' => 'issue_date',
+                                'format' => ['date', 'php:d/m/Y']
+                            ],
+                            [
                                 'attribute' => 'customer_id',
                                 'value' => 'customer.name'
                             ],
@@ -160,7 +164,24 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'opens' => 'left'
                             ],
                         ]),
-                        'headerOptions' => ['width' => '200px'],
+                        'headerOptions' => ['width' => '150px'],
+                    ],
+                    [
+                        'attribute' => 'issue_date',
+                        'format' => ['date', 'php:d/m/Y'],
+                        'filter' => DateRangePicker::widget([
+                            'model' => $searchModel,
+                            'attribute' => 'issue_date',
+                            'convertFormat' => true,
+                            'pluginOptions' => [
+                                'locale' => [
+                                    'format' => 'd/m/Y',
+                                    'separator' => ' - ',
+                                ],
+                                'opens' => 'left'
+                            ],
+                        ]),
+                        'headerOptions' => ['width' => '150px'],
                     ],
                     [
                         'attribute' => 'customer_id',

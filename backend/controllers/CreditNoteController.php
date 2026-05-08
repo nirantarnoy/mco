@@ -86,6 +86,7 @@ class CreditNoteController extends BaseController
     {
         $model = new CreditNote();
         $model->document_date = date('Y-m-d');
+        $model->issue_date = date('Y-m-d');
         $model->vat_percent = 7;
 
         $modelsItem = [new CreditNoteItem];

@@ -742,10 +742,10 @@ $this->registerJs($js);
             <div class="form-section">
                 <h4 class="section-title">ข้อมูลเอกสาร</h4>
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <?= $form->field($model, 'document_no')->textInput(['maxlength' => true, 'readonly' => true]) ?>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <?= $form->field($model, 'document_date')->widget(DatePicker::class, [
                             'pluginOptions' => [
                                 'autoclose' => true,
@@ -753,7 +753,15 @@ $this->registerJs($js);
                             ]
                         ]) ?>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                        <?= $form->field($model, 'issue_date')->widget(DatePicker::class, [
+                            'pluginOptions' => [
+                                'autoclose' => true,
+                                'format' => 'yyyy-mm-dd'
+                            ]
+                        ]) ?>
+                    </div>
+                    <div class="col-md-3">
                         <?= $form->field($model, 'status')->dropDownList($model->getStatusList(), ['prompt' => 'เลือกสถานะ...']) ?>
                     </div>
                 </div>
