@@ -273,9 +273,11 @@ class PurchReq extends ActiveRecord
         if ($job_id) {
             $job = \backend\models\Job::findOne($job_id);
             if ($job && $job->job_no) {
+                // Strip the first part of the job number (e.g., RY-QT26-000009 -> QT26-000009)
                 $xp = explode('-', $job->job_no);
                 if (count($xp) > 1) {
                     $new_job_no = implode('-', array_slice($xp, 1));
+                    // Identify the year part for filtering (e.g., QT26 or ข๐ธ26)
                     foreach ($xp as $p) {
                         if (strpos($p, 'QT') !== false || strpos($p, 'ข๐ธ') !== false) {
                             $year_filter = " AND (purch_req_no LIKE '%" . $p . "%' OR purch_no LIKE '%" . $p . "%')";
@@ -292,6 +294,7 @@ class PurchReq extends ActiveRecord
             $new_job_no = date('Ym');
         }
 
+        // Check both tables for the max running number within the same year context
         $maxPr = Yii::$app->db->createCommand("
             SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
             FROM purch_req 
@@ -312,11 +315,13 @@ class PurchReq extends ActiveRecord
 
         $maxNum = max((int)$maxPr, (int)$maxPo);
         
+        // Ensure the sequence starts at 183 or higher if it's the first record of the year/company
         $mainNumber = ($maxNum > 0) ? $maxNum + 1 : 183;
         if ($mainNumber < 183) $mainNumber = 183;
 
         $subNumber = 1;
         if ($job_id) {
+            // Sub-number remains specific to this job
             $lastSubPr = self::find()
                 ->where(['job_id' => $job_id])
                 ->orderBy(['id' => SORT_DESC])
