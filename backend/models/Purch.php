@@ -320,12 +320,13 @@ class Purch extends ActiveRecord
                 $new_job_no = date('Ym');
             }
 
+            $current_year = date('Y');
             $maxPr = Yii::$app->db->createCommand("
                 SELECT MAX(CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED)) 
                 FROM purch_req 
                 WHERE (company_id = " . (int)$company_id . " OR company_id IS NULL OR company_id = 0)
                 AND purch_req_no LIKE 'PR-%'
-                " . ($year_part ? " AND purch_req_no LIKE '%" . $year_part . "%'" : "") . "
+                AND YEAR(purch_req_date) = " . (int)$current_year . "
                 AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_req_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
             ")->queryScalar();
 
@@ -334,7 +335,7 @@ class Purch extends ActiveRecord
                 FROM purch 
                 WHERE (company_id = " . (int)$company_id . " OR company_id IS NULL OR company_id = 0)
                 AND purch_no LIKE 'PO-%'
-                " . ($year_part ? " AND purch_no LIKE '%" . $year_part . "%'" : "") . "
+                AND YEAR(purch_date) = " . (int)$current_year . "
                 AND CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(purch_no, '-', 2), '-', -1) AS UNSIGNED) < 100000
             ")->queryScalar();
 
