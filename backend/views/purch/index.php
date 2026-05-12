@@ -82,6 +82,12 @@ $this->params['breadcrumbs'][] = $this->title;
                 },
             ],
             [
+                'attribute' => 'rev',
+                'label' => 'Rev',
+                'headerOptions' => ['style' => 'width: 50px; text-align: center;'],
+                'contentOptions' => ['style' => 'text-align: center;'],
+            ],
+            [
                 'attribute' => 'purch_date',
                 'label' => 'วันที่',
                 'headerOptions' => ['style' => 'width: 120px;'],

@@ -160,6 +160,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                             'model' => $model,
                             'attributes' => [
                                 'purch_no:text:เลขที่ใบสั่งซื้อ',
+                                'rev:text:ครั้งที่แก้ไข',
                                 [
                                     'attribute' => 'purch_date',
                                     'label' => 'วันที่',
