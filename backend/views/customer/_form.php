@@ -56,8 +56,16 @@ if($model->isNewRecord) {
             <?= $form->field($model, 'taxid')->textInput(['maxlength' => true]) ?>
         </div>
         <div class="col-lg-5">
-            <div style="height: 35px"></div>
-            <?= $form->field($model, 'status')->widget(\toxor88\switchery\Switchery::className())->label(false) ?>
+            <div class="row">
+                <div class="col-lg-6">
+                    <label class="control-label"><?= $model->getAttributeLabel('status') ?></label>
+                    <?= $form->field($model, 'status')->widget(\toxor88\switchery\Switchery::className())->label(false) ?>
+                </div>
+                <div class="col-lg-6">
+                    <label class="control-label"><?= $model->getAttributeLabel('is_common') ?></label>
+                    <?= $form->field($model, 'is_common')->widget(\toxor88\switchery\Switchery::className())->label(false) ?>
+                </div>
+            </div>
         </div>
         <div class="col-lg-1"></div>
     </div>

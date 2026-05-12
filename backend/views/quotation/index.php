@@ -106,7 +106,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'filter' => Select2::widget([
                     'model' => $searchModel,
                     'attribute' => 'customer_id',
-                    'data' => ArrayHelper::map(Customer::find()->where(['company_id' => \Yii::$app->session->get('company_id')])->all(), 'id', 'name'),
+                    'data' => ArrayHelper::map(\backend\models\Customer::getAllowedCustomers()->all(), 'id', 'name'),
                     'options' => ['placeholder' => 'เลือกลูกค้า'],
                     'pluginOptions' => [
                         'allowClear' => true

@@ -99,6 +99,16 @@ class Customer extends \common\models\Customer
         return $data;
     }
 
+    public static function getAllowedCustomers()
+    {
+        $company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
+        $query = Customer::find();
+        if ($company_id != null) {
+            $query->andWhere(['or', ['company_id' => $company_id], ['is_common' => 1]]);
+        }
+        return $query;
+    }
+
     public static function getlastno()
     {
         $customer_code = 'NOT FOUND';
@@ -127,7 +137,14 @@ class Customer extends \common\models\Customer
 
     public function beforeSave($insert)
     {
-        $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
-        return true;
+        if (parent::beforeSave($insert)) {
+            if ($this->is_common == 1) {
+                $this->company_id = null;
+            } else {
+                $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
+            }
+            return true;
+        }
+        return false;
     }
 }

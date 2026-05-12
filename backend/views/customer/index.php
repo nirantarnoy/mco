@@ -90,6 +90,19 @@ $this->params['breadcrumbs'][] = $this->title;
                     }
                 }
             ],
+            [
+                'attribute' => 'is_common',
+                'format' => 'raw',
+                'headerOptions' => ['style' => 'text-align: center'],
+                'contentOptions' => ['style' => 'text-align: center'],
+                'value' => function ($data) {
+                    if ($data->is_common == 1) {
+                        return '<div class="badge badge-info">ใช้ร่วมกัน</div>';
+                    } else {
+                        return '';
+                    }
+                }
+            ],
             //'created_at',
             //'created_by',
             //'updated_at',
