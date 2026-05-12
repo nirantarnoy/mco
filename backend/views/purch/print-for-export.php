@@ -575,7 +575,7 @@ $contact_name = $vendor_info !== null ? ($vendor_info['contact_name'] ?? '') : '
         <div class="col-lg-5">
             <div class="info-row">
                 <span class="info-label">PO.NO. :</span>
-                <span class="info-value"><?= Html::encode($purchase->purch_no) ?></span>
+                <span class="info-value"><?= Html::encode($purchase->purch_no) . ($purchase->rev > 0 ? ' REV' . sprintf('%02d', $purchase->rev) : '') ?></span>
             </div>
             <div class="info-row">
                 <span class="info-label">DATE :</span>

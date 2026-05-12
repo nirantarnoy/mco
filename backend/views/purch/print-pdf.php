@@ -233,7 +233,7 @@ $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
                     <span class="info-label">PO.NO. :</span>
                 </td>
                 <td width="25%" class="info-value">
-                    <?= Html::encode($purchase->purch_no) ?>
+                    <?= Html::encode($purchase->purch_no) . ($purchase->rev > 0 ? ' REV' . sprintf('%02d', $purchase->rev) : '') ?>
                 </td>
                 <td width="25%">
                     <span class="info-label">DATE :</span>
