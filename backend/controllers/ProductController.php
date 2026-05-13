@@ -1216,4 +1216,115 @@ class ProductController extends BaseController
         return $product_code;
     }
 
+    public function actionExportExpress()
+    {
+        $sql = "SELECT p.*, pg.name as group_name, u.name as unit_name 
+                FROM product as p 
+                LEFT JOIN product_group as pg ON p.product_group_id = pg.id 
+                LEFT JOIN unit as u ON p.unit_id = u.id 
+                ORDER BY p.code ASC";
+        $products = \Yii::$app->db->createCommand($sql)->queryAll();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Row 1: Instruction
+        $sheet->mergeCells('A1:U1');
+        $sheet->setCellValue('A1', '**ช่องข้อความที่เป็น อักษรสีแดง ต้องใส่ให้ครบทุกช่อง**');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF0000FF'));
+
+        // Row 2: Headers
+        $headers = [
+            'STKCOD', 'STKDES', 'STKDES2', 'BARCOD', 'ACCCOD', 'STKGRP', 'QUCOD', 'CQUCOD', 'CFACTOR', 'PQUCOD', 'PFACTOR', 'SQUCOD', 'SFACTOR', 'STNPR', 'SELLPR1', 'SELLPR2', 'SELLPR3', 'SELLPR4', 'SELLPR5', 'VATCOD', 'REMARK'
+        ];
+        $mandatoryCols = ['A', 'B', 'E', 'F', 'G', 'O', 'T'];
+
+        foreach ($headers as $index => $header) {
+            $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
+            $sheet->setCellValue($col . '2', $header);
+            if (in_array($col, $mandatoryCols)) {
+                $sheet->getStyle($col . '2')->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFFF0000'));
+            }
+        }
+
+        // Row 3: Thai Labels
+        $labels = [
+            '*รหัสสินค้า*', '*ชื่อไทย*', 'ชื่ออังกฤษ', 'บาร์โค้ด', '*กลุ่มบัญชีสินค้า*', '*หมวดสินค้า*', '*หน่วยนับ(ย่อย)*', 'หน่วยนับ(ใหญ่)', 'ตัวคูณหน่วยนับ(ใหญ่)', 'หน่วยซื้อ', 'ตัวคูณหน่วยนับ(ซื้อ)', 'หน่วยขาย', 'ตัวคูณหน่วยนับ(ขาย)', 'ราคาทุนมาตรฐาน', '*ราคาขาย 1*', 'ราคาขาย 2', 'ราคาขาย 3', 'ราคาขาย 4', 'ราคาขาย 5', '*ประเภท VAT*', 'หมายเหตุ'
+        ];
+        foreach ($labels as $index => $label) {
+            $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
+            $sheet->setCellValue($col . '3', $label);
+            $sheet->getStyle($col . '3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            if (in_array($col, $mandatoryCols)) {
+                $sheet->getStyle($col . '3')->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFFF0000'));
+            }
+        }
+
+        // Row 4: Constraints
+        $constraints = [
+            'ห้ามเกิน 20 ตัว ห้ามเว้นวรรค,ห้ามใช้เครื่องหมาย / * " .', 'ห้ามเกิน 50 ตัว', 'ห้ามเกิน 50 ตัว', 'ห้ามเกิน 20 ตัว', 'เป็นรหัสไม่เกิน 4 ตัว', 'เป็นรหัส ไม่เกิน 4 ตัว', 'เป็นรหัส ไม่เกิน 2 ตัว', 'เป็นรหัส ไม่เกิน 2 ตัว', 'ตัวเลข', 'เป็นรหัส ไม่เกิน 2 ตัว', 'ตัวเลข', 'เป็นรหัส ไม่เกิน 2 ตัว', 'ตัวเลข', 'ห้ามเกิน 8 หลัก ทศนิยม 2 หลัก', 'ห้ามเกิน 8 หลัก ทศนิยมห้ามเกิน 4 หลัก', 'ห้ามเกิน 8 หลัก ทศนิยมห้ามเกิน 4 หลัก', 'ห้ามเกิน 8 หลัก ทศนิยมห้ามเกิน 4 หลัก', 'ห้ามเกิน 8 หลัก ทศนิยมห้ามเกิน 4 หลัก', 'ห้ามเกิน 8 หลัก ทศนิยมห้ามเกิน 4 หลัก', 'ว่าง=ไม่ระบุ, 1=อัตราปกติ, 0=ได้รับยกเว้น VAT', 'ห้ามเกิน 50 ตัว'
+        ];
+        foreach ($constraints as $index => $constraint) {
+            $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
+            $sheet->setCellValue($col . '4', $constraint);
+            $sheet->getStyle($col . '4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle($col . '4')->getFont()->setSize(8);
+            if (in_array($col, $mandatoryCols)) {
+                $sheet->getStyle($col . '4')->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFFF0000'));
+            }
+        }
+
+        // Row 6: Notes
+        $sheet->setCellValue('B6', '**ห้ามใส่เครื่องหมาย " กรณีต้องการพิมพ์รายงานจาก Express ไปยัง Excel');
+        $sheet->getStyle('B6')->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF0000FF'));
+        $sheet->setCellValue('C6', '**ห้ามใส่เครื่องหมาย " กรณีต้องการพิมพ์รายงานจาก Express ไปยัง Excel');
+        $sheet->getStyle('C6')->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF0000FF'));
+        $sheet->setCellValue('E6', '**กรณีตัวอักษรเป็นภาษาอังกฤษ จะต้องใช้อักษรตัวใหญ่**');
+        $sheet->getStyle('E6')->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF0000FF'));
+
+        // Fill Data
+        $rowNum = 7;
+        foreach ($products as $v) {
+            $sheet->setCellValue('A' . $rowNum, strtoupper($v['code']));
+            $sheet->setCellValue('B' . $rowNum, $v['name']);
+            $sheet->setCellValue('C' . $rowNum, $v['description']);
+            $sheet->setCellValue('D' . $rowNum, ''); // BARCOD
+            $sheet->setCellValue('E' . $rowNum, '01'); // ACCCOD (Default)
+            $sheet->setCellValue('F' . $rowNum, $v['product_group_id']); // STKGRP
+            $sheet->setCellValue('G' . $rowNum, strtoupper($v['unit_name'])); // QUCOD
+            $sheet->setCellValue('H' . $rowNum, ''); // CQUCOD
+            $sheet->setCellValue('I' . $rowNum, 1); // CFACTOR
+            $sheet->setCellValue('J' . $rowNum, ''); // PQUCOD
+            $sheet->setCellValue('K' . $rowNum, 1); // PFACTOR
+            $sheet->setCellValue('L' . $rowNum, ''); // SQUCOD
+            $sheet->setCellValue('M' . $rowNum, 1); // SFACTOR
+            $sheet->setCellValue('N' . $rowNum, $v['cost_price']);
+            $sheet->setCellValue('O' . $rowNum, $v['sale_price']);
+            $sheet->setCellValue('P' . $rowNum, 0);
+            $sheet->setCellValue('Q' . $rowNum, 0);
+            $sheet->setCellValue('R' . $rowNum, 0);
+            $sheet->setCellValue('S' . $rowNum, 0);
+            $sheet->setCellValue('T' . $rowNum, 1); // VATCOD (Default 1)
+            $sheet->setCellValue('U' . $rowNum, ''); // REMARK
+
+            $rowNum++;
+        }
+
+        // Auto width
+        foreach (range('A', 'U') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        \Yii::$app->response->format = Response::FORMAT_RAW;
+        \Yii::$app->response->headers->add('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        \Yii::$app->response->headers->add('Content-Disposition', 'attachment;filename="product_express_export_' . date('Y-m-d_H-i-s') . '.xlsx"');
+        \Yii::$app->response->headers->add('Cache-Control', 'max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        ob_start();
+        $writer->save('php://output');
+        $content = ob_get_clean();
+
+        return $content;
+    }
 }

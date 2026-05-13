@@ -36,7 +36,10 @@ $this->params['breadcrumbs'][] = $this->title;
                           style="margin-left: 10px">
                         <button class="btn btn-info"><i class="fa fa-download"></i> Download product pattern</button>
                     </form>
-
+                    <form action="<?= Url::to(['product/export-express'], true) ?>" method="post"
+                          style="margin-left: 10px">
+                        <button class="btn btn-warning"><i class="fa fa-download"></i> Export Express</button>
+                    </form>
                 </div>
 
             </div>

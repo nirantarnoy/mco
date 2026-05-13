@@ -457,4 +457,144 @@ class CustomerController extends BaseController
 
         return $content;
     }
+
+    public function actionExportExpress()
+    {
+        $sql = "SELECT * FROM customer ORDER BY id ASC";
+        $customers = \Yii::$app->db->createCommand($sql)->queryAll();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Row 1: Instruction
+        $sheet->mergeCells('A1:V1');
+        $sheet->setCellValue('A1', '**ช่องข้อความที่เป็นอักษรสีแดง ต้องใช้ให้ครบทุกช่อง**');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF0000FF'));
+
+        // Row 2: Headers
+        $headers = [
+            'CUSCOD', 'PRENAM', 'CUSNAM', 'ADDR01', 'ADDR02', 'ADDR03', 'ZIPCOD', 'TELNUM',
+            'CUSTYP', 'ACCNUM', 'CONTACT', 'DLVBY', 'SLMCOD', 'AREACOD', 'TABPR', 'PAYTRM', 'PAYCOND', 'DISC', 'CRLINE', 'REMARK', 'TAXID', 'ORGNUM'
+        ];
+
+        $mandatoryCols = ['A', 'B', 'C', 'D', 'I', 'J', 'O', 'U', 'V'];
+
+        foreach ($headers as $index => $header) {
+            $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
+            $sheet->setCellValue($col . '2', $header);
+            if (in_array($col, $mandatoryCols)) {
+                $sheet->getStyle($col . '2')->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFFF0000'));
+            }
+        }
+
+        // Row 3: Thai Labels
+        $labels = [
+            '*รหัสลูกค้า*', '*คำนำหน้าชื่อ*', '*ชื่อลูกค้า*', '*ที่อยู่บรรทัดที่ 1*', 'ที่อยู่บรรทัดที่ 2', 'ที่อยู่บรรทัดที่ 3', 'รหัสไปรษณีย์', 'โทร-Fax',
+            '*ประเภทลูกค้า*', '*เลขที่บัญชี*', 'ชื่อผู้ติดต่อ', 'ขนส่งโดย', 'พนักงานขาย', 'เขตการขาย', '*ตารางราคา*', 'เครดิต', 'เงื่อนไขการชำระเงิน', 'ส่วนลด', 'วงเงินสินเชื่อ', 'หมายเหตุ', '*เลขประจำตัวผู้เสียภาษี*', 'สาขา'
+        ];
+        foreach ($labels as $index => $label) {
+            $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
+            $sheet->setCellValue($col . '3', $label);
+            $sheet->getStyle($col . '3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            if (in_array($col, $mandatoryCols)) {
+                $sheet->getStyle($col . '3')->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFFF0000'));
+            }
+        }
+
+        // Row 4: Constraints
+        $constraints = [
+            'ห้ามเกิน 10 ตัว ห้ามเว้นวรรค,ห้ามใช้เครื่องหมาย / * " .', 'ห้ามเกิน 15 ตัว', 'ห้ามเกิน 60 ตัว', 'ห้ามเกิน 50 ตัว', 'ห้ามเกิน 50 ตัว', 'ห้ามเกิน 20 ตัว', 'ห้ามเกิน 5 ตัว', 'ห้ามเกิน 50 ตัว',
+            'ห้ามเกิน 2 ตัว เช่น 00=ลูกค้าประจำ, 04=ลูกค้าชั่วคราว', 'ห้ามเกิน 15 ตัว', 'ห้ามเกิน 40 ตัว', 'ห้ามเกิน 2 ตัว', 'ห้ามเกิน 10 ตัว', 'ห้ามเกิน 4 ตัว', '0=ขายต่ำสุด หรือ 1-5', 'ห้ามเกิน 3 ตัว', 'ห้ามเกิน 25 ตัว', 'ห้ามเกิน 10 ตัว', 'ห้ามเกิน 8 ตัว', 'ห้ามเกิน 50 ตัว', 'ห้ามเกิน 15 ตัว', 'สำนักงานใหญ่กรอก 0 สาขา เช่น สาขาที่ 00011 ให้กรอก 11 เท่านั้น'
+        ];
+        foreach ($constraints as $index => $constraint) {
+            $col = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
+            $sheet->setCellValue($col . '4', $constraint);
+            $sheet->getStyle($col . '4')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle($col . '4')->getFont()->setSize(8);
+            if (in_array($col, $mandatoryCols)) {
+                $sheet->getStyle($col . '4')->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FFFF0000'));
+            }
+        }
+
+        // Row 6: Note (Blue)
+        $sheet->mergeCells('A6:C6');
+        $sheet->setCellValue('A6', '**กรณีตัวอักษรเป็นภาษาอังกฤษ จะต้องใช้อักษรตัวใหญ่**');
+        $sheet->getStyle('A6')->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color('FF0000FF'));
+
+        // Fill Data starting from Row 7
+        $rowNum = 7;
+        foreach ($customers as $v) {
+            $sheet->setCellValue('A' . $rowNum, strtoupper($v['code']));
+
+            // PRENAM and CUSNAM logic
+            $name = $v['name'];
+            $prenam = '';
+            $cusnam = $name;
+            $prefixes = ['บจก.', 'หจก.', 'บริษัท', 'ห้างหุ้นส่วนจำกัด', 'นาย', 'นาง', 'นางสาว'];
+            foreach ($prefixes as $p) {
+                if (mb_strpos($name, $p) === 0) {
+                    $prenam = $p;
+                    $cusnam = trim(mb_substr($name, mb_strlen($p)));
+                    break;
+                }
+            }
+            if ($prenam == '') $prenam = '.'; // Default for mandatory field
+
+            $sheet->setCellValue('B' . $rowNum, $prenam);
+            $sheet->setCellValue('C' . $rowNum, strtoupper($cusnam));
+
+            // Address logic
+            $addr1 = trim(($v['home_number'] ?? '') . ' ' . ($v['street'] ?? ''));
+            $addr2 = trim(($v['aisle'] ?? '') . ' ' . ($v['district_name'] ?? ''));
+            $addr3 = trim(($v['city_name'] ?? '') . ' ' . ($v['province_name'] ?? ''));
+
+            $sheet->setCellValue('D' . $rowNum, strtoupper($addr1));
+            $sheet->setCellValue('E' . $rowNum, strtoupper($addr2));
+            $sheet->setCellValue('F' . $rowNum, strtoupper($addr3));
+            $sheet->setCellValue('G' . $rowNum, $v['zipcode']);
+            $sheet->setCellValue('H' . $rowNum, $v['phone']);
+
+            $sheet->setCellValue('I' . $rowNum, '00'); // CUSTYP
+            $sheet->setCellValue('J' . $rowNum, ''); // ACCNUM
+            $sheet->setCellValue('K' . $rowNum, strtoupper($v['contact_name']));
+            $sheet->setCellValue('L' . $rowNum, ''); // DLVBY
+            $sheet->setCellValue('M' . $rowNum, ''); // SLMCOD
+            $sheet->setCellValue('N' . $rowNum, ''); // AREACOD
+            $sheet->setCellValue('O' . $rowNum, '0'); // TABPR
+            $sheet->setCellValue('P' . $rowNum, '0'); // PAYTRM
+            $sheet->setCellValue('Q' . $rowNum, ''); // PAYCOND
+            $sheet->setCellValue('R' . $rowNum, ''); // DISC
+            $sheet->setCellValue('S' . $rowNum, '0'); // CRLINE
+            $sheet->setCellValue('T' . $rowNum, strtoupper($v['description'])); // REMARK
+            $sheet->setCellValue('U' . $rowNum, $v['taxid']);
+
+            $orgnum = '0';
+            if (isset($v['is_head']) && $v['is_head'] == 0 && !empty($v['branch_name'])) {
+                $orgnum = preg_replace('/[^0-9]/', '', $v['branch_name']);
+                if (empty($orgnum)) $orgnum = '0';
+                else $orgnum = (int)$orgnum;
+            }
+            $sheet->setCellValue('V' . $rowNum, $orgnum);
+
+            $rowNum++;
+        }
+
+        // Auto width for columns
+        foreach (range('A', 'V') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        // Set response headers for download
+        \Yii::$app->response->format = Response::FORMAT_RAW;
+        \Yii::$app->response->headers->add('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        \Yii::$app->response->headers->add('Content-Disposition', 'attachment;filename="customer_express_export_' . date('Y-m-d_H-i-s') . '.xlsx"');
+        \Yii::$app->response->headers->add('Cache-Control', 'max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        ob_start();
+        $writer->save('php://output');
+        $content = ob_get_clean();
+
+        return $content;
+    }
 }
