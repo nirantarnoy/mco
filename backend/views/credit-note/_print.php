@@ -20,7 +20,7 @@ $formatter = Yii::$app->formatter;
     <style>
         @page {
             size: A4;
-            margin: 8mm;
+            margin: 10mm 10mm 20mm 10mm; /* Top, Right, Bottom (2cm), Left */
         }
 
         @font-face {
@@ -58,17 +58,18 @@ $formatter = Yii::$app->formatter;
                 color: #000;
             }
 
-            .print-container {
+            .print-container, .container {
                 font-family: 'THSarabunPSK' !important;
-                max-width: 0 auto;
-                width: 100%;
+                max-width: none !important;
+                width: 100% !important;
                 page-break-after: always;
                 padding: 0 !important;
                 margin: 0 !important;
                 border: none !important;
+                box-shadow: none !important;
             }
 
-            .print-container:last-child {
+            .print-container:last-child, .container:last-child {
                 page-break-after: auto;
             }
 
@@ -99,8 +100,8 @@ $formatter = Yii::$app->formatter;
         .container {
             font-family: 'THSarabunPSK' !important;
             width: 100%;
-            max-width: 210mm;
             margin: 0 auto;
+            padding: 0;
         }
 
         .header {
@@ -588,10 +589,10 @@ $formatter = Yii::$app->formatter;
                         <div class="label">รหัสลูกค้า</div>
                         <div class="value">
                             <?php 
-                                if ($model->customer_id) {
-                                    echo Html::encode(\backend\models\Customer::findCode($model->customer_id));
-                                } elseif ($model->vendor_id) {
-                                    echo Html::encode(\backend\models\Vendor::findCode($model->vendor_id));
+                                if ($model->customer) {
+                                    echo Html::encode($model->customer->code);
+                                } elseif ($model->vendor) {
+                                    echo Html::encode($model->vendor->code);
                                 }
                             ?>
                         </div>
@@ -600,10 +601,10 @@ $formatter = Yii::$app->formatter;
                         <div class="label">ชื่อลูกค้า</div>
                         <div class="value">
                             <?php 
-                                if ($model->customer_id) {
-                                    echo Html::encode(\backend\models\Customer::findName($model->customer_id));
-                                } elseif ($model->vendor_id) {
-                                    echo Html::encode(\backend\models\Vendor::findName($model->vendor_id));
+                                if ($model->customer) {
+                                    echo Html::encode($model->customer->name);
+                                } elseif ($model->vendor) {
+                                    echo Html::encode($model->vendor->name);
                                 }
                             ?>
                         </div>
