@@ -355,7 +355,7 @@ class PurchController extends BaseController
 
 
         if ($model->load(Yii::$app->request->post())) {
-            $model->rev = (int)$model->rev + 1;
+
             $custom_vat_amount = \Yii::$app->request->post('purch_vat_amount');
             $customer_tax_amount = \Yii::$app->request->post('purch_tax_amount');
             $deposit_date = \Yii::$app->request->post('deposit_date');

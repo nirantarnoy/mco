@@ -338,7 +338,7 @@ $this->registerJs($autocompleteJs);
                             'maxlength' => true,
                             'placeholder' => 'ระบบจะสร้างอัตโนมัติหากไม่ระบุ'
                         ]) ?>
-                        <?= $form->field($model, 'rev')->textInput(['readOnly' => true]) ?>
+                        <?= $form->field($model, 'rev')->textInput() ?>
 
 
 

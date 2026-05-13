@@ -758,7 +758,7 @@ window.addEventListener('afterprint', function() {
                                     echo Html::encode($address);
                                     ?>
                                 </div>
-                                <div style="margin-top: 4px;">TAX ID: <?= Html::encode($model->customer_tax_id ?: '') ?></div>
+                                <div style="margin-top: 4px;"><span class="field-label">เลขประจำตัวผู้เสียภาษี:</span> <?= Html::encode($model->customer_tax_id ?: '') ?></div>
                             </td>
                         </tr>
                     </table>

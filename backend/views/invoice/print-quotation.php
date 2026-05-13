@@ -805,7 +805,7 @@ window.addEventListener('afterprint', function() {
                     $address = trim($address);
                     echo Html::encode($address);
                     ?><br>
-                    เลขประจำตัวผู้เสียภาษี
+                    <span id="labelCustomerTaxId">เลขประจำตัวผู้เสียภาษี</span>
                     <?= Html::encode($model->customer_tax_id ?: '') ?>
                 </span>
             </div>
@@ -1049,6 +1049,12 @@ window.addEventListener('afterprint', function() {
                 else if (text === 'Credit, Due:') label.textContent = 'เงื่อนไข / วันที่ครบกำหนด / Credit, Due:';
             }
         });
+        
+        // Customer Tax ID label
+        const labelCustomerTaxId = document.getElementById('labelCustomerTaxId');
+        if (labelCustomerTaxId) {
+            labelCustomerTaxId.textContent = lang === 'en' ? 'Tax ID:' : 'เลขประจำตัวผู้เสียภาษี';
+        }
 
         // Table headers
         const tableHeaders = document.querySelectorAll('.items-table thead th');
