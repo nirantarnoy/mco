@@ -679,6 +679,23 @@ $formatter = Yii::$app->formatter;
                         <td class="text-right"><?= $formatter->asDecimal($item->quantity * $item->unit_price, 2) ?></td>
                     </tr>
                 <?php endforeach; ?>
+                <?php
+                $itemCount = count($model->creditNoteItems);
+                $minRows = 10; // กำหนดจำนวนแถวขั้นต่ำเพื่อให้ดูเต็มหน้า
+                if ($itemCount < $minRows):
+                    for ($k = $itemCount; $k < $minRows; $k++):
+                ?>
+                    <tr style="height: 35px;">
+                        <td class="text-center"><?= $k + 1 ?></td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                <?php
+                    endfor;
+                endif;
+                ?>
                 <?php if ($totalDiscount > 0): ?>
                     <tr>
                         <td colspan="4" class="text-right">Discount</td>
