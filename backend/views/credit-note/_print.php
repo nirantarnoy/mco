@@ -685,11 +685,11 @@ $formatter = Yii::$app->formatter;
                 <?php endforeach; ?>
                 <?php
                 $itemCount = count($model->creditNoteItems);
-                $minRows = 10; // กำหนดจำนวนแถวขั้นต่ำเพื่อให้ดูเต็มหน้า
+                $minRows = 6; // ลดจำนวนแถวลงเพื่อไม่ให้ล้นหน้า A4
                 if ($itemCount < $minRows):
                     for ($k = $itemCount; $k < $minRows; $k++):
                 ?>
-                    <tr style="height: 35px;">
+                    <tr style="height: 30px;">
                         <td class="text-center">&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
