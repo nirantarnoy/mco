@@ -585,7 +585,9 @@ $formatter = Yii::$app->formatter;
                         <div class="label">รหัสลูกค้า</div>
                         <div class="value">
                             <?php 
-                                if ($model->customer) {
+                                if ($model->invoice) {
+                                    echo Html::encode($model->invoice->customer_code);
+                                } elseif ($model->customer) {
                                     echo Html::encode($model->customer->code);
                                 } elseif ($model->vendor) {
                                     echo Html::encode($model->vendor->code);
@@ -597,7 +599,9 @@ $formatter = Yii::$app->formatter;
                         <div class="label">ชื่อลูกค้า</div>
                         <div class="value">
                             <?php 
-                                if ($model->customer) {
+                                if ($model->invoice) {
+                                    echo Html::encode($model->invoice->customer_name);
+                                } elseif ($model->customer) {
                                     echo Html::encode($model->customer->name);
                                 } elseif ($model->vendor) {
                                     echo Html::encode($model->vendor->name);
@@ -609,18 +613,22 @@ $formatter = Yii::$app->formatter;
                         <div class="label">ที่อยู่</div>
                         <div class="value">
                             <?php 
-                                if ($model->customer_id) {
+                                if ($model->invoice) {
+                                    echo Html::encode($model->invoice->customer_address);
+                                } elseif ($model->customer) {
                                     echo Html::encode(\backend\models\Customer::findFullAddress($model->customer_id));
-                                } elseif ($model->vendor_id) {
+                                } elseif ($model->vendor) {
                                     echo Html::encode(\backend\models\Vendor::findFullAddress($model->vendor_id));
                                 }
                             ?>
                             <br>
                             <?php 
                                 $taxId = '';
-                                if ($model->customer_id && $model->customer) {
+                                if ($model->invoice) {
+                                    $taxId = $model->invoice->customer_tax_id;
+                                } elseif ($model->customer) {
                                     $taxId = $model->customer->taxid;
-                                } elseif ($model->vendor_id && $model->vendor) {
+                                } elseif ($model->vendor) {
                                     $taxId = $model->vendor->taxid;
                                 }
                             ?>
