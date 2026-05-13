@@ -62,16 +62,12 @@ $formatter = Yii::$app->formatter;
                 font-family: 'THSarabunPSK' !important;
                 max-width: none !important;
                 width: 100% !important;
-                page-break-after: always;
                 padding: 0 !important;
                 margin: 0 !important;
                 border: none !important;
                 box-shadow: none !important;
             }
-
-            .print-container:last-child, .container:last-child {
-                page-break-after: auto;
-            }
+        }
 
             .copy-watermark {
                 display: none !important;
