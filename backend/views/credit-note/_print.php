@@ -686,7 +686,7 @@ $formatter = Yii::$app->formatter;
                     for ($k = $itemCount; $k < $minRows; $k++):
                 ?>
                     <tr style="height: 35px;">
-                        <td class="text-center"><?= $k + 1 ?></td>
+                        <td class="text-center">&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
