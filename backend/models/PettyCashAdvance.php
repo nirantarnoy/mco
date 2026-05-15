@@ -112,6 +112,14 @@ class PettyCashAdvance extends ActiveRecord
     }
 
     public function beforeSave($insert){
+        if ($this->request_date) {
+            $date = \DateTime::createFromFormat('m/d/Y', $this->request_date);
+            if ($date) {
+                $this->request_date = $date->format('Y-m-d');
+            } else {
+                $this->request_date = date('Y-m-d', strtotime($this->request_date));
+            }
+        }
         $this->created_at = time();
         $this->created_by = Yii::$app->user->id;
         $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));

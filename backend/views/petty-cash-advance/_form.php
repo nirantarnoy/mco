@@ -146,7 +146,9 @@ $(document).ready(function() {
                     <?= $form->field($model, 'request_date')->widget(DatePicker::class, [
                         'options' => ['placeholder' => 'เลือกวันที่เบิก'],
                         'pluginOptions' => [
+                            'format' => 'yyyy-mm-dd',
                             'autoclose' => true,
+                            'todayHighlight' => true,
                         ],
                     ]) ?>
                 </div>

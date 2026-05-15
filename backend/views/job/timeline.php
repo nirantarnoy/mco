@@ -375,7 +375,11 @@ if($today > $end){
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <?php foreach ($purchReqs as $req): ?>
+                                    <?php
+                                    $totalPurchReq = 0;
+                                    foreach ($purchReqs as $req):
+                                        $totalPurchReq += $req['total_amount'];
+                                        ?>
                                         <?php
                                         $line_status = '';
                                         if ($req['approve_status'] == 0) {
@@ -403,6 +407,13 @@ if($today > $end){
                                         </tr>
                                     <?php endforeach; ?>
                                     </tbody>
+                                    <tfoot class="bg-light">
+                                    <tr>
+                                        <td colspan="4" class="text-right font-weight-bold">รวมใบขอซื้อ:</td>
+                                        <td class="text-right font-weight-bold text-primary"><?= number_format($totalPurchReq, 2) ?></td>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         <?php else: ?>
@@ -443,7 +454,17 @@ if($today > $end){
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <?php foreach ($purchases as $purchase): ?>
+                                    <?php
+                                    $totalPoAmount = 0;
+                                    $totalPoDiscount = 0;
+                                    $totalPoVat = 0;
+                                    $totalPoNet = 0;
+                                    foreach ($purchases as $purchase):
+                                        $totalPoAmount += $purchase['total_amount'];
+                                        $totalPoDiscount += $purchase['discount_amount'];
+                                        $totalPoVat += $purchase['vat_amount'];
+                                        $totalPoNet += $purchase['net_amount'];
+                                        ?>
                                         <?php
                                         $line_status = '';
                                         if ($purchase['approve_status'] == 0) {
@@ -473,6 +494,16 @@ if($today > $end){
                                         </tr>
                                     <?php endforeach; ?>
                                     </tbody>
+                                    <tfoot class="bg-light">
+                                    <tr>
+                                        <td colspan="4" class="text-right font-weight-bold">รวมใบสั่งซื้อ:</td>
+                                        <td class="text-right font-weight-bold"><?= number_format($totalPoAmount, 2) ?></td>
+                                        <td class="text-right font-weight-bold"><?= number_format($totalPoDiscount, 2) ?></td>
+                                        <td class="text-right font-weight-bold"><?= number_format($totalPoVat, 2) ?></td>
+                                        <td class="text-right font-weight-bold text-danger"><?= number_format($totalPoNet, 2) ?></td>
+                                        <td></td>
+                                    </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         <?php else: ?>
@@ -509,7 +540,11 @@ if($today > $end){
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <?php foreach ($purchasesnonepr as $purchase): ?>
+                                    <?php
+                                    $totalPoNonePr = 0;
+                                    foreach ($purchasesnonepr as $purchase):
+                                        $totalPoNonePr += $purchase['total_amount'];
+                                        ?>
                                         <tr>
                                             <td style="text-align: center;"><?= Html::encode($purchase['purch_no']) ?></td>
                                             <td style="text-align: center;"><?= date('d/m/Y', strtotime($purchase['purch_date'])) ?></td>
@@ -519,6 +554,13 @@ if($today > $end){
                                         </tr>
                                     <?php endforeach; ?>
                                     </tbody>
+                                    <tfoot class="bg-light">
+                                    <tr>
+                                        <td colspan="3" class="text-right font-weight-bold">รวมใบสั่งซื้อ (None PR):</td>
+                                        <td class="text-right font-weight-bold text-danger"><?= number_format($totalPoNonePr, 2) ?></td>
+                                        <td></td>
+                                    </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         <?php else: ?>
@@ -558,7 +600,11 @@ if($today > $end){
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <?php foreach ($journalTrans as $trans): ?>
+                                    <?php
+                                    $totalJournalQty = 0;
+                                    foreach ($journalTrans as $trans):
+                                        $totalJournalQty += $trans['qty'];
+                                        ?>
                                         <?php
                                            $line_type_name = '';
                                            if($trans['trans_type_id']==3){
@@ -591,6 +637,13 @@ if($today > $end){
                                         </tr>
                                     <?php endforeach; ?>
                                     </tbody>
+                                    <tfoot class="bg-light">
+                                    <tr>
+                                        <td colspan="4" class="text-right font-weight-bold">รวมจำนวนทั้งหมด:</td>
+                                        <td style="text-align: right;" class="font-weight-bold text-primary"><?= number_format($totalJournalQty, 0) ?></td>
+                                        <td colspan="3"></td>
+                                    </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         <?php else: ?>
@@ -750,7 +803,13 @@ if($today > $end){
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <?php foreach ($vehicleExpense as $expanse): ?>
+                                    <?php
+                                    $totalVehicleCost = 0;
+                                    $totalVehicleWage = 0;
+                                    foreach ($vehicleExpense as $expanse):
+                                        $totalVehicleCost += $expanse['vehicle_cost'];
+                                        $totalVehicleWage += $expanse['total_wage'];
+                                        ?>
                                         <tr>
                                             <td style="text-align: center;"><?= Html::encode($expanse['vehicle_no']) ?></td>
                                             <td style="text-align: center;"><?= date('d/m/Y', strtotime($expanse['expense_date'])) ?></td>
@@ -761,6 +820,14 @@ if($today > $end){
                                         </tr>
                                     <?php endforeach; ?>
                                     </tbody>
+                                    <tfoot class="bg-light">
+                                    <tr>
+                                        <td colspan="3" class="text-right font-weight-bold">รวมค่าใช้จ่ายรถ:</td>
+                                        <td style="text-align: right;" class="font-weight-bold text-danger"><?= number_format($totalVehicleCost, 2) ?></td>
+                                        <td class="text-right font-weight-bold">รวมค่าจ้าง:</td>
+                                        <td style="text-align: right;" class="font-weight-bold text-danger"><?= number_format($totalVehicleWage, 2) ?></td>
+                                    </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         <?php else: ?>
@@ -802,7 +869,17 @@ if($today > $end){
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <?php foreach ($invoices as $invoice): ?>
+                                    <?php
+                                    $totalInvSubtotal = 0;
+                                    $totalInvDiscount = 0;
+                                    $totalInvVat = 0;
+                                    $totalInvAmount = 0;
+                                    foreach ($invoices as $invoice):
+                                        $totalInvSubtotal += $invoice['subtotal'];
+                                        $totalInvDiscount += $invoice['discount_amount'];
+                                        $totalInvVat += $invoice['vat_amount'];
+                                        $totalInvAmount += $invoice['total_amount'];
+                                        ?>
                                         <tr>
                                             <td><?= Html::encode($invoice['invoice_number']) ?></td>
                                             <td>
@@ -825,6 +902,16 @@ if($today > $end){
                                         </tr>
                                     <?php endforeach; ?>
                                     </tbody>
+                                    <tfoot class="bg-light">
+                                    <tr>
+                                        <td colspan="5" class="text-right font-weight-bold">รวมใบกำกับภาษี:</td>
+                                        <td class="text-right font-weight-bold"><?= number_format($totalInvSubtotal, 2) ?></td>
+                                        <td class="text-right font-weight-bold"><?= number_format($totalInvDiscount, 2) ?></td>
+                                        <td class="text-right font-weight-bold"><?= number_format($totalInvVat, 2) ?></td>
+                                        <td class="text-right font-weight-bold text-success"><?= number_format($totalInvAmount, 2) ?></td>
+                                        <td></td>
+                                    </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         <?php else: ?>
@@ -849,7 +936,11 @@ if($today > $end){
                     </div>
                     <div class="card-body">
                         <?php if (!empty($billingInvoices)): ?>
-                            <?php foreach ($billingInvoices as $billing): ?>
+                            <?php
+                            $grandTotalBilling = 0;
+                            foreach ($billingInvoices as $billing):
+                                $grandTotalBilling += $billing['total_amount'];
+                                ?>
                                 <div class="billing-group mb-4">
                                     <!-- หัวข้อใบวางบิล -->
                                     <div class="billing-header bg-light p-3 rounded mb-2">
@@ -924,6 +1015,9 @@ if($today > $end){
                                     </div>
                                 </div>
                             <?php endforeach; ?>
+                            <div class="alert alert-success mt-3 text-right">
+                                <h5 class="mb-0">ยอดรวมใบวางบิลทั้งหมด: <span class="text-bold text-success"><?= number_format($grandTotalBilling, 2) ?></span> บาท</h5>
+                            </div>
                         <?php else: ?>
                             <div class="alert alert-teal mb-0">
                                 <i class="fas fa-info-circle"></i>
@@ -963,7 +1057,17 @@ if($today > $end){
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <?php foreach ($paymentReceipts as $receipt): ?>
+                                    <?php
+                                    $totalRecReceived = 0;
+                                    $totalRecVat = 0;
+                                    $totalRecWht = 0;
+                                    $totalRecNet = 0;
+                                    foreach ($paymentReceipts as $receipt):
+                                        $totalRecReceived += $receipt['received_amount'];
+                                        $totalRecVat += $receipt['vat_amount'];
+                                        $totalRecWht += $receipt['withholding_tax'];
+                                        $totalRecNet += $receipt['net_amount'];
+                                        ?>
                                         <tr>
                                             <td class="font-weight-bold"><?= Html::encode($receipt['receipt_number']) ?></td>
                                             <td><?= date('d/m/Y', strtotime($receipt['payment_date'])) ?></td>
@@ -1004,6 +1108,16 @@ if($today > $end){
                                         <?php endif; ?>
                                     <?php endforeach; ?>
                                     </tbody>
+                                    <tfoot class="bg-light">
+                                    <tr>
+                                        <td colspan="4" class="text-right font-weight-bold">รวมใบเสร็จรับเงิน:</td>
+                                        <td class="text-right font-weight-bold"><?= number_format($totalRecReceived, 2) ?></td>
+                                        <td class="text-right font-weight-bold"><?= number_format($totalRecVat, 2) ?></td>
+                                        <td class="text-right font-weight-bold text-danger"><?= number_format($totalRecWht, 2) ?></td>
+                                        <td class="text-right font-weight-bold text-success"><?= number_format($totalRecNet, 2) ?></td>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         <?php else: ?>
