@@ -106,6 +106,11 @@ class Job extends \common\models\Job
         return $this->hasMany(JobPoDoc::className(), ['job_id' => 'id']);
     }
 
+    public function getJobReportDocs()
+    {
+        return $this->hasMany(JobReportDoc::className(), ['job_id' => 'id']);
+    }
+
     public static function findJobNo($id)
     {
         $model = \backend\models\Job::find()->where(['id' => $id])->one();

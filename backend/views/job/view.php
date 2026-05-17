@@ -161,8 +161,62 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php endif; ?>
                 </tbody>
             </table>
-        </div>
     </div>
+
+    <?php
+    $reportDocs = \backend\models\JobReportDoc::find()->where(['job_id' => $model->id])->all();
+    if (!empty($reportDocs)):
+        $groupedDocs = [];
+        foreach ($reportDocs as $doc) {
+            $folder = $doc->folder_name ?: 'ทั่วไป';
+            $groupedDocs[$folder][] = $doc;
+        }
+    ?>
+        <div class="card card-outline card-info mt-3 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title text-info mb-0 font-weight-bold">
+                    <i class="fas fa-folder-open text-warning me-2"></i> เอกสารรายงาน (แยกตามโฟลเดอร์)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <?php foreach ($groupedDocs as $folder => $docs): ?>
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 border-light-subtle shadow-sm">
+                                <div class="card-header bg-light py-2">
+                                    <h6 class="card-title mb-0 font-weight-bold text-secondary">
+                                        <i class="fas fa-folder text-warning me-2"></i> <?= Html::encode($folder) ?>
+                                    </h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <ul class="list-group list-group-flush">
+                                        <?php foreach ($docs as $doc): ?>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                                <div class="text-truncate" style="max-width: 80%;">
+                                                    <i class="far fa-file-pdf text-danger me-2"></i>
+                                                    <?= Html::a(Html::encode($doc->file_name), 
+                                                        Yii::getAlias('@web/uploads/job/' . $doc->file_path), 
+                                                        [
+                                                            'class' => 'text-primary small',
+                                                            'target' => '_blank',
+                                                            'data-pjax' => '0'
+                                                        ]) 
+                                                    ?>
+                                                </div>
+                                                <span class="badge badge-secondary badge-pill small font-weight-normal">
+                                                    <?= Yii::$app->formatter->asShortSize($doc->file_size) ?>
+                                                </span>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 
 </div>
 

@@ -202,11 +202,105 @@ if(!$model->isNewRecord){
                         ]) ?>
                     </div>
                 <?php endif; ?>
-            </div>
-            <div class="col-lg-3">
-                <?= $form->field($model, 'report_doc')->fileInput() ?>
-            </div>
         </div>
+
+        <div class="row mt-4">
+            <div class="col-lg-12">
+                <div class="card card-outline card-info shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center bg-white py-3">
+                        <h5 class="card-title text-info mb-0 font-weight-bold">
+                            <i class="fas fa-folder-open text-warning me-2"></i> เอกสารรายงาน (จัดการด้วยโฟลเดอร์)
+                        </h5>
+                        <button type="button" class="btn btn-success btn-sm" onclick="createNewFolder()">
+                            <i class="fas fa-folder-plus"></i> สร้างโฟลเดอร์ใหม่
+                        </button>
+                    </div>
+                    <div class="card-body bg-light-50">
+                        <div class="row" id="folders-container">
+                            <?php
+                            $groupedReportDocs = [];
+                            if (!$model->isNewRecord) {
+                                $reportDocs = $model->getJobReportDocs()->all();
+                                foreach ($reportDocs as $doc) {
+                                    $folder = $doc->folder_name ?: 'ทั่วไป';
+                                    $groupedReportDocs[$folder][] = $doc;
+                                }
+                            }
+                            
+                            // หากยังไม่มีโฟลเดอร์ใดๆ เลย ให้เริ่มด้วยโฟลเดอร์ "ทั่วไป"
+                            if (empty($groupedReportDocs)) {
+                                $groupedReportDocs['ทั่วไป'] = [];
+                            }
+                            
+                            foreach ($groupedReportDocs as $folderName => $docs):
+                                $safeFolderKey = bin2hex($folderName);
+                            ?>
+                                <div class="col-md-6 mb-3 folder-card-container" id="folder-card-<?= $safeFolderKey ?>">
+                                    <div class="card h-100 border-light-subtle shadow-sm">
+                                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                            <span class="font-weight-bold text-secondary">
+                                                <i class="fas fa-folder text-warning me-2"></i>
+                                                <span class="folder-title"><?= Html::encode($folderName) ?></span>
+                                            </span>
+                                            <?php if ($folderName !== 'ทั่วไป' && empty($docs)): ?>
+                                                <button type="button" class="btn btn-xs btn-outline-danger" onclick="removeFolderCard('<?= $safeFolderKey ?>')">
+                                                    <i class="fas fa-trash"></i> ลบโฟลเดอร์
+                                                </button>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="card-body">
+                                            <!-- ส่วนอัพโหลดไฟล์ใหม่สำหรับโฟลเดอร์นี้ -->
+                                            <div class="mb-3">
+                                                <label class="form-label text-muted small">เลือกไฟล์แนบเพิ่มในโฟลเดอร์นี้:</label>
+                                                <input type="file" class="form-control form-control-sm" name="report_files_<?= $safeFolderKey ?>[]" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
+                                                <input type="hidden" name="active_folders[]" value="<?= Html::encode($folderName) ?>">
+                                                <input type="hidden" name="folder_keys[]" value="<?= $safeFolderKey ?>">
+                                            </div>
+                                            
+                                            <!-- รายการไฟล์ที่เคยแนบแล้ว -->
+                                            <?php if (!empty($docs)): ?>
+                                                <div class="mt-3">
+                                                    <strong class="small text-secondary">ไฟล์ในโฟลเดอร์:</strong>
+                                                    <ul class="list-unstyled mb-0 mt-1">
+                                                        <?php foreach ($docs as $doc): ?>
+                                                            <li class="d-flex justify-content-between align-items-center py-1 border-bottom border-light">
+                                                                <div class="text-truncate" style="max-width: 80%;">
+                                                                    <i class="far fa-file-pdf text-danger me-1"></i>
+                                                                    <?= Html::a(Html::encode($doc->file_name), 
+                                                                        Yii::getAlias('@web/uploads/job/' . $doc->file_path), 
+                                                                        [
+                                                                            'class' => 'text-primary small',
+                                                                            'target' => '_blank',
+                                                                            'data-pjax' => '0'
+                                                                        ]) 
+                                                                    ?>
+                                                                    <small class="text-muted block-size">
+                                                                        (<?= Yii::$app->formatter->asShortSize($doc->file_size) ?>)
+                                                                    </small>
+                                                                </div>
+                                                                <?= Html::a('<i class="fas fa-trash"></i>', 
+                                                                    ['delete-report-doc', 'id' => $doc->id], 
+                                                                    [
+                                                                        'class' => 'btn btn-outline-danger btn-xs',
+                                                                        'data' => [
+                                                                            'confirm' => 'ต้องการลบไฟล์ "' . $doc->file_name . '" หรือไม่?',
+                                                                            'method' => 'post',
+                                                                        ],
+                                                                    ]) 
+                                                                ?>
+                                                            </li>
+                                                        <?php endforeach; ?>
+                                                    </ul>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         <div class="row">
             <div class="col-lg-6">
@@ -656,6 +750,69 @@ function pullQuotationDetails(e){
     }else{
         alert('กรุณาเลือกใบเสนอราคาก่อน');
     }
+}
+
+function createNewFolder() {
+    var folderName = prompt("กรุณาระบุชื่อโฟลเดอร์ใหม่:");
+    if (folderName === null) return;
+    folderName = folderName.trim();
+    if (folderName === "") {
+        alert("ชื่อโฟลเดอร์ห้ามว่าง!");
+        return;
+    }
+    
+    var exists = false;
+    $("input[name='active_folders[]']").each(function() {
+        if ($(this).val().toLowerCase() === folderName.toLowerCase()) {
+            exists = true;
+        }
+    });
+    
+    if (exists) {
+        alert("โฟลเดอร์นี้มีอยู่แล้ว!");
+        return;
+    }
+    
+    var safeFolderKey = Array.from(new TextEncoder().encode(folderName)).map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    var html = '<div class="col-md-6 mb-3 folder-card-container" id="folder-card-' + safeFolderKey + '">' +
+        '<div class="card h-100 border-light-subtle shadow-sm">' +
+            '<div class="card-header bg-light d-flex justify-content-between align-items-center">' +
+                '<span class="font-weight-bold text-secondary">' +
+                    '<i class="fas fa-folder text-warning me-2"></i>' +
+                    '<span class="folder-title">' + escapeHtml(folderName) + '</span>' +
+                '</span>' +
+                '<button type="button" class="btn btn-xs btn-outline-danger" onclick="removeFolderCard(\'' + safeFolderKey + '\')">' +
+                    '<i class="fas fa-trash"></i> ลบโฟลเดอร์' +
+                '</button>' +
+            '</div>' +
+            '<div class="card-body">' +
+                '<div class="mb-3">' +
+                    '<label class="form-label text-muted small">เลือกไฟล์แนบเพิ่มในโฟลเดอร์นี้:</label>' +
+                    '<input type="file" class="form-control form-control-sm" name="report_files_' + safeFolderKey + '[]" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">' +
+                    '<input type="hidden" name="active_folders[]" value="' + escapeHtml(folderName) + '">' +
+                    '<input type="hidden" name="folder_keys[]" value="' + safeFolderKey + '">' +
+                '</div>' +
+            '</div>' +
+        '</div>' +
+    '</div>';
+    
+    $("#folders-container").append(html);
+}
+
+function removeFolderCard(safeFolderKey) {
+    if (confirm("ต้องการลบโฟลเดอร์นี้หรือไม่?")) {
+        $("#folder-card-" + safeFolderKey).remove();
+    }
+}
+
+function escapeHtml(text) {
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 JS;

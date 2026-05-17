@@ -562,17 +562,40 @@ class JobController extends BaseController
                     }
                 }
 
-                // จัดการไฟล์ report_doc (โค้ดเดิม)
-                $uploaded = UploadedFile::getInstances($model, 'report_doc');
-                if (!empty($uploaded)) {
-                    $loop = 0;
-                    foreach ($uploaded as $file) {
-                        $upfiles = "report_" . time()."_".$loop . "." . $file->getExtension();
-                        if ($file->saveAs('uploads/job/' . $upfiles)) {
-                            $model->report_doc = $upfiles;
-                            $model->save(false);
+                // จัดการไฟล์ report_doc ตามโฟลเดอร์ (เอกสารรายงาน)
+                $activeFolders = Yii::$app->request->post('active_folders', []);
+                $folderKeys = Yii::$app->request->post('folder_keys', []);
+                
+                if (!empty($activeFolders)) {
+                    foreach ($activeFolders as $idx => $folderName) {
+                        $key = isset($folderKeys[$idx]) ? $folderKeys[$idx] : bin2hex($folderName);
+                        // ดึงไฟล์แนบสำหรับโฟลเดอร์นี้
+                        $uploadedReportFiles = UploadedFile::getInstancesByName('report_files_' . $key);
+                        if (!empty($uploadedReportFiles)) {
+                            foreach ($uploadedReportFiles as $file) {
+                                if ($file->error === UPLOAD_ERR_OK) {
+                                    $fileName = 'report_' . time() . '_' . uniqid() . '.' . $file->getExtension();
+                                    $uploadPath = 'uploads/job/';
+                                    
+                                    if (!is_dir($uploadPath)) {
+                                        mkdir($uploadPath, 0777, true);
+                                    }
+                                    
+                                    if ($file->saveAs($uploadPath . $fileName)) {
+                                        // บันทึกลงตาราง job_report_doc
+                                        $reportDoc = new \backend\models\JobReportDoc();
+                                        $reportDoc->job_id = $model->id;
+                                        $reportDoc->folder_name = $folderName;
+                                        $reportDoc->file_name = $file->baseName . '.' . $file->extension;
+                                        $reportDoc->file_path = $fileName;
+                                        $reportDoc->file_size = $file->size;
+                                        $reportDoc->uploaded_at = time();
+                                        $reportDoc->uploaded_by = Yii::$app->user->id ?? null;
+                                        $reportDoc->save(false);
+                                    }
+                                }
+                            }
                         }
-                        $loop++;
                     }
                 }
                 // จัดการไฟล์ cus_po_doc - รองรับหลายไฟล์
@@ -1982,6 +2005,27 @@ class JobController extends BaseController
     public function actionDeletePoDoc($id)
     {
         $model = \backend\models\JobPoDoc::findOne($id);
+
+        if ($model !== null) {
+            $jobId = $model->job_id;
+            $model->delete(); // จะลบไฟล์อัตโนมัติผ่าน beforeDelete()
+            
+            Yii::$app->session->setFlash('success', 'ลบไฟล์สำเร็จ');
+            return $this->redirect(['update', 'id' => $jobId]);
+        }
+
+        Yii::$app->session->setFlash('error', 'ไม่พบไฟล์ที่ต้องการลบ');
+        return $this->redirect(Yii::$app->request->referrer);
+    }
+
+    /**
+     * ลบไฟล์แนบเอกสารรายงาน
+     * @param int $id ID ของไฟล์
+     * @return Response
+     */
+    public function actionDeleteReportDoc($id)
+    {
+        $model = \backend\models\JobReportDoc::findOne($id);
 
         if ($model !== null) {
             $jobId = $model->job_id;
