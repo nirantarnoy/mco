@@ -28,6 +28,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'method' => 'post',
             ],
         ]) ?>
+        <?= Html::a('กลับ', ['index'], ['class' => 'btn btn-secondary']) ?>
     </p>
 
     <?= DetailView::widget([
