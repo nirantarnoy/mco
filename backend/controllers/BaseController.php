@@ -37,6 +37,10 @@ class BaseController extends Controller
             if ($controllerName == 'site' && $actionName == 'index') {
                 return parent::beforeAction($action);
             }
+            // อนุโลมให้เข้าหน้ารายงานค่าแรงคนขับรถได้หากเข้าสู่ระบบแล้ว
+            if ($controllerName == 'driverwagereport') {
+                return parent::beforeAction($action);
+            }
             
             throw new ForbiddenHttpException('คุณไม่ได้รับอนุญาตให้ใช้ส่วนนี้ (' . $permissionName . ')');
         }

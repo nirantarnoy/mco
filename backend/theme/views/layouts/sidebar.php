@@ -508,6 +508,12 @@
                                         <p>สถานะใบงานรวม</p>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a href="index.php?r=driver-wage-report/index" class="nav-link driver-wage-report">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>ค่าเที่ยว/ค่าแรงพนักงานขับรถ</p>
+                                    </a>
+                                </li>
                             <?php endif; ?>
                         </ul>
                     </li>
