@@ -67,6 +67,10 @@ foreach ($modelline as $line) {
                 'class' => 'btn btn-warning',
                 'target' => '_blank'
             ]) ?>
+            <?= Html::a('<i class="fas fa-file-excel"></i> Export to Express', ['export-express', 'id' => $model->id], [
+                'class' => 'btn btn-success',
+                'target' => '_blank'
+            ]) ?>
 
             <?= Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
             <?php if ($model->approve_status == Quotation::APPROVE_STATUS_PENDING): ?>

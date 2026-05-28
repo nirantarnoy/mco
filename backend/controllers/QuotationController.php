@@ -13,6 +13,10 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\Response;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 /**
  * QuotationController implements the CRUD actions for Quotation model.
@@ -34,7 +38,39 @@ class QuotationController extends BaseController
         ];
     }
 
-
+    public function beforeAction($action)
+    {
+        if ($action->id == 'export-express') {
+            $auth = Yii::$app->authManager;
+            $permissionName = 'quotation/exportexpress';
+            if (!$auth->getPermission($permissionName)) {
+                try {
+                    $permission = $auth->createPermission($permissionName);
+                    $permission->description = 'ใบเสนอราคา - ส่งออก Excel (Express)';
+                    $auth->add($permission);
+                    
+                    // Auto-assign to any role that has quotation/index or quotation/view
+                    $roles = $auth->getRoles();
+                    foreach ($roles as $role) {
+                        $rolePermissions = $auth->getPermissionsByRole($role->name);
+                        $hasQuotationAccess = false;
+                        foreach ($rolePermissions as $rp) {
+                            if ($rp->name == 'quotation/index' || $rp->name == 'quotation/view') {
+                                $hasQuotationAccess = true;
+                                break;
+                            }
+                        }
+                        if ($hasQuotationAccess && !$auth->hasChild($role, $permission)) {
+                            $auth->addChild($role, $permission);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Yii::error("Error auto-adding permission: " . $e->getMessage());
+                }
+            }
+        }
+        return parent::beforeAction($action);
+    }
 
     /**
      * Lists all Quotation models.
@@ -560,5 +596,238 @@ class QuotationController extends BaseController
         exit;
     }
 
+    public function actionExportExpress($id = null)
+    {
+        if ($id) {
+            $models = Quotation::find()->where(['id' => $id])->all();
+        } else {
+            $searchModel = new QuotationSearch();
+            $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+            $dataProvider->pagination = false;
+            $models = $dataProvider->getModels();
+        }
 
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Columns Map
+        $columns = [
+            'DEPCOD', 'DOCNUM', 'DOCDAT', 'CUSCOD', 'CUSNAM', 'STKCOD', 'STKDES', 
+            'TRNQTY', 'UNITPR', 'DISC', 'AMOUNT', 'PAYTRM', 'DLVDAT', 'DISCOUNT', 
+            'ORGNUM', 'SLMCOD'
+        ];
+
+        // Row 1: Headers
+        $colIndex = 1;
+        foreach ($columns as $header) {
+            $sheet->setCellValueByColumnAndRow($colIndex, 1, $header);
+            $colIndex++;
+        }
+
+        // Row 2: Thai Labels
+        $labels = [
+            'แผนก', 'เลขที่บิล', 'วันที่บิล', 'รหัสลูกค้า', 'ชื่อลูกค้า', 'รหัสสินค้า', 'ชื่อสินค้า',
+            'จำนวน', 'ราคาต่อหน่วย', 'ส่วนลดแต่ละรายการ', 'จำนวนเงิน', 'เครดิต', 'ส่งของวันที่', 'ส่วนลดท้ายบิล',
+            'ลำดับสาขา', 'รหัสพนักงานขาย'
+        ];
+        $colIndex = 1;
+        foreach ($labels as $label) {
+            $sheet->setCellValueByColumnAndRow($colIndex, 2, $label);
+            $colIndex++;
+        }
+
+        // Row 3: Red Constraints
+        $constraints = [
+            'ห้ามเกิน 4 ตัว',
+            'ห้ามเกิน 30 ตัว',
+            'DD/MM/YYYY',
+            'ห้ามเกิน 10 ตัว ห้ามเว้นวรรค,ห้ามใช้เครื่องหมาย / \ " \' .',
+            'ห้ามเกิน 60 ตัว',
+            'ห้ามเกิน 20 ตัว',
+            'ห้ามเกิน 50 ตัว',
+            'ตัวเลข',
+            'ตัวเลข',
+            'ห้ามเกิน 10 ตัว',
+            'ตัวเลข',
+            'ห้ามเกิน 3 ตัว',
+            'DD/MM/YYYY',
+            'ห้ามเกิน 10 ตัว',
+            'สำนักงานใหญ่ กรอก 0 สาขา เช่น สาขาที่ 00011 ให้กรอก 11 เท่านั้น',
+            'ห้ามเกิน 10 ตัว'
+        ];
+        $colIndex = 1;
+        foreach ($constraints as $constraint) {
+            $sheet->setCellValueByColumnAndRow($colIndex, 3, $constraint);
+            $sheet->getStyleByColumnAndRow($colIndex, 3)->getFont()->getColor()->setARGB('FFFF0000');
+            $colIndex++;
+        }
+
+        // Row 4: Blue Notes
+        $notes = [
+            '',
+            '',
+            '',
+            '**กรณีกำหนดรหัสเป็นภาษาอังกฤษ จะต้องใช้อักษรตัวใหญ่',
+            '**ห้ามใส่เครื่องหมาย " กรณีต้องการพิมพ์รายงานจาก Express ไปยัง Excel',
+            'ห้ามเว้นวรรค,ห้ามใช้เครื่องหมาย / \ " \' .',
+            '**ห้ามใส่เครื่องหมาย " กรณีต้องการพิมพ์รายงานจาก Express ไปยัง Excel',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            ''
+        ];
+        $colIndex = 1;
+        foreach ($notes as $note) {
+            $sheet->setCellValueByColumnAndRow($colIndex, 4, $note);
+            $sheet->getStyleByColumnAndRow($colIndex, 4)->getFont()->getColor()->setARGB('FF0000FF');
+            $colIndex++;
+        }
+
+        // Row 5: Empty (leave empty)
+
+        // Row 6: Yellow Warning Message
+        $sheet->mergeCells('A6:P6');
+        $sheet->setCellValue('A6', 'ถ้าใส่ข้อมูลครบแล้วให้ลบบรรทัดที่ 2 ถึง บรรทัดที่ 6 ออก แล้วนำไฟล์นี้ไปใช้ใน EXPRESS PLATFORM');
+        
+        // Apply yellow background to merged range A6:P6
+        $sheet->getStyle('A6:P6')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('FFFFFF00');
+        $sheet->getStyle('A6:P6')->getFont()->setBold(true);
+
+        // Center alignments for header rows
+        for ($c = 1; $c <= 16; $c++) {
+            $sheet->getStyleByColumnAndRow($c, 2)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyleByColumnAndRow($c, 3)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyleByColumnAndRow($c, 4)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        }
+
+        $row = 7;
+        foreach ($models as $model) {
+            $lines = QuotationLine::find()->where(['quotation_id' => $model->id])->all();
+            foreach ($lines as $line) {
+                $colIndex = 1;
+
+                // A: DEPCOD
+                $depcod = '';
+                if ($model->sale_emp_id) {
+                    $emp = \backend\models\Employee::findOne($model->sale_emp_id);
+                    if ($emp && $emp->department) {
+                        $depcod = mb_substr($emp->department->name, 0, 4);
+                    }
+                }
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $depcod);
+
+                // B: DOCNUM
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($model->quotation_no ?? '', 0, 30));
+
+                // C: DOCDAT
+                $formattedDate = '';
+                if ($model->quotation_date) {
+                    $formattedDate = date('d/m/Y', strtotime($model->quotation_date));
+                }
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $formattedDate);
+
+                // D: CUSCOD
+                $cuscod = '';
+                if ($model->customer) {
+                    $cuscod = $model->customer->code;
+                }
+                $cuscod = strtoupper(preg_replace('/[\s\/\x22\x27\x5c\.]/', '', $cuscod));
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($cuscod, 0, 10));
+
+                // E: CUSNAM
+                $cusnam = $model->customer_name ?: ($model->customer ? $model->customer->name : '');
+                $cusnam = str_replace('"', '', $cusnam);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($cusnam, 0, 60));
+
+                // F: STKCOD
+                $stkcod = '';
+                if ($line->product) {
+                    $stkcod = $line->product->code;
+                }
+                $stkcod = strtoupper(preg_replace('/[\s\/\x22\x27\x5c\.]/', '', $stkcod));
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($stkcod, 0, 20));
+
+                // G: STKDES
+                $stkdes = $line->product_name ?: ($line->product ? $line->product->name : '');
+                $stkdes = str_replace('"', '', $stkdes);
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($stkdes, 0, 50));
+
+                // H: TRNQTY
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $line->qty);
+
+                // I: UNITPR
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $line->line_price);
+
+                // J: DISC
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $line->discount_amount ?: 0);
+
+                // K: AMOUNT
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $line->line_total);
+
+                // L: PAYTRM
+                $paytrm = '';
+                if ($model->payment_term_id) {
+                    $pt = \backend\models\Paymentterm::findOne($model->payment_term_id);
+                    if ($pt) {
+                        $paytrm = $pt->day_count;
+                    }
+                }
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($paytrm, 0, 3));
+
+                // M: DLVDAT
+                $dlvdat = '';
+                if ($model->quotation_date) {
+                    $dlvdat = date('d/m/Y', strtotime($model->quotation_date));
+                }
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $dlvdat);
+
+                // N: DISCOUNT
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->total_discount_amount ?: 0);
+
+                // O: ORGNUM
+                $orgnum = '0';
+                if ($model->customer) {
+                    if ($model->customer->is_head == 1) {
+                        $orgnum = '0';
+                    } else {
+                        $branch = preg_replace('/[^0-9]/', '', $model->customer->branch_name);
+                        $orgnum = ltrim($branch, '0');
+                        if ($orgnum === '') {
+                            $orgnum = '0';
+                        }
+                    }
+                }
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $orgnum);
+
+                // P: SLMCOD
+                $slmcod = '';
+                if ($model->sale_emp_id) {
+                    $slmcod = \backend\models\Employee::findCode($model->sale_emp_id);
+                }
+                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($slmcod, 0, 10));
+
+                $row++;
+            }
+        }
+
+        // Set Auto width for all columns
+        foreach (range(1, 16) as $col) {
+            $sheet->getColumnDimensionByColumn($col)->setAutoSize(true);
+        }
+
+        $filename = 'QUOTATION_EXPRESS_' . date('Ymd_His') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
 }

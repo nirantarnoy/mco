@@ -54,7 +54,8 @@ $this->params['breadcrumbs'][] = $this->title;
         'panel' => [
             'type' => GridView::TYPE_DEFAULT,
             'heading' => false,
-            'before' => Html::a('<i class="fas fa-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-success']),
+            'before' => Html::a('<i class="fas fa-plus"></i> สร้างใหม่', ['create'], ['class' => 'btn btn-success']) . ' ' .
+                Html::a('<i class="fas fa-file-excel"></i> Export to Express', array_merge(['export-express'], Yii::$app->request->queryParams), ['class' => 'btn btn-info', 'data-pjax' => '0']),
             'after' => false,
         ],
         'toolbar' => [
