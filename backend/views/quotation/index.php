@@ -39,6 +39,42 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?php Pjax::begin(); ?>
 
+    <div class="card mb-3">
+        <div class="card-body">
+            <?php $form = \yii\widgets\ActiveForm::begin([
+                'action' => ['index'],
+                'method' => 'get',
+                'options' => ['data-pjax' => 1],
+            ]); ?>
+            <div class="row align-items-end">
+                <div class="col-md-3 mb-2 mb-md-0">
+                    <label class="form-label font-weight-bold">วันที่เริ่มต้น</label>
+                    <?= Html::textInput('date_from', $searchModel->date_from, [
+                        'class' => 'form-control',
+                        'type' => 'date',
+                    ]) ?>
+                </div>
+                <div class="col-md-3 mb-2 mb-md-0">
+                    <label class="form-label font-weight-bold">วันที่สิ้นสุด</label>
+                    <?= Html::textInput('date_to', $searchModel->date_to, [
+                        'class' => 'form-control',
+                        'type' => 'date',
+                    ]) ?>
+                </div>
+                <div class="col-md-6 mb-2 mb-md-0">
+                    <?= Html::submitButton('<i class="fas fa-search"></i> ค้นหาตามช่วงเวลา', ['class' => 'btn btn-primary']) ?>
+                    <?= Html::a('<i class="fas fa-redo"></i> รีเซ็ต', ['index'], ['class' => 'btn btn-secondary']) ?>
+                    <?= Html::a('<i class="fas fa-file-excel"></i> Export to Express', array_merge(['export-express'], Yii::$app->request->queryParams), [
+                        'class' => 'btn btn-info',
+                        'data-pjax' => '0',
+                        'target' => '_blank'
+                    ]) ?>
+                </div>
+            </div>
+            <?php \yii\widgets\ActiveForm::end(); ?>
+        </div>
+    </div>
+
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         'filterModel' => $searchModel,

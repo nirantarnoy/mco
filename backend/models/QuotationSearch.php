@@ -9,6 +9,9 @@ use yii\data\ActiveDataProvider;
  */
 class QuotationSearch extends Quotation
 {
+    public $date_from;
+    public $date_to;
+
     /**
      * {@inheritdoc}
      */
@@ -16,7 +19,7 @@ class QuotationSearch extends Quotation
     {
         return [
             [['id', 'customer_id', 'status', 'approve_status', 'approve_by', 'created_by', 'updated_by'], 'integer'],
-            [['quotation_no', 'quotation_date', 'customer_name', 'total_amount_text', 'note'], 'safe'],
+            [['quotation_no', 'quotation_date', 'customer_name', 'total_amount_text', 'note', 'date_from', 'date_to'], 'safe'],
             [['total_amount'], 'number'],
         ];
     }
@@ -66,7 +69,6 @@ class QuotationSearch extends Quotation
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'quotation_date' => $this->quotation_date,
             'customer_id' => $this->customer_id,
             'status' => $this->status,
             'approve_status' => $this->approve_status,
@@ -77,10 +79,19 @@ class QuotationSearch extends Quotation
             'updated_at' => $this->updated_at,
             'updated_by' => $this->updated_by,
         ]);
-    //    $company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
-    //     if ($company_id != 1) {
-    //         $query->andFilterWhere(['company_id' => $company_id]);
-    //     }
+
+        if ($this->quotation_date) {
+            $query->andFilterWhere(['quotation_date' => $this->quotation_date]);
+        }
+
+        if ($this->date_from) {
+            $query->andWhere(['>=', 'quotation_date', $this->date_from]);
+        }
+
+        if ($this->date_to) {
+            $query->andWhere(['<=', 'quotation_date', $this->date_to]);
+        }
+
         $query->andFilterWhere(['company_id' => (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'))]);
 
         $query->andFilterWhere(['like', 'quotation_no', $this->quotation_no])

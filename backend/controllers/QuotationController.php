@@ -602,7 +602,15 @@ class QuotationController extends BaseController
             $models = Quotation::find()->where(['id' => $id])->all();
         } else {
             $searchModel = new QuotationSearch();
-            $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
+            $params = Yii::$app->request->queryParams;
+            if (isset($params['date_from'])) {
+                $searchModel->date_from = $params['date_from'];
+            }
+            if (isset($params['date_to'])) {
+                $searchModel->date_to = $params['date_to'];
+            }
+            $dataProvider = $searchModel->search($params);
+            $dataProvider->query->orderBy(['quotation_date' => SORT_ASC, 'quotation_no' => SORT_ASC]);
             $dataProvider->pagination = false;
             $models = $dataProvider->getModels();
         }
