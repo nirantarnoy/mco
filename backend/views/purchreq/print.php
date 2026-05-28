@@ -274,7 +274,11 @@ $this->title = 'พิมพ์ใบขอซื้อ: ' . $model->purch_req_n
                 <td><?= $itemCount++ ?></td>
                 <td><?= Html::encode($line->product_id ?: '') ?></td>
                 <td class="description">
-                    <?= Html::encode($line->product_name) ?><br>
+                    <?php 
+                    $model_name = \backend\models\Product::findModelName($line->product_id);
+                    $brand_name = \backend\models\Product::findBrand($line->product_id);
+                    ?>
+                    <?= Html::encode($line->product_name) . (!empty($brand_name) ? ' (' . Html::encode($brand_name) . ')' : '') . (!empty($model_name) ? ' - ' . Html::encode($model_name) : '') ?><br>
                     <small><?= Html::encode($line->product_description) ?></small>
                 </td>
                 <td><?= Html::encode($line->product_id ?: '') ?></td>
