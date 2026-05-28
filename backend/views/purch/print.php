@@ -537,7 +537,13 @@ $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
                 <tr>
                     <td><?= $itemNo++ ?></td>
                     <td><?= Html::encode($line->product->code ?? '') ?></td>
-                    <td class="description-cell"><?php $brand = \backend\models\Product::findBrand($line->product_id); ?><?= Html::encode($line->product_name).(!empty($brand) ? ' ('.Html::encode($brand).')' : '').'<br />'.Html::encode($line['product_description']) ?></td>
+                    <td class="description-cell">
+                        <?php 
+                        $brand = \backend\models\Product::findBrand($line->product_id); 
+                        $model_name = \backend\models\Product::findModelName($line->product_id);
+                        ?>
+                        <?= Html::encode($line->product_name).(!empty($brand) ? ' ('.Html::encode($brand).')' : '').(!empty($model_name) ? ' - '.Html::encode($model_name) : '').'<br />'.Html::encode($line['product_description']) ?>
+                    </td>
                     <td></td>
                     <td><?= number_format($line->qty, 1) ?></td>
                     <td><?= Html::encode(\backend\models\Unit::findName($line->unit_id)) ?></td>
