@@ -197,7 +197,7 @@ use yii\helpers\Html;
         $profitLoss = $model->getProfitLoss();
         $percentage = $model->getProfitLossPercentage();
 
-        $totalJobAmount += $model->job_amount;
+        $totalJobAmount += $model->getJobAmountNoVat();
         $totalWithdrawAmount += $withdrawAmount;
         ?>
         <tr>
@@ -205,7 +205,7 @@ use yii\helpers\Html;
             <td class="text-left"><?= Html::encode($model->job_no) ?></td>
             <td><?= date('d/m/Y', strtotime($model->start_date)) ?></td>
             <td><?= Html::encode($model->getStatusText()) ?></td>
-            <td class="text-right"><?= number_format($model->job_amount, 2) ?></td>
+            <td class="text-right"><?= number_format($model->getJobAmountNoVat(), 2) ?></td>
             <td class="text-right"><?= number_format($withdrawAmount, 2) ?></td>
             <td class="text-right <?= $profitLoss >= 0 ? 'profit' : 'loss' ?>">
                 <?= number_format($profitLoss, 2) ?>

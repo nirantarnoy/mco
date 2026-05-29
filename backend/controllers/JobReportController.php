@@ -94,13 +94,14 @@ class JobReportController extends BaseController
         $row = 2;
         foreach ($dataProvider->getModels() as $model) {
             $totalWithdraw = $model->getTotalWithdrawAmount();
-            $profitLoss = $model->job_amount - $totalWithdraw;
-            $percentage = $model->job_amount > 0 ? ($profitLoss / $model->job_amount) * 100 : 0;
+            $jobAmountNoVat = $model->getJobAmountNoVat();
+            $profitLoss = $jobAmountNoVat - $totalWithdraw;
+            $percentage = $jobAmountNoVat > 0 ? ($profitLoss / $jobAmountNoVat) * 100 : 0;
 
             $sheet->setCellValue('A' . $row, $model->job_no);
             $sheet->setCellValue('B' . $row, $model->start_date);
             $sheet->setCellValue('C' . $row, $model->status);
-            $sheet->setCellValue('D' . $row, number_format($model->job_amount, 2));
+            $sheet->setCellValue('D' . $row, number_format($jobAmountNoVat, 2));
             $sheet->setCellValue('E' . $row, number_format($totalWithdraw, 2));
             $sheet->setCellValue('F' . $row, number_format($profitLoss, 2));
             $sheet->setCellValue('G' . $row, number_format($percentage, 2) . '%');

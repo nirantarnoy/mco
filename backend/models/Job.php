@@ -191,11 +191,25 @@ class Job extends \common\models\Job
     }
 
     /**
+     * ดึงข้อมูลมูลค่างานที่ไม่รวม VAT
+     */
+    public function getJobAmountNoVat()
+    {
+        if ($this->quotation && $this->quotation->vat_total_amount > 0 && $this->quotation->total_amount > 0) {
+            // คำนวณแบบสัดส่วนเผื่อกรณีที่ยอด job_amount ถูกแก้ไขด้วยตนเอง
+            $vatRatio = $this->quotation->vat_total_amount / $this->quotation->total_amount;
+            return $this->job_amount * (1 - $vatRatio);
+        }
+        // หากไม่มีใบเสนอราคา หรือไม่มี VAT ให้คืนค่า job_amount ปกติ
+        return $this->job_amount;
+    }
+
+    /**
      * คำนวณกำไร/ขาดทุน
      */
     public function getProfitLoss()
     {
-        return $this->job_amount - ($this->getTotalWithdrawAmount() + $this->getJobexpenseAll() + $this->getVehicleExpenseAll());
+        return $this->getJobAmountNoVat() - ($this->getTotalWithdrawAmount() + $this->getJobexpenseAll() + $this->getVehicleExpenseAll());
     }
 
     /**
@@ -203,11 +217,12 @@ class Job extends \common\models\Job
      */
     public function getProfitLossPercentage()
     {
-        if ($this->job_amount <= 0) {
+        $amountNoVat = $this->getJobAmountNoVat();
+        if ($amountNoVat <= 0) {
             return 0;
         }
 
-        return ($this->getProfitLoss() / $this->job_amount) * 100;
+        return ($this->getProfitLoss() / $amountNoVat) * 100;
     }
 
     /**

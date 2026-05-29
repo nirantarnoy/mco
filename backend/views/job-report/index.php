@@ -312,7 +312,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'format' => 'raw',
                                 'value' => function ($model) {
                                     return '<div style="text-align: right;">' .
-                                        number_format($model->job_amount, 2) .
+                                        number_format($model->getJobAmountNoVat(), 2) .
                                         '</div>';
                                 },
                                 'contentOptions' => ['style' => 'width: 120px;'],
@@ -406,7 +406,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     $totalVehicleExpense = 0;
 
                     foreach ($allModels as $model) {
-                        $totalJobAmount += $model->job_amount;
+                        $totalJobAmount += $model->getJobAmountNoVat();
                         $totalWithdrawAmount += $model->getTotalWithdrawAmount();
                         $totalJobExpense += $model->getJobExpenseAll();
                         $totalVehicleExpense += $model->getVehicleExpenseAll();
@@ -472,7 +472,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         }
 
                         $companySummary[$companyId]['job_count']++;
-                        $companySummary[$companyId]['total_job_amount'] += $model->job_amount;
+                        $companySummary[$companyId]['total_job_amount'] += $model->getJobAmountNoVat();
                         $companySummary[$companyId]['total_withdraw_amount'] += ($model->getTotalWithdrawAmount() + $model->getJobExpenseAll() + $model->getVehicleExpenseAll());
                     }
 
