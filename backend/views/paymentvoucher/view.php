@@ -17,7 +17,8 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
             <h5 class="mb-0 text-primary"><i class="fas fa-file-invoice-dollar me-2"></i>รายละเอียด Payment Voucher: <?= Html::encode($this->title) ?></h5>
             <div>
-                <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], ['class' => 'btn btn-secondary', 'target' => '_blank']) ?>
+                <?= Html::a('<i class="fas fa-print"></i> พิมพ์ใบรวมบิล (สเต็ป 1)', ['print', 'id' => $model->id, 'step' => 1], ['class' => 'btn btn-secondary me-2', 'target' => '_blank']) ?>
+                <?= Html::a('<i class="fas fa-print"></i> พิมพ์ใบจ่ายเงิน & บัญชี (สเต็ป 2)', ['print', 'id' => $model->id, 'step' => 2], ['class' => 'btn btn-success me-2', 'target' => '_blank']) ?>
                 <?= Html::a('<i class="fas fa-edit"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
                 <?= Html::a('<i class="fas fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
                     'class' => 'btn btn-danger',

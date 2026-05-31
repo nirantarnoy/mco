@@ -63,12 +63,19 @@ $this->params['breadcrumbs'][] = $this->title;
                         'template' => '{print} {view} {update} {delete}',
                         'buttons' => [
                             'print' => function($url, $model) {
-                                return Html::a('<i class="fas fa-print"></i>', ['print', 'id' => $model->id], [
-                                    'title' => 'พิมพ์',
-                                    'class' => 'btn btn-sm btn-outline-secondary me-1',
+                                $btn1 = Html::a('<i class="fas fa-list-alt"></i> 1', ['print', 'id' => $model->id, 'step' => 1], [
+                                    'title' => 'พิมพ์ใบรวมบิล (สเต็ป 1)',
+                                    'class' => 'btn btn-xs btn-outline-secondary me-1',
                                     'target' => '_blank',
                                     'data-pjax' => '0'
                                 ]);
+                                $btn2 = Html::a('<i class="fas fa-file-invoice-dollar"></i> 2', ['print', 'id' => $model->id, 'step' => 2], [
+                                    'title' => 'พิมพ์ใบจ่ายเงิน & บัญชี (สเต็ป 2)',
+                                    'class' => 'btn btn-xs btn-outline-success me-1',
+                                    'target' => '_blank',
+                                    'data-pjax' => '0'
+                                ]);
+                                return $btn1 . $btn2;
                             },
                         ],
                         'headerOptions' => ['style' => 'width: 15%'],

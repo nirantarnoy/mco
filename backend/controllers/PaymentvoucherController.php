@@ -246,9 +246,17 @@ class PaymentvoucherController extends BaseController
             
             // แสดงเฉพาะที่ยังมียอดคงเหลือ
             if ($remaining > 0) {
+                $has_draft_pv = \backend\models\PaymentVoucherRef::find()
+                    ->alias('r')
+                    ->innerJoin('payment_voucher pv', 'r.payment_voucher_id = pv.id')
+                    ->where(['r.ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PR, 'r.ref_id' => $pr->id])
+                    ->andWhere(['pv.status' => \backend\models\PaymentVoucher::STATUS_DRAFT])
+                    ->exists();
+                $pv_suffix = $has_draft_pv ? ' [สร้าง PV แล้ว - ยังไม่จ่าย]' : '';
+                
                 $result[] = [
                     'id' => $pr->id,
-                    'text' => $pr->purch_req_no . ' (คงเหลือ: ' . number_format($remaining, 2) . ( !empty($pr->vendor_name) ? ' - ' . $pr->vendor_name : '' ) . ')',
+                    'text' => $pr->purch_req_no . ' (คงเหลือ: ' . number_format($remaining, 2) . ( !empty($pr->vendor_name) ? ' - ' . $pr->vendor_name : '' ) . ')' . $pv_suffix,
                     'total_amount' => $pr->net_amount,
                     'paid_amount' => $paidAmount,
                     'remaining' => $remaining,
@@ -291,9 +299,17 @@ class PaymentvoucherController extends BaseController
             
             // แสดงเฉพาะที่ยังมียอดคงเหลือ
             if ($remaining > 0) {
+                $has_draft_pv = \backend\models\PaymentVoucherRef::find()
+                    ->alias('r')
+                    ->innerJoin('payment_voucher pv', 'r.payment_voucher_id = pv.id')
+                    ->where(['r.ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PO, 'r.ref_id' => $po->id])
+                    ->andWhere(['pv.status' => \backend\models\PaymentVoucher::STATUS_DRAFT])
+                    ->exists();
+                $pv_suffix = $has_draft_pv ? ' [สร้าง PV แล้ว - ยังไม่จ่าย]' : '';
+                
                 $result[] = [
                     'id' => $po->id,
-                    'text' => $po->purch_no . ' (คงเหลือ: ' . number_format($remaining, 2) . ( !empty($po->vendor_name) ? ' - ' . $po->vendor_name : '' ) . ')',
+                    'text' => $po->purch_no . ' (คงเหลือ: ' . number_format($remaining, 2) . ( !empty($po->vendor_name) ? ' - ' . $po->vendor_name : '' ) . ')' . $pv_suffix,
                     'total_amount' => $po->net_amount,
                     'paid_amount' => $paidAmount,
                     'remaining' => $remaining,
@@ -336,9 +352,17 @@ class PaymentvoucherController extends BaseController
             
             // แสดงเฉพาะที่ยังมียอดคงเหลือ
             if ($remaining > 0) {
+                $has_draft_pv = \backend\models\PaymentVoucherRef::find()
+                    ->alias('r')
+                    ->innerJoin('payment_voucher pv', 'r.payment_voucher_id = pv.id')
+                    ->where(['r.ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, 'r.ref_id' => $none_pr->id])
+                    ->andWhere(['pv.status' => \backend\models\PaymentVoucher::STATUS_DRAFT])
+                    ->exists();
+                $pv_suffix = $has_draft_pv ? ' [สร้าง PV แล้ว - ยังไม่จ่าย]' : '';
+                
                 $result[] = [
                     'id' => $none_pr->id,
-                    'text' => $none_pr->docnum . ' (คงเหลือ: ' . number_format($remaining, 2) . ( !empty($none_pr->supnam) ? ' - ' . $none_pr->supnam : '' ) . ')',
+                    'text' => $none_pr->docnum . ' (คงเหลือ: ' . number_format($remaining, 2) . ( !empty($none_pr->supnam) ? ' - ' . $none_pr->supnam : '' ) . ')' . $pv_suffix,
                     'total_amount' => $none_pr->total_amount,
                     'paid_amount' => $paidAmount,
                     'remaining' => $remaining,
@@ -499,12 +523,13 @@ class PaymentvoucherController extends BaseController
         ];
     }
 
-    public function actionPrint($id)
+    public function actionPrint($id, $step = 1)
     {
         $model = $this->findModel($id);
         $this->layout = false;
         return $this->render('print', [
             'model' => $model,
+            'step' => $step,
         ]);
     }
 

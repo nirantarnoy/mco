@@ -547,4 +547,35 @@ class Purch extends ActiveRecord
 
         return $docs;
     }
+
+    /**
+     * Get Payment Voucher payment status badge
+     */
+    public function getPvStatusText()
+    {
+        $refs = \backend\models\PaymentVoucherRef::find()
+            ->alias('r')
+            ->innerJoin('payment_voucher pv', 'r.payment_voucher_id = pv.id')
+            ->where(['r.ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PO, 'r.ref_id' => $this->id])
+            ->andWhere(['!=', 'pv.status', \backend\models\PaymentVoucher::STATUS_CANCELLED])
+            ->all();
+
+        if (empty($refs)) {
+            return '';
+        }
+
+        $has_draft = false;
+        foreach ($refs as $ref) {
+            if ($ref->paymentVoucher->status == \backend\models\PaymentVoucher::STATUS_DRAFT) {
+                $has_draft = true;
+                break;
+            }
+        }
+
+        if ($has_draft) {
+            return '<span class="badge bg-warning text-dark" title="สร้าง PV แล้วแต่ยังไม่ชำระเงิน">สร้าง PV แล้ว (ยังไม่จ่าย)</span>';
+        }
+
+        return '<span class="badge bg-success" title="สร้าง PV และชำระเงินแล้ว">สร้าง PV แล้ว (จ่ายแล้ว)</span>';
+    }
 }

@@ -181,6 +181,15 @@ $this->params['breadcrumbs'][] = $this->title;
                 'format' => 'raw',
             ],
             [
+                'label' => 'สถานะ PV',
+                'format' => 'raw',
+                'headerOptions' => ['style' => 'width: 150px; text-align: center;'],
+                'contentOptions' => ['style' => 'text-align: center;'],
+                'value' => function ($model) {
+                    return $model->getPvStatusText();
+                },
+            ],
+            [
                 'attribute' => 'approve_status',
                 'label' => 'สถานะ',
                 'headerOptions' => ['style' => 'width: 120px; text-align: center;'],
