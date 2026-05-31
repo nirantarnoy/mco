@@ -235,6 +235,39 @@ class Invoice extends ActiveRecord
             return '<span class="badge badge-danger">ยกเลิก</span>';
         }
 
+        if ($this->invoice_type == self::TYPE_QUOTATION || $this->invoice_type == self::TYPE_BILL_PLACEMENT) {
+            $has_tax_invoice = InvoiceRelation::find()
+                ->alias('r')
+                ->innerJoin('invoices c', 'r.child_invoice_id = c.id')
+                ->where(['r.parent_invoice_id' => $this->id])
+                ->andWhere(['c.status' => self::STATUS_ACTIVE])
+                ->andWhere(['c.invoice_type' => self::TYPE_TAX_INVOICE])
+                ->exists();
+
+            if (!$has_tax_invoice) {
+                $has_tax_invoice = InvoiceRelation::find()
+                    ->alias('r1')
+                    ->innerJoin('invoice_relations r2', 'r1.child_invoice_id = r2.parent_invoice_id')
+                    ->innerJoin('invoices c', 'r2.child_invoice_id = c.id')
+                    ->where(['r1.parent_invoice_id' => $this->id])
+                    ->andWhere(['c.status' => self::STATUS_ACTIVE])
+                    ->andWhere(['c.invoice_type' => self::TYPE_TAX_INVOICE])
+                    ->exists();
+            }
+
+            if (!$has_tax_invoice && $this->quotation_id) {
+                $has_tax_invoice = self::find()
+                    ->where(['quotation_id' => $this->quotation_id])
+                    ->andWhere(['invoice_type' => self::TYPE_TAX_INVOICE])
+                    ->andWhere(['status' => self::STATUS_ACTIVE])
+                    ->exists();
+            }
+
+            if ($has_tax_invoice) {
+                return '<span class="badge badge-success">ดึงไปทำใบกำกับแล้ว</span>';
+            }
+        }
+
         if ($this->invoice_type == self::TYPE_TAX_INVOICE) {
             // Check if any receipt has been issued for this tax invoice and it's NOT cancelled
             $has_receipt = InvoicePaymentHistory::find()

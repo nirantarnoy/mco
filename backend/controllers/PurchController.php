@@ -54,6 +54,35 @@ class PurchController extends BaseController
         if ($action->id == 'showdoc') {
             $this->enableCsrfValidation = false;
         }
+        if ($action->id == 'export-express') {
+            $auth = Yii::$app->authManager;
+            $permissionName = 'purch/exportexpress';
+            if (!$auth->getPermission($permissionName)) {
+                try {
+                    $permission = $auth->createPermission($permissionName);
+                    $permission->description = 'ใบสั่งซื้อ - ส่งออก Excel (Express)';
+                    $auth->add($permission);
+                    
+                    // Auto-assign to any role that has purch/index or purch/view
+                    $roles = $auth->getRoles();
+                    foreach ($roles as $role) {
+                        $rolePermissions = $auth->getPermissionsByRole($role->name);
+                        $hasPurchAccess = false;
+                        foreach ($rolePermissions as $rp) {
+                            if ($rp->name == 'purch/index' || $rp->name == 'purch/view') {
+                                $hasPurchAccess = true;
+                                break;
+                            }
+                        }
+                        if ($hasPurchAccess && !$auth->hasChild($role, $permission)) {
+                            $auth->addChild($role, $permission);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Yii::error("Error auto-adding permission: " . $e->getMessage());
+                }
+            }
+        }
         return parent::beforeAction($action);
     }
 

@@ -10,6 +10,8 @@ use yii\data\ActiveDataProvider;
 class PurchSearch extends Purch
 {
     public $vendor_name;
+    public $date_from;
+    public $date_to;
     /**
      * {@inheritdoc}
      */
@@ -17,7 +19,7 @@ class PurchSearch extends Purch
     {
         return [
             [['id', 'vendor_id', 'status', 'approve_status', 'created_by', 'updated_by'], 'integer'],
-            [['purch_no', 'purch_date', 'vendor_name', 'note',], 'safe'],
+            [['purch_no', 'purch_date', 'vendor_name', 'note', 'date_from', 'date_to'], 'safe'],
             [['total_amount'], 'number'],
         ];
     }
@@ -57,6 +59,12 @@ class PurchSearch extends Purch
         ]);
 
         $this->load($params);
+        if (isset($params['date_from'])) {
+            $this->date_from = $params['date_from'];
+        }
+        if (isset($params['date_to'])) {
+            $this->date_to = $params['date_to'];
+        }
 
         if (!$this->validate()) {
             // uncomment the following line if you do not want to return any records when validation fails
@@ -67,7 +75,6 @@ class PurchSearch extends Purch
         // grid filtering conditions
         $query->andFilterWhere([
             'p.id' => $this->id,
-            'p.purch_date' => $this->purch_date,
            // 'vendor_id' => $this->vendor_id,
             'p.status' => $this->status,
             'p.approve_status' => $this->approve_status,
@@ -77,6 +84,18 @@ class PurchSearch extends Purch
             'p.updated_at' => $this->updated_at,
             'p.updated_by' => $this->updated_by,
         ]);
+
+        if ($this->purch_date) {
+            $query->andFilterWhere(['p.purch_date' => $this->purch_date]);
+        }
+
+        if ($this->date_from) {
+            $query->andWhere(['>=', 'p.purch_date', $this->date_from]);
+        }
+
+        if ($this->date_to) {
+            $query->andWhere(['<=', 'p.purch_date', $this->date_to]);
+        }
 
         if (\Yii::$app->session->get('company_id') == 100) {
             $query->andFilterWhere(['p.company_id' => $this->company_id]);
