@@ -616,14 +616,16 @@ class PaymentvoucherController extends BaseController
                 
                 $remaining = $pr->net_amount - $paidAmount;
                 
-                $ref = new \backend\models\PaymentVoucherRef();
-                $ref->payment_voucher_id = $model->id;
-                $ref->ref_type = \backend\models\PaymentVoucherRef::REF_TYPE_PR;
-                $ref->ref_id = $pr->id;
-                $ref->ref_no = $pr->purch_req_no;
-                $ref->amount = $remaining;
-                $ref->created_at = time();
-                $ref->save(false);
+                if ($remaining > 0) {
+                    $ref = new \backend\models\PaymentVoucherRef();
+                    $ref->payment_voucher_id = $model->id;
+                    $ref->ref_type = \backend\models\PaymentVoucherRef::REF_TYPE_PR;
+                    $ref->ref_id = $pr->id;
+                    $ref->ref_no = $pr->purch_req_no;
+                    $ref->amount = $remaining;
+                    $ref->created_at = time();
+                    $ref->save(false);
+                }
             }
         }
         
@@ -638,14 +640,16 @@ class PaymentvoucherController extends BaseController
                 
                 $remaining = $po->net_amount - $paidAmount;
                 
-                $ref = new \backend\models\PaymentVoucherRef();
-                $ref->payment_voucher_id = $model->id;
-                $ref->ref_type = \backend\models\PaymentVoucherRef::REF_TYPE_PO;
-                $ref->ref_id = $po->id;
-                $ref->ref_no = $po->purch_no;
-                $ref->amount = $remaining;
-                $ref->created_at = time();
-                $ref->save(false);
+                if ($remaining > 0) {
+                    $ref = new \backend\models\PaymentVoucherRef();
+                    $ref->payment_voucher_id = $model->id;
+                    $ref->ref_type = \backend\models\PaymentVoucherRef::REF_TYPE_PO;
+                    $ref->ref_id = $po->id;
+                    $ref->ref_no = $po->purch_no;
+                    $ref->amount = $remaining;
+                    $ref->created_at = time();
+                    $ref->save(false);
+                }
             }
         }
 
@@ -660,14 +664,16 @@ class PaymentvoucherController extends BaseController
                 
                 $remaining = $none_pr->total_amount - $paidAmount;
                 
-                $ref = new \backend\models\PaymentVoucherRef();
-                $ref->payment_voucher_id = $model->id;
-                $ref->ref_type = \backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR;
-                $ref->ref_id = $none_pr->id;
-                $ref->ref_no = $none_pr->docnum;
-                $ref->amount = $remaining;
-                $ref->created_at = time();
-                $ref->save(false);
+                if ($remaining > 0) {
+                    $ref = new \backend\models\PaymentVoucherRef();
+                    $ref->payment_voucher_id = $model->id;
+                    $ref->ref_type = \backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR;
+                    $ref->ref_id = $none_pr->id;
+                    $ref->ref_no = $none_pr->docnum;
+                    $ref->amount = $remaining;
+                    $ref->created_at = time();
+                    $ref->save(false);
+                }
             }
         }
     }
