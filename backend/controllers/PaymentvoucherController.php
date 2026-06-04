@@ -328,7 +328,8 @@ class PaymentvoucherController extends BaseController
         Yii::$app->response->format = Response::FORMAT_JSON;
         
         $query = \backend\models\PurchaseMaster::find()
-            ->where(['status' => \backend\models\PurchaseMaster::STATUS_APPROVED])
+            ->where(['approve_status' => \backend\models\PurchaseMaster::APPROVE_STATUS_APPROVED])
+            ->andWhere(['status' => \backend\models\PurchaseMaster::STATUS_ACTIVE])
             ->andWhere(['>', 'total_amount', 0]);
             
         if ($vendor_id && $vendor_id !== 'null' && $vendor_id !== '') {
