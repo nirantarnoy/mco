@@ -39,13 +39,13 @@ $this->params['breadcrumbs'][] = $this->title;
                             <form action="<?= \yii\helpers\Url::to(['vendor/importvendor'], true) ?>" method="post" enctype="multipart/form-data">
                                 <div class="row">
                                     <div class="col-lg-4">
-                                        <input type="file" name="file_vendor" class="form-control" required>
+                                        <input type="file" name="file_vendor" class="form-control" accept=".csv, .xlsx" required>
                                     </div>
                                     <div class="col-lg-2">
                                         <button class="btn btn-success"><i class="fa fa-check"></i> ยืนยันนำเข้า</button>
                                     </div>
                                     <div class="col-lg-6">
-                                        <small class="text-muted">รูปแบบไฟล์: NAMELIST, ADDRESS, TAXID (ข้ามแถวแรก)</small>
+                                        <small class="text-muted">รูปแบบไฟล์: NAMELIST, ADDRESS, TAXID (ข้ามแถวแรก, รองรับ .csv และ .xlsx)</small>
                                     </div>
                                 </div>
                             </form>
