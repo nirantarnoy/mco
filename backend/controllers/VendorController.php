@@ -278,9 +278,10 @@ class VendorController extends BaseController
                     $reader->setReadDataOnly(true); // Read only data (skip styles)
                     $spreadsheet = $reader->load($filePath);
                     
-                    $res = 0;
-                    $dup = 0;
                     $companyId = \Yii::$app->session->get('company_id');
+                    
+                    $mismatchedVendors = [];
+                    $newVendors = [];
 
                     // Loop through all sheets
                     foreach ($spreadsheet->getWorksheetIterator() as $worksheet) {
@@ -302,47 +303,110 @@ class VendorController extends BaseController
                             $taxId = isset($rowData[2]) ? trim($rowData[2] . "") : '';
 
                             // Check duplicate name for this company
-                            $exists = Vendor::find()->where(['name' => $name, 'company_id' => $companyId])->exists();
-                            if ($exists) {
-                                $dup++;
-                                continue;
-                            }
-
-                            $model = new Vendor();
-                            $model->code = Vendor::getlastno();
-                            $model->name = $name;
-                            $model->taxid = $taxId;
-                            $model->full_address = $addressStr; // Use description for full address if needed
-                            $model->status = 1;
-                            $model->company_id = $companyId;
-
-                            if ($model->save()) {
-                                // Create address entry
-                                if (!empty($addressStr)) {
-                                    $model_address = new \common\models\AddressInfo();
-                                    $model_address->party_id = $model->id;
-                                    $model_address->party_type_id = 1; // Vendor type
-                                    $model_address->address = $addressStr;
-                                    $model_address->save(false);
+                            $existingVendor = Vendor::find()->where(['name' => $name, 'company_id' => $companyId])->one();
+                            if ($existingVendor) {
+                                $dbTaxId = trim($existingVendor->taxid . "");
+                                if ($dbTaxId !== $taxId) {
+                                    $mismatchedVendors[] = [
+                                        'id' => $existingVendor->id,
+                                        'name' => $name,
+                                        'old_taxid' => $dbTaxId,
+                                        'new_taxid' => $taxId,
+                                        'address' => $addressStr,
+                                        'old_address' => $existingVendor->full_address,
+                                    ];
                                 }
-                                $res++;
+                            } else {
+                                $newVendors[] = [
+                                    'name' => $name,
+                                    'address' => $addressStr,
+                                    'taxid' => $taxId,
+                                ];
                             }
                         }
                     }
 
                     unlink($filePath); // Delete file after processing
 
-                    if ($res > 0) {
-                        \Yii::$app->session->setFlash('success', "นำเข้าข้อมูลสำเร็จ $res รายการ" . ($dup > 0 ? " (ข้ามรายการซ้ำ $dup รายการ)" : ""));
-                    } else {
-                        \Yii::$app->session->setFlash('warning', "ไม่มีข้อมูลใหม่ถูกนำเข้า" . ($dup > 0 ? " ($dup รายการซ้ำ)" : ""));
-                    }
+                    return $this->render('import-preview', [
+                        'mismatchedVendors' => $mismatchedVendors,
+                        'newVendors' => $newVendors,
+                    ]);
 
                 } catch (\Exception $e) {
                     \Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการอ่านไฟล์: ' . $e->getMessage());
                 }
             }
         }
+        return $this->redirect(['index']);
+    }
+
+    public function actionImportConfirm()
+    {
+        $request = \Yii::$app->request;
+        if ($request->isPost) {
+            $mismatchedVendors = $request->post('mismatchedVendors', []);
+            $newVendors = $request->post('newVendors', []);
+            
+            $companyId = \Yii::$app->session->get('company_id');
+            $updatedCount = 0;
+            $newCount = 0;
+            
+            // Update mismatched vendors
+            if (is_array($mismatchedVendors)) {
+                foreach ($mismatchedVendors as $v) {
+                    $model = Vendor::findOne(['id' => $v['id'], 'company_id' => $companyId]);
+                    if ($model) {
+                        $model->taxid = $v['new_taxid'];
+                        $model->full_address = $v['address'];
+                        if ($model->save()) {
+                            // Update address info
+                            if (!empty($v['address'])) {
+                                $model_address = \common\models\AddressInfo::find()->where(['party_id' => $model->id, 'party_type_id' => 1])->one();
+                                if ($model_address) {
+                                    $model_address->address = $v['address'];
+                                    $model_address->save(false);
+                                } else {
+                                    $model_address = new \common\models\AddressInfo();
+                                    $model_address->party_id = $model->id;
+                                    $model_address->party_type_id = 1;
+                                    $model_address->address = $v['address'];
+                                    $model_address->save(false);
+                                }
+                            }
+                            $updatedCount++;
+                        }
+                    }
+                }
+            }
+            
+            // Insert new vendors
+            if (is_array($newVendors)) {
+                foreach ($newVendors as $v) {
+                    $model = new Vendor();
+                    $model->code = Vendor::getlastno();
+                    $model->name = $v['name'];
+                    $model->taxid = $v['taxid'];
+                    $model->full_address = $v['address'];
+                    $model->status = 1;
+                    $model->company_id = $companyId;
+                    
+                    if ($model->save()) {
+                        if (!empty($v['address'])) {
+                            $model_address = new \common\models\AddressInfo();
+                            $model_address->party_id = $model->id;
+                            $model_address->party_type_id = 1;
+                            $model_address->address = $v['address'];
+                            $model_address->save(false);
+                        }
+                        $newCount++;
+                    }
+                }
+            }
+            
+            \Yii::$app->session->setFlash('success', "นำเข้าข้อมูลสำเร็จ! อัพเดทข้อมูล $updatedCount รายการ และสร้างใหม่ $newCount รายการ");
+        }
+        
         return $this->redirect(['index']);
     }
     public function actionExportVendors()

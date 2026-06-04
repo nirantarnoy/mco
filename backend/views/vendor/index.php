@@ -45,7 +45,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <button class="btn btn-success"><i class="fa fa-check"></i> ยืนยันนำเข้า</button>
                                     </div>
                                     <div class="col-lg-6">
-                                        <small class="text-muted">รูปแบบไฟล์: COMPANY, ADDRESS, TAXID (ข้ามแถวแรก)</small>
+                                        <small class="text-muted">รูปแบบไฟล์: NAMELIST, ADDRESS, TAXID (ข้ามแถวแรก)</small>
                                     </div>
                                 </div>
                             </form>
