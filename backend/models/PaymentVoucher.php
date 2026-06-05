@@ -36,6 +36,8 @@ class PaymentVoucher extends ActiveRecord
     const REF_TYPE_PR = 1;
     const REF_TYPE_PO = 2;
     const REF_TYPE_QT = 3;
+    const REF_TYPE_NONE_PR = 4; // Noticed it's missing but we'll add PreAdvance instead, wait, actually let's see.
+    const REF_TYPE_PRE_ADVANCE = 5;
 
     const PAY_METHOD_CASH = 1;
     const PAY_METHOD_CHEQUE = 2;

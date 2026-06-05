@@ -204,10 +204,11 @@ $(document).ready(function() {
         $(this).closest('tr').find('input[name="line_description1[]"]').val(name);
     });
     
-    // อัปเดต hidden inputs เมื่อ PR/PO select เปลี่ยน
+    // อัปเดต hidden inputs เมื่อ Pre-Advance/PO select เปลี่ยน
     $('#pr-select').on('change', function() {
         var selectedPrIds = $(this).val() || [];
         $('#hidden-pr-ids').val(JSON.stringify(selectedPrIds));
+        pullMultipleData();
     });
     
     $('#po-select').on('change', function() {
@@ -285,13 +286,13 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
 
             <div class="row mb-3" id="pr-po-section">
                 <div class="col-md-4">
-                    <label class="form-label">เลือกใบขอซื้อ (PR) - เลือกได้หลายรายการ</label>
+                    <label class="form-label">เลือก Pre-Advance - เลือกได้หลายรายการ</label>
                     <?= Select2::widget([
                         'name' => 'pr_ids[]',
                         'data' => $selectedPrList,
                         'value' => array_keys($selectedPrList),
                         'options' => [
-                            'placeholder' => 'ค้นหา/เลือก PR...',
+                            'placeholder' => 'ค้นหา/เลือก Pre-Advance...',
                             'multiple' => true,
                             'id' => 'pr-select'
                         ],
@@ -299,7 +300,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                             'allowClear' => true,
                             'minimumInputLength' => 0,
                             'ajax' => [
-                                'url' => $getPrByVendorUrl,
+                                'url' => Url::to(['get-pre-advance-by-vendor']),
                                 'dataType' => 'json',
                                 'delay' => 250,
                                 'data' => new JsExpression('function(params) { return {q:params.term, vendor_id: $("#vendor-select").val()}; }'),
@@ -429,7 +430,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
             <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
-                        <label class="control-label">แนบไฟล์เพิ่มเติม (เลือกได้หลายไฟล์)</label>
+                        <label class="control-label">แนบสลิปโอน/หัก ณ ที่จ่าย(ถ้ามี) (เลือกได้หลายไฟล์)</label>
                         <?= Html::fileInput('upload_files[]', null, ['multiple' => true, 'class' => 'form-control', 'accept' => 'image/*,application/pdf,.doc,.docx,.xls,.xlsx']) ?>
                     </div>
                 </div>

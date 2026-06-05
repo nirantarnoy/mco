@@ -215,22 +215,22 @@ class PaymentvoucherController extends BaseController
     }
 
     /**
-     * ดึงรายการ PR ตาม Vendor (ที่ยังไม่จ่ายครบ)
+     * ดึงรายการ Pre-Advance ตาม Vendor (ที่ยังไม่จ่ายครบ)
      */
-    public function actionGetPrByVendor($vendor_id = null, $q = null)
+    public function actionGetPreAdvanceByVendor($vendor_id = null, $q = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         
-        $query = PurchReq::find()
-            ->where(['approve_status' => 1])
-            ->andWhere(['>', 'net_amount', 0]);
+        $query = \backend\models\PreAdvance::find()
+            ->where(['status' => \backend\models\PreAdvance::STATUS_ACTIVE])
+            ->andWhere(['>', 'amount', 0]);
             
         if ($vendor_id && $vendor_id !== 'null' && $vendor_id !== '') {
             $query->andWhere(['vendor_id' => $vendor_id]);
         }
         
         if ($q) {
-            $query->andWhere(['like', 'purch_req_no', $q]);
+            $query->andWhere(['like', 'pre_advance_no', $q]);
         }
         
         $prs = $query->limit(20)->all();
@@ -239,25 +239,25 @@ class PaymentvoucherController extends BaseController
         foreach ($prs as $pr) {
             // คำนวณยอดที่จ่ายไปแล้ว
             $paidAmount = \backend\models\PaymentVoucherRef::find()
-                ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PR, 'ref_id' => $pr->id])
+                ->where(['ref_type' => \backend\models\PaymentVoucher::REF_TYPE_PRE_ADVANCE, 'ref_id' => $pr->id])
                 ->sum('amount') ?: 0;
             
-            $remaining = $pr->net_amount - $paidAmount;
+            $remaining = $pr->amount - $paidAmount;
             
             // แสดงเฉพาะที่ยังมียอดคงเหลือ
             if ($remaining > 0) {
                 $has_draft_pv = \backend\models\PaymentVoucherRef::find()
                     ->alias('r')
                     ->innerJoin('payment_voucher pv', 'r.payment_voucher_id = pv.id')
-                    ->where(['r.ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PR, 'r.ref_id' => $pr->id])
+                    ->where(['r.ref_type' => \backend\models\PaymentVoucher::REF_TYPE_PRE_ADVANCE, 'r.ref_id' => $pr->id])
                     ->andWhere(['pv.status' => \backend\models\PaymentVoucher::STATUS_DRAFT])
                     ->exists();
                 $pv_suffix = $has_draft_pv ? ' [สร้าง PV แล้ว - ยังไม่จ่าย]' : '';
                 
                 $result[] = [
                     'id' => $pr->id,
-                    'text' => $pr->purch_req_no . ' (คงเหลือ: ' . number_format($remaining, 2) . ( !empty($pr->vendor_name) ? ' - ' . $pr->vendor_name : '' ) . ')' . $pv_suffix,
-                    'total_amount' => $pr->net_amount,
+                    'text' => $pr->pre_advance_no . ' (คงเหลือ: ' . number_format($remaining, 2) . ( !empty($pr->recipient_name) ? ' - ' . $pr->recipient_name : '' ) . ')' . $pv_suffix,
+                    'total_amount' => $pr->amount,
                     'paid_amount' => $paidAmount,
                     'remaining' => $remaining,
                 ];
@@ -392,20 +392,34 @@ class PaymentvoucherController extends BaseController
         $paid_for_items = [];
         $vendor_id = null;
         
-        // ดึงข้อมูลจาก PR
+        // ดึงข้อมูลจาก Pre-Advance
         foreach ($pr_ids as $pr_id) {
-            $pr = PurchReq::findOne($pr_id);
+            $pr = \backend\models\PreAdvance::findOne($pr_id);
             if ($pr) {
                 $paidAmount = \backend\models\PaymentVoucherRef::find()
-                    ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PR, 'ref_id' => $pr->id])
+                    ->where(['ref_type' => \backend\models\PaymentVoucher::REF_TYPE_PRE_ADVANCE, 'ref_id' => $pr->id])
                     ->sum('amount') ?: 0;
                 
-                $remaining = $pr->net_amount - $paidAmount;
+                $remaining = $pr->amount - $paidAmount;
                 $total_amount += $remaining;
-                $paid_for_items[] = 'PR: ' . $pr->purch_req_no;
+                $paid_for_items[] = 'Pre-Advance: ' . $pr->pre_advance_no;
                 if (!$vendor_id) {
                     $vendor_id = $pr->vendor_id;
-                    $vendor_name = $pr->vendor_name;
+                    $vendor_name = $pr->recipient_name;
+                }
+
+                // Add lines from Pre-Advance
+                if ($pr->preAdvanceLines) {
+                    foreach ($pr->preAdvanceLines as $paLine) {
+                        $lines[] = [
+                            'account_code' => '',
+                            'bill_code' => $pr->pre_advance_no,
+                            'description1' => $paLine->description,
+                            'description2' => $paLine->remark,
+                            'debit' => $paLine->amount,
+                            'credit' => 0,
+                        ];
+                    }
                 }
             }
         }
@@ -605,23 +619,23 @@ class PaymentvoucherController extends BaseController
         // ลบ refs เดิม (กรณี update)
         \backend\models\PaymentVoucherRef::deleteAll(['payment_voucher_id' => $model->id]);
         
-        // บันทึก PR refs
+        // บันทึก Pre-Advance refs
         foreach ($pr_ids as $pr_id) {
-            $pr = PurchReq::findOne($pr_id);
+            $pr = \backend\models\PreAdvance::findOne($pr_id);
             if ($pr) {
                 $paidAmount = \backend\models\PaymentVoucherRef::find()
-                    ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PR, 'ref_id' => $pr->id])
+                    ->where(['ref_type' => \backend\models\PaymentVoucher::REF_TYPE_PRE_ADVANCE, 'ref_id' => $pr->id])
                     ->andWhere(['!=', 'payment_voucher_id', $model->id])
                     ->sum('amount') ?: 0;
                 
-                $remaining = $pr->net_amount - $paidAmount;
+                $remaining = $pr->amount - $paidAmount;
                 
                 if ($remaining > 0) {
                     $ref = new \backend\models\PaymentVoucherRef();
                     $ref->payment_voucher_id = $model->id;
-                    $ref->ref_type = \backend\models\PaymentVoucherRef::REF_TYPE_PR;
+                    $ref->ref_type = \backend\models\PaymentVoucher::REF_TYPE_PRE_ADVANCE;
                     $ref->ref_id = $pr->id;
-                    $ref->ref_no = $pr->purch_req_no;
+                    $ref->ref_no = $pr->pre_advance_no;
                     $ref->amount = $remaining;
                     $ref->created_at = time();
                     $ref->save(false);
