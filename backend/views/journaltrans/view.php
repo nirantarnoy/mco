@@ -56,7 +56,7 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                 <div class="btn-group">
                     <?php if ($model->status === JournalTrans::STATUS_DRAFT): ?>
                         <?= Html::a('<i class="fa fa-edit"></i> Edit', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-                        <?php if (\Yii::$app->user->can('approveJournalTrans')): ?>
+                        <?php if (\Yii::$app->user->can('journaltrans/approve')): ?>
                             <?= Html::a('<i class="fa fa-check"></i> Approve', ['approve', 'id' => $model->id], [
                                 'class' => 'btn btn-success',
                                 'data' => [

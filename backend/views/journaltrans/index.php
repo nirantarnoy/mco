@@ -172,7 +172,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 return '';
                             },
                             'approve' => function ($url, $model, $key) {
-                                if ($model->status === JournalTrans::STATUS_DRAFT && \Yii::$app->user->can('approveJournalTrans')) {
+                                if ($model->status === JournalTrans::STATUS_DRAFT && \Yii::$app->user->can('journaltrans/approve')) {
                                     return Html::a('<i class="fa fa-check"></i>', ['approve', 'id' => $model->id], [
                                         'class' => 'btn btn-xs btn-success',
                                         'title' => 'Approve',
@@ -185,7 +185,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 return '';
                             },
                             'delete' => function ($url, $model, $key) {
-                                if ($model->status === JournalTrans::STATUS_DRAFT &&  \Yii::$app->user->can('approveJournalTrans')) {
+                                if ($model->status === JournalTrans::STATUS_DRAFT &&  \Yii::$app->user->can('journaltrans/approve')) {
                                     return Html::a('<i class="fa fa-trash"></i>', ['delete', 'id' => $model->id], [
                                         'class' => 'btn btn-xs btn-danger',
                                         'title' => 'Delete',
