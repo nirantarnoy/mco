@@ -464,6 +464,35 @@
                 </li>
                 <li class="nav-item has-treeview has-sub">
                     <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                        <p>
+                            จัดซื้อ / ค่าใช้จ่าย
+                            <i class="fas fa-angle-left right"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a href="index.php?r=purchasemaster/index" class="nav-link purchasemaster">
+                                <i class="far fa-circlez nav-icon"></i>
+                                <p>ใบสั่งซื้อ</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="index.php?r=pre-advance/index" class="nav-link pre-advance">
+                                <i class="far fa-circlez nav-icon"></i>
+                                <p>Payment Advance</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="index.php?r=paymentvoucher/index" class="nav-link paymentvoucher">
+                                <i class="far fa-circlez nav-icon"></i>
+                                <p>Payment Voucher</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item has-treeview has-sub">
+                    <a href="#" class="nav-link">
                         <i class="nav-icon fas fa-users-cog"></i>
                         <p>
                             พนักงาน/คอมมิชชั่น

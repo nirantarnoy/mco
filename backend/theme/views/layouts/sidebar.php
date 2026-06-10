@@ -355,6 +355,12 @@
                                 </li>
                             <?php endif; ?>
                             <li class="nav-item">
+                                <a href="index.php?r=pre-advance/index" class="nav-link pre-advance">
+                                    <i class="far fa-circlez nav-icon"></i>
+                                    <p>Payment Advance</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a href="index.php?r=paymentvoucher/index" class="nav-link paymentvoucher">
                                     <i class="far fa-circlez nav-icon"></i>
                                     <p>Payment Voucher</p>
