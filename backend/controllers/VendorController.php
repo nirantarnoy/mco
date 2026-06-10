@@ -357,8 +357,8 @@ class VendorController extends BaseController
                 foreach ($mismatchedVendors as $v) {
                     $model = Vendor::findOne(['id' => $v['id'], 'company_id' => $companyId]);
                     if ($model) {
-                        $model->taxid = $v['new_taxid'];
-                        $model->full_address = $v['address'];
+                        $model->taxid = $v['new_taxid'] ?? '';
+                        $model->full_address = $v['address'] ?? '';
                         if ($model->save()) {
                             // Update address info
                             if (!empty($v['address'])) {
@@ -385,9 +385,9 @@ class VendorController extends BaseController
                 foreach ($newVendors as $v) {
                     $model = new Vendor();
                     $model->code = Vendor::getlastno();
-                    $model->name = $v['name'];
-                    $model->taxid = $v['taxid'];
-                    $model->full_address = $v['address'];
+                    $model->name = $v['name'] ?? '';
+                    $model->taxid = $v['taxid'] ?? '';
+                    $model->full_address = $v['address'] ?? '';
                     $model->status = 1;
                     $model->company_id = $companyId;
                     $model->vendor_group_id = 0;
