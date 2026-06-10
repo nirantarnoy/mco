@@ -390,6 +390,7 @@ class VendorController extends BaseController
                     $model->full_address = $v['address'];
                     $model->status = 1;
                     $model->company_id = $companyId;
+                    $model->vendor_group_id = 0;
                     
                     if ($model->save()) {
                         if (!empty($v['address'])) {
