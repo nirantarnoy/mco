@@ -153,6 +153,11 @@ class PurchasemasterController extends BaseController
                         $model->save(false);
 
                         // upload
+                        $uploadPathPurch = 'uploads/purch_doc/';
+                        if (!file_exists($uploadPathPurch)) {
+                            \yii\helpers\FileHelper::createDirectory($uploadPathPurch, 0777, true);
+                        }
+                        
                         $uploaded = UploadedFile::getInstancesByName('file_invoice_doc');
                         if (!empty($uploaded)) {
                             $loop = 0;
@@ -166,6 +171,8 @@ class PurchasemasterController extends BaseController
                                     $model_doc->created_by = \Yii::$app->user->id;
                                     $model_doc->created_at = time();
                                     $model_doc->save(false);
+                                } else {
+                                    Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $file->name . ' ได้');
                                 }
                                 $loop++;
                             }
@@ -187,13 +194,15 @@ class PurchasemasterController extends BaseController
                                 if($model_purch_deposit->save(false)){
                                     if(!empty($deposit_doc)){
                                         $file = 'purch_none_pr_deposit_'.time().'_'.($deposit_doc->getExtension());
-                                        $deposit_doc->saveAs('uploads/purch_doc/' .$file);
-
-                                        $model_purch_deposit_line = new \backend\models\PurchNonePrDepositLine();
-                                        $model_purch_deposit_line->purch_none_pr_deposit_id = $model_purch_deposit->id;
-                                        $model_purch_deposit_line->deposit_date = date('Y-m-d H:i:s',strtotime($deposit_date));
-                                        $model_purch_deposit_line->deposit_amount = (double)$deposit_amount;
-                                        $model_purch_deposit_line->deposit_doc = $file;
+                                        if ($deposit_doc->saveAs('uploads/purch_doc/' .$file)) {
+                                            $model_purch_deposit_line = new \backend\models\PurchNonePrDepositLine();
+                                            $model_purch_deposit_line->purch_none_pr_deposit_id = $model_purch_deposit->id;
+                                            $model_purch_deposit_line->deposit_date = date('Y-m-d H:i:s',strtotime($deposit_date));
+                                            $model_purch_deposit_line->deposit_amount = (double)$deposit_amount;
+                                            $model_purch_deposit_line->deposit_doc = $file;
+                                        } else {
+                                            Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $deposit_doc->name . ' ได้');
+                                        }
                                         
                                         $receive_amount = \Yii::$app->request->post('deposit_receive_amount');
                                         $receive_doc = UploadedFile::getInstanceByName('deposit_receive_doc');
@@ -202,8 +211,11 @@ class PurchasemasterController extends BaseController
                                             $model_purch_deposit_line->receive_date = date('Y-m-d H:i:s',strtotime($receive_date));
                                             if(!empty($receive_doc)){
                                                 $rec_file = 'purch_none_pr_receive_'.time().'_'.($receive_doc->getExtension());
-                                                $receive_doc->saveAs('uploads/purch_doc/' .$rec_file);
-                                                $model_purch_deposit_line->receive_doc = $rec_file;
+                                                if ($receive_doc->saveAs('uploads/purch_doc/' .$rec_file)) {
+                                                    $model_purch_deposit_line->receive_doc = $rec_file;
+                                                } else {
+                                                    Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $receive_doc->name . ' ได้');
+                                                }
                                             }
                                         }
 
@@ -221,8 +233,11 @@ class PurchasemasterController extends BaseController
                                             $model_purch_deposit_line->receive_date = date('Y-m-d H:i:s',strtotime($receive_date));
                                             if(!empty($receive_doc)){
                                                 $rec_file = 'purch_none_pr_receive_'.time().'_'.($receive_doc->getExtension());
-                                                $receive_doc->saveAs('uploads/purch_doc/' .$rec_file);
-                                                $model_purch_deposit_line->receive_doc = $rec_file;
+                                                if ($receive_doc->saveAs('uploads/purch_doc/' .$rec_file)) {
+                                                    $model_purch_deposit_line->receive_doc = $rec_file;
+                                                } else {
+                                                    Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $receive_doc->name . ' ได้');
+                                                }
                                             }
                                         }
 
@@ -320,6 +335,11 @@ class PurchasemasterController extends BaseController
                         $model->save(false);
 
                         // upload
+                        $uploadPathPurch = 'uploads/purch_doc/';
+                        if (!file_exists($uploadPathPurch)) {
+                            \yii\helpers\FileHelper::createDirectory($uploadPathPurch, 0777, true);
+                        }
+
                         $uploaded = UploadedFile::getInstancesByName('file_invoice_doc');
                         if (!empty($uploaded)) {
                             $loop = 0;
@@ -333,6 +353,8 @@ class PurchasemasterController extends BaseController
                                     $model_doc->created_by = \Yii::$app->user->id;
                                     $model_doc->created_at = time();
                                     $model_doc->save(false);
+                                } else {
+                                    Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $file->name . ' ได้');
                                 }
                                 $loop++;
                             }
@@ -355,13 +377,15 @@ class PurchasemasterController extends BaseController
                                 if($model_purch_deposit->save(false)){
                                     if(!empty($deposit_doc)){
                                         $file = 'purch_none_pr_deposit_'.time().'_'.($deposit_doc->getExtension());
-                                        $deposit_doc->saveAs('uploads/purch_doc/' .$file);
-
-                                        $model_purch_deposit_line = new \backend\models\PurchNonePrDepositLine();
-                                        $model_purch_deposit_line->purch_none_pr_deposit_id = $model_purch_deposit->id;
-                                        $model_purch_deposit_line->deposit_date = date('Y-m-d H:i:s',strtotime($deposit_date));
-                                        $model_purch_deposit_line->deposit_amount = (double)$deposit_amount;
-                                        $model_purch_deposit_line->deposit_doc = $file;
+                                        if ($deposit_doc->saveAs('uploads/purch_doc/' .$file)) {
+                                            $model_purch_deposit_line = new \backend\models\PurchNonePrDepositLine();
+                                            $model_purch_deposit_line->purch_none_pr_deposit_id = $model_purch_deposit->id;
+                                            $model_purch_deposit_line->deposit_date = date('Y-m-d H:i:s',strtotime($deposit_date));
+                                            $model_purch_deposit_line->deposit_amount = (double)$deposit_amount;
+                                            $model_purch_deposit_line->deposit_doc = $file;
+                                        } else {
+                                            Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $deposit_doc->name . ' ได้');
+                                        }
                                         
                                         $receive_amount = \Yii::$app->request->post('deposit_receive_amount');
                                         $receive_doc = UploadedFile::getInstanceByName('deposit_receive_doc');
@@ -370,8 +394,11 @@ class PurchasemasterController extends BaseController
                                             $model_purch_deposit_line->receive_date = date('Y-m-d H:i:s',strtotime($receive_date));
                                             if(!empty($receive_doc)){
                                                 $rec_file = 'purch_none_pr_receive_'.time().'_'.($receive_doc->getExtension());
-                                                $receive_doc->saveAs('uploads/purch_doc/' .$rec_file);
-                                                $model_purch_deposit_line->receive_doc = $rec_file;
+                                                if ($receive_doc->saveAs('uploads/purch_doc/' .$rec_file)) {
+                                                    $model_purch_deposit_line->receive_doc = $rec_file;
+                                                } else {
+                                                    Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $receive_doc->name . ' ได้');
+                                                }
                                             }
                                         }
 
@@ -389,8 +416,11 @@ class PurchasemasterController extends BaseController
                                             $model_purch_deposit_line->receive_date = date('Y-m-d H:i:s',strtotime($receive_date));
                                             if(!empty($receive_doc)){
                                                 $rec_file = 'purch_none_pr_receive_'.time().'_'.($receive_doc->getExtension());
-                                                $receive_doc->saveAs('uploads/purch_doc/' .$rec_file);
-                                                $model_purch_deposit_line->receive_doc = $rec_file;
+                                                if ($receive_doc->saveAs('uploads/purch_doc/' .$rec_file)) {
+                                                    $model_purch_deposit_line->receive_doc = $rec_file;
+                                                } else {
+                                                    Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $receive_doc->name . ' ได้');
+                                                }
                                             }
                                         }
 

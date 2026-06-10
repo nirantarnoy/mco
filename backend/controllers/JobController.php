@@ -516,6 +516,8 @@ class JobController extends BaseController
 
                                     if($uploadedFiles[$i]->saveAs($uploadPath . $fileName)){
                                         $model_expense->line_doc = $fileName;
+                                    } else {
+                                        Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $uploadedFiles[$i]->name . ' ได้');
                                     }
                                 }
 
@@ -540,6 +542,8 @@ class JobController extends BaseController
 
                                 if($uploadedFiles[$i]->saveAs($uploadPath . $fileName)){
                                     $model_expense->line_doc = $fileName;
+                                } else {
+                                    Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $uploadedFiles[$i]->name . ' ได้');
                                 }
                             }
 
@@ -549,6 +553,10 @@ class JobController extends BaseController
                 }
 
                 // จัดการไฟล์ jsa_doc (โค้ดเดิม)
+                $uploadPathJob = 'uploads/job/';
+                if (!file_exists($uploadPathJob)) {
+                    \yii\helpers\FileHelper::createDirectory($uploadPathJob, 0777, true);
+                }
                 $uploaded = UploadedFile::getInstances($model, 'jsa_doc');
                 if (!empty($uploaded)) {
                     $loop = 0;
@@ -557,6 +565,8 @@ class JobController extends BaseController
                         if ($file->saveAs('uploads/job/' . $upfiles)) {
                             $model->jsa_doc = $upfiles;
                             $model->save(false);
+                        } else {
+                            Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $file->name . ' ได้');
                         }
                         $loop++;
                     }
@@ -592,6 +602,8 @@ class JobController extends BaseController
                                         $reportDoc->uploaded_at = time();
                                         $reportDoc->uploaded_by = Yii::$app->user->id ?? null;
                                         $reportDoc->save(false);
+                                    } else {
+                                        Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $file->name . ' ได้');
                                     }
                                 }
                             }
@@ -620,6 +632,8 @@ class JobController extends BaseController
                                 $poDoc->uploaded_at = time();
                                 $poDoc->uploaded_by = Yii::$app->user->id ?? null;
                                 $poDoc->save(false);
+                            } else {
+                                Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $file->name . ' ได้');
                             }
                         }
                     }
@@ -1900,7 +1914,7 @@ class JobController extends BaseController
         if ($type == 'purch_req') {
             return Yii::getAlias('@webroot/uploads/purch_req_doc/' . $filename);
         }
-        if ($type == 'purchase') {
+        if ($type == 'purchase' || $type == 'purch') {
             return Yii::getAlias('@webroot/uploads/purch_doc/' . $filename);
         }
 

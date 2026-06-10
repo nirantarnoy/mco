@@ -258,18 +258,26 @@ class PurchController extends BaseController
                         $uploaded = UploadedFile::getInstancesByName('file_acknowledge_doc');
                         $uploaded1 = UploadedFile::getInstancesByName('file_invoice_doc');
                         $uploaded2 = UploadedFile::getInstancesByName('file_slip_doc');
+                        
+                        $uploadPathPurch = 'uploads/purch_doc/';
+                        if (!file_exists($uploadPathPurch)) {
+                            \yii\helpers\FileHelper::createDirectory($uploadPathPurch, 0777, true);
+                        }
+
                         if (!empty($uploaded)) {
                             $loop = 0;
                             foreach ($uploaded as $file) {
                                 $upfiles = "purch_" . time() . "_" . $loop . "." . $file->getExtension();
                                 if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
-                                    $model_doc = new \common\models\PurchReqDoc();
-                                    $model_doc->purch_req_id = $id;
+                                    $model_doc = new \common\models\PurchDoc();
+                                    $model_doc->purch_id = $model->id;
                                     $model_doc->doc_name = $upfiles;
                                     $model_doc->doc_type_id = 1;
                                     $model_doc->created_by = \Yii::$app->user->id;
                                     $model_doc->created_at = time();
                                     $model_doc->save(false);
+                                } else {
+                                    Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $file->name . ' ได้');
                                 }
                                 $loop++;
                             }
@@ -279,13 +287,15 @@ class PurchController extends BaseController
                             foreach ($uploaded1 as $file) {
                                 $upfiles = "purch_" . time() . "_" . $loop . "." . $file->getExtension();
                                 if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
-                                    $model_doc = new \common\models\PurchReqDoc();
-                                    $model_doc->purch_req_id = $id;
+                                    $model_doc = new \common\models\PurchDoc();
+                                    $model_doc->purch_id = $model->id;
                                     $model_doc->doc_name = $upfiles;
                                     $model_doc->doc_type_id = 2;
                                     $model_doc->created_by = \Yii::$app->user->id;
                                     $model_doc->created_at = time();
                                     $model_doc->save(false);
+                                } else {
+                                    Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $file->name . ' ได้');
                                 }
                                 $loop++;
                             }
@@ -295,13 +305,15 @@ class PurchController extends BaseController
                             foreach ($uploaded2 as $file) {
                                 $upfiles = "purch_" . time() . "_" . $loop . "." . $file->getExtension();
                                 if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
-                                    $model_doc = new \common\models\PurchReqDoc();
-                                    $model_doc->purch_req_id = $id;
+                                    $model_doc = new \common\models\PurchDoc();
+                                    $model_doc->purch_id = $model->id;
                                     $model_doc->doc_name = $upfiles;
                                     $model_doc->doc_type_id = 3;
                                     $model_doc->created_by = \Yii::$app->user->id;
                                     $model_doc->created_at = time();
                                     $model_doc->save(false);
+                                } else {
+                                    Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $file->name . ' ได้');
                                 }
                                 $loop++;
                             }
@@ -317,14 +329,16 @@ class PurchController extends BaseController
                                 if ($model_purch_deposit->save(false)) {
                                     if (!empty($deposit_doc)) {
                                         $file = 'purch_deposit_' . time() . '_' . ($deposit_doc->getExtension());
-                                        $deposit_doc->saveAs('uploads/purch_doc/' . $file);
-
-                                        $model_purch_deposit_line = new \backend\models\PurchDepositLine();
-                                        $model_purch_deposit_line->purch_deposit_id = $model_purch_deposit->id;
-                                        $model_purch_deposit_line->deposit_date = date('Y-m-d H:i:s', strtotime($deposit_date));
-                                        $model_purch_deposit_line->deposit_amount = (double)$deposit_amount;
-                                        $model_purch_deposit_line->deposit_doc = $file;
-                                        $model_purch_deposit_line->save(false);
+                                        if ($deposit_doc->saveAs('uploads/purch_doc/' . $file)) {
+                                            $model_purch_deposit_line = new \backend\models\PurchDepositLine();
+                                            $model_purch_deposit_line->purch_deposit_id = $model_purch_deposit->id;
+                                            $model_purch_deposit_line->deposit_date = date('Y-m-d H:i:s', strtotime($deposit_date));
+                                            $model_purch_deposit_line->deposit_amount = (double)$deposit_amount;
+                                            $model_purch_deposit_line->deposit_doc = $file;
+                                            $model_purch_deposit_line->save(false);
+                                        } else {
+                                            Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $deposit_doc->name . ' ได้');
+                                        }
                                     }
 
                                 }
@@ -508,6 +522,11 @@ class PurchController extends BaseController
                             throw new \Exception('Failed to update total amount');
                         }
 
+                        $uploadPathPurch = 'uploads/purch_doc/';
+                        if (!file_exists($uploadPathPurch)) {
+                            \yii\helpers\FileHelper::createDirectory($uploadPathPurch, 0777, true);
+                        }
+
                         if ($model->is_deposit == 1) { // มีมัดจำ
                             if ($deposit_amount > 0) {
                                 $model_purch_deposit = \backend\models\PurchDeposit::find()->where(['purch_id' => $model->id])->one();
@@ -534,6 +553,8 @@ class PurchController extends BaseController
                                         $file = 'purch_deposit_' . time() . '_' . ($deposit_doc->getExtension());
                                         if ($deposit_doc->saveAs('uploads/purch_doc/' . $file)) {
                                             $model_purch_deposit_line->deposit_doc = $file;
+                                        } else {
+                                            Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $deposit_doc->name . ' ได้');
                                         }
                                     }
 
@@ -546,6 +567,8 @@ class PurchController extends BaseController
                                         $file_receive = 'purch_deposit_return_' . time() . '_' . ($deposit_receive_doc->getExtension());
                                         if ($deposit_receive_doc->saveAs('uploads/purch_doc/' . $file_receive)) {
                                             $model_purch_deposit_line->receive_doc = $file_receive;
+                                        } else {
+                                            Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $deposit_receive_doc->name . ' ได้');
                                         }
                                     }
 
@@ -572,24 +595,26 @@ class PurchController extends BaseController
                             if (!empty($purch_vendor_bill_doc)) {
                                 if (!empty($purch_vendor_bill_doc)) {
                                     $file = 'purch_vendor_bill_' . time() . '_' . ($purch_vendor_bill_doc->getExtension());
-                                    $purch_vendor_bill_doc->saveAs('uploads/purch_doc/' . $file);
-
-                                    $model_vendor_bill = \common\models\PurchVendorBill::find()->where(['purch_id' => $id])->one();
-                                    if ($model_vendor_bill) {
-                                        if (file_exists('uploads/purch_doc/' . $model_vendor_bill->vendor_bill_doc)) {
-                                            unlink('uploads/purch_doc/' . $model_vendor_bill->vendor_bill_doc);
+                                    if ($purch_vendor_bill_doc->saveAs('uploads/purch_doc/' . $file)) {
+                                        $model_vendor_bill = \common\models\PurchVendorBill::find()->where(['purch_id' => $id])->one();
+                                        if ($model_vendor_bill) {
+                                            if (file_exists('uploads/purch_doc/' . $model_vendor_bill->vendor_bill_doc)) {
+                                                unlink('uploads/purch_doc/' . $model_vendor_bill->vendor_bill_doc);
+                                            }
+                                            $model_vendor_bill->bill_date = date('Y-m-d', strtotime($purch_bill_date));
+                                            $model_vendor_bill->appoinment_date = date('Y-m-d', strtotime($purch_vendor_bill_date));
+                                            $model_vendor_bill->bill_doc = $file;
+                                            $model_vendor_bill->save(false);
+                                        } else {
+                                            $model_vendor_bill = new \common\models\PurchVendorBill();
+                                            $model_vendor_bill->purch_id = $id;
+                                            $model_vendor_bill->bill_date = date('Y-m-d', strtotime($purch_bill_date));
+                                            $model_vendor_bill->appoinment_date = date('Y-m-d', strtotime($purch_vendor_bill_date));
+                                            $model_vendor_bill->bill_doc = $file;
+                                            $model_vendor_bill->save(false);
                                         }
-                                        $model_vendor_bill->bill_date = date('Y-m-d', strtotime($purch_bill_date));
-                                        $model_vendor_bill->appoinment_date = date('Y-m-d', strtotime($purch_vendor_bill_date));
-                                        $model_vendor_bill->bill_doc = $file;
-                                        $model_vendor_bill->save(false);
                                     } else {
-                                        $model_vendor_bill = new \common\models\PurchVendorBill();
-                                        $model_vendor_bill->purch_id = $id;
-                                        $model_vendor_bill->bill_date = date('Y-m-d', strtotime($purch_bill_date));
-                                        $model_vendor_bill->appoinment_date = date('Y-m-d', strtotime($purch_vendor_bill_date));
-                                        $model_vendor_bill->bill_doc = $file;
-                                        $model_vendor_bill->save(false);
+                                        Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $purch_vendor_bill_doc->name . ' ได้');
                                     }
                                 }
                             }
@@ -1609,6 +1634,12 @@ class PurchController extends BaseController
         $id = \Yii::$app->request->post('id');
         if ($id) {
             $uploaded = UploadedFile::getInstancesByName('file_doc');
+            
+            $uploadPathPurch = 'uploads/purch_doc/';
+            if (!file_exists($uploadPathPurch)) {
+                \yii\helpers\FileHelper::createDirectory($uploadPathPurch, 0777, true);
+            }
+
             if (!empty($uploaded)) {
                 $loop = 0;
                 foreach ($uploaded as $file) {
@@ -1620,6 +1651,8 @@ class PurchController extends BaseController
                         $model_doc->created_by = \Yii::$app->user->id;
                         $model_doc->created_at = time();
                         $model_doc->save(false);
+                    } else {
+                        Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $file->name . ' ได้');
                     }
                     $loop++;
                 }
@@ -1655,6 +1688,10 @@ class PurchController extends BaseController
         $uploaded1 = UploadedFile::getInstancesByName('file_invoice_doc');
         $uploaded2 = UploadedFile::getInstancesByName('file_slip_doc');
         if($id){
+            $uploadPathPurch = 'uploads/purch_doc/';
+            if (!file_exists($uploadPathPurch)) {
+                \yii\helpers\FileHelper::createDirectory($uploadPathPurch, 0777, true);
+            }
             if (!empty($uploaded)) {
                 $loop = 0;
                 foreach ($uploaded as $file) {
@@ -1667,6 +1704,8 @@ class PurchController extends BaseController
                         $model_doc->created_by = \Yii::$app->user->id;
                         $model_doc->created_at = time();
                         $model_doc->save(false);
+                    } else {
+                        Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $file->name . ' ได้');
                     }
                     $loop++;
                 }
@@ -1683,6 +1722,8 @@ class PurchController extends BaseController
                         $model_doc->created_by = \Yii::$app->user->id;
                         $model_doc->created_at = time();
                         $model_doc->save(false);
+                    } else {
+                        Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $file->name . ' ได้');
                     }
                     $loop++;
                 }
@@ -1699,6 +1740,8 @@ class PurchController extends BaseController
                         $model_doc->created_by = \Yii::$app->user->id;
                         $model_doc->created_at = time();
                         $model_doc->save(false);
+                    } else {
+                        Yii::$app->session->addFlash('error', 'ไม่สามารถบันทึกไฟล์ ' . $file->name . ' ได้');
                     }
                     $loop++;
                 }
