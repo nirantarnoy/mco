@@ -168,7 +168,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
 
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label class="form-label">เลือกใบสั่งซื้อ (None PR) - ยังไม่สามารถกดเลือกข้อมูลได้</label>
+                    <label class="form-label">เลือกใบสั่งซื้อ (None PR)</label>
                     <?= Select2::widget([
                         'name' => 'none_pr_ids[]',
                         'data' => $selectedNonePrList,

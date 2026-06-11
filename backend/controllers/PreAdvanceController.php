@@ -135,16 +135,14 @@ class PreAdvanceController extends BaseController
         
         $result = [];
         foreach ($none_prs as $none_pr) {
-            $paidAmount = \backend\models\PreAdvanceRef::find()
+            $isUsed = \backend\models\PreAdvanceRef::find()
                 ->where(['ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR, 'ref_id' => $none_pr->id])
-                ->sum('amount') ?: 0;
+                ->exists();
             
-            $remaining = $none_pr->total_amount - $paidAmount;
-            
-            if ($remaining > 0) {
+            if (!$isUsed) {
                 $result[] = [
                     'id' => $none_pr->id,
-                    'text' => $none_pr->docnum . ' (คงเหลือ: ' . number_format($remaining, 2) . ( !empty($none_pr->supnam) ? ' - ' . $none_pr->supnam : '' ) . ')',
+                    'text' => $none_pr->docnum . ' (ยอดรวม: ' . number_format($none_pr->total_amount, 2) . ( !empty($none_pr->supnam) ? ' - ' . $none_pr->supnam : '' ) . ')',
                 ];
             }
         }
@@ -166,12 +164,7 @@ class PreAdvanceController extends BaseController
         foreach ($none_pr_ids as $none_pr_id) {
             $none_pr = \backend\models\PurchaseMaster::findOne($none_pr_id);
             if ($none_pr) {
-                $paidAmount = \backend\models\PreAdvanceRef::find()
-                    ->where(['ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR, 'ref_id' => $none_pr->id])
-                    ->sum('amount') ?: 0;
-                
-                $remaining = $none_pr->total_amount - $paidAmount;
-                $total_amount += $remaining;
+                $total_amount += $none_pr->total_amount;
                 if (!$vendor_id) {
                     $vendor_id = $none_pr->supcod;
                     $vendor_name = $none_pr->supnam;
@@ -234,14 +227,12 @@ class PreAdvanceController extends BaseController
         foreach ($none_pr_ids as $none_pr_id) {
             $none_pr = \backend\models\PurchaseMaster::findOne($none_pr_id);
             if ($none_pr) {
-                $paidAmount = \backend\models\PreAdvanceRef::find()
+                $isUsed = \backend\models\PreAdvanceRef::find()
                     ->where(['ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR, 'ref_id' => $none_pr->id])
                     ->andWhere(['!=', 'pre_advance_id', $model->id])
-                    ->sum('amount') ?: 0;
+                    ->exists();
                 
-                $remaining = $none_pr->total_amount - $paidAmount;
-                
-                if ($remaining > 0) {
+                if (!$isUsed) {
                     $ref = new PreAdvanceRef();
                     $ref->pre_advance_id = $model->id;
                     $ref->ref_type = PreAdvanceRef::REF_TYPE_NONE_PR;
