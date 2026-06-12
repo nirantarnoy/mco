@@ -35,7 +35,7 @@ use backend\models\Vendor;
         <div class="col-md-6">
             <?= $form->field($model, 'vendor_id')->widget(Select2::className(), [
                 'data' => ArrayHelper::map(Vendor::find()->all(), 'id', function($m) {
-                    return $m->name . ' (' . $m->tax_id . ')';
+                    return $m->name . ' (' . $m->taxid . ')';
                 }),
                 'options' => ['placeholder' => 'เลือกผู้ถูกหักภาษี...'],
                 'pluginOptions' => [

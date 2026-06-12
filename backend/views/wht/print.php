@@ -61,8 +61,8 @@ $formatter = \Yii::$app->formatter;
         <div class="section-box">
             <b>ผู้ถูกหักภาษี ณ ที่จ่าย:</b><br>
             ชื่อ: <b><?= $model->vendor ? Html::encode($model->vendor->name) : '-' ?></b><br>
-            ที่อยู่: <b><?= $model->vendor ? Html::encode($model->vendor->address) : '-' ?></b><br>
-            เลขประจำตัวผู้เสียภาษีอากร: <b><?= $model->vendor ? Html::encode($model->vendor->tax_id) : '-' ?></b>
+            ที่อยู่: <b><?= $model->vendor ? Html::encode($model->vendor->full_address) : '-' ?></b><br>
+            เลขประจำตัวผู้เสียภาษีอากร: <b><?= $model->vendor ? Html::encode($model->vendor->taxid) : '-' ?></b>
         </div>
 
         <div style="margin-top: 10px;">

@@ -6,7 +6,6 @@ $this->title = 'Pre-Advances';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="pre-advance-index">
-    <h1><?= Html::encode($this->title) ?></h1>
     <p>
         <?= Html::a('Create Pre-Advance', ['create'], ['class' => 'btn btn-success']) ?>
     </p>

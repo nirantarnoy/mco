@@ -6,7 +6,6 @@ $this->title = 'รายการหัก ณ ที่จ่าย (WHT)';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="wht-index">
-    <h1><?= Html::encode($this->title) ?></h1>
     <p>
         <?= Html::a('สร้างรายการ', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
