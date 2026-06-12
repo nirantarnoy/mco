@@ -366,6 +366,12 @@
                                     <p>Payment Voucher</p>
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="index.php?r=wht/index" class="nav-link wht">
+                                    <i class="far fa-circlez nav-icon"></i>
+                                    <p>จัดการหัก ณ ที่จ่าย (WHT)</p>
+                                </a>
+                            </li>
                             <?php if (\Yii::$app->user->can('purch/index')): ?>
                                 <li class="nav-item">
                                     <a href="index.php?r=purchasemaster" class="nav-link purchasemaster">
