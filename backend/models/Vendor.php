@@ -83,12 +83,12 @@ class Vendor extends \common\models\Vendor
 
         // Find last number for this type and date
         $lastRecord = Vendor::find()
-            ->where(['like', 'code', $prefix])
-            ->orderBy(['id' => SORT_DESC])
+            ->where(['like', 'code', $prefix . '%', false])
+            ->orderBy([new \yii\db\Expression('LENGTH(code) DESC'), 'code' => SORT_DESC])
             ->one();
 
         if ($lastRecord) {
-            $lastNumber = intval(substr($lastRecord->code, -3));
+            $lastNumber = intval(substr($lastRecord->code, strlen($prefix)));
             $newNumber = $lastNumber + 1;
             $vendor_code = $lastNumber;
         } else {
@@ -96,7 +96,6 @@ class Vendor extends \common\models\Vendor
         }
 
         $vendor_code = $prefix . sprintf('%03d', $newNumber);
-
 
         return $vendor_code;
     }

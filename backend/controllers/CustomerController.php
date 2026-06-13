@@ -92,6 +92,7 @@ class CustomerController extends BaseController
                 $zipcode = \Yii::$app->request->post('zipcode');
 
                 $party_type_id = 2;
+                $model->code = Customer::getlastno();
 
                 if($model->save(false)){
                     if($address != null || $address != '') {

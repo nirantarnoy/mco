@@ -117,12 +117,12 @@ class Customer extends \common\models\Customer
 
         // Find last number for this type and date
         $lastRecord = Customer::find()
-            ->where(['like', 'code', $prefix])
-            ->orderBy(['id' => SORT_DESC])
+            ->where(['like', 'code', $prefix . '%', false])
+            ->orderBy([new \yii\db\Expression('LENGTH(code) DESC'), 'code' => SORT_DESC])
             ->one();
 
         if ($lastRecord) {
-            $lastNumber = intval(substr($lastRecord->code, -3));
+            $lastNumber = intval(substr($lastRecord->code, strlen($prefix)));
             $newNumber = $lastNumber + 1;
             $customer_code = $lastNumber;
         } else {
@@ -130,7 +130,6 @@ class Customer extends \common\models\Customer
         }
 
         $customer_code = $prefix . sprintf('%03d', $newNumber);
-
 
         return $customer_code;
     }
