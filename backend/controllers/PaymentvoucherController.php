@@ -73,7 +73,7 @@ class PaymentvoucherController extends BaseController
     {
         $model = new PaymentVoucher();
         $model->trans_date = date('Y-m-d');
-        $model->status = PaymentVoucher::STATUS_DRAFT;
+        $model->status = PaymentVoucher::STATUS_ACTIVE;
 
         if ($model->load(Yii::$app->request->post())) {
             $transaction = Yii::$app->db->beginTransaction();

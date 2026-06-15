@@ -57,6 +57,18 @@ $this->params['breadcrumbs'][] = $this->title;
                             'cheque_date:date',
                             'amount:decimal',
                             'paid_for',
+                            [
+                                'attribute' => 'status',
+                                'format' => 'html',
+                                'value' => function($model) {
+                                    if ($model->status == \backend\models\PaymentVoucher::STATUS_ACTIVE) {
+                                        return '<span class="badge bg-success">จ่ายแล้ว</span>';
+                                    } else if ($model->status == \backend\models\PaymentVoucher::STATUS_DRAFT) {
+                                        return '<span class="badge bg-warning text-dark">ร่าง (ยังไม่จ่าย)</span>';
+                                    }
+                                    return '<span class="badge bg-secondary">ยกเลิก</span>';
+                                }
+                            ],
                         ],
                     ]) ?>
                 </div>

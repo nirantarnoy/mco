@@ -409,8 +409,14 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                 <div class="col-md-4">
                     <?= $form->field($model, 'amount')->textInput(['type' => 'number', 'step' => '0.01', 'readonly' => true]) ?>
                 </div>
-                <div class="col-md-8">
+                <div class="col-md-4">
                     <?= $form->field($model, 'paid_for')->textInput(['maxlength' => true, 'placeholder' => 'จ่ายสำหรับ PR/PO/QT เลขที่...']) ?>
+                </div>
+                <div class="col-md-4">
+                    <?= $form->field($model, 'status')->dropDownList([
+                        \backend\models\PaymentVoucher::STATUS_ACTIVE => 'จ่ายแล้ว',
+                        \backend\models\PaymentVoucher::STATUS_DRAFT => 'ร่าง (ยังไม่จ่าย)',
+                    ])->label('สถานะ') ?>
                 </div>
             </div>
 

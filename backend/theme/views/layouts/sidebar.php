@@ -348,11 +348,19 @@
                             <?php endif; ?>
                             <?php if (\Yii::$app->user->can('purch/index')): ?>
                                 <li class="nav-item">
+                                    <a href="index.php?r=purchasemaster" class="nav-link purchasemaster">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>บันทึกข้อมูลซื้อ(None PR)</p>
+                                    </a>
+                                </li>
+                            <?php endif; ?>
+                            <?php if (\Yii::$app->user->can('purch/index')): ?>
+                                <!-- <li class="nav-item">
                                     <a href="index.php?r=purch-payment" class="nav-link purch-payment">
                                         <i class="far fa-circlez nav-icon"></i>
                                         <p>โอนเงินคำสั่งซื้อ</p>
                                     </a>
-                                </li>
+                                </li> -->
                             <?php endif; ?>
                             <li class="nav-item">
                                 <a href="index.php?r=pre-advance/index" class="nav-link pre-advance">
@@ -372,14 +380,6 @@
                                     <p>จัดการหัก ณ ที่จ่าย (WHT)</p>
                                 </a>
                             </li>
-                            <?php if (\Yii::$app->user->can('purch/index')): ?>
-                                <li class="nav-item">
-                                    <a href="index.php?r=purchasemaster" class="nav-link purchasemaster">
-                                        <i class="far fa-circlez nav-icon"></i>
-                                        <p>บันทึกข้อมูลซื้อ(None PR)</p>
-                                    </a>
-                                </li>
-                            <?php endif; ?>
 <!--                            --><?php //if (\Yii::$app->user->can('stocktrans/index')): ?>
 <!--                                <li class="nav-item">-->
 <!--                                    <a href="index.php?r=stocktrans" class="nav-link stocktrans">-->
