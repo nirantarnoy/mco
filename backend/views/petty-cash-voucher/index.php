@@ -51,7 +51,12 @@ $this->params['breadcrumbs'][] = $this->title;
                     ],
                     [
                         'attribute' => 'name',
+                        'label' => 'ชื่อผู้รับเงิน (Vendor)',
                         'headerOptions' => ['width' => '200px'],
+                        'value' => function($model) {
+                            $vendor = \backend\models\Vendor::findOne($model->vendor_id);
+                            return $vendor ? $vendor->name : $model->name;
+                        }
                     ],
                     [
                         'attribute' => 'paid_for',

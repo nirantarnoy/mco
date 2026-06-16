@@ -88,7 +88,14 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                                 'attribute' => 'date',
                                 'value' => Yii::$app->formatter->asDate($model->date, 'dd/MM/yyyy'),
                             ],
-                            'name',
+                            [
+                                'attribute' => 'name',
+                                'label' => 'ชื่อผู้รับเงิน (Vendor)',
+                                'value' => function($model) {
+                                    $vendor = \backend\models\Vendor::findOne($model->vendor_id);
+                                    return $vendor ? $vendor->name : $model->name;
+                                }
+                            ],
                             [
                                 'attribute' => 'amount',
                                 'value' => number_format($model->amount - $model->getTotalVat() - $model->getTotalWht() - $model->getTotalVatProhibit(), 2) . ' บาท',

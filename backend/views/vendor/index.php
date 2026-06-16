@@ -30,7 +30,11 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <i class="fa fa-upload"></i> นำเข้าข้อมูล
                                 </button>
                                 <?= Html::a(Yii::t('app', '<i class="fa fa-download"></i> Export vendors'), ['export-vendors'], ['class' => 'btn btn-info']) ?>
-                                <?= Html::a(Yii::t('app', '<i class="fa fa-download"></i> Export Express'), ['export-express'], ['class' => 'btn btn-warning']) ?>
+                                <form action="<?= Url::to(['vendor/export-express'], true) ?>" method="post" style="display: inline-flex; margin-left: 5px;">
+                                    <input type="text" name="from_code" class="form-control" placeholder="จากรหัส" style="width: 120px; margin-right: 5px;">
+                                    <input type="text" name="to_code" class="form-control" placeholder="ถึงรหัส" style="width: 120px; margin-right: 5px;">
+                                    <button class="btn btn-warning"><i class="fa fa-download"></i> Export Express</button>
+                                </form>
                             </div>
                         </div>
                     </div>

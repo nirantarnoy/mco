@@ -553,8 +553,21 @@ class VendorController extends BaseController
 
     public function actionExportExpress()
     {
-        $sql = "SELECT * FROM vendor ORDER BY id ASC";
-        $vendors = \Yii::$app->db->createCommand($sql)->queryAll();
+        $from_code = \Yii::$app->request->post('from_code');
+        $to_code = \Yii::$app->request->post('to_code');
+
+        $sql = "SELECT * FROM vendor WHERE 1=1";
+        $params = [];
+        if (!empty($from_code)) {
+            $sql .= " AND code >= :from_code";
+            $params[':from_code'] = $from_code;
+        }
+        if (!empty($to_code)) {
+            $sql .= " AND code <= :to_code";
+            $params[':to_code'] = $to_code;
+        }
+        $sql .= " ORDER BY id ASC";
+        $vendors = \Yii::$app->db->createCommand($sql, $params)->queryAll();
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
