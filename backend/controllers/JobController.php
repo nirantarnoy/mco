@@ -1789,7 +1789,7 @@ class JobController extends BaseController
         $foreignKey = $this->getDocumentForeignKey($type);
 
         $doc_name = 'doc';
-        if($tableName =='purch_req_doc' || $tableName == 'purch_doc'){
+        if($tableName =='purch_req_doc' || $tableName == 'purch_doc' || $tableName == 'journal_trans_doc'){
             $doc_name = 'doc_name';
         }
 
@@ -1916,6 +1916,12 @@ class JobController extends BaseController
         }
         if ($type == 'purchase' || $type == 'purch') {
             return Yii::getAlias('@webroot/uploads/purch_doc/' . $filename);
+        }
+        if ($type == 'journal_trans') {
+            return Yii::getAlias('@webroot/uploads/journal_trans_doc/' . $filename);
+        }
+        if ($type == 'invoice' || $type == 'billing') {
+            return Yii::getAlias('@webroot/uploads/invoice_doc/' . $filename);
         }
 
         $basePath = Yii::getAlias('@webroot/uploads/documents');
