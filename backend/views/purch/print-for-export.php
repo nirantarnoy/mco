@@ -671,9 +671,9 @@ $contact_name = $vendor_info !== null ? ($vendor_info['contact_name'] ?? '') : '
                         $brand = \backend\models\Product::findBrand($line->product_id); 
                         $model_name = \backend\models\Product::findModelName($line->product_id);
                         ?>
-                        <?= Html::encode($line->product_name).(!empty($brand) ? ' ('.Html::encode($brand).')' : '').(!empty($model_name) ? ' - '.Html::encode($model_name) : '') ?>
+                        <?= Html::encode($line->product_name).(!empty($brand) ? ' ('.Html::encode($brand).')' : '') ?>
                     </td>
-                    <td><?= Html::encode($product_line_des) ?></td>
+                    <td><?= Html::encode($product_line_des).(!empty($model_name) ? ' - '.Html::encode($model_name) : '') ?></td>
                     <td><?= number_format($line->qty, 0) ?></td>
                     <td><?= Html::encode(\backend\models\Unit::findName($line->unit_id)) ?></td>
                     <td class="number-cell"><?= number_format($line->line_price, 2) ?></td>
