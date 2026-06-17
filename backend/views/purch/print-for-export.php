@@ -659,21 +659,26 @@ $contact_name = $vendor_info !== null ? ($vendor_info['contact_name'] ?? '') : '
         <?php if ($purchaseLines): ?>
             <?php $itemNo = 1; ?>
             <?php foreach ($purchaseLines as $line): ?>
-                <?php
-                  $product_line_des = str_replace(["P/N :", "P/N:"], "", $line->product_description);
-                ?>
                 <tr>
                     <td><?= $itemNo++ ?></td>
                     <td><?= Html::encode($line->product->code ?? '') ?></td>
-                    <!-- <td class="description-cell"><?php //echo Html::encode($line->product->name ?? $line->product_name) ?></td> -->
                     <td class="description-cell">
                         <?php 
-                        $brand = \backend\models\Product::findBrand($line->product_id); 
-                        $model_name = \backend\models\Product::findModelName($line->product_id);
+                        $p_name = $line->product ? $line->product->name : $line->product_name;
+                        $p_desc = $line->product ? $line->product->description : $line->product_description;
                         ?>
-                        <?= Html::encode($line->product_name).(!empty($brand) ? ' ('.Html::encode($brand).')' : '') ?>
+                        <?= Html::encode($p_name) ?>
+                        <?php if(!empty($p_desc)): ?>
+                            <br>
+                            <?= nl2br(Html::encode($p_desc)) ?>
+                        <?php endif; ?>
                     </td>
-                    <td><?= Html::encode($product_line_des).(!empty($model_name) ? ' - '.Html::encode($model_name) : '') ?></td>
+                    <td>
+                        <?php 
+                        $model_name = $line->product ? $line->product->model_name : \backend\models\Product::findModelName($line->product_id);
+                        ?>
+                        <?= Html::encode($model_name) ?>
+                    </td>
                     <td><?= number_format($line->qty, 0) ?></td>
                     <td><?= Html::encode(\backend\models\Unit::findName($line->unit_id)) ?></td>
                     <td class="number-cell"><?= number_format($line->line_price, 2) ?></td>
