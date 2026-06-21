@@ -38,11 +38,16 @@ $step = isset($step) ? (int)$step : 1;
         @media print {
             .no-print { display: none; }
             body { padding: 0; }
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
         }
         
         .checkbox-container { display: inline-block; margin-right: 15px; }
         .checkbox-box { display: inline-block; width: 12px; height: 12px; border: 1px solid #000; margin-right: 5px; position: relative; top: 2px; }
-        .checkbox-box.checked { background-color: #000; }
+        .checkbox-box.checked { background-color: #000 !important; }
         .checkbox-box.circle { border-radius: 50%; }
         
         .section-title { font-weight: bold; font-size: 15px; margin-top: 15px; margin-bottom: 5px; color: #333; border-left: 3px solid #007bff; padding-left: 8px; }
@@ -238,6 +243,8 @@ $step = isset($step) ? (int)$step : 1;
                         }
                     }
 
+                    $total = $before_vat + $vat - $wth;
+                    
                     $sum_before_vat += $before_vat;
                     $sum_vat += $vat;
                     $sum_wth += $wth;
@@ -333,14 +340,23 @@ $step = isset($step) ? (int)$step : 1;
             </div>
             Prepared by
             <div style="font-size: 11px; margin-top: 5px;"><?= \backend\models\User::findEmployeeNameByUserId($model->created_by) ?></div>
+            <div class="no-print" style="margin-top: 10px;">
+                <a href="<?= \yii\helpers\Url::to(['paymentvoucher/view', 'id' => $model->id]) ?>" target="_blank" style="display: inline-block; padding: 4px 8px; font-size: 11px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; border: 1px solid #0056b3;">Electronic sign</a>
+            </div>
         </td>
         <td>
             <div class="sig-container"></div>
             Checker by
+            <div class="no-print" style="margin-top: 10px;">
+                <a href="<?= \yii\helpers\Url::to(['paymentvoucher/view', 'id' => $model->id]) ?>" target="_blank" style="display: inline-block; padding: 4px 8px; font-size: 11px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; border: 1px solid #0056b3;">Electronic sign</a>
+            </div>
         </td>
         <td>
             <div class="sig-container"></div>
             Authorized by
+            <div class="no-print" style="margin-top: 10px;">
+                <a href="<?= \yii\helpers\Url::to(['paymentvoucher/view', 'id' => $model->id]) ?>" target="_blank" style="display: inline-block; padding: 4px 8px; font-size: 11px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; border: 1px solid #0056b3;">Electronic sign</a>
+            </div>
         </td>
     </tr>
 </table>

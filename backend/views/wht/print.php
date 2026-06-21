@@ -54,21 +54,26 @@ $formatter = \Yii::$app->formatter;
         <div class="section-box" style="margin-top: 15px;">
             <b>ผู้มีหน้าที่หักภาษี ณ ที่จ่าย:</b><br>
             ชื่อ: <b>บริษัท เอ็ม.ซี.โอ. จำกัด</b><br>
-            ที่อยู่: 228/15 ถ.พหลโยธิน แขวงสามเสนใน เขตพญาไท กรุงเทพมหานคร 10400<br>
-            เลขประจำตัวผู้เสียภาษีอากร: <b>0105543000955</b>
+            ที่อยู่: 8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000<br>
+            เลขประจำตัวผู้เสียภาษีอากร: <b>0215543000985</b>
         </div>
 
         <div class="section-box">
             <b>ผู้ถูกหักภาษี ณ ที่จ่าย:</b><br>
             ชื่อ: <b><?= $model->vendor ? Html::encode($model->vendor->name) : '-' ?></b><br>
-            ที่อยู่: <b><?= $model->vendor ? Html::encode($model->vendor->full_address) : '-' ?></b><br>
+            ที่อยู่: <b><?= $model->vendor ? Html::encode(\backend\models\Vendor::findFullAddress($model->vendor_id)) : '-' ?></b><br>
             เลขประจำตัวผู้เสียภาษีอากร: <b><?= $model->vendor ? Html::encode($model->vendor->taxid) : '-' ?></b>
         </div>
 
-        <div style="margin-top: 10px;">
+        <div style="margin-top: 10px; font-size: 13px;">
             <b>แบบที่ยื่น:</b>
-            <span class="check-box <?= $model->wht_type == 3 ? 'checked' : '' ?>"></span> (1) ภ.ง.ด. 3 &nbsp;&nbsp;&nbsp;&nbsp;
-            <span class="check-box <?= $model->wht_type == 53 ? 'checked' : '' ?>"></span> (2) ภ.ง.ด. 53
+            <span class="check-box"></span> (1) ภ.ง.ด. 1 ก &nbsp;
+            <span class="check-box"></span> (2) ภ.ง.ด. 1 ก พิเศษ &nbsp;
+            <span class="check-box"></span> (3) ภ.ง.ด. 2 &nbsp;
+            <span class="check-box <?= $model->wht_type == 3 ? 'checked' : '' ?>"></span> (4) ภ.ง.ด. 3 &nbsp;
+            <span class="check-box"></span> (5) ภ.ง.ด. 2 ก &nbsp;
+            <span class="check-box"></span> (6) ภ.ง.ด. 3 ก &nbsp;
+            <span class="check-box <?= $model->wht_type == 53 ? 'checked' : '' ?>"></span> (7) ภ.ง.ด. 53
         </div>
 
         <table class="wht-table">
