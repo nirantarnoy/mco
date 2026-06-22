@@ -57,7 +57,7 @@ use backend\models\Vendor;
                 'ค่าโฆษณา' => 'ค่าโฆษณา',
                 'ค่าเช่า' => 'ค่าเช่า',
                 'อื่นๆ' => 'อื่นๆ (ระบุ)'
-            ], ['prompt' => '-- เลือกประเภทเงินได้ --', 'id' => 'wht_desc_select']) ?>
+            ], ['prompt' => '-- เลือกประเภทเงินได้ --']) ?>
         </div>
         <div class="col-md-8">
             <?= $form->field($model, 'other_desc')->textInput(['maxlength' => true, 'placeholder' => 'ระบุประเภทเงินได้อื่นๆ (ถ้ามี)']) ?>
@@ -66,13 +66,13 @@ use backend\models\Vendor;
 
     <div class="row">
         <div class="col-md-4">
-            <?= $form->field($model, 'base_amount')->textInput(['type' => 'number', 'step' => '0.01', 'id' => 'base_amount']) ?>
+            <?= $form->field($model, 'base_amount')->textInput(['type' => 'number', 'step' => '0.01']) ?>
         </div>
         <div class="col-md-4">
-            <?= $form->field($model, 'wht_percent')->textInput(['type' => 'number', 'step' => '0.01', 'id' => 'wht_percent']) ?>
+            <?= $form->field($model, 'wht_percent')->textInput(['type' => 'number', 'step' => '0.01']) ?>
         </div>
         <div class="col-md-4">
-            <?= $form->field($model, 'wht_amount')->textInput(['type' => 'number', 'step' => '0.01', 'id' => 'wht_amount']) ?>
+            <?= $form->field($model, 'wht_amount')->textInput(['type' => 'number', 'step' => '0.01']) ?>
         </div>
     </div>
 
@@ -90,17 +90,17 @@ use backend\models\Vendor;
 <?php
 $js = <<<JS
 function calculateWht() {
-    var base = parseFloat($('#base_amount').val()) || 0;
-    var percent = parseFloat($('#wht_percent').val()) || 0;
+    var base = parseFloat($('#wht-base_amount').val()) || 0;
+    var percent = parseFloat($('#wht-wht_percent').val()) || 0;
     var amount = (base * percent) / 100;
-    $('#wht_amount').val(amount.toFixed(2));
+    $('#wht-wht_amount').val(amount.toFixed(2));
 }
 
-$('#base_amount, #wht_percent').on('input', function() {
+$('#wht-base_amount, #wht-wht_percent').on('input', function() {
     calculateWht();
 });
 
-$('#wht_desc_select').on('change', function() {
+$('#wht-wht_desc').on('change', function() {
     var val = $(this).val();
     var percent = 0;
     if (val === 'ค่าขนส่ง') percent = 1;
@@ -110,7 +110,7 @@ $('#wht_desc_select').on('change', function() {
     else if (val === 'ค่าเช่า') percent = 5;
     
     if (percent > 0) {
-        $('#wht_percent').val(percent);
+        $('#wht-wht_percent').val(percent);
         calculateWht();
     }
 });
