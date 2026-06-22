@@ -33,7 +33,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'template' => '{view} {update} {print} {delete}',
                 'buttons' => [
                     'print' => function ($url, $model, $key) {
-                        return Html::a('<span class="glyphicon glyphicon-print" aria-hidden="true"></span> Print', ['print', 'id' => $model->id], [
+                        return Html::a('<span class="fas fa-print" aria-hidden="true"></span> Print', ['print', 'id' => $model->id], [
                             'title' => 'Print',
                             'class' => 'btn btn-sm btn-info',
                             'target' => '_blank',
@@ -41,17 +41,17 @@ $this->params['breadcrumbs'][] = $this->title;
                         ]);
                     },
                     'update' => function ($url, $model, $key) {
-                        return Html::a('<span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>', $url, [
+                        return Html::a('<span class="fas fa-edit" aria-hidden="true"></span>', $url, [
                             'class' => 'btn btn-sm btn-primary'
                         ]);
                     },
                     'view' => function ($url, $model, $key) {
-                        return Html::a('<span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span>', $url, [
+                        return Html::a('<span class="fas fa-eye" aria-hidden="true"></span>', $url, [
                             'class' => 'btn btn-sm btn-success'
                         ]);
                     },
                     'delete' => function ($url, $model, $key) {
-                        return Html::a('<span class="glyphicon glyphicon-trash" aria-hidden="true"></span>', $url, [
+                        return Html::a('<span class="fas fa-trash-alt" aria-hidden="true"></span>', $url, [
                             'class' => 'btn btn-sm btn-danger',
                             'data' => [
                                 'confirm' => 'Are you sure you want to delete this item?',
