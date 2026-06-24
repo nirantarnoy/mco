@@ -278,6 +278,24 @@ class Invoice extends ActiveRecord
                 ->andWhere(['r.invoice_type' => self::TYPE_RECEIPT])
                 ->exists();
             
+            if (!$has_receipt) {
+                $has_receipt = InvoiceRelation::find()
+                    ->alias('rel')
+                    ->innerJoin('invoices r', 'rel.child_invoice_id = r.id')
+                    ->where(['rel.parent_invoice_id' => $this->id])
+                    ->andWhere(['r.status' => self::STATUS_ACTIVE])
+                    ->andWhere(['r.invoice_type' => self::TYPE_RECEIPT])
+                    ->exists();
+            }
+
+            if (!$has_receipt && $this->quotation_id) {
+                $has_receipt = self::find()
+                    ->where(['quotation_id' => $this->quotation_id])
+                    ->andWhere(['invoice_type' => self::TYPE_RECEIPT])
+                    ->andWhere(['status' => self::STATUS_ACTIVE])
+                    ->exists();
+            }
+
             if ($has_receipt) {
                 return '<span class="badge badge-success">ออกใบเสร็จแล้ว</span>';
             } else {
