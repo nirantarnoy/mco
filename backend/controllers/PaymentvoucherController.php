@@ -222,11 +222,16 @@ class PaymentvoucherController extends BaseController
         Yii::$app->response->format = Response::FORMAT_JSON;
         
         $query = \backend\models\PreAdvance::find()
-            ->where(['status' => \backend\models\PreAdvance::STATUS_ACTIVE])
+            ->where(['!=', 'status', \backend\models\PreAdvance::STATUS_CANCELLED])
             ->andWhere(['>', 'amount', 0]);
             
         if ($vendor_id && $vendor_id !== 'null' && $vendor_id !== '') {
-            $query->andWhere(['vendor_id' => $vendor_id]);
+            $query->andWhere([
+                'or',
+                ['vendor_id' => $vendor_id],
+                ['vendor_id' => null],
+                ['vendor_id' => 0]
+            ]);
         }
         
         if ($q) {
@@ -381,9 +386,13 @@ class PaymentvoucherController extends BaseController
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         
-        $pr_ids = Yii::$app->request->post('pr_ids', []);
-        $po_ids = Yii::$app->request->post('po_ids', []);
-        $none_pr_ids = Yii::$app->request->post('none_pr_ids', []);
+        $pr_ids_raw = Yii::$app->request->post('pr_ids', []);
+        $po_ids_raw = Yii::$app->request->post('po_ids', []);
+        $none_pr_ids_raw = Yii::$app->request->post('none_pr_ids', []);
+        
+        $pr_ids = is_string($pr_ids_raw) ? (json_decode($pr_ids_raw, true) ?: []) : $pr_ids_raw;
+        $po_ids = is_string($po_ids_raw) ? (json_decode($po_ids_raw, true) ?: []) : $po_ids_raw;
+        $none_pr_ids = is_string($none_pr_ids_raw) ? (json_decode($none_pr_ids_raw, true) ?: []) : $none_pr_ids_raw;
         
         $lines = [];
         $total_amount = 0;

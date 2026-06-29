@@ -31,16 +31,14 @@ foreach ($chart_of_accounts as $acc) {
 }
 $account_data_json = json_encode($account_data);
 
-// เตรียมข้อมูล PR/PO ที่เลือกไว้เดิม (สำหรับกรณี update)
+// เตรียมข้อมูล Pre-Advance ที่เลือกไว้เดิม (สำหรับกรณี update)
 $selectedPrIds = \backend\models\PaymentVoucherRef::find()
-    ->where(['payment_voucher_id' => $model->id, 'ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PR])
+    ->where(['payment_voucher_id' => $model->id, 'ref_type' => \backend\models\PaymentVoucher::REF_TYPE_PRE_ADVANCE])
     ->select('ref_id')
     ->column();
 $selectedPrList = [];
 if (!empty($selectedPrIds)) {
-    $selectedPrList = ArrayHelper::map(\backend\models\PurchReq::find()->where(['id' => $selectedPrIds])->all(), 'id', function($m) {
-        return $m->purch_req_no;
-    });
+    $selectedPrList = ArrayHelper::map(\backend\models\PreAdvance::find()->where(['id' => $selectedPrIds])->all(), 'id', 'pre_advance_no');
 }
 
 $selectedPoIds = \backend\models\PaymentVoucherRef::find()
