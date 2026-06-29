@@ -56,7 +56,7 @@ class PreAdvanceController extends BaseController
     {
         $model = new PreAdvance();
         $model->trans_date = date('Y-m-d');
-        $model->status = PreAdvance::STATUS_DRAFT;
+        $model->status = PreAdvance::STATUS_ACTIVE;
 
         if ($model->load(Yii::$app->request->post())) {
             $transaction = Yii::$app->db->beginTransaction();

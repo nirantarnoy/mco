@@ -208,7 +208,13 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                 <div class="col-md-4">
                     <?= $form->field($model, 'amount')->textInput(['type' => 'number', 'step' => '0.01', 'readonly' => true]) ?>
                 </div>
-                <div class="col-md-8">
+                <div class="col-md-4">
+                    <?= $form->field($model, 'status')->dropDownList([
+                        \backend\models\PreAdvance::STATUS_ACTIVE => 'ใช้งาน (Active)',
+                        \backend\models\PreAdvance::STATUS_DRAFT => 'ร่าง (Draft)',
+                    ])->label('สถานะ') ?>
+                </div>
+                <div class="col-md-4">
                     <?= $form->field($model, 'remark')->textInput(['placeholder' => 'หมายเหตุ']) ?>
                 </div>
             </div>

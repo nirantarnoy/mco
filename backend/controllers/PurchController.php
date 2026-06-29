@@ -762,107 +762,186 @@ class PurchController extends BaseController
             $details = $model->getPurchLines()->all();
             if ($details) {
                 foreach ($details as $detail) {
-                $colIndex = 1;
+                    $colIndex = 1;
 
-                // DEPCOD
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $depcod);
+                    // DEPCOD
+                    $sheet->setCellValueByColumnAndRow($colIndex++, $row, $depcod);
 
-                // DOCNUM
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($model->purch_no, 0, 30));
+                    // DOCNUM
+                    $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($model->purch_no ?? '', 0, 30));
 
-                // DOCDAT
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->purch_date ? date('d/m/Y', strtotime($model->purch_date)) : '');
+                    // DOCDAT
+                    if ($model->purch_date) {
+                        try {
+                            $excelDate = \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel(new \DateTime($model->purch_date));
+                            $sheet->setCellValueByColumnAndRow($colIndex, $row, $excelDate);
+                            $sheet->getStyleByColumnAndRow($colIndex, $row)->getNumberFormat()->setFormatCode('dd/mm/yyyy');
+                        } catch (\Exception $e) {
+                            $sheet->setCellValueByColumnAndRow($colIndex, $row, '');
+                        }
+                    } else {
+                        $sheet->setCellValueByColumnAndRow($colIndex, $row, '');
+                    }
+                    $colIndex++;
 
-                // SUPCOD
-                $supcod = strtoupper(preg_replace('/[\s\/\x22\x27]/', '', $model->vendor ? $model->vendor->code : ''));
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($supcod, 0, 10));
+                    // SUPCOD
+                    $supcod = strtoupper(preg_replace('/[\s\/\x22\x27]/', '', $model->vendor ? $model->vendor->code : ''));
+                    $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($supcod, 0, 10));
 
-                // SUPNAM
-                $supnam = str_replace('"', '', $model->vendor_name);
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($supnam, 0, 60));
+                    // SUPNAM
+                    $vendorName = $model->vendor_name;
+                    if (empty($vendorName) && $model->vendor) {
+                        $vendorName = $model->vendor->name;
+                    }
+                    $supnam = $vendorName ? str_replace('"', '', $vendorName) : '';
+                    $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($supnam, 0, 60));
 
-                // STKCOD
-                $productCode = '';
-                if ($detail->product_id) {
-                    $product = \backend\models\Product::findOne($detail->product_id);
-                    $productCode = $product ? $product->code : '';
+                    // STKCOD
+                    $productCode = '';
+                    if ($detail->product_id) {
+                        $product = \backend\models\Product::findOne($detail->product_id);
+                        if ($product) {
+                            $productCode = $product->code;
+                        }
+                    }
+                    if (empty($productCode) && !empty($detail->product_name)) {
+                        // Try to find product where name matches
+                        $product = \backend\models\Product::find()->where(['name' => $detail->product_name])->one();
+                        if ($product) {
+                            $productCode = $product->code;
+                        }
+                    }
+                    if (empty($productCode) && !empty($detail->product_name) && strpos($detail->product_name, ' - ') !== false) {
+                        // Try to extract potential code if the name format is "CODE - NAME"
+                        $parts = explode(' - ', $detail->product_name);
+                        $potentialCode = trim($parts[0]);
+                        $product = \backend\models\Product::find()->where(['code' => $potentialCode])->one();
+                        if ($product) {
+                            $productCode = $product->code;
+                        } else {
+                            if (preg_match('/^[A-Za-z0-9\-_]+$/', $potentialCode)) {
+                                $productCode = $potentialCode;
+                            }
+                        }
+                    }
+                    $stkcod = $productCode ? strtoupper(preg_replace('/[\s\/\x22\x27]/', '', $productCode)) : '';
+                    $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($stkcod, 0, 20));
+
+                    // STKDES
+                    $stkdes = $detail->product_name ? str_replace('"', '', $detail->product_name) : '';
+                    $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($stkdes, 0, 50));
+
+                    // TRNQTY
+                    $sheet->setCellValueByColumnAndRow($colIndex, $row, (float)($detail->qty ?? 0));
+                    $sheet->getStyleByColumnAndRow($colIndex, $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                    $colIndex++;
+
+                    // UNITPR
+                    $sheet->setCellValueByColumnAndRow($colIndex, $row, (float)($detail->line_price ?? 0));
+                    $sheet->getStyleByColumnAndRow($colIndex, $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                    $colIndex++;
+
+                    // DISC (Line item discount - assume 0 if not present)
+                    $sheet->setCellValueByColumnAndRow($colIndex++, $row, '');
+
+                    // AMOUNT
+                    $sheet->setCellValueByColumnAndRow($colIndex, $row, (float)($detail->line_total ?? 0));
+                    $sheet->getStyleByColumnAndRow($colIndex, $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                    $colIndex++;
+
+                    // PAYTRM
+                    $sheet->setCellValueByColumnAndRow($colIndex++, $row, ''); // Purch model doesn't have paytrm
+
+                    // DUEDAT
+                    $sheet->setCellValueByColumnAndRow($colIndex++, $row, ''); // Purch model doesn't have duedat
+
+                    // TAXID
+                    $taxid = '';
+                    if ($model->vendor && !empty($model->vendor->taxid)) {
+                        $taxid = trim(preg_replace('/[^0-9]/', '', $model->vendor->taxid));
+                        if ($taxid === '0000000000000' || $taxid === '0') {
+                            $taxid = '';
+                        }
+                    }
+                    $sheet->setCellValueExplicitByColumnAndRow(
+                        $colIndex,
+                        $row,
+                        $taxid !== '' ? mb_substr($taxid, 0, 15) : '',
+                        \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING
+                    );
+                    $colIndex++;
+
+                    // DISCOUNT (Header discount)
+                    $sheet->setCellValueByColumnAndRow($colIndex, $row, (float)($model->discount_total_amount ?? 0));
+                    $sheet->getStyleByColumnAndRow($colIndex, $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                    $colIndex++;
+
+                    // ADDR01-03
+                    $addr1 = ''; $addr2 = ''; $addr3 = '';
+                    if ($model->vendor) {
+                        $addr1 = ($model->vendor->home_number ?? '') . ' ' . ($model->vendor->street ?? '');
+                        $addr2 = ($model->vendor->district_name ?? '') . ' ' . ($model->vendor->city_name ?? '');
+                        $addr3 = $model->vendor->province_name ?? '';
+                    }
+                    $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($addr1, 0, 50));
+                    $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($addr2, 0, 50));
+                    $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($addr3, 0, 30));
+
+                    // ZIPCOD
+                    $zipcod = $model->vendor ? $model->vendor->zipcode : '';
+                    $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($zipcod ?? '', 0, 5));
+
+                    // TELNUM
+                    $telnum = $model->vendor ? $model->vendor->phone : '';
+                    $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($telnum ?? '', 0, 50));
+
+                    // ORGNUM
+                    $orgnum = '0';
+                    if ($model->vendor && $model->vendor->branch_name) {
+                        $orgnum = preg_replace('/[^0-9]/', '', $model->vendor->branch_name);
+                        $orgnum = ltrim($orgnum, '0');
+                        if ($orgnum == '') $orgnum = '0';
+                    }
+                    $sheet->setCellValueByColumnAndRow($colIndex++, $row, $orgnum);
+
+                    // REFNUM (REF NO)
+                    $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($model->ref_no ?? '', 0, 15));
+
+                    // VATDAT
+                    if ($model->purch_date) {
+                        try {
+                            $excelDate = \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel(new \DateTime($model->purch_date));
+                            $sheet->setCellValueByColumnAndRow($colIndex, $row, $excelDate);
+                            $sheet->getStyleByColumnAndRow($colIndex, $row)->getNumberFormat()->setFormatCode('dd/mm/yyyy');
+                        } catch (\Exception $e) {
+                            $sheet->setCellValueByColumnAndRow($colIndex, $row, '');
+                        }
+                    } else {
+                        $sheet->setCellValueByColumnAndRow($colIndex, $row, '');
+                    }
+                    $colIndex++;
+
+                    // VATPRD
+                    if ($model->purch_date) {
+                        try {
+                            $excelDate = \PhpOffice\PhpSpreadsheet\Shared\Date::PHPToExcel(new \DateTime($model->purch_date));
+                            $sheet->setCellValueByColumnAndRow($colIndex, $row, $excelDate);
+                            $sheet->getStyleByColumnAndRow($colIndex, $row)->getNumberFormat()->setFormatCode('mm/yyyy');
+                        } catch (\Exception $e) {
+                            $sheet->setCellValueByColumnAndRow($colIndex, $row, '');
+                        }
+                    } else {
+                        $sheet->setCellValueByColumnAndRow($colIndex, $row, '');
+                    }
+                    $colIndex++;
+
+                    // LATE
+                    $sheet->setCellValueByColumnAndRow($colIndex++, $row, '');
+
+                    $row++;
                 }
-                $stkcod = strtoupper(preg_replace('/[\s\/\x22\x27]/', '', $productCode));
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($stkcod, 0, 20));
-
-                // STKDES
-                $stkdes = str_replace('"', '', $detail->product_name);
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($stkdes, 0, 50));
-
-                // TRNQTY
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->qty);
-
-                // UNITPR
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->line_price);
-
-                // DISC (Line item discount - assume 0 if not present)
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, '');
-
-                // AMOUNT
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $detail->line_total);
-
-                // PAYTRM
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, ''); // Purch model doesn't have paytrm
-
-                // DUEDAT
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, ''); // Purch model doesn't have duedat
-
-                // TAXID
-                $taxid = $model->vendor ? $model->vendor->taxid : '';
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($taxid, 0, 15));
-
-                // DISCOUNT (Header discount)
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->discount_total_amount);
-
-                // ADDR01-03
-                $addr1 = ''; $addr2 = ''; $addr3 = '';
-                if ($model->vendor) {
-                    $addr1 = $model->vendor->home_number . ' ' . $model->vendor->street;
-                    $addr2 = $model->vendor->district_name . ' ' . $model->vendor->city_name;
-                    $addr3 = $model->vendor->province_name;
-                }
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($addr1, 0, 50));
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($addr2, 0, 50));
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($addr3, 0, 30));
-
-                // ZIPCOD
-                $zipcod = $model->vendor ? $model->vendor->zipcode : '';
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($zipcod, 0, 5));
-
-                // TELNUM
-                $telnum = $model->vendor ? $model->vendor->phone : '';
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($telnum, 0, 50));
-
-                // ORGNUM
-                $orgnum = '0';
-                if ($model->vendor && $model->vendor->branch_name) {
-                    $orgnum = preg_replace('/[^0-9]/', '', $model->vendor->branch_name);
-                    $orgnum = ltrim($orgnum, '0');
-                    if ($orgnum == '') $orgnum = '0';
-                }
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $orgnum);
-
-                // REFNUM (REF NO)
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($model->ref_no, 0, 15));
-
-                // VATDAT
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->purch_date ? date('d/m/Y', strtotime($model->purch_date)) : '');
-
-                // VATPRD
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, $model->purch_date ? date('m/Y', strtotime($model->purch_date)) : '');
-
-                // LATE
-                $sheet->setCellValueByColumnAndRow($colIndex++, $row, '');
-
-                $row++;
             }
         }
-    }
 
         foreach (range(1, count($columns)) as $col) {
             $sheet->getColumnDimensionByColumn($col)->setAutoSize(true);
