@@ -944,7 +944,8 @@ class PurchController extends BaseController
         }
 
         foreach (range(1, count($columns)) as $col) {
-            $sheet->getColumnDimensionByColumn($col)->setAutoSize(true);
+            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
+            $sheet->getColumnDimension($colLetter)->setAutoSize(true);
         }
 
         $filename = 'PURCH_EXPRESS_' . date('Ymd_His') . '.xlsx';
