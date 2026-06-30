@@ -1218,12 +1218,30 @@ class ProductController extends BaseController
 
     public function actionExportExpress()
     {
+        $from_code = \Yii::$app->request->post('from_code');
+        $to_code = \Yii::$app->request->post('to_code');
+
+        $company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
         $sql = "SELECT p.*, pg.name as group_name, u.name as unit_name 
                 FROM product as p 
                 LEFT JOIN product_group as pg ON p.product_group_id = pg.id 
                 LEFT JOIN unit as u ON p.unit_id = u.id 
-                ORDER BY p.code ASC";
-        $products = \Yii::$app->db->createCommand($sql)->queryAll();
+                WHERE 1=1";
+        $params = [];
+        if ($company_id !== null) {
+            $sql .= " AND p.company_id = :company_id";
+            $params[':company_id'] = $company_id;
+        }
+        if (!empty($from_code)) {
+            $sql .= " AND p.code >= :from_code";
+            $params[':from_code'] = $from_code;
+        }
+        if (!empty($to_code)) {
+            $sql .= " AND p.code <= :to_code";
+            $params[':to_code'] = $to_code;
+        }
+        $sql .= " ORDER BY p.code ASC";
+        $products = \Yii::$app->db->createCommand($sql, $params)->queryAll();
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();

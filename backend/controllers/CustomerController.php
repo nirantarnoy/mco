@@ -323,9 +323,15 @@ class CustomerController extends BaseController
         // Get data from your model
         // $users = Product::find()->joinWith('StockSum')->all();
 
-        $users = null;
-        $sql = "SELECT * FROM customer ORDER BY id ASC";
-        $users = \Yii::$app->db->createCommand($sql)->queryAll();
+        $company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
+        $sql = "SELECT * FROM customer WHERE 1=1";
+        $params = [];
+        if ($company_id !== null) {
+            $sql .= " AND (company_id = :company_id OR is_common = 1)";
+            $params[':company_id'] = $company_id;
+        }
+        $sql .= " ORDER BY id ASC";
+        $users = \Yii::$app->db->createCommand($sql, $params)->queryAll();
 
         // Create new Spreadsheet object
         $spreadsheet = new Spreadsheet();
@@ -464,8 +470,13 @@ class CustomerController extends BaseController
         $from_code = \Yii::$app->request->post('from_code');
         $to_code = \Yii::$app->request->post('to_code');
 
+        $company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
         $sql = "SELECT * FROM customer WHERE 1=1";
         $params = [];
+        if ($company_id !== null) {
+            $sql .= " AND (company_id = :company_id OR is_common = 1)";
+            $params[':company_id'] = $company_id;
+        }
         if (!empty($from_code)) {
             $sql .= " AND code >= :from_code";
             $params[':from_code'] = $from_code;

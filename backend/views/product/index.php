@@ -32,14 +32,16 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="col-lg-10">
                 <div class="btn-group">
                     <?= Html::a(Yii::t('app', '<i class="fa fa-plus"></i> สร้างใหม่'), ['create'], ['class' => 'btn btn-success']) ?>
-                    <form action="<?= Url::to(['product/export-products'], true) ?>" method="post"
-                          style="margin-left: 10px">
-                        <button class="btn btn-info"><i class="fa fa-download"></i> Download product pattern</button>
-                    </form>
-                    <form action="<?= Url::to(['product/export-express'], true) ?>" method="post"
-                          style="margin-left: 10px">
-                        <button class="btn btn-warning"><i class="fa fa-download"></i> Export Express</button>
-                    </form>
+                     <form action="<?= Url::to(['product/export-products'], true) ?>" method="post" data-pjax="0"
+                           style="margin-left: 10px">
+                         <button class="btn btn-info"><i class="fa fa-download"></i> Download product pattern</button>
+                     </form>
+                     <form action="<?= Url::to(['product/export-express'], true) ?>" method="post" data-pjax="0"
+                           style="margin-left: 10px; display: inline-flex;">
+                         <input type="text" name="from_code" class="form-control" placeholder="จากรหัส" style="width: 120px; margin-right: 5px;">
+                         <input type="text" name="to_code" class="form-control" placeholder="ถึงรหัส" style="width: 120px; margin-right: 5px;">
+                         <button class="btn btn-warning"><i class="fa fa-download"></i> Export Express</button>
+                     </form>
                 </div>
 
             </div>
