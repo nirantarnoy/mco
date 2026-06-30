@@ -559,8 +559,25 @@ class VendorController extends BaseController
 
     public function actionExportExpress()
     {
-        $from_code = \Yii::$app->request->post('from_code');
-        $to_code = \Yii::$app->request->post('to_code');
+        $normalizeCode = function($code) {
+            $code = trim($code);
+            if (empty($code)) {
+                return '';
+            }
+            if (is_numeric($code)) {
+                return 'VA' . str_pad($code, 3, '0', STR_PAD_LEFT);
+            }
+            if (stripos($code, 'VA') === 0) {
+                $numPart = substr($code, 2);
+                if (is_numeric($numPart)) {
+                    return 'VA' . str_pad($numPart, 3, '0', STR_PAD_LEFT);
+                }
+            }
+            return strtoupper($code);
+        };
+
+        $from_code = $normalizeCode(\Yii::$app->request->post('from_code', \Yii::$app->request->get('from_code')));
+        $to_code = $normalizeCode(\Yii::$app->request->post('to_code', \Yii::$app->request->get('to_code')));
 
         $company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
         $sql = "SELECT * FROM vendor WHERE 1=1";
@@ -577,7 +594,7 @@ class VendorController extends BaseController
             $sql .= " AND code <= :to_code";
             $params[':to_code'] = $to_code;
         }
-        $sql .= " ORDER BY id ASC";
+        $sql .= " ORDER BY code ASC"; // Order by code for sequential export
         $vendors = \Yii::$app->db->createCommand($sql, $params)->queryAll();
 
         $spreadsheet = new Spreadsheet();
@@ -664,7 +681,17 @@ class VendorController extends BaseController
             $addr1 = trim(($v['home_number'] ?? '') . ' ' . ($v['street'] ?? ''));
             $addr2 = trim(($v['aisle'] ?? '') . ' ' . ($v['district_name'] ?? ''));
             $addr3 = trim(($v['city_name'] ?? '') . ' ' . ($v['province_name'] ?? ''));
-            
+
+            if (empty($addr1) && !empty($v['full_address'])) {
+                $fullAddr = trim($v['full_address']);
+                $addr1 = mb_substr($fullAddr, 0, 50);
+                $addr2 = mb_substr($fullAddr, 50, 50);
+                $addr3 = mb_substr($fullAddr, 100, 50);
+            }
+            if (empty($addr1)) {
+                $addr1 = '.'; // Default value for mandatory ADDR01 field
+            }
+
             $sheet->setCellValue('D' . $rowNum, strtoupper($addr1));
             $sheet->setCellValue('E' . $rowNum, strtoupper($addr2));
             $sheet->setCellValue('F' . $rowNum, strtoupper($addr3));

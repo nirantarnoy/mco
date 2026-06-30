@@ -681,20 +681,43 @@ class PurchController extends BaseController
 
     public function actionExportExpress()
     {
-        $date_from = Yii::$app->request->get('date_from');
-        $date_to = Yii::$app->request->get('date_to');
+        $searchModel = new PurchSearch();
+        $queryParams = Yii::$app->request->queryParams;
+        $postParams = Yii::$app->request->post();
 
-        $query = Purch::find()
-            ->with(['vendor', 'purchLines'])
-            ->orderBy(['purch_date' => SORT_ASC, 'purch_no' => SORT_ASC]);
-
-        if ($date_from) {
-            $query->andWhere(['>=', 'purch_date', $date_from]);
+        // Ensure date_from and date_to from POST are also captured
+        if (!isset($queryParams['date_from']) && Yii::$app->request->post('date_from')) {
+            $queryParams['date_from'] = Yii::$app->request->post('date_from');
+        }
+        if (!isset($queryParams['date_to']) && Yii::$app->request->post('date_to')) {
+            $queryParams['date_to'] = Yii::$app->request->post('date_to');
         }
 
-        if ($date_to) {
-            $query->andWhere(['<=', 'purch_date', $date_to]);
+        $dataProvider = $searchModel->search($queryParams);
+        $query = $dataProvider->query;
+
+        // Capture vendor_id from GET or POST (direct or nested inside PurchSearch)
+        $vendor_id = Yii::$app->request->get('vendor_id') ?: Yii::$app->request->post('vendor_id');
+        if (!$vendor_id && isset($queryParams['PurchSearch']['vendor_id'])) {
+            $vendor_id = $queryParams['PurchSearch']['vendor_id'];
         }
+        if (!$vendor_id && isset($postParams['PurchSearch']['vendor_id'])) {
+            $vendor_id = $postParams['PurchSearch']['vendor_id'];
+        }
+        
+        if ($vendor_id) {
+            $query->andFilterWhere(['p.vendor_id' => $vendor_id]);
+        }
+
+        // Apply company isolation filter if not already covered
+        $company_id = Yii::$app->session->get('company_id');
+        if ($company_id && $company_id != 100) {
+            $query->andFilterWhere(['p.company_id' => $company_id]);
+        }
+
+        // Force order and load relations
+        $query->with(['vendor', 'purchLines'])
+            ->orderBy(['p.purch_date' => SORT_ASC, 'p.purch_no' => SORT_ASC]);
 
         $models = $query->all();
 

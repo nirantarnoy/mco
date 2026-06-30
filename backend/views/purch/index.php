@@ -7,6 +7,8 @@ use kartik\grid\ActionColumn;
 use yii\widgets\Pjax;
 use backend\models\Purch;
 
+use kartik\select2\Select2;
+
 /* @var $this yii\web\View */
 /* @var $searchModel backend\models\PurchSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
@@ -16,12 +18,10 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="purch-index">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-<!--        <h1>--><?php //= Html::encode($this->title) ?><!--</h1>-->
-        <h1></h1>
-        <div class="d-flex align-items-center">
+    <div class="row mb-3">
+        <div class="col-md-6 d-flex align-items-center">
             <span class="me-2">แสดง</span>
-            <?= Html::dropDownList('per-page', $dataProvider->pagination->pageSize, [
+            <?= Html::dropDownList('per-page', Yii::$app->request->get('per-page', 20), [
                 10 => '10',
                 20 => '20',
                 50 => '50',
@@ -60,10 +60,28 @@ $this->params['breadcrumbs'][] = $this->title;
                         'type' => 'date',
                     ]) ?>
                 </div>
-                <div class="col-md-6 mb-2 mb-md-0">
-                    <?= Html::submitButton('<i class="fas fa-search"></i> ค้นหาตามช่วงเวลา', ['class' => 'btn btn-primary']) ?>
+                <div class="col-md-3 mb-2 mb-md-0 col-vendor-select">
+                    <label class="form-label font-weight-bold">ผู้ขาย</label>
+                    <?= Select2::widget([
+                        'name' => 'vendor_id',
+                        'value' => Yii::$app->request->get('vendor_id'),
+                        'data' => \yii\helpers\ArrayHelper::map(
+                            \backend\models\Vendor::find()
+                                ->andFilterWhere(['company_id' => Yii::$app->session->get('company_id') == 100 ? null : Yii::$app->session->get('company_id')])
+                                ->all(), 
+                            'id', 
+                            'name'
+                        ),
+                        'options' => ['placeholder' => 'ทั้งหมด'],
+                        'pluginOptions' => [
+                            'allowClear' => true
+                        ],
+                    ]) ?>
+                </div>
+                <div class="col-md-3 mb-2 mb-md-0">
+                    <?= Html::submitButton('<i class="fas fa-search"></i> ค้นหา', ['class' => 'btn btn-primary']) ?>
                     <?= Html::a('<i class="fas fa-redo"></i> รีเซ็ต', ['index'], ['class' => 'btn btn-secondary']) ?>
-                    <?= Html::a('<i class="fas fa-file-excel"></i> Export PO (Express)', array_merge(['export-express'], Yii::$app->request->queryParams), [
+                    <?= Html::a('<i class="fas fa-file-excel"></i> Export PO', array_merge(['export-express'], Yii::$app->request->queryParams), [
                         'class' => 'btn btn-info',
                         'data-pjax' => '0',
                         'target' => '_blank'

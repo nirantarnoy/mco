@@ -119,11 +119,28 @@ class PurchLine extends ActiveRecord
             }
         }
 
-        // 3. Try to find the Product model by product_name
+        // 3. Try to find the Product model by product_name prefix or exact match
         if (empty($productCode) && !empty($this->product_name)) {
-            $product = Product::find()->where(['name' => $this->product_name])->one();
+            $trimmedName = trim($this->product_name);
+            
+            // Try exact match first (case-insensitive)
+            $product = Product::find()->where(['name' => $trimmedName])->one();
             if ($product) {
                 $productCode = $product->code;
+            } else {
+                // Find products where the database product name is a prefix of the line's product name.
+                // We order by length of the product name descending so we get the most specific/longest match first.
+                $product = Product::find()
+                    ->where(['and',
+                        ['not', ['name' => null]],
+                        ['!=', 'name', ''],
+                        new \yii\db\Expression('LOCATE(name, :product_name) = 1', [':product_name' => $trimmedName])
+                    ])
+                    ->orderBy([new \yii\db\Expression('LENGTH(name) DESC')])
+                    ->one();
+                if ($product) {
+                    $productCode = $product->code;
+                }
             }
         }
 
@@ -140,9 +157,9 @@ class PurchLine extends ActiveRecord
                     $productCode = $potentialCode;
                 }
             }
-            // Check if name contains dash like "CODE - NAME"
-            elseif (strpos($trimmedName, ' - ') !== false) {
-                $parts = explode(' - ', $trimmedName);
+            // Check if name contains dash like "CODE-NAME" or "CODE - NAME"
+            elseif (strpos($trimmedName, '-') !== false) {
+                $parts = explode('-', $trimmedName);
                 $potentialCode = trim($parts[0]);
                 $product = Product::find()->where(['code' => $potentialCode])->one();
                 if ($product) {
