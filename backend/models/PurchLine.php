@@ -99,6 +99,75 @@ class PurchLine extends ActiveRecord
     }
 
     /**
+     * Get product code with robust fallback mechanisms
+     * @return string
+     */
+    public function getProductCode()
+    {
+        $productCode = '';
+
+        // 1. Try to get from the related Product model
+        if ($this->product) {
+            $productCode = $this->product->code;
+        }
+
+        // 2. Try to query the Product model directly if relation is null but product_id exists
+        if (empty($productCode) && $this->product_id) {
+            $product = Product::findOne($this->product_id);
+            if ($product) {
+                $productCode = $product->code;
+            }
+        }
+
+        // 3. Try to find the Product model by product_name
+        if (empty($productCode) && !empty($this->product_name)) {
+            $product = Product::find()->where(['name' => $this->product_name])->one();
+            if ($product) {
+                $productCode = $product->code;
+            }
+        }
+
+        // 4. Try to parse/extract the code from product_name (e.g. "CODE (NAME)" or "CODE - NAME" or just "CODE")
+        if (empty($productCode) && !empty($this->product_name)) {
+            $trimmedName = trim($this->product_name);
+            // Check if name starts with bracket pattern like "CODE (NAME)" or "CODE(NAME)"
+            if (preg_match('/^([A-Za-z0-9\-_]+)\s*\(/', $trimmedName, $matches)) {
+                $potentialCode = trim($matches[1]);
+                $product = Product::find()->where(['code' => $potentialCode])->one();
+                if ($product) {
+                    $productCode = $product->code;
+                } else {
+                    $productCode = $potentialCode;
+                }
+            }
+            // Check if name contains dash like "CODE - NAME"
+            elseif (strpos($trimmedName, ' - ') !== false) {
+                $parts = explode(' - ', $trimmedName);
+                $potentialCode = trim($parts[0]);
+                $product = Product::find()->where(['code' => $potentialCode])->one();
+                if ($product) {
+                    $productCode = $product->code;
+                } else {
+                    if (preg_match('/^[A-Za-z0-9\-_]+$/', $potentialCode)) {
+                        $productCode = $potentialCode;
+                    }
+                }
+            }
+            // Check if the product_name itself looks like a code (e.g., alphanumeric, no spaces, typical code format)
+            elseif (preg_match('/^[A-Za-z0-9\-_]+$/', $trimmedName)) {
+                $product = Product::find()->where(['code' => $trimmedName])->one();
+                if ($product) {
+                    $productCode = $product->code;
+                } else {
+                    $productCode = $trimmedName;
+                }
+            }
+        }
+
+        return $productCode;
+    }
+
+    /**
      * Before save
      */
     public function beforeSave($insert)

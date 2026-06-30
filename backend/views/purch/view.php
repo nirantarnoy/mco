@@ -320,6 +320,14 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                             'contentOptions' => ['style' => 'text-align: center;'],
                         ],
                         [
+                            'label' => 'รหัสสินค้า',
+                            'headerOptions' => ['style' => 'width: 120px;'],
+                            'contentOptions' => ['style' => 'text-align: left;'],
+                            'value' => function ($data) {
+                                return $data->getProductCode();
+                            },
+                        ],
+                        [
                             'attribute' => 'product_name',
                             'label' => 'ชื่อสินค้า',
                             'headerOptions' => ['style' => 'width: 250px;'],

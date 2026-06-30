@@ -330,7 +330,7 @@ $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
                 <?php foreach ($purchaseLines as $line): ?>
                     <tr>
                         <td><?= $itemNo++ ?></td>
-                        <td><?= Html::encode($line->product->code ?? '') ?></td>
+                        <td><?= Html::encode($line->getProductCode()) ?></td>
                         <td class="description-cell">
                             <?php 
                             $brand = \backend\models\Product::findBrand($line->product_id); 

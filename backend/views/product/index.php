@@ -27,7 +27,6 @@ $this->params['breadcrumbs'][] = $this->title;
         <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><br>กำลังโหลดข้อมูล...
     </div>
     <div class="employee-index">
-        <?php Pjax::begin(); ?>
         <div class="row">
             <div class="col-lg-10">
                 <div class="btn-group">
@@ -62,6 +61,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <br/>
 
+        <?php Pjax::begin(); ?>
         <?php echo $this->render('_search', ['model' => $searchModel, 'viewstatus' => $viewstatus]); ?>
         <div id="div-delete-btn" style="padding: 10px;display: none">
             <?php echo Html::button('ลบ', [

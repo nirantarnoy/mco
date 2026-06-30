@@ -797,33 +797,7 @@ class PurchController extends BaseController
                     $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($supnam, 0, 60));
 
                     // STKCOD
-                    $productCode = '';
-                    if ($detail->product_id) {
-                        $product = \backend\models\Product::findOne($detail->product_id);
-                        if ($product) {
-                            $productCode = $product->code;
-                        }
-                    }
-                    if (empty($productCode) && !empty($detail->product_name)) {
-                        // Try to find product where name matches
-                        $product = \backend\models\Product::find()->where(['name' => $detail->product_name])->one();
-                        if ($product) {
-                            $productCode = $product->code;
-                        }
-                    }
-                    if (empty($productCode) && !empty($detail->product_name) && strpos($detail->product_name, ' - ') !== false) {
-                        // Try to extract potential code if the name format is "CODE - NAME"
-                        $parts = explode(' - ', $detail->product_name);
-                        $potentialCode = trim($parts[0]);
-                        $product = \backend\models\Product::find()->where(['code' => $potentialCode])->one();
-                        if ($product) {
-                            $productCode = $product->code;
-                        } else {
-                            if (preg_match('/^[A-Za-z0-9\-_]+$/', $potentialCode)) {
-                                $productCode = $potentialCode;
-                            }
-                        }
-                    }
+                    $productCode = $detail->getProductCode();
                     $stkcod = $productCode ? strtoupper(preg_replace('/[\s\/\x22\x27]/', '', $productCode)) : '';
                     $sheet->setCellValueByColumnAndRow($colIndex++, $row, mb_substr($stkcod, 0, 20));
 

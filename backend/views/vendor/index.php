@@ -17,7 +17,6 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="vendor-index">
 
-    <?php Pjax::begin(); ?>
     <div class="row">
         <div class="col-lg-12">
             <div class="card">
@@ -60,6 +59,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
     <br />
+    <?php Pjax::begin(); ?>
     <?php echo $this->render('_search', ['model' => $searchModel,'viewstatus'=>null]); ?>
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
