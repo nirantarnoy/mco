@@ -713,6 +713,12 @@ class PaymentvoucherController extends BaseController
                 }
             }
         }
+        
+        // ตรวจสอบว่าใส่ยอดเงินเกินกว่ายอดคงเหลือของ PR/PO ที่เลือกหรือไม่
+        $has_refs = (count($pr_ids) + count($po_ids) + count($none_pr_ids)) > 0;
+        if ($has_refs && round($available_amount, 2) > 0) {
+            throw new \Exception('ยอดรวมใน Voucher มากกว่ายอดคงเหลือรวมของ PR/PO ที่เลือก (เกินมา ' . number_format($available_amount, 2) . ' บาท)');
+        }
     }
 
     /**
