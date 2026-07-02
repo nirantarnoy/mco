@@ -107,8 +107,8 @@ function calculateTotal() {
 function loadPrPoByVendor(vendorId) {
     var prevVal = $('#vendor-select').data('prev-val');
     if (prevVal !== vendorId) {
-        // เมื่อมีการเปลี่ยน Vendor ให้ล้างรายการ PR/PO/None PR ที่เลือกไว้เดิม
-        $('#pr-select').val(null).trigger('change');
+        // เมื่อมีการเปลี่ยน Vendor ให้ล้างรายการ PO/None PR ที่เลือกไว้เดิม
+        // $('#pr-select').val(null).trigger('change'); // ไม่ต้องล้าง pre-advance เพราะเลือกอิสระได้
         $('#po-select').val(null).trigger('change');
         $('#none-pr-select').val(null).trigger('change');
     }
@@ -301,13 +301,13 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                                 'url' => Url::to(['get-pre-advance-by-vendor']),
                                 'dataType' => 'json',
                                 'delay' => 250,
-                                'data' => new JsExpression('function(params) { return {q:params.term, vendor_id: $("#vendor-select").val()}; }'),
+                                'data' => new JsExpression('function(params) { return {q:params.term}; }'),
                                 'processResults' => new JsExpression('function(data) { return {results: data.results}; }'),
                                 'cache' => true
                             ],
                         ],
                     ]) ?>
-                    <small class="text-muted">ค้นหาได้ทันที หรือเลือก Vendor เพื่อกรองรายการ</small>
+                    <small class="text-muted">ค้นหาได้ทันที</small>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">เลือกใบสั่งซื้อ (PO) - เลือกได้หลายรายการ</label>
