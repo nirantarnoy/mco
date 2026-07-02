@@ -628,8 +628,11 @@ class PaymentvoucherController extends BaseController
         // ลบ refs เดิม (กรณี update)
         \backend\models\PaymentVoucherRef::deleteAll(['payment_voucher_id' => $model->id]);
         
+        $available_amount = $model->amount;
+
         // บันทึก Pre-Advance refs
         foreach ($pr_ids as $pr_id) {
+            if ($available_amount <= 0) break;
             $pr = \backend\models\PreAdvance::findOne($pr_id);
             if ($pr) {
                 $paidAmount = \backend\models\PaymentVoucherRef::find()
@@ -640,20 +643,24 @@ class PaymentvoucherController extends BaseController
                 $remaining = $pr->amount - $paidAmount;
                 
                 if ($remaining > 0) {
+                    $allocate = min($remaining, $available_amount);
                     $ref = new \backend\models\PaymentVoucherRef();
                     $ref->payment_voucher_id = $model->id;
                     $ref->ref_type = \backend\models\PaymentVoucher::REF_TYPE_PRE_ADVANCE;
                     $ref->ref_id = $pr->id;
                     $ref->ref_no = $pr->pre_advance_no;
-                    $ref->amount = $remaining;
+                    $ref->amount = $allocate;
                     $ref->created_at = time();
                     $ref->save(false);
+                    
+                    $available_amount -= $allocate;
                 }
             }
         }
         
         // บันทึก PO refs
         foreach ($po_ids as $po_id) {
+            if ($available_amount <= 0) break;
             $po = Purch::findOne($po_id);
             if ($po) {
                 $paidAmount = \backend\models\PaymentVoucherRef::find()
@@ -664,20 +671,24 @@ class PaymentvoucherController extends BaseController
                 $remaining = $po->net_amount - $paidAmount;
                 
                 if ($remaining > 0) {
+                    $allocate = min($remaining, $available_amount);
                     $ref = new \backend\models\PaymentVoucherRef();
                     $ref->payment_voucher_id = $model->id;
                     $ref->ref_type = \backend\models\PaymentVoucherRef::REF_TYPE_PO;
                     $ref->ref_id = $po->id;
                     $ref->ref_no = $po->purch_no;
-                    $ref->amount = $remaining;
+                    $ref->amount = $allocate;
                     $ref->created_at = time();
                     $ref->save(false);
+                    
+                    $available_amount -= $allocate;
                 }
             }
         }
 
         // บันทึก None PR refs
         foreach ($none_pr_ids as $none_pr_id) {
+            if ($available_amount <= 0) break;
             $none_pr = \backend\models\PurchaseMaster::findOne($none_pr_id);
             if ($none_pr) {
                 $paidAmount = \backend\models\PaymentVoucherRef::find()
@@ -688,14 +699,17 @@ class PaymentvoucherController extends BaseController
                 $remaining = $none_pr->total_amount - $paidAmount;
                 
                 if ($remaining > 0) {
+                    $allocate = min($remaining, $available_amount);
                     $ref = new \backend\models\PaymentVoucherRef();
                     $ref->payment_voucher_id = $model->id;
                     $ref->ref_type = \backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR;
                     $ref->ref_id = $none_pr->id;
                     $ref->ref_no = $none_pr->docnum;
-                    $ref->amount = $remaining;
+                    $ref->amount = $allocate;
                     $ref->created_at = time();
                     $ref->save(false);
+                    
+                    $available_amount -= $allocate;
                 }
             }
         }
