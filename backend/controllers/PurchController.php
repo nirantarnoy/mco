@@ -598,8 +598,8 @@ class PurchController extends BaseController
                                     if ($purch_vendor_bill_doc->saveAs('uploads/purch_doc/' . $file)) {
                                         $model_vendor_bill = \common\models\PurchVendorBill::find()->where(['purch_id' => $id])->one();
                                         if ($model_vendor_bill) {
-                                            if (file_exists('uploads/purch_doc/' . $model_vendor_bill->vendor_bill_doc)) {
-                                                unlink('uploads/purch_doc/' . $model_vendor_bill->vendor_bill_doc);
+                                            if (!empty($model_vendor_bill->bill_doc) && file_exists('uploads/purch_doc/' . $model_vendor_bill->bill_doc)) {
+                                                unlink('uploads/purch_doc/' . $model_vendor_bill->bill_doc);
                                             }
                                             $model_vendor_bill->bill_date = date('Y-m-d', strtotime($purch_bill_date));
                                             $model_vendor_bill->appoinment_date = date('Y-m-d', strtotime($purch_vendor_bill_date));
