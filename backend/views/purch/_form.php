@@ -460,7 +460,7 @@ $this->registerJs($autocompleteJs);
                     'widgetContainer' => 'dynamicform_wrapper',
                     'widgetBody' => '.container-items',
                     'widgetItem' => '.item',
-                    'limit' => 10,
+                    'limit' => 999,
                     'min' => 1,
                     'insertButton' => '.add-item',
                     'deleteButton' => '.remove-item',
