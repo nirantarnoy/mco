@@ -495,6 +495,12 @@
                                 <p>จัดการหัก ณ ที่จ่าย</p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="index.php?r=check-duplicate/index" class="nav-link check-duplicate">
+                                <i class="far fa-circlez nav-icon"></i>
+                                <p>Check Duplicate</p>
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <li class="nav-item has-treeview has-sub">
