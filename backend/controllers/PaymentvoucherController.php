@@ -214,6 +214,21 @@ class PaymentvoucherController extends BaseController
         return ['success' => false];
     }
 
+    private function getPaidAmount($refType, $refId, $excludeVoucherId = null)
+    {
+        $query = \backend\models\PaymentVoucherRef::find()
+            ->alias('ref')
+            ->innerJoin('payment_voucher pv', 'ref.payment_voucher_id = pv.id')
+            ->where(['ref.ref_type' => $refType, 'ref.ref_id' => $refId])
+            ->andWhere(['!=', 'pv.status', \backend\models\PaymentVoucher::STATUS_CANCELLED]);
+            
+        if ($excludeVoucherId) {
+            $query->andWhere(['!=', 'ref.payment_voucher_id', $excludeVoucherId]);
+        }
+        
+        return $query->sum('ref.amount') ?: 0;
+    }
+
     /**
      * ดึงรายการ Pre-Advance ตาม Vendor (ที่ยังไม่จ่ายครบ)
      */
@@ -243,9 +258,7 @@ class PaymentvoucherController extends BaseController
         $result = [];
         foreach ($prs as $pr) {
             // คำนวณยอดที่จ่ายไปแล้ว
-            $paidAmount = \backend\models\PaymentVoucherRef::find()
-                ->where(['ref_type' => \backend\models\PaymentVoucher::REF_TYPE_PRE_ADVANCE, 'ref_id' => $pr->id])
-                ->sum('amount') ?: 0;
+            $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucher::REF_TYPE_PRE_ADVANCE, $pr->id);
             
             $remaining = $pr->amount - $paidAmount;
             
@@ -296,9 +309,7 @@ class PaymentvoucherController extends BaseController
         $result = [];
         foreach ($pos as $po) {
             // คำนวณยอดที่จ่ายไปแล้ว
-            $paidAmount = \backend\models\PaymentVoucherRef::find()
-                ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PO, 'ref_id' => $po->id])
-                ->sum('amount') ?: 0;
+            $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_PO, $po->id);
             
             $remaining = $po->net_amount - $paidAmount;
             
@@ -350,9 +361,7 @@ class PaymentvoucherController extends BaseController
         $result = [];
         foreach ($none_prs as $none_pr) {
             // คำนวณยอดที่จ่ายไปแล้ว
-            $paidAmount = \backend\models\PaymentVoucherRef::find()
-                ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, 'ref_id' => $none_pr->id])
-                ->sum('amount') ?: 0;
+            $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, $none_pr->id);
             
             $remaining = $none_pr->total_amount - $paidAmount;
             
@@ -405,9 +414,7 @@ class PaymentvoucherController extends BaseController
         foreach ($pr_ids as $pr_id) {
             $pr = \backend\models\PreAdvance::findOne($pr_id);
             if ($pr) {
-                $paidAmount = \backend\models\PaymentVoucherRef::find()
-                    ->where(['ref_type' => \backend\models\PaymentVoucher::REF_TYPE_PRE_ADVANCE, 'ref_id' => $pr->id])
-                    ->sum('amount') ?: 0;
+                $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucher::REF_TYPE_PRE_ADVANCE, $pr->id);
                 
                 $remaining = $pr->amount - $paidAmount;
                 $total_amount += $remaining;
@@ -437,9 +444,7 @@ class PaymentvoucherController extends BaseController
         foreach ($po_ids as $po_id) {
             $po = Purch::findOne($po_id);
             if ($po) {
-                $paidAmount = \backend\models\PaymentVoucherRef::find()
-                    ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PO, 'ref_id' => $po->id])
-                    ->sum('amount') ?: 0;
+                $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_PO, $po->id);
                 
                 $remaining = $po->net_amount - $paidAmount;
                 $total_amount += $remaining;
@@ -471,9 +476,7 @@ class PaymentvoucherController extends BaseController
         foreach ($none_pr_ids as $none_pr_id) {
             $none_pr = \backend\models\PurchaseMaster::findOne($none_pr_id);
             if ($none_pr) {
-                $paidAmount = \backend\models\PaymentVoucherRef::find()
-                    ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, 'ref_id' => $none_pr->id])
-                    ->sum('amount') ?: 0;
+                $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, $none_pr->id);
                 
                 $remaining = $none_pr->total_amount - $paidAmount;
                 $total_amount += $remaining;
@@ -635,10 +638,7 @@ class PaymentvoucherController extends BaseController
             if ($available_amount <= 0) break;
             $pr = \backend\models\PreAdvance::findOne($pr_id);
             if ($pr) {
-                $paidAmount = \backend\models\PaymentVoucherRef::find()
-                    ->where(['ref_type' => \backend\models\PaymentVoucher::REF_TYPE_PRE_ADVANCE, 'ref_id' => $pr->id])
-                    ->andWhere(['!=', 'payment_voucher_id', $model->id])
-                    ->sum('amount') ?: 0;
+                $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucher::REF_TYPE_PRE_ADVANCE, $pr->id, $model->id);
                 
                 $remaining = $pr->amount - $paidAmount;
                 
@@ -663,10 +663,7 @@ class PaymentvoucherController extends BaseController
             if ($available_amount <= 0) break;
             $po = Purch::findOne($po_id);
             if ($po) {
-                $paidAmount = \backend\models\PaymentVoucherRef::find()
-                    ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PO, 'ref_id' => $po->id])
-                    ->andWhere(['!=', 'payment_voucher_id', $model->id])
-                    ->sum('amount') ?: 0;
+                $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_PO, $po->id, $model->id);
                 
                 $remaining = $po->net_amount - $paidAmount;
                 
@@ -691,10 +688,7 @@ class PaymentvoucherController extends BaseController
             if ($available_amount <= 0) break;
             $none_pr = \backend\models\PurchaseMaster::findOne($none_pr_id);
             if ($none_pr) {
-                $paidAmount = \backend\models\PaymentVoucherRef::find()
-                    ->where(['ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, 'ref_id' => $none_pr->id])
-                    ->andWhere(['!=', 'payment_voucher_id', $model->id])
-                    ->sum('amount') ?: 0;
+                $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, $none_pr->id, $model->id);
                 
                 $remaining = $none_pr->total_amount - $paidAmount;
                 
