@@ -380,6 +380,12 @@
                                     <p>จัดการหัก ณ ที่จ่าย (WHT)</p>
                                 </a>
                             </li>
+                              <li class="nav-item">
+                            <a href="index.php?r=check-duplicate/index" class="nav-link check-duplicate">
+                                <i class="far fa-circlez nav-icon"></i>
+                                <p>Check Duplicate</p>
+                            </a>
+                        </li>
 <!--                            --><?php //if (\Yii::$app->user->can('stocktrans/index')): ?>
 <!--                                <li class="nav-item">-->
 <!--                                    <a href="index.php?r=stocktrans" class="nav-link stocktrans">-->
