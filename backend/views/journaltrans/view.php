@@ -175,7 +175,7 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                                 [
                                     'attribute' => 'emp_trans_id',
                                     'value' => function ($model) {
-                                        return \backend\models\User::findEmployeeNameByUserId($model->emp_trans_id);
+                                        return \backend\models\Employee::findFullName($model->emp_trans_id);
                                     }
                                 ],
                                 [
@@ -611,7 +611,7 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
                         <div class="timeline-content">
                             <h4>Transaction Created</h4>
                             <p>
-                                Created by: <strong><?= \backend\models\User::findEmployeeNameByUserId($model->emp_trans_id) ?></strong><br>
+                                Created by: <strong><?= \backend\models\User::findEmployeeNameByUserId($model->created_by) ?></strong><br>
                                 Date: <?= date('m-d-Y H:i:s', strtotime($model->created_at)) ?>
                             </p>
                         </div>

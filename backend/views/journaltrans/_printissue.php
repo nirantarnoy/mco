@@ -27,7 +27,8 @@ foreach ($model_line as $line) {
 }
 
 // ลายเซ็น
-$issue_signature = \backend\models\User::findEmployeeSignature($model->emp_trans_id);
+$emp = \backend\models\Employee::findOne($model->emp_trans_id);
+$issue_signature = $emp ? $emp->signature : '';
 $approve_signature = \backend\models\User::findEmployeeSignature($model->approve_by);
 ?>
 
