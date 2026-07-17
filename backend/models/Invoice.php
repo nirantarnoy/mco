@@ -427,6 +427,13 @@ class Invoice extends ActiveRecord
             }
 
             if ($this->quotation_id) {
+                if (empty($this->job_id)) {
+                    $job = Job::find()->where(['quotation_id' => $this->quotation_id])->one();
+                    if ($job) {
+                        $this->job_id = $job->id;
+                    }
+                }
+
                 if ($this->invoice_type === self::TYPE_RECEIPT) {
                     $sourceInvoice = self::findOne($this->quotation_id);
                     if ($sourceInvoice) {
