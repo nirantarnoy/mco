@@ -8,6 +8,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="wht-index">
     <p>
         <?= Html::a('สร้างรายการ', ['create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a('รายงานสรุปภาษีรายเดือน', ['report'], ['class' => 'btn btn-info']) ?>
     </p>
 
     <?= GridView::widget([

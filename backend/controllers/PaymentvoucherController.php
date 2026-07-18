@@ -308,10 +308,23 @@ class PaymentvoucherController extends BaseController
         
         $result = [];
         foreach ($pos as $po) {
+            $vat_percent = 0;
+            $wht_percent = 0;
+            if ($po->is_vat == 1) {
+                $vat_percent = $po->vat_percent > 0 ? $po->vat_percent : 7;
+            }
+            if ($po->whd_tax_per > 0) {
+                $wht_percent = $po->whd_tax_per;
+            }
+            $multiplier = 1 + ($vat_percent / 100);
+            $po_full_before_vat = $multiplier > 0 ? ($po->net_amount / $multiplier) : $po->net_amount;
+            $po_full_wht = $po_full_before_vat * ($wht_percent / 100);
+            $po_target_payment = $po->net_amount - $po_full_wht;
+            
             // คำนวณยอดที่จ่ายไปแล้ว
             $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_PO, $po->id);
             
-            $remaining = $po->net_amount - $paidAmount;
+            $remaining = $po_target_payment - $paidAmount;
             
             // แสดงเฉพาะที่ยังมียอดคงเหลือ
             if ($remaining > 0) {
@@ -360,10 +373,23 @@ class PaymentvoucherController extends BaseController
         
         $result = [];
         foreach ($none_prs as $none_pr) {
+            $vat_percent = 0;
+            $wht_percent = 0;
+            if ($none_pr->vat_percent > 0) {
+                $vat_percent = $none_pr->vat_percent;
+            }
+            if ($none_pr->tax_percent > 0) {
+                $wht_percent = $none_pr->tax_percent;
+            }
+            $multiplier = 1 + ($vat_percent / 100);
+            $none_pr_full_before_vat = $multiplier > 0 ? ($none_pr->total_amount / $multiplier) : $none_pr->total_amount;
+            $none_pr_full_wht = $none_pr_full_before_vat * ($wht_percent / 100);
+            $none_pr_target_payment = $none_pr->total_amount - $none_pr_full_wht;
+            
             // คำนวณยอดที่จ่ายไปแล้ว
             $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, $none_pr->id);
             
-            $remaining = $none_pr->total_amount - $paidAmount;
+            $remaining = $none_pr_target_payment - $paidAmount;
             
             // แสดงเฉพาะที่ยังมียอดคงเหลือ
             if ($remaining > 0) {
@@ -444,31 +470,41 @@ class PaymentvoucherController extends BaseController
         foreach ($po_ids as $po_id) {
             $po = Purch::findOne($po_id);
             if ($po) {
+                $vat_percent = 0;
+                $wht_percent = 0;
+                if ($po->is_vat == 1) {
+                    $vat_percent = $po->vat_percent > 0 ? $po->vat_percent : 7;
+                }
+                if ($po->whd_tax_per > 0) {
+                    $wht_percent = $po->whd_tax_per;
+                }
+                
+                $multiplier = 1 + ($vat_percent / 100);
+                $po_full_before_vat = $multiplier > 0 ? ($po->net_amount / $multiplier) : $po->net_amount;
+                $po_full_wht = $po_full_before_vat * ($wht_percent / 100);
+                $po_target_payment = $po->net_amount - $po_full_wht;
+                
                 $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_PO, $po->id);
                 
-                $remaining = $po->net_amount - $paidAmount;
-                $total_amount += $remaining;
-                $paid_for_items[] = 'PO: ' . $po->purch_no;
-                if (!$vendor_id) {
-                    $vendor_id = $po->vendor_id;
-                    $vendor_name = $po->vendor_name;
+                $remaining = $po_target_payment - $paidAmount;
+                
+                if ($remaining > 0) {
+                    $total_amount += $remaining;
+                    
+                    // คำนวณแยกกลับเป็นก่อนภาษี จากยอดที่ต้องจ่าย
+                    $multiplier2 = 1 + ($vat_percent / 100) - ($wht_percent / 100);
+                    if ($multiplier2 > 0) {
+                        $po_before_vat = $remaining / $multiplier2;
+                    } else {
+                        $po_before_vat = $remaining;
+                    }
+                    $po_vat = $po_before_vat * ($vat_percent / 100);
+                    $po_wht = $po_before_vat * ($wht_percent / 100);
+                    
+                    $total_before_vat += $po_before_vat;
+                    $total_vat += $po_vat;
+                    $total_wht += $po_wht;
                 }
-                
-                // คำนวณยอดก่อน VAT และ VAT จาก PO
-                // net_amount = total_amount - discount + vat_amount
-                // ดังนั้น amount before vat = net_amount - vat_amount
-                $po_vat = $po->vat_amount ?: 0;
-                $po_before_vat = $remaining - $po_vat;
-                
-                // สัดส่วนที่จ่าย (กรณีจ่ายบางส่วน)
-                if ($po->net_amount > 0) {
-                    $ratio = $remaining / $po->net_amount;
-                    $po_vat = $po_vat * $ratio;
-                    $po_before_vat = $remaining - $po_vat;
-                }
-                
-                $total_before_vat += $po_before_vat;
-                $total_vat += $po_vat;
             }
         }
 
@@ -476,29 +512,40 @@ class PaymentvoucherController extends BaseController
         foreach ($none_pr_ids as $none_pr_id) {
             $none_pr = \backend\models\PurchaseMaster::findOne($none_pr_id);
             if ($none_pr) {
+                $vat_percent = 0;
+                $wht_percent = 0;
+                if ($none_pr->vat_percent > 0) {
+                    $vat_percent = $none_pr->vat_percent;
+                }
+                if ($none_pr->tax_percent > 0) {
+                    $wht_percent = $none_pr->tax_percent;
+                }
+                
+                $multiplier = 1 + ($vat_percent / 100);
+                $none_pr_full_before_vat = $multiplier > 0 ? ($none_pr->total_amount / $multiplier) : $none_pr->total_amount;
+                $none_pr_full_wht = $none_pr_full_before_vat * ($wht_percent / 100);
+                $none_pr_target_payment = $none_pr->total_amount - $none_pr_full_wht;
+                
                 $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, $none_pr->id);
                 
-                $remaining = $none_pr->total_amount - $paidAmount;
-                $total_amount += $remaining;
-                $paid_for_items[] = 'None PR: ' . $none_pr->docnum;
-                if (!$vendor_id) {
-                    $vendor_id = $none_pr->supcod;
-                    $vendor_name = $none_pr->supnam;
-                }
-
-                // คำนวณยอดก่อน VAT และ VAT จาก None PR
-                $none_pr_vat = $none_pr->vat_amount ?: 0;
-                $none_pr_before_vat = $remaining - $none_pr_vat;
+                $remaining = $none_pr_target_payment - $paidAmount;
                 
-                // สัดส่วนที่จ่าย (กรณีจ่ายบางส่วน)
-                if ($none_pr->total_amount > 0) {
-                    $ratio = $remaining / $none_pr->total_amount;
-                    $none_pr_vat = $none_pr_vat * $ratio;
-                    $none_pr_before_vat = $remaining - $none_pr_vat;
+                if ($remaining > 0) {
+                    $total_amount += $remaining;
+                    
+                    $multiplier2 = 1 + ($vat_percent / 100) - ($wht_percent / 100);
+                    if ($multiplier2 > 0) {
+                        $none_pr_before_vat = $remaining / $multiplier2;
+                    } else {
+                        $none_pr_before_vat = $remaining;
+                    }
+                    $none_pr_vat = $none_pr_before_vat * ($vat_percent / 100);
+                    $none_pr_wht = $none_pr_before_vat * ($wht_percent / 100);
+                    
+                    $total_before_vat += $none_pr_before_vat;
+                    $total_vat += $none_pr_vat;
+                    $total_wht += $none_pr_wht;
                 }
-                
-                $total_before_vat += $none_pr_before_vat;
-                $total_vat += $none_pr_vat;
             }
         }
         
@@ -506,35 +553,47 @@ class PaymentvoucherController extends BaseController
         if (count($po_ids) > 0 || count($none_pr_ids) > 0) {
             // แถวที่ 1: สินค้า (Debit)
             $lines[] = [
-                'account_code' => '1120',
+                'account_code' => '',
                 'bill_code' => '',
-                'description1' => 'สินค้า',
+                'description1' => 'สินค้า/บริการ',
                 'description2' => '',
                 'debit' => round($total_before_vat, 2),
                 'credit' => 0,
             ];
             
-            // แถวที่ 2: ภาษีมูลค่าเพิ่ม (Debit)
+            // แถวที่ 2: ภาษีซื้อ (Debit)
             if ($total_vat > 0) {
                 $lines[] = [
-                    'account_code' => '2200',
+                    'account_code' => '',
                     'bill_code' => '',
-                    'description1' => 'ภาษีมูลค่าเพิ่ม',
+                    'description1' => 'ภาษีซื้อ',
                     'description2' => '',
                     'debit' => round($total_vat, 2),
                     'credit' => 0,
                 ];
             }
             
-            // แถวที่ 3: เจ้าหนี้ (Credit)
+            // แถวที่ 3: ธนาคาร (Credit)
             $lines[] = [
-                'account_code' => '2017',
+                'account_code' => '',
                 'bill_code' => '',
                 'description1' => '',
-                'description2' => 'เจ้าหนี้',
+                'description2' => 'ธนาคารเงินฝากกระแสรายวัน',
                 'debit' => 0,
-                'credit' => round($total_before_vat + $total_vat, 2),
+                'credit' => round($total_before_vat + $total_vat - $total_wht, 2),
             ];
+
+            // แถวที่ 4: ภาษีหัก ณ ที่จ่าย (Credit)
+            if ($total_wht > 0) {
+                $lines[] = [
+                    'account_code' => '',
+                    'bill_code' => '',
+                    'description1' => '',
+                    'description2' => 'ภาษีหัก ณ ที่จ่ายค้างจ่าย',
+                    'debit' => 0,
+                    'credit' => round($total_wht, 2),
+                ];
+            }
         }
         
         return [
@@ -663,9 +722,23 @@ class PaymentvoucherController extends BaseController
             if ($available_amount <= 0) break;
             $po = Purch::findOne($po_id);
             if ($po) {
+                $vat_percent = 0;
+                $wht_percent = 0;
+                if ($po->is_vat == 1) {
+                    $vat_percent = $po->vat_percent > 0 ? $po->vat_percent : 7;
+                }
+                if ($po->whd_tax_per > 0) {
+                    $wht_percent = $po->whd_tax_per;
+                }
+                
+                $multiplier = 1 + ($vat_percent / 100);
+                $po_full_before_vat = $multiplier > 0 ? ($po->net_amount / $multiplier) : $po->net_amount;
+                $po_full_wht = $po_full_before_vat * ($wht_percent / 100);
+                $po_target_payment = $po->net_amount - $po_full_wht;
+
                 $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_PO, $po->id, $model->id);
                 
-                $remaining = $po->net_amount - $paidAmount;
+                $remaining = $po_target_payment - $paidAmount;
                 
                 if ($remaining > 0) {
                     $allocate = min($remaining, $available_amount);
@@ -688,9 +761,23 @@ class PaymentvoucherController extends BaseController
             if ($available_amount <= 0) break;
             $none_pr = \backend\models\PurchaseMaster::findOne($none_pr_id);
             if ($none_pr) {
+                $vat_percent = 0;
+                $wht_percent = 0;
+                if ($none_pr->vat_percent > 0) {
+                    $vat_percent = $none_pr->vat_percent;
+                }
+                if ($none_pr->tax_percent > 0) {
+                    $wht_percent = $none_pr->tax_percent;
+                }
+                
+                $multiplier = 1 + ($vat_percent / 100);
+                $none_pr_full_before_vat = $multiplier > 0 ? ($none_pr->total_amount / $multiplier) : $none_pr->total_amount;
+                $none_pr_full_wht = $none_pr_full_before_vat * ($wht_percent / 100);
+                $none_pr_target_payment = $none_pr->total_amount - $none_pr_full_wht;
+
                 $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, $none_pr->id, $model->id);
                 
-                $remaining = $none_pr->total_amount - $paidAmount;
+                $remaining = $none_pr_target_payment - $paidAmount;
                 
                 if ($remaining > 0) {
                     $allocate = min($remaining, $available_amount);

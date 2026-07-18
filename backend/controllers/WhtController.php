@@ -44,6 +44,28 @@ class WhtController extends BaseController
         ]);
     }
 
+    public function actionReport()
+    {
+        $month = Yii::$app->request->get('month', date('m'));
+        $year = Yii::$app->request->get('year', date('Y'));
+
+        $query = \backend\models\Wht::find()
+            ->andWhere(['MONTH(trans_date)' => $month])
+            ->andWhere(['YEAR(trans_date)' => $year])
+            ->orderBy(['trans_date' => SORT_ASC, 'wht_no' => SORT_ASC]);
+
+        $dataProvider = new \yii\data\ActiveDataProvider([
+            'query' => $query,
+            'pagination' => false,
+        ]);
+
+        return $this->render('report', [
+            'dataProvider' => $dataProvider,
+            'month' => $month,
+            'year' => $year,
+        ]);
+    }
+
     public function actionCreate($ref_type = null, $ref_id = null)
     {
         $model = new Wht();

@@ -90,10 +90,14 @@ $step = isset($step) ? (int)$step : 1;
         <td><span class="label">By</span></td>
         <td colspan="3">
             <div class="checkbox-container">
-                <div class="checkbox-box circle <?= $model->payment_method == \backend\models\PaymentVoucher::PAY_METHOD_CASH ? 'checked' : '' ?>"></div> Cash/TR/TT
+                <div class="checkbox-box circle" style="text-align:center; line-height: 10px; font-size: 10px;">
+                    <?= $model->payment_method == \backend\models\PaymentVoucher::PAY_METHOD_CASH ? '&#9679;' : '' ?>
+                </div> Cash/TR/TT
             </div>
             <div class="checkbox-container">
-                <div class="checkbox-box circle <?= $model->payment_method == \backend\models\PaymentVoucher::PAY_METHOD_CHEQUE ? 'checked' : '' ?>"></div> Bank of Cheque
+                <div class="checkbox-box circle" style="text-align:center; line-height: 10px; font-size: 10px;">
+                    <?= $model->payment_method == \backend\models\PaymentVoucher::PAY_METHOD_CHEQUE ? '&#9679;' : '' ?>
+                </div> Bank of Cheque
             </div>
         </td>
     </tr>
@@ -214,34 +218,55 @@ $step = isset($step) ? (int)$step : 1;
                     $wth = 0;
                     $total = $ref->amount;
 
+                    $vat_percent = 0;
+                    $wht_percent = 0;
+
                     if ($ref->ref_type == \backend\models\PaymentVoucherRef::REF_TYPE_PO) {
                         $po = \backend\models\Purch::findOne($ref->ref_id);
                         if ($po) {
                             $doc_date = $po->purch_date ? date('d/m/Y', strtotime($po->purch_date)) : '-';
-                            $ratio = ($po->net_amount > 0) ? ($ref->amount / $po->net_amount) : 1;
-                            $before_vat = ($po->total_amount - $po->discount_amount) * $ratio;
-                            $vat = $po->vat_amount * $ratio;
-                            $wth = $po->whd_tax_amount * $ratio;
+                            if ($po->is_vat == 1) {
+                                $vat_percent = $po->vat_percent > 0 ? $po->vat_percent : 7;
+                            }
+                            if ($po->whd_tax_per > 0) {
+                                $wht_percent = $po->whd_tax_per;
+                            }
                         }
                     } elseif ($ref->ref_type == \backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR) {
                         $none_pr = \backend\models\PurchaseMaster::findOne($ref->ref_id);
                         if ($none_pr) {
                             $doc_date = $none_pr->docdat ? date('d/m/Y', strtotime($none_pr->docdat)) : '-';
-                            $ratio = ($none_pr->total_amount > 0) ? ($ref->amount / $none_pr->total_amount) : 1;
-                            $before_vat = $none_pr->vatpr0 * $ratio;
-                            $vat = $none_pr->vat_amount * $ratio;
-                            $wth = $none_pr->tax_amount * $ratio;
+                            if ($none_pr->vat_percent > 0) {
+                                $vat_percent = $none_pr->vat_percent;
+                            }
+                            if ($none_pr->tax_percent > 0) {
+                                $wht_percent = $none_pr->tax_percent;
+                            }
                         }
                     } elseif ($ref->ref_type == \backend\models\PaymentVoucherRef::REF_TYPE_PR) {
                         $pr = \backend\models\PurchReq::findOne($ref->ref_id);
                         if ($pr) {
                             $doc_date = $pr->purch_req_date ? date('d/m/Y', strtotime($pr->purch_req_date)) : '-';
-                            $ratio = ($pr->net_amount > 0) ? ($ref->amount / $pr->net_amount) : 1;
-                            $before_vat = ($pr->total_amount - $pr->discount_amount) * $ratio;
-                            $vat = $pr->vat_amount * $ratio;
-                            $wth = 0;
+                            if ($pr->is_vat == 1) {
+                                $vat_percent = $pr->vat_percent > 0 ? $pr->vat_percent : 7;
+                            }
                         }
                     }
+
+                    // คำนวณยอดก่อนภาษีและภาษีจากยอดชำระจริง (Total Payment)
+                    $total = $ref->amount;
+                    
+                    // Total = BeforeVAT * (1 + vat_percent/100 - wht_percent/100)
+                    $multiplier = 1 + ($vat_percent / 100) - ($wht_percent / 100);
+                    
+                    if ($multiplier > 0) {
+                        $before_vat = $total / $multiplier;
+                    } else {
+                        $before_vat = $total;
+                    }
+                    
+                    $vat = $before_vat * ($vat_percent / 100);
+                    $wth = $before_vat * ($wht_percent / 100);
 
                     $total = $before_vat + $vat - $wth;
                     
@@ -341,7 +366,7 @@ $step = isset($step) ? (int)$step : 1;
             Prepared by
             <div style="font-size: 11px; margin-top: 5px;"><?= \backend\models\User::findEmployeeNameByUserId($model->created_by) ?></div>
             <div class="no-print" style="margin-top: 10px;">
-                <a href="<?= \yii\helpers\Url::to(['paymentvoucher/view', 'id' => $model->id]) ?>" target="_blank" style="display: inline-block; padding: 4px 8px; font-size: 11px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; border: 1px solid #0056b3;">Electronic sign</a>
+                <a href="<?= \yii\helpers\Url::to(['paymentvoucher/update', 'id' => $model->id]) ?>" target="_blank" style="display: inline-block; padding: 4px 8px; font-size: 11px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; border: 1px solid #0056b3;">Electronic sign</a>
             </div>
         </td>
         <td>
