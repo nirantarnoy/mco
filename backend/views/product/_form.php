@@ -304,7 +304,7 @@ if (!$model->isNewRecord) {
         </div>
         <br/>
         <div class="form-group">
-            <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+            <?= Html::submitButton('Save', ['class' => 'btn btn-success btn-submit']) ?>
         </div>
 
         <?php ActiveForm::end(); ?>
@@ -395,6 +395,13 @@ function addcustomerpriceline(e){
     tr.after(clone);
      
 }
+$('form').on('submit', function() {
+    var $btn = $(this).find('.btn-submit');
+    if ($btn.hasClass('disabled')) {
+        return false;
+    }
+    $btn.addClass('disabled').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> กำลังบันทึก...');
+});
 
 JS;
 $this->registerJs($js, static::POS_END);
