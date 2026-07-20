@@ -395,7 +395,7 @@ function addcustomerpriceline(e){
     tr.after(clone);
      
 }
-$('form').on('submit', function() {
+$('form').on('beforeSubmit', function() {
     var btn = $(this).find('.btn-submit');
     if (btn.hasClass('disabled')) {
         return false;
@@ -404,6 +404,7 @@ $('form').on('submit', function() {
     setTimeout(function() {
         btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> กำลังบันทึก...');
     }, 10);
+    return true;
 });
 
 JS;
