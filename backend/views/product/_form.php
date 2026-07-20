@@ -400,7 +400,10 @@ $('form').on('submit', function() {
     if (btn.hasClass('disabled')) {
         return false;
     }
-    btn.addClass('disabled').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> กำลังบันทึก...');
+    btn.addClass('disabled');
+    setTimeout(function() {
+        btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> กำลังบันทึก...');
+    }, 10);
 });
 
 JS;
