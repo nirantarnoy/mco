@@ -396,11 +396,11 @@ function addcustomerpriceline(e){
      
 }
 $('form').on('submit', function() {
-    var $btn = $(this).find('.btn-submit');
-    if ($btn.hasClass('disabled')) {
+    var btn = $(this).find('.btn-submit');
+    if (btn.hasClass('disabled')) {
         return false;
     }
-    $btn.addClass('disabled').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> กำลังบันทึก...');
+    btn.addClass('disabled').prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> กำลังบันทึก...');
 });
 
 JS;

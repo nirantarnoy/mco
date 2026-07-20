@@ -53,6 +53,9 @@ class GoogleVisionService extends Component
                         [
                             'type' => 'DOCUMENT_TEXT_DETECTION' // ปรับให้เหมาะกับการสแกนเอกสารมากกว่า
                         ]
+                    ],
+                    'imageContext' => [
+                        'languageHints' => ['th', 'en'] // เพิ่ม Hint ภาษาเพื่อเพิ่มความแม่นยำ
                     ]
                 ]
             ]

@@ -150,7 +150,7 @@ class PurchController extends BaseController
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
-    public function actionCreate()
+    public function actionCreate($ocr_id = null)
     {
         $model = new Purch();
         $model->status = Purch::STATUS_DRAFT;
@@ -159,6 +159,44 @@ class PurchController extends BaseController
 
         // Initialize with one empty purch line
         $model->purchLines = [new PurchLine()];
+        
+        // If created from OCR
+        if ($ocr_id) {
+            $tempInvoice = \backend\models\TempInvoice::findOne($ocr_id);
+            if ($tempInvoice) {
+                $model->ref_no = $tempInvoice->invoice_number;
+                if ($tempInvoice->invoice_date) {
+                    $model->purch_date = date('Y-m-d', strtotime($tempInvoice->invoice_date));
+                }
+                $model->note = "สร้างจากระบบ OCR (ผู้ขาย: {$tempInvoice->vendor_name})";
+                
+                // Try to map vendor by Tax ID
+                if ($tempInvoice->customer_tax_id) {
+                    $vendor = \backend\models\Vendor::find()->where(['taxid' => $tempInvoice->customer_tax_id])->one();
+                    if ($vendor) {
+                        $model->vendor_id = $vendor->id;
+                    }
+                }
+                
+                $model->is_vat = $tempInvoice->vat_amount > 0 ? 1 : 2;
+                $model->vat_amount = $tempInvoice->vat_amount;
+                
+                if (!empty($tempInvoice->tempInvoiceLines)) {
+                    $purchLines = [];
+                    foreach ($tempInvoice->tempInvoiceLines as $tempLine) {
+                        $line = new PurchLine();
+                        $line->product_description = $tempLine->description;
+                        $line->qty = $tempLine->quantity > 0 ? $tempLine->quantity : 1;
+                        $line->line_price = $tempLine->unit_price;
+                        $line->line_total = $tempLine->amount;
+                        $purchLines[] = $line;
+                    }
+                    if (!empty($purchLines)) {
+                        $model->purchLines = $purchLines;
+                    }
+                }
+            }
+        }
 
         if ($model->load(Yii::$app->request->post())) {
             $purchLines = [];
