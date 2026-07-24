@@ -190,6 +190,43 @@ class SiteController extends BaseController
         return $this->redirect(['site/logindriver']);
     }
 
+    /**
+     * Change current working company session dynamically.
+     *
+     * @param int $id
+     * @return \yii\web\Response
+     */
+    public function actionChangeCompany($id)
+    {
+        if (Yii::$app->user->isGuest) {
+            return $this->redirect(['site/login']);
+        }
+
+        $id = (int)$id;
+        $user_info = \backend\models\User::find()->where(['id' => \Yii::$app->user->id])->one();
+
+        if ($id == 100) {
+            if ($user_info && $user_info->user_group_id != 1) {
+                Yii::$app->session->setFlash('msg-error', 'คุณไม่ได้รับอนุญาตให้เข้าถึงทุกบริษัท');
+                return $this->redirect(Yii::$app->request->referrer ?: ['site/index']);
+            }
+            $com_name = 'ทุกบริษัท';
+        } else {
+            $company = \backend\models\Company::findOne($id);
+            if ($company) {
+                $com_name = $company->name;
+            } else {
+                Yii::$app->session->setFlash('msg-error', 'ไม่พบข้อมูลบริษัทที่เลือก');
+                return $this->redirect(Yii::$app->request->referrer ?: ['site/index']);
+            }
+        }
+
+        Yii::$app->session->set('company_id', $id);
+        Yii::$app->session->set('company_name', $com_name);
+
+        return $this->redirect(Yii::$app->request->referrer ?: ['site/index']);
+    }
+
 
     public function actionChangepassword()
     {
