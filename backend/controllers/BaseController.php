@@ -10,7 +10,7 @@ class BaseController extends Controller
 {
     public function beforeAction($action)
     {
-        if ($this->id === 'site' && in_array($action->id, ['login', 'error', 'logout', 'logindriver', 'logoutdriver'])) {
+        if ($this->id === 'site' && in_array($action->id, ['login', 'error', 'logout', 'logindriver', 'logoutdriver', 'change-company', 'changecompany'])) {
             return parent::beforeAction($action);
         }
 
