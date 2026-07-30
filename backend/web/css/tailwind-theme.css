@@ -180,6 +180,63 @@ body, h1, h2, h3, h4, h5, h6, p, a, div, span, .btn, .form-control, .nav-link, .
 }
 
 /* ============================
+   5.1 Sidebar (Light Mode)
+============================ */
+[class*="sidebar-light-"] {
+    background-color: #ffffff !important;
+    border-right: 1px solid #f3f4f6 !important;
+}
+
+/* Base link color (Light Mode) */
+[class*="sidebar-light-"] .nav-sidebar > .nav-item > .nav-link,
+[class*="sidebar-light-"] .nav-sidebar > .nav-treeview > .nav-item > .nav-link {
+    border-radius: 0.5rem !important;
+    margin: 0.25rem 0.75rem !important;
+    padding: 0.75rem 1rem !important;
+    transition: all 0.2s ease-in-out !important;
+    color: #374151 !important; /* Dark gray for max contrast on white */
+    opacity: 1 !important;
+    font-weight: 500;
+}
+
+/* Hover state (Light Mode) */
+[class*="sidebar-light-"] .nav-sidebar > .nav-item > .nav-link:hover,
+[class*="sidebar-light-"] .nav-sidebar > .nav-treeview > .nav-item > .nav-link:hover {
+    background-color: #f3f4f6 !important; /* Light gray hover */
+    color: #111827 !important; /* Darker text */
+    transform: translateX(4px);
+    opacity: 1 !important;
+}
+
+/* Active state (Light Mode) - Already looks good in screenshot but forcing opacity */
+[class*="sidebar-light-"] .nav-sidebar > .nav-item > .nav-link.active {
+    background-color: #3b82f6 !important; /* blue-500 */
+    color: #ffffff !important;
+    box-shadow: var(--tw-shadow) !important;
+    opacity: 1 !important;
+}
+
+/* Brand & User panel (Light Mode) */
+[class*="sidebar-light-"] .brand-link {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+    opacity: 1 !important;
+}
+[class*="sidebar-light-"] .brand-link .brand-text {
+    color: #111827 !important;
+    opacity: 1 !important;
+    font-weight: 600;
+}
+[class*="sidebar-light-"] .user-panel {
+    border-bottom: 1px solid #f3f4f6 !important;
+}
+[class*="sidebar-light-"] .user-panel .info a {
+    color: #374151 !important;
+    opacity: 1 !important;
+}
+
+/* ============================
    6. Tables (ตาราง)
 ============================ */
 .table {
