@@ -430,6 +430,55 @@ class OcrController extends BaseController
     }
 
     /**
+     * Parse date string DD/MM/YYYY
+     */
+    protected function parseDateString($dateStr)
+    {
+        $parts = preg_split('/[\/\.-]/', $dateStr);
+        if (count($parts) == 3) {
+            $d = (int)$parts[0];
+            $m = (int)$parts[1];
+            $y = (int)$parts[2];
+            if ($y < 100) $y += 2000;
+            if ($y > 2400) $y -= 543;
+            return sprintf('%04d-%02d-%02d', $y, $m, $d);
+        }
+        return null;
+    }
+
+    /**
+     * Parse regex date match
+     */
+    protected function parseDateMatch($m)
+    {
+        if (count($m) >= 4) {
+            if (strlen($m[1]) == 4) { // YYYY-MM-DD
+                return sprintf('%04d-%02d-%02d', (int)$m[1], (int)$m[2], (int)$m[3]);
+            }
+            $d = (int)$m[1];
+            $monthStr = $m[2];
+            $y = (int)$m[3];
+
+            $months = [
+                'ม.ค.' => 1, 'ก.พ.' => 2, 'มี.ค.' => 3, 'เม.ย.' => 4, 'พ.ค.' => 5, 'มิ.ย.' => 6,
+                'ก.ค.' => 7, 'ส.ค.' => 8, 'ก.ย.' => 9, 'ต.ค.' => 10, 'พ.ย.' => 11, 'ธ.ค.' => 12,
+                'มกราคม' => 1, 'กุมภาพันธ์' => 2, 'มีนาคม' => 3, 'เมษายน' => 4, 'พฤษภาคม' => 5, 'มิถุนายน' => 6,
+                'กรกฎาคม' => 7, 'สิงหาคม' => 8, 'กันยายน' => 9, 'ตูลายน' => 10, 'พฤศจิกายน' => 11, 'ธันวาคม' => 12,
+                'jan' => 1, 'feb' => 2, 'mar' => 3, 'apr' => 4, 'may' => 5, 'jun' => 6,
+                'jul' => 7, 'aug' => 8, 'sep' => 9, 'oct' => 10, 'nov' => 11, 'dec' => 12
+            ];
+
+            $monthLower = mb_strtolower($monthStr, 'UTF-8');
+            $mNum = is_numeric($monthStr) ? (int)$monthStr : ($months[$monthLower] ?? 1);
+
+            if ($y < 100) $y += 2000;
+            if ($y > 2400) $y -= 543;
+            return sprintf('%04d-%02d-%02d', $y, $mNum, $d);
+        }
+        return null;
+    }
+
+    /**
      * Specialized parser for Gas / Fuel / Petroleum receipt forms
      */
     protected function tryGasFuelReceiptParsing($fullText, $model)
