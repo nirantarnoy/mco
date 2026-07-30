@@ -1799,9 +1799,10 @@ class PurchController extends BaseController
     {
         // upload
         $id = \Yii::$app->request->post('id');
-        $uploaded = UploadedFile::getInstancesByName('file_acknowledge_doc');
-        $uploaded1 = UploadedFile::getInstancesByName('file_invoice_doc');
-        $uploaded2 = UploadedFile::getInstancesByName('file_slip_doc');
+        $doc_type_id = \Yii::$app->request->post('doc_type_id', 3);
+        $uploaded = UploadedFile::getInstancesByName('file_doc');
+        $uploaded1 = [];
+        $uploaded2 = [];
         if($id){
             $uploadPathPurch = 'uploads/purch_doc/';
             if (!file_exists($uploadPathPurch)) {
@@ -1815,7 +1816,7 @@ class PurchController extends BaseController
                         $model_doc = new \common\models\PurchDoc();
                         $model_doc->purch_id = $id;
                         $model_doc->doc_name = $upfiles;
-                        $model_doc->doc_type_id = 1;
+                        $model_doc->doc_type_id = $doc_type_id;
                         $model_doc->created_by = \Yii::$app->user->id;
                         $model_doc->created_at = time();
                         $model_doc->save(false);

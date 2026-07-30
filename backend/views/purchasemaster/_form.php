@@ -762,12 +762,23 @@ JS
     <div class="form-group mt-3">
         <br/>
         <div class="row">
-            <div class="col-lg-4">
+            <div class="col-lg-6">
                 <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
                     <div class="row">
                         <div class="col-lg-12">
-                            <label for="">เอกสารแนบ ใบกำกับภาษี</label>
-                            <input type="file" name="file_invoice_doc" multiple>
+                            <label for="">ประเภทเอกสาร</label>
+                            <select name="doc_type_id" class="form-control" required>
+                                <?php foreach (\backend\helpers\PurchNonePrDocType::asArray() as $k => $v): ?>
+                                    <option value="<?= $k ?>"><?= $v ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="height: 10px;"></div>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <label for="">แนบไฟล์</label>
+                            <input type="file" name="file_doc[]" class="form-control" multiple>
                         </div>
                     </div>
                 </div>
@@ -798,7 +809,7 @@ JS
                         <tr>
                             <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
                             <td><?= $value->doc_name ?></td>
-                            <td><?= \backend\helpers\PurchDocType::getTypeById($value->doc_type_id) ?></td>
+                            <td><?= \backend\helpers\PurchNonePrDocType::getTypeById($value->doc_type_id) ?></td>
                             <td style="text-align: center">
                                 <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $value->doc_name ?>"
                                    target="_blank">

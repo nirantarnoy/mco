@@ -158,7 +158,8 @@ class PurchasemasterController extends BaseController
                             \yii\helpers\FileHelper::createDirectory($uploadPathPurch, 0777, true);
                         }
                         
-                        $uploaded = UploadedFile::getInstancesByName('file_invoice_doc');
+                        $doc_type_id = \Yii::$app->request->post('doc_type_id', 3);
+                        $uploaded = UploadedFile::getInstancesByName('file_doc');
                         if (!empty($uploaded)) {
                             $loop = 0;
                             foreach ($uploaded as $file) {
@@ -167,7 +168,7 @@ class PurchasemasterController extends BaseController
                                     $model_doc = new \common\models\PurchNonePrDoc();
                                     $model_doc->purchase_master_id = $model->id;
                                     $model_doc->doc_name = $upfiles;
-                                    $model_doc->doc_type_id = 2;
+                                    $model_doc->doc_type_id = $doc_type_id;
                                     $model_doc->created_by = \Yii::$app->user->id;
                                     $model_doc->created_at = time();
                                     $model_doc->save(false);
@@ -340,7 +341,8 @@ class PurchasemasterController extends BaseController
                             \yii\helpers\FileHelper::createDirectory($uploadPathPurch, 0777, true);
                         }
 
-                        $uploaded = UploadedFile::getInstancesByName('file_invoice_doc');
+                        $doc_type_id = \Yii::$app->request->post('doc_type_id', 3);
+                        $uploaded = UploadedFile::getInstancesByName('file_doc');
                         if (!empty($uploaded)) {
                             $loop = 0;
                             foreach ($uploaded as $file) {
@@ -349,7 +351,7 @@ class PurchasemasterController extends BaseController
                                     $model_doc = new \common\models\PurchNonePrDoc();
                                     $model_doc->purchase_master_id = $id;
                                     $model_doc->doc_name = $upfiles;
-                                    $model_doc->doc_type_id = 2;
+                                    $model_doc->doc_type_id = $doc_type_id;
                                     $model_doc->created_by = \Yii::$app->user->id;
                                     $model_doc->created_at = time();
                                     $model_doc->save(false);
