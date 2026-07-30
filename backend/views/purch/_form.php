@@ -874,9 +874,11 @@ $this->registerJs($autocompleteJs);
                             <div class="col-lg-12">
                                 <form action="<?= Url::to(['purch/add-doc-file-new'], true) ?>" method="post"
                                       enctype="multipart/form-data">
+                                    <input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
                                     <input type="hidden" name="id" value="<?= $model->id ?>">
+                                    <input type="hidden" name="doc_type_id" value="1">
                                     <label for="">เอกสารแนบ PO Acknowledge</label>
-                                    <input type="file" name="file_acknowledge_doc" multiple>
+                                    <input type="file" name="file_doc[]" multiple>
                                     <div style="height: 10px;"></div>
                                     <div class="row">
                                         <div class="col-lg-12">
@@ -896,9 +898,11 @@ $this->registerJs($autocompleteJs);
                             <div class="col-lg-12">
                                 <form action="<?= Url::to(['purch/add-doc-file-new'], true) ?>" method="post"
                                       enctype="multipart/form-data">
+                                    <input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
                                     <input type="hidden" name="id" value="<?= $model->id ?>">
+                                    <input type="hidden" name="doc_type_id" value="2">
                                     <label for="">เอกสารแนบ ใบกำกับภาษี</label>
-                                    <input type="file" name="file_invoice_doc" multiple>
+                                    <input type="file" name="file_doc[]" multiple>
                                     <div style="height: 10px;"></div>
                                     <div class="row">
                                         <div class="col-lg-12">
@@ -917,9 +921,11 @@ $this->registerJs($autocompleteJs);
                             <div class="col-lg-12">
                                 <form action="<?= Url::to(['purch/add-doc-file-new'], true) ?>" method="post"
                                       enctype="multipart/form-data">
+                                    <input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
                                     <input type="hidden" name="id" value="<?= $model->id ?>">
+                                    <input type="hidden" name="doc_type_id" value="3">
                                     <label for="">เอกสารแนบ เอกสารจ่ายเงิน</label>
-                                    <input type="file" name="file_slip_doc" multiple>
+                                    <input type="file" name="file_doc[]" multiple>
                                     <div style="height: 10px;"></div>
                                     <div class="row">
                                         <div class="col-lg-12">
