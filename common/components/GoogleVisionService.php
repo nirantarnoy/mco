@@ -171,7 +171,10 @@ class GoogleVisionService extends Component
         }
 
         if (isset($result['responses'][0]['textAnnotations'])) {
-            $details = $result['responses'][0]['textAnnotations'];
+            // Index 0 is full document summary text annotation. Slice from 1 to keep individual word tokens.
+            $details = count($result['responses'][0]['textAnnotations']) > 1 
+                ? array_slice($result['responses'][0]['textAnnotations'], 1) 
+                : $result['responses'][0]['textAnnotations'];
         }
 
         return [

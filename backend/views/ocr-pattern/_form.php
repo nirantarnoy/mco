@@ -36,9 +36,14 @@ use kartik\file\FileInput;
                         <small><i class="fas fa-info-circle"></i> คลิกที่ข้อความจากผลการสแกนด้านล่างเพื่อนำมาสร้าง Pattern อัตโนมัติ</small>
                     </div>
                     
-                    <?= $form->field($model, 'regex_invoice_no')->textInput(['maxlength' => true, 'id' => 'regex-invoice-no']) ?>
-                    <?= $form->field($model, 'regex_date')->textInput(['maxlength' => true, 'id' => 'regex-date']) ?>
-                    <?= $form->field($model, 'regex_total')->textInput(['maxlength' => true, 'id' => 'regex-total']) ?>
+                    <?= $form->field($model, 'regex_invoice_no')->textInput(['maxlength' => true, 'id' => 'regex-invoice-no', 'placeholder' => '/(?:เลขที่)\s*[:.]?\s*([A-Z0-9\-\/]+)/iu']) ?>
+                    <?= $form->field($model, 'regex_date')->textInput(['maxlength' => true, 'id' => 'regex-date', 'placeholder' => '/วันที่\s*(\d{2}\/\d{2}\/\d{4})/']) ?>
+                    <?= $form->field($model, 'regex_total')->textInput(['maxlength' => true, 'id' => 'regex-total', 'placeholder' => '/(?:รวมเงินทั้งสิ้น)\s*[:.]?\s*([0-9,]+\.[0-9]{2})/iu']) ?>
+                    <?= $form->field($model, 'regex_item_start')->textInput(['maxlength' => true, 'id' => 'regex-item-start', 'placeholder' => '/^(\d{1,2})\s+([A-Z0-9-]{4,20})\s+(.+)$/u']) ?>
+                    <?= $form->field($model, 'parsing_strategy')->dropDownList([
+                        'block' => 'Block Strategy (อ่านทีละบรรทัดสินค้า)',
+                        'collector' => 'Collector Strategy (สะสมคำและตัวเลขแยกกลุ่ม)'
+                    ]) ?>
                 </div>
             </div>
             
@@ -121,10 +126,11 @@ $js = <<<JS
 var currentField = 'regex-invoice-no';
 
 // เมื่อ focus ที่ช่อง regex ให้จำไว้ว่ากำลังตั้งค่าช่องไหน
-$('#regex-invoice-no, #regex-date, #regex-total').on('focus', function() {
+$('#regex-invoice-no, #regex-date, #regex-total, #regex-item-start').on('focus', function() {
     currentField = $(this).attr('id');
+    var labelText = $(this).prev('label').text();
     $('.card-success').addClass('border-primary');
-    $('.card-success .card-title').html('สูตรการดึงข้อมูล (กำลังแากเลิก: ' + $(this).prev('label').text() + ')');
+    $('.card-success .card-title').html('สูตรการดึงข้อมูล (กำลังเลือก: ' + labelText + ')');
 });
 
 $('#btn-scan').on('click', function() {
@@ -188,13 +194,12 @@ function renderTokens(text) {
                 
                 // สร้าง Regex อัตโนมัติจากคำที่เลือก
                 if (currentField === 'regex-total') {
-                    // สำหรับยอดรวม มักจะตามด้วยตัวเลขทศนิยม
                     regex = '/(?:' + escapeRegExp(selectedText) + ')\\\\s*[:.]?\\\\s*([0-9,]+\\\\.[0-9]{2})/iu';
                 } else if (currentField === 'regex-invoice-no') {
-                    // สำหรับเลขที่ มักจะตามด้วยตัวอักษรและตัวเลข
                     regex = '/(?:' + escapeRegExp(selectedText) + ')\\\\s*[:.]?\\\\s*([A-Z0-9\\\\-\\\\/]+)/iu';
+                } else if (currentField === 'regex-item-start') {
+                    regex = '/(?:' + escapeRegExp(selectedText) + ')\\\\s+(.+)/iu';
                 } else {
-                    // ทั่วไป
                     regex = '/(?:' + escapeRegExp(selectedText) + ')\\\\s*[:.]?\\\\s*(.+)/iu';
                 }
                 

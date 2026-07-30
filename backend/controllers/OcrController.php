@@ -117,10 +117,24 @@ class OcrController extends BaseController
             $model->status = TempInvoice::STATUS_PENDING;
             $model->invoice_date = date('Y-m-d'); 
 
-            // 1. Detect Tax IDs
-            preg_match_all('/\d{13}/', $fullText, $taxMatches);
-            if (!empty($taxMatches[0])) {
-                $model->customer_tax_id = count($taxMatches[0]) > 1 ? $taxMatches[0][1] : $taxMatches[0][0];
+            // 1. Detect Tax IDs (13 digits continuous or with hyphens/spaces e.g. 0-1055-58123-45-6)
+            $taxIdFound = null;
+            if (preg_match_all('/(?:TAX\s*ID|เลขประจำตัวผู้เสียภาษี|ผู้เสียภาษี|Tax\s*No\.?)?\s*[:.]?\s*(\d[\s\-]?\d{4}[\s\-]?\d{5}[\s\-]?\d{2}[\s\-]?\d)/iu', $fullText, $taxMatches)) {
+                foreach ($taxMatches[1] as $rawTax) {
+                    $cleanedTax = preg_replace('/\D/', '', $rawTax);
+                    if (strlen($cleanedTax) === 13) {
+                        $taxIdFound = $cleanedTax;
+                        break;
+                    }
+                }
+            }
+            if (!$taxIdFound) {
+                if (preg_match_all('/\d{13}/', $fullText, $plainMatches)) {
+                    $taxIdFound = $plainMatches[0][0];
+                }
+            }
+            if ($taxIdFound) {
+                $model->customer_tax_id = $taxIdFound;
             }
             
             // 2. Look for Pattern based on Tax ID
@@ -133,48 +147,62 @@ class OcrController extends BaseController
             }
 
             // 3. Extract Invoice Number (Global + Pattern)
-            $regexInvoice = $pattern && $pattern->regex_invoice_no ? $pattern->regex_invoice_no : '/(?:เลขที่|No\.?|Doc No|Inv No|Inv\s*#)\s*[:.]?\s*([A-Z0-9\-\/]+)/iu';
-            if (preg_match($regexInvoice, $fullText, $matches)) {
+            $regexInvoice = $pattern && $pattern->regex_invoice_no ? $pattern->regex_invoice_no : '/(?:เลขที่ใบกำกับภาษี|เลขที่ใบเสร็จ|เลขที่เอกสาร|เลขที่|TAX\s*INVOICE\s*NO|TAX\s*INV\s*NO|INV\s*NO|INVOICE\s*NO|POS\s*NO|DOCUMENT\s*NO|RECEIPT\s*NO|BILL\s*NO|DOC\s*NO|No\.?|Inv\s*#)\s*[:.]?\s*([A-Z0-9\-\/]{3,30})/iu';
+            if (@preg_match($regexInvoice, $fullText, $matches)) {
                 $model->invoice_number = isset($matches[1]) ? trim($matches[1]) : trim($matches[0]);
             } else {
-                // Secondary check for patterns like S001-IV... or anything looking like an ID
-                if (preg_match('/([A-Z0-9]{2,}-\w+-\d+-\d+)/', $fullText, $matches)) {
-                    $model->invoice_number = $matches[1];
+                // Secondary check for patterns like S001-IV-12345 or IV-2026-001
+                if (preg_match('/([A-Z0-9]{2,}[\-\/][A-Z0-9\-\/]{4,20})/', $fullText, $matches)) {
+                    $model->invoice_number = trim($matches[1]);
                 }
             }
 
-            // 4. Extract Date
-            $regexDate = $pattern && $pattern->regex_date ? $pattern->regex_date : '/วันที่\s*(\d{2}\/\d{2}\/\d{4})/';
-            if (preg_match($regexDate, $fullText, $matches)) {
-                $dateStr = isset($matches[1]) ? $matches[1] : $matches[0];
-                $parts = explode('/', $dateStr);
-                if (count($parts) == 3) {
-                    $y = (int)$parts[2];
-                    if ($y > 2400) $y -= 543;
-                    $model->invoice_date = $y . '-' . $parts[1] . '-' . $parts[0];
+            // 4. Extract Date with B.E. to C.E. conversion & Multi-language support
+            $regexDate = $pattern && $pattern->regex_date ? $pattern->regex_date : null;
+            $dateParsed = false;
+            
+            if ($regexDate && @preg_match($regexDate, $fullText, $matches)) {
+                $dateStr = isset($matches[1]) ? trim($matches[1]) : trim($matches[0]);
+                $parsed = $this->parseDateString($dateStr);
+                if ($parsed) {
+                    $model->invoice_date = $parsed;
+                    $dateParsed = true;
+                }
+            }
+            
+            if (!$dateParsed) {
+                $datePatterns = [
+                    '/(?:วันที่|Date)\s*[:.]?\s*(\d{1,2})[\/\.-](\d{1,2})[\/\.-](\d{2,4})/iu',
+                    '/(\d{1,2})\s+(ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.|มกราคม|กุมภาพันธ์|มีนาคม|เมษายน|พฤษภาคม|มิถุนายน|กรกฎาคม|สิงหาคม|กันยายน|ตูลายน|พฤศจิกายน|ธันวาคม|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{2,4})/iu',
+                    '/(\d{4})[\/\.-](\d{1,2})[\/\.-](\d{1,2})/'
+                ];
+                foreach ($datePatterns as $dp) {
+                    if (preg_match($dp, $fullText, $m)) {
+                        $parsed = $this->parseDateMatch($m);
+                        if ($parsed) {
+                            $model->invoice_date = $parsed;
+                            break;
+                        }
+                    }
                 }
             }
 
             // 5. Extract Totals, VAT, Subtotal
-            $regexTotal = $pattern && $pattern->regex_total ? $pattern->regex_total : '/(?:จำนวนเงินรวมภาษี|รวมเงินทั้งสิ้น|ยอดรวมสุทธิ|ยอดโอน|Grand Total|Total Amount|Total).{0,50}?([0-9,]+\.[0-9]{2})/is';
+            $regexTotal = $pattern && $pattern->regex_total ? $pattern->regex_total : '/(?:จำนวนเงินรวมทั้งสิ้น|จำนวนเงินรวมภาษี|รวมเงินทั้งสิ้น|ยอดรวมสุทธิ|จำนวนเงินรวม|ยอดโอน|ยอดชำระ|Grand\s*Total|Total\s*Amount|Total\s*Due|Amount\s*Due|Net\s*Total|TOTAL|Net\s*Amount).{0,50}?([0-9,]+\.[0-9]{2})/is';
             
-            // Try specific labels first
-            if (preg_match($regexTotal, $fullText, $m)) {
+            if (@preg_match($regexTotal, $fullText, $m)) {
                 $model->total_amount = (float)str_replace(',', '', $m[1]);
             } 
             
-            // Try specific Net Amount/Subtotal label
-            if (preg_match('/(?:มูลค่าสินค้า|Subtotal|Net Amount|มูลค่าบริการ).{0,50}?([0-9,]+\.[0-9]{2})/is', $fullText, $m)) {
+            if (preg_match('/(?:มูลค่าสินค้า|มูลค่าบริการ|รวมเป็นเงิน|Subtotal|Sub\s*Total|Net\s*Amount).{0,50}?([0-9,]+\.[0-9]{2})/is', $fullText, $m)) {
                 $model->subtotal = (float)str_replace(',', '', $m[1]);
             }
 
-            // Try specific VAT label
-            if (preg_match('/(?:ภาษีมูลค่าเพิ่ม|VAT|Value Added).{0,30}?([0-9,]+\.[0-9]{2})/is', $fullText, $m)) {
+            if (preg_match('/(?:ภาษีมูลค่าเพิ่ม|VAT\s*7%|VAT|Value\s*Added\s*Tax).{0,30}?([0-9,]+\.[0-9]{2})/is', $fullText, $m)) {
                 $model->vat_amount = (float)str_replace(',', '', $m[1]);
             }
 
             // Fallback: If total_amount still 0, look at the last 5 numbers and pick the largest 
-            // (Common for jumbled OCR where total is in a cluster)
             if ($model->total_amount == 0) {
                  if (preg_match_all('/([0-9,]+\.[0-9]{2})/', $fullText, $allMatches)) {
                     $nums = array_map(function($n) { return (float)str_replace(',', '', $n); }, $allMatches[0]);
@@ -185,13 +213,13 @@ class OcrController extends BaseController
                 }
             }
 
-            // Logic check: if we have total and vat but no subtotal
+            // Cross-validation logic: If total > 0 and subtotal is 0
             if ($model->total_amount > 0 && $model->subtotal == 0) {
                 if ($model->vat_amount > 0) {
-                    $model->subtotal = $model->total_amount - $model->vat_amount;
+                    $model->subtotal = round($model->total_amount - $model->vat_amount, 2);
                 } else {
-                    $model->subtotal = $model->total_amount / 1.07;
-                    $model->vat_amount = $model->total_amount - $model->subtotal;
+                    $model->subtotal = round($model->total_amount / 1.07, 2);
+                    $model->vat_amount = round($model->total_amount - $model->subtotal, 2);
                 }
             }
 
@@ -217,15 +245,12 @@ class OcrController extends BaseController
 
                 // Save items with Final Calculation Check
                 foreach ($items as $item) {
-                    // Logic: If we only have one number, it's safer to assume it's the TOTAL 
-                    // and calculate unit price backwards, especially if Qty > 1
                     if ($item['amount'] == 0 && $item['price'] > 0) {
                         $item['amount'] = $item['price'];
                         if ($item['qty'] > 1) {
-                             $item['price'] = $item['amount'] / $item['qty'];
+                             $item['price'] = round($item['amount'] / $item['qty'], 2);
                         }
                     } elseif ($item['amount'] > 0 && $item['amount'] < $item['price']) {
-                        // Swap if somehow total < unit price
                         $tmp = $item['price'];
                         $item['price'] = $item['amount'];
                         $item['amount'] = $tmp;
@@ -251,6 +276,7 @@ class OcrController extends BaseController
                     $line->description = 'รายการจาก OCR';
                     $line->amount = $model->total_amount;
                     $line->quantity = 1;
+                    $line->unit_price = $model->total_amount;
                     $line->save();
                 }
 
@@ -272,13 +298,31 @@ class OcrController extends BaseController
     }
 
     /**
-     * Group OCR words into rows based on their Y-coordinates
+     * Group OCR words into rows based on their Y-coordinates with dynamic thresholding
      */
     protected function reconstructRows($words)
     {
         if (empty($words)) return [];
 
-        // 1. Sort words by Y-coordinate
+        // Compute dynamic Y-threshold based on average word bounding box height
+        $heights = [];
+        foreach ($words as $word) {
+            $vertices = $word['boundingPoly']['vertices'] ?? [];
+            if (count($vertices) >= 4) {
+                $yMin = min(array_column($vertices, 'y'));
+                $yMax = max(array_column($vertices, 'y'));
+                $h = $yMax - $yMin;
+                if ($h > 0 && $h < 500) $heights[] = $h;
+            }
+        }
+
+        $yThreshold = 10;
+        if (!empty($heights)) {
+            $avgHeight = array_sum($heights) / count($heights);
+            $yThreshold = max(6, (int)round($avgHeight * 0.45));
+        }
+
+        // Sort words by Y-coordinate of top-left vertex
         usort($words, function($a, $b) {
             $ay = $a['boundingPoly']['vertices'][0]['y'] ?? 0;
             $by = $b['boundingPoly']['vertices'][0]['y'] ?? 0;
@@ -288,7 +332,6 @@ class OcrController extends BaseController
         $rows = [];
         $currentRow = [];
         $lastY = -1;
-        $yThreshold = 10; // Pixels distance to be considered same row
 
         foreach ($words as $word) {
             $y = $word['boundingPoly']['vertices'][0]['y'] ?? 0;
@@ -296,7 +339,6 @@ class OcrController extends BaseController
             if ($lastY == -1 || abs($y - $lastY) <= $yThreshold) {
                 $currentRow[] = $word;
             } else {
-                // Finish current row
                 $rows[] = $this->sortRowByX($currentRow);
                 $currentRow = [$word];
             }
@@ -306,7 +348,6 @@ class OcrController extends BaseController
             $rows[] = $this->sortRowByX($currentRow);
         }
 
-        // Convert word arrays to strings
         return array_map(function($rowWords) {
             return implode(' ', array_column($rowWords, 'description'));
         }, $rows);
@@ -323,6 +364,55 @@ class OcrController extends BaseController
     }
 
     /**
+     * Parse date string DD/MM/YYYY
+     */
+    protected function parseDateString($dateStr)
+    {
+        $parts = preg_split('/[\/\.-]/', $dateStr);
+        if (count($parts) == 3) {
+            $d = (int)$parts[0];
+            $m = (int)$parts[1];
+            $y = (int)$parts[2];
+            if ($y < 100) $y += 2000;
+            if ($y > 2400) $y -= 543;
+            return sprintf('%04d-%02d-%02d', $y, $m, $d);
+        }
+        return null;
+    }
+
+    /**
+     * Parse regex date match
+     */
+    protected function parseDateMatch($m)
+    {
+        if (count($m) >= 4) {
+            if (strlen($m[1]) == 4) { // YYYY-MM-DD
+                return sprintf('%04d-%02d-%02d', (int)$m[1], (int)$m[2], (int)$m[3]);
+            }
+            $d = (int)$m[1];
+            $monthStr = $m[2];
+            $y = (int)$m[3];
+
+            $months = [
+                'ม.ค.' => 1, 'ก.พ.' => 2, 'มี.ค.' => 3, 'เม.ย.' => 4, 'พ.ค.' => 5, 'มิ.ย.' => 6,
+                'ก.ค.' => 7, 'ส.ค.' => 8, 'ก.ย.' => 9, 'ต.ค.' => 10, 'พ.ย.' => 11, 'ธ.ค.' => 12,
+                'มกราคม' => 1, 'กุมภาพันธ์' => 2, 'มีนาคม' => 3, 'เมษายน' => 4, 'พฤษภาคม' => 5, 'มิถุนายน' => 6,
+                'กรกฎาคม' => 7, 'สิงหาคม' => 8, 'กันยายน' => 9, 'ตูลายน' => 10, 'พฤศจิกายน' => 11, 'ธันวาคม' => 12,
+                'jan' => 1, 'feb' => 2, 'mar' => 3, 'apr' => 4, 'may' => 5, 'jun' => 6,
+                'jul' => 7, 'aug' => 8, 'sep' => 9, 'oct' => 10, 'nov' => 11, 'dec' => 12
+            ];
+
+            $monthLower = mb_strtolower($monthStr, 'UTF-8');
+            $mNum = is_numeric($monthStr) ? (int)$monthStr : ($months[$monthLower] ?? 1);
+
+            if ($y < 100) $y += 2000;
+            if ($y > 2400) $y -= 543;
+            return sprintf('%04d-%02d-%02d', $y, $mNum, $d);
+        }
+        return null;
+    }
+
+    /**
      * Strategy for well-structured multi-line items
      */
     protected function runBlockStrategy($logicalLines, $model, $regexStart, $pattern)
@@ -334,7 +424,12 @@ class OcrController extends BaseController
             $line = trim($line);
             if (empty($line)) continue;
 
-            if (preg_match($regexStart, $line, $m)) {
+            // Skip table header lines
+            if (preg_match('/^(ลำดับ|รายการ|รายละเอียด|จำนวน|ราคา|หน่วย|จำนวนเงิน|No\.|Description|Qty|Price|Amount|Unit)$/iu', $line)) {
+                continue;
+            }
+
+            if (@preg_match($regexStart, $line, $m)) {
                 if ($currentItem) $items[] = $currentItem;
                 $currentItem = [
                     'code' => $m[2] ?? '',
@@ -397,7 +492,7 @@ class OcrController extends BaseController
 
             if ($isTableArea) {
                 if (preg_match('/[ก-ฮA-Z]{4,}/iu', $line) && !preg_match('/(\d{10}|No|Qty|Price|Unit|Amount|ID|Tel)/i', $line)) {
-                     if (!in_array($line, ['รายการ', 'Description', 'Quantity'])) $descriptions[] = $line;
+                     if (!in_array($line, ['รายการ', 'Description', 'Quantity', 'รายละเอียด', 'จำนวน', 'ราคา'])) $descriptions[] = $line;
                 }
                 if (preg_match('/^\d{1,3}$/', $line)) {
                     $quantities[] = (float)$line;
