@@ -285,15 +285,21 @@ class OcrController extends BaseController
                 if (!empty($gasItems)) {
                     $items = $gasItems;
                 } else {
-                    $regexStart = $pattern && $pattern->regex_item_start ? $pattern->regex_item_start : '/^(\d{1,2})\s+([A-Z0-9-]{4,20})\s+(.+)$/u';
-                    $strategy = $pattern && $pattern->parsing_strategy ? $pattern->parsing_strategy : 'block';
-
-                    if ($strategy == 'collector') {
-                        $items = $this->runCollector($logicalLines, $model);
+                    // 2. Try Retail / HomePro Multi-column Item Parser
+                    $homeproItems = $this->tryHomeProReceiptParsing($logicalLines);
+                    if (!empty($homeproItems)) {
+                        $items = $homeproItems;
                     } else {
-                        $items = $this->runBlockStrategy($logicalLines, $model, $regexStart, $pattern);
-                        if (empty($items) && $model->total_amount > 0) {
+                        $regexStart = $pattern && $pattern->regex_item_start ? $pattern->regex_item_start : '/^(\d{1,2})\s+([A-Z0-9-]{4,20})\s+(.+)$/u';
+                        $strategy = $pattern && $pattern->parsing_strategy ? $pattern->parsing_strategy : 'block';
+
+                        if ($strategy == 'collector') {
                             $items = $this->runCollector($logicalLines, $model);
+                        } else {
+                            $items = $this->runBlockStrategy($logicalLines, $model, $regexStart, $pattern);
+                            if (empty($items) && $model->total_amount > 0) {
+                                $items = $this->runCollector($logicalLines, $model);
+                            }
                         }
                     }
                 }
@@ -461,6 +467,43 @@ class OcrController extends BaseController
             ];
         }
         return [];
+    }
+
+    /**
+     * Specialized parser for Retail / HomePro Multi-column Item Lines
+     */
+    protected function tryHomeProReceiptParsing($logicalLines)
+    {
+        $items = [];
+        foreach ($logicalLines as $line) {
+            $line = trim($line);
+            if (empty($line) || $this->isHeaderOrLabelLine($line)) continue;
+
+            // Match pattern: Seq, Product Code, Description, Qty, Unit, Price, Discount, Total Amount
+            // e.g. 1 V7 8859177006917 หัวน็อตชุบขาวอย่างดี M16 0.5 Kg 1.00 EA 85.00 0.00 85.00
+            if (preg_match('/^(\d{1,2})\s+([A-Z0-9\s]{4,25})\s+(.+?)\s+(\d+(?:\.\d+)?)\s+([A-Za-zก-ฮ]{1,10})\s+([0-9,]+\.\d{2})\s+([0-9,]+\.\d{2})\s+([0-9,]+\.\d{2})$/u', $line, $m)) {
+                $items[] = [
+                    'code' => trim($m[2]),
+                    'desc' => trim($m[3]),
+                    'qty' => (float)$m[4],
+                    'unit' => trim($m[5]),
+                    'price' => (float)str_replace(',', '', $m[6]),
+                    'amount' => (float)str_replace(',', '', $m[8]),
+                ];
+            }
+            // Match pattern without discount column
+            elseif (preg_match('/^(\d{1,2})\s+([A-Z0-9\s]{4,25})\s+(.+?)\s+(\d+(?:\.\d+)?)\s+([A-Za-zก-ฮ]{1,10})\s+([0-9,]+\.\d{2})\s+([0-9,]+\.\d{2})$/u', $line, $m)) {
+                $items[] = [
+                    'code' => trim($m[2]),
+                    'desc' => trim($m[3]),
+                    'qty' => (float)$m[4],
+                    'unit' => trim($m[5]),
+                    'price' => (float)str_replace(',', '', $m[6]),
+                    'amount' => (float)str_replace(',', '', $m[7]),
+                ];
+            }
+        }
+        return $items;
     }
 
     /**
