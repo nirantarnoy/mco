@@ -232,6 +232,20 @@ class OcrController extends BaseController
                 }
             }
 
+            // Detect Customer Name & Address
+            if (preg_match('/(?:นาม|ชื่อ|นามผู้ซื้อ|นามผู้รับ|Customer\s*Name|Customer|Sold\s*To)\s*[:.]?\s*([ก-ฮA-Za-z0-9\.\s()-]+)/u', $fullText, $cMatch)) {
+                $cName = trim(str_replace(['...', '..', '.', '........................'], '', $cMatch[1]));
+                if (mb_strlen($cName, 'UTF-8') > 2) {
+                    $model->customer_name = $cName;
+                }
+            }
+            if (preg_match('/(?:ที่อยู่|Address)\s*[:.]?\s*([ก-ฮA-Za-z0-9\/\.\s\d-]+)/u', $fullText, $aMatch)) {
+                $cAddr = trim(str_replace(['...', '..', '........................'], '', $aMatch[1]));
+                if (mb_strlen($cAddr, 'UTF-8') > 3) {
+                    $model->customer_address = $cAddr;
+                }
+            }
+
             // Extract Remarks & Extra Info (e.g., License plate, Baht text)
             $remarksArr = [];
             if (preg_match('/\(ตัวอักษร\)\s*([ก-ฮ\s-]+)/u', $fullText, $bahtMatch)) {
@@ -245,27 +259,36 @@ class OcrController extends BaseController
             }
 
             if ($model->save()) {
-                // Use Pattern-specific Regex if available
-                $regexStart = $pattern && $pattern->regex_item_start ? $pattern->regex_item_start : '/^(\d{1,2})\s+([A-Z0-9-]{4,20})\s+(.+)$/u';
-                $strategy = $pattern && $pattern->parsing_strategy ? $pattern->parsing_strategy : 'block';
-
                 // Prepare rows from spatial data if available
                 $logicalLines = $this->reconstructRows($ocrResult['details'] ?? []);
                 
                 $items = [];
 
-                if ($strategy == 'collector') {
-                    $items = $this->runCollector($logicalLines, $model);
+                // 1. Try Fuel / Gas Receipt Direct Parser first if applicable
+                $gasItems = $this->tryGasFuelReceiptParsing($fullText, $model);
+                if (!empty($gasItems)) {
+                    $items = $gasItems;
                 } else {
-                    $items = $this->runBlockStrategy($logicalLines, $model, $regexStart, $pattern);
-                    // Automatic Fallback: If block strategy found nothing, try collector
-                    if (empty($items) && $model->total_amount > 0) {
+                    $regexStart = $pattern && $pattern->regex_item_start ? $pattern->regex_item_start : '/^(\d{1,2})\s+([A-Z0-9-]{4,20})\s+(.+)$/u';
+                    $strategy = $pattern && $pattern->parsing_strategy ? $pattern->parsing_strategy : 'block';
+
+                    if ($strategy == 'collector') {
                         $items = $this->runCollector($logicalLines, $model);
+                    } else {
+                        $items = $this->runBlockStrategy($logicalLines, $model, $regexStart, $pattern);
+                        if (empty($items) && $model->total_amount > 0) {
+                            $items = $this->runCollector($logicalLines, $model);
+                        }
                     }
                 }
 
                 // Save items with Final Calculation Check
                 foreach ($items as $item) {
+                    // Ignore column header text as item description
+                    if ($this->isHeaderOrLabelLine($item['desc'])) {
+                        continue;
+                    }
+
                     if ($item['amount'] == 0 && $item['price'] > 0) {
                         $item['amount'] = $item['price'];
                         if ($item['qty'] > 1) {
@@ -319,118 +342,63 @@ class OcrController extends BaseController
     }
 
     /**
-     * Group OCR words into rows based on their Y-coordinates with dynamic thresholding
+     * Specialized parser for Gas / Fuel / Petroleum receipt forms
      */
-    protected function reconstructRows($words)
+    protected function tryGasFuelReceiptParsing($fullText, $model)
     {
-        if (empty($words)) return [];
+        if (preg_match('/(แก๊ส[ก-ฮA-Za-z0-9\s()]+|ดีเซล[ก-ฮA-Za-z0-9\s()]+|โซฮอล์[ก-ฮA-Za-z0-9\s()]+|Gasohol[ก-ฮA-Za-z0-9\s()]+|เบนซิน[ก-ฮA-Za-z0-9\s()]+|น้ำมัน[ก-ฮA-Za-z0-9\s()]+)/iu', $fullText, $gasMatch)) {
+            $desc = trim($gasMatch[1]);
+            $qty = 1.0;
+            $unit = 'ลิตร';
+            $price = 0.0;
 
-        // Compute dynamic Y-threshold based on average word bounding box height
-        $heights = [];
-        foreach ($words as $word) {
-            $vertices = $word['boundingPoly']['vertices'] ?? [];
-            if (count($vertices) >= 4) {
-                $yMin = min(array_column($vertices, 'y'));
-                $yMax = max(array_column($vertices, 'y'));
-                $h = $yMax - $yMin;
-                if ($h > 0 && $h < 500) $heights[] = $h;
+            if (preg_match('/(\d+\.\d{2,3})\s*(?:ลิตร|L|Liter)?/iu', $fullText, $qm)) {
+                $qty = (float)$qm[1];
             }
-        }
 
-        $yThreshold = 10;
-        if (!empty($heights)) {
-            $avgHeight = array_sum($heights) / count($heights);
-            $yThreshold = max(6, (int)round($avgHeight * 0.45));
-        }
-
-        // Sort words by Y-coordinate of top-left vertex
-        usort($words, function($a, $b) {
-            $ay = $a['boundingPoly']['vertices'][0]['y'] ?? 0;
-            $by = $b['boundingPoly']['vertices'][0]['y'] ?? 0;
-            return $ay <=> $by;
-        });
-
-        $rows = [];
-        $currentRow = [];
-        $lastY = -1;
-
-        foreach ($words as $word) {
-            $y = $word['boundingPoly']['vertices'][0]['y'] ?? 0;
-            
-            if ($lastY == -1 || abs($y - $lastY) <= $yThreshold) {
-                $currentRow[] = $word;
-            } else {
-                $rows[] = $this->sortRowByX($currentRow);
-                $currentRow = [$word];
+            if (preg_match_all('/(\d+\.\d{2})/', $fullText, $pm)) {
+                foreach ($pm[1] as $pValStr) {
+                    $pVal = (float)$pValStr;
+                    if ($pVal != $model->total_amount && $pVal != $model->subtotal && $pVal != $model->vat_amount && $pVal != $qty) {
+                        if ($price == 0) $price = $pVal;
+                    }
+                }
             }
-            $lastY = $y;
-        }
-        if (!empty($currentRow)) {
-            $rows[] = $this->sortRowByX($currentRow);
-        }
 
-        return array_map(function($rowWords) {
-            return implode(' ', array_column($rowWords, 'description'));
-        }, $rows);
-    }
+            $amount = $model->total_amount > 0 ? $model->total_amount : ($price * $qty);
 
-    protected function sortRowByX($rowWords)
-    {
-        usort($rowWords, function($a, $b) {
-            $ax = $a['boundingPoly']['vertices'][0]['x'] ?? 0;
-            $bx = $b['boundingPoly']['vertices'][0]['x'] ?? 0;
-            return $ax <=> $bx;
-        });
-        return $rowWords;
-    }
-
-    /**
-     * Parse date string DD/MM/YYYY
-     */
-    protected function parseDateString($dateStr)
-    {
-        $parts = preg_split('/[\/\.-]/', $dateStr);
-        if (count($parts) == 3) {
-            $d = (int)$parts[0];
-            $m = (int)$parts[1];
-            $y = (int)$parts[2];
-            if ($y < 100) $y += 2000;
-            if ($y > 2400) $y -= 543;
-            return sprintf('%04d-%02d-%02d', $y, $m, $d);
-        }
-        return null;
-    }
-
-    /**
-     * Parse regex date match
-     */
-    protected function parseDateMatch($m)
-    {
-        if (count($m) >= 4) {
-            if (strlen($m[1]) == 4) { // YYYY-MM-DD
-                return sprintf('%04d-%02d-%02d', (int)$m[1], (int)$m[2], (int)$m[3]);
-            }
-            $d = (int)$m[1];
-            $monthStr = $m[2];
-            $y = (int)$m[3];
-
-            $months = [
-                'ม.ค.' => 1, 'ก.พ.' => 2, 'มี.ค.' => 3, 'เม.ย.' => 4, 'พ.ค.' => 5, 'มิ.ย.' => 6,
-                'ก.ค.' => 7, 'ส.ค.' => 8, 'ก.ย.' => 9, 'ต.ค.' => 10, 'พ.ย.' => 11, 'ธ.ค.' => 12,
-                'มกราคม' => 1, 'กุมภาพันธ์' => 2, 'มีนาคม' => 3, 'เมษายน' => 4, 'พฤษภาคม' => 5, 'มิถุนายน' => 6,
-                'กรกฎาคม' => 7, 'สิงหาคม' => 8, 'กันยายน' => 9, 'ตูลายน' => 10, 'พฤศจิกายน' => 11, 'ธันวาคม' => 12,
-                'jan' => 1, 'feb' => 2, 'mar' => 3, 'apr' => 4, 'may' => 5, 'jun' => 6,
-                'jul' => 7, 'aug' => 8, 'sep' => 9, 'oct' => 10, 'nov' => 11, 'dec' => 12
+            return [
+                [
+                    'code' => '',
+                    'desc' => $desc,
+                    'qty' => $qty,
+                    'unit' => $unit,
+                    'price' => $price,
+                    'amount' => $amount
+                ]
             ];
-
-            $monthLower = mb_strtolower($monthStr, 'UTF-8');
-            $mNum = is_numeric($monthStr) ? (int)$monthStr : ($months[$monthLower] ?? 1);
-
-            if ($y < 100) $y += 2000;
-            if ($y > 2400) $y -= 543;
-            return sprintf('%04d-%02d-%02d', $y, $mNum, $d);
         }
-        return null;
+        return [];
+    }
+
+    /**
+     * Check if a line is a table header or pre-printed label line
+     */
+    protected function isHeaderOrLabelLine($line)
+    {
+        $clean = trim($line);
+        if (empty($clean)) return true;
+        
+        $headersRegex = '/^(จำนวน\s*\([^)]*\)|จำนวน|รายการ|รายละเอียด|ราคาต่อหน่วย|หน่วยละ|หน่วย|จำนวนเงิน|รวมราคาสินค้า|จำนวนภาษีมูลค่าเพิ่ม|จำนวนเงินรวมทั้งสิ้น|รวมเงินทั้งสิ้น|เล่มที่|เลขที่|เลขประจำตัวผู้เสียภาษี|เลขประจำตัวผู้เสียภาษีอากร|วันที่|นาม|ที่อยู่|สาขาที่|ผู้รับเงิน|ลงชื่อ|No\.|Qty|Price|Amount|Unit|Description|Total|VAT|Subtotal)$/iu';
+        if (preg_match($headersRegex, $clean)) {
+            return true;
+        }
+
+        if (in_array($clean, ['จำนวน (ลิตร)', 'จำนวน', 'รายการ', 'รายละเอียด', 'ราคาต่อหน่วย', 'จำนวนเงิน', 'รวมราคาสินค้า', 'จำนวนภาษีมูลค่าเพิ่ม', 'จำนวนเงินรวมทั้งสิ้น'])) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -446,7 +414,7 @@ class OcrController extends BaseController
             if (empty($line)) continue;
 
             // Skip table header lines
-            if (preg_match('/^(ลำดับ|รายการ|รายละเอียด|จำนวน|ราคา|หน่วย|จำนวนเงิน|No\.|Description|Qty|Price|Amount|Unit)$/iu', $line)) {
+            if ($this->isHeaderOrLabelLine($line)) {
                 continue;
             }
 
@@ -513,7 +481,9 @@ class OcrController extends BaseController
 
             if ($isTableArea) {
                 if (preg_match('/[ก-ฮA-Z]{4,}/iu', $line) && !preg_match('/(\d{10}|No|Qty|Price|Unit|Amount|ID|Tel)/i', $line)) {
-                     if (!in_array($line, ['รายการ', 'Description', 'Quantity', 'รายละเอียด', 'จำนวน', 'ราคา'])) $descriptions[] = $line;
+                     if (!$this->isHeaderOrLabelLine($line)) {
+                        $descriptions[] = $line;
+                     }
                 }
                 if (preg_match('/^\d{1,3}$/', $line)) {
                     $quantities[] = (float)$line;
