@@ -212,41 +212,125 @@ class OcrController extends BaseController
                 }
             }
 
-            // 5. Extract Totals, VAT, Subtotal from normalized text
-            $regexTotal = $pattern && $pattern->regex_total ? $pattern->regex_total : '/(?:จำนวนเงินรวมทั้งสิ้น|จำนวนเงินรวมภาษี|รวมเงินทั้งสิ้น|ยอดรวมสุทธิ|จำนวนเงินรวม|ยอดโอน|ยอดชำระ|Grand\s*Total|Total\s*Amount|Total\s*Due|Amount\s*Due|Net\s*Total|TOTAL|Net\s*Amount).{0,50}?([0-9,]+\.[0-9]{2}|\d+)/is';
-            
-            if (@preg_match($regexTotal, $normalizedText, $m)) {
-                $model->total_amount = (float)str_replace(',', '', $m[1]);
-            } 
-            
-            if (preg_match('/(?:รวมราคาสินค้า|มูลค่าสินค้า|มูลค่าบริการ|รวมเป็นเงิน|Subtotal|Sub\s*Total|Net\s*Amount).{0,50}?([0-9,]+\.[0-9]{2})/is', $normalizedText, $m)) {
-                $model->subtotal = (float)str_replace(',', '', $m[1]);
-            }
+            // Prepare rows from spatial data for item line parsing
+            $logicalLines = $this->reconstructRows($ocrResult['details'] ?? []);
+            $items = [];
 
-            if (preg_match('/(?:จำนวนภาษีมูลค่าเพิ่ม|ภาษีมูลค่าเพิ่ม|VAT\s*7%|VAT|Value\s*Added\s*Tax).{0,30}?([0-9,]+\.[0-9]{2})/is', $normalizedText, $m)) {
-                $model->vat_amount = (float)str_replace(',', '', $m[1]);
-            }
+            // 1. Try Fuel / Gas Receipt Direct Parser first if applicable
+            $gasItems = $this->tryGasFuelReceiptParsing($fullText, $model);
+            if (!empty($gasItems)) {
+                $items = $gasItems;
+            } else {
+                // 2. Try Retail / HomePro Multi-column Item Parser
+                $homeproItems = $this->tryHomeProReceiptParsing($logicalLines);
+                if (!empty($homeproItems)) {
+                    $items = $homeproItems;
+                } else {
+                    $regexStart = $pattern && $pattern->regex_item_start ? $pattern->regex_item_start : '/^(\d{1,2})\s+([A-Z0-9-]{4,20})\s+(.+)$/u';
+                    $strategy = $pattern && $pattern->parsing_strategy ? $pattern->parsing_strategy : 'block';
 
-            // Fallback: If total_amount still 0, look at the last 5 numbers and pick the largest 
-            if ($model->total_amount == 0) {
-                 if (preg_match_all('/([0-9,]+\.[0-9]{2})/', $normalizedText, $allMatches)) {
-                    $nums = array_map(function($n) { return (float)str_replace(',', '', $n); }, $allMatches[0]);
-                    $lastFew = array_slice($nums, -5);
-                    if (!empty($lastFew)) {
-                        $model->total_amount = max($lastFew);
+                    if ($strategy == 'collector') {
+                        $items = $this->runCollector($logicalLines, $model);
+                    } else {
+                        $items = $this->runBlockStrategy($logicalLines, $model, $regexStart, $pattern);
+                        if (empty($items)) {
+                            $items = $this->runCollector($logicalLines, $model);
+                        }
                     }
                 }
             }
 
-            // Cross-validation logic: If total > 0 and subtotal is 0
-            if ($model->total_amount > 0 && $model->subtotal == 0) {
-                if ($model->vat_amount > 0) {
-                    $model->subtotal = round($model->total_amount - $model->vat_amount, 2);
-                } else {
-                    $model->subtotal = round($model->total_amount / 1.07, 2);
-                    $model->vat_amount = round($model->total_amount - $model->subtotal, 2);
+            // Calculate sum of line item amounts
+            $sumItemAmounts = 0.0;
+            foreach ($items as $it) {
+                if (!$this->isHeaderOrLabelLine($it['desc'])) {
+                    $sumItemAmounts += (float)($it['amount'] ?? 0);
                 }
             }
+
+            // 5. Extract Totals, VAT, Subtotal with Smart Reconciliation
+            $extractedSubtotal = 0.0;
+            $extractedVat = 0.0;
+            $extractedTotal = 0.0;
+
+            // Subtotal (e.g. มูลค่าสินค้าก่อนภาษีมูลค่าเพิ่ม 357.01 บาท)
+            if (preg_match('/(?:มูลค่าสินค้าก่อนภาษีมูลค่าเพิ่ม|มูลค่าสินค้าก่อนภาษี|รวมราคาสินค้า|มูลค่าสินค้า|มูลค่าบริการ|รวมเป็นเงิน|Subtotal|Sub\s*Total|Net\s*Amount)[^\d]{0,30}?([0-9,]+\.[0-9]{2})\s*(?:บาท|Baht)?/iu', $normalizedText, $m)) {
+                $extractedSubtotal = (float)str_replace(',', '', $m[1]);
+            }
+
+            // VAT (e.g. ภาษีมูลค่าเพิ่ม 24.99 บาท)
+            if (preg_match('/(?:จำนวนภาษีมูลค่าเพิ่ม|ภาษีมูลค่าเพิ่ม|VAT\s*7%|VAT|Value\s*Added\s*Tax)[^\d]{0,30}?([0-9,]+\.[0-9]{2})\s*(?:บาท|Baht)?/iu', $normalizedText, $m)) {
+                $extractedVat = (float)str_replace(',', '', $m[1]);
+            }
+
+            // Total (e.g. มูลค่ารวม 382.00 บาท หรือ มูลค่ารวม(สามร้อยแปดสิบสองบาทถ้วน))
+            if (preg_match('/(?:มูลค่ารวม\s*\(.*?\)|จำนวนเงินรวมทั้งสิ้น|จำนวนเงินรวมภาษี|รวมเงินทั้งสิ้น|ยอดรวมสุทธิ|จำนวนเงินรวม|ยอดโอน|ยอดชำระ|Grand\s*Total|Total\s*Amount|Total\s*Due|Amount\s*Due|Net\s*Total|TOTAL)[^\d]{0,30}?([0-9,]+\.[0-9]{2})\s*(?:บาท|Baht)?/iu', $normalizedText, $m)) {
+                $extractedTotal = (float)str_replace(',', '', $m[1]);
+            }
+
+            if ($extractedTotal == 0 && preg_match('/มูลค่ารวม[^\d]{0,80}?([0-9,]+\.[0-9]{2})\s*(?:บาท|Baht)?/iu', $normalizedText, $m)) {
+                $extractedTotal = (float)str_replace(',', '', $m[1]);
+            }
+
+            if ($pattern && $pattern->regex_total && @preg_match($pattern->regex_total, $normalizedText, $m)) {
+                $extractedTotal = (float)str_replace(',', '', $m[1]);
+            }
+
+            // Collect all candidate numbers in text for validation
+            $allNumbers = [];
+            if (preg_match_all('/([0-9,]+\.[0-9]{2})/', $normalizedText, $numMatches)) {
+                foreach ($numMatches[1] as $nStr) {
+                    $nVal = (float)str_replace(',', '', $nStr);
+                    if ($nVal > 0) $allNumbers[] = $nVal;
+                }
+            }
+
+            // Reconciliation Step 1: Match with Subtotal + VAT
+            if ($extractedSubtotal > 0 && $extractedVat > 0) {
+                $expectedTotal = round($extractedSubtotal + $extractedVat, 2);
+                foreach ($allNumbers as $cand) {
+                    if (abs($cand - $expectedTotal) < 0.05) {
+                        $extractedTotal = $cand;
+                        break;
+                    }
+                }
+                if ($extractedTotal == 0) {
+                    $extractedTotal = $expectedTotal;
+                }
+            }
+
+            // Reconciliation Step 2: Match with sum of items if Total still 0 or inconsistent
+            if ($sumItemAmounts > 0 && ($extractedTotal == 0 || $extractedTotal < $extractedSubtotal)) {
+                foreach ($allNumbers as $cand) {
+                    if (abs($cand - $sumItemAmounts) < 0.05) {
+                        $extractedTotal = $cand;
+                        break;
+                    }
+                }
+                if ($extractedTotal == 0) {
+                    $extractedTotal = $sumItemAmounts;
+                }
+            }
+
+            // Reconciliation Step 3: Ensure Subtotal & VAT consistency
+            if ($extractedTotal > 0 && $extractedSubtotal > 0 && $extractedVat > 0) {
+                if (abs(($extractedSubtotal + $extractedVat) - $extractedTotal) > 0.1) {
+                    $extractedTotal = round($extractedSubtotal + $extractedVat, 2);
+                }
+            } elseif ($extractedTotal > 0 && $extractedSubtotal == 0) {
+                if ($extractedVat > 0) {
+                    $extractedSubtotal = round($extractedTotal - $extractedVat, 2);
+                } else {
+                    $extractedSubtotal = round($extractedTotal / 1.07, 2);
+                    $extractedVat = round($extractedTotal - $extractedSubtotal, 2);
+                }
+            } elseif ($extractedTotal == 0 && $extractedSubtotal > 0 && $extractedVat > 0) {
+                $extractedTotal = round($extractedSubtotal + $extractedVat, 2);
+            }
+
+            $model->subtotal = $extractedSubtotal;
+            $model->vat_amount = $extractedVat;
+            $model->total_amount = $extractedTotal;
 
             // Detect Customer Name & Address
             if (preg_match('/(?:นาม|ชื่อ|นามผู้ซื้อ|นามผู้รับ|Customer\s*Name|Customer|Sold\s*To)\s*[:.]?\s*([ก-ฮA-Za-z0-9\.\s()-]+)/u', $fullText, $cMatch)) {
@@ -275,35 +359,6 @@ class OcrController extends BaseController
             }
 
             if ($model->save()) {
-                // Prepare rows from spatial data if available
-                $logicalLines = $this->reconstructRows($ocrResult['details'] ?? []);
-                
-                $items = [];
-
-                // 1. Try Fuel / Gas Receipt Direct Parser first if applicable
-                $gasItems = $this->tryGasFuelReceiptParsing($fullText, $model);
-                if (!empty($gasItems)) {
-                    $items = $gasItems;
-                } else {
-                    // 2. Try Retail / HomePro Multi-column Item Parser
-                    $homeproItems = $this->tryHomeProReceiptParsing($logicalLines);
-                    if (!empty($homeproItems)) {
-                        $items = $homeproItems;
-                    } else {
-                        $regexStart = $pattern && $pattern->regex_item_start ? $pattern->regex_item_start : '/^(\d{1,2})\s+([A-Z0-9-]{4,20})\s+(.+)$/u';
-                        $strategy = $pattern && $pattern->parsing_strategy ? $pattern->parsing_strategy : 'block';
-
-                        if ($strategy == 'collector') {
-                            $items = $this->runCollector($logicalLines, $model);
-                        } else {
-                            $items = $this->runBlockStrategy($logicalLines, $model, $regexStart, $pattern);
-                            if (empty($items) && $model->total_amount > 0) {
-                                $items = $this->runCollector($logicalLines, $model);
-                            }
-                        }
-                    }
-                }
-
                 // Save items with Final Calculation Check
                 foreach ($items as $item) {
                     // Ignore column header text as item description
