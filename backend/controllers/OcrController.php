@@ -117,50 +117,66 @@ class OcrController extends BaseController
             $model->status = TempInvoice::STATUS_PENDING;
             $model->invoice_date = date('Y-m-d'); 
 
+            // Normalize text: fix spaces in decimal numbers e.g. "476. 64" -> "476.64" and Tax ID spaces e.g. "027559300098 5"
+            $normalizedText = preg_replace('/(\d+)\s*\.\s*(\d+)/', '$1.$2', $fullText);
+            $normalizedText = preg_replace('/(?<=\d{10,12})\s+(?=\d{1,3})/', '', $normalizedText);
+
             // 1. Detect Tax IDs (13 digits continuous or with hyphens/spaces e.g. 0-1055-58123-45-6)
-            $taxIdFound = null;
-            if (preg_match_all('/(?:TAX\s*ID|เลขประจำตัวผู้เสียภาษี|ผู้เสียภาษี|Tax\s*No\.?)?\s*[:.]?\s*(\d[\s\-]?\d{4}[\s\-]?\d{5}[\s\-]?\d{2}[\s\-]?\d)/iu', $fullText, $taxMatches)) {
+            $taxIds = [];
+            if (preg_match_all('/(?:TAX\s*ID|เลขประจำตัวผู้เสียภาษี|ผู้เสียภาษี|Tax\s*No\.?)?\s*[:.]?\s*(\d[\s\-]?\d{4}[\s\-]?\d{5}[\s\-]?\d{2}[\s\-]?\d)/iu', $normalizedText, $taxMatches)) {
                 foreach ($taxMatches[1] as $rawTax) {
                     $cleanedTax = preg_replace('/\D/', '', $rawTax);
-                    if (strlen($cleanedTax) === 13) {
-                        $taxIdFound = $cleanedTax;
-                        break;
+                    if (strlen($cleanedTax) === 13 && !in_array($cleanedTax, $taxIds)) {
+                        $taxIds[] = $cleanedTax;
                     }
                 }
             }
-            if (!$taxIdFound) {
-                if (preg_match_all('/\d{13}/', $fullText, $plainMatches)) {
-                    $taxIdFound = $plainMatches[0][0];
+            if (empty($taxIds)) {
+                if (preg_match_all('/\d{13}/', $normalizedText, $plainMatches)) {
+                    $taxIds = array_unique($plainMatches[0]);
                 }
             }
-            if ($taxIdFound) {
-                $model->customer_tax_id = $taxIdFound;
+            if (!empty($taxIds)) {
+                // If 2 Tax IDs present, second is usually Customer Tax ID, first is Vendor Tax ID
+                $model->customer_tax_id = count($taxIds) > 1 ? $taxIds[1] : $taxIds[0];
             }
             
             // 2. Look for Vendor Name & Pattern based on Tax ID or Text
             $pattern = null;
-            if ($model->customer_tax_id) {
-                $pattern = OcrPattern::findOne(['tax_id' => $model->customer_tax_id, 'status' => 1]);
+            $vendorTaxId = !empty($taxIds) ? $taxIds[0] : null;
+            if ($vendorTaxId) {
+                $pattern = OcrPattern::findOne(['tax_id' => $vendorTaxId, 'status' => 1]);
                 if ($pattern) {
                     $model->vendor_name = $pattern->name;
                 }
             }
             if (!$model->vendor_name) {
                 // Detect company/partnership names in header
-                if (preg_match('/((?:ห้างหุ้นส่วนจำกัด|บริษัท|บจก\.|หจก\.|ร้าน)\s*[ก-ฮA-Za-z0-9\s()]+)/u', $fullText, $vMatch)) {
+                if (preg_match('/((?:ห้างหุ้นส่วนจำกัด|บริษัท|บจก\.|หจก\.|ร้าน)\s*[ก-ฮA-Za-z0-9\s()]+)/u', $normalizedText, $vMatch)) {
                     $model->vendor_name = trim($vMatch[1]);
                 }
             }
 
-            // 3. Extract Invoice Number (Check Book No + Invoice No pattern first)
-            if (preg_match('/เล่มที่\s*[:.]?\s*(\d+)\s*เลขที่\s*[:.]?\s*(\d+)/iu', $fullText, $bookMatches)) {
-                $model->invoice_number = $bookMatches[1] . '/' . $bookMatches[2];
+            // 3. Extract Invoice Number (Check Multi-line Book No + Invoice No pattern first)
+            $bookNo = null;
+            $invNo = null;
+            if (preg_match('/เล่มที่\s*[\r\n\s]*[:.]?\s*(\d+)/iu', $normalizedText, $bm)) {
+                $bookNo = $bm[1];
+            }
+            if (preg_match('/เลขที่\s*[\r\n\s]*[:.]?\s*(\d+)/iu', $normalizedText, $im)) {
+                $invNo = $im[1];
+            }
+
+            if ($bookNo && $invNo) {
+                $model->invoice_number = $bookNo . '/' . $invNo;
+            } elseif ($invNo) {
+                $model->invoice_number = $invNo;
             } else {
                 $regexInvoice = $pattern && $pattern->regex_invoice_no ? $pattern->regex_invoice_no : '/(?:เลขที่ใบกำกับภาษี|เลขที่ใบเสร็จ|เลขที่เอกสาร|เลขที่|TAX\s*INVOICE\s*NO|TAX\s*INV\s*NO|INV\s*NO|INVOICE\s*NO|POS\s*NO|DOCUMENT\s*NO|RECEIPT\s*NO|BILL\s*NO|DOC\s*NO|No\.?|Inv\s*#)\s*[:.]?\s*([A-Z0-9\-\/]{3,30})/iu';
-                if (@preg_match($regexInvoice, $fullText, $matches)) {
+                if (@preg_match($regexInvoice, $normalizedText, $matches)) {
                     $model->invoice_number = isset($matches[1]) ? trim($matches[1]) : trim($matches[0]);
                 } else {
-                    if (preg_match('/([A-Z0-9]{2,}[\-\/][A-Z0-9\-\/]{4,20})/', $fullText, $matches)) {
+                    if (preg_match('/([A-Z0-9]{2,}[\-\/][A-Z0-9\-\/]{4,20})/', $normalizedText, $matches)) {
                         $model->invoice_number = trim($matches[1]);
                     }
                 }
@@ -170,7 +186,7 @@ class OcrController extends BaseController
             $regexDate = $pattern && $pattern->regex_date ? $pattern->regex_date : null;
             $dateParsed = false;
             
-            if ($regexDate && @preg_match($regexDate, $fullText, $matches)) {
+            if ($regexDate && @preg_match($regexDate, $normalizedText, $matches)) {
                 $dateStr = isset($matches[1]) ? trim($matches[1]) : trim($matches[0]);
                 $parsed = $this->parseDateString($dateStr);
                 if ($parsed) {
@@ -186,7 +202,7 @@ class OcrController extends BaseController
                     '/(\d{4})[\/\.-](\d{1,2})[\/\.-](\d{1,2})/'
                 ];
                 foreach ($datePatterns as $dp) {
-                    if (preg_match($dp, $fullText, $m)) {
+                    if (preg_match($dp, $normalizedText, $m)) {
                         $parsed = $this->parseDateMatch($m);
                         if ($parsed) {
                             $model->invoice_date = $parsed;
@@ -196,24 +212,24 @@ class OcrController extends BaseController
                 }
             }
 
-            // 5. Extract Totals, VAT, Subtotal
+            // 5. Extract Totals, VAT, Subtotal from normalized text
             $regexTotal = $pattern && $pattern->regex_total ? $pattern->regex_total : '/(?:จำนวนเงินรวมทั้งสิ้น|จำนวนเงินรวมภาษี|รวมเงินทั้งสิ้น|ยอดรวมสุทธิ|จำนวนเงินรวม|ยอดโอน|ยอดชำระ|Grand\s*Total|Total\s*Amount|Total\s*Due|Amount\s*Due|Net\s*Total|TOTAL|Net\s*Amount).{0,50}?([0-9,]+\.[0-9]{2}|\d+)/is';
             
-            if (@preg_match($regexTotal, $fullText, $m)) {
+            if (@preg_match($regexTotal, $normalizedText, $m)) {
                 $model->total_amount = (float)str_replace(',', '', $m[1]);
             } 
             
-            if (preg_match('/(?:รวมราคาสินค้า|มูลค่าสินค้า|มูลค่าบริการ|รวมเป็นเงิน|Subtotal|Sub\s*Total|Net\s*Amount).{0,50}?([0-9,]+\.[0-9]{2})/is', $fullText, $m)) {
+            if (preg_match('/(?:รวมราคาสินค้า|มูลค่าสินค้า|มูลค่าบริการ|รวมเป็นเงิน|Subtotal|Sub\s*Total|Net\s*Amount).{0,50}?([0-9,]+\.[0-9]{2})/is', $normalizedText, $m)) {
                 $model->subtotal = (float)str_replace(',', '', $m[1]);
             }
 
-            if (preg_match('/(?:จำนวนภาษีมูลค่าเพิ่ม|ภาษีมูลค่าเพิ่ม|VAT\s*7%|VAT|Value\s*Added\s*Tax).{0,30}?([0-9,]+\.[0-9]{2})/is', $fullText, $m)) {
+            if (preg_match('/(?:จำนวนภาษีมูลค่าเพิ่ม|ภาษีมูลค่าเพิ่ม|VAT\s*7%|VAT|Value\s*Added\s*Tax).{0,30}?([0-9,]+\.[0-9]{2})/is', $normalizedText, $m)) {
                 $model->vat_amount = (float)str_replace(',', '', $m[1]);
             }
 
             // Fallback: If total_amount still 0, look at the last 5 numbers and pick the largest 
             if ($model->total_amount == 0) {
-                 if (preg_match_all('/([0-9,]+\.[0-9]{2})/', $fullText, $allMatches)) {
+                 if (preg_match_all('/([0-9,]+\.[0-9]{2})/', $normalizedText, $allMatches)) {
                     $nums = array_map(function($n) { return (float)str_replace(',', '', $n); }, $allMatches[0]);
                     $lastFew = array_slice($nums, -5);
                     if (!empty($lastFew)) {
