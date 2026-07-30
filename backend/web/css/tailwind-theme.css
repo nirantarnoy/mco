@@ -1,0 +1,172 @@
+/* 
+   Tailwind-like Theme Override for AdminLTE / Bootstrap 
+   This file restyles default components to have modern, rounded, soft-shadow aesthetics.
+*/
+
+:root {
+    --tw-ring-color: rgba(59, 130, 246, 0.5); /* blue-500 with opacity */
+    --tw-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --tw-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --tw-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --tw-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* ============================
+   1. Buttons (ปุ่ม)
+============================ */
+.btn {
+    border-radius: 0.5rem !important; /* rounded-lg */
+    font-weight: 500 !important;
+    letter-spacing: 0.025em;
+    transition: all 0.2s ease-in-out !important;
+    box-shadow: var(--tw-shadow-sm) !important;
+    border: none !important;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--tw-shadow) !important;
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-primary { background-color: #3b82f6 !important; }
+.btn-primary:hover { background-color: #2563eb !important; }
+
+.btn-success { background-color: #10b981 !important; }
+.btn-success:hover { background-color: #059669 !important; }
+
+.btn-danger { background-color: #ef4444 !important; }
+.btn-danger:hover { background-color: #dc2626 !important; }
+
+.btn-info { background-color: #0ea5e9 !important; color: white !important; }
+.btn-info:hover { background-color: #0284c7 !important; color: white !important; }
+
+.btn-warning { background-color: #f59e0b !important; color: white !important; }
+.btn-warning:hover { background-color: #d97706 !important; color: white !important; }
+
+/* ============================
+   2. Cards (กล่องข้อมูล)
+============================ */
+.card {
+    border-radius: 0.75rem !important; /* rounded-xl */
+    border: none !important;
+    box-shadow: var(--tw-shadow-md) !important;
+    margin-bottom: 1.5rem !important;
+}
+
+.card-header {
+    background-color: transparent !important;
+    border-bottom: 1px solid #f3f4f6 !important; /* gray-100 */
+    padding: 1.25rem 1.5rem !important;
+    border-top-left-radius: 0.75rem !important;
+    border-top-right-radius: 0.75rem !important;
+}
+
+.card-title {
+    font-weight: 600 !important;
+    color: #1f2937 !important; /* gray-800 */
+}
+
+.card-body {
+    padding: 1.5rem !important;
+}
+
+/* ============================
+   3. Form Inputs (ช่องกรอกข้อมูล)
+============================ */
+.form-control, .select2-selection {
+    border-radius: 0.5rem !important; /* rounded-lg */
+    border: 1px solid #d1d5db !important; /* gray-300 */
+    padding: 0.5rem 0.75rem !important;
+    box-shadow: var(--tw-shadow-sm) !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+.form-control:focus {
+    border-color: #3b82f6 !important; /* blue-500 */
+    box-shadow: 0 0 0 3px var(--tw-ring-color) !important; /* Tailwind ring */
+    outline: none !important;
+}
+
+/* ============================
+   4. Navbar (แถบด้านบน)
+============================ */
+.main-header {
+    border-bottom: none !important;
+    box-shadow: var(--tw-shadow-sm) !important;
+    background-color: #ffffff !important;
+}
+
+.main-header .nav-link {
+    color: #4b5563 !important; /* gray-600 */
+    transition: color 0.2s;
+}
+
+.main-header .nav-link:hover {
+    color: #111827 !important; /* gray-900 */
+}
+
+/* ============================
+   5. Sidebar (แถบเมนูด้านซ้าย)
+============================ */
+.main-sidebar {
+    box-shadow: var(--tw-shadow-lg) !important;
+    border-right: none !important;
+}
+
+/* For dark mode sidebar styling (AdminLTE default) */
+.sidebar-dark-primary {
+    background-color: #1f2937 !important; /* gray-800 */
+}
+
+.nav-sidebar .nav-item > .nav-link {
+    border-radius: 0.5rem !important;
+    margin: 0.25rem 0.75rem !important;
+    padding: 0.75rem 1rem !important;
+    transition: all 0.2s ease-in-out !important;
+    color: #d1d5db !important; /* gray-300 */
+}
+
+.nav-sidebar .nav-item > .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+    transform: translateX(4px);
+}
+
+.nav-sidebar .nav-item > .nav-link.active {
+    background-color: #3b82f6 !important; /* blue-500 */
+    color: #ffffff !important;
+    box-shadow: var(--tw-shadow) !important;
+}
+
+.brand-link {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ============================
+   6. Tables (ตาราง)
+============================ */
+.table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}
+
+.table th {
+    background-color: #f9fafb !important; /* gray-50 */
+    color: #4b5563 !important; /* gray-600 */
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e5e7eb !important; /* gray-200 */
+    padding: 0.75rem 1.5rem !important;
+}
+
+.table td {
+    padding: 1rem 1.5rem !important;
+    border-bottom: 1px solid #f3f4f6 !important; /* gray-100 */
+    vertical-align: middle;
+}
