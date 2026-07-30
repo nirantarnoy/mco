@@ -3,12 +3,21 @@
    This file restyles default components to have modern, rounded, soft-shadow aesthetics.
 */
 
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
+
 :root {
     --tw-ring-color: rgba(59, 130, 246, 0.5); /* blue-500 with opacity */
     --tw-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --tw-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --tw-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --tw-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* ============================
+   0. Typography (Font)
+============================ */
+body, h1, h2, h3, h4, h5, h6, p, a, div, span, .btn, .form-control, .nav-link, .main-sidebar {
+    font-family: 'Prompt', sans-serif !important;
 }
 
 /* ============================
@@ -117,9 +126,8 @@
     border-right: none !important;
 }
 
-/* For dark mode sidebar styling (AdminLTE default) */
-.sidebar-dark-primary {
-    background-color: #1f2937 !important; /* gray-800 */
+.main-sidebar, .sidebar-dark-primary {
+    background-color: #111827 !important; /* Tailwind gray-900 for solid dark background */
 }
 
 .nav-sidebar .nav-item > .nav-link {
@@ -127,11 +135,11 @@
     margin: 0.25rem 0.75rem !important;
     padding: 0.75rem 1rem !important;
     transition: all 0.2s ease-in-out !important;
-    color: #d1d5db !important; /* gray-300 */
+    color: #e5e7eb !important; /* Lighter text for contrast */
 }
 
 .nav-sidebar .nav-item > .nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: #374151 !important; /* Solid gray-700 instead of transparent white */
     color: #ffffff !important;
     transform: translateX(4px);
 }
