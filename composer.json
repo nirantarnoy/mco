@@ -39,7 +39,9 @@
       "ext-intl": "*",
         "phpoffice/phpspreadsheet": "^1.24",
         "kartik-v/yii2-export": "dev-master",
-        "google/apiclient": "2.15.0"
+        "google/apiclient": "2.15.0",
+        "google/apiclient-services": "0.330.0",
+        "google/auth": "1.30.0"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",
@@ -68,6 +70,9 @@
         "process-timeout": 1800,
         "fxp-asset": {
             "enabled": false
+        },
+        "platform": {
+            "php": "8.0.30"
         }
     },
     "repositories": [
