@@ -126,32 +126,57 @@ body, h1, h2, h3, h4, h5, h6, p, a, div, span, .btn, .form-control, .nav-link, .
     border-right: none !important;
 }
 
-.main-sidebar, .sidebar-dark-primary {
-    background-color: #111827 !important; /* Tailwind gray-900 for solid dark background */
+[class*="sidebar-dark-"] {
+    background-color: #111827 !important; /* Tailwind gray-900 */
 }
 
-.nav-sidebar .nav-item > .nav-link {
+/* Base link color */
+[class*="sidebar-dark-"] .nav-sidebar > .nav-item > .nav-link,
+[class*="sidebar-dark-"] .nav-sidebar > .nav-treeview > .nav-item > .nav-link {
     border-radius: 0.5rem !important;
     margin: 0.25rem 0.75rem !important;
     padding: 0.75rem 1rem !important;
     transition: all 0.2s ease-in-out !important;
-    color: #e5e7eb !important; /* Lighter text for contrast */
+    color: #f3f4f6 !important; /* Very light gray for max contrast */
+    opacity: 1 !important; /* Force no transparency */
 }
 
-.nav-sidebar .nav-item > .nav-link:hover {
-    background-color: #374151 !important; /* Solid gray-700 instead of transparent white */
+/* Hover state */
+[class*="sidebar-dark-"] .nav-sidebar > .nav-item > .nav-link:hover,
+[class*="sidebar-dark-"] .nav-sidebar > .nav-treeview > .nav-item > .nav-link:hover {
+    background-color: #374151 !important; /* Solid gray-700 */
     color: #ffffff !important;
     transform: translateX(4px);
+    opacity: 1 !important;
 }
 
-.nav-sidebar .nav-item > .nav-link.active {
+/* Active state */
+[class*="sidebar-dark-"] .nav-sidebar > .nav-item > .nav-link.active {
     background-color: #3b82f6 !important; /* blue-500 */
     color: #ffffff !important;
     box-shadow: var(--tw-shadow) !important;
+    opacity: 1 !important;
 }
 
-.brand-link {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+/* Brand Link at the top */
+[class*="sidebar-dark-"] .brand-link {
+    background-color: #111827 !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid #374151 !important;
+    opacity: 1 !important;
+}
+
+[class*="sidebar-dark-"] .brand-link .brand-text {
+    opacity: 1 !important;
+}
+
+/* Sidebar user panel */
+[class*="sidebar-dark-"] .user-panel {
+    border-bottom: 1px solid #374151 !important;
+}
+[class*="sidebar-dark-"] .user-panel .info a {
+    color: #f3f4f6 !important;
+    opacity: 1 !important;
 }
 
 /* ============================
