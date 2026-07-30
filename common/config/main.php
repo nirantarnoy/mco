@@ -14,6 +14,7 @@ return [
         ],
         'googleVision' => [
             'class' => 'common\components\GoogleVisionService',
+            'keyFile' => '@backend/config/vision-key.json',
         ],
     ],
 ];

@@ -106,10 +106,25 @@ class GoogleVisionService extends Component
             return $this->_accessToken;
         }
 
-        $keyPath = $this->keyFile ? Yii::getAlias($this->keyFile) : Yii::getAlias('@common/config/google-vision-key.json');
+        $keyPath = $this->keyFile ? Yii::getAlias($this->keyFile) : null;
         
-        if (!file_exists($keyPath)) {
-            throw new Exception('Service Account Key file not found: ' . $keyPath);
+        if (!$keyPath || !file_exists($keyPath)) {
+            $candidates = [
+                Yii::getAlias('@backend/config/vision-key.json'),
+                Yii::getAlias('@backend/config/google-vision-key.json'),
+                Yii::getAlias('@common/config/vision-key.json'),
+                Yii::getAlias('@common/config/google-vision-key.json'),
+            ];
+            foreach ($candidates as $candidate) {
+                if (file_exists($candidate)) {
+                    $keyPath = $candidate;
+                    break;
+                }
+            }
+        }
+        
+        if (!$keyPath || !file_exists($keyPath)) {
+            throw new Exception('Service Account Key file not found: ' . ($keyPath ?: '@backend/config/vision-key.json'));
         }
 
         $keyData = Json::decode(file_get_contents($keyPath));

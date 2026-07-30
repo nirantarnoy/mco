@@ -46,3 +46,6 @@ phpunit.phar
 /scripts/*.sh
 /scripts/*.bat
 /common/config/google-vision-key.json
+/common/config/*key*.json
+/backend/config/vision-key.json
+/backend/config/*key*.json
