@@ -137,7 +137,7 @@ class OcrController extends BaseController
                 $model->customer_tax_id = $taxIdFound;
             }
             
-            // 2. Look for Pattern based on Tax ID
+            // 2. Look for Vendor Name & Pattern based on Tax ID or Text
             $pattern = null;
             if ($model->customer_tax_id) {
                 $pattern = OcrPattern::findOne(['tax_id' => $model->customer_tax_id, 'status' => 1]);
@@ -145,15 +145,24 @@ class OcrController extends BaseController
                     $model->vendor_name = $pattern->name;
                 }
             }
+            if (!$model->vendor_name) {
+                // Detect company/partnership names in header
+                if (preg_match('/((?:ห้างหุ้นส่วนจำกัด|บริษัท|บจก\.|หจก\.|ร้าน)\s*[ก-ฮA-Za-z0-9\s()]+)/u', $fullText, $vMatch)) {
+                    $model->vendor_name = trim($vMatch[1]);
+                }
+            }
 
-            // 3. Extract Invoice Number (Global + Pattern)
-            $regexInvoice = $pattern && $pattern->regex_invoice_no ? $pattern->regex_invoice_no : '/(?:เลขที่ใบกำกับภาษี|เลขที่ใบเสร็จ|เลขที่เอกสาร|เลขที่|TAX\s*INVOICE\s*NO|TAX\s*INV\s*NO|INV\s*NO|INVOICE\s*NO|POS\s*NO|DOCUMENT\s*NO|RECEIPT\s*NO|BILL\s*NO|DOC\s*NO|No\.?|Inv\s*#)\s*[:.]?\s*([A-Z0-9\-\/]{3,30})/iu';
-            if (@preg_match($regexInvoice, $fullText, $matches)) {
-                $model->invoice_number = isset($matches[1]) ? trim($matches[1]) : trim($matches[0]);
+            // 3. Extract Invoice Number (Check Book No + Invoice No pattern first)
+            if (preg_match('/เล่มที่\s*[:.]?\s*(\d+)\s*เลขที่\s*[:.]?\s*(\d+)/iu', $fullText, $bookMatches)) {
+                $model->invoice_number = $bookMatches[1] . '/' . $bookMatches[2];
             } else {
-                // Secondary check for patterns like S001-IV-12345 or IV-2026-001
-                if (preg_match('/([A-Z0-9]{2,}[\-\/][A-Z0-9\-\/]{4,20})/', $fullText, $matches)) {
-                    $model->invoice_number = trim($matches[1]);
+                $regexInvoice = $pattern && $pattern->regex_invoice_no ? $pattern->regex_invoice_no : '/(?:เลขที่ใบกำกับภาษี|เลขที่ใบเสร็จ|เลขที่เอกสาร|เลขที่|TAX\s*INVOICE\s*NO|TAX\s*INV\s*NO|INV\s*NO|INVOICE\s*NO|POS\s*NO|DOCUMENT\s*NO|RECEIPT\s*NO|BILL\s*NO|DOC\s*NO|No\.?|Inv\s*#)\s*[:.]?\s*([A-Z0-9\-\/]{3,30})/iu';
+                if (@preg_match($regexInvoice, $fullText, $matches)) {
+                    $model->invoice_number = isset($matches[1]) ? trim($matches[1]) : trim($matches[0]);
+                } else {
+                    if (preg_match('/([A-Z0-9]{2,}[\-\/][A-Z0-9\-\/]{4,20})/', $fullText, $matches)) {
+                        $model->invoice_number = trim($matches[1]);
+                    }
                 }
             }
 
@@ -188,17 +197,17 @@ class OcrController extends BaseController
             }
 
             // 5. Extract Totals, VAT, Subtotal
-            $regexTotal = $pattern && $pattern->regex_total ? $pattern->regex_total : '/(?:จำนวนเงินรวมทั้งสิ้น|จำนวนเงินรวมภาษี|รวมเงินทั้งสิ้น|ยอดรวมสุทธิ|จำนวนเงินรวม|ยอดโอน|ยอดชำระ|Grand\s*Total|Total\s*Amount|Total\s*Due|Amount\s*Due|Net\s*Total|TOTAL|Net\s*Amount).{0,50}?([0-9,]+\.[0-9]{2})/is';
+            $regexTotal = $pattern && $pattern->regex_total ? $pattern->regex_total : '/(?:จำนวนเงินรวมทั้งสิ้น|จำนวนเงินรวมภาษี|รวมเงินทั้งสิ้น|ยอดรวมสุทธิ|จำนวนเงินรวม|ยอดโอน|ยอดชำระ|Grand\s*Total|Total\s*Amount|Total\s*Due|Amount\s*Due|Net\s*Total|TOTAL|Net\s*Amount).{0,50}?([0-9,]+\.[0-9]{2}|\d+)/is';
             
             if (@preg_match($regexTotal, $fullText, $m)) {
                 $model->total_amount = (float)str_replace(',', '', $m[1]);
             } 
             
-            if (preg_match('/(?:มูลค่าสินค้า|มูลค่าบริการ|รวมเป็นเงิน|Subtotal|Sub\s*Total|Net\s*Amount).{0,50}?([0-9,]+\.[0-9]{2})/is', $fullText, $m)) {
+            if (preg_match('/(?:รวมราคาสินค้า|มูลค่าสินค้า|มูลค่าบริการ|รวมเป็นเงิน|Subtotal|Sub\s*Total|Net\s*Amount).{0,50}?([0-9,]+\.[0-9]{2})/is', $fullText, $m)) {
                 $model->subtotal = (float)str_replace(',', '', $m[1]);
             }
 
-            if (preg_match('/(?:ภาษีมูลค่าเพิ่ม|VAT\s*7%|VAT|Value\s*Added\s*Tax).{0,30}?([0-9,]+\.[0-9]{2})/is', $fullText, $m)) {
+            if (preg_match('/(?:จำนวนภาษีมูลค่าเพิ่ม|ภาษีมูลค่าเพิ่ม|VAT\s*7%|VAT|Value\s*Added\s*Tax).{0,30}?([0-9,]+\.[0-9]{2})/is', $fullText, $m)) {
                 $model->vat_amount = (float)str_replace(',', '', $m[1]);
             }
 
@@ -221,6 +230,18 @@ class OcrController extends BaseController
                     $model->subtotal = round($model->total_amount / 1.07, 2);
                     $model->vat_amount = round($model->total_amount - $model->subtotal, 2);
                 }
+            }
+
+            // Extract Remarks & Extra Info (e.g., License plate, Baht text)
+            $remarksArr = [];
+            if (preg_match('/\(ตัวอักษร\)\s*([ก-ฮ\s-]+)/u', $fullText, $bahtMatch)) {
+                $remarksArr[] = 'ตัวอักษร: ' . trim($bahtMatch[1]);
+            }
+            if (preg_match('/([rA-Z0-9\s]{2,10}\s*\d{3,4}\s*[a-zA-Z]*)/i', $fullText, $refMatch)) {
+                $remarksArr[] = 'อ้างอิง/ทะเบียน: ' . trim($refMatch[1]);
+            }
+            if (!empty($remarksArr) && property_exists($model, 'remarks')) {
+                $model->remarks = implode(' | ', $remarksArr);
             }
 
             if ($model->save()) {
