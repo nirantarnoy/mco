@@ -119,7 +119,7 @@ class OcrController extends BaseController
 
             // Normalize text: fix spaces in decimal numbers e.g. "476. 64" -> "476.64" and Tax ID spaces e.g. "027559300098 5"
             $normalizedText = preg_replace('/(\d+)\s*\.\s*(\d+)/', '$1.$2', $fullText);
-            $normalizedText = preg_replace('/(?<=\d{10,12})\s+(?=\d{1,3})/', '', $normalizedText);
+            $normalizedText = preg_replace('/(\d{8,12})\s+(\d{1,5})/', '$1$2', $normalizedText);
 
             // 1. Detect Tax IDs (13 digits continuous or with hyphens/spaces e.g. 0-1055-58123-45-6)
             $taxIds = [];
