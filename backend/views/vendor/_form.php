@@ -72,10 +72,16 @@ if($model->isNewRecord) {
     </div>
     <div class="row">
         <div class="col-lg-1"></div>
-        <div class="col-lg-5">
+        <div class="col-lg-4">
             <?= $form->field($model, 'taxid')->textInput(['maxlength' => true]) ?>
         </div>
-        <div class="col-lg-5">
+        <div class="col-lg-3">
+            <?= $form->field($model, 'is_vat')->dropDownList([
+                '1' => 'คิด VAT',
+                '2' => 'ไม่คิด VAT',
+            ], ['prompt' => 'เลือกระบบ VAT']) ?>
+        </div>
+        <div class="col-lg-2">
             <div style="height: 35px"></div>
             <?= $form->field($model, 'status')->widget(\toxor88\switchery\Switchery::className())->label(false) ?>
         </div>

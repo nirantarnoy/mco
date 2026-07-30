@@ -344,9 +344,12 @@ $this->registerJs($autocompleteJs);
 
                         <?= $form->field($model, 'vendor_id')->widget(Select2::className(), [
                             'data' => ArrayHelper::map(\backend\models\Vendor::find()->all(), 'id', 'name'),
-                            'options' => ['placeholder' => 'เลือกผู้จําหน่าย'],
+                            'options' => ['placeholder' => 'เลือกผู้จําหน่าย', 'id' => 'purch-vendor_id'],
                             'pluginOptions' => [
                                 'allowClear' => true
+                            ],
+                            'pluginEvents' => [
+                                "change" => "function() { fetchVendorVat($(this).val()); }",
                             ]
                         ]) ?>
                         <?= $form->field($model, 'currency_id')->widget(Select2::className(), [
@@ -424,6 +427,7 @@ $this->registerJs($autocompleteJs);
                             '2' => 'NO VAT',
                         ],
                             [
+                                'id' => 'purch-is_vat',
                                 'onchange' => 'enableVat($(this))',
                                 'prompt' => 'เลือกคำนวน VAT'
                             ],) ?>
@@ -824,13 +828,6 @@ $this->registerJs($autocompleteJs);
                             <div class="col-lg-3">
                                 <?php if ($model_purch_vendor_bill != null): ?>
                                     <label for="">เอกสารที่แนบแล้ว</label><br/>
-<!--                                    --><?php //if ($model_purch_vendor_bill->bill_doc != ''): ?>
-<!--                                        <a href="--><?php //= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $model_purch_vendor_bill->bill_doc ?><!--"-->
-<!--                                           target="_blank">-->
-<!--                                            ดูเอกสาร-->
-<!--                                        </a>-->
-<!--                                    -->
-<!--                                    --><?php //endif; ?>
                                     <?php
                                    // $url = Yii::$app->request->hostInfo . Yii::$app->request->baseUrl . '/uploads/purch_doc/' . $model_purch_vendor_bill->bill_doc;
                                     echo Html::a(
@@ -990,29 +987,6 @@ $this->registerJs($autocompleteJs);
             </div>
         </div>
         <br/>
-        <?php if (!$model->isNewRecord): ?>
-            <!--            <form action="--><?php //= Url::to(['purch/add-doc-file'], true) ?><!--" method="post" enctype="multipart/form-data">-->
-            <!--                <input type="hidden" name="id" value="--><?php //= $model->id ?><!--">-->
-            <!--                <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">-->
-            <!--                    <div class="row">-->
-            <!--                        <div class="col-lg-12">-->
-            <!--                            <label for="">เอกสารแนบ</label>-->
-            <!--                            <input type="file" name="file_doc" multiple>-->
-            <!--                        </div>-->
-            <!--                    </div>-->
-            <!--                    <br/>-->
-            <!--                    <div class="row">-->
-            <!--                        <div class="col-lg-12">-->
-            <!--                            <button class="btn btn-info">-->
-            <!--                                <i class="fas fa-upload"></i> อัพโหลดเอกสารแนบ-->
-            <!--                            </button>-->
-            <!--                        </div>-->
-            <!--                    </div>-->
-            <!--                </div>-->
-            <!--            </form>-->
-        <?php endif; ?>
-
-
     </div>
     <form id="form-delete-doc-file" action="<?= Url::to(['purch/delete-doc-file'], true) ?>" method="post">
         <input type="hidden" name="id" value="<?= $model->id ?>">
@@ -1175,6 +1149,32 @@ $(document).ready(function() {
         // Re-initialize any plugins if necessary
     });
 });
+
+function addCommas(nStr) {
+    nStr += '';
+    x = nStr.split('.');
+    x1 = x[0];
+    x2 = x.length > 1 ? '.' + x[1] : '';
+    var rgx = /(\d+)(\d{3})/;
+    while (rgx.test(x1)) {
+        x1 = x1.replace(rgx, '$1' + ',' + '$2');
+    }
+    return x1 + x2;
+}
+
+function fetchVendorVat(vendorId) {
+    if (!vendorId) return;
+    $.ajax({
+        url: 'index.php?r=vendor/get-vat-status',
+        type: 'GET',
+        data: {id: vendorId},
+        success: function(res) {
+            if (res && res.is_vat) {
+                $('#purch-is_vat').val(res.is_vat).trigger('change');
+            }
+        }
+    });
+}
 JS;
 $this->registerJs($script, static::POS_END);
 ?>

@@ -41,6 +41,16 @@ class VendorController extends BaseController
         );
     }
 
+    public function actionGetVatStatus($id)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $vendor = \backend\models\Vendor::findOne($id);
+        if ($vendor) {
+            return ['is_vat' => $vendor->is_vat];
+        }
+        return ['is_vat' => null];
+    }
+
     /**
      * Lists all Vendor models.
      *
