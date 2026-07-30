@@ -16,8 +16,13 @@
 /* ============================
    0. Typography (Font)
 ============================ */
-body, h1, h2, h3, h4, h5, h6, p, a, div, span, .btn, .form-control, .nav-link, .main-sidebar {
-    font-family: 'Prompt', sans-serif !important;
+body, h1, h2, h3, h4, h5, h6, p, .form-control, .nav-link, .main-sidebar {
+    font-family: 'Prompt', sans-serif;
+}
+
+/* Make buttons use Prompt but allow child icons to keep their fonts */
+.btn {
+    font-family: 'Prompt', sans-serif;
 }
 
 /* ============================
