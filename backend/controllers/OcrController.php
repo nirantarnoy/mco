@@ -342,6 +342,72 @@ class OcrController extends BaseController
     }
 
     /**
+     * Group OCR words into rows based on their Y-coordinates with dynamic thresholding
+     */
+    protected function reconstructRows($words)
+    {
+        if (empty($words)) return [];
+
+        // Compute dynamic Y-threshold based on average word bounding box height
+        $heights = [];
+        foreach ($words as $word) {
+            $vertices = $word['boundingPoly']['vertices'] ?? [];
+            if (count($vertices) >= 4) {
+                $yMin = min(array_column($vertices, 'y'));
+                $yMax = max(array_column($vertices, 'y'));
+                $h = $yMax - $yMin;
+                if ($h > 0 && $h < 500) $heights[] = $h;
+            }
+        }
+
+        $yThreshold = 10;
+        if (!empty($heights)) {
+            $avgHeight = array_sum($heights) / count($heights);
+            $yThreshold = max(6, (int)round($avgHeight * 0.45));
+        }
+
+        // Sort words by Y-coordinate of top-left vertex
+        usort($words, function($a, $b) {
+            $ay = $a['boundingPoly']['vertices'][0]['y'] ?? 0;
+            $by = $b['boundingPoly']['vertices'][0]['y'] ?? 0;
+            return $ay <=> $by;
+        });
+
+        $rows = [];
+        $currentRow = [];
+        $lastY = -1;
+
+        foreach ($words as $word) {
+            $y = $word['boundingPoly']['vertices'][0]['y'] ?? 0;
+            
+            if ($lastY == -1 || abs($y - $lastY) <= $yThreshold) {
+                $currentRow[] = $word;
+            } else {
+                $rows[] = $this->sortRowByX($currentRow);
+                $currentRow = [$word];
+            }
+            $lastY = $y;
+        }
+        if (!empty($currentRow)) {
+            $rows[] = $this->sortRowByX($currentRow);
+        }
+
+        return array_map(function($rowWords) {
+            return implode(' ', array_column($rowWords, 'description'));
+        }, $rows);
+    }
+
+    protected function sortRowByX($rowWords)
+    {
+        usort($rowWords, function($a, $b) {
+            $ax = $a['boundingPoly']['vertices'][0]['x'] ?? 0;
+            $bx = $b['boundingPoly']['vertices'][0]['x'] ?? 0;
+            return $ax <=> $bx;
+        });
+        return $rowWords;
+    }
+
+    /**
      * Specialized parser for Gas / Fuel / Petroleum receipt forms
      */
     protected function tryGasFuelReceiptParsing($fullText, $model)
