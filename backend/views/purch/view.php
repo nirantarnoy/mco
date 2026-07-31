@@ -53,8 +53,8 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
             </div>
         <?php endif; ?>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div class="d-flex flex-wrap gap-2">
                 <?php if (\Yii::$app->user->can('purch/update')): ?>
                     <?= Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
                 <?php endif; ?>

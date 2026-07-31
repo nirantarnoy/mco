@@ -232,21 +232,45 @@ $this->params['breadcrumbs'][] = $this->title;
                 'header' => 'ตัวเลือก',
                 'headerOptions' => ['style' => 'width: 120px; text-align: center;'],
                 'contentOptions' => ['style' => 'text-align: center;'],
-                'template' => '{view} {update} {delete}',
+                'template' => '{view} {update} {approve} {reject} {delete}',
                 'buttons' => [
                     'view' => function ($url, $model, $key) {
                         return Html::a('<i class="fas fa-eye"></i>', $url, [
                             'title' => 'ดูรายละเอียด',
-                            'class' => 'btn btn-sm btn-outline-info me-1',
+                            'class' => 'btn btn-sm btn-outline-info me-1 mb-1',
                             'data-pjax' => '0'
                         ]);
                     },
                     'update' => function ($url, $model, $key) {
                         return Html::a('<i class="fas fa-edit"></i>', $url, [
                             'title' => 'แก้ไข',
-                            'class' => 'btn btn-sm btn-outline-primary me-1',
+                            'class' => 'btn btn-sm btn-outline-primary me-1 mb-1',
                             'data-pjax' => '0'
                         ]);
+                    },
+                    'approve' => function ($url, $model, $key) {
+                        if ($model->approve_status == Purch::APPROVE_STATUS_PENDING && \Yii::$app->user->can('purch/approve')) {
+                            return Html::a('<i class="fas fa-check"></i>', ['approve', 'id' => $model->id], [
+                                'title' => 'อนุมัติ',
+                                'class' => 'btn btn-sm btn-outline-success me-1 mb-1',
+                                'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบสั่งซื้อนี้?',
+                                'data-method' => 'post',
+                                'data-pjax' => '0'
+                            ]);
+                        }
+                        return '';
+                    },
+                    'reject' => function ($url, $model, $key) {
+                        if ($model->approve_status == Purch::APPROVE_STATUS_PENDING && \Yii::$app->user->can('purch/reject')) {
+                            return Html::a('<i class="fas fa-times"></i>', ['reject', 'id' => $model->id], [
+                                'title' => 'ไม่อนุมัติ',
+                                'class' => 'btn btn-sm btn-outline-warning me-1 mb-1',
+                                'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะไม่อนุมัติใบสั่งซื้อนี้?',
+                                'data-method' => 'post',
+                                'data-pjax' => '0'
+                            ]);
+                        }
+                        return '';
                     },
                     'delete' => function ($url, $model, $key) {
                         return '';
