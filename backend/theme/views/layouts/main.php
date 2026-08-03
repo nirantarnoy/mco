@@ -73,7 +73,8 @@ $is_pos_user = 0;
         }
 
         body {
-            font-family: "Kanit-Regular";
+            /* font-family: "Kanit-Regular"; */
+            font-family: 'Prompt', sans-serif;
             font-size: 16px;
         }
 
