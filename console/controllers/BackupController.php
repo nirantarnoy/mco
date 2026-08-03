@@ -20,7 +20,7 @@ class BackupController extends Controller
      * Then folder ID is "1aBcDeFgHiJkLmNoPqRsTuVwXyZ".
      * If left empty, it will upload to the root directory of the Service Account.
      */
-    public $googleDriveFolderId = '';
+    public $googleDriveFolderId = '1D2ku_jO3r8liyCAZhz0FyCyvjZFdXYdI';
 
     /**
      * Executes the database backup and uploads to Google Drive.
