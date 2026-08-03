@@ -136,7 +136,8 @@ class BackupController extends Controller
                 'data' => $content,
                 'mimeType' => $mimeType,
                 'uploadType' => 'multipart',
-                'fields' => 'id'
+                'fields' => 'id',
+                'supportsAllDrives' => true
             ]);
 
             $this->stdout("File ID: " . $file->id . "\n", Console::FG_GREEN);
