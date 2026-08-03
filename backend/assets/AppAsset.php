@@ -13,7 +13,7 @@ class AppAsset extends AssetBundle
     public $baseUrl = '@web';
     public $css = [
         'css/site.css',
-        'css/tailwind-theme.css?v=4',
+        'css/tailwind-theme.css?v=5',
     ];
     public $js = [
     ];
