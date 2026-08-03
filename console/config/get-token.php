@@ -20,6 +20,7 @@ $client->setAuthConfig($clientSecretPath);
 $client->addScope(Drive::DRIVE_FILE);
 $client->setAccessType('offline');
 $client->setPrompt('select_account consent');
+$client->setRedirectUri('http://127.0.0.1:8080');
 
 // Request authorization from the user.
 $authUrl = $client->createAuthUrl();
