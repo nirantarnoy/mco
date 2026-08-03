@@ -60,10 +60,16 @@ class DbbackupController extends BaseController
 
     public function actionBak()
     {
-        $host = "localhost";
-        $username = "root";
-        $password = "";
-        $database_name = "coltd";
+        $db = \Yii::$app->db;
+        $username = $db->username;
+        $password = $db->password;
+        
+        $dsn = $db->dsn;
+        preg_match('/host=([^;]*)/', $dsn, $hostMatch);
+        $host = isset($hostMatch[1]) ? $hostMatch[1] : 'localhost';
+        
+        preg_match('/dbname=([^;]*)/', $dsn, $dbMatch);
+        $database_name = isset($dbMatch[1]) ? $dbMatch[1] : 'mmc_db';
 
 // Get connection object and set the charset
         $conn = mysqli_connect($host, $username, $password, $database_name);
@@ -229,25 +235,32 @@ class DbbackupController extends BaseController
 
     public function actionExrestore()
     {
-        $host = "localhost";
-        $username = "root";
-        $password = "";
-      //  $database_name = "admin_icesystem";
-        $database_name = "mmc_db";
-        $date_string = time();
+        $db = \Yii::$app->db;
+        $username = $db->username;
+        $password = $db->password;
+        
+        $dsn = $db->dsn;
+        preg_match('/host=([^;]*)/', $dsn, $hostMatch);
+        $host = isset($hostMatch[1]) ? $hostMatch[1] : 'localhost';
+        
+        preg_match('/dbname=([^;]*)/', $dsn, $dbMatch);
+        $database_name = isset($dbMatch[1]) ? $dbMatch[1] : 'mmc_db';
 
+        $date_string = time();
         $cmd = '';
 
         $os = php_uname();
         if (strpos($os, 'ndow') > 0) {
-            $cmd = 'D:/xampp/mysql/bin/';
-            $cmd .= "mysqldump -h {$host} -u {$username} {$database_name} > " . '../web/uploads/backup/' . "pc_{$date_string}_{$database_name}.sql";
-
+            // For Windows/XAMPP
+            $mysqlPath = 'C:/xampp/mysql/bin/mysqldump';
+            if (file_exists('D:/xampp/mysql/bin/mysqldump.exe')) {
+                $mysqlPath = 'D:/xampp/mysql/bin/mysqldump';
+            }
+            $cmd = "{$mysqlPath} -h {$host} -u {$username}" . (!empty($password) ? " -p{$password}" : "") . " {$database_name} > " . '../web/uploads/backup/' . "pc_{$date_string}_{$database_name}.sql";
         } else {
-            //    $cmd ='/usr/bin/';
-            $cmd = "/usr/bin/mysqldump -u {$username} -p{$password} {$database_name} > " . '../web/uploads/backup/' . "web_{$date_string}_{$database_name}.sql";
+            // For Linux
+            $cmd = "mysqldump -h {$host} -u {$username}" . (!empty($password) ? " -p'{$password}'" : "") . " {$database_name} > " . '../web/uploads/backup/' . "web_{$date_string}_{$database_name}.sql";
         }
-
 
         exec($cmd);
 
