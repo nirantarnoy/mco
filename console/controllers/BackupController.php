@@ -102,20 +102,44 @@ class BackupController extends Controller
     }
 
     /**
-     * Uploads a file to Google Drive using a Service Account.
+     * Uploads a file to Google Drive using OAuth 2.0 (User Consent).
      */
     protected function uploadToGoogleDrive($filePath, $fileName)
     {
-        $keyFilePath = Yii::getAlias('@console/config/google-key.json');
-        if (!file_exists($keyFilePath)) {
-            $this->stderr("Google Service Account Key not found at: {$keyFilePath}\n", Console::FG_RED);
+        $clientSecretPath = Yii::getAlias('@console/config/client_secret.json');
+        $tokenPath = Yii::getAlias('@console/config/token.json');
+        
+        if (!file_exists($clientSecretPath)) {
+            $this->stderr("OAuth Client Secret not found at: {$clientSecretPath}\n", Console::FG_RED);
+            $this->stderr("Please download it from Google Cloud Console.\n", Console::FG_RED);
             return false;
         }
 
         try {
             $client = new Client();
-            $client->setAuthConfig($keyFilePath);
+            $client->setAuthConfig($clientSecretPath);
             $client->addScope(Drive::DRIVE_FILE);
+            $client->setAccessType('offline');
+            $client->setPrompt('select_account consent');
+
+            if (file_exists($tokenPath)) {
+                $accessToken = json_decode(file_get_contents($tokenPath), true);
+                $client->setAccessToken($accessToken);
+            } else {
+                $this->stderr("Token file not found at: {$tokenPath}\n", Console::FG_RED);
+                $this->stderr("Please run 'php console/config/get-token.php' to generate it.\n", Console::FG_RED);
+                return false;
+            }
+
+            if ($client->isAccessTokenExpired()) {
+                if ($client->getRefreshToken()) {
+                    $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+                    file_put_contents($tokenPath, json_encode($client->getAccessToken()));
+                } else {
+                    $this->stderr("Refresh token missing. Please delete token.json and re-run get-token.php\n", Console::FG_RED);
+                    return false;
+                }
+            }
             
             $driveService = new Drive($client);
 
@@ -127,9 +151,7 @@ class BackupController extends Controller
                 $fileMetadata->setParents([$this->googleDriveFolderId]);
             }
 
-            // Fallback for mime_content_type if it doesn't exist
             $mimeType = function_exists('mime_content_type') ? mime_content_type($filePath) : 'application/zip';
-
             $content = file_get_contents($filePath);
 
             $file = $driveService->files->create($fileMetadata, [
