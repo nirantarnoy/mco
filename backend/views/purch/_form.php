@@ -908,6 +908,7 @@ $this->registerJs($autocompleteJs);
                                             </button>
                                         </div>
                                     </div>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -931,6 +932,7 @@ $this->registerJs($autocompleteJs);
                                             </button>
                                         </div>
                                     </div>
+                                </form>
                             </div>
                         </div>
                     </div>
