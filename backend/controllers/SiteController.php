@@ -30,7 +30,7 @@ class SiteController extends BaseController
                         'allow' => true,
                     ],
                     [
-                        'actions' => ['logout', 'index', 'changepassword','grab','logoutdriver','change-company','changecompany'],
+                        'actions' => ['logout', 'index', 'changepassword','grab','logoutdriver','change-company','changecompany','google-auth','google-callback'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -227,6 +227,67 @@ class SiteController extends BaseController
         return $this->redirect(Yii::$app->request->referrer ?: ['site/index']);
     }
 
+
+    public function actionGoogleAuth()
+    {
+        $clientSecretPath = Yii::getAlias('@console/config/client_secret.json');
+        if (!file_exists($clientSecretPath)) {
+            Yii::$app->session->setFlash('msg-error', 'Client Secret file not found. Please upload it first.');
+            return $this->redirect(['site/index']);
+        }
+
+        $client = new \Google\Client();
+        $client->setAuthConfig($clientSecretPath);
+        $client->addScope(\Google\Service\Drive::DRIVE_FILE);
+        $client->setAccessType('offline');
+        $client->setPrompt('select_account consent');
+        
+        // Use standard Yii2 URL generation for the callback
+        $redirectUri = \yii\helpers\Url::to(['site/google-callback'], true);
+        $client->setRedirectUri($redirectUri);
+
+        $authUrl = $client->createAuthUrl();
+        return $this->redirect($authUrl);
+    }
+
+    public function actionGoogleCallback()
+    {
+        $code = Yii::$app->request->get('code');
+        if (!$code) {
+            Yii::$app->session->setFlash('msg-error', 'Google Auth failed: No code received.');
+            return $this->redirect(['site/index']);
+        }
+
+        $clientSecretPath = Yii::getAlias('@console/config/client_secret.json');
+        $tokenPath = Yii::getAlias('@console/config/token.json');
+
+        try {
+            $client = new \Google\Client();
+            $client->setAuthConfig($clientSecretPath);
+            // Redirect URI must match exactly what was sent in actionGoogleAuth
+            $redirectUri = \yii\helpers\Url::to(['site/google-callback'], true);
+            $client->setRedirectUri($redirectUri);
+
+            $accessToken = $client->fetchAccessTokenWithAuthCode($code);
+            
+            if (array_key_exists('error', $accessToken)) {
+                throw new \Exception(join(', ', $accessToken));
+            }
+
+            $client->setAccessToken($accessToken);
+            
+            if (!file_exists(dirname($tokenPath))) {
+                mkdir(dirname($tokenPath), 0700, true);
+            }
+            file_put_contents($tokenPath, json_encode($client->getAccessToken()));
+            
+            Yii::$app->session->setFlash('msg-success', 'เชื่อมต่อ Google Drive สำเร็จแล้ว! (Token Generated)');
+        } catch (\Exception $e) {
+            Yii::$app->session->setFlash('msg-error', 'เชื่อมต่อล้มเหลว: ' . $e->getMessage());
+        }
+
+        return $this->redirect(['site/index']);
+    }
 
     public function actionChangepassword()
     {

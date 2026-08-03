@@ -19,6 +19,16 @@ $this->registerJsFile('https://code.highcharts.com/highcharts.js', ['depends' =>
 $this->registerJsFile('https://code.highcharts.com/modules/exporting.js', ['depends' => [\yii\web\JqueryAsset::className()]]);
 ?>
 
+<div class="row mb-3">
+    <div class="col-md-12 text-right">
+        <?php if (Yii::$app->user->identity->user_group_id == 1): // Only for admin ?>
+            <a href="<?= Url::to(['site/google-auth']) ?>" class="btn btn-primary">
+                <i class="fa fa-google"></i> เชื่อมต่อ Google Drive สำหรับการ Backup
+            </a>
+        <?php endif; ?>
+    </div>
+</div>
+
 <div class="dashboard-index">
     <!-- Date Range Filter -->
     <div class="row">
