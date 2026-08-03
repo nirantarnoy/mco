@@ -154,12 +154,12 @@ $this->registerJsFile('https://code.highcharts.com/modules/exporting.js', ['depe
                             <tr>
                                 <th>#</th>
                                 <th>ชื่อสินค้า</th>
-                                <th class="text-end">จำนวนขาย</th>
-                                <th class="text-end">ยอดขาย</th>
-                                <th class="text-end">ราคาขายเฉลี่ย</th>
-                                <th class="text-end">ต้นทุน</th>
-                                <th class="text-end">กำไร</th>
-                                <th class="text-end">%กำไร</th>
+                                <th class="text-right">จำนวนขาย</th>
+                                <th class="text-right">ยอดขาย</th>
+                                <th class="text-right">ราคาขายเฉลี่ย</th>
+                                <th class="text-right">ต้นทุน</th>
+                                <th class="text-right">กำไร</th>
+                                <th class="text-right">%กำไร</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -167,17 +167,17 @@ $this->registerJsFile('https://code.highcharts.com/modules/exporting.js', ['depe
                                 <tr>
                                     <td><?= $index + 1 ?></td>
                                     <td><?= Html::encode($product['name']) ?></td>
-                                    <td class="text-end"><?= number_format($product['total_qty']) ?></td>
-                                    <td class="text-end">฿<?= number_format($product['total_sales'], 2) ?></td>
-                                    <td class="text-end">฿<?= number_format($product['avg_price'], 2) ?></td>
-                                    <td class="text-end">฿<?= number_format($product['cost_price'], 2) ?></td>
-                                    <td class="text-end">฿<?= number_format($product['profit'], 2) ?></td>
-                                    <td class="text-end">
+                                    <td class="text-right"><?= number_format($product['total_qty']) ?></td>
+                                    <td class="text-right">฿<?= number_format($product['total_sales'], 2) ?></td>
+                                    <td class="text-right">฿<?= number_format($product['avg_price'], 2) ?></td>
+                                    <td class="text-right">฿<?= number_format($product['cost_price'], 2) ?></td>
+                                    <td class="text-right">฿<?= number_format($product['profit'], 2) ?></td>
+                                    <td class="text-right">
                                         <?php
                                         $profitPercent = $product['total_sales'] > 0 ?
                                             ($product['profit'] / $product['total_sales']) * 100 : 0;
                                         ?>
-                                        <span class="badge bg-<?= $profitPercent > 20 ? 'success' : ($profitPercent > 10 ? 'warning' : 'danger') ?>">
+                                        <span class="badge badge-<?= $profitPercent > 20 ? 'success' : ($profitPercent > 10 ? 'warning' : 'danger') ?>">
                                             <?= number_format($profitPercent, 2) ?>%
                                         </span>
                                     </td>
@@ -187,12 +187,12 @@ $this->registerJsFile('https://code.highcharts.com/modules/exporting.js', ['depe
                             <tfoot>
                             <tr class="active">
                                 <th colspan="2">รวมทั้งหมด</th>
-                                <th class="text-end"><?= number_format($totalQty) ?></th>
-                                <th class="text-end">฿<?= number_format($totalSales, 2) ?></th>
+                                <th class="text-right"><?= number_format($totalQty) ?></th>
+                                <th class="text-right">฿<?= number_format($totalSales, 2) ?></th>
                                 <th colspan="2"></th>
-                                <th class="text-end">฿<?= number_format($totalProfit, 2) ?></th>
-                                <th class="text-end">
-                                    <span class="badge bg-primary"><?= number_format($profitMargin, 2) ?>%</span>
+                                <th class="text-right">฿<?= number_format($totalProfit, 2) ?></th>
+                                <th class="text-right">
+                                    <span class="badge badge-primary"><?= number_format($profitMargin, 2) ?>%</span>
                                 </th>
                             </tr>
                             </tfoot>
