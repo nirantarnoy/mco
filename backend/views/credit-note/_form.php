@@ -772,7 +772,7 @@ $this->registerJs($js);
                 <h4 class="section-title">ข้อมูลเอกสาร</h4>
                 <div class="row">
                     <div class="col-md-3">
-                        <?= $form->field($model, 'document_no')->textInput(['maxlength' => true, 'readonly' => true]) ?>
+                        <?= $form->field($model, 'document_no', ['enableClientValidation' => false])->textInput(['maxlength' => true, 'readonly' => true, 'placeholder' => 'ระบบจะสร้างให้อัตโนมัติ']) ?>
                     </div>
                     <div class="col-md-3">
                         <?= $form->field($model, 'document_date')->widget(DatePicker::class, [
