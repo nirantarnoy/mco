@@ -441,12 +441,19 @@ $(document).on("click", ".btn-load-invoice-items", function() {
 });
 
 
+let isSettingFromInvoice = false;
+
 // Event สำหรับการเปลี่ยนแปลงลูกค้า - โหลดใบแจ้งหนี้ตามลูกค้า
 $("#credit-note-customer_id").on("change", function() {
     var customerId = $(this).val();
     
+    if (isSettingFromInvoice) {
+        isSettingFromInvoice = false;
+        return;
+    }
+    
     // ล้างข้อมูลใบแจ้งหนี้เดิม
-    $("#credit-note-invoice_id").val("").trigger("change");
+    $("#credit-note-invoice_id").val("").trigger("change.select2");
     $("#credit-note-original_invoice_no").val("");
     $("#credit-note-original_invoice_date").val("");
     $("#credit-note-original_amount").val("");
@@ -461,13 +468,25 @@ $("#credit-note-invoice_id").on("change", function() {
     var invoiceId = $(this).val();
     if (invoiceId) {
         $.get("' . Url::to(['credit-note/get-invoice-data']) . '", {id: invoiceId}, function(data) {
-            if (data) {
+            if (data && data.success) {
                 $("#credit-note-original_invoice_no").val(data.invoice_number);
                 $("#credit-note-original_invoice_date").val(data.invoice_date);
                 $("#credit-note-original_amount").val(data.total_amount);
-                $("#credit-note-customer_id").val(data.customer_id).trigger("change");
+                
+                var currentCustomer = $("#credit-note-customer_id").val();
+                if (currentCustomer != data.customer_id) {
+                    isSettingFromInvoice = true;
+                    $("#credit-note-customer_id").val(data.customer_id).trigger("change");
+                }
+                
+                // โหลดรายการสินค้าอัตโนมัติ
+                loadInvoiceItems(invoiceId);
             }
         });
+    } else {
+        $("#credit-note-original_invoice_no").val("");
+        $("#credit-note-original_invoice_date").val("");
+        $("#credit-note-original_amount").val("");
     }
 });
 
@@ -516,8 +535,13 @@ function loadInvoicesByCustomer(customerId) {
 $("#credit-note-vendor_id").on("change", function() {
     var vendorId = $(this).val();
     
+    if (typeof isSettingFromInvoice !== 'undefined' && isSettingFromInvoice) {
+        isSettingFromInvoice = false;
+        return;
+    }
+    
     // ล้างข้อมูลใบแจ้งหนี้เดิม
-    $("#credit-note-invoice_id").val("").trigger("change");
+    $("#credit-note-invoice_id").val("").trigger("change.select2");
     $("#credit-note-original_invoice_no").val("");
     $("#credit-note-original_invoice_date").val("");
     $("#credit-note-original_amount").val("");
