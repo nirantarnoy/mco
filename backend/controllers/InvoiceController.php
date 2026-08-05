@@ -617,7 +617,8 @@ class InvoiceController extends BaseController
             // Create a pool of already invoiced items to match against
             $invoicedPool = [];
             foreach ($alreadyInvoicedItems as $invItem) {
-                $key = ($invItem->product_id ?: 0) . '|' . trim($invItem->item_description) . '|' . (float)$invItem->quantity . '|' . (float)$invItem->unit_price;
+                $normalizedDesc = trim(preg_replace('/\s+/', ' ', $invItem->item_description));
+                $key = ($invItem->product_id ?: 0) . '|' . $normalizedDesc . '|' . (float)$invItem->quantity . '|' . (float)$invItem->unit_price;
                 $invoicedPool[] = $key;
             }
 
@@ -626,11 +627,12 @@ class InvoiceController extends BaseController
             foreach ($jobItems as $jobItem) {
                 $description = $this->cleanProductDescription($jobItem->product_name);
                 if (!empty($jobItem->note)) {
-                    $description .= "\n" . $jobItem->note;
+                    $description .= " " . $jobItem->note;
                 }
 
                 // Try to see if this item has already been invoiced
-                $itemKey = ($jobItem->product_id ?: 0) . '|' . trim($description) . '|' . (float)$jobItem->qty . '|' . (float)$jobItem->line_price;
+                $normalizedJobDesc = trim(preg_replace('/\s+/', ' ', $description));
+                $itemKey = ($jobItem->product_id ?: 0) . '|' . $normalizedJobDesc . '|' . (float)$jobItem->qty . '|' . (float)$jobItem->line_price;
                 
                 $poolIndex = array_search($itemKey, $invoicedPool);
                 if ($poolIndex !== false) {
