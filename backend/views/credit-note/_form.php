@@ -535,7 +535,7 @@ function loadInvoicesByCustomer(customerId) {
 $("#credit-note-vendor_id").on("change", function() {
     var vendorId = $(this).val();
     
-    if (typeof isSettingFromInvoice !== 'undefined' && isSettingFromInvoice) {
+    if (typeof isSettingFromInvoice !== "undefined" && isSettingFromInvoice) {
         isSettingFromInvoice = false;
         return;
     }
