@@ -49,3 +49,5 @@ phpunit.phar
 /common/config/*key*.json
 /backend/config/vision-key.json
 /backend/config/*key*.json
+/console/config/client_secret.json
+/console/config/token.json

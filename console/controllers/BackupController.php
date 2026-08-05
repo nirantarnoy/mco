@@ -20,7 +20,7 @@ class BackupController extends Controller
      * Then folder ID is "1aBcDeFgHiJkLmNoPqRsTuVwXyZ".
      * If left empty, it will upload to the root directory of the Service Account.
      */
-    public $googleDriveFolderId = '1D2ku_jO3r8liyCAZhz0FyCyvjZFdXYdI';
+    public $googleDriveFolderId = '14rgC5ndU-LCy1FE4DgWIkRakUZkkUSdW';
 
     /**
      * Executes the database backup and uploads to Google Drive.
@@ -54,7 +54,11 @@ class BackupController extends Controller
 
         // Run mysqldump
         // Note: For Linux hosting, mysqldump is usually available in the PATH.
-        $cmd = "mysqldump -h {$host} -u {$username}";
+        $mysqldumpPath = 'mysqldump';
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            $mysqldumpPath = 'e:\xampp\mysql\bin\mysqldump.exe';
+        }
+        $cmd = "\"{$mysqldumpPath}\" -h {$host} -u {$username}";
         if (!empty($password)) {
             $cmd .= " -p" . escapeshellarg($password); // No space between -p and password
         }
