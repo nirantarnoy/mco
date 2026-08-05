@@ -488,13 +488,15 @@ function loadInvoicesByCustomer(customerId) {
                 console.log("Customer invoices response:", response);
                 if (response.success && response.invoices && response.invoices.length > 0) {
                     // เพิ่ม options ใหม่
+                    var html = "<option value=\"\">เลือกใบแจ้งหนี้...</option>";
                     response.invoices.forEach(function(invoice) {
-                        invoiceSelect.append("<option value=\"" + invoice.id + "\">" + invoice.invoice_number + "</option>");
+                        html += "<option value=\"" + invoice.id + "\">" + invoice.invoice_number + "</option>";
                     });
+                    invoiceSelect.html(html);
                     
                     // Refresh Select2 if it\'s initialized
                     if (invoiceSelect.hasClass("select2-hidden-accessible")) {
-                        invoiceSelect.trigger("change");
+                        invoiceSelect.trigger("change.select2");
                     }
                     
                     showMessage("info", "โหลดใบแจ้งหนี้ของลูกค้านี้เรียบร้อยแล้ว (" + response.invoices.length + " รายการ)");
@@ -542,13 +544,15 @@ function loadPurchByVendor(vendorId) {
                 console.log("Vendor invoices response:", response);
                 if (response.success && response.invoices && response.invoices.length > 0) {
                     // เพิ่ม options ใหม่
+                    var html = "<option value=\"\">เลือกใบแจ้งหนี้...</option>";
                     response.invoices.forEach(function(invoice) {
-                        invoiceSelect.append("<option value=\"" + invoice.id + "\">" + invoice.purch_no + "</option>");
+                        html += "<option value=\"" + invoice.id + "\">" + invoice.purch_no + "</option>";
                     });
+                    invoiceSelect.html(html);
                     
                     // Refresh Select2 if it\'s initialized
                     if (invoiceSelect.hasClass("select2-hidden-accessible")) {
-                        invoiceSelect.trigger("change");
+                        invoiceSelect.trigger("change.select2");
                     }
                     
                     showMessage("info", "โหลดใบแจ้งหนี้ของลูกค้านี้เรียบร้อยแล้ว (" + response.invoices.length + " รายการ)");
