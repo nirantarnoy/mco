@@ -255,13 +255,14 @@ class Invoice extends ActiveRecord
                     ->exists();
             }
 
-            if (!$has_tax_invoice && $this->quotation_id) {
-                $has_tax_invoice = self::find()
-                    ->where(['quotation_id' => $this->quotation_id])
-                    ->andWhere(['invoice_type' => self::TYPE_TAX_INVOICE])
-                    ->andWhere(['status' => self::STATUS_ACTIVE])
-                    ->exists();
-            }
+            // [REMOVED] Overly broad check: this causes partial invoices to show wrong status
+            // if (!$has_tax_invoice && $this->quotation_id) {
+            //     $has_tax_invoice = self::find()
+            //         ->where(['quotation_id' => $this->quotation_id])
+            //         ->andWhere(['invoice_type' => self::TYPE_TAX_INVOICE])
+            //         ->andWhere(['status' => self::STATUS_ACTIVE])
+            //         ->exists();
+            // }
 
             if ($has_tax_invoice) {
                 return '<span class="badge badge-success">ดึงไปทำใบกำกับแล้ว</span>';
@@ -288,13 +289,14 @@ class Invoice extends ActiveRecord
                     ->exists();
             }
 
-            if (!$has_receipt && $this->quotation_id) {
-                $has_receipt = self::find()
-                    ->where(['quotation_id' => $this->quotation_id])
-                    ->andWhere(['invoice_type' => self::TYPE_RECEIPT])
-                    ->andWhere(['status' => self::STATUS_ACTIVE])
-                    ->exists();
-            }
+            // [REMOVED] Overly broad check: this causes partial invoices to show wrong status
+            // if (!$has_receipt && $this->quotation_id) {
+            //     $has_receipt = self::find()
+            //         ->where(['quotation_id' => $this->quotation_id])
+            //         ->andWhere(['invoice_type' => self::TYPE_RECEIPT])
+            //         ->andWhere(['status' => self::STATUS_ACTIVE])
+            //         ->exists();
+            // }
 
             if ($has_receipt) {
                 return '<span class="badge badge-success">ออกใบเสร็จแล้ว</span>';

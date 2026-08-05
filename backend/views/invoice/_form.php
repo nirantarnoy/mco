@@ -343,7 +343,11 @@ function loadJobItems(jobId) {
     $.ajax({
         url: '{$getJobItemsUrl}',
         type: 'POST',
-        data: { id: jobId },
+        data: { 
+            id: jobId, 
+            invoice_type: '{$model->invoice_type}',
+            current_invoice_id: '{$model->id}'
+        },
         dataType: 'json',
         success: function(data) {
             if (data.success && data.items && data.items.length > 0) {

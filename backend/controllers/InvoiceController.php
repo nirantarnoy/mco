@@ -595,16 +595,24 @@ class InvoiceController extends BaseController
                 ];
             }
 
-            // Get already invoiced items from other active Tax Invoices for this quotation
-            $alreadyInvoicedItems = \backend\models\InvoiceItem::find()
+            $invoiceType = \Yii::$app->request->post('invoice_type', Invoice::TYPE_TAX_INVOICE);
+            $currentInvoiceId = \Yii::$app->request->post('current_invoice_id');
+
+            // Get already invoiced items from other active invoices of the same type for this quotation
+            $query = \backend\models\InvoiceItem::find()
                 ->alias('ii')
                 ->innerJoin('invoices i', 'ii.invoice_id = i.id')
                 ->where([
                     'i.quotation_id' => $jobId,
-                    'i.invoice_type' => Invoice::TYPE_TAX_INVOICE,
+                    'i.invoice_type' => $invoiceType,
                     'i.status' => Invoice::STATUS_ACTIVE
-                ])
-                ->all();
+                ]);
+            
+            if ($currentInvoiceId) {
+                $query->andWhere(['!=', 'i.id', $currentInvoiceId]);
+            }
+            
+            $alreadyInvoicedItems = $query->all();
 
             // Create a pool of already invoiced items to match against
             $invoicedPool = [];
