@@ -73,13 +73,16 @@ $stockSums = $dataProvider->getModels();
                         
                         $group_name = $product->productGroup ? $product->productGroup->name : 'ไม่ระบุหมวดหมู่';
 
-                        $latest_purch_line = \backend\models\PurchLine::find()
-                            ->joinWith('purch')
-                            ->where(['purch_line.product_id' => $product->id])
-                            ->andWhere(['!=', 'purch.status', \backend\models\Purch::STATUS_CANCELLED])
-                            ->orderBy(['purch.purch_date' => SORT_DESC, 'purch_line.id' => SORT_DESC])
+                        // Find original receiving price for this specific lot
+                        $receiveLine = \backend\models\JournalTransLine::find()
+                            ->joinWith('journalTrans')
+                            ->where(['journal_trans_line.product_id' => $product->id])
+                            ->andWhere(['journal_trans_line.lot_no' => $stockSum->lot_no])
+                            ->andWhere(['journal_trans.trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_RECEIVE])
                             ->one();
-                        $unit_price = $latest_purch_line ? $latest_purch_line->line_price : $product->cost_price;
+                        
+                        // If found, use sale_price (which stores the unit price from PO), otherwise fallback to cost_price
+                        $unit_price = $receiveLine && $receiveLine->sale_price > 0 ? $receiveLine->sale_price : $product->cost_price;
 
                         $balance_value = $stockSum->qty * $unit_price;
 
