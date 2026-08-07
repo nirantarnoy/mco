@@ -68,7 +68,16 @@ $products = $dataProvider->getModels();
 
                     foreach ($products as $index => $product):
                         $group_name = $product->productGroup ? $product->productGroup->name : 'ไม่ระบุหมวดหมู่';
-                        $balance_value = $product->stock_qty * $product->cost_price;
+
+                        $latest_purch_line = \backend\models\PurchLine::find()
+                            ->joinWith('purch')
+                            ->where(['purch_line.product_id' => $product->id])
+                            ->andWhere(['!=', 'purch.status', \backend\models\Purch::STATUS_CANCELLED])
+                            ->orderBy(['purch.purch_date' => SORT_DESC, 'purch_line.id' => SORT_DESC])
+                            ->one();
+                        $unit_price = $latest_purch_line ? $latest_purch_line->line_price : $product->cost_price;
+
+                        $balance_value = $product->stock_qty * $unit_price;
 
                         if ($current_group !== null && $current_group !== $group_name):
                     ?>
@@ -95,7 +104,7 @@ $products = $dataProvider->getModels();
                             <td><?= Html::encode($product->name) ?></td>
                             <td><?= Html::encode($product->unit ? $product->unit->name : '') ?></td>
                             <td class="text-right"><?= number_format($product->stock_qty, 2) ?></td>
-                            <td class="text-right"><?= number_format($product->cost_price, 2) ?></td>
+                            <td class="text-right"><?= number_format($unit_price, 2) ?></td>
                             <td class="text-right"><?= number_format($balance_value, 2) ?></td>
                         </tr>
                     <?php endforeach; ?>

@@ -1306,6 +1306,22 @@ class PurchController extends BaseController
                 throw new \Exception('ไม่สามารถสร้าง Journal Transaction ได้: ' . implode(', ', $journalTrans->getFirstErrors()));
             }
 
+            // Generate Lot No (1 Lot per receive transaction)
+            $todayPrefix = date('ymd'); // YYMMDD
+            $lastLotLine = \backend\models\JournalTransLine::find()
+                ->where(['like', 'lot_no', $todayPrefix . '%', false])
+                ->orderBy(['lot_no' => SORT_DESC])
+                ->one();
+                
+            $nextSeq = 1;
+            if ($lastLotLine && $lastLotLine->lot_no) {
+                $lastSeq = substr($lastLotLine->lot_no, 6);
+                if (is_numeric($lastSeq)) {
+                    $nextSeq = intval($lastSeq) + 1;
+                }
+            }
+            $currentLotNo = $todayPrefix . sprintf('%04d', $nextSeq);
+
             $loop_index = 0;
             // Process each item
             foreach ($validItems as $lineId => $qty) {
@@ -1334,7 +1350,10 @@ class PurchController extends BaseController
                 $journalTransLine->product_id = $productId;
                 $journalTransLine->warehouse_id = $line_warehouse_id;
                 $journalTransLine->qty = $qty;
+                $journalTransLine->lot_no = $currentLotNo;
                 $journalTransLine->remark = $poLine->product_name . ' (' . $purchModel->purch_no . ')';
+                // Set the purchase price from the PO line
+                $journalTransLine->sale_price = $poLine->line_price;
                 // Save unit_id if available in PO line
                 if(isset($poLine->unit_id)){
                      $journalTransLine->unit_id = $poLine->unit_id;
@@ -1962,5 +1981,59 @@ class PurchController extends BaseController
             'from_date' => $from_date,
             'to_date' => $to_date,
         ]);
+    }
+    public function actionFixOldPrices()
+    {
+        $transactions = \backend\models\JournalTrans::find()
+            ->where(['trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE])
+            ->all();
+
+        $updatedLines = 0;
+        $updatedStockTrans = 0;
+
+        foreach ($transactions as $jt) {
+            $purchId = $jt->trans_ref_id;
+            if (!$purchId) continue;
+
+            $purch = \backend\models\Purch::findOne($purchId);
+            if (!$purch) continue;
+
+            $jtLines = \backend\models\JournalTransLine::find()->where(['journal_trans_id' => $jt->id])->all();
+            foreach ($jtLines as $jtLine) {
+                // Find matching PurchLine
+                $poLine = \backend\models\PurchLine::find()
+                    ->where(['purch_id' => $purchId, 'product_id' => $jtLine->product_id])
+                    ->one();
+
+                if ($poLine) {
+                    $unitPrice = $poLine->line_price;
+                    $totalPrice = $unitPrice * $jtLine->qty;
+
+                    // Update JournalTransLine
+                    $jtLine->sale_price = $unitPrice;
+                    $jtLine->line_price = $totalPrice;
+                    if ($jtLine->save(false)) { // Save without validation to bypass beforeSave overwrite
+                        $updatedLines++;
+                    }
+
+                    // Update corresponding StockTrans
+                    $stockTransList = \backend\models\StockTrans::find()
+                        ->where([
+                            'journal_trans_id' => $jt->id,
+                            'product_id' => $jtLine->product_id,
+                            'warehouse_id' => $jtLine->warehouse_id
+                        ])->all();
+
+                    foreach ($stockTransList as $stockTrans) {
+                        $stockTrans->line_price = $totalPrice;
+                        if ($stockTrans->save(false)) {
+                            $updatedStockTrans++;
+                        }
+                    }
+                }
+            }
+        }
+
+        return "Updated JournalTransLines: " . $updatedLines . "<br>Updated StockTrans: " . $updatedStockTrans . "<br>Done.";
     }
 }

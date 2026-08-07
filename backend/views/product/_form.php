@@ -120,6 +120,9 @@ if (!$model->isNewRecord) {
             </div>
         </div>
         <div class="row">
+            <div class="col-lg-3">
+                <?= $form->field($model, 'shelf_life_days')->textInput(['type' => 'number', 'min' => 0]) ?>
+            </div>
             <div class="col-lg-6">
                 <?= $form->field($model, 'remark')->textInput(['maxlength' => true])->label('หมายเหตุ') ?>
             </div>

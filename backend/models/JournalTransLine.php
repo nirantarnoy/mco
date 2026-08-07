@@ -63,7 +63,7 @@ class JournalTransLine extends ActiveRecord
             [['journal_trans_id', 'product_id', 'warehouse_id','is_damage','status'], 'integer'],
             [['qty', 'line_price', 'sale_price', 'good_qty', 'damaged_qty', 'missing_qty'], 'number'],
             [['remark', 'condition_note'], 'string'],
-            [['return_to_type', 'item_condition','return_note'], 'string', 'max' => 255],
+            [['return_to_type', 'item_condition','return_note', 'lot_no'], 'string', 'max' => 255],
             [['return_to_type'], 'in', 'range' => [self::RETURN_TYPE_COMPLETE, self::RETURN_TYPE_DAMAGED, self::RETURN_TYPE_INCOMPLETE]],
             [['item_condition'], 'in', 'range' => [self::CONDITION_GOOD, self::CONDITION_DAMAGED, self::CONDITION_MISSING]],
             [['journal_trans_id'], 'exist', 'skipOnError' => true, 'targetClass' => JournalTrans::class, 'targetAttribute' => ['journal_trans_id' => 'id']],
@@ -98,6 +98,7 @@ class JournalTransLine extends ActiveRecord
             'good_qty' => 'Good Quantity',
             'damaged_qty' => 'Damaged Quantity',
             'missing_qty' => 'Missing Quantity',
+            'lot_no' => 'Lot No',
         ];
     }
 
@@ -178,12 +179,14 @@ class JournalTransLine extends ActiveRecord
     {
         if (parent::beforeSave($insert)) {
             if ($insert || $this->isAttributeChanged('product_id')) {
-                // Get sale price from product
-                $product = Product::findOne($this->product_id);
-                if ($product) {
-                    $this->sale_price = $product->sale_price;
-                    $this->line_price = $this->qty * $this->sale_price;
+                // Get sale price from product only if not provided
+                if (empty($this->sale_price)) {
+                    $product = Product::findOne($this->product_id);
+                    if ($product) {
+                        $this->sale_price = $product->sale_price;
+                    }
                 }
+                $this->line_price = $this->qty * $this->sale_price;
             }
 
             // Recalculate line price if quantity changed

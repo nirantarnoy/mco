@@ -85,7 +85,7 @@ class StockTrans extends ActiveRecord
             [['trans_date', 'created_at', 'updated_at'], 'safe'],
             [['qty', 'line_price'], 'number'],
             [['remark'], 'string'],
-            [['created_by'], 'string', 'max' => 255],
+            [['created_by', 'lot_no'], 'string', 'max' => 255],
             [['journal_trans_id'], 'exist', 'skipOnError' => true, 'targetClass' => JournalTrans::class, 'targetAttribute' => ['journal_trans_id' => 'id']],
             [['product_id'], 'exist', 'skipOnError' => true, 'targetClass' => Product::class, 'targetAttribute' => ['product_id' => 'id']],
         ];
@@ -111,6 +111,7 @@ class StockTrans extends ActiveRecord
             'warehouse_id' => 'คลัง',
             'line_price' => 'Line Price',
             'updated_at' => 'Updated At',
+            'lot_no' => 'Lot No',
         ];
     }
 

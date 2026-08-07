@@ -42,7 +42,7 @@ class Product extends \yii\db\ActiveRecord
         return [
             [['code','name','product_group_id'], 'required'],
             [['code'], 'unique'],
-            [['status', 'product_group_id', 'unit_id', 'created_at', 'created_by', 'updated_at', 'updated_by','type_id','product_type_id','brand_id'], 'integer'],
+            [['status', 'product_group_id', 'unit_id', 'created_at', 'created_by', 'updated_at', 'updated_by','type_id','product_type_id','brand_id', 'shelf_life_days'], 'integer'],
             [['cost_price', 'sale_price', 'stock_qty','minimum_stock'], 'number'],
             [['code', 'photo','photo2'], 'string', 'max' => 255],
             [['name', 'description', 'remark', 'model_name'], 'string'],
@@ -74,7 +74,8 @@ class Product extends \yii\db\ActiveRecord
             'type_id' => 'สภาพสินค้า',
             'product_type_id' => 'ประเภทสินค้า',
             'brand_id' => 'ยี่ห้อ',
-            'model_name' => 'Model'
+            'model_name' => 'Model',
+            'shelf_life_days' => 'อายุการเก็บรักษา (วัน)',
         ];
     }
 }

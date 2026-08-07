@@ -526,35 +526,82 @@ class JournalTrans extends ActiveRecord
         if ($qtyToReverse > 0) {
             // ตรวจสอบสต็อกก่อนหักออก (กรณี reverseDirection เป็น -1 คือการรับเข้าแล้วจะกดยกเลิกเพื่อถอนออก)
             if ($reverseDirection == -1) {
-                $stockSum = StockSum::find()->where(['product_id' => $line->product_id, 'warehouse_id' => $line->warehouse_id])->one();
+                $stockSum = StockSum::find()->where(['product_id' => $line->product_id, 'warehouse_id' => $line->warehouse_id, 'lot_no' => $line->lot_no])->one();
                 $available = $stockSum ? $stockSum->qty : 0;
                 if ($available < $qtyToReverse) {
                     throw new \Exception("ไม่สามารถยกเลิกรายการได้: สินค้า " . ($line->product->name ?? '') . " ในคลังมีไม่เพียงพอสำหรับการหักออก (ต้องการ: {$qtyToReverse}, คงเหลือ: {$available})");
                 }
-            }
-
-            // Update Stock Sum
-            StockSum::updateStock($line->product_id, $line->warehouse_id, $qtyToReverse, $reverseDirection);
-        }
-
-        // Create reverse StockTrans for history
-        $stockTrans = new StockTrans();
-        $stockTrans->journal_trans_id = $this->id;
-        $stockTrans->product_id = $line->product_id;
-        $stockTrans->warehouse_id = $line->warehouse_id;
-        $stockTrans->qty = $qtyToReverse;
-        $stockTrans->stock_type_id = $reverseStockTypeId;
-        $stockTrans->trans_type_id = $this->trans_type_id;
-        $stockTrans->trans_date = date('Y-m-d H:i:s');
-        $stockTrans->created_at = date('Y-m-d H:i:s');
-        $stockTrans->created_by = Yii::$app->user->id;
-        $stockTrans->status = StockTrans::STATUS_CANCELLED;
-        $stockTrans->remark = "ยกเลิกรายการ: " . ($line->product->code ?? '');
-        $stockTrans->line_price = $line->line_price;
-        
-        if ($qtyToReverse > 0) {
-            if (!$stockTrans->save(false)) {
-                throw new \Exception("Failed to save stock transaction history.");
+                
+                // Update Stock Sum
+                StockSum::updateStock($line->product_id, $line->warehouse_id, $qtyToReverse, $reverseDirection, $line->lot_no);
+                
+                // Create reverse StockTrans for history
+                $stockTrans = new StockTrans();
+                $stockTrans->journal_trans_id = $this->id;
+                $stockTrans->product_id = $line->product_id;
+                $stockTrans->warehouse_id = $line->warehouse_id;
+                $stockTrans->qty = $qtyToReverse;
+                $stockTrans->stock_type_id = $reverseStockTypeId;
+                $stockTrans->trans_type_id = $this->trans_type_id;
+                $stockTrans->trans_date = date('Y-m-d H:i:s');
+                $stockTrans->created_at = date('Y-m-d H:i:s');
+                $stockTrans->created_by = Yii::$app->user->id;
+                $stockTrans->status = StockTrans::STATUS_CANCELLED;
+                $stockTrans->remark = "ยกเลิกรายการ: " . ($line->product->code ?? '');
+                $stockTrans->line_price = $line->line_price;
+                $stockTrans->lot_no = $line->lot_no;
+                if (!$stockTrans->save(false)) {
+                    throw new \Exception("Failed to save stock transaction history.");
+                }
+            } else {
+                // Canceling an OUT -> Adding back to the exact lots that were deducted
+                $stockTransList = StockTrans::find()
+                    ->where(['journal_trans_id' => $this->id, 'product_id' => $line->product_id, 'warehouse_id' => $line->warehouse_id, 'status' => 3])
+                    ->all();
+                
+                if (empty($stockTransList)) {
+                     // Fallback just in case
+                     StockSum::updateStock($line->product_id, $line->warehouse_id, $qtyToReverse, $reverseDirection, null);
+                     
+                     $stockTrans = new StockTrans();
+                     $stockTrans->journal_trans_id = $this->id;
+                     $stockTrans->product_id = $line->product_id;
+                     $stockTrans->warehouse_id = $line->warehouse_id;
+                     $stockTrans->qty = $qtyToReverse;
+                     $stockTrans->stock_type_id = $reverseStockTypeId;
+                     $stockTrans->trans_type_id = $this->trans_type_id;
+                     $stockTrans->trans_date = date('Y-m-d H:i:s');
+                     $stockTrans->created_at = date('Y-m-d H:i:s');
+                     $stockTrans->created_by = Yii::$app->user->id;
+                     $stockTrans->status = StockTrans::STATUS_CANCELLED;
+                     $stockTrans->remark = "ยกเลิกรายการ: " . ($line->product->code ?? '');
+                     $stockTrans->line_price = $line->line_price;
+                     if (!$stockTrans->save(false)) {
+                         throw new \Exception("Failed to save stock transaction history.");
+                     }
+                } else {
+                    foreach($stockTransList as $st) {
+                        StockSum::updateStock($line->product_id, $line->warehouse_id, $st->qty, 1, $st->lot_no);
+                        
+                        $stockTrans = new StockTrans();
+                        $stockTrans->journal_trans_id = $this->id;
+                        $stockTrans->product_id = $line->product_id;
+                        $stockTrans->warehouse_id = $line->warehouse_id;
+                        $stockTrans->qty = $st->qty;
+                        $stockTrans->stock_type_id = $reverseStockTypeId;
+                        $stockTrans->trans_type_id = $this->trans_type_id;
+                        $stockTrans->trans_date = date('Y-m-d H:i:s');
+                        $stockTrans->created_at = date('Y-m-d H:i:s');
+                        $stockTrans->created_by = Yii::$app->user->id;
+                        $stockTrans->status = StockTrans::STATUS_CANCELLED;
+                        $stockTrans->remark = "ยกเลิกรายการ: " . ($line->product->code ?? '');
+                        $stockTrans->line_price = $line->line_price;
+                        $stockTrans->lot_no = $st->lot_no;
+                        if (!$stockTrans->save(false)) {
+                            throw new \Exception("Failed to save stock transaction history.");
+                        }
+                    }
+                }
             }
         }
 
@@ -583,27 +630,52 @@ class JournalTrans extends ActiveRecord
             }
 
             if ($qtyToUpdate > 0) {
-                // Create stock transaction for the actual stock increase (Good items)
-                $stockTrans = new StockTrans();
-                $stockTrans->journal_trans_id = $this->id;
-                $stockTrans->trans_date = $this->trans_date;
-                $stockTrans->product_id = $line->product_id;
-                $stockTrans->trans_type_id = $this->trans_type_id;
-                $stockTrans->qty = $qtyToUpdate;
-                $stockTrans->created_at = date('Y-m-d H:i:s');
-                $stockTrans->created_by = $this->created_by;
-                $stockTrans->status = 3; // Completed
-                $stockTrans->remark = $line->remark;
-                $stockTrans->stock_type_id = $this->stock_type_id;
-                $stockTrans->warehouse_id = $line->warehouse_id; 
-                $stockTrans->line_price = $line->line_price;
-                $stockTrans->updated_at = date('Y-m-d H:i:s');
-                if (!$stockTrans->save(false)) {
-                    Yii::error("Failed to save StockTrans: " . print_r($stockTrans->errors, true));
+                if ($this->stock_type_id == self::STOCK_TYPE_OUT) {
+                    // OUT (Issue) - FIFO Deduction
+                    $deductions = StockSum::deductStockFIFO($line->product_id, $line->warehouse_id, $qtyToUpdate);
+                    foreach ($deductions as $deduction) {
+                        $stockTrans = new StockTrans();
+                        $stockTrans->journal_trans_id = $this->id;
+                        $stockTrans->trans_date = $this->trans_date;
+                        $stockTrans->product_id = $line->product_id;
+                        $stockTrans->trans_type_id = $this->trans_type_id;
+                        $stockTrans->qty = $deduction['qty'];
+                        $stockTrans->created_at = date('Y-m-d H:i:s');
+                        $stockTrans->created_by = $this->created_by;
+                        $stockTrans->status = 3; // Completed
+                        $stockTrans->remark = $line->remark;
+                        $stockTrans->stock_type_id = $this->stock_type_id;
+                        $stockTrans->warehouse_id = $line->warehouse_id; 
+                        $stockTrans->line_price = $line->line_price;
+                        $stockTrans->lot_no = $deduction['lot_no']; // SAVE LOT NO for tracking
+                        $stockTrans->updated_at = date('Y-m-d H:i:s');
+                        if (!$stockTrans->save(false)) {
+                            Yii::error("Failed to save StockTrans: " . print_r($stockTrans->errors, true));
+                        }
+                    }
+                } else {
+                    // IN (Receive/Return)
+                    $stockTrans = new StockTrans();
+                    $stockTrans->journal_trans_id = $this->id;
+                    $stockTrans->trans_date = $this->trans_date;
+                    $stockTrans->product_id = $line->product_id;
+                    $stockTrans->trans_type_id = $this->trans_type_id;
+                    $stockTrans->qty = $qtyToUpdate;
+                    $stockTrans->created_at = date('Y-m-d H:i:s');
+                    $stockTrans->created_by = $this->created_by;
+                    $stockTrans->status = 3; // Completed
+                    $stockTrans->remark = $line->remark;
+                    $stockTrans->stock_type_id = $this->stock_type_id;
+                    $stockTrans->warehouse_id = $line->warehouse_id; 
+                    $stockTrans->line_price = $line->line_price;
+                    $stockTrans->lot_no = $line->lot_no;
+                    $stockTrans->updated_at = date('Y-m-d H:i:s');
+                    if (!$stockTrans->save(false)) {
+                        Yii::error("Failed to save StockTrans: " . print_r($stockTrans->errors, true));
+                    }
+                    // Update stock summary
+                    $this->updateStockSummary($line->product_id, $line->warehouse_id, $qtyToUpdate, $line->lot_no);
                 }
-
-                // Update stock summary
-                $this->updateStockSummary($line->product_id, $line->warehouse_id, $qtyToUpdate);
             }
             
             // กรณีมีของเสีย หรือ ของหาย ให้บันทึกเป็น StockTrans เฉพาะรายการ (ถ้าต้องการเก็บประวัติ)
@@ -642,10 +714,10 @@ class JournalTrans extends ActiveRecord
     /**
      * Update stock summary
      */
-    protected function updateStockSummary($productId, $warehouseId, $qty)
+    protected function updateStockSummary($productId, $warehouseId, $qty, $lotNo = null)
     {
         $direction = ($this->stock_type_id == self::STOCK_TYPE_IN) ? 1 : -1;
-        StockSum::updateStock($productId, $warehouseId, $qty, $direction);
+        StockSum::updateStock($productId, $warehouseId, $qty, $direction, $lotNo);
     }
 
     /**
