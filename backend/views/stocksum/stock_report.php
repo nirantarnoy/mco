@@ -78,7 +78,7 @@ $stockSums = $dataProvider->getModels();
                             ->joinWith('journalTrans')
                             ->where(['journal_trans_line.product_id' => $product->id])
                             ->andWhere(['journal_trans_line.lot_no' => $stockSum->lot_no])
-                            ->andWhere(['journal_trans.trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_RECEIVE])
+                            ->andWhere(['journal_trans.trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE])
                             ->one();
                         
                         // If found, use sale_price (which stores the unit price from PO), otherwise fallback to cost_price
