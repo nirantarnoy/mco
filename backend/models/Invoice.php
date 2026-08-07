@@ -295,6 +295,15 @@ class Invoice extends ActiveRecord
                 }
             }
 
+            // Fallback: If receipt was pulled from quotation or bill placement instead of this tax invoice directly
+            if ($receipt_amount == 0 && $this->quotation_id) {
+                $receipt_amount = self::find()
+                    ->where(['quotation_id' => $this->quotation_id])
+                    ->andWhere(['invoice_type' => self::TYPE_RECEIPT])
+                    ->andWhere(['status' => self::STATUS_ACTIVE])
+                    ->sum('total_amount') ?: 0;
+            }
+
             if ($receipt_amount > 0) {
                 if ($receipt_amount >= ($this->total_amount - 0.1) && $this->total_amount > 0) {
                     return '<span class="badge badge-success">ออกใบเสร็จแล้ว</span>';
