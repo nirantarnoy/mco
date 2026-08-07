@@ -14,11 +14,12 @@ $yesno = [['id' => 1, 'YES'], ['id' => 0, 'NO']];
 $model_warehouse_product = null;
 
 if (!$model->isNewRecord) {
-    $sql = "SELECT w.name as warehouse_name,st.qty 
+    $sql = "SELECT w.name as warehouse_name, st.lot_no, st.qty 
             FROM product as p 
                 left join stock_sum as st on p.id = st.product_id 
                 inner join warehouse as w on st.warehouse_id = w.id 
-            where st.qty > 0 and p.id = " . $model->id;
+            where st.qty > 0 and p.id = " . $model->id . "
+            ORDER BY w.name ASC, st.lot_no ASC";
 
     $model_warehouse_product = Yii::$app->db->createCommand($sql)->queryAll();
 
@@ -189,6 +190,7 @@ if (!$model->isNewRecord) {
                     <thead>
                     <tr>
                         <td>คลังจัดเก็บ</td>
+                        <td>Lot No.</td>
                         <td>จำนวน</td>
                     </tr>
                     </thead>
@@ -197,6 +199,7 @@ if (!$model->isNewRecord) {
                         <?php for ($i = 0; $i <= count($model_warehouse_product) - 1; $i++): ?>
                             <tr>
                                 <td><?= $model_warehouse_product[$i]['warehouse_name'] ?></td>
+                                <td><?= $model_warehouse_product[$i]['lot_no'] ?: '-' ?></td>
                                 <td><?= number_format($model_warehouse_product[$i]['qty'], 0) ?></td>
                             </tr>
                         <?php endfor; ?>
