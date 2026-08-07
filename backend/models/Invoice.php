@@ -270,7 +270,7 @@ class Invoice extends ActiveRecord
         }
 
         if ($this->invoice_type == self::TYPE_TAX_INVOICE) {
-            // Check receipt amount from payment history
+            // 1. Check receipt amount from payment history
             $receipt_amount = InvoicePaymentHistory::find()
                 ->alias('h')
                 ->innerJoin('invoices r', 'h.receipt_id = r.id')
@@ -279,7 +279,7 @@ class Invoice extends ActiveRecord
                 ->andWhere(['r.invoice_type' => self::TYPE_RECEIPT])
                 ->sum('h.amount') ?: 0;
             
-            // Fallback for older records using InvoiceRelation
+            // 2. Fallback for direct parent-child relation (Tax Invoice -> Receipt)
             if ($receipt_amount == 0) {
                 $receipt_ids = InvoiceRelation::find()
                     ->alias('rel')
@@ -295,23 +295,39 @@ class Invoice extends ActiveRecord
                 }
             }
 
-            // Fallback: If receipt was pulled from quotation or bill placement instead of this tax invoice directly
-            if ($receipt_amount == 0 && $this->quotation_id) {
-                $receipt_amount = self::find()
-                    ->where(['quotation_id' => $this->quotation_id])
-                    ->andWhere(['invoice_type' => self::TYPE_RECEIPT])
-                    ->andWhere(['status' => self::STATUS_ACTIVE])
-                    ->sum('total_amount') ?: 0;
+            // 3. Fallback for siblings (e.g. Quotation -> Tax Invoice AND Quotation -> Receipt)
+            if ($receipt_amount == 0) {
+                // Find all parent IDs of this Tax Invoice
+                $parent_ids = InvoiceRelation::find()
+                    ->where(['child_invoice_id' => $this->id])
+                    ->select('parent_invoice_id')
+                    ->column();
+                
+                if (!empty($parent_ids)) {
+                    // Find all receipts that share the same parents
+                    $sibling_receipt_ids = InvoiceRelation::find()
+                        ->alias('rel')
+                        ->innerJoin('invoices r', 'rel.child_invoice_id = r.id')
+                        ->where(['rel.parent_invoice_id' => $parent_ids])
+                        ->andWhere(['r.status' => self::STATUS_ACTIVE])
+                        ->andWhere(['r.invoice_type' => self::TYPE_RECEIPT])
+                        ->select('r.id')
+                        ->column();
+                        
+                    if (!empty($sibling_receipt_ids)) {
+                        $receipt_amount = self::find()->where(['id' => $sibling_receipt_ids])->sum('total_amount') ?: 0;
+                    }
+                }
             }
 
             if ($receipt_amount > 0) {
                 if ($receipt_amount >= ($this->total_amount - 0.1) && $this->total_amount > 0) {
-                    return '<span class="badge badge-success">ออกใบเสร็จแล้ว (' . $receipt_amount . '/' . $this->total_amount . ')</span>';
+                    return '<span class="badge badge-success">ออกใบเสร็จแล้ว</span>';
                 } else {
-                    return '<span class="badge badge-warning" style="background-color: #ff9800;">ออกใบเสร็จแล้วบางส่วน (' . $receipt_amount . '/' . $this->total_amount . ')</span>';
+                    return '<span class="badge badge-warning" style="background-color: #ff9800;">ออกใบเสร็จแล้วบางส่วน</span>';
                 }
             } else {
-                return '<span class="badge badge-info">ใช้งาน (' . $receipt_amount . '/' . $this->total_amount . ')</span>';
+                return '<span class="badge badge-info">ใช้งาน</span>';
             }
         }
 
