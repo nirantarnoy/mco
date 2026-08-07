@@ -306,12 +306,12 @@ class Invoice extends ActiveRecord
 
             if ($receipt_amount > 0) {
                 if ($receipt_amount >= ($this->total_amount - 0.1) && $this->total_amount > 0) {
-                    return '<span class="badge badge-success">ออกใบเสร็จแล้ว</span>';
+                    return '<span class="badge badge-success">ออกใบเสร็จแล้ว (' . $receipt_amount . '/' . $this->total_amount . ')</span>';
                 } else {
-                    return '<span class="badge badge-warning" style="background-color: #ff9800;">ออกใบเสร็จแล้วบางส่วน</span>';
+                    return '<span class="badge badge-warning" style="background-color: #ff9800;">ออกใบเสร็จแล้วบางส่วน (' . $receipt_amount . '/' . $this->total_amount . ')</span>';
                 }
             } else {
-                return '<span class="badge badge-info">ใช้งาน</span>';
+                return '<span class="badge badge-info">ใช้งาน (' . $receipt_amount . '/' . $this->total_amount . ')</span>';
             }
         }
 
