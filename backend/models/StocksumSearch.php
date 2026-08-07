@@ -19,7 +19,7 @@ class StocksumSearch extends StockSum
         return [
             [['id', 'warehouse_id', 'product_id'], 'integer'],
             [['qty'], 'number'],
-            [['last_update'], 'safe'],
+            [['last_update', 'lot_no'], 'safe'],
         ];
     }
 
@@ -64,6 +64,8 @@ class StocksumSearch extends StockSum
             'product_id' => $this->product_id,
             'qty' => $this->qty
         ]);
+
+        $query->andFilterWhere(['like', 'lot_no', $this->lot_no]);
 
         $query->andFilterWhere(['company_id'=> (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'))]);
 

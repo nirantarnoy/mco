@@ -7,11 +7,11 @@ use yii\helpers\Url;
 /* @var $dataProvider yii\data\ActiveDataProvider */
 /* @var $filter_qty string */
 
-$this->title = 'รายงานแสดงยอดสินค้าคงเหลือ';
+$this->title = 'รายงานแสดงยอดสินค้าคงเหลือ (แยก Lot)';
 $this->params['breadcrumbs'][] = ['label' => 'จัดการสต๊อกสินค้า', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 
-$products = $dataProvider->getModels();
+$stockSums = $dataProvider->getModels();
 ?>
 <style>
     .stock-report table {
@@ -52,6 +52,7 @@ $products = $dataProvider->getModels();
                         <th>หมวดหมู่สินค้า</th>
                         <th>รหัสสินค้า</th>
                         <th>รายการสินค้า</th>
+                        <th>Lot No.</th>
                         <th>หน่วยนับ</th>
                         <th class="text-right">คงเหลือ</th>
                         <th class="text-right">ราคาต่อหน่วย</th>
@@ -66,7 +67,10 @@ $products = $dataProvider->getModels();
                     $total_qty = 0;
                     $total_value = 0;
 
-                    foreach ($products as $index => $product):
+                    foreach ($stockSums as $index => $stockSum):
+                        $product = $stockSum->product;
+                        if (!$product) continue;
+                        
                         $group_name = $product->productGroup ? $product->productGroup->name : 'ไม่ระบุหมวดหมู่';
 
                         $latest_purch_line = \backend\models\PurchLine::find()
@@ -77,12 +81,12 @@ $products = $dataProvider->getModels();
                             ->one();
                         $unit_price = $latest_purch_line ? $latest_purch_line->line_price : $product->cost_price;
 
-                        $balance_value = $product->stock_qty * $unit_price;
+                        $balance_value = $stockSum->qty * $unit_price;
 
                         if ($current_group !== null && $current_group !== $group_name):
                     ?>
                         <tr style="background-color: #f4f4f4; font-weight: bold;">
-                            <td colspan="4" class="text-right">รวมหมวดนี้</td>
+                            <td colspan="5" class="text-right">รวมหมวดนี้</td>
                             <td class="text-right"><?= number_format($group_qty, 2) ?></td>
                             <td></td>
                             <td class="text-right"><?= number_format($group_value, 2) ?></td>
@@ -93,17 +97,18 @@ $products = $dataProvider->getModels();
                         endif;
 
                         $current_group = $group_name;
-                        $group_qty += $product->stock_qty;
+                        $group_qty += $stockSum->qty;
                         $group_value += $balance_value;
-                        $total_qty += $product->stock_qty;
+                        $total_qty += $stockSum->qty;
                         $total_value += $balance_value;
                     ?>
                         <tr>
                             <td><?= Html::encode($group_name) ?></td>
                             <td><?= Html::encode($product->code) ?></td>
                             <td><?= Html::encode($product->name) ?></td>
+                            <td><?= Html::encode($stockSum->lot_no ?: '-') ?></td>
                             <td><?= Html::encode($product->unit ? $product->unit->name : '') ?></td>
-                            <td class="text-right"><?= number_format($product->stock_qty, 2) ?></td>
+                            <td class="text-right"><?= number_format($stockSum->qty, 2) ?></td>
                             <td class="text-right"><?= number_format($unit_price, 2) ?></td>
                             <td class="text-right"><?= number_format($balance_value, 2) ?></td>
                         </tr>
@@ -111,7 +116,7 @@ $products = $dataProvider->getModels();
 
                     <?php if ($current_group !== null): ?>
                         <tr style="background-color: #f4f4f4; font-weight: bold;">
-                            <td colspan="4" class="text-right">รวมหมวดนี้</td>
+                            <td colspan="5" class="text-right">รวมหมวดนี้</td>
                             <td class="text-right"><?= number_format($group_qty, 2) ?></td>
                             <td></td>
                             <td class="text-right"><?= number_format($group_value, 2) ?></td>
@@ -120,7 +125,7 @@ $products = $dataProvider->getModels();
                 </tbody>
                 <tfoot>
                     <tr style="background-color: #e9ecef; font-weight: bold;">
-                        <td colspan="4" class="text-center">รวมทั้งสิ้น</td>
+                        <td colspan="5" class="text-center">รวมทั้งสิ้น</td>
                         <td class="text-right"><?= number_format($total_qty, 2) ?></td>
                         <td></td>
                         <td class="text-right"><?= number_format($total_value, 2) ?></td>

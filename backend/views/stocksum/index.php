@@ -42,6 +42,13 @@ $this->params['breadcrumbs'][] = $this->title;
                     return '<a href="' . Url::to(['product/view', 'id' => $data->product_id]) . '">' . \backend\models\Product::findName($data->product_id) . '</a>';
                 }
             ],
+            [
+                'attribute' => 'lot_no',
+                'label' => 'Lot No.',
+                'value' => function($data) {
+                    return $data->lot_no ? $data->lot_no : '-';
+                }
+            ],
             'qty',
 
         ],
