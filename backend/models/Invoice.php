@@ -270,36 +270,37 @@ class Invoice extends ActiveRecord
         }
 
         if ($this->invoice_type == self::TYPE_TAX_INVOICE) {
-            // Check if any receipt has been issued for this tax invoice and it's NOT cancelled
-            $has_receipt = InvoicePaymentHistory::find()
+            // Check receipt amount from payment history
+            $receipt_amount = InvoicePaymentHistory::find()
                 ->alias('h')
                 ->innerJoin('invoices r', 'h.receipt_id = r.id')
                 ->where(['h.invoice_id' => $this->id])
                 ->andWhere(['r.status' => self::STATUS_ACTIVE])
                 ->andWhere(['r.invoice_type' => self::TYPE_RECEIPT])
-                ->exists();
+                ->sum('h.amount') ?: 0;
             
-            if (!$has_receipt) {
-                $has_receipt = InvoiceRelation::find()
+            // Fallback for older records using InvoiceRelation
+            if ($receipt_amount == 0) {
+                $receipt_ids = InvoiceRelation::find()
                     ->alias('rel')
                     ->innerJoin('invoices r', 'rel.child_invoice_id = r.id')
                     ->where(['rel.parent_invoice_id' => $this->id])
                     ->andWhere(['r.status' => self::STATUS_ACTIVE])
                     ->andWhere(['r.invoice_type' => self::TYPE_RECEIPT])
-                    ->exists();
+                    ->select('r.id')
+                    ->column();
+                
+                if (!empty($receipt_ids)) {
+                    $receipt_amount = self::find()->where(['id' => $receipt_ids])->sum('total_amount') ?: 0;
+                }
             }
 
-            // [REMOVED] Overly broad check: this causes partial invoices to show wrong status
-            // if (!$has_receipt && $this->quotation_id) {
-            //     $has_receipt = self::find()
-            //         ->where(['quotation_id' => $this->quotation_id])
-            //         ->andWhere(['invoice_type' => self::TYPE_RECEIPT])
-            //         ->andWhere(['status' => self::STATUS_ACTIVE])
-            //         ->exists();
-            // }
-
-            if ($has_receipt) {
-                return '<span class="badge badge-success">ออกใบเสร็จแล้ว</span>';
+            if ($receipt_amount > 0) {
+                if ($receipt_amount >= ($this->total_amount - 0.1) && $this->total_amount > 0) {
+                    return '<span class="badge badge-success">ออกใบเสร็จแล้ว</span>';
+                } else {
+                    return '<span class="badge badge-warning" style="background-color: #ff9800;">ออกใบเสร็จแล้วบางส่วน</span>';
+                }
             } else {
                 return '<span class="badge badge-info">ใช้งาน</span>';
             }

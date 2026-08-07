@@ -122,7 +122,7 @@ class InvoiceController extends BaseController
             // If copying to a different type (e.g. Invoice -> Receipt), 
             // set the quotation_id to the source invoice ID to maintain reference.
             if ($sourceInvoice->invoice_type != $type) {
-                 if ($type === Invoice::TYPE_RECEIPT && $sourceInvoice->invoice_type !== Invoice::TYPE_RECEIPT) {
+                 if ($type == Invoice::TYPE_RECEIPT && $sourceInvoice->invoice_type !== Invoice::TYPE_RECEIPT) {
                     $model->quotation_id = $sourceInvoice->id;
                  } else {
                     $model->quotation_id = $sourceInvoice->quotation_id;
@@ -131,7 +131,7 @@ class InvoiceController extends BaseController
         }
 
         // Simplified form for Receipt from copy
-//        if ($type === Invoice::TYPE_RECEIPT && $copy_from) {
+//        if ($type == Invoice::TYPE_RECEIPT && $copy_from) {
 //             // Pre-load data for modal if it's a new request (not post)
 //             if (!Yii::$app->request->isPost) {
 //                 // The model is already populated with copied data above
@@ -148,7 +148,7 @@ class InvoiceController extends BaseController
 //                    if ($copy_from) {
 //                         $sourceInvoice = $this->findModel($copy_from);
 //                         if ($sourceInvoice->invoice_type != $type) {
-//                             if ($type === Invoice::TYPE_RECEIPT && $sourceInvoice->invoice_type !== Invoice::TYPE_RECEIPT) {
+//                             if ($type == Invoice::TYPE_RECEIPT && $sourceInvoice->invoice_type !== Invoice::TYPE_RECEIPT) {
 //                                $model->quotation_id = $sourceInvoice->id;
 //                             } else {
 //                                $model->quotation_id = $sourceInvoice->quotation_id;
@@ -201,7 +201,7 @@ class InvoiceController extends BaseController
                 if ($copy_from && empty($model->quotation_id)) {
                      $sourceInvoice = $this->findModel($copy_from);
                      if ($sourceInvoice->invoice_type != $type) {
-                         if ($type === Invoice::TYPE_RECEIPT && $sourceInvoice->invoice_type !== Invoice::TYPE_RECEIPT) {
+                         if ($type == Invoice::TYPE_RECEIPT && $sourceInvoice->invoice_type !== Invoice::TYPE_RECEIPT) {
                             $model->quotation_id = $sourceInvoice->id;
                          } else {
                             $model->quotation_id = $sourceInvoice->quotation_id;
@@ -227,7 +227,7 @@ class InvoiceController extends BaseController
                         }
 
                         // Save Payment History ONLY if the new document is a RECEIPT
-                        if ($type === Invoice::TYPE_RECEIPT) {
+                        if ($type == Invoice::TYPE_RECEIPT) {
                             $history = new \backend\models\InvoicePaymentHistory();
                             $history->invoice_id = $copy_from;
                             $history->receipt_id = $model->id;
