@@ -320,6 +320,16 @@ class Invoice extends ActiveRecord
                 }
             }
 
+            // 4. Fallback for PO Number (when documents are created manually without direct link)
+            if ($receipt_amount == 0 && !empty($this->po_number)) {
+                $receipt_amount = self::find()
+                    ->where(['po_number' => $this->po_number])
+                    ->andWhere(['customer_id' => $this->customer_id]) // ensure it's the same customer
+                    ->andWhere(['invoice_type' => self::TYPE_RECEIPT])
+                    ->andWhere(['status' => self::STATUS_ACTIVE])
+                    ->sum('total_amount') ?: 0;
+            }
+
             if ($receipt_amount > 0) {
                 if ($receipt_amount >= ($this->total_amount - 0.1) && $this->total_amount > 0) {
                     return '<span class="badge badge-success">ออกใบเสร็จแล้ว</span>';
