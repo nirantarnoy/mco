@@ -293,8 +293,14 @@ class OcrController extends BaseController
         $model->invoice_number = $data['invoice_number'] ?? null;
         
         if (!empty($data['invoice_date'])) {
-            $parsed = $this->parseDateString($data['invoice_date']);
-            if ($parsed) $model->invoice_date = $parsed;
+            // Gemini is prompted to return YYYY-MM-DD
+            $dateStr = $data['invoice_date'];
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
+                $model->invoice_date = $dateStr;
+            } else {
+                $parsed = $this->parseDateString($dateStr);
+                if ($parsed) $model->invoice_date = $parsed;
+            }
         }
 
         $model->subtotal = isset($data['subtotal']) ? (float)$data['subtotal'] : 0;
