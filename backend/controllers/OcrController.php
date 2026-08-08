@@ -625,46 +625,27 @@ class OcrController extends BaseController
      */
     protected function tryThaiWatsaduReceiptParsing($logicalLines)
     {
-        $itemNames = [];
-        $itemPrices = [];
+        $items = [];
         
         foreach ($logicalLines as $line) {
             $line = trim($line);
             if (empty($line) || $this->isHeaderOrLabelLine($line)) continue;
             
-            // Match Item Name line: e.g. "1 V 8855890024900 ท่อตรงยูพีวีซี 16มม. 2.90M. EAGLE EG16 ขาว"
-            if (preg_match('/^(\d{1,3})\s+[A-Za-z]\s+(\d{8,15})\s+(.+)$/u', $line, $m)) {
-                $itemNames[] = [
-                    'code' => trim($m[2]),
-                    'desc' => trim($m[3])
-                ];
-            }
-            // Match Price line: e.g. "6 33.00 0.00 198.00" or "1 63.00 0.00 63.00"
-            // Qty (int or float), Price, Discount, Total Amount
-            elseif (preg_match('/^(\d+(?:\.\d+)?)\s+([0-9,]+\.\d{2})\s+([0-9,]+\.\d{2})\s+([0-9,]+\.\d{2})$/u', $line, $p)) {
-                $itemPrices[] = [
-                    'qty' => (float)$p[1],
-                    'price' => (float)str_replace(',', '', $p[2]),
-                    'amount' => (float)str_replace(',', '', $p[4])
+            // Match Barcode (8-14 digits) + Description + Qty + Price + Discount + Total Amount
+            // It ignores junk at the beginning (like sequence numbers, 'V', 'N') and junk at the end.
+            // Example line: "2 V 8855890026072 ท่ออ่อนลายลูกฟูก ... ขาว 1 63.00 0.00 63.00 98"
+            if (preg_match('/(\d{8,14})\s+(.+?)\s+(\d+(?:\.\d+)?)\s+([0-9,]+\.\d{2})\s+([0-9,]+\.\d{2})\s+([0-9,]+\.\d{2})/u', $line, $m)) {
+                $items[] = [
+                    'code' => trim($m[1]),
+                    'desc' => trim($m[2]),
+                    'qty' => (float)$m[3],
+                    'unit' => 'รายการ', 
+                    'price' => (float)str_replace(',', '', $m[4]),
+                    'amount' => (float)str_replace(',', '', $m[6])
                 ];
             }
         }
         
-        $items = [];
-        // Pair them up sequentially if we found a matching number of names and prices
-        if (!empty($itemNames) && count($itemNames) === count($itemPrices)) {
-            foreach ($itemNames as $index => $nameData) {
-                $priceData = $itemPrices[$index];
-                $items[] = [
-                    'code' => $nameData['code'],
-                    'desc' => $nameData['desc'],
-                    'qty' => $priceData['qty'],
-                    'unit' => 'รายการ', 
-                    'price' => $priceData['price'],
-                    'amount' => $priceData['amount']
-                ];
-            }
-        }
         return $items;
     }
 
