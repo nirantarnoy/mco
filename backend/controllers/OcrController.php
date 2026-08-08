@@ -171,7 +171,6 @@ class OcrController extends BaseController
         // Map standard Invoice Parser entities
         $model->vendor_name = $entities['supplier_name'] ?? null;
         $model->customer_name = $entities['receiver_name'] ?? null;
-        $model->vendor_tax_id = $entities['supplier_tax_id'] ?? null;
         $model->customer_tax_id = $entities['receiver_tax_id'] ?? null;
         $model->invoice_number = $entities['invoice_id'] ?? null;
         
