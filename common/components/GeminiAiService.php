@@ -11,7 +11,7 @@ class GeminiAiService extends Component
 {
     public $apiKey;
     // Default model to use
-    public $model = 'gemini-2.5-flash';
+    public $model = 'gemini-flash-latest';
     
     public function processInvoice($filePath)
     {
