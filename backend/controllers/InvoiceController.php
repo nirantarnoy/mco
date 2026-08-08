@@ -84,9 +84,10 @@ class InvoiceController extends BaseController
      * Creates a new Invoice model.
      * @param string $type Invoice type
      * @param integer|null $copy_from Copy from existing invoice
+     * @param integer|null $ocr_id Create from OCR temp invoice
      * @return mixed
      */
-    public function actionCreate($type = null, $copy_from = null)
+    public function actionCreate($type = null, $copy_from = null, $ocr_id = null)
     {
         if (!$type) {
             return $this->redirect(['select']);
@@ -127,6 +128,44 @@ class InvoiceController extends BaseController
                  } else {
                     $model->quotation_id = $sourceInvoice->quotation_id;
                  }
+            }
+        } elseif ($ocr_id) {
+            // Create from OCR TempInvoice
+            $tempInvoice = \backend\models\TempInvoice::findOne($ocr_id);
+            if ($tempInvoice) {
+                $model->customer_name = $tempInvoice->customer_name;
+                $model->customer_address = $tempInvoice->customer_address;
+                $model->customer_tax_id = $tempInvoice->customer_tax_id;
+                
+                if ($tempInvoice->invoice_date) {
+                    $model->invoice_date = $tempInvoice->invoice_date;
+                }
+                
+                $model->po_number = $tempInvoice->invoice_number; 
+
+                $model->subtotal = $tempInvoice->subtotal;
+                $model->vat_amount = $tempInvoice->vat_amount;
+                $model->total_amount = $tempInvoice->total_amount;
+                
+                // Add vendor name to special note if it exists
+                $model->special_note = "";
+                if ($tempInvoice->vendor_name) {
+                    $model->special_note .= "อ้างอิงจากผู้ขาย: " . $tempInvoice->vendor_name;
+                }
+
+                $items = [];
+                foreach ($tempInvoice->tempInvoiceLines as $line) {
+                    $item = new InvoiceItem();
+                    $item->item_description = $line->description;
+                    $item->quantity = $line->quantity ?: 1;
+                    $item->unit = $line->unit;
+                    $item->unit_price = $line->unit_price;
+                    $item->amount = $line->amount;
+                    $items[] = $item;
+                }
+                if (empty($items)) {
+                    $items = [new InvoiceItem()];
+                }
             }
         }
 
