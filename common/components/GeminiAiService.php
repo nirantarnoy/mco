@@ -15,8 +15,8 @@ class GeminiAiService extends Component
     public $apiKey; // Added to prevent unknown property error from legacy main-local.php
     
     // Default model to use (Vertex AI uses 001/002 versions typically, or flash-latest)
-    // gemini-1.5-flash-001 is stable on Vertex AI
-    public $model = 'gemini-1.5-flash-001';
+    // In 2026, 1.5 is deprecated. We use gemini-2.5-flash.
+    public $model = 'gemini-2.5-flash';
 
     private $_accessToken;
     
