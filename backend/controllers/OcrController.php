@@ -109,16 +109,20 @@ class OcrController extends BaseController
         $transaction = Yii::$app->db->beginTransaction();
         try {
             $fullText = $ocrResult['fullText'];
-            $lines_raw = explode("\n", $fullText);
+            
+            // 1. Text Reconstruction (ดึงพิกัดมารวมบรรทัดเองก่อน)
+            // จัดเรียงคำตาม Y-coordinate ให้เป็นบรรทัดเดียวกัน ก่อนนำไปเข้า Regex เพื่อแก้ปัญหาข้อความจาก Vision AI สลับบรรทัดกัน
+            $logicalLines = $this->reconstructRows($ocrResult['details'] ?? []);
+            $reconstructedText = implode("\n", $logicalLines);
             
             $model = new TempInvoice();
-            $model->raw_text = $fullText;
+            $model->raw_text = $reconstructedText; // เก็บ text ที่จัดเรียงแล้ว
             $model->company_id = Yii::$app->session->get('company_id');
             $model->status = TempInvoice::STATUS_PENDING;
             $model->invoice_date = date('Y-m-d'); 
 
             // Normalize text: fix spaces in decimal numbers e.g. "476. 64" -> "476.64" and Tax ID spaces e.g. "027559300098 5"
-            $normalizedText = preg_replace('/(\d+)\s*\.\s*(\d+)/', '$1.$2', $fullText);
+            $normalizedText = preg_replace('/(\d+)\s*\.\s*(\d+)/', '$1.$2', $reconstructedText);
             $normalizedText = preg_replace('/(\d{8,12})\s+(\d{1,5})/', '$1$2', $normalizedText);
 
             // 1. Detect Tax IDs (13 digits continuous or with hyphens/spaces e.g. 0-1055-58123-45-6)
@@ -212,8 +216,7 @@ class OcrController extends BaseController
                 }
             }
 
-            // Prepare rows from spatial data for item line parsing
-            $logicalLines = $this->reconstructRows($ocrResult['details'] ?? []);
+            // Prepare items
             $items = [];
 
             // 1. Try Fuel / Gas Receipt Direct Parser first if applicable
