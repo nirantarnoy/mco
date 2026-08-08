@@ -14,7 +14,7 @@ class GeminiAiService extends Component
     
     // Default model on OpenRouter
     // You can change this to "openai/gpt-4o", "anthropic/claude-3.5-sonnet", etc.
-    public $model = 'google/gemini-1.5-flash';
+    public $model = 'google/gemini-2.5-flash';
     
     public function processInvoice($filePath)
     {
