@@ -121,6 +121,7 @@ class StocksumController extends BaseController
     public function actionStockReport()
     {
         $filter_qty = \Yii::$app->request->get('filter_qty');
+        $export = \Yii::$app->request->get('export');
 
         $query = \backend\models\StockSum::find()
             ->joinWith(['product', 'product.productGroup', 'product.unit'])
@@ -136,6 +137,10 @@ class StocksumController extends BaseController
             'query' => $query,
             'pagination' => false,
         ]);
+
+        if ($export === 'excel') {
+            return $this->exportToExcel($dataProvider->getModels(), $filter_qty);
+        }
 
         return $this->render('stock_report', [
             'dataProvider' => $dataProvider,
@@ -211,5 +216,149 @@ class StocksumController extends BaseController
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    protected function exportToExcel($stockSums, $filter_qty)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
+
+        $filename = 'stock_report_' . date('Y-m-d_His') . '.xlsx';
+
+        \Yii::$app->response->headers->add('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        \Yii::$app->response->headers->add('Content-Disposition', 'attachment;filename="' . $filename . '"');
+        \Yii::$app->response->headers->add('Cache-Control', 'max-age=0');
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Set title
+        $sheet->setCellValue('A1', 'รายงานแสดงยอดสินค้าคงเหลือ (แยก Lot)');
+        $sheet->mergeCells('A1:H1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        // Filters text
+        $filter_text = 'แสดงทั้งหมด';
+        if ($filter_qty == 'gt0') {
+            $filter_text = 'แสดงคงเหลือ > 0';
+        } elseif ($filter_qty == 'eq0') {
+            $filter_text = 'แสดงคงเหลือ = 0';
+        }
+        $sheet->setCellValue('A2', 'เงื่อนไข: ' . $filter_text);
+        $sheet->mergeCells('A2:H2');
+
+        // Headers
+        $headers = ['หมวดหมู่สินค้า', 'รหัสสินค้า', 'รายการสินค้า', 'Lot No.', 'หน่วยนับ', 'คงเหลือ', 'ราคาต่อหน่วย', 'มูลค่าคงเหลือ'];
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . '4', $header);
+            $sheet->getStyle($col . '4')->getFont()->setBold(true);
+            $sheet->getStyle($col . '4')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FFE9ECEF');
+            $col++;
+        }
+
+        $row = 5;
+        $current_group = null;
+        $group_qty = 0;
+        $group_value = 0;
+        $total_qty = 0;
+        $total_value = 0;
+
+        foreach ($stockSums as $stockSum) {
+            $product = $stockSum->product;
+            if (!$product) continue;
+            
+            $group_name = $product->productGroup ? $product->productGroup->name : 'ไม่ระบุหมวดหมู่';
+
+            $receiveLine = \backend\models\JournalTransLine::find()
+                ->joinWith('journalTrans')
+                ->where(['journal_trans_line.product_id' => $product->id])
+                ->andWhere(['journal_trans_line.lot_no' => $stockSum->lot_no])
+                ->andWhere(['journal_trans.trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE])
+                ->one();
+            
+            $unit_price = $receiveLine && $receiveLine->sale_price > 0 ? $receiveLine->sale_price : 0;
+            if ($unit_price <= 0) {
+                $unit_price = $product->cost_price > 0 ? $product->cost_price : $product->sale_price;
+            }
+
+            $balance_value = $stockSum->qty * $unit_price;
+
+            if ($current_group !== null && $current_group !== $group_name) {
+                $sheet->setCellValue('A' . $row, 'รวมหมวดนี้');
+                $sheet->mergeCells('A' . $row . ':E' . $row);
+                $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+                $sheet->setCellValue('F' . $row, $group_qty);
+                $sheet->setCellValue('H' . $row, $group_value);
+                $sheet->getStyle('A' . $row . ':H' . $row)->getFont()->setBold(true);
+                $sheet->getStyle('A' . $row . ':H' . $row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB('FFF4F4F4');
+                $row++;
+
+                $group_qty = 0;
+                $group_value = 0;
+            }
+
+            $current_group = $group_name;
+            $group_qty += $stockSum->qty;
+            $group_value += $balance_value;
+            $total_qty += $stockSum->qty;
+            $total_value += $balance_value;
+
+            $sheet->setCellValueExplicit('A' . $row, $group_name, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit('B' . $row, $product->code, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue('C' . $row, $product->name);
+            $sheet->setCellValue('D' . $row, $stockSum->lot_no ?: '-');
+            $sheet->setCellValue('E' . $row, $product->unit ? $product->unit->name : '');
+            $sheet->setCellValue('F' . $row, $stockSum->qty);
+            $sheet->setCellValue('G' . $row, $unit_price);
+            $sheet->setCellValue('H' . $row, $balance_value);
+            
+            $sheet->getStyle('F' . $row . ':H' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+            
+            $row++;
+        }
+
+        if ($current_group !== null) {
+            $sheet->setCellValue('A' . $row, 'รวมหมวดนี้');
+            $sheet->mergeCells('A' . $row . ':E' . $row);
+            $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+            $sheet->setCellValue('F' . $row, $group_qty);
+            $sheet->setCellValue('H' . $row, $group_value);
+            $sheet->getStyle('A' . $row . ':H' . $row)->getFont()->setBold(true);
+            $sheet->getStyle('A' . $row . ':H' . $row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FFF4F4F4');
+            $sheet->getStyle('F' . $row . ':H' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+            $row++;
+        }
+
+        // Total
+        $sheet->setCellValue('A' . $row, 'รวมทั้งสิ้น');
+        $sheet->mergeCells('A' . $row . ':E' . $row);
+        $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->setCellValue('F' . $row, $total_qty);
+        $sheet->setCellValue('H' . $row, $total_value);
+        $sheet->getStyle('A' . $row . ':H' . $row)->getFont()->setBold(true);
+        $sheet->getStyle('A' . $row . ':H' . $row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()->setARGB('FFE9ECEF');
+        $sheet->getStyle('F' . $row . ':H' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+
+        $dataRange = 'A4:H' . $row;
+        $sheet->getStyle($dataRange)->getBorders()->getAllBorders()
+            ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)
+            ->getColor()->setRGB('000000');
+
+        foreach (range('A', 'H') as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        ob_start();
+        $writer->save('php://output');
+        $content = ob_get_clean();
+
+        return $content;
     }
 }

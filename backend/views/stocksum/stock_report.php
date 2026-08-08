@@ -42,6 +42,7 @@ $stockSums = $dataProvider->getModels();
                     <option value="<?= Url::current(['filter_qty' => 'gt0']) ?>" <?= ($filter_qty ?? '') == 'gt0' ? 'selected' : '' ?>>แสดงคงเหลือ > 0</option>
                     <option value="<?= Url::current(['filter_qty' => 'eq0']) ?>" <?= ($filter_qty ?? '') == 'eq0' ? 'selected' : '' ?>>แสดงคงเหลือ = 0</option>
                 </select>
+                <a href="<?= Url::current(['export' => 'excel']) ?>" class="btn btn-success"><i class="fas fa-file-excel"></i> Export Excel</a>
                 <button class="btn btn-default" onclick="window.print()"><i class="fas fa-print"></i> พิมพ์</button>
             </div>
         </div>
@@ -81,8 +82,11 @@ $stockSums = $dataProvider->getModels();
                             ->andWhere(['journal_trans.trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE])
                             ->one();
                         
-                        // If found, use sale_price (which stores the unit price from PO), otherwise fallback to cost_price
-                        $unit_price = $receiveLine && $receiveLine->sale_price > 0 ? $receiveLine->sale_price : $product->cost_price;
+                        // If found, use sale_price (which stores the unit price from PO), otherwise fallback to cost_price or sale_price
+                        $unit_price = $receiveLine && $receiveLine->sale_price > 0 ? $receiveLine->sale_price : 0;
+                        if ($unit_price <= 0) {
+                            $unit_price = $product->cost_price > 0 ? $product->cost_price : $product->sale_price;
+                        }
 
                         $balance_value = $stockSum->qty * $unit_price;
 
