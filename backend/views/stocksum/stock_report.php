@@ -126,7 +126,7 @@ $stockSums = $dataProvider->getModels();
                     ?>
                         <tr>
                             <td><?= Html::encode($group_name) ?></td>
-                            <td><?= Html::encode($product->code) ?></td>
+                            <td><a href="<?= Url::to(['product/update', 'id' => $product->id]) ?>" target="_blank" title="คลิกเพื่อแก้ไขข้อมูลสินค้า"><?= Html::encode($product->code) ?></a></td>
                             <td><?= Html::encode($product->name) ?></td>
                             <td><?= Html::encode($stockSum->lot_no ?: '-') ?></td>
                             <td><?= Html::encode($product->unit ? $product->unit->name : '') ?></td>
