@@ -27,7 +27,7 @@ return [
             'class' => 'common\components\GeminiAiService',
             'keyFile' => '@backend/config/vision-key.json',
             'projectId' => 'billora-ai',
-            'location' => 'asia-southeast1',
+            'location' => 'us-central1',
         ],
     ],
 ];
