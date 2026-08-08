@@ -93,17 +93,12 @@ if (!$model->isNewRecord) {
             </div>
         </div>
         <div class="row">
-            <?php if (\Yii::$app->user->can('ViewCostPrice')): ?>
-                <div class="col-lg-3">
-                    <?= $form->field($model, 'cost_price')->textInput() ?>
-
-                </div>
-            <?php endif; ?>
-            <?php if (\Yii::$app->user->can('ViewSalePrice')): ?>
-                <div class="col-lg-3">
-                    <?= $form->field($model, 'sale_price')->textInput() ?>
-                </div>
-            <?php endif; ?>
+            <div class="col-lg-3">
+                <?= $form->field($model, 'cost_price')->textInput() ?>
+            </div>
+            <div class="col-lg-3">
+                <?= $form->field($model, 'sale_price')->textInput() ?>
+            </div>
             <div class="col-lg-3">
                 <?= $form->field($model, 'unit_id')->widget(\kartik\select2\Select2::className(),
                     [
