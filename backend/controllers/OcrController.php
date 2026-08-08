@@ -102,6 +102,123 @@ class OcrController extends BaseController
     }
 
     /**
+     * Process the OCR request using Document AI.
+     */
+    public function actionProcessDocAi()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        ini_set('memory_limit', '512M');
+        set_time_limit(120);
+        
+        $file = UploadedFile::getInstanceByName('ocr_file');
+        if (!$file) {
+            return ['success' => false, 'message' => 'กรุณาแนบไฟล์รูปภาพ'];
+        }
+
+        if (!in_array($file->extension, ['jpg', 'jpeg', 'png', 'pdf'])) {
+            return ['success' => false, 'message' => 'รองรับเฉพาะไฟล์ JPG, JPEG, PNG และ PDF'];
+        }
+
+        $tempDir = Yii::getAlias('@runtime/ocr');
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0777, true);
+        }
+        $filePath = $tempDir .  '/' . time() . '_docai_' . $file->baseName . '.' . $file->extension;
+        
+        if ($file->saveAs($filePath)) {
+            try {
+                $service = Yii::$app->googleDocumentAi;
+                $result = $service->processDocument($filePath);
+                unlink($filePath);
+
+                $saveResult = $this->saveDocAiToTempInvoice($result);
+
+                if ($saveResult['success']) {
+                    return [
+                        'success' => true,
+                        'fullText' => $result['fullText'],
+                        'temp_invoice_id' => $saveResult['model']->id,
+                        'message' => 'สแกนสำเร็จและบันทึกข้อมูลเข้าฐานข้อมูลชั่วคราวแล้ว (Document AI)'
+                    ];
+                } else {
+                    return [
+                        'success' => true, 
+                        'fullText' => $result['fullText'],
+                        'message' => 'สแกนสำเร็จ แต่ไม่สามารถบันทึกข้อมูลได้: ' . $saveResult['error']
+                    ];
+                }
+
+            } catch (\Exception $e) {
+                if (file_exists($filePath)) unlink($filePath);
+                return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
+            }
+        }
+
+        return ['success' => false, 'message' => 'ไม่สามารถบันทึกไฟล์ได้'];
+    }
+
+    /**
+     * Save Document AI Result to TempInvoice
+     */
+    protected function saveDocAiToTempInvoice($result)
+    {
+        $model = new TempInvoice();
+        $model->status = 0; 
+        
+        $entities = $result['entities'] ?? [];
+        $lineItems = $result['lineItems'] ?? [];
+
+        // Map standard Invoice Parser entities
+        $model->vendor_name = $entities['supplier_name'] ?? null;
+        $model->customer_name = $entities['receiver_name'] ?? null;
+        $model->vendor_tax_id = $entities['supplier_tax_id'] ?? null;
+        $model->customer_tax_id = $entities['receiver_tax_id'] ?? null;
+        $model->invoice_number = $entities['invoice_id'] ?? null;
+        
+        // Map date
+        if (isset($entities['invoice_date'])) {
+            $parsed = $this->parseDateString($entities['invoice_date']);
+            if ($parsed) $model->invoice_date = $parsed;
+        }
+
+        // Amounts
+        if (isset($entities['net_amount'])) $model->subtotal = (float)preg_replace('/[^\d.]/', '', $entities['net_amount']);
+        if (isset($entities['total_tax_amount'])) $model->vat_amount = (float)preg_replace('/[^\d.]/', '', $entities['total_tax_amount']);
+        if (isset($entities['total_amount'])) $model->total_amount = (float)preg_replace('/[^\d.]/', '', $entities['total_amount']);
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            if ($model->save()) {
+                // Save line items
+                foreach ($lineItems as $idx => $item) {
+                    $desc = $item['line_item/description'] ?? '';
+                    if (empty($desc)) continue;
+
+                    $line = new TempInvoiceLine();
+                    $line->temp_invoice_id = $model->id;
+                    $line->product_code = $item['line_item/product_code'] ?? null;
+                    $line->description = $desc;
+                    $line->quantity = isset($item['line_item/quantity']) ? (float)preg_replace('/[^\d.]/', '', $item['line_item/quantity']) : 1;
+                    $line->unit = $item['line_item/unit'] ?? 'รายการ';
+                    $line->unit_price = isset($item['line_item/unit_price']) ? (float)preg_replace('/[^\d.]/', '', $item['line_item/unit_price']) : 0;
+                    $line->amount = isset($item['line_item/amount']) ? (float)preg_replace('/[^\d.]/', '', $item['line_item/amount']) : ($line->quantity * $line->unit_price);
+                    
+                    if (!$line->save()) {
+                        throw new \Exception(Json::encode($line->errors));
+                    }
+                }
+                $transaction->commit();
+                return ['success' => true, 'model' => $model];
+            } else {
+                throw new \Exception(Json::encode($model->errors));
+            }
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
      * Save OCR results to temp_invoice tables with robust multi-line parsing
      */
     protected function saveToTempInvoice($ocrResult)
@@ -155,8 +272,8 @@ class OcrController extends BaseController
                 }
             }
             if (!$model->vendor_name) {
-                // Detect company/partnership names in header
-                if (preg_match('/((?:ห้างหุ้นส่วนจำกัด|บริษัท|บจก\.|หจก\.|ร้าน)\s*[ก-ฮA-Za-z0-9\s()]+)/u', $normalizedText, $vMatch)) {
+                // Detect company/partnership names in header, stop at newline or common keywords
+                if (preg_match('/((?:ห้างหุ้นส่วนจำกัด|บริษัท|บจก\.|หจก\.|ร้าน)\s*[ก-ฮA-Za-z0-9\s().,]+?)(?=\s+สาขา|\s+เลข|\s+ที่อยู่|\s+Tax|\s+ถนน|\s+ตำบล|\s+โทร|\s+Fax|$|\r|\n)/iu', $normalizedText, $vMatch)) {
                     $model->vendor_name = trim($vMatch[1]);
                 }
             }
@@ -164,10 +281,11 @@ class OcrController extends BaseController
             // 3. Extract Invoice Number (Check Multi-line Book No + Invoice No pattern first)
             $bookNo = null;
             $invNo = null;
-            if (preg_match('/เล่มที่\s*[\r\n\s]*[:.]?\s*(\d+)/iu', $normalizedText, $bm)) {
+            if (preg_match('/เล่ม\s*ที่\s*[\r\n\s]*[:.]?\s*([A-Za-z0-9\-\/]+)/iu', $normalizedText, $bm)) {
                 $bookNo = $bm[1];
             }
-            if (preg_match('/เลขที่\s*[\r\n\s]*[:.]?\s*(\d+)/iu', $normalizedText, $im)) {
+            // Exclude "ประจำตัว" to not capture Tax ID as invoice no
+            if (preg_match('/เลข\s*ที่(?!\s*ประจำตัว)\s*[\r\n\s]*[:.]?\s*([A-Za-z0-9\-\/]{4,30})/iu', $normalizedText, $im)) {
                 $invNo = $im[1];
             }
 
@@ -176,7 +294,7 @@ class OcrController extends BaseController
             } elseif ($invNo) {
                 $model->invoice_number = $invNo;
             } else {
-                $regexInvoice = $pattern && $pattern->regex_invoice_no ? $pattern->regex_invoice_no : '/(?:เลขที่ใบกำกับภาษี|เลขที่ใบเสร็จ|เลขที่เอกสาร|เลขที่|TAX\s*INVOICE\s*NO|TAX\s*INV\s*NO|INV\s*NO|INVOICE\s*NO|POS\s*NO|DOCUMENT\s*NO|RECEIPT\s*NO|BILL\s*NO|DOC\s*NO|No\.?|Inv\s*#)\s*[:.]?\s*([A-Z0-9\-\/]{3,30})/iu';
+                $regexInvoice = $pattern && $pattern->regex_invoice_no ? $pattern->regex_invoice_no : '/(?:เลข\s*ที่ใบกำกับภาษี|เลข\s*ที่ใบเสร็จ|เลข\s*ที่เอกสาร|เลข\s*ที่|TAX\s*INVOICE\s*NO|TAX\s*INV\s*NO|INV\s*NO|INVOICE\s*NO|POS\s*NO|DOCUMENT\s*NO|RECEIPT\s*NO|BILL\s*NO|DOC\s*NO|Order\s*No\.?|No\.?|Inv\s*#)\s*[:.]?\s*([A-Z0-9\-\/]{4,30})/iu';
                 if (@preg_match($regexInvoice, $normalizedText, $matches)) {
                     $model->invoice_number = isset($matches[1]) ? trim($matches[1]) : trim($matches[0]);
                 } else {

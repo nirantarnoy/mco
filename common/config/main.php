@@ -16,5 +16,12 @@ return [
             'class' => 'common\components\GoogleVisionService',
             'keyFile' => '@backend/config/vision-key.json',
         ],
+        'googleDocumentAi' => [
+            'class' => 'common\components\GoogleDocumentAiService',
+            'keyFile' => '@backend/config/vision-key.json',
+            'projectId' => 'billora-ai',
+            'location' => 'asia-southeast1',
+            'processorId' => '9b311c68c9eb63b6',
+        ],
     ],
 ];

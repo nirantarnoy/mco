@@ -41,7 +41,10 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="row mt-4">
                 <div class="col-md-12 text-center">
                     <button type="button" class="btn btn-lg btn-success px-5" id="btn-scan" disabled>
-                        <i class="fas fa-search"></i> เริ่มการสแกน OCR
+                        <i class="fas fa-search"></i> เริ่มการสแกน OCR (Vision AI)
+                    </button>
+                    <button type="button" class="btn btn-lg btn-warning px-5 ml-2" id="btn-scan-docai" disabled>
+                        <i class="fas fa-file-invoice"></i> สแกนด้วย Document AI
                     </button>
                     <div id="loading" class="mt-2" style="display:none;">
                         <div class="spinner-border text-primary" role="status">
@@ -102,16 +105,17 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php
 $scanUrl = Url::to(['ocr/process']);
+$scanDocAiUrl = Url::to(['ocr/process-doc-ai']);
 $js = <<<JS
 $('#ocr-input-file').on('change', function() {
     if ($(this).val()) {
-        $('#btn-scan').prop('disabled', false);
+        $('#btn-scan, #btn-scan-docai').prop('disabled', false);
     } else {
-        $('#btn-scan').prop('disabled', true);
+        $('#btn-scan, #btn-scan-docai').prop('disabled', true);
     }
 });
 
-$('#btn-scan').on('click', function() {
+function doScan(url) {
     var formData = new FormData();
     var fileInput = $('#ocr-input-file')[0];
     
@@ -120,19 +124,19 @@ $('#btn-scan').on('click', function() {
     formData.append('ocr_file', fileInput.files[0]);
     
     // UI Loading state
-    $('#btn-scan').hide();
+    $('#btn-scan, #btn-scan-docai').hide();
     $('#loading').show();
     $('#result-area').fadeOut();
 
     $.ajax({
-        url: '{$scanUrl}',
+        url: url,
         type: 'POST',
         data: formData,
         processData: false,
         contentType: false,
         success: function(response) {
             $('#loading').hide();
-            $('#btn-scan').show();
+            $('#btn-scan, #btn-scan-docai').show();
             
             if (response.success) {
                 $('#full-text').val(response.fullText);
@@ -163,10 +167,18 @@ $('#btn-scan').on('click', function() {
         },
         error: function(xhr, status, error) {
             $('#loading').hide();
-            $('#btn-scan').show();
+            $('#btn-scan, #btn-scan-docai').show();
             alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์: ' + error);
         }
     });
+}
+
+$('#btn-scan').on('click', function() {
+    doScan('{$scanUrl}');
+});
+
+$('#btn-scan-docai').on('click', function() {
+    doScan('{$scanDocAiUrl}');
 });
 
 $('#btn-copy').on('click', function() {
