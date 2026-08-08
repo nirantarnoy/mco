@@ -229,15 +229,21 @@ class OcrController extends BaseController
                 if (!empty($homeproItems)) {
                     $items = $homeproItems;
                 } else {
-                    $regexStart = $pattern && $pattern->regex_item_start ? $pattern->regex_item_start : '/^(\d{1,2})\s+([A-Z0-9-]{4,20})\s+(.+)$/u';
-                    $strategy = $pattern && $pattern->parsing_strategy ? $pattern->parsing_strategy : 'block';
-
-                    if ($strategy == 'collector') {
-                        $items = $this->runCollector($logicalLines, $model);
+                    // 3. Try Thai Watsadu Sequential Pairing Parser
+                    $thaiWatsaduItems = $this->tryThaiWatsaduReceiptParsing($logicalLines);
+                    if (!empty($thaiWatsaduItems)) {
+                        $items = $thaiWatsaduItems;
                     } else {
-                        $items = $this->runBlockStrategy($logicalLines, $model, $regexStart, $pattern);
-                        if (empty($items)) {
+                        $regexStart = $pattern && $pattern->regex_item_start ? $pattern->regex_item_start : '/^(\d{1,2})\s+([A-Z0-9-]{4,20})\s+(.+)$/u';
+                        $strategy = $pattern && $pattern->parsing_strategy ? $pattern->parsing_strategy : 'block';
+
+                        if ($strategy == 'collector') {
                             $items = $this->runCollector($logicalLines, $model);
+                        } else {
+                            $items = $this->runBlockStrategy($logicalLines, $model, $regexStart, $pattern);
+                            if (empty($items)) {
+                                $items = $this->runCollector($logicalLines, $model);
+                            }
                         }
                     }
                 }
@@ -607,6 +613,55 @@ class OcrController extends BaseController
                     'unit' => trim($m[5]),
                     'price' => (float)str_replace(',', '', $m[6]),
                     'amount' => (float)str_replace(',', '', $m[7]),
+                ];
+            }
+        }
+        return $items;
+    }
+
+    /**
+     * Specialized parser for Thai Watsadu receipts
+     * Handles cases where Qty/Price line and Item Name line are physically separated and out of order
+     */
+    protected function tryThaiWatsaduReceiptParsing($logicalLines)
+    {
+        $itemNames = [];
+        $itemPrices = [];
+        
+        foreach ($logicalLines as $line) {
+            $line = trim($line);
+            if (empty($line) || $this->isHeaderOrLabelLine($line)) continue;
+            
+            // Match Item Name line: e.g. "1 V 8855890024900 ท่อตรงยูพีวีซี 16มม. 2.90M. EAGLE EG16 ขาว"
+            if (preg_match('/^(\d{1,3})\s+[A-Za-z]\s+(\d{8,15})\s+(.+)$/u', $line, $m)) {
+                $itemNames[] = [
+                    'code' => trim($m[2]),
+                    'desc' => trim($m[3])
+                ];
+            }
+            // Match Price line: e.g. "6 33.00 0.00 198.00" or "1 63.00 0.00 63.00"
+            // Qty (int or float), Price, Discount, Total Amount
+            elseif (preg_match('/^(\d+(?:\.\d+)?)\s+([0-9,]+\.\d{2})\s+([0-9,]+\.\d{2})\s+([0-9,]+\.\d{2})$/u', $line, $p)) {
+                $itemPrices[] = [
+                    'qty' => (float)$p[1],
+                    'price' => (float)str_replace(',', '', $p[2]),
+                    'amount' => (float)str_replace(',', '', $p[4])
+                ];
+            }
+        }
+        
+        $items = [];
+        // Pair them up sequentially if we found a matching number of names and prices
+        if (!empty($itemNames) && count($itemNames) === count($itemPrices)) {
+            foreach ($itemNames as $index => $nameData) {
+                $priceData = $itemPrices[$index];
+                $items[] = [
+                    'code' => $nameData['code'],
+                    'desc' => $nameData['desc'],
+                    'qty' => $priceData['qty'],
+                    'unit' => 'รายการ', 
+                    'price' => $priceData['price'],
+                    'amount' => $priceData['amount']
                 ];
             }
         }
