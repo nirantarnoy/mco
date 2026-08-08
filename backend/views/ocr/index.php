@@ -46,6 +46,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     <button type="button" class="btn btn-lg btn-warning px-5 ml-2" id="btn-scan-docai" disabled>
                         <i class="fas fa-file-invoice"></i> สแกนด้วย Document AI
                     </button>
+                    <button type="button" class="btn btn-lg btn-info px-5 ml-2" id="btn-scan-gemini" disabled>
+                        <i class="fas fa-robot"></i> สแกนด้วย Gemini AI
+                    </button>
                     <div id="loading" class="mt-2" style="display:none;">
                         <div class="spinner-border text-primary" role="status">
                             <span class="sr-only">กำลังประมวลผล...</span>
@@ -106,12 +109,13 @@ $this->params['breadcrumbs'][] = $this->title;
 <?php
 $scanUrl = Url::to(['ocr/process']);
 $scanDocAiUrl = Url::to(['ocr/process-doc-ai']);
+$scanGeminiUrl = Url::to(['ocr/process-gemini']);
 $js = <<<JS
 $('#ocr-input-file').on('change', function() {
     if ($(this).val()) {
-        $('#btn-scan, #btn-scan-docai').prop('disabled', false);
+        $('#btn-scan, #btn-scan-docai, #btn-scan-gemini').prop('disabled', false);
     } else {
-        $('#btn-scan, #btn-scan-docai').prop('disabled', true);
+        $('#btn-scan, #btn-scan-docai, #btn-scan-gemini').prop('disabled', true);
     }
 });
 
@@ -124,7 +128,7 @@ function doScan(url) {
     formData.append('ocr_file', fileInput.files[0]);
     
     // UI Loading state
-    $('#btn-scan, #btn-scan-docai').hide();
+    $('#btn-scan, #btn-scan-docai, #btn-scan-gemini').hide();
     $('#loading').show();
     $('#result-area').fadeOut();
 
@@ -136,7 +140,7 @@ function doScan(url) {
         contentType: false,
         success: function(response) {
             $('#loading').hide();
-            $('#btn-scan, #btn-scan-docai').show();
+            $('#btn-scan, #btn-scan-docai, #btn-scan-gemini').show();
             
             if (response.success) {
                 $('#full-text').val(response.fullText);
@@ -167,7 +171,7 @@ function doScan(url) {
         },
         error: function(xhr, status, error) {
             $('#loading').hide();
-            $('#btn-scan, #btn-scan-docai').show();
+            $('#btn-scan, #btn-scan-docai, #btn-scan-gemini').show();
             alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์: ' + error);
         }
     });
@@ -179,6 +183,10 @@ $('#btn-scan').on('click', function() {
 
 $('#btn-scan-docai').on('click', function() {
     doScan('{$scanDocAiUrl}');
+});
+
+$('#btn-scan-gemini').on('click', function() {
+    doScan('{$scanGeminiUrl}');
 });
 
 $('#btn-copy').on('click', function() {

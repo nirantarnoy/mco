@@ -218,6 +218,122 @@ class OcrController extends BaseController
     }
 
     /**
+     * Process the OCR request using Gemini AI.
+     */
+    public function actionProcessGemini()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        ini_set('memory_limit', '512M');
+        set_time_limit(120);
+        
+        $file = UploadedFile::getInstanceByName('ocr_file');
+        if (!$file) {
+            return ['success' => false, 'message' => 'กรุณาแนบไฟล์รูปภาพ'];
+        }
+
+        if (!in_array($file->extension, ['jpg', 'jpeg', 'png', 'pdf'])) {
+            return ['success' => false, 'message' => 'รองรับเฉพาะไฟล์ JPG, JPEG, PNG และ PDF'];
+        }
+
+        $tempDir = Yii::getAlias('@runtime/ocr');
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0777, true);
+        }
+        $filePath = $tempDir .  '/' . time() . '_gemini_' . $file->baseName . '.' . $file->extension;
+        
+        if ($file->saveAs($filePath)) {
+            try {
+                $service = Yii::$app->geminiAi;
+                $result = $service->processInvoice($filePath);
+                unlink($filePath);
+
+                if (!$result['success']) {
+                    throw new \Exception('Gemini processing failed');
+                }
+
+                $saveResult = $this->saveGeminiToTempInvoice($result['data'], $result['rawText']);
+
+                if ($saveResult['success']) {
+                    return [
+                        'success' => true,
+                        'fullText' => $result['rawText'],
+                        'temp_invoice_id' => $saveResult['model']->id,
+                        'message' => 'สแกนสำเร็จด้วย Gemini AI'
+                    ];
+                } else {
+                    return [
+                        'success' => true, 
+                        'fullText' => $result['rawText'],
+                        'message' => 'สแกนสำเร็จ แต่บันทึกข้อมูลไม่สำเร็จ: ' . $saveResult['error']
+                    ];
+                }
+
+            } catch (\Exception $e) {
+                if (file_exists($filePath)) unlink($filePath);
+                return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
+            }
+        }
+
+        return ['success' => false, 'message' => 'ไม่สามารถบันทึกไฟล์ได้'];
+    }
+
+    /**
+     * Save Gemini JSON Result to TempInvoice
+     */
+    protected function saveGeminiToTempInvoice($data, $rawText)
+    {
+        $model = new TempInvoice();
+        $model->status = 0; 
+        $model->raw_text = $rawText;
+        $model->company_id = Yii::$app->session->get('company_id');
+        
+        $model->vendor_name = $data['vendor_name'] ?? null;
+        $model->customer_name = $data['customer_name'] ?? null;
+        $model->customer_tax_id = $data['customer_tax_id'] ?? null;
+        $model->invoice_number = $data['invoice_number'] ?? null;
+        
+        if (!empty($data['invoice_date'])) {
+            $parsed = $this->parseDateString($data['invoice_date']);
+            if ($parsed) $model->invoice_date = $parsed;
+        }
+
+        $model->subtotal = isset($data['subtotal']) ? (float)$data['subtotal'] : 0;
+        $model->vat_amount = isset($data['vat_amount']) ? (float)$data['vat_amount'] : 0;
+        $model->total_amount = isset($data['total_amount']) ? (float)$data['total_amount'] : 0;
+
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            if ($model->save()) {
+                $lineItems = $data['line_items'] ?? [];
+                foreach ($lineItems as $item) {
+                    $desc = $item['description'] ?? '';
+                    if (empty($desc)) continue;
+
+                    $line = new TempInvoiceLine();
+                    $line->temp_invoice_id = $model->id;
+                    $line->product_code = $item['product_code'] ?? null;
+                    $line->description = $desc;
+                    $line->quantity = isset($item['quantity']) ? (float)$item['quantity'] : 1;
+                    $line->unit = $item['unit'] ?? 'รายการ';
+                    $line->unit_price = isset($item['unit_price']) ? (float)$item['unit_price'] : 0;
+                    $line->amount = isset($item['amount']) ? (float)$item['amount'] : ($line->quantity * $line->unit_price);
+                    
+                    if (!$line->save()) {
+                        throw new \Exception(Json::encode($line->errors));
+                    }
+                }
+                $transaction->commit();
+                return ['success' => true, 'model' => $model];
+            } else {
+                throw new \Exception(Json::encode($model->errors));
+            }
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
      * Save OCR results to temp_invoice tables with robust multi-line parsing
      */
     protected function saveToTempInvoice($ocrResult)

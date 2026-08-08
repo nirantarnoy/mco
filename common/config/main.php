@@ -23,5 +23,9 @@ return [
             'location' => 'asia-southeast1',
             'processorId' => '9b311c68c9eb63b6',
         ],
+        'geminiAi' => [
+            'class' => 'common\components\GeminiAiService',
+            // 'apiKey' is configured in main-local.php which is ignored by git
+        ],
     ],
 ];
