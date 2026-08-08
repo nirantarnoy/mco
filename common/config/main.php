@@ -25,7 +25,9 @@ return [
         ],
         'geminiAi' => [
             'class' => 'common\components\GeminiAiService',
-            // 'apiKey' is configured in main-local.php which is ignored by git
+            'keyFile' => '@backend/config/vision-key.json',
+            'projectId' => 'billora-ai',
+            'location' => 'asia-southeast1',
         ],
     ],
 ];
