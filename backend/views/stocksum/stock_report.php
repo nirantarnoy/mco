@@ -84,11 +84,26 @@ $stockSums = $dataProvider->getModels();
                         
                         // If found, use sale_price (which stores the unit price from PO), otherwise fallback to cost_price or sale_price
                         $unit_price = $receiveLine && $receiveLine->sale_price > 0 ? $receiveLine->sale_price : 0;
+                        
                         if ($unit_price <= 0) {
-                            $unit_price = $product->cost_price > 0 ? $product->cost_price : $product->sale_price;
+                            $unit_price = $product->cost_price > 0 ? $product->cost_price : ($product->sale_price > 0 ? $product->sale_price : 0);
+                        }
+                        
+                        // If still 0, try to get the latest PO price for this product as last resort
+                        if ($unit_price <= 0) {
+                            $latestReceive = \backend\models\JournalTransLine::find()
+                                ->joinWith('journalTrans')
+                                ->where(['journal_trans_line.product_id' => $product->id])
+                                ->andWhere(['journal_trans.trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE])
+                                ->andWhere(['>', 'journal_trans_line.sale_price', 0])
+                                ->orderBy(['journal_trans.id' => SORT_DESC])
+                                ->one();
+                            if ($latestReceive) {
+                                $unit_price = $latestReceive->sale_price;
+                            }
                         }
 
-                        $balance_value = $stockSum->qty * $unit_price;
+                        $balance_value = $stockSum->qty * floatval($unit_price);
 
                         if ($current_group !== null && $current_group !== $group_name):
                     ?>
