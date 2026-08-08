@@ -9,20 +9,18 @@ use yii\helpers\Json;
 
 class GeminiAiService extends Component
 {
-    public $keyFile;
-    public $projectId;
-    public $location = 'us-central1';
-    public $apiKey; // Added to prevent unknown property error from legacy main-local.php
+    // API Key for OpenRouter
+    public $apiKey;
     
-    // Default model to use (Vertex AI uses 001/002 versions typically, or flash-latest)
-    // In 2026, 1.5 is deprecated. We use gemini-2.5-flash.
-    public $model = 'gemini-2.5-flash';
-
-    private $_accessToken;
+    // Default model on OpenRouter
+    // You can change this to "openai/gpt-4o", "anthropic/claude-3.5-sonnet", etc.
+    public $model = 'google/gemini-1.5-flash';
     
     public function processInvoice($filePath)
     {
-        $token = $this->getAccessToken();
+        if (empty($this->apiKey)) {
+            throw new Exception('OpenRouter API Key is missing. Please configure it in common/config/main-local.php.');
+        }
 
         if (!file_exists($filePath)) {
             throw new Exception('File not found: ' . $filePath);
@@ -32,7 +30,9 @@ class GeminiAiService extends Component
         $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
         $mimeType = 'image/jpeg';
         if ($ext === 'png') $mimeType = 'image/png';
-        if ($ext === 'pdf') $mimeType = 'application/pdf';
+        if ($ext === 'pdf') {
+            throw new Exception('OpenRouter Vision models currently support images (JPG, PNG). Please convert PDF to image before sending.');
+        }
 
         $prompt = 'You are an expert invoice parser. Extract the data from this Thai invoice and return ONLY a valid JSON object. Do not include markdown formatting or backticks around the JSON. The JSON must exactly follow this schema:
 {
@@ -58,41 +58,37 @@ class GeminiAiService extends Component
 If a value is not found, use null for strings and 0 for numbers. Ensure the JSON is well-formed.';
 
         $payload = [
-            'contents' => [
+            'model' => $this->model,
+            'messages' => [
                 [
                     'role' => 'user',
-                    'parts' => [
+                    'content' => [
                         [
-                            'inlineData' => [
-                                'mimeType' => $mimeType,
-                                'data' => $imageData
-                            ]
+                            'type' => 'text',
+                            'text' => $prompt
                         ],
-                        ['text' => $prompt]
+                        [
+                            'type' => 'image_url',
+                            'image_url' => [
+                                'url' => 'data:' . $mimeType . ';base64,' . $imageData
+                            ]
+                        ]
                     ]
                 ]
             ],
-            'generationConfig' => [
-                'temperature' => 0.1,
-                'responseMimeType' => 'application/json'
-            ]
+            // 'response_format' => ['type' => 'json_object'], // Supported by many models on OpenRouter
         ];
 
-        // Vertex AI Endpoint
-        $apiUrl = sprintf(
-            'https://%s-aiplatform.googleapis.com/v1/projects/%s/locations/%s/publishers/google/models/%s:generateContent',
-            $this->location,
-            $this->projectId,
-            $this->location,
-            $this->model
-        );
+        $apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $apiUrl);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json',
-            'Authorization: Bearer ' . $token
+            'Authorization: Bearer ' . $this->apiKey,
+            'HTTP-Referer: ' . Yii::$app->request->hostInfo, 
+            'X-Title: Billora AI'
         ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, Json::encode($payload));
@@ -109,16 +105,16 @@ If a value is not found, use null for strings and 0 for numbers. Ensure the JSON
         }
 
         $result = Json::decode($response);
-        Yii::info('Vertex AI Gemini Response: ' . substr($response, 0, 1000) . '...', 'ocr');
+        Yii::info('OpenRouter Response: ' . substr($response, 0, 1000) . '...', 'ocr');
 
         if ($httpCode !== 200) {
             $message = isset($result['error']['message']) ? $result['error']['message'] : 'Unknown API Error';
-            throw new Exception('Vertex AI Error (HTTP ' . $httpCode . '): ' . $message);
+            throw new Exception('OpenRouter API Error (HTTP ' . $httpCode . '): ' . $message);
         }
         
-        $text = $result['candidates'][0]['content']['parts'][0]['text'] ?? '';
+        $text = $result['choices'][0]['message']['content'] ?? '';
         
-        // Remove markdown block if Gemini still returns it despite the instruction
+        // Remove markdown block if model still returns it
         $text = preg_replace('/^```json\s*/i', '', $text);
         $text = preg_replace('/```$/', '', $text);
         $text = trim($text);
@@ -131,82 +127,7 @@ If a value is not found, use null for strings and 0 for numbers. Ensure the JSON
                 'rawText' => $text
             ];
         } catch (\Exception $e) {
-            throw new Exception('Failed to parse Gemini response as JSON: ' . $text);
+            throw new Exception('Failed to parse OpenRouter response as JSON: ' . $text);
         }
-    }
-
-    public function getAccessToken()
-    {
-        if ($this->_accessToken) {
-            return $this->_accessToken;
-        }
-
-        $keyPath = $this->keyFile ? Yii::getAlias($this->keyFile) : null;
-        
-        if (!$keyPath || !file_exists($keyPath)) {
-            $candidates = [
-                Yii::getAlias('@backend/config/vision-key.json'),
-                Yii::getAlias('@backend/config/google-vision-key.json'),
-                Yii::getAlias('@common/config/vision-key.json'),
-                Yii::getAlias('@common/config/google-vision-key.json'),
-            ];
-            foreach ($candidates as $candidate) {
-                if (file_exists($candidate)) {
-                    $keyPath = $candidate;
-                    break;
-                }
-            }
-        }
-        
-        if (!$keyPath || !file_exists($keyPath)) {
-            throw new Exception('Service Account Key file not found: ' . ($keyPath ?: '@backend/config/vision-key.json'));
-        }
-
-        $keyData = Json::decode(file_get_contents($keyPath));
-        
-        // Generate JWT
-        $header = $this->base64url_encode(Json::encode(['alg' => 'RS256', 'typ' => 'JWT']));
-        $now = time();
-        $payload = $this->base64url_encode(Json::encode([
-            'iss' => $keyData['client_email'],
-            'sub' => $keyData['client_email'],
-            'aud' => $keyData['token_uri'],
-            'iat' => $now,
-            'exp' => $now + 3600,
-            'scope' => 'https://www.googleapis.com/auth/cloud-platform'
-        ]));
-
-        $signatureInput = $header . "." . $payload;
-        $signature = '';
-        if (!openssl_sign($signatureInput, $signature, $keyData['private_key'], 'SHA256')) {
-            throw new Exception('Failed to sign JWT: ' . openssl_error_string());
-        }
-        $jwt = $signatureInput . "." . $this->base64url_encode($signature);
-
-        // Exchange JWT for Access Token
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $keyData['token_uri']);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
-            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-            'assertion' => $jwt
-        ]));
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-        $response = curl_exec($ch);
-        curl_close($ch);
-        
-        $tokenData = Json::decode($response);
-        if (!isset($tokenData['access_token'])) {
-            throw new Exception('Failed to obtain access token: ' . ($tokenData['error_description'] ?? 'Unknown Error'));
-        }
-
-        $this->_accessToken = $tokenData['access_token'];
-        return $this->_accessToken;
-    }
-
-    private function base64url_encode($data) {
-        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
     }
 }

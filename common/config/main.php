@@ -25,9 +25,7 @@ return [
         ],
         'geminiAi' => [
             'class' => 'common\components\GeminiAiService',
-            'keyFile' => '@backend/config/vision-key.json',
-            'projectId' => 'billora-ai',
-            'location' => 'us-central1',
+            // 'apiKey' should be set in common/config/main-local.php
         ],
     ],
 ];
