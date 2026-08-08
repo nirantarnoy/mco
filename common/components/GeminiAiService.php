@@ -12,6 +12,7 @@ class GeminiAiService extends Component
     public $keyFile;
     public $projectId;
     public $location = 'asia-southeast1';
+    public $apiKey; // Added to prevent unknown property error from legacy main-local.php
     
     // Default model to use (Vertex AI uses 001/002 versions typically, or flash-latest)
     // gemini-1.5-flash-001 is stable on Vertex AI
