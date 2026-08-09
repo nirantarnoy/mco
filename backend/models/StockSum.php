@@ -119,12 +119,12 @@ class StockSum extends ActiveRecord
         $deductions = [];
         $remainingToDeduct = $qtyToDeduct;
 
-        // Get all available lots, ordered by lot_no ASC (oldest first)
-        // If lot_no is YYMMDDXXXX, alphabetical sort corresponds to chronological order.
+        // Get all available lots, ordered by created_at ASC (oldest first)
+        // Ensure true FIFO behavior based on the time the stock was received.
         $lots = self::find()
             ->where(['product_id' => $productId, 'warehouse_id' => $warehouseId])
             ->andWhere(['>', 'qty', 0])
-            ->orderBy(['lot_no' => SORT_ASC, 'id' => SORT_ASC])
+            ->orderBy(['created_at' => SORT_ASC, 'id' => SORT_ASC])
             ->all();
 
         foreach ($lots as $lot) {

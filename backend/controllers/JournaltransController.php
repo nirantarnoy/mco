@@ -202,7 +202,7 @@ class JournaltransController extends BaseController
             ->select([
                 'w.id as warehouse_id',
                 'w.name as warehouse_name',
-                'COALESCE(s.qty, 0) as qty',
+                'COALESCE(SUM(s.qty), 0) as qty',
                 'p.unit_id',
                 'u.name as unit',
             ])
@@ -211,6 +211,7 @@ class JournaltransController extends BaseController
             ->leftJoin('product p', 'p.id = :product_id', [':product_id' => $productId])
             ->leftJoin('unit u', 'u.id = p.unit_id')
             ->where(['w.status' => 1])
+            ->groupBy(['w.id', 'w.name', 'p.unit_id', 'u.name'])
             ->all();
 
         return $stocks;

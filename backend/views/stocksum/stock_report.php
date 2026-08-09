@@ -6,6 +6,7 @@ use yii\helpers\Url;
 /* @var $this yii\web\View */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 /* @var $filter_qty string */
+/* @var $product_group_id int|null */
 
 $this->title = 'รายงานแสดงยอดสินค้าคงเหลือ (แยก Lot)';
 $this->params['breadcrumbs'][] = ['label' => 'จัดการสต๊อกสินค้า', 'url' => ['index']];
@@ -37,10 +38,19 @@ $stockSums = $dataProvider->getModels();
         <div class="card-header">
             <h3 class="card-title"><?= Html::encode($this->title) ?></h3>
             <div class="card-tools">
-                <select class="form-control" style="width: auto; display: inline-block; margin-right: 10px;" onchange="location.href=this.value">
-                    <option value="<?= Url::current(['filter_qty' => 'all']) ?>" <?= ($filter_qty ?? '') == 'all' ? 'selected' : '' ?>>แสดงทั้งหมด</option>
-                    <option value="<?= Url::current(['filter_qty' => 'gt0']) ?>" <?= ($filter_qty ?? '') == 'gt0' ? 'selected' : '' ?>>แสดงคงเหลือ > 0</option>
-                    <option value="<?= Url::current(['filter_qty' => 'eq0']) ?>" <?= ($filter_qty ?? '') == 'eq0' ? 'selected' : '' ?>>แสดงคงเหลือ = 0</option>
+                <?php
+                $productGroups = \yii\helpers\ArrayHelper::map(\backend\models\Productgroup::find()->where(['status' => 1])->all(), 'id', 'name');
+                ?>
+                <select class="form-control" style="width: auto; display: inline-block; margin-right: 10px;" onchange="var url = new URL(window.location.href); url.searchParams.set('product_group_id', this.value); window.location.href = url.href;">
+                    <option value="">-- ทุกหมวดหมู่ --</option>
+                    <?php foreach ($productGroups as $id => $name): ?>
+                        <option value="<?= $id ?>" <?= ($product_group_id ?? '') == $id ? 'selected' : '' ?>><?= Html::encode($name) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <select class="form-control" style="width: auto; display: inline-block; margin-right: 10px;" onchange="var url = new URL(window.location.href); url.searchParams.set('filter_qty', this.value); window.location.href = url.href;">
+                    <option value="all" <?= ($filter_qty ?? '') == 'all' ? 'selected' : '' ?>>แสดงทั้งหมด</option>
+                    <option value="gt0" <?= ($filter_qty ?? '') == 'gt0' ? 'selected' : '' ?>>แสดงคงเหลือ > 0</option>
+                    <option value="eq0" <?= ($filter_qty ?? '') == 'eq0' ? 'selected' : '' ?>>แสดงคงเหลือ = 0</option>
                 </select>
                 <a href="<?= Url::current(['export' => 'excel']) ?>" class="btn btn-success"><i class="fas fa-file-excel"></i> Export Excel</a>
                 <button class="btn btn-default" onclick="window.print()"><i class="fas fa-print"></i> พิมพ์</button>

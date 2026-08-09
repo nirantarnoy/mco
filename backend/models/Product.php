@@ -140,11 +140,11 @@ class Product extends \common\models\Product
      */
     public function getStockInWarehouse($warehouseId)
     {
-        $stockSum = \backend\models\StockSum::find()
+        $qty = \backend\models\StockSum::find()
             ->where(['product_id' => $this->id, 'warehouse_id' => $warehouseId])
-            ->one();
+            ->sum('qty');
 
-        return $stockSum ? $stockSum->qty : 0;
+        return $qty ?: 0;
     }
 
     /**
@@ -152,11 +152,15 @@ class Product extends \common\models\Product
      */
     public function getAvailableStockInWarehouse($warehouseId)
     {
-        $stockSum = \backend\models\StockSum::find()
+        $qty = \backend\models\StockSum::find()
             ->where(['product_id' => $this->id, 'warehouse_id' => $warehouseId])
-            ->one();
+            ->sum('qty');
+            
+        $reservQty = \backend\models\StockSum::find()
+            ->where(['product_id' => $this->id, 'warehouse_id' => $warehouseId])
+            ->sum('reserv_qty');
 
-        return $stockSum ? $stockSum->getAvailableQty() : 0;
+        return ($qty ?: 0) - ($reservQty ?: 0);
     }
 
     /**

@@ -122,6 +122,7 @@ class StocksumController extends BaseController
     {
         $filter_qty = \Yii::$app->request->get('filter_qty');
         $export = \Yii::$app->request->get('export');
+        $product_group_id = \Yii::$app->request->get('product_group_id');
 
         $query = \backend\models\StockSum::find()
             ->joinWith(['product', 'product.productGroup', 'product.unit'])
@@ -131,6 +132,10 @@ class StocksumController extends BaseController
             $query->andWhere(['>', 'stock_sum.qty', 0]);
         } elseif ($filter_qty === 'eq0') {
             $query->andWhere(['<=', 'stock_sum.qty', 0]);
+        }
+
+        if ($product_group_id) {
+            $query->andWhere(['product.product_group_id' => $product_group_id]);
         }
 
         $dataProvider = new \yii\data\ActiveDataProvider([
@@ -145,6 +150,7 @@ class StocksumController extends BaseController
         return $this->render('stock_report', [
             'dataProvider' => $dataProvider,
             'filter_qty' => $filter_qty,
+            'product_group_id' => $product_group_id,
         ]);
     }
 
