@@ -72,7 +72,6 @@ $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
             padding: 8mm !important;
             transform: scale(0.95);
             transform-origin: top left;
-            page-break-inside: avoid;
             page-break-before: auto;
             page-break-after: auto;
             position: relative;
@@ -572,8 +571,10 @@ $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
         </tbody>
     </table>
 
-    <!-- Summary -->
-    <div class="summary-section">
+    <!-- Footer Block (Summary, Terms, Signatures) -->
+    <div style="page-break-inside: avoid;">
+        <!-- Summary -->
+        <div class="summary-section">
         <div class="summary-left">
             <div class="acknowledgment">ACKNOWLEDGMENT BY :</div>
             <div style="text-align: center;">
@@ -657,6 +658,7 @@ $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
             <div>F-WP-FMA-002-002 R.2</div>
         </div>
     </div>
+    </div> <!-- Close Footer Block -->
 </div>
 <?php
 function getEmpRequestor($purch_id) {
