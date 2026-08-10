@@ -131,6 +131,23 @@ class WhtController extends BaseController
         ]);
     }
 
+    public function actionClearData()
+    {
+        $db = Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try {
+            $deleted = Wht::deleteAll();
+            // Reset auto increment
+            $db->createCommand('ALTER TABLE wht AUTO_INCREMENT = 1')->execute();
+            $transaction->commit();
+            Yii::$app->session->setFlash('success', "ลบข้อมูล WHT ทั้งหมด {$deleted} รายการ เรียบร้อยแล้ว (ไม่กระทบตารางอื่น)");
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            Yii::$app->session->setFlash('error', "เกิดข้อผิดพลาดในการลบข้อมูล: " . $e->getMessage());
+        }
+        return $this->redirect(['index']);
+    }
+
     protected function findModel($id)
     {
         if (($model = Wht::findOne($id)) !== null) {
