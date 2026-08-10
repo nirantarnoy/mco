@@ -496,7 +496,7 @@ class PettyCashVoucherController extends BaseController
                     'job_no' => $job->job_no,
                     'quotation_id' => $job->quotation_id ?? '',
                     'job_amount' => $job->job_amount ?? 0,
-                    'display' => $job->job_no,// $product->code . ($product->name ? ' (' . $product->name . ')' : '')
+                    'display' => $job->getJobDisplayName(),
                 ];
             }
 
@@ -516,7 +516,7 @@ class PettyCashVoucherController extends BaseController
                     'job_no' => $job->job_no,
                     'quotation_id' => $job->quotation_id ?? '',
                     'job_amount' => $job->job_amount ?? 0,
-                    'display' => $job->job_no,// $product->code . ($product->name ? ' (' . $product->name . ')' : '')
+                    'display' => $job->getJobDisplayName(),
                 ];
             }
         }

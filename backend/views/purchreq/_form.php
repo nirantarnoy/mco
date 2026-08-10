@@ -494,7 +494,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 
                     </div>
                     <div class="col-md-4">
-                        <?= $form->field($model, 'job_id')->widget(Select2::class, [
+                        <?= $form->field($model, 'job_id')->widget(Select2::className(), [
                             'data' => \yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(), 'id', 'job_no'),
                             'language' => 'th',
                             'options' => ['placeholder' => 'เลือกงาน', 'id' => 'job-id'],

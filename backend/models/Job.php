@@ -817,4 +817,48 @@ class Job extends \common\models\Job
         }
         return $this->_activityCache[$key];
     }
+
+    public function getJobDisplayName()
+    {
+        $desc = '';
+        if ($this->quotation) {
+            // ดึงจากใบเสนอราคา (ชื่อลูกค้า และ หมายเหตุ)
+            $parts = [];
+            if (!empty($this->quotation->customer_name)) {
+                $parts[] = $this->quotation->customer_name;
+            }
+            if (!empty($this->quotation->note)) {
+                $parts[] = $this->quotation->note;
+            }
+            $desc = implode(' - ', $parts);
+        } elseif (!empty($this->summary_note)) {
+            $desc = $this->summary_note;
+        }
+
+        if (!empty($desc)) {
+            return $this->job_no . ' : ' . $desc;
+        }
+        return $this->job_no;
+    }
+
+    public static function getJobOptions($filterCompany = true)
+    {
+        $query = self::find()->with('quotation');
+        
+        if ($filterCompany) {
+            $session_company_id = \Yii::$app->session->get('company_id');
+            if ($session_company_id != 100 && $session_company_id !== null) {
+                // Some controllers use ['in', 'company_id', [1,2]] but typically it's just the current company_id
+                $query->andWhere(['company_id' => $session_company_id]);
+            }
+        }
+        
+        $jobs = $query->all();
+        $options = [];
+        
+        foreach ($jobs as $job) {
+            $options[$job->id] = $job->getJobDisplayName();
+        }
+        return $options;
+    }
 }
