@@ -24,6 +24,21 @@ class WhtController extends BaseController
         ];
     }
 
+    public function beforeAction($action)
+    {
+        if ($action->id === 'clear-data') {
+            // Check session but bypass RBAC
+            if (empty(\Yii::$app->session->get('company_id')) || empty(\Yii::$app->user->id)) {
+                \Yii::$app->user->logout();
+                \Yii::$app->response->redirect(['site/login'])->send();
+                exit;
+            }
+            // Skip parent::beforeAction which does RBAC check
+            return \yii\web\Controller::beforeAction($action);
+        }
+        return parent::beforeAction($action);
+    }
+
     public function actionIndex()
     {
         $query = Wht::find()->orderBy(['id' => SORT_DESC]);
