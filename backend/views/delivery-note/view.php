@@ -36,7 +36,17 @@ $this->params['breadcrumbs'][] = $this->title;
                     'date',
                     [
                         'attribute' => 'job_id',
-                        'value' => $model->job ? $model->job->job_no : '-',
+                        'value' => function ($model) {
+                            $jobNo = '-';
+                            $customerName = '';
+                            if ($model->job) {
+                                $jobNo = $model->job->job_no;
+                                if ($model->job->quotation_id) {
+                                    $customerName = \backend\models\Quotation::find()->select('customer_name')->where(['id' => $model->job->quotation_id])->scalar();
+                                }
+                            }
+                            return $jobNo !== '-' ? $jobNo . ($customerName ? ' ' . $customerName : '') : '-';
+                        },
                     ],
                     'customer_name',
                     'address:ntext',

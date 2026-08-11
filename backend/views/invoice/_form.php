@@ -87,7 +87,9 @@ if ($model->invoice_type == Invoice::TYPE_TAX_INVOICE) {
         }
     }
 }
-$quotationData = ArrayHelper::map($quotationQuery->all(), 'id', 'quotation_no');
+$quotationData = ArrayHelper::map($quotationQuery->all(), 'id', function($model) {
+    return $model->quotation_no . ($model->customer_name ? ' ' . $model->customer_name : '');
+});
 
 $js = <<<JS
 // ตัวแปรเก็บข้อมูลสินค้า

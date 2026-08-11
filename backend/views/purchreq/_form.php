@@ -495,7 +495,13 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                     </div>
                     <div class="col-md-4">
                         <?= $form->field($model, 'job_id')->widget(Select2::className(), [
-                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(), 'id', 'job_no'),
+                            'data' => \yii\helpers\ArrayHelper::map(\backend\models\Job::find()->all(), 'id', function($model) {
+                                $customerName = '';
+                                if ($model->quotation_id) {
+                                    $customerName = \backend\models\Quotation::find()->select('customer_name')->where(['id' => $model->quotation_id])->scalar();
+                                }
+                                return $model->job_no . ($customerName ? ' ' . $customerName : '');
+                            }),
                             'language' => 'th',
                             'options' => ['placeholder' => 'เลือกงาน', 'id' => 'job-id'],
                         ])->label('ใบงาน') ?>

@@ -103,7 +103,13 @@ $this->registerJs("
                     ]) ?>
 
                     <?= $form->field($model, 'job_id')->widget(\kartik\select2\Select2::className(), [
-                        'data' => \yii\helpers\ArrayHelper::map(\backend\models\Job::find()->orderBy(['id' => SORT_DESC])->all(), 'id', 'job_no'),
+                        'data' => \yii\helpers\ArrayHelper::map(\backend\models\Job::find()->orderBy(['id' => SORT_DESC])->all(), 'id', function($model) {
+                            $customerName = '';
+                            if ($model->quotation_id) {
+                                $customerName = \backend\models\Quotation::find()->select('customer_name')->where(['id' => $model->quotation_id])->scalar();
+                            }
+                            return $model->job_no . ($customerName ? ' ' . $customerName : '');
+                        }),
                         'options' => ['placeholder' => 'เลือก Job No.'],
                         'pluginOptions' => ['allowClear' => true],
                         'pluginEvents' => [

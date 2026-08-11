@@ -116,8 +116,14 @@ $this->params['breadcrumbs'][] = $this->title;
                                 'format' => 'raw',
                                 'value' => function($model) {
                                     if ($model->job_id && $model->job) {
+                                        $jobNo = $model->job->job_no ?? $model->job->job_number ?? $model->job_id;
+                                        $customerName = '';
+                                        if ($model->job->quotation_id) {
+                                            $customerName = \backend\models\Quotation::find()->select('customer_name')->where(['id' => $model->job->quotation_id])->scalar();
+                                        }
+                                        $displayText = $jobNo . ($customerName ? ' ' . $customerName : '');
                                         return Html::a(
-                                            Html::encode($model->job->job_number ?? $model->job_id),
+                                            Html::encode($displayText),
                                             ['/job/view', 'id' => $model->job_id],
                                             ['class' => 'btn btn-sm btn-outline-secondary', 'target' => '_blank']
                                         );

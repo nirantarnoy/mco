@@ -39,7 +39,7 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'attribute' => 'quotation_id',
                 'value' => function ($data) {
-                    return $data->quotation != null ? $data->quotation->quotation_no:'';
+                    return $data->quotation != null ? $data->quotation->quotation_no . ($data->quotation->customer_name ? ' ' . $data->quotation->customer_name : '') : '';
                 }
             ],
             [
