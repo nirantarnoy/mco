@@ -88,7 +88,8 @@ if ($model->invoice_type == Invoice::TYPE_TAX_INVOICE) {
     }
 }
 $quotationData = ArrayHelper::map($quotationQuery->all(), 'id', function($model) {
-    return $model->quotation_no . ($model->customer_name ? ' ' . $model->customer_name : '');
+    $customerName = $model->customer ? $model->customer->name : $model->customer_name;
+    return $model->quotation_no . ($customerName ? ' ' . $customerName : '');
 });
 
 $js = <<<JS

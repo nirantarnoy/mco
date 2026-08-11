@@ -42,7 +42,10 @@ $this->params['breadcrumbs'][] = $this->title;
                             if ($model->job) {
                                 $jobNo = $model->job->job_no;
                                 if ($model->job->quotation_id) {
-                                    $customerName = \backend\models\Quotation::find()->select('customer_name')->where(['id' => $model->job->quotation_id])->scalar();
+                                    $quotation = \backend\models\Quotation::find()->where(['id' => $model->job->quotation_id])->one();
+                                    if ($quotation) {
+                                        $customerName = $quotation->customer ? $quotation->customer->name : $quotation->customer_name;
+                                    }
                                 }
                             }
                             return $jobNo !== '-' ? $jobNo . ($customerName ? ' ' . $customerName : '') : '-';

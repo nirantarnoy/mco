@@ -67,6 +67,15 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             ],
             [
+                'label' => 'ชื่อลูกค้า',
+                'value' => function ($data) {
+                    if ($data->quotation != null) {
+                        return $data->quotation->customer ? $data->quotation->customer->name : $data->quotation->customer_name;
+                    }
+                    return '';
+                }
+            ],
+            [
                 'attribute' => 'job_date',
                 'value' => function ($data) {
                     return date('m/d/Y', strtotime($data->job_date));

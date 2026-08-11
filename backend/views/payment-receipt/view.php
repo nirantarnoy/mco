@@ -119,7 +119,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                         $jobNo = $model->job->job_no ?? $model->job->job_number ?? $model->job_id;
                                         $customerName = '';
                                         if ($model->job->quotation_id) {
-                                            $customerName = \backend\models\Quotation::find()->select('customer_name')->where(['id' => $model->job->quotation_id])->scalar();
+                                            $quotation = \backend\models\Quotation::find()->where(['id' => $model->job->quotation_id])->one();
+                                            if ($quotation) {
+                                                $customerName = $quotation->customer ? $quotation->customer->name : $quotation->customer_name;
+                                            }
                                         }
                                         $displayText = $jobNo . ($customerName ? ' ' . $customerName : '');
                                         return Html::a(

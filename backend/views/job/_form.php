@@ -50,7 +50,8 @@ if(!$model->isNewRecord){
                 <?= $form->field($model, 'quotation_id')->widget(Select2::className(),
                     [
                         'data' => \yii\helpers\ArrayHelper::map(\backend\models\Quotation::find()->all(), 'id', function($model) {
-                            return $model->quotation_no . ($model->customer_name ? ' ' . $model->customer_name : '');
+                            $customerName = $model->customer ? $model->customer->name : $model->customer_name;
+                            return $model->quotation_no . ($customerName ? ' ' . $customerName : '');
                         }),
                         'language' => 'th',
                         'options' => ['placeholder' => 'เลือกใบเสนอราคา', 'onchange' => 'getCustomerinfo($(this))'],

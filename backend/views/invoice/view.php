@@ -77,13 +77,19 @@ $model_doc = \common\models\InvoiceDoc::find()->where(['invoice_id' => $model->i
                                     if ($model->job_id && $model->job) {
                                         $jobNo = $model->job->job_no;
                                         if ($model->job->quotation_id) {
-                                            $customerName = \backend\models\Quotation::find()->select('customer_name')->where(['id' => $model->job->quotation_id])->scalar();
+                                            $quotation = \backend\models\Quotation::find()->where(['id' => $model->job->quotation_id])->one();
+                                            if ($quotation) {
+                                                $customerName = $quotation->customer ? $quotation->customer->name : $quotation->customer_name;
+                                            }
                                         }
                                     } elseif ($model->quotation_id) {
                                         $job = \backend\models\Job::find()->where(['quotation_id' => $model->quotation_id])->one();
                                         if ($job) {
                                             $jobNo = $job->job_no;
-                                            $customerName = \backend\models\Quotation::find()->select('customer_name')->where(['id' => $model->quotation_id])->scalar();
+                                            $quotation = \backend\models\Quotation::find()->where(['id' => $model->quotation_id])->one();
+                                            if ($quotation) {
+                                                $customerName = $quotation->customer ? $quotation->customer->name : $quotation->customer_name;
+                                            }
                                         }
                                     }
                                     return $jobNo !== '-' ? $jobNo . ($customerName ? ' ' . $customerName : '') : '-';

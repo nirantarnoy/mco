@@ -106,7 +106,10 @@ $this->registerJs("
                         'data' => \yii\helpers\ArrayHelper::map(\backend\models\Job::find()->orderBy(['id' => SORT_DESC])->all(), 'id', function($model) {
                             $customerName = '';
                             if ($model->quotation_id) {
-                                $customerName = \backend\models\Quotation::find()->select('customer_name')->where(['id' => $model->quotation_id])->scalar();
+                                $quotation = \backend\models\Quotation::find()->where(['id' => $model->quotation_id])->one();
+                                if ($quotation) {
+                                    $customerName = $quotation->customer ? $quotation->customer->name : $quotation->customer_name;
+                                }
                             }
                             return $model->job_no . ($customerName ? ' ' . $customerName : '');
                         }),
