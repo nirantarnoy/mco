@@ -172,6 +172,10 @@ class StocksumController extends BaseController
         $batchInsert = [];
         $createdAt = date('Y-m-d H:i:s');
         foreach ($models as $model) {
+            if (!$model->product_id || !$model->warehouse_id) {
+                continue;
+            }
+
             $key = $model->product_id . '_' . trim((string)$model->lot_no);
             $historicalQty = $model->qty;
             if (isset($adjMap[$key])) {
