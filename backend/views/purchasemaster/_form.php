@@ -767,11 +767,15 @@ JS
                     <div class="row">
                         <div class="col-lg-12">
                             <label for="">ประเภทเอกสาร</label>
-                            <select name="doc_type_id" class="form-control" required>
+                            <select name="doc_type_id" id="doc_type_id" class="form-control" onchange="checkDocType(this)" required>
                                 <?php foreach (\backend\helpers\PurchNonePrDocType::asArray() as $k => $v): ?>
                                     <option value="<?= $k ?>"><?= $v ?></option>
                                 <?php endforeach; ?>
                             </select>
+                            <div id="other_doc_type_div" style="display: none; margin-top: 10px;">
+                                <label for="">ระบุรายละเอียดเอกสารอื่นๆ <span class="text-danger">*</span></label>
+                                <input type="text" name="other_doc_type_detail" id="other_doc_type_detail" class="form-control">
+                            </div>
                         </div>
                     </div>
                     <div style="height: 10px;"></div>
@@ -809,7 +813,12 @@ JS
                         <tr>
                             <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
                             <td><?= $value->doc_name ?></td>
-                            <td><?= \backend\helpers\PurchNonePrDocType::getTypeById($value->doc_type_id) ?></td>
+                            <td>
+                                <?= \backend\helpers\PurchNonePrDocType::getTypeById($value->doc_type_id) ?>
+                                <?php if ($value->doc_type_id == 3 && !empty($value->type_description)): ?>
+                                    <br><small class="text-muted">(<?= $value->type_description ?>)</small>
+                                <?php endif; ?>
+                            </td>
                             <td style="text-align: center">
                                 <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $value->doc_name ?>"
                                    target="_blank">
@@ -842,8 +851,20 @@ JS
 $url_to_delete_doc = Url::to(['purchasemaster/delete-doc'],true);
 $js=<<<JS
 $(function(){
-    
+    if ($('#doc_type_id').length) {
+        checkDocType($('#doc_type_id')[0]);
+    }
 });
+function checkDocType(e) {
+    if ($(e).val() == '3') {
+        $('#other_doc_type_div').show();
+        $('#other_doc_type_detail').prop('required', true);
+    } else {
+        $('#other_doc_type_div').hide();
+        $('#other_doc_type_detail').val('');
+        $('#other_doc_type_detail').prop('required', false);
+    }
+}
 function delete_doc(e){
     var id = e.attr("data-value");
     var doc_name = e.attr("data-var");

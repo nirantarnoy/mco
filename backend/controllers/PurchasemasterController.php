@@ -159,6 +159,7 @@ class PurchasemasterController extends BaseController
                         }
                         
                         $doc_type_id = \Yii::$app->request->post('doc_type_id', 3);
+                        $other_doc_type_detail = \Yii::$app->request->post('other_doc_type_detail', '');
                         $uploaded = UploadedFile::getInstancesByName('file_doc');
                         if (!empty($uploaded)) {
                             $loop = 0;
@@ -169,6 +170,9 @@ class PurchasemasterController extends BaseController
                                     $model_doc->purchase_master_id = $model->id;
                                     $model_doc->doc_name = $upfiles;
                                     $model_doc->doc_type_id = $doc_type_id;
+                                    if ($doc_type_id == 3) {
+                                        $model_doc->type_description = $other_doc_type_detail;
+                                    }
                                     $model_doc->created_by = \Yii::$app->user->id;
                                     $model_doc->created_at = time();
                                     $model_doc->save(false);
@@ -342,6 +346,7 @@ class PurchasemasterController extends BaseController
                         }
 
                         $doc_type_id = \Yii::$app->request->post('doc_type_id', 3);
+                        $other_doc_type_detail = \Yii::$app->request->post('other_doc_type_detail', '');
                         $uploaded = UploadedFile::getInstancesByName('file_doc');
                         if (!empty($uploaded)) {
                             $loop = 0;
@@ -352,6 +357,9 @@ class PurchasemasterController extends BaseController
                                     $model_doc->purchase_master_id = $id;
                                     $model_doc->doc_name = $upfiles;
                                     $model_doc->doc_type_id = $doc_type_id;
+                                    if ($doc_type_id == 3) {
+                                        $model_doc->type_description = $other_doc_type_detail;
+                                    }
                                     $model_doc->created_by = \Yii::$app->user->id;
                                     $model_doc->created_at = time();
                                     $model_doc->save(false);

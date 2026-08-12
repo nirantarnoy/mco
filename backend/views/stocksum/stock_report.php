@@ -41,6 +41,19 @@ $stockSums = $dataProvider->getModels();
                 <?php
                 $productGroups = \yii\helpers\ArrayHelper::map(\backend\models\Productgroup::find()->where(['status' => 1])->all(), 'id', 'name');
                 ?>
+                <label style="margin-right: 5px;">ยอด ณ วันที่:</label>
+                <input type="date" class="form-control" style="width: auto; display: inline-block; margin-right: 10px;" 
+                       value="<?= Html::encode($as_of_date ?? '') ?>" 
+                       onchange="location.href='<?= Url::current(['as_of_date' => '']) ?>' + this.value">
+                <label style="margin-right: 5px;">ยอดสิ้นเดือน:</label>
+                <select class="form-control" style="width: auto; display: inline-block; margin-right: 10px;" onchange="location.href=this.value">
+                    <option value="<?= Url::current(['snapshot_period' => null]) ?>">-- ปัจจุบัน --</option>
+                    <?php if (isset($availableSnapshots) && is_array($availableSnapshots)): ?>
+                        <?php foreach ($availableSnapshots as $period => $label): ?>
+                            <option value="<?= Url::current(['snapshot_period' => $period]) ?>" <?= ($snapshot_period ?? '') == $period ? 'selected' : '' ?>><?= Html::encode($label) ?></option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
                 <select class="form-control" style="width: auto; display: inline-block; margin-right: 10px;" onchange="location.href=this.value">
                     <option value="<?= Url::current(['product_group_id' => null]) ?>">-- ทุกหมวดหมู่ --</option>
                     <?php foreach ($productGroups as $id => $name): ?>
@@ -54,6 +67,7 @@ $stockSums = $dataProvider->getModels();
                 </select>
                 <a href="<?= Url::current(['export' => 'excel']) ?>" class="btn btn-success"><i class="fas fa-file-excel"></i> Export Excel</a>
                 <button class="btn btn-default" onclick="window.print()"><i class="fas fa-print"></i> พิมพ์</button>
+                <button class="btn btn-warning" data-toggle="modal" data-target="#snapshotModal"><i class="fas fa-save"></i> ประมวลผลยอดสิ้นเดือน</button>
             </div>
         </div>
         <div class="card-body">
@@ -167,3 +181,31 @@ $stockSums = $dataProvider->getModels();
         </div>
     </div>
 </div>
+
+<!-- Snapshot Modal -->
+<div class="modal fade" id="snapshotModal" tabindex="-1" role="dialog" aria-labelledby="snapshotModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <?= Html::beginForm(['process-snapshot'], 'post') ?>
+      <div class="modal-header">
+        <h5 class="modal-title" id="snapshotModalLabel">ประมวลผลยอดยกไปสิ้นเดือน</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+            <label>เลือกเดือนที่ต้องการบันทึกยอด (คศ-เดือน)</label>
+            <input type="month" name="snapshot_period" class="form-control" value="<?= date('Y-m') ?>" required>
+            <small class="form-text text-muted">ระบบจะทำการคำนวณและบันทึกยอดคงเหลือ ณ วันสิ้นเดือนของเดือนที่เลือก (หากเคยบันทึกแล้วจะถูกแทนที่ด้วยข้อมูลใหม่)</small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">ยกเลิก</button>
+        <button type="submit" class="btn btn-primary">ยืนยันการประมวลผล</button>
+      </div>
+      <?= Html::endForm() ?>
+    </div>
+  </div>
+</div>
+

@@ -118,39 +118,207 @@ class StocksumController extends BaseController
         return $this->redirect(['index']);
     }
 
+    public function actionProcessSnapshot()
+    {
+        $period = \Yii::$app->request->post('snapshot_period');
+        if (!$period) {
+            \Yii::$app->session->setFlash('error', 'กรุณาระบุเดือนที่ต้องการประมวลผล');
+            return $this->redirect(['stock-report']);
+        }
+        
+        // Auto-create table if not exists
+        \Yii::$app->db->createCommand("
+            CREATE TABLE IF NOT EXISTS `stock_monthly_snapshot` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `product_id` int(11) NOT NULL,
+                `warehouse_id` int(11) NOT NULL,
+                `lot_no` varchar(50) DEFAULT NULL,
+                `qty` float DEFAULT '0',
+                `snapshot_period` varchar(7) NOT NULL COMMENT 'Format YYYY-MM',
+                `created_at` datetime DEFAULT NULL,
+                PRIMARY KEY (`id`),
+                KEY `idx-stock_monthly_snapshot-period` (`snapshot_period`),
+                KEY `idx-stock_monthly_snapshot-product_id` (`product_id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+        ")->execute();
+
+        // Calculate end of the month date
+        $dateEnd = date('Y-m-t 23:59:59', strtotime($period . '-01'));
+
+        $models = \backend\models\StockSum::find()->all();
+        
+        $adjustments = \backend\models\JournalTransLine::find()
+            ->select([
+                'journal_trans_line.product_id', 
+                'journal_trans_line.lot_no',
+                'SUM(CASE WHEN journal_trans.stock_type_id = 1 THEN journal_trans_line.qty ELSE -journal_trans_line.qty END) as qty_diff'
+            ])
+            ->joinWith('journalTrans')
+            ->where(['>', 'journal_trans.trans_date', $dateEnd])
+            ->andWhere(['IN', 'journal_trans.status', [0, 1, 2]])
+            ->groupBy(['journal_trans_line.product_id', 'journal_trans_line.lot_no'])
+            ->asArray()
+            ->all();
+
+        $adjMap = [];
+        foreach ($adjustments as $adj) {
+            $key = $adj['product_id'] . '_' . trim((string)$adj['lot_no']);
+            $adjMap[$key] = (float)$adj['qty_diff'];
+        }
+
+        // Delete existing snapshot for this period
+        \backend\models\StockMonthlySnapshot::deleteAll(['snapshot_period' => $period]);
+
+        $batchInsert = [];
+        $createdAt = date('Y-m-d H:i:s');
+        foreach ($models as $model) {
+            $key = $model->product_id . '_' . trim((string)$model->lot_no);
+            $historicalQty = $model->qty;
+            if (isset($adjMap[$key])) {
+                $historicalQty = $model->qty - $adjMap[$key];
+            }
+
+            if ($historicalQty != 0) { // Keep only non-zero to save space
+                $batchInsert[] = [
+                    $model->product_id,
+                    $model->warehouse_id,
+                    $model->lot_no,
+                    $historicalQty,
+                    $period,
+                    $createdAt
+                ];
+            }
+        }
+
+        if (!empty($batchInsert)) {
+            \Yii::$app->db->createCommand()->batchInsert(
+                'stock_monthly_snapshot',
+                ['product_id', 'warehouse_id', 'lot_no', 'qty', 'snapshot_period', 'created_at'],
+                $batchInsert
+            )->execute();
+        }
+
+        \Yii::$app->session->setFlash('success', 'ประมวลผลยอดยกไปของเดือน ' . $period . ' สำเร็จเรียบร้อยแล้ว');
+        return $this->redirect(['stock-report']);
+    }
+
     public function actionStockReport()
     {
         $filter_qty = \Yii::$app->request->get('filter_qty');
         $export = \Yii::$app->request->get('export');
         $product_group_id = \Yii::$app->request->get('product_group_id');
+        $as_of_date = \Yii::$app->request->get('as_of_date');
+        $snapshot_period = \Yii::$app->request->get('snapshot_period');
 
-        $query = \backend\models\StockSum::find()
-            ->joinWith(['product', 'product.productGroup', 'product.unit'])
-            ->orderBy(['product.product_group_id' => SORT_ASC, 'product.code' => SORT_ASC, 'stock_sum.lot_no' => SORT_ASC]);
-        
-        if ($filter_qty === 'gt0') {
-            $query->andWhere(['>', 'stock_sum.qty', 0]);
-        } elseif ($filter_qty === 'eq0') {
-            $query->andWhere(['<=', 'stock_sum.qty', 0]);
+        if ($snapshot_period) {
+            // Read from snapshot table instead
+            $query = \backend\models\StockMonthlySnapshot::find()
+                ->joinWith(['product', 'product.productGroup', 'product.unit'])
+                ->where(['snapshot_period' => $snapshot_period])
+                ->orderBy(['product.product_group_id' => SORT_ASC, 'product.code' => SORT_ASC, 'stock_monthly_snapshot.lot_no' => SORT_ASC]);
+
+            if ($filter_qty === 'gt0') {
+                $query->andWhere(['>', 'stock_monthly_snapshot.qty', 0]);
+            } elseif ($filter_qty === 'eq0') {
+                $query->andWhere(['<=', 'stock_monthly_snapshot.qty', 0]);
+            }
+            if ($product_group_id) {
+                $query->andWhere(['product.product_group_id' => $product_group_id]);
+            }
+            $models = $query->all();
+        } else {
+            // Read from current stock_sum
+            $query = \backend\models\StockSum::find()
+                ->joinWith(['product', 'product.productGroup', 'product.unit'])
+                ->orderBy(['product.product_group_id' => SORT_ASC, 'product.code' => SORT_ASC, 'stock_sum.lot_no' => SORT_ASC]);
+            
+            if (!$as_of_date) {
+                if ($filter_qty === 'gt0') {
+                    $query->andWhere(['>', 'stock_sum.qty', 0]);
+                } elseif ($filter_qty === 'eq0') {
+                    $query->andWhere(['<=', 'stock_sum.qty', 0]);
+                }
+            }
+
+            if ($product_group_id) {
+                $query->andWhere(['product.product_group_id' => $product_group_id]);
+            }
+
+            $models = $query->all();
+
+            if ($as_of_date) {
+                $dateEnd = date('Y-m-d 23:59:59', strtotime($as_of_date));
+                
+                // Get all transactions AFTER the as_of_date
+                $adjustments = \backend\models\JournalTransLine::find()
+                    ->select([
+                        'journal_trans_line.product_id', 
+                        'journal_trans_line.lot_no',
+                        'SUM(CASE WHEN journal_trans.stock_type_id = 1 THEN journal_trans_line.qty ELSE -journal_trans_line.qty END) as qty_diff'
+                    ])
+                    ->joinWith('journalTrans')
+                    ->where(['>', 'journal_trans.trans_date', $dateEnd])
+                    ->andWhere(['IN', 'journal_trans.status', [0, 1, 2]]) // Adjust status based on typical active trans
+                    ->groupBy(['journal_trans_line.product_id', 'journal_trans_line.lot_no'])
+                    ->asArray()
+                    ->all();
+
+                $adjMap = [];
+                foreach ($adjustments as $adj) {
+                    $key = $adj['product_id'] . '_' . trim((string)$adj['lot_no']);
+                    $adjMap[$key] = (float)$adj['qty_diff'];
+                }
+
+                $filteredModels = [];
+                foreach ($models as $model) {
+                    $key = $model->product_id . '_' . trim((string)$model->lot_no);
+                    
+                    // Historical = Current - (IN after) + (OUT after) = Current - (qty_diff)
+                    if (isset($adjMap[$key])) {
+                        $model->qty = $model->qty - $adjMap[$key];
+                    }
+
+                    // Apply filter_qty manually
+                    if ($filter_qty === 'gt0' && $model->qty <= 0) {
+                        continue;
+                    }
+                    if ($filter_qty === 'eq0' && $model->qty > 0) {
+                        continue;
+                    }
+                    
+                    $filteredModels[] = $model;
+                }
+                $models = $filteredModels;
+            }
         }
 
-        if ($product_group_id) {
-            $query->andWhere(['product.product_group_id' => $product_group_id]);
-        }
-
-        $dataProvider = new \yii\data\ActiveDataProvider([
-            'query' => $query,
+        $dataProvider = new \yii\data\ArrayDataProvider([
+            'allModels' => $models,
             'pagination' => false,
         ]);
 
         if ($export === 'excel') {
-            return $this->exportToExcel($dataProvider->getModels(), $filter_qty);
+            return $this->exportToExcel($models, $filter_qty);
+        }
+
+        // Get available snapshot periods for dropdown
+        $availableSnapshots = [];
+        try {
+            $periods = \Yii::$app->db->createCommand('SELECT DISTINCT snapshot_period FROM stock_monthly_snapshot ORDER BY snapshot_period DESC')->queryColumn();
+            foreach ($periods as $p) {
+                $availableSnapshots[$p] = 'สิ้นเดือน ' . $p;
+            }
+        } catch (\Exception $e) {
+            // Table might not exist yet
         }
 
         return $this->render('stock_report', [
             'dataProvider' => $dataProvider,
             'filter_qty' => $filter_qty,
             'product_group_id' => $product_group_id,
+            'as_of_date' => $as_of_date,
+            'snapshot_period' => $snapshot_period,
+            'availableSnapshots' => $availableSnapshots,
         ]);
     }
 

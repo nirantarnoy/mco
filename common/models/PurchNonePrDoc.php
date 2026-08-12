@@ -32,9 +32,9 @@ class PurchNonePrDoc extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['purchase_master_id', 'doc_name', 'note', 'created_at', 'created_by'], 'default', 'value' => null],
+            [['purchase_master_id', 'doc_name', 'note', 'type_description', 'created_at', 'created_by'], 'default', 'value' => null],
             [['purchase_master_id', 'created_at', 'created_by','doc_type_id'], 'integer'],
-            [['doc_name', 'note'], 'string', 'max' => 255],
+            [['doc_name', 'note', 'type_description'], 'string', 'max' => 255],
         ];
     }
 
@@ -48,6 +48,7 @@ class PurchNonePrDoc extends \yii\db\ActiveRecord
             'purchase_master_id' => 'Purchase Master ID',
             'doc_name' => 'Doc Name',
             'note' => 'Note',
+            'type_description' => 'Type Description',
             'created_at' => 'Created At',
             'created_by' => 'Created By',
         ];
