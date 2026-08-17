@@ -40,20 +40,14 @@ $this->params['breadcrumbs'][] = $this->title;
 
             <div class="row mt-4">
                 <div class="col-md-12 text-center">
-                    <button type="button" class="btn btn-lg btn-success px-5" id="btn-scan" disabled>
-                        <i class="fas fa-search"></i> เริ่มการสแกน OCR (Vision AI)
-                    </button>
-                    <button type="button" class="btn btn-lg btn-warning px-5 ml-2" id="btn-scan-docai" disabled>
-                        <i class="fas fa-file-invoice"></i> สแกนด้วย Document AI
-                    </button>
-                    <button type="button" class="btn btn-lg btn-info px-5 ml-2" id="btn-scan-gemini" disabled>
+                    <button type="button" class="btn btn-lg btn-info px-5" id="btn-scan-gemini" disabled>
                         <i class="fas fa-robot"></i> สแกนด้วย Gemini AI
                     </button>
                     <div id="loading" class="mt-2" style="display:none;">
                         <div class="spinner-border text-primary" role="status">
                             <span class="sr-only">กำลังประมวลผล...</span>
                         </div>
-                        <p>กำลังส่งไฟล์ไปยัง Google Vision และประมวลผล...</p>
+                        <p>กำลังส่งไฟล์ไปยัง Gemini AI และประมวลผล...</p>
                     </div>
                 </div>
             </div>
@@ -113,9 +107,9 @@ $scanGeminiUrl = Url::to(['ocr/process-gemini']);
 $js = <<<JS
 $('#ocr-input-file').on('change', function() {
     if ($(this).val()) {
-        $('#btn-scan, #btn-scan-docai, #btn-scan-gemini').prop('disabled', false);
+        $('#btn-scan-gemini').prop('disabled', false);
     } else {
-        $('#btn-scan, #btn-scan-docai, #btn-scan-gemini').prop('disabled', true);
+        $('#btn-scan-gemini').prop('disabled', true);
     }
 });
 
@@ -128,7 +122,7 @@ function doScan(url) {
     formData.append('ocr_file', fileInput.files[0]);
     
     // UI Loading state
-    $('#btn-scan, #btn-scan-docai, #btn-scan-gemini').hide();
+    $('#btn-scan-gemini').hide();
     $('#loading').show();
     $('#result-area').fadeOut();
 
@@ -140,7 +134,7 @@ function doScan(url) {
         contentType: false,
         success: function(response) {
             $('#loading').hide();
-            $('#btn-scan, #btn-scan-docai, #btn-scan-gemini').show();
+            $('#btn-scan-gemini').show();
             
             if (response.success) {
                 $('#full-text').val(response.fullText);
@@ -171,19 +165,11 @@ function doScan(url) {
         },
         error: function(xhr, status, error) {
             $('#loading').hide();
-            $('#btn-scan, #btn-scan-docai, #btn-scan-gemini').show();
+            $('#btn-scan-gemini').show();
             alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์: ' + error);
         }
     });
 }
-
-$('#btn-scan').on('click', function() {
-    doScan('{$scanUrl}');
-});
-
-$('#btn-scan-docai').on('click', function() {
-    doScan('{$scanDocAiUrl}');
-});
 
 $('#btn-scan-gemini').on('click', function() {
     doScan('{$scanGeminiUrl}');

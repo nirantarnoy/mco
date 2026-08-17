@@ -37,6 +37,7 @@ AppAsset::register($this);
     $menuItems = [
         ['label' => 'หน้าแรก', 'url' => ['/site/index']],
         ['label' => 'สินค้า', 'url' => ['/product/index']],
+        ['label' => 'Report Portal', 'url' => ['/report-portal/index']],
         ['label' => 'อ่าน OCR', 'url' => ['/ocr/index']],
         ['label' => 'ตรวจสอบรหัสซ้ำ', 'url' => ['/check-duplicate/index']],
     ];

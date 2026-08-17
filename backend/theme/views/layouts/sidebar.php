@@ -512,23 +512,29 @@
                 <?php //if(\Yii::$app->user->can('salereport/crosstab')):?>
                     <li class="nav-item has-treeview has-sub">
                         <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-chart-line"></i>
+                            <i class="nav-icon fas fa-chart-pie text-info"></i>
                             <p>
-                                รายงาน
+                                Report Portal
                                 <i class="fas fa-angle-left right"></i>
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
+                            <li class="nav-item">
+                                <a href="index.php?r=report-portal/index" class="nav-link report-portal">
+                                    <i class="fas fa-chart-line nav-icon text-primary"></i>
+                                    <p>ศูนย์รวมรายงาน (Portal Hub)</p>
+                                </a>
+                            </li>
                             <?php if (\Yii::$app->user->can('job/index')): ?>
                                 <li class="nav-item">
                                     <a href="index.php?r=job-report/index" class="nav-link job-report">
-                                        <i class="far fa-circlez nav-icon"></i>
+                                        <i class="far fa-circle nav-icon"></i>
                                         <p>สถานะใบงานรวม</p>
                                     </a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="index.php?r=driver-wage-report/index" class="nav-link driver-wage-report">
-                                        <i class="far fa-circlez nav-icon"></i>
+                                        <i class="far fa-circle nav-icon"></i>
                                         <p>ค่าเที่ยว/ค่าแรงพนักงานขับรถ</p>
                                     </a>
                                 </li>
