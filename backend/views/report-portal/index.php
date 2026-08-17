@@ -10,8 +10,8 @@ use backend\models\Company;
 
 /* @var $this yii\web\View */
 
-$this->title = 'Report Portal - ศูนย์รวมรายงานและวิเคราะห์ผลประกอบการ';
-$this->params['breadcrumbs'][] = $this->title;
+//$this->title = 'Report Portal - ศูนย์รวมรายงานและวิเคราะห์ผลประกอบการ';
+$this->params['breadcrumbs'][] = 'Report Portal - ศูนย์รวมรายงานและวิเคราะห์ผลประกอบการ' ;
 
 $monthNames = [
     1 => 'มกราคม', 2 => 'กุมภาพันธ์', 3 => 'มีนาคม', 4 => 'เมษายน',
@@ -30,7 +30,7 @@ $monthNames = [
                         <i class="fas fa-chart-pie"></i>
                     </div>
                     <div>
-                        <h3 class="font-weight-bold mb-1 text-dark"><?= Html::encode($this->title) ?></h3>
+                        <h3 class="font-weight-bold mb-1 text-dark"><?= Html::encode($this->title) ?>Report Portal - ศูนย์รวมรายงานและวิเคราะห์ผลประกอบการ</h3>
                         <p class="text-muted mb-0"><i class="fas fa-info-circle text-info"></i> สรุปผลประกอบการ รายรับ, รายจ่าย, เงินเดือน และค่าใช้จ่ายรถ (คำนวณยอดไม่รวม VAT)</p>
                     </div>
                 </div>
@@ -51,6 +51,7 @@ $monthNames = [
         </div>
         <div class="card-body">
             <form method="get" action="<?= Url::to(['report-portal/index']) ?>" id="filter-form">
+                <input type="hidden" name="r" value="report-portal/index">
                 <div class="row">
                     <!-- บริษัท -->
                     <div class="col-lg-3 col-md-6 mb-3">
