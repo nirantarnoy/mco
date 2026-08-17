@@ -55,9 +55,18 @@ class ReportPortalController extends BaseController
 
         if (!empty($companyId) && $companyId != '0') {
             $companyQueryId = is_array($companyId) ? $companyId : [$companyId];
-            $jobQuery->andFilterWhere(['IN', 'company_id', $companyQueryId]);
+            if (in_array(1, $companyQueryId)) {
+                $jobQuery->andFilterWhere(['OR', ['IN', 'company_id', $companyQueryId], ['company_id' => 0], ['is', 'company_id', null]]);
+            } else {
+                $jobQuery->andFilterWhere(['IN', 'company_id', $companyQueryId]);
+            }
         } elseif (\Yii::$app->session->get('company_id') && \Yii::$app->session->get('company_id') != 100) {
-            $jobQuery->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')]);
+            $sessCompId = \Yii::$app->session->get('company_id');
+            if ($sessCompId == 1) {
+                $jobQuery->andFilterWhere(['OR', ['company_id' => 1], ['company_id' => 0], ['is', 'company_id', null]]);
+            } else {
+                $jobQuery->andFilterWhere(['company_id' => $sessCompId]);
+            }
         }
 
         if (!empty($jobNo)) {
@@ -137,7 +146,7 @@ class ReportPortalController extends BaseController
         // Group Jobs by company
         $jobsByCompany = [];
         foreach ($jobs as $job) {
-            $cId = $job->company_id ?: 0;
+            $cId = ($job->company_id && $job->company_id != 0) ? $job->company_id : 1;
             if (!isset($jobsByCompany[$cId])) {
                 $jobsByCompany[$cId] = [];
             }
@@ -297,7 +306,7 @@ class ReportPortalController extends BaseController
 
         $jobsByCompany = [];
         foreach ($jobs as $job) {
-            $cId = $job->company_id ?: 0;
+            $cId = ($job->company_id && $job->company_id != 0) ? $job->company_id : 1;
             $jobsByCompany[$cId][] = $job;
         }
 

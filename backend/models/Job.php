@@ -211,12 +211,21 @@ class Job extends \common\models\Job
                 }
 
                 $lineAmount = 0;
+                $unitPrice = 0;
+
                 if (!empty($line->sale_price) && floatval($line->sale_price) > 0) {
-                    $lineAmount = floatval($line->sale_price) * $qty;
+                    $unitPrice = floatval($line->sale_price);
+                    $lineAmount = $unitPrice * $qty;
                 } elseif (!empty($line->line_price) && floatval($line->line_price) > 0) {
-                    $lineAmount = floatval($line->line_price);
-                } elseif ($line->product && !empty($line->product->sale_price) && floatval($line->product->sale_price) > 0) {
-                    $lineAmount = floatval($line->product->sale_price) * $qty;
+                    $lp = floatval($line->line_price);
+                    $lineAmount = $lp;
+                } elseif ($line->product) {
+                    if (!empty($line->product->sale_price) && floatval($line->product->sale_price) > 0) {
+                        $unitPrice = floatval($line->product->sale_price);
+                    } elseif (!empty($line->product->cost_price) && floatval($line->product->cost_price) > 0) {
+                        $unitPrice = floatval($line->product->cost_price);
+                    }
+                    $lineAmount = $unitPrice * $qty;
                 }
 
                 if ($isReturn) {
