@@ -190,15 +190,21 @@ use yii\helpers\Html;
     $models = $dataProvider->getModels();
     $totalJobAmount = 0;
     $totalWithdrawAmount = 0;
+    $totalJobExpense = 0;
+    $totalVehicleExpense = 0;
     $no = 1;
 
     foreach ($models as $model):
         $withdrawAmount = $model->getTotalWithdrawAmount();
+        $jobExpense = $model->getJobExpenseAll();
+        $vehicleExpense = $model->getVehicleExpenseAll();
         $profitLoss = $model->getProfitLoss();
         $percentage = $model->getProfitLossPercentage();
 
         $totalJobAmount += $model->getJobAmountNoVat();
         $totalWithdrawAmount += $withdrawAmount;
+        $totalJobExpense += $jobExpense;
+        $totalVehicleExpense += $vehicleExpense;
         ?>
         <tr>
             <td><?= $no++ ?></td>
@@ -206,7 +212,7 @@ use yii\helpers\Html;
             <td><?= date('d/m/Y', strtotime($model->start_date)) ?></td>
             <td><?= Html::encode($model->getStatusText()) ?></td>
             <td class="text-right"><?= number_format($model->getJobAmountNoVat(), 2) ?></td>
-            <td class="text-right"><?= number_format($withdrawAmount, 2) ?></td>
+            <td class="text-right"><?= number_format($withdrawAmount + $jobExpense + $vehicleExpense, 2) ?></td>
             <td class="text-right <?= $profitLoss >= 0 ? 'profit' : 'loss' ?>">
                 <?= number_format($profitLoss, 2) ?>
             </td>
@@ -220,7 +226,8 @@ use yii\helpers\Html;
 
 <!-- สรุปยอดรวม -->
 <?php
-$totalProfitLoss = $totalJobAmount - $totalWithdrawAmount;
+$totalAllExpenses = $totalWithdrawAmount + $totalJobExpense + $totalVehicleExpense;
+$totalProfitLoss = $totalJobAmount - $totalAllExpenses;
 $totalPercentage = $totalJobAmount > 0 ? ($totalProfitLoss / $totalJobAmount) * 100 : 0;
 ?>
 
@@ -237,8 +244,8 @@ $totalPercentage = $totalJobAmount > 0 ? ($totalProfitLoss / $totalJobAmount) * 
             <td class="summary-value"><?= number_format($totalJobAmount, 2) ?> บาท</td>
         </tr>
         <tr>
-            <td class="summary-label">มูลค่าเบิกของรวม:</td>
-            <td class="summary-value"><?= number_format($totalWithdrawAmount, 2) ?> บาท</td>
+            <td class="summary-label">รายจ่ายรวม (เบิก/ค่าใช้จ่าย/รถ):</td>
+            <td class="summary-value"><?= number_format($totalAllExpenses, 2) ?> บาท</td>
         </tr>
         <tr>
             <td class="summary-label">กำไร/ขาดทุนรวม:</td>

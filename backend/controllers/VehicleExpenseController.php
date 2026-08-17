@@ -178,6 +178,10 @@ class VehicleExpenseController extends BaseController
                         $jobNo = strtoupper($matches[1]);
                     } elseif (preg_match('/(RY-[A-Z]{2}\d{2}-\d{5})/i', $colB, $matches)) {
                         $jobNo = strtoupper($matches[1]);
+                    } elseif (preg_match('/(JO\d{10})/i', $colB, $matches)) {
+                        $jobNo = strtoupper($matches[1]);
+                    } else {
+                        $jobNo = trim($colB);
                     }
                 }
 

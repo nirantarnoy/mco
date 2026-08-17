@@ -799,9 +799,24 @@ class Job extends \common\models\Job
         return $total;
     }
 
+    public function getVehicleExpenseOnly()
+    {
+        $sum = \backend\models\VehicleExpense::find()->where(['job_no' => $this->job_no])->sum('vehicle_cost');
+        return $sum ? (float)$sum : 0;
+    }
+
+    public function getVehicleWageOnly()
+    {
+        $sum = \backend\models\VehicleExpense::find()->where(['job_no' => $this->job_no])->sum('total_wage');
+        return $sum ? (float)$sum : 0;
+    }
+
     public function getVehicleExpenseAll()
     {
-        return \backend\models\VehicleExpense::find()->where(['job_no' => $this->job_no])->sum('total_wage');
+        $sum = \backend\models\VehicleExpense::find()
+            ->where(['job_no' => $this->job_no])
+            ->sum('COALESCE(vehicle_cost, 0) + COALESCE(total_wage, 0)');
+        return $sum ? (float)$sum : 0;
     }
 
     public function beforeSave($insert)

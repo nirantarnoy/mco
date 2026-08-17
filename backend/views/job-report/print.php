@@ -199,15 +199,21 @@ $this->title = 'รายงานใบงาน';
     $models = $dataProvider->getModels();
     $totalJobAmount = 0;
     $totalWithdrawAmount = 0;
+    $totalJobExpense = 0;
+    $totalVehicleExpense = 0;
     $no = 1;
 
     foreach ($models as $model):
         $withdrawAmount = $model->getTotalWithdrawAmount();
+        $jobExpense = $model->getJobExpenseAll();
+        $vehicleExpense = $model->getVehicleExpenseAll();
         $profitLoss = $model->getProfitLoss();
         $percentage = $model->getProfitLossPercentage();
 
         $totalJobAmount += $model->getJobAmountNoVat();
         $totalWithdrawAmount += $withdrawAmount;
+        $totalJobExpense += $jobExpense;
+        $totalVehicleExpense += $vehicleExpense;
         ?>
         <tr>
             <td><?= $no++ ?></td>
@@ -215,7 +221,7 @@ $this->title = 'รายงานใบงาน';
             <td><?= Yii::$app->formatter->asDate($model->start_date) ?></td>
             <td><?= Html::encode($model->getStatusText()) ?></td>
             <td class="text-right"><?= number_format($model->getJobAmountNoVat(), 2) ?></td>
-            <td class="text-right"><?= number_format($withdrawAmount, 2) ?></td>
+            <td class="text-right"><?= number_format($withdrawAmount + $jobExpense + $vehicleExpense, 2) ?></td>
             <td class="text-right <?= $profitLoss >= 0 ? 'profit' : 'loss' ?>">
                 <?= number_format($profitLoss, 2) ?>
             </td>
@@ -229,7 +235,8 @@ $this->title = 'รายงานใบงาน';
 
 <!-- สรุปยอดรวม -->
 <?php
-$totalProfitLoss = $totalJobAmount - $totalWithdrawAmount;
+$totalAllExpenses = $totalWithdrawAmount + $totalJobExpense + $totalVehicleExpense;
+$totalProfitLoss = $totalJobAmount - $totalAllExpenses;
 $totalPercentage = $totalJobAmount > 0 ? ($totalProfitLoss / $totalJobAmount) * 100 : 0;
 ?>
 
@@ -247,8 +254,8 @@ $totalPercentage = $totalJobAmount > 0 ? ($totalProfitLoss / $totalJobAmount) * 
     </div>
 
     <div class="summary-row">
-        <span class="summary-label">มูลค่าเบิกของรวม:</span>
-        <span class="summary-value"><?= number_format($totalWithdrawAmount, 2) ?> บาท</span>
+        <span class="summary-label">รายจ่ายรวม (เบิก/ค่าใช้จ่าย/รถ):</span>
+        <span class="summary-value"><?= number_format($totalAllExpenses, 2) ?> บาท</span>
     </div>
 
     <div class="summary-row">

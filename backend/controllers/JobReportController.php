@@ -81,7 +81,7 @@ class JobReportController extends BaseController
             'B1' => 'วันที่เริ่ม',
             'C1' => 'สถานะ',
             'D1' => 'มูลค่างาน',
-            'E1' => 'มูลค่าเบิกของ',
+            'E1' => 'เบิก/ค่าใช้จ่าย/รถ',
             'F1' => 'กำไร/ขาดทุน',
             'G1' => 'เปอร์เซ็นต์',
         ];
@@ -93,16 +93,16 @@ class JobReportController extends BaseController
         // ใส่ข้อมูล
         $row = 2;
         foreach ($dataProvider->getModels() as $model) {
-            $totalWithdraw = $model->getTotalWithdrawAmount();
+            $totalExpense = $model->getTotalWithdrawAmount() + $model->getJobExpenseAll() + $model->getVehicleExpenseAll();
             $jobAmountNoVat = $model->getJobAmountNoVat();
-            $profitLoss = $jobAmountNoVat - $totalWithdraw;
-            $percentage = $jobAmountNoVat > 0 ? ($profitLoss / $jobAmountNoVat) * 100 : 0;
+            $profitLoss = $model->getProfitLoss();
+            $percentage = $model->getProfitLossPercentage();
 
             $sheet->setCellValue('A' . $row, $model->job_no);
             $sheet->setCellValue('B' . $row, $model->start_date);
-            $sheet->setCellValue('C' . $row, $model->status);
+            $sheet->setCellValue('C' . $row, $model->getStatusText());
             $sheet->setCellValue('D' . $row, number_format($jobAmountNoVat, 2));
-            $sheet->setCellValue('E' . $row, number_format($totalWithdraw, 2));
+            $sheet->setCellValue('E' . $row, number_format($totalExpense, 2));
             $sheet->setCellValue('F' . $row, number_format($profitLoss, 2));
             $sheet->setCellValue('G' . $row, number_format($percentage, 2) . '%');
             $row++;

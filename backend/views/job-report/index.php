@@ -403,12 +403,16 @@ $this->params['breadcrumbs'][] = $this->title;
                     $totalWithdrawAmount = 0;
                     $totalJobExpense = 0;
                     $totalProfitLoss = 0;
+                    $totalVehicleCost = 0;
+                    $totalVehicleWage = 0;
                     $totalVehicleExpense = 0;
 
                     foreach ($allModels as $model) {
                         $totalJobAmount += $model->getJobAmountNoVat();
                         $totalWithdrawAmount += $model->getTotalWithdrawAmount();
                         $totalJobExpense += $model->getJobExpenseAll();
+                        $totalVehicleCost += $model->getVehicleExpenseOnly();
+                        $totalVehicleWage += $model->getVehicleWageOnly();
                         $totalVehicleExpense += $model->getVehicleExpenseAll();
                     }
                     $totalProfitLoss = $totalJobAmount - $totalWithdrawAmount - $totalJobExpense - $totalVehicleExpense;
@@ -438,6 +442,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <div class="text-center">
                                             <h6 class="text-muted">รายจ่ายรวม</h6>
                                             <h4 class="text-warning"><?= number_format($totalWithdrawAmount + $totalJobExpense + $totalVehicleExpense , 2) ?> บาท</h4>
+                                            <div class="small text-muted mt-1">
+                                                (ค่าใช้จ่ายรถ: <?= number_format($totalVehicleCost, 2) ?> | ค่าแรง: <?= number_format($totalVehicleWage, 2) ?>)
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
