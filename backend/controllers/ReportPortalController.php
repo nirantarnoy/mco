@@ -43,8 +43,8 @@ class ReportPortalController extends BaseController
     public function actionIndex()
     {
         $companyId = Yii::$app->request->get('company_id', '');
-        $startDateFrom = Yii::$app->request->get('start_date_from', date('Y-m-01'));
-        $startDateTo = Yii::$app->request->get('start_date_to', date('Y-m-t'));
+        $startDateFrom = Yii::$app->request->get('start_date_from', '');
+        $startDateTo = Yii::$app->request->get('start_date_to', '');
         $jobNo = Yii::$app->request->get('job_no', '');
         $status = Yii::$app->request->get('status', '');
         $month = Yii::$app->request->get('month', date('m'));
@@ -260,8 +260,8 @@ class ReportPortalController extends BaseController
      */
     public function actionExportCompanyExcel()
     {
-        $startDateFrom = Yii::$app->request->get('start_date_from', date('Y-m-01'));
-        $startDateTo = Yii::$app->request->get('start_date_to', date('Y-m-t'));
+        $startDateFrom = Yii::$app->request->get('start_date_from', '');
+        $startDateTo = Yii::$app->request->get('start_date_to', '');
         $month = Yii::$app->request->get('month', date('m'));
         $year = Yii::$app->request->get('year', date('Y'));
 
@@ -350,8 +350,8 @@ class ReportPortalController extends BaseController
      */
     public function actionExportJobExcel()
     {
-        $startDateFrom = Yii::$app->request->get('start_date_from', date('Y-m-01'));
-        $startDateTo = Yii::$app->request->get('start_date_to', date('Y-m-t'));
+        $startDateFrom = Yii::$app->request->get('start_date_from', '');
+        $startDateTo = Yii::$app->request->get('start_date_to', '');
         $companyId = Yii::$app->request->get('company_id', '');
         $jobNo = Yii::$app->request->get('job_no', '');
 

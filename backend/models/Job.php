@@ -180,15 +180,56 @@ class Job extends \common\models\Job
         $total = 0;
 
         foreach ($this->journalTrans as $trans) {
+            // ยกเว้นรายการที่ถูกยกเลิก (STATUS_CANCELLED)
+            if ($trans->status == JournalTrans::STATUS_CANCELLED) {
+                continue;
+            }
+
+            // กรองเฉพาะประเภทรายการเบิก/ยืม/คืนสินค้า
+            // Type 3: ISSUE_STOCK (เบิกสินค้า) (+)
+            // Type 5: ISSUE_BORROW (ยืมสินค้า) (+)
+            // Type 4: RETURN_ISSUE (คืนสินค้าที่เบิก) (-)
+            // Type 6: RETURN_BORROW (คืนสินค้าที่ยืม) (-)
+            if (!empty($trans->trans_type_id) && !in_array($trans->trans_type_id, [
+                JournalTrans::TRANS_TYPE_ISSUE_STOCK,
+                JournalTrans::TRANS_TYPE_RETURN_ISSUE,
+                JournalTrans::TRANS_TYPE_ISSUE_BORROW,
+                JournalTrans::TRANS_TYPE_RETURN_BORROW,
+            ])) {
+                continue;
+            }
+
+            $isReturn = in_array($trans->trans_type_id, [
+                JournalTrans::TRANS_TYPE_RETURN_ISSUE,
+                JournalTrans::TRANS_TYPE_RETURN_BORROW,
+            ]);
+
             foreach ($trans->journalTransLines as $line) {
-                // คำนวณจากราคาขาย (sale_price) คูณกับจำนวน (qty)
-                $lineTotal = $line->sale_price * $line->qty;
-                $total += $lineTotal;
+                $qty = floatval($line->qty);
+                if ($qty <= 0) {
+                    continue;
+                }
+
+                $lineAmount = 0;
+                if (!empty($line->sale_price) && floatval($line->sale_price) > 0) {
+                    $lineAmount = floatval($line->sale_price) * $qty;
+                } elseif (!empty($line->line_price) && floatval($line->line_price) > 0) {
+                    $lineAmount = floatval($line->line_price);
+                } elseif ($line->product && !empty($line->product->sale_price) && floatval($line->product->sale_price) > 0) {
+                    $lineAmount = floatval($line->product->sale_price) * $qty;
+                }
+
+                if ($isReturn) {
+                    $total -= $lineAmount;
+                } else {
+                    $total += $lineAmount;
+                }
             }
         }
 
         return $total;
     }
+
 
     /**
      * ดึงข้อมูลมูลค่างานที่ไม่รวม VAT

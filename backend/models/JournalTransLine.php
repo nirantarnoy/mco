@@ -179,19 +179,23 @@ class JournalTransLine extends ActiveRecord
     {
         if (parent::beforeSave($insert)) {
             if ($insert || $this->isAttributeChanged('product_id')) {
-                // Get sale price from product only if not provided
-                if (empty($this->sale_price)) {
-                    $product = Product::findOne($this->product_id);
-                    if ($product) {
-                        $this->sale_price = $product->sale_price;
+                // Get sale price from line_price form input or product model if empty
+                if (empty($this->sale_price) || floatval($this->sale_price) == 0) {
+                    if (!empty($this->line_price) && floatval($this->line_price) > 0) {
+                        $this->sale_price = $this->line_price;
+                    } else {
+                        $product = Product::findOne($this->product_id);
+                        if ($product && !empty($product->sale_price)) {
+                            $this->sale_price = $product->sale_price;
+                        }
                     }
                 }
-                $this->line_price = $this->qty * $this->sale_price;
+                $this->line_price = $this->qty * floatval($this->sale_price);
             }
 
             // Recalculate line price if quantity changed
-            if ($this->isAttributeChanged('qty') && $this->sale_price) {
-                $this->line_price = $this->qty * $this->sale_price;
+            if ($this->isAttributeChanged('qty') && !empty($this->sale_price)) {
+                $this->line_price = $this->qty * floatval($this->sale_price);
             }
 
             // Auto-fill condition quantities for return borrow
