@@ -47,6 +47,7 @@ class ExecutiveDashboardController extends BaseController
             $expensesQuery->andWhere(['company_id' => $companyId]);
             $nonePrQuery->andWhere(['company_id' => $companyId]);
             $invoiceQuery->andWhere(['company_id' => $companyId]);
+            $wageQuery->andWhere(['company_id' => $companyId]);
         }
 
         if (!empty($fromDate) && !empty($toDate)) {
@@ -82,22 +83,29 @@ class ExecutiveDashboardController extends BaseController
                 ['between', 'expense_date', $fromDate, $toDate],
                 ['between', 'created_at', $fromDateTime, $toDateTime]
             ]);
+
+            // Filter Driver Wage Reports
+            $wageQuery->andWhere([
+                'or',
+                ['between', 'created_at', $fromTs, $toTs],
+                ['between', 'report_date', $fromDate, $toDate]
+            ]);
         }
 
-        $totalPoExpenses = (float)$expensesQuery->sum('net_amount');
-        $totalNonePrExpenses = (float)$nonePrQuery->sum('total_amount');
-        $totalVehicleExpenses = (float)$vehicleQuery->sum('vehicle_cost');
+        $totalPoExpenses = (float)(clone $expensesQuery)->sum('net_amount');
+        $totalNonePrExpenses = (float)(clone $nonePrQuery)->sum('total_amount');
+        $totalVehicleExpenses = (float)(clone $vehicleQuery)->sum('vehicle_cost');
         if ($totalVehicleExpenses == 0) {
-            $totalVehicleExpenses = (float)$vehicleQuery->sum('total_cost');
+            $totalVehicleExpenses = (float)(clone $vehicleQuery)->sum('total_cost');
         }
-        $totalVehicleWages = (float)$vehicleQuery->sum('total_wage');
-        $totalDriverReportWages = (float)$wageQuery->sum('net_total');
+        $totalVehicleWages = (float)(clone $vehicleQuery)->sum('total_wage');
+        $totalDriverReportWages = (float)(clone $wageQuery)->sum('net_total');
         $totalWages = $totalDriverReportWages + $totalVehicleWages;
         
         $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalVehicleExpenses + $totalWages;
 
         // Total Revenue from Invoices
-        $totalRevenue = (float)$invoiceQuery->sum('total_amount');
+        $totalRevenue = (float)(clone $invoiceQuery)->sum('total_amount');
 
         // Fallback: If invoices in current filter return 0.00, check Job amount or Quotation total for that filter
         if ($totalRevenue == 0) {
@@ -140,7 +148,7 @@ class ExecutiveDashboardController extends BaseController
         }
 
         // Vehicle Usage Km x 5 THB/km
-        $totalKm = (float)$vehicleQuery->sum('total_distance');
+        $totalKm = (float)(clone $vehicleQuery)->sum('total_distance');
         $vehicleCostByKm = $totalKm * 5;
         if ($vehicleCostByKm == 0 && $totalVehicleExpenses > 0) {
             $vehicleCostByKm = $totalVehicleExpenses;
@@ -186,8 +194,15 @@ class ExecutiveDashboardController extends BaseController
         // --- 8.8.4 Advanced Search System ---
         $jobsQuery = Job::find()->with(['company', 'quotation']);
 
+        if (!empty($fromDate) && !empty($toDate)) {
+            $jobsQuery->andWhere([
+                'or',
+                ['between', 'job.created_at', strtotime($fromDate . ' 00:00:00'), strtotime($toDate . ' 23:59:59')],
+                ['between', 'job.job_date', $fromDate . ' 00:00:00', $toDate . ' 23:59:59']
+            ]);
+        }
         if (!empty($searchJobNo)) {
-            $jobsQuery->andWhere(['like', 'job_no', $searchJobNo]);
+            $jobsQuery->andWhere(['like', 'job.job_no', $searchJobNo]);
         }
         if (!empty($searchCustomer)) {
             $jobsQuery->joinWith('quotation q')
@@ -197,7 +212,7 @@ class ExecutiveDashboardController extends BaseController
             $jobsQuery->andWhere(['job.company_id' => $companyId]);
         }
 
-        $searchJobsList = $jobsQuery->orderBy(['id' => SORT_DESC])->limit(50)->all();
+        $searchJobsList = $jobsQuery->orderBy(['job.id' => SORT_DESC])->limit(1000)->all();
 
         // High-performance batch query for 15-step activity statuses (1 query instead of 1,000 loop queries)
         $jobIds = ArrayHelper::getColumn($searchJobsList, 'id');
