@@ -312,6 +312,8 @@ class PreAdvanceController extends BaseController
                 }
             }
         }
+
+        $this->syncAttachmentsToSources($model);
     }
 
     protected function findModel($id)
@@ -345,14 +347,65 @@ class PreAdvanceController extends BaseController
                 }
             }
         }
+
+        $this->syncAttachmentsToSources($model);
+    }
+
+    private function syncAttachmentsToSources($model)
+    {
+        $uploadPathPreAdvance = Yii::getAlias('@backend/web/uploads/pre_advance/');
+        $uploadPathPurch = Yii::getAlias('@backend/web/uploads/purch_doc/');
+        if (!file_exists($uploadPathPurch)) {
+            FileHelper::createDirectory($uploadPathPurch, 0777);
+        }
+
+        $docs = PreAdvanceDoc::find()->where(['pre_advance_id' => $model->id])->all();
+        $refs = PreAdvanceRef::find()->where(['pre_advance_id' => $model->id])->all();
+
+        foreach ($docs as $doc) {
+            if (file_exists($uploadPathPreAdvance . $doc->file_path) && !file_exists($uploadPathPurch . $doc->file_path)) {
+                @copy($uploadPathPreAdvance . $doc->file_path, $uploadPathPurch . $doc->file_path);
+            }
+
+            foreach ($refs as $ref) {
+                if ($ref->ref_type == PreAdvanceRef::REF_TYPE_PO) {
+                    $exists = \common\models\PurchDoc::find()
+                        ->where(['purch_id' => $ref->ref_id, 'doc_name' => $doc->file_path])
+                        ->exists();
+                    if (!$exists) {
+                        $purchDoc = new \common\models\PurchDoc();
+                        $purchDoc->purch_id = $ref->ref_id;
+                        $purchDoc->doc_name = $doc->file_path;
+                        $purchDoc->doc_type_id = 3;
+                        $purchDoc->save(false);
+                    }
+                } elseif ($ref->ref_type == PreAdvanceRef::REF_TYPE_NONE_PR) {
+                    $exists = \common\models\PurchNonePrDoc::find()
+                        ->where(['purchase_master_id' => $ref->ref_id, 'doc_name' => $doc->file_path])
+                        ->exists();
+                    if (!$exists) {
+                        $nonePrDoc = new \common\models\PurchNonePrDoc();
+                        $nonePrDoc->purchase_master_id = $ref->ref_id;
+                        $nonePrDoc->doc_name = $doc->file_path;
+                        $nonePrDoc->doc_type_id = 3;
+                        $nonePrDoc->save(false);
+                    }
+                }
+            }
+        }
     }
 
     public function actionRemoveAttachment($id)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         $doc = PreAdvanceDoc::findOne($id);
-        if ($doc && $doc->delete()) {
-            return ['success' => true];
+        if ($doc) {
+            $filePath = $doc->file_path;
+            if ($doc->delete()) {
+                \common\models\PurchDoc::deleteAll(['doc_name' => $filePath]);
+                \common\models\PurchNonePrDoc::deleteAll(['doc_name' => $filePath]);
+                return ['success' => true];
+            }
         }
         return ['success' => false];
     }

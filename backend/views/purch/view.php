@@ -533,9 +533,68 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                 <?php endif; ?>
                 </tbody>
             </table>
-        </div>
     </div>
     <br/>
+
+    <?php
+    $preAdvanceRefs = \backend\models\PreAdvanceRef::find()
+        ->where(['ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_PO, 'ref_id' => $model->id])
+        ->all();
+    if (!empty($preAdvanceRefs)):
+    ?>
+        <div class="pre-advance-history-section mb-4">
+            <h3 class="mb-3">
+                <i class="fas fa-file-invoice-dollar text-primary"></i> ข้อมูล Pre-Advance / Pay Advance ที่นำไปใช้งาน
+            </h3>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                    <tr>
+                        <th style="width: 5%;" class="text-center">#</th>
+                        <th style="width: 20%;">เลขที่ Pre-Advance</th>
+                        <th style="width: 15%;">วันที่</th>
+                        <th style="width: 20%;">ผู้รับเงิน</th>
+                        <th style="width: 15%;" class="text-right">จำนวนเงิน</th>
+                        <th style="width: 25%;" class="text-center">เอกสารแนบจาก Pre-Advance</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <?php foreach ($preAdvanceRefs as $index => $paRef): 
+                        $pa = $paRef->preAdvance;
+                        if (!$pa) continue;
+                    ?>
+                        <tr>
+                            <td class="text-center"><?= $index + 1 ?></td>
+                            <td>
+                                <?= Html::a('<i class="fas fa-external-link-alt"></i> ' . Html::encode($pa->pre_advance_no), ['/pre-advance/view', 'id' => $pa->id], ['target' => '_blank', 'class' => 'fw-bold text-primary']) ?>
+                            </td>
+                            <td><?= $pa->trans_date ? date('d/m/Y', strtotime($pa->trans_date)) : '-' ?></td>
+                            <td><?= Html::encode($pa->recipient_name) ?></td>
+                            <td class="text-right"><?= number_format($pa->amount, 2) ?> บาท</td>
+                            <td>
+                                <?php if (!empty($pa->preAdvanceDocs)): ?>
+                                    <div class="d-flex flex-column gap-1">
+                                        <?php foreach ($pa->preAdvanceDocs as $doc): ?>
+                                            <div>
+                                                <a href="<?= Yii::getAlias('@web/uploads/pre_advance/') . $doc->file_path ?>" target="_blank" class="btn btn-outline-info btn-xs btn-sm me-1 mb-1">
+                                                    <i class="fas fa-paperclip"></i> <?= Html::encode($doc->file_name) ?>
+                                                </a>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <span class="text-muted">ไม่มีเอกสารแนบ</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <br/>
+    <?php endif; ?>
+
     <div class="payment-history-section">
         <h3 class="mb-3">
             <i class="fas fa-history"></i> ประวัติการโอนเงิน

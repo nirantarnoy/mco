@@ -234,11 +234,64 @@ $this->params['breadcrumbs'][] = $this->title;
                                             <strong><?= Yii::$app->formatter->asDecimal($model->total_amount, 2) ?>
                                                 บาท</strong></h5></td>
                                 </tr>
-                            </table>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <?php
+            $preAdvanceRefs = \backend\models\PreAdvanceRef::find()
+                ->where(['ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR, 'ref_id' => $model->id])
+                ->all();
+            if (!empty($preAdvanceRefs)):
+            ?>
+                <h5 class="mt-4 mb-3"><i class="fas fa-file-invoice-dollar text-primary me-2"></i> ข้อมูล Pre-Advance / Pay Advance ที่นำไปใช้งาน</h5>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered table-striped align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="5%" class="text-center">#</th>
+                                <th width="20%">เลขที่ Pre-Advance</th>
+                                <th width="15%">วันที่</th>
+                                <th width="20%">ผู้รับเงิน</th>
+                                <th width="15%" class="text-right">จำนวนเงิน</th>
+                                <th width="25%" class="text-center">เอกสารแนบจาก Pre-Advance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($preAdvanceRefs as $idx => $paRef): 
+                                $pa = $paRef->preAdvance;
+                                if (!$pa) continue;
+                            ?>
+                                <tr>
+                                    <td class="text-center"><?= $idx + 1 ?></td>
+                                    <td>
+                                        <?= Html::a('<i class="fas fa-external-link-alt"></i> ' . Html::encode($pa->pre_advance_no), ['/pre-advance/view', 'id' => $pa->id], ['target' => '_blank', 'class' => 'fw-bold text-primary']) ?>
+                                    </td>
+                                    <td><?= $pa->trans_date ? date('d/m/Y', strtotime($pa->trans_date)) : '-' ?></td>
+                                    <td><?= Html::encode($pa->recipient_name) ?></td>
+                                    <td class="text-right"><?= number_format($pa->amount, 2) ?> บาท</td>
+                                    <td>
+                                        <?php if (!empty($pa->preAdvanceDocs)): ?>
+                                            <div class="d-flex flex-column gap-1">
+                                                <?php foreach ($pa->preAdvanceDocs as $doc): ?>
+                                                    <div>
+                                                        <a href="<?= Yii::getAlias('@web/uploads/pre_advance/') . $doc->file_path ?>" target="_blank" class="btn btn-outline-info btn-xs btn-sm me-1 mb-1">
+                                                            <i class="fas fa-paperclip"></i> <?= Html::encode($doc->file_name) ?>
+                                                        </a>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <span class="text-muted">ไม่มีเอกสารแนบ</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
 
             <div class="mt-3">
                 <?= DetailView::widget([
