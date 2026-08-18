@@ -194,11 +194,17 @@ class ExecutiveDashboardController extends BaseController
 
         $searchJobsList = $jobsQuery->orderBy(['id' => SORT_DESC])->limit(50)->all();
 
-        // Auto-evaluate 15-step activity statuses for all searchJobsList
+        // High-performance batch query for 15-step activity statuses (1 query instead of 1,000 loop queries)
+        $jobIds = ArrayHelper::getColumn($searchJobsList, 'id');
         $jobActivityMap = [];
-        foreach ($searchJobsList as $jobItem) {
-            $eval = $this->evaluateJobStepStatuses($jobItem);
-            $jobActivityMap[$jobItem->id] = $eval['statuses'];
+        if (!empty($jobIds)) {
+            $statuses = JobActivityStatus::find()
+                ->where(['in', 'job_id', $jobIds])
+                ->asArray()
+                ->all();
+            foreach ($statuses as $st) {
+                $jobActivityMap[$st['job_id']][$st['step_no']] = (int)$st['status'];
+            }
         }
 
         return $this->render('index', [
