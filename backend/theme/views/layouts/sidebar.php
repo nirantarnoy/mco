@@ -509,6 +509,15 @@
                         </ul>
                     </li>
                 <?php endif;?>
+                <li class="nav-item">
+                    <a href="index.php?r=executive-dashboard/index" class="nav-link executive-dashboard text-warning font-weight-bold">
+                        <i class="nav-icon fas fa-chart-line text-warning"></i>
+                        <p>
+                            Executive Dashboard (8.8)
+                            <span class="right badge badge-danger">ผู้บริหาร</span>
+                        </p>
+                    </a>
+                </li>
                 <?php //if(\Yii::$app->user->can('salereport/crosstab')):?>
                     <li class="nav-item has-treeview has-sub">
                         <a href="#" class="nav-link">
