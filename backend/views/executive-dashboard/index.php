@@ -4,8 +4,8 @@ use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 use backend\models\Company;
 
-$this->title = 'Executive Dashboard';
-$this->params['breadcrumbs'][] = $this->title;
+// $this->title = 'Executive Dashboard';
+$this->params['breadcrumbs'][] = 'Executive Dashboard';
 ?>
 
 <!-- Google Font Inter & Prompt -->

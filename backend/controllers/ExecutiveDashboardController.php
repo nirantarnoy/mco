@@ -82,17 +82,24 @@ class ExecutiveDashboardController extends BaseController
         // Net Profit / Loss for Group
         $netProfitLoss = $totalRevenue - ($totalExpenses + $vehicleCostByKm);
 
-        // --- 8.8.2 Accounting PO Cashflow Alert & Comparison ---
-        $mainBankAccounts = BankAccount::find()->where(['status' => 1])->all();
-        $totalMainBankBalance = 0;
-        foreach ($mainBankAccounts as $acc) {
-            $totalMainBankBalance += (float)$acc->balance;
-        }
+        // --- Accounting PO Cashflow Alert & Comparison ---
+        $latestClosing = MonthlyAccountClosing::find()
+            ->andFilterWhere(['company_id' => $companyId])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
 
-        // Petty Cash Balance
-        $totalPettyCashBalance = (float)PettyCashVoucher::find()
+        $totalMainBankBalance = $latestClosing ? (float)$latestClosing->main_account_balance : 0;
+        $totalPettyCashBalance = $latestClosing ? (float)$latestClosing->petty_cash_balance : (float)PettyCashVoucher::find()
             ->where(['status' => 1])
+            ->andFilterWhere(['company_id' => $companyId])
             ->sum('amount');
+
+        if ($totalPettyCashBalance == 0) {
+            $totalPettyCashBalance = (float)PettyCashVoucher::find()
+                ->where(['status' => 1])
+                ->andFilterWhere(['company_id' => $companyId])
+                ->sum('amount');
+        }
 
         $currentAvailableCash = $totalMainBankBalance + $totalPettyCashBalance;
 

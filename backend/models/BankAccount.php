@@ -49,6 +49,11 @@ class BankAccount extends \yii\db\ActiveRecord
         ];
     }
 
+    public function getBalance()
+    {
+        return 0;
+    }
+
     /**
      * {@inheritdoc}
      */
