@@ -25,7 +25,7 @@ use backend\models\MonthlyAccountClosing;
 class ExecutiveDashboardController extends BaseController
 {
     /**
-     * Normalize any date input (DD/MM/YYYY or YYYY-MM-DD or D/M/YYYY) to standard YYYY-MM-DD
+     * Normalize any date input (DD/MM/YYYY or YYYY-MM-DD or BE year 2569) to standard YYYY-MM-DD
      */
     private function normalizeDate($dateStr)
     {
@@ -35,10 +35,14 @@ class ExecutiveDashboardController extends BaseController
         if (count($parts) == 3) {
             if (strlen($parts[0]) == 4) {
                 // YYYY-MM-DD
-                return sprintf('%04d-%02d-%02d', $parts[0], $parts[1], $parts[2]);
+                $year = (int)$parts[0];
+                if ($year > 2400) $year -= 543;
+                return sprintf('%04d-%02d-%02d', $year, (int)$parts[1], (int)$parts[2]);
             } else {
                 // DD-MM-YYYY or D-M-YYYY
-                return sprintf('%04d-%02d-%02d', $parts[2], $parts[1], $parts[0]);
+                $year = (int)$parts[2];
+                if ($year > 2400) $year -= 543;
+                return sprintf('%04d-%02d-%02d', $year, (int)$parts[1], (int)$parts[0]);
             }
         }
         $ts = strtotime($dateStr);
