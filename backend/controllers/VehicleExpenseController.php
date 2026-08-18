@@ -207,8 +207,10 @@ class VehicleExpenseController extends BaseController
                 $colF = trim($data[5] ?? '');
                 $colG = trim($data[6] ?? '');
 
-                // ข้ามแถว "รวม"
-                if (stripos($colA, 'รวม') !== false) {
+                // ข้ามแถว "รวม" / "ผลรวม" / "Total" (ไม่ว่าจะอยู่ใน Col A, B หรือ C)
+                if (mb_stripos($colA, 'รวม') !== false || mb_stripos($colA, 'total') !== false ||
+                    mb_stripos($colB, 'รวม') !== false || mb_stripos($colB, 'total') !== false ||
+                    mb_stripos($colC, 'รวม') !== false || mb_stripos($colC, 'total') !== false) {
                     $skippedCount++;
                     continue;
                 }
@@ -247,6 +249,12 @@ class VehicleExpenseController extends BaseController
                 $vehicleCost = $this->parseNumber($colE);
                 $passengerCount = intval($this->parseNumber($colF));
                 $totalWage = $this->parseNumber($colG);
+
+                // ข้ามแถวที่มีค่าติดลบ (เช่น แถวสูตรคำนวณผลรวม/ส่วนต่างใน Google Sheet)
+                if ($totalDistance < 0 || $vehicleCost < 0 || $totalWage < 0) {
+                    $skippedCount++;
+                    continue;
+                }
 
                 // ข้ามแถวที่ไม่มีข้อมูลสำคัญ
                 if (empty($vehicleNo) && $totalDistance == 0 && $vehicleCost == 0 && $totalWage == 0) {
@@ -381,8 +389,10 @@ class VehicleExpenseController extends BaseController
                 $colF = trim($data[5] ?? '');
                 $colG = trim($data[6] ?? '');
 
-                // ข้ามแถว "รวม"
-                if (stripos($colA, 'รวม') !== false) {
+                // ข้ามแถว "รวม" / "ผลรวม" / "Total" (ไม่ว่าจะอยู่ใน Col A, B หรือ C)
+                if (mb_stripos($colA, 'รวม') !== false || mb_stripos($colA, 'total') !== false ||
+                    mb_stripos($colB, 'รวม') !== false || mb_stripos($colB, 'total') !== false ||
+                    mb_stripos($colC, 'รวม') !== false || mb_stripos($colC, 'total') !== false) {
                     $skippedCount++;
                     continue;
                 }
@@ -405,15 +415,7 @@ class VehicleExpenseController extends BaseController
                 // ทำความสะอาด Job No
                 $jobNo = null;
                 if (!empty($colB)) {
-                    if (preg_match('/(RY-[A-Z]{2}\d{2}-\d{6})/i', $colB, $matches)) {
-                        $jobNo = strtoupper($matches[1]);
-                    } elseif (preg_match('/(RY-[A-Z]{2}\d{2}-\d{5})/i', $colB, $matches)) {
-                        $jobNo = strtoupper($matches[1]);
-                    } elseif (preg_match('/(JO\d{10})/i', $colB, $matches)) {
-                        $jobNo = strtoupper($matches[1]);
-                    } else {
-                        $jobNo = trim($colB);
-                    }
+                    $jobNo = $this->cleanJobNo($colB);
                 }
 
                 $vehicleNo = !empty($colC) ? trim($colC) : null;
@@ -421,6 +423,12 @@ class VehicleExpenseController extends BaseController
                 $vehicleCost = $this->parseNumber($colE);
                 $passengerCount = $this->parseNumber($colF);
                 $totalWage = $this->parseNumber($colG);
+
+                // ข้ามแถวที่มีค่าติดลบ (เช่น แถวสูตรคำนวณผลรวม/ส่วนต่างใน Google Sheet)
+                if ($totalDistance < 0 || $vehicleCost < 0 || $totalWage < 0) {
+                    $skippedCount++;
+                    continue;
+                }
 
                 // ข้ามแถวที่ไม่มีข้อมูลสำคัญ
                 if (empty($vehicleNo) && $totalDistance == 0 && $vehicleCost == 0 && $totalWage == 0) {
