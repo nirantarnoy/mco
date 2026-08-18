@@ -81,6 +81,243 @@ class VehicleExpenseController extends BaseController
     }
 
     /**
+     * ดึงข้อมูลจาก Google Sheets (วันปัจจุบัน หรือวันที่ระบุ)
+     */
+    public function actionSyncGoogleSheet($date = null)
+    {
+        $targetDate = $date ? $date : date('Y-m-d');
+        $syncAll = (Yii::$app->request->get('all') == 1);
+
+        try {
+            $result = $this->syncGoogleSheetData($syncAll ? null : $targetDate, $syncAll);
+
+            $formattedDate = date('d/m/Y', strtotime($targetDate));
+
+            if ($syncAll) {
+                Yii::$app->session->setFlash('success',
+                    "นำเข้าข้อมูลทั้งหมดจาก Google Sheets สำเร็จ {$result['success']} รายการ" .
+                    ($result['duplicate'] > 0 ? " (รายการซ้ำที่มีอยู่แล้ว {$result['duplicate']} รายการ)" : "") .
+                    ($result['skipped'] > 0 ? " (ข้ามแถวว่าง/รวม {$result['skipped']} แถว)" : "")
+                );
+            } else {
+                Yii::$app->session->setFlash('success',
+                    "ดึงข้อมูลค่าใช้จ่ายรถประจำวันที่ {$formattedDate} จาก Google Sheets สำเร็จ {$result['success']} รายการ" .
+                    ($result['duplicate'] > 0 ? " (มีในระบบแล้ว {$result['duplicate']} รายการ)" : "") .
+                    ($result['skipped'] > 0 ? " (ข้าม {$result['skipped']} รายการ)" : "")
+                );
+            }
+        } catch (\Exception $e) {
+            Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการดึงข้อมูลจาก Google Sheets: ' . $e->getMessage());
+            Yii::error("Google Sheets Sync Exception: " . $e->getMessage(), __METHOD__);
+        }
+
+        return $this->redirect(Yii::$app->request->referrer ?: ['list']);
+    }
+
+    /**
+     * Helper สำหรับดึงข้อมูล CSV จาก Google Sheets และประมวลผล
+     */
+    public function syncGoogleSheetData($targetDate = null, $syncAll = false)
+    {
+        $url = 'https://docs.google.com/spreadsheets/d/1ICudBNBaXrujPiSiNV2oDjA4QY6CUNrogbyBfYyy_XA/export?format=csv&gid=952154332';
+
+        $ctx = stream_context_create([
+            'http' => [
+                'timeout' => 30,
+                'header' => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)\r\n"
+            ],
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+            ]
+        ]);
+
+        $content = @file_get_contents($url, false, $ctx);
+        if ($content === false) {
+            if (function_exists('curl_init')) {
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+                $content = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+
+                if ($content === false || $httpCode >= 400) {
+                    throw new \Exception('ไม่สามารถดาวน์โหลดข้อมูลจาก Google Sheets ได้ (HTTP Code: ' . $httpCode . ')');
+                }
+            } else {
+                throw new \Exception('ไม่สามารถดาวน์โหลดข้อมูลจาก Google Sheets ได้');
+            }
+        }
+
+        // ลบ BOM
+        $content = str_replace("\xEF\xBB\xBF", '', $content);
+
+        // แปลงเป็น UTF-8
+        if (!mb_check_encoding($content, 'UTF-8')) {
+            $converted = @iconv('Windows-874', 'UTF-8//IGNORE', $content);
+            if ($converted !== false) {
+                $content = $converted;
+            }
+        }
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'gsheet_');
+        file_put_contents($tempFile, $content);
+
+        $handle = fopen($tempFile, 'r');
+        if ($handle === false) {
+            throw new \Exception('ไม่สามารถอ่านข้อมูล CSV ที่ดาวน์โหลดมาได้');
+        }
+
+        $userId = (Yii::$app instanceof \yii\web\Application && isset(Yii::$app->user)) ? Yii::$app->user->id : 'system';
+        $batchId = 'gsheet_' . date('YmdHis') . '_' . $userId;
+        $successCount = 0;
+        $skippedCount = 0;
+        $duplicateCount = 0;
+        $errorCount = 0;
+        $currentDate = null;
+        $rowIndex = 0;
+
+        $transaction = Yii::$app->db->beginTransaction();
+
+        try {
+            while (($data = fgetcsv($handle, 10000, ',')) !== false) {
+                $rowIndex++;
+
+                // ข้าม header
+                if ($rowIndex == 1) {
+                    continue;
+                }
+
+                if (count($data) < 7) {
+                    $skippedCount++;
+                    continue;
+                }
+
+                $colA = trim($data[0] ?? '');
+                $colB = trim($data[1] ?? '');
+                $colC = trim($data[2] ?? '');
+                $colD = trim($data[3] ?? '');
+                $colE = trim($data[4] ?? '');
+                $colF = trim($data[5] ?? '');
+                $colG = trim($data[6] ?? '');
+
+                // ข้ามแถว "รวม"
+                if (stripos($colA, 'รวม') !== false) {
+                    $skippedCount++;
+                    continue;
+                }
+
+                // ข้ามแถวว่าง
+                if (empty($colA) && empty($colB) && empty($colC) && empty($colD) && empty($colE) && empty($colF) && empty($colG)) {
+                    $skippedCount++;
+                    continue;
+                }
+
+                // วันที่ใช้งาน
+                if (!empty($colA)) {
+                    $parsedDate = $this->parseDate($colA);
+                    if ($parsedDate) {
+                        $currentDate = $parsedDate;
+                    }
+                }
+
+                if (!$currentDate) {
+                    $currentDate = date('Y-m-d');
+                }
+
+                // ถ้าระบุ targetDate และไม่ syncAll
+                if (!$syncAll && $targetDate && $currentDate !== $targetDate) {
+                    continue;
+                }
+
+                // ทำความสะอาด Job No
+                $jobNo = null;
+                if (!empty($colB)) {
+                    if (preg_match('/(RY-[A-Z]{2}\d{2}-\d{6})/i', $colB, $matches)) {
+                        $jobNo = strtoupper($matches[1]);
+                    } elseif (preg_match('/(RY-[A-Z]{2}\d{2}-\d{5})/i', $colB, $matches)) {
+                        $jobNo = strtoupper($matches[1]);
+                    } elseif (preg_match('/(JO\d{10})/i', $colB, $matches)) {
+                        $jobNo = strtoupper($matches[1]);
+                    } else {
+                        $jobNo = trim($colB);
+                    }
+                }
+
+                $vehicleNo = !empty($colC) ? trim($colC) : null;
+                $totalDistance = $this->parseNumber($colD);
+                $vehicleCost = $this->parseNumber($colE);
+                $passengerCount = intval($this->parseNumber($colF));
+                $totalWage = $this->parseNumber($colG);
+
+                // ข้ามแถวที่ไม่มีข้อมูลสำคัญ
+                if (empty($vehicleNo) && $totalDistance == 0 && $vehicleCost == 0 && $totalWage == 0) {
+                    $skippedCount++;
+                    continue;
+                }
+
+                // ตรวจสอบรายการซ้ำ
+                $exists = VehicleExpense::find()->where([
+                    'expense_date' => $currentDate,
+                    'job_no' => $jobNo,
+                    'vehicle_no' => $vehicleNo,
+                    'total_distance' => $totalDistance,
+                    'vehicle_cost' => $vehicleCost,
+                    'passenger_count' => $passengerCount,
+                    'total_wage' => $totalWage,
+                ])->exists();
+
+                if ($exists) {
+                    $duplicateCount++;
+                    continue;
+                }
+
+                $expense = new VehicleExpense();
+                $expense->expense_date = $currentDate;
+                $expense->job_no = $jobNo;
+                $expense->vehicle_no = $vehicleNo;
+                $expense->total_distance = $totalDistance;
+                $expense->vehicle_cost = $vehicleCost;
+                $expense->passenger_count = $passengerCount;
+                $expense->total_wage = $totalWage;
+                $expense->import_batch = $batchId;
+
+                if ($expense->save()) {
+                    $successCount++;
+                } else {
+                    $errorCount++;
+                    Yii::error("Google Sheet Sync Row {$rowIndex} validation error: " . json_encode($expense->errors), __METHOD__);
+                }
+            }
+
+            fclose($handle);
+            @unlink($tempFile);
+
+            $transaction->commit();
+
+            return [
+                'success' => $successCount,
+                'duplicate' => $duplicateCount,
+                'skipped' => $skippedCount,
+                'errors' => $errorCount,
+            ];
+        } catch (\Exception $e) {
+            if (isset($handle) && is_resource($handle)) {
+                fclose($handle);
+            }
+            if (isset($tempFile) && file_exists($tempFile)) {
+                @unlink($tempFile);
+            }
+            $transaction->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
      * ประมวลผลไฟล์ CSV
      */
     private function processCsvFile($filePath)

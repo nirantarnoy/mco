@@ -34,6 +34,14 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="box box-primary">
         <div class="box-header with-border">
             <div class="box-tools">
+                <?= Html::a('<i class="fa fa-refresh"></i> ดึงข้อมูลวันปัจจุบันจาก Google Sheets', ['sync-google-sheet'], [
+                    'class' => 'btn btn-info',
+                    'title' => 'ดึงข้อมูลค่าใช้จ่ายรถประจำวันที่ ' . date('d/m/Y') . ' จาก Google Sheets',
+                    'data' => [
+                        'confirm' => 'ต้องการดึงข้อมูลค่าใช้จ่ายรถประจำวันที่ ' . date('d/m/Y') . ' จาก Google Sheets เข้าสู่ระบบใช่หรือไม่?',
+                        'method' => 'post',
+                    ],
+                ]) ?>
                 <?= Html::a('<i class="fa fa-upload"></i> นำเข้าข้อมูล', ['import'], [
                     'class' => 'btn btn-success',
                 ]) ?>
