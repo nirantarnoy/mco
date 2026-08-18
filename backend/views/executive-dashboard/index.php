@@ -4,7 +4,7 @@ use yii\helpers\Url;
 use yii\widgets\ActiveForm;
 use backend\models\Company;
 
-$this->title = 'Executive Dashboard (8.8)';
+$this->title = 'Executive Dashboard';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
@@ -17,7 +17,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h3 class="fw-bold text-slate-800 mb-1" style="color: #0f172a; font-family: 'Prompt', sans-serif;">
-                <i class="fas fa-chart-line text-indigo-600 me-2" style="color: #4f46e5;"></i> Executive Dashboard (8.8)
+                <i class="fas fa-chart-line text-indigo-600 me-2" style="color: #4f46e5;"></i> Executive Dashboard
             </h3>
             <p class="text-slate-500 mb-0 small" style="color: #64748b;">
                 ภาพรวมสรุปการเงินบริษัทในเครือ, แจ้งเตือนกระแสเงินสด PO และติดตามสถานะกิจกรรม 15 ขั้นตอน
@@ -108,7 +108,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover" style="background-color: #ffffff; border-radius: 16px;">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b;">8.8.1 ค่าใช้จ่ายรวม</span>
+                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b;">ค่าใช้จ่ายรวม</span>
                         <div class="p-3 rounded-3" style="background-color: #ffe4e6; color: #e11d48;">
                             <i class="fas fa-receipt fa-lg"></i>
                         </div>
@@ -128,7 +128,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover" style="background-color: #ffffff; border-radius: 16px;">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b;">8.8.1 รายรับรวม</span>
+                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b;">รายรับรวม</span>
                         <div class="p-3 rounded-3" style="background-color: #d1fae5; color: #059669;">
                             <i class="fas fa-hand-holding-usd fa-lg"></i>
                         </div>
@@ -148,7 +148,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover" style="background-color: #ffffff; border-radius: 16px;">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b;">8.8.1 ยอดค้างรับ</span>
+                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b;">ยอดค้างรับ</span>
                         <div class="p-3 rounded-3" style="background-color: #fef3c7; color: #d97706;">
                             <i class="fas fa-hourglass-half fa-lg"></i>
                         </div>
@@ -168,7 +168,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover" style="background-color: #ffffff; border-radius: 16px;">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b;">8.8.1 ใช้รถยนต์ (กม.ละ 5 บาท)</span>
+                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b;">ใช้รถยนต์ (กม.ละ 5 บาท)</span>
                         <div class="p-3 rounded-3" style="background-color: #e0f2fe; color: #0284c7;">
                             <i class="fas fa-car fa-lg"></i>
                         </div>
@@ -212,7 +212,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #ffffff; border-radius: 16px;">
                 <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
                     <h6 class="fw-bold mb-0 text-slate-800" style="color: #1e293b; font-family: 'Prompt', sans-serif;">
-                        <i class="fas fa-university text-indigo-600 me-2" style="color: #4f46e5;"></i> 8.8.2 สรุปเปรียบเทียบบัญชีจริง กับ ใน MCOAutomation
+                        <i class="fas fa-university text-indigo-600 me-2" style="color: #4f46e5;"></i> สรุปเปรียบเทียบบัญชีจริง กับ ใน MCOAutomation
                     </h6>
                     <button type="button" class="btn btn-indigo-modern btn-sm" data-bs-toggle="modal" data-bs-target="#monthlyClosingModal">
                         <i class="fas fa-file-invoice-dollar me-1"></i> ปิดยอด/จัดเก็บไฟล์ประจำเดือน
@@ -317,9 +317,9 @@ $this->params['breadcrumbs'][] = $this->title;
         <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
             <div>
                 <h6 class="fw-bold mb-1 text-slate-800" style="color: #1e293b; font-family: 'Prompt', sans-serif;">
-                    <i class="fas fa-search-location text-indigo-600 me-2" style="color: #4f46e5;"></i> 8.8.4 ระบบค้นหาข้อมูลเชิงลึก (Advanced Search to Job Pipeline)
+                    <i class="fas fa-search-location text-indigo-600 me-2" style="color: #4f46e5;"></i> ระบบค้นหาข้อมูลเชิงลึก (Advanced Search to Job Pipeline)
                 </h6>
-                <div class="small text-slate-500" style="color: #64748b;">8.8.4.1 ค้นหา Job Number เพื่อเจาะลึกเข้าไปดูรายละเอียด 15 ขั้นตอนในหน้า 8.8.3</div>
+                <div class="small text-slate-500" style="color: #64748b;">ค้นหา Job Number เพื่อเจาะลึกเข้าไปดูรายละเอียด 15 ขั้นตอน</div>
             </div>
             <span class="badge bg-indigo-50 text-indigo-700 px-3 py-2 rounded-pill fw-medium" style="background-color: #eef2ff; color: #4338ca;">
                 Search & Drill-Down
@@ -354,7 +354,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <th style="width: 15%">บริษัท</th>
                             <th class="text-end" style="width: 15%">มูลค่างาน (บาท)</th>
                             <th class="text-center" style="width: 15%">สถานะ 15 ขั้นตอน</th>
-                            <th class="text-center" style="width: 10%">Action (8.8.3)</th>
+                            <th class="text-center" style="width: 10%">Action</th>
                         </tr>
                     </thead>
                     <tbody>

@@ -3,7 +3,7 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use backend\models\JobActivityStatus;
 
-$this->title = '8.8.3 สถานะกิจกรรม MCOAutomation: Job ' . Html::encode($job->job_no);
+$this->title = 'สถานะกิจกรรม MCOAutomation: Job ' . Html::encode($job->job_no);
 $this->params['breadcrumbs'][] = ['label' => 'Executive Dashboard', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 
@@ -38,7 +38,7 @@ $stepsDef = [
                 <i class="fas fa-arrow-left me-1"></i> ย้อนกลับหน้า Executive Dashboard
             </a>
             <h3 class="fw-bold text-slate-800 mb-0" style="color: #0f172a; font-family: 'Prompt', sans-serif;">
-                <i class="fas fa-tasks text-indigo-600 me-2" style="color: #4f46e5;"></i> สถานะกิจกรรม 15 ขั้นตอน (8.8.3)
+                <i class="fas fa-tasks text-indigo-600 me-2" style="color: #4f46e5;"></i> สถานะกิจกรรม 15 ขั้นตอน
             </h3>
         </div>
         <div>

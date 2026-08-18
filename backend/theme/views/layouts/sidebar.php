@@ -513,7 +513,7 @@
                     <a href="index.php?r=executive-dashboard/index" class="nav-link executive-dashboard text-warning font-weight-bold">
                         <i class="nav-icon fas fa-chart-line text-warning"></i>
                         <p>
-                            Executive Dashboard (8.8)
+                            Executive Dashboard
                             <span class="right badge badge-danger">ผู้บริหาร</span>
                         </p>
                     </a>
