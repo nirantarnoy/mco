@@ -62,7 +62,7 @@ class ExecutiveDashboardController extends BaseController
         $totalPoExpenses = (float)$expensesQuery->sum('net_amount');
         $totalNonePrExpenses = (float)$nonePrQuery->sum('total_amount');
         $totalVehicleExpenses = (float)$vehicleQuery->sum('total_cost');
-        $totalWages = (float)$wageQuery->sum('total_wage');
+        $totalWages = (float)$wageQuery->sum('net_total');
         
         $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalVehicleExpenses + $totalWages;
 
@@ -76,7 +76,7 @@ class ExecutiveDashboardController extends BaseController
         $pendingReceivables = (float)$unpaidInvoices;
 
         // Vehicle Usage Km x 5 THB/km
-        $totalKm = (float)$vehicleQuery->sum('total_km');
+        $totalKm = (float)$vehicleQuery->sum('total_distance');
         $vehicleCostByKm = $totalKm * 5;
 
         // Net Profit / Loss for Group
@@ -195,12 +195,12 @@ class ExecutiveDashboardController extends BaseController
             $jobNonePrTotal += (float)$npr->total_amount;
         }
 
-        $jobVehicleExp = VehicleExpense::find()->where(['job_id' => $job->id])->all();
+        $jobVehicleExp = VehicleExpense::find()->where(['job_no' => $job->job_no])->all();
         $jobKmTotal = 0;
         $jobVehicleCost = 0;
         foreach ($jobVehicleExp as $ve) {
-            $jobKmTotal += (float)$ve->total_km;
-            $jobVehicleCost += (float)$ve->total_cost;
+            $jobKmTotal += (float)$ve->total_distance;
+            $jobVehicleCost += (float)($ve->vehicle_cost ?: $ve->total_cost);
         }
         $jobKmCostAt5 = $jobKmTotal * 5;
 
