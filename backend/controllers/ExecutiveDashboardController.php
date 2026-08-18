@@ -134,17 +134,38 @@ class ExecutiveDashboardController extends BaseController
             }
         }
 
-        // Pending Receivables (Active Invoices or Active Jobs)
-        $unpaidInvoices = Invoice::find()
+        // Pending Receivables (Active Unpaid Invoices or Active Jobs)
+        $unpaidInvQuery = Invoice::find()
             ->where(['status' => Invoice::STATUS_ACTIVE])
-            ->andFilterWhere(['company_id' => $companyId])
-            ->sum('total_amount');
-        $pendingReceivables = (float)$unpaidInvoices;
+            ->andWhere(['!=', 'invoice_type', Invoice::TYPE_RECEIPT]);
+
+        if (!empty($companyId) && $companyId != '0') {
+            $unpaidInvQuery->andWhere(['company_id' => $companyId]);
+        }
+
+        if (!empty($fromDate) && !empty($toDate)) {
+            $unpaidInvQuery->andWhere(['between', 'invoice_date', $fromDate, $toDate]);
+        }
+
+        $pendingReceivables = (float)(clone $unpaidInvQuery)->sum('total_amount');
+
+        // Fallback: หากในช่วงวันที่เลือกไม่มีใบแจ้งหนี้ค้างชำระ ให้ดึงยอดลูกหนี้การค้าค้างชำระสะสมทั้งหมดของบริษัท
         if ($pendingReceivables == 0) {
-            $pendingReceivables = (float)Job::find()
-                ->where(['status' => 1])
-                ->andFilterWhere(['company_id' => $companyId])
-                ->sum('job_amount');
+            $allUnpaidInvQuery = Invoice::find()
+                ->where(['status' => Invoice::STATUS_ACTIVE])
+                ->andWhere(['!=', 'invoice_type', Invoice::TYPE_RECEIPT]);
+            if (!empty($companyId) && $companyId != '0') {
+                $allUnpaidInvQuery->andWhere(['company_id' => $companyId]);
+            }
+            $pendingReceivables = (float)(clone $allUnpaidInvQuery)->sum('total_amount');
+
+            if ($pendingReceivables == 0) {
+                $jobPendingQuery = Job::find()->where(['status' => 1]);
+                if (!empty($companyId) && $companyId != '0') {
+                    $jobPendingQuery->andWhere(['company_id' => $companyId]);
+                }
+                $pendingReceivables = (float)$jobPendingQuery->sum('job_amount');
+            }
         }
 
         // Vehicle Usage Km x 5 THB/km
