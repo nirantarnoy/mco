@@ -127,20 +127,24 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
         </div>
 
         <!-- Revenue Card -->
+        <!-- Total Cash Revenue Card (Dual Display: Cash Receipt + Invoiced Sales) -->
         <div class="col-md col-sm-6" style="flex: 1 0 0%;">
             <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover" style="background-color: #ffffff; border-radius: 16px;">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b; font-size: 0.8rem;">รายรับรวม</span>
-                        <div class="p-2 rounded-3" style="background-color: #d1fae5; color: #059669;">
+                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b; font-size: 0.8rem;">รายรับรวม (ใบเสร็จ)</span>
+                        <div class="p-2 rounded-3" style="background-color: #d1fae5; color: #059669;" title="ยอดขายตั้งหนี้ตาม Invoice: <?= number_format($totalInvoicedAmount, 2) ?> บาท">
                             <i class="fas fa-hand-holding-usd fa-md"></i>
                         </div>
                     </div>
                     <h3 class="fw-bold mb-1" style="color: #047857; font-family: 'Inter', sans-serif;">
                         <?= number_format($totalRevenue, 2) ?>
                     </h3>
-                    <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.75rem;">
-                        <i class="fas fa-file-invoice me-1"></i> ตามใบแจ้งหนี้ Invoice
+                    <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.72rem;">
+                        <i class="fas fa-receipt me-1"></i> เงินสดรับจริง (ใบเสร็จรับเงิน)
+                        <?php if ($totalInvoicedAmount > 0): ?>
+                            <br><span class="fw-medium text-emerald-700" style="color: #047857;"><i class="fas fa-file-invoice-dollar me-1"></i> ตั้งหนี้ Invoice: <?= number_format($totalInvoicedAmount, 0) ?> ฿</span>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

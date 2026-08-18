@@ -144,34 +144,36 @@ class ExecutiveDashboardController extends BaseController
         $effectiveVehicleExpense = max($totalVehicleExpenses, $vehicleCostByKm);
         $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $effectiveVehicleExpense + $totalWages;
 
-        // Total Revenue from Invoices (or Jobs/Quotations strictly within date range)
-        $totalRevenue = (float)(clone $invoiceQuery)->sum('total_amount');
+        // Total Cash Revenue from Official Receipts (ใบเสร็จรับเงิน - Cash Basis)
+        $cashReceiptQuery = Invoice::find()
+            ->where(['status' => Invoice::STATUS_ACTIVE])
+            ->andWhere(['invoice_type' => Invoice::TYPE_RECEIPT]);
 
-        if ($totalRevenue == 0) {
-            $jobRevQuery = Job::find()->where(['status' => 1]);
-            if (!empty($companyId) && $companyId != '0') {
-                $jobRevQuery->andWhere(['company_id' => $companyId]);
-            }
-            if (!empty($fromDate) && !empty($toDate)) {
-                $jobRevQuery->andWhere([
-                    'or',
-                    ['between', 'job_date', $fromDate . ' 00:00:00', $toDate . ' 23:59:59'],
-                    ['and', ['job_date' => null], ['between', 'created_at', strtotime($fromDate . ' 00:00:00'), strtotime($toDate . ' 23:59:59')]]
-                ]);
-            }
-            $totalRevenue = (float)$jobRevQuery->sum('job_amount');
-
-            if ($totalRevenue == 0) {
-                $quotRevQuery = Quotation::find()->where(['approve_status' => 1]);
-                if (!empty($companyId) && $companyId != '0') {
-                    $quotRevQuery->andWhere(['company_id' => $companyId]);
-                }
-                if (!empty($fromDate) && !empty($toDate)) {
-                    $quotRevQuery->andWhere(['between', 'created_at', strtotime($fromDate . ' 00:00:00'), strtotime($toDate . ' 23:59:59')]);
-                }
-                $totalRevenue = (float)$quotRevQuery->sum('total_amount');
-            }
+        if (!empty($companyId) && $companyId != '0') {
+            $cashReceiptQuery->andWhere(['company_id' => $companyId]);
         }
+        if (!empty($fromDate) && !empty($toDate)) {
+            $cashReceiptQuery->andWhere(['between', 'invoice_date', $fromDate, $toDate]);
+        }
+
+        $totalRevenue = (float)(clone $cashReceiptQuery)->sum('total_amount');
+
+        // Total Invoiced Sales (ยอดขายตามใบแจ้งหนี้/ใบวางบิล - Accrual Basis)
+        $invoicedSalesQuery = Invoice::find()
+            ->where(['status' => Invoice::STATUS_ACTIVE])
+            ->andWhere(['!=', 'invoice_type', Invoice::TYPE_RECEIPT]);
+
+        if (!empty($companyId) && $companyId != '0') {
+            $invoicedSalesQuery->andWhere(['company_id' => $companyId]);
+        }
+        if (!empty($fromDate) && !empty($toDate)) {
+            $invoicedSalesQuery->andWhere(['between', 'invoice_date', $fromDate, $toDate]);
+        }
+
+        $totalInvoicedAmount = (float)(clone $invoicedSalesQuery)->sum('total_amount');
+
+        // If Cash Revenue in date range is 0 but Invoiced Sales exist, use Invoiced Sales for Profit calculation
+        $effectiveRevenueForProfit = $totalRevenue > 0 ? $totalRevenue : $totalInvoicedAmount;
 
         // Pending Receivables strictly within date range filter
         $unpaidInvQuery = Invoice::find()
@@ -204,8 +206,8 @@ class ExecutiveDashboardController extends BaseController
         $unbilledJobAmount = max(0, $totalJobAmountRange - $pendingReceivables);
         $totalReceivableExposure = $pendingReceivables + $unbilledJobAmount;
 
-        // Net Profit / Loss for Group = Total Revenue - Total Expenses
-        $netProfitLoss = $totalRevenue - $totalExpenses;
+        // Net Profit / Loss for Group = Effective Revenue - Total Expenses
+        $netProfitLoss = $effectiveRevenueForProfit - $totalExpenses;
 
         // --- Accounting PO Cashflow Alert & Comparison ---
         $latestClosing = MonthlyAccountClosing::find()
@@ -411,6 +413,7 @@ class ExecutiveDashboardController extends BaseController
             'toDate' => $toDate,
             'totalExpenses' => $totalExpenses,
             'totalRevenue' => $totalRevenue,
+            'totalInvoicedAmount' => $totalInvoicedAmount,
             'totalPoExpenses' => $totalPoExpenses,
             'totalNonePrExpenses' => $totalNonePrExpenses,
             'pendingReceivables' => $pendingReceivables,
