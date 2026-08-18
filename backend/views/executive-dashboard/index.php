@@ -230,32 +230,72 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
         </div>
     </div>
 
-    <!-- 8.8.5 Financial Trend Line Chart (Revenue, Expenses, Receivables Comparison) -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4" style="background-color: #ffffff; border-radius: 16px;">
-        <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex flex-wrap justify-content-between align-items-center">
-            <div>
-                <h6 class="fw-bold mb-1 text-slate-800" style="color: #1e293b; font-family: 'Prompt', sans-serif;">
-                    <i class="fas fa-chart-line me-2" style="color: #4f46e5;"></i> กราฟเส้นเปรียบเทียบ รายรับ, รายจ่าย และ ยอดค้างรับ
-                </h6>
-                <div class="small text-slate-500" style="color: #64748b;">
-                    แนวโน้มเปรียบเทียบการเงินย้อนหลังรายเดือน (บาท)
+    <!-- 8.8.5 Financial Trend Line Chart & Expense Structure Doughnut Chart (Side-by-Side 2 Columns) -->
+    <div class="row g-4 mb-4">
+        <!-- Left: Financial Trend Line Chart -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #ffffff; border-radius: 16px;">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex flex-wrap justify-content-between align-items-center">
+                    <div>
+                        <h6 class="fw-bold mb-1 text-slate-800" style="color: #1e293b; font-family: 'Prompt', sans-serif;">
+                            <i class="fas fa-chart-line me-2" style="color: #4f46e5;"></i> กราฟเส้นเปรียบเทียบ รายรับ, รายจ่าย และ ยอดค้างรับ
+                        </h6>
+                        <div class="small text-slate-500" style="color: #64748b;">
+                            แนวโน้มเปรียบเทียบการเงินย้อนหลังรายเดือน (บาท)
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 mt-2 mt-sm-0">
+                        <span class="small fw-semibold" style="color: #059669; font-size: 0.75rem;">
+                            <span class="d-inline-block rounded-circle me-1" style="width: 8px; height: 8px; background-color: #059669;"></span> รายรับ
+                        </span>
+                        <span class="small fw-semibold" style="color: #e11d48; font-size: 0.75rem;">
+                            <span class="d-inline-block rounded-circle me-1" style="width: 8px; height: 8px; background-color: #e11d48;"></span> รายจ่าย
+                        </span>
+                        <span class="small fw-semibold" style="color: #d97706; font-size: 0.75rem;">
+                            <span class="d-inline-block rounded-circle me-1" style="width: 8px; height: 8px; background-color: #d97706;"></span> ค้างรับ
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div style="height: 310px; position: relative;">
+                        <canvas id="financialComparisonChart"></canvas>
+                    </div>
                 </div>
             </div>
-            <div class="d-flex align-items-center gap-3 mt-2 mt-sm-0">
-                <span class="small fw-semibold" style="color: #059669;">
-                    <span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background-color: #059669;"></span> รายรับรวม
-                </span>
-                <span class="small fw-semibold" style="color: #e11d48;">
-                    <span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background-color: #e11d48;"></span> รายจ่ายรวม
-                </span>
-                <span class="small fw-semibold" style="color: #d97706;">
-                    <span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background-color: #d97706;"></span> ยอดค้างรับ
-                </span>
-            </div>
         </div>
-        <div class="card-body p-4">
-            <div style="height: 320px; position: relative;">
-                <canvas id="financialComparisonChart"></canvas>
+
+        <!-- Right: Expense Structure Doughnut Chart -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #ffffff; border-radius: 16px;">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                    <h6 class="fw-bold mb-1 text-slate-800" style="color: #1e293b; font-family: 'Prompt', sans-serif;">
+                        <i class="fas fa-chart-pie me-2" style="color: #0284c7;"></i> กราฟโดนัทแสดงสัดส่วนโครงสร้างค่าใช้จ่าย
+                    </h6>
+                    <div class="small text-slate-500" style="color: #64748b;">
+                        สัดส่วนรายจ่ายแยกตามประเภท (บาท)
+                    </div>
+                </div>
+                <div class="card-body p-4 d-flex flex-column justify-content-center align-items-center">
+                    <div style="height: 230px; width: 100%; position: relative;">
+                        <canvas id="expenseStructureDoughnutChart"></canvas>
+                    </div>
+                    <div class="w-100 mt-3 pt-2 border-top">
+                        <div class="row g-2 text-center" style="font-size: 0.75rem;">
+                            <div class="col-6">
+                                <span class="fw-semibold" style="color: #e11d48;"><i class="fas fa-circle me-1"></i> PO: <?= number_format($totalPoExpenses, 0) ?></span>
+                            </div>
+                            <div class="col-6">
+                                <span class="fw-semibold" style="color: #d97706;"><i class="fas fa-circle me-1"></i> None PR: <?= number_format($totalNonePrExpenses, 0) ?></span>
+                            </div>
+                            <div class="col-6">
+                                <span class="fw-semibold" style="color: #0284c7;"><i class="fas fa-circle me-1"></i> รถยนต์: <?= number_format($vehicleCostByKm, 0) ?></span>
+                            </div>
+                            <div class="col-6">
+                                <span class="fw-semibold" style="color: #7e22ce;"><i class="fas fa-circle me-1"></i> ค่าจ้าง: <?= number_format($totalWages, 0) ?></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -770,6 +810,65 @@ document.addEventListener('DOMContentLoaded', function() {
                         color: '#64748b',
                         callback: function(value) {
                             return '฿' + (value >= 1000 ? (value / 1000).toLocaleString() + 'k' : value);
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Doughnut Chart for Expenses Breakdown Structure
+    const doughnutCanvas = document.getElementById('expenseStructureDoughnutChart');
+    if (!doughnutCanvas) return;
+    const doughnutCtx = doughnutCanvas.getContext('2d');
+    const poExpVal = <?= json_encode(round($totalPoExpenses, 2)) ?>;
+    const nonePrVal = <?= json_encode(round($totalNonePrExpenses, 2)) ?>;
+    const vehicleVal = <?= json_encode(round($vehicleCostByKm, 2)) ?>;
+    const wagesVal = <?= json_encode(round($totalWages, 2)) ?>;
+
+    new Chart(doughnutCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['สั่งซื้อ PO', 'ไม่มี PR (None PR)', 'ค่าใช้รถยนต์', 'ค่าจ้างคนขับ/ปฏิบัติงาน'],
+            datasets: [{
+                data: [poExpVal, nonePrVal, vehicleVal, wagesVal],
+                backgroundColor: [
+                    '#e11d48', // PO - Rose
+                    '#d97706', // None PR - Amber
+                    '#0284c7', // Vehicle - Sky
+                    '#7e22ce'  // Wages - Purple
+                ],
+                hoverBackgroundColor: [
+                    '#be123c',
+                    '#b45309',
+                    '#0369a1',
+                    '#6b21a8'
+                ],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '68%',
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    titleFont: { family: 'Prompt', size: 13, weight: '600' },
+                    bodyFont: { family: 'Prompt', size: 12 },
+                    padding: 10,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            let value = context.parsed;
+                            let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            let percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                            let formatted = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(value);
+                            return `${context.label}: ${formatted} (${percentage}%)`;
                         }
                     }
                 }

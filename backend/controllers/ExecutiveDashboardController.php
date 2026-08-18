@@ -383,6 +383,8 @@ class ExecutiveDashboardController extends BaseController
             'toDate' => $toDate,
             'totalExpenses' => $totalExpenses,
             'totalRevenue' => $totalRevenue,
+            'totalPoExpenses' => $totalPoExpenses,
+            'totalNonePrExpenses' => $totalNonePrExpenses,
             'pendingReceivables' => $pendingReceivables,
             'totalKm' => $totalKm,
             'vehicleCostByKm' => $vehicleCostByKm,
