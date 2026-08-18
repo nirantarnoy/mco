@@ -144,10 +144,9 @@ class ExecutiveDashboardController extends BaseController
         $effectiveVehicleExpense = max($totalVehicleExpenses, $vehicleCostByKm);
         $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $effectiveVehicleExpense + $totalWages;
 
-        // Total Revenue from Invoices
+        // Total Revenue from Invoices (or Jobs/Quotations strictly within date range)
         $totalRevenue = (float)(clone $invoiceQuery)->sum('total_amount');
 
-        // Fallback: If invoices in current filter return 0.00, check Job amount or Quotation total for that filter
         if ($totalRevenue == 0) {
             $jobRevQuery = Job::find()->where(['status' => 1]);
             if (!empty($companyId) && $companyId != '0') {
@@ -174,7 +173,7 @@ class ExecutiveDashboardController extends BaseController
             }
         }
 
-        // Pending Receivables (Active Unpaid Invoices or Active Jobs)
+        // Pending Receivables strictly within date range filter
         $unpaidInvQuery = Invoice::find()
             ->where(['status' => Invoice::STATUS_ACTIVE])
             ->andWhere(['!=', 'invoice_type', Invoice::TYPE_RECEIPT]);
@@ -188,25 +187,6 @@ class ExecutiveDashboardController extends BaseController
         }
 
         $pendingReceivables = (float)(clone $unpaidInvQuery)->sum('total_amount');
-
-        // Fallback: หากในช่วงวันที่เลือกไม่มีใบแจ้งหนี้ค้างชำระ ให้ดึงยอดลูกหนี้การค้าค้างชำระสะสมทั้งหมดของบริษัท
-        if ($pendingReceivables == 0) {
-            $allUnpaidInvQuery = Invoice::find()
-                ->where(['status' => Invoice::STATUS_ACTIVE])
-                ->andWhere(['!=', 'invoice_type', Invoice::TYPE_RECEIPT]);
-            if (!empty($companyId) && $companyId != '0') {
-                $allUnpaidInvQuery->andWhere(['company_id' => $companyId]);
-            }
-            $pendingReceivables = (float)(clone $allUnpaidInvQuery)->sum('total_amount');
-
-            if ($pendingReceivables == 0) {
-                $jobPendingQuery = Job::find()->where(['status' => 1]);
-                if (!empty($companyId) && $companyId != '0') {
-                    $jobPendingQuery->andWhere(['company_id' => $companyId]);
-                }
-                $pendingReceivables = (float)$jobPendingQuery->sum('job_amount');
-            }
-        }
 
         // Net Profit / Loss for Group = Total Revenue - Total Expenses
         $netProfitLoss = $totalRevenue - $totalExpenses;
