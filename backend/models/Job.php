@@ -96,6 +96,12 @@ class Job extends \common\models\Job
         return $this->hasOne(Quotation::className(), ['id' => 'quotation_id']);
     }
 
+    public function getCustomer()
+    {
+        return $this->hasOne(Customer::className(), ['id' => 'customer_id'])
+            ->via('quotation');
+    }
+
     public function getJobLines()
     {
         return $this->hasMany(JobLine::className(), ['job_id' => 'id']);

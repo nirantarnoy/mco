@@ -110,16 +110,17 @@ class ExecutiveDashboardController extends BaseController
             ->all();
 
         // --- 8.8.4 Advanced Search System ---
-        $jobsQuery = Job::find()->with(['customer', 'company', 'quotation']);
+        $jobsQuery = Job::find()->with(['company', 'quotation']);
 
         if (!empty($searchJobNo)) {
             $jobsQuery->andWhere(['like', 'job_no', $searchJobNo]);
         }
         if (!empty($searchCustomer)) {
-            $jobsQuery->andWhere(['or', ['like', 'customer_name', $searchCustomer], ['customer_id' => $searchCustomer]]);
+            $jobsQuery->joinWith('quotation q')
+                      ->andWhere(['or', ['like', 'q.customer_name', $searchCustomer], ['q.customer_id' => $searchCustomer]]);
         }
         if (!empty($companyId) && $companyId != '0') {
-            $jobsQuery->andWhere(['company_id' => $companyId]);
+            $jobsQuery->andWhere(['job.company_id' => $companyId]);
         }
 
         $searchJobsList = $jobsQuery->orderBy(['id' => SORT_DESC])->limit(50)->all();
