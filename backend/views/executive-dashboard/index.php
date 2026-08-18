@@ -297,7 +297,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                             <i class="fas fa-folder me-1"></i> <?= Html::encode($jobItem->job_no) ?>
                                         </a>
                                     </td>
-                                    <td><?= Html::encode($jobItem->customer_name ?: ($jobItem->customer ? $jobItem->customer->name : '-')) ?></td>
+                                    <td><?= Html::encode($jobItem->customerName) ?></td>
                                     <td><?= $jobItem->company ? Html::encode($jobItem->company->name) : '-' ?></td>
                                     <td class="text-right fw-bold">
                                         <?= $jobItem->quotation ? number_format($jobItem->quotation->grand_total, 2) : '0.00' ?>

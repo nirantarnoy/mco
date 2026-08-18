@@ -102,6 +102,19 @@ class Job extends \common\models\Job
             ->via('quotation');
     }
 
+    public function getCustomerName()
+    {
+        if ($this->quotation) {
+            if (!empty($this->quotation->customer_name)) {
+                return $this->quotation->customer_name;
+            }
+            if ($this->quotation->customer) {
+                return $this->quotation->customer->name;
+            }
+        }
+        return '-';
+    }
+
     public function getJobLines()
     {
         return $this->hasMany(JobLine::className(), ['job_id' => 'id']);

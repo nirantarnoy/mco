@@ -37,7 +37,7 @@ $stepsDef = [
                     <i class="fas fa-project-diagram me-2"></i> Job No: <?= Html::encode($job->job_no) ?>
                 </h4>
                 <div class="small opacity-75">
-                    ลูกค้า: <strong><?= Html::encode($job->customer_name ?: ($job->customer ? $job->customer->name : '-')) ?></strong>
+                    ลูกค้า: <strong><?= Html::encode($job->customerName) ?></strong>
                     | บริษัท: <strong><?= $job->company ? Html::encode($job->company->name) : '-' ?></strong>
                 </div>
             </div>
