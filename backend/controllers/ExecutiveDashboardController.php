@@ -221,8 +221,9 @@ class ExecutiveDashboardController extends BaseController
 
         // Days remaining calculation
         $daysRemaining = 0;
-        if (!empty($job->target_date) || !empty($job->end_date)) {
-            $targetTs = strtotime($job->target_date ?: $job->end_date);
+        $dueDate = !empty($job->end_date) ? $job->end_date : $job->job_date;
+        if (!empty($dueDate)) {
+            $targetTs = strtotime($dueDate);
             $todayTs = strtotime(date('Y-m-d'));
             $daysRemaining = round(($targetTs - $todayTs) / (60 * 60 * 24));
         }
