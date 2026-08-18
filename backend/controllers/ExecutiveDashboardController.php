@@ -233,7 +233,6 @@ class ExecutiveDashboardController extends BaseController
 
         $searchJobsList = $jobsQuery->orderBy(['job.id' => SORT_DESC])->limit(1000)->all();
 
-        // High-performance batch query for 15-step activity statuses (1 query instead of 1,000 loop queries)
         $jobIds = ArrayHelper::getColumn($searchJobsList, 'id');
         $jobActivityMap = [];
         if (!empty($jobIds)) {
@@ -270,6 +269,114 @@ class ExecutiveDashboardController extends BaseController
             }
         }
 
+        // --- 8.8.5 Financial Comparison Line Chart Data (Revenue, Expenses, Receivables) ---
+        $chartMonths = [];
+        if (!empty($fromDate) && !empty($toDate)) {
+            $startMonthTs = strtotime(date('Y-m-01', strtotime($fromDate)));
+            $endMonthTs = strtotime(date('Y-m-01', strtotime($toDate)));
+            
+            $curTs = $startMonthTs;
+            $mCount = 0;
+            while ($curTs <= $endMonthTs) {
+                $chartMonths[] = date('Y-m', $curTs);
+                $curTs = strtotime('+1 month', $curTs);
+                $mCount++;
+            }
+            if ($mCount < 4) {
+                $chartMonths = [];
+                $priorStart = strtotime('-3 months', $startMonthTs);
+                $curTs = $priorStart;
+                while ($curTs <= $endMonthTs) {
+                    $chartMonths[] = date('Y-m', $curTs);
+                    $curTs = strtotime('+1 month', $curTs);
+                }
+            }
+        } else {
+            for ($i = 5; $i >= 0; $i--) {
+                $chartMonths[] = date('Y-m', strtotime("-{$i} months"));
+            }
+        }
+
+        $chartLabels = [];
+        $chartRevenueData = [];
+        $chartExpensesData = [];
+        $chartReceivablesData = [];
+
+        foreach ($chartMonths as $m) {
+            $mLabel = date('M Y', strtotime($m . '-01'));
+            $mStart = $m . '-01';
+            $mEnd = date('Y-m-t', strtotime($mStart));
+            $mStartDt = $mStart . ' 00:00:00';
+            $mEndDt = $mEnd . ' 23:59:59';
+
+            // Revenue for month
+            $invMQuery = Invoice::find()
+                ->where(['status' => Invoice::STATUS_ACTIVE])
+                ->andWhere(['between', 'invoice_date', $mStart, $mEnd]);
+            if (!empty($companyId) && $companyId != '0') {
+                $invMQuery->andWhere(['company_id' => $companyId]);
+            }
+            $mRev = (float)(clone $invMQuery)->sum('total_amount');
+            if ($mRev == 0) {
+                $jobMQuery = Job::find()->where(['status' => 1])
+                    ->andWhere(['between', 'job_date', $mStartDt, $mEndDt]);
+                if (!empty($companyId) && $companyId != '0') {
+                    $jobMQuery->andWhere(['company_id' => $companyId]);
+                }
+                $mRev = (float)$jobMQuery->sum('job_amount');
+            }
+
+            // PO Expenses for month
+            $poMQuery = Purch::find()->where(['approve_status' => 1])
+                ->andWhere(['between', 'purch_date', $mStartDt, $mEndDt]);
+            if (!empty($companyId) && $companyId != '0') {
+                $poMQuery->andWhere(['company_id' => $companyId]);
+            }
+            $mPo = (float)(clone $poMQuery)->sum('net_amount');
+
+            // None PR Expenses for month
+            $nprMQuery = PurchaseMaster::find()->where(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED])
+                ->andWhere(['between', 'docdat', $mStart, $mEnd]);
+            if (!empty($companyId) && $companyId != '0') {
+                $nprMQuery->andWhere(['company_id' => $companyId]);
+            }
+            $mNpr = (float)(clone $nprMQuery)->sum('total_amount');
+
+            // Vehicle Expenses for month
+            $veMQuery = VehicleExpense::find()->andWhere(['between', 'expense_date', $mStart, $mEnd]);
+            $mKm = abs((float)(clone $veMQuery)->sum('total_distance'));
+            $mVehicleCost = abs((float)(clone $veMQuery)->sum('vehicle_cost'));
+            $mVehicleWage = abs((float)(clone $veMQuery)->sum('total_wage'));
+            $mEffVehicleCost = max($mVehicleCost, $mKm * 5);
+
+            // Driver Wage Report for month
+            $y = (int)date('Y', strtotime($mStart));
+            $mon = (int)date('m', strtotime($mStart));
+            $wageMQuery = DriverWageReport::find()->where(['report_year' => $y, 'report_month' => $mon]);
+            if (!empty($companyId) && $companyId != '0') {
+                $wageMQuery->andWhere(['company_id' => $companyId]);
+            }
+            $mDriverReportWage = abs((float)(clone $wageMQuery)->sum('net_total'));
+            $mTotalWages = $mDriverReportWage + $mVehicleWage;
+
+            $mTotalExpenses = $mPo + $mNpr + $mEffVehicleCost + $mTotalWages;
+
+            // Receivables for month
+            $recMQuery = Invoice::find()
+                ->where(['status' => Invoice::STATUS_ACTIVE])
+                ->andWhere(['!=', 'invoice_type', Invoice::TYPE_RECEIPT])
+                ->andWhere(['between', 'invoice_date', $mStart, $mEnd]);
+            if (!empty($companyId) && $companyId != '0') {
+                $recMQuery->andWhere(['company_id' => $companyId]);
+            }
+            $mRec = (float)(clone $recMQuery)->sum('total_amount');
+
+            $chartLabels[] = $mLabel;
+            $chartRevenueData[] = round($mRev, 2);
+            $chartExpensesData[] = round($mTotalExpenses, 2);
+            $chartReceivablesData[] = round($mRec, 2);
+        }
+
         return $this->render('index', [
             'companyId' => $companyId,
             'fromDate' => $fromDate,
@@ -290,6 +397,10 @@ class ExecutiveDashboardController extends BaseController
             'monthlyClosings' => $monthlyClosings,
             'searchJobsList' => $searchJobsList,
             'jobActivityMap' => $jobActivityMap,
+            'chartLabels' => $chartLabels,
+            'chartRevenueData' => $chartRevenueData,
+            'chartExpensesData' => $chartExpensesData,
+            'chartReceivablesData' => $chartReceivablesData,
             'searchJobNo' => $searchJobNo,
             'searchVendor' => $searchVendor,
             'searchCustomer' => $searchCustomer,

@@ -230,6 +230,36 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
         </div>
     </div>
 
+    <!-- 8.8.5 Financial Trend Line Chart (Revenue, Expenses, Receivables Comparison) -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4" style="background-color: #ffffff; border-radius: 16px;">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex flex-wrap justify-content-between align-items-center">
+            <div>
+                <h6 class="fw-bold mb-1 text-slate-800" style="color: #1e293b; font-family: 'Prompt', sans-serif;">
+                    <i class="fas fa-chart-line me-2" style="color: #4f46e5;"></i> กราฟเส้นเปรียบเทียบ รายรับ, รายจ่าย และ ยอดค้างรับ
+                </h6>
+                <div class="small text-slate-500" style="color: #64748b;">
+                    แนวโน้มเปรียบเทียบการเงินย้อนหลังรายเดือน (บาท)
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-3 mt-2 mt-sm-0">
+                <span class="small fw-semibold" style="color: #059669;">
+                    <span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background-color: #059669;"></span> รายรับรวม
+                </span>
+                <span class="small fw-semibold" style="color: #e11d48;">
+                    <span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background-color: #e11d48;"></span> รายจ่ายรวม
+                </span>
+                <span class="small fw-semibold" style="color: #d97706;">
+                    <span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background-color: #d97706;"></span> ยอดค้างรับ
+                </span>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <div style="height: 320px; position: relative;">
+                <canvas id="financialComparisonChart"></canvas>
+            </div>
+        </div>
+    </div>
+
     <!-- 8.8.2 Account Balance Comparison & Monthly Closing Section -->
     <div class="row g-4 mb-4">
         <div class="col-md-8">
@@ -631,3 +661,120 @@ body {
 .badge-soft-danger { background-color: #ffe4e6; color: #be123c; }
 .badge-soft-indigo { background-color: #eef2ff; color: #4338ca; }
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('financialComparisonChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    const chartLabels = <?= json_encode($chartLabels) ?>;
+    const revenueData = <?= json_encode($chartRevenueData) ?>;
+    const expensesData = <?= json_encode($chartExpensesData) ?>;
+    const receivablesData = <?= json_encode($chartReceivablesData) ?>;
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartLabels,
+            datasets: [
+                {
+                    label: 'รายรับรวม (Revenue)',
+                    data: revenueData,
+                    borderColor: '#059669',
+                    backgroundColor: 'rgba(5, 150, 105, 0.08)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#059669',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    tension: 0.35,
+                    fill: true
+                },
+                {
+                    label: 'รายจ่ายรวม (Expenses)',
+                    data: expensesData,
+                    borderColor: '#e11d48',
+                    backgroundColor: 'rgba(225, 29, 72, 0.08)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#e11d48',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    tension: 0.35,
+                    fill: true
+                },
+                {
+                    label: 'ยอดค้างรับ (Receivables)',
+                    data: receivablesData,
+                    borderColor: '#d97706',
+                    backgroundColor: 'rgba(217, 119, 6, 0.08)',
+                    borderWidth: 3,
+                    borderDash: [5, 5],
+                    pointBackgroundColor: '#d97706',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    tension: 0.35,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    titleFont: { family: 'Prompt', size: 14, weight: '600' },
+                    bodyFont: { family: 'Prompt', size: 13 },
+                    padding: 12,
+                    cornerRadius: 10,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(context.parsed.y);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        font: { family: 'Prompt', size: 12 },
+                        color: '#64748b'
+                    }
+                },
+                y: {
+                    grid: { color: '#f1f5f9' },
+                    ticks: {
+                        font: { family: 'Inter', size: 11 },
+                        color: '#64748b',
+                        callback: function(value) {
+                            return '฿' + (value >= 1000 ? (value / 1000).toLocaleString() + 'k' : value);
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
