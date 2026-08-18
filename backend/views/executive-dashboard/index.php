@@ -221,9 +221,9 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
                 </h1>
                 <span class="badge px-3 py-2 rounded-pill fw-bold shadow-sm" style="background-color: <?= $netProfitLoss >= 0 ? '#d1fae5' : '#ffe4e6' ?>; color: <?= $netProfitLoss >= 0 ? '#047857' : '#be123c' ?>; font-size: 0.85rem;">
                     <?php if ($netProfitLoss >= 0): ?>
-                        <i class="fas fa-arrow-trend-up me-1"></i> กำไรสุทธิ (PROFIT)
+                        <i class="fas fa-arrow-up me-1"></i> กำไรสุทธิ (PROFIT)
                     <?php else: ?>
-                        <i class="fas fa-arrow-trend-down me-1"></i> ขาดทุนสุทธิ (LOSS)
+                        <i class="fas fa-arrow-down me-1"></i> ขาดทุนสุทธิ (LOSS)
                     <?php endif; ?>
                 </span>
             </div>
