@@ -248,6 +248,30 @@ class ExecutiveDashboardController extends BaseController
             }
         }
 
+        // Auto-evaluate Step 13 (Vehicle Usage) in real time for all searched jobs
+        $veJobNosMap = [];
+        $veRows = VehicleExpense::find()
+            ->select(['job_no'])
+            ->where(['not', ['job_no' => null]])
+            ->andWhere(['!=', 'job_no', ''])
+            ->distinct()
+            ->asArray()
+            ->all();
+
+        foreach ($veRows as $vr) {
+            $cleanNo = strtoupper(trim($vr['job_no']));
+            if (!empty($cleanNo)) {
+                $veJobNosMap[$cleanNo] = true;
+            }
+        }
+
+        foreach ($searchJobsList as $jobItem) {
+            $cleanJn = strtoupper(trim($jobItem->job_no));
+            if (!empty($cleanJn) && isset($veJobNosMap[$cleanJn])) {
+                $jobActivityMap[$jobItem->id][13] = JobActivityStatus::STATUS_GREEN;
+            }
+        }
+
         return $this->render('index', [
             'companyId' => $companyId,
             'fromDate' => $fromDate,
@@ -332,8 +356,15 @@ class ExecutiveDashboardController extends BaseController
             }
         }
         $cleanJobNo = trim($job->job_no);
+        $upperJobNo = strtoupper($cleanJobNo);
         $jobVehicleExp = VehicleExpense::find()
-            ->where(['or', ['job_no' => $job->job_no], ['job_no' => $cleanJobNo]])
+            ->where([
+                'or',
+                ['job_no' => $job->job_no],
+                ['job_no' => $cleanJobNo],
+                ['job_no' => $upperJobNo],
+                ['like', 'job_no', $cleanJobNo]
+            ])
             ->orderBy(['expense_date' => SORT_DESC])
             ->all();
         $jobKmTotal = 0;
