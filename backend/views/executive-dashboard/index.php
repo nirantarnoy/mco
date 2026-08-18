@@ -311,7 +311,7 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
                     <h6 class="fw-bold mb-0 text-slate-800" style="color: #1e293b; font-family: 'Prompt', sans-serif;">
                         <i class="fas fa-university text-indigo-600 me-2" style="color: #4f46e5;"></i> สรุปเปรียบเทียบบัญชีจริง กับ ใน MCOAutomation
                     </h6>
-                    <button type="button" class="btn btn-indigo-modern btn-sm" data-bs-toggle="modal" data-bs-target="#monthlyClosingModal">
+                    <button type="button" class="btn btn-closing-action shadow-sm" data-bs-toggle="modal" data-bs-target="#monthlyClosingModal">
                         <i class="fas fa-file-invoice-dollar me-1"></i> ปิดยอด/จัดเก็บไฟล์ประจำเดือน
                     </button>
                 </div>
@@ -544,7 +544,7 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
                                         </div>
                                     </td>
                                     <td class="text-center">
-                                        <a href="<?= Url::to(['executive-dashboard/job-pipeline', 'id' => $jobItem->id]) ?>" class="btn btn-indigo-modern btn-xs">
+                                        <a href="<?= Url::to(['executive-dashboard/job-pipeline', 'id' => $jobItem->id]) ?>" class="btn btn-pipeline-action">
                                             <i class="fas fa-external-link-alt me-1"></i> เปิดดู
                                         </a>
                                     </td>
@@ -632,32 +632,106 @@ body {
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 .btn-indigo-modern {
-    background-color: #4f46e5;
-    color: #ffffff;
+    background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+    color: #ffffff !important;
     border: none;
-    border-radius: 10px;
-    padding: 0.5rem 1.25rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
+    border-radius: 12px;
+    padding: 0.55rem 1.35rem;
+    font-family: 'Prompt', sans-serif;
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.02em;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
 }
 .btn-indigo-modern:hover {
-    background-color: #4338ca;
-    color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    background: linear-gradient(135deg, #4338ca 0%, #2563eb 100%);
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.45);
 }
+.btn-indigo-modern:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+
 .btn-light-modern {
-    background-color: #f1f5f9;
-    color: #475569;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    color: #475569 !important;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 0.55rem 1.1rem;
+    font-family: 'Prompt', sans-serif;
     font-weight: 500;
-    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
 }
 .btn-light-modern:hover {
-    background-color: #e2e8f0;
-    color: #1e293b;
+    background: #f1f5f9;
+    color: #0f172a !important;
+    border-color: #94a3b8;
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.btn-light-modern:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.btn-pipeline-action {
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #ffffff !important;
+    border: none;
+    border-radius: 9999px;
+    padding: 0.38rem 0.95rem;
+    font-family: 'Prompt', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    box-shadow: 0 3px 10px rgba(99, 102, 241, 0.25);
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    text-decoration: none !important;
+}
+.btn-pipeline-action:hover {
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+}
+
+.btn-closing-action {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    color: #ffffff !important;
+    border: none;
+    border-radius: 12px;
+    padding: 0.45rem 1.1rem;
+    font-family: 'Prompt', sans-serif;
+    font-size: 0.825rem;
+    font-weight: 600;
+    box-shadow: 0 3px 10px rgba(14, 165, 233, 0.25);
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+}
+.btn-closing-action:hover {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4);
 }
 .transition-hover {
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
