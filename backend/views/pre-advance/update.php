@@ -7,7 +7,7 @@ $this->params['breadcrumbs'][] = ['label' => $model->pre_advance_no, 'url' => ['
 $this->params['breadcrumbs'][] = 'Update';
 ?>
 <div class="pre-advance-update">
-    <h1><?= Html::encode($this->title) ?></h1>
+
     <?= $this->render('_form', [
         'model' => $model,
     ]) ?>
