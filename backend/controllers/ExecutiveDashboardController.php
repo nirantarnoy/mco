@@ -64,40 +64,32 @@ class ExecutiveDashboardController extends BaseController
             $startYm = $startYear * 100 + $startMonth;
             $endYm = $endYear * 100 + $endMonth;
 
-            // Filter PO Expenses by integer timestamp OR string date
+            // Filter PO Expenses by purch_date (or created_at if purch_date is empty)
             $expensesQuery->andWhere([
                 'or',
-                ['between', 'created_at', $fromTs, $toTs],
-                ['between', 'purch_date', $fromDateTime, $toDateTime]
+                ['between', 'purch_date', $fromDateTime, $toDateTime],
+                ['and', ['purch_date' => null], ['between', 'created_at', $fromTs, $toTs]]
             ]);
 
-            // Filter None PR Expenses by integer timestamp OR string date
+            // Filter None PR Expenses by docdat (or created_at if docdat is empty)
             $nonePrQuery->andWhere([
                 'or',
-                ['between', 'created_at', $fromTs, $toTs],
-                ['between', 'docdat', $fromDate, $toDate]
+                ['between', 'docdat', $fromDate, $toDate],
+                ['and', ['docdat' => null], ['between', 'created_at', $fromTs, $toTs]]
             ]);
 
-            // Filter Invoices by invoice_date OR created_at string
+            // Filter Invoices by invoice_date (or created_at if invoice_date is empty)
             $invoiceQuery->andWhere([
                 'or',
                 ['between', 'invoice_date', $fromDate, $toDate],
-                ['between', 'created_at', $fromDateTime, $toDateTime]
+                ['and', ['invoice_date' => null], ['between', 'created_at', $fromDateTime, $toDateTime]]
             ]);
 
-            // Filter Vehicle Expenses by expense_date OR created_at string
-            $vehicleQuery->andWhere([
-                'or',
-                ['between', 'expense_date', $fromDate, $toDate],
-                ['between', 'created_at', $fromDateTime, $toDateTime]
-            ]);
+            // Filter Vehicle Expenses strictly by expense_date (วันที่ใช้งานรถจริง)
+            $vehicleQuery->andWhere(['between', 'expense_date', $fromDate, $toDate]);
 
-            // Filter Driver Wage Reports by year/month OR created_at
-            $wageQuery->andWhere([
-                'or',
-                ['between', 'created_at', $fromDateTime, $toDateTime],
-                ['between', new \yii\db\Expression('(report_year * 100 + report_month)'), $startYm, $endYm]
-            ]);
+            // Filter Driver Wage Reports by year/month
+            $wageQuery->andWhere(['between', new \yii\db\Expression('(report_year * 100 + report_month)'), $startYm, $endYm]);
         }
 
         $totalPoExpenses = (float)(clone $expensesQuery)->sum('net_amount');
@@ -124,8 +116,8 @@ class ExecutiveDashboardController extends BaseController
             if (!empty($fromDate) && !empty($toDate)) {
                 $jobRevQuery->andWhere([
                     'or',
-                    ['between', 'created_at', strtotime($fromDate . ' 00:00:00'), strtotime($toDate . ' 23:59:59')],
-                    ['between', 'job_date', $fromDate . ' 00:00:00', $toDate . ' 23:59:59']
+                    ['between', 'job_date', $fromDate . ' 00:00:00', $toDate . ' 23:59:59'],
+                    ['and', ['job_date' => null], ['between', 'created_at', strtotime($fromDate . ' 00:00:00'), strtotime($toDate . ' 23:59:59')]]
                 ]);
             }
             $totalRevenue = (float)$jobRevQuery->sum('job_amount');
@@ -205,8 +197,8 @@ class ExecutiveDashboardController extends BaseController
         if (!empty($fromDate) && !empty($toDate)) {
             $jobsQuery->andWhere([
                 'or',
-                ['between', 'job.created_at', strtotime($fromDate . ' 00:00:00'), strtotime($toDate . ' 23:59:59')],
-                ['between', 'job.job_date', $fromDate . ' 00:00:00', $toDate . ' 23:59:59']
+                ['between', 'job.job_date', $fromDate . ' 00:00:00', $toDate . ' 23:59:59'],
+                ['and', ['job.job_date' => null], ['between', 'job.created_at', strtotime($fromDate . ' 00:00:00'), strtotime($toDate . ' 23:59:59')]]
             ]);
         }
         if (!empty($searchJobNo)) {
