@@ -34,17 +34,61 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="vehicle-expense-list">
     <div class="box box-primary">
         <div class="box-header with-border">
+            <h3 class="box-title"><i class="fa fa-car"></i> รายการค่าใช้จ่ายรถยนต์</h3>
             <div class="box-tools pull-right">
-                <button type="button" class="btn btn-info" data-toggle="modal" data-target="#syncGoogleSheetModal">
-                    <i class="fa fa-google"></i> ดึงข้อมูลจาก Google Sheets
-                </button>
-                <?= Html::a('<i class="fa fa-upload"></i> นำเข้าข้อมูล', ['import'], [
+                <?= Html::a('<i class="fa fa-upload"></i> นำเข้าไฟล์ CSV', ['import'], [
                     'class' => 'btn btn-success',
                 ]) ?>
                 <?= Html::a('<i class="fa fa-download"></i> Template', ['download-template'], [
                     'class' => 'btn btn-default',
                 ]) ?>
             </div>
+        </div>
+
+        <!-- แถบดึงข้อมูลจาก Google Sheets (แสดงผลบนหน้าจอหลัก) -->
+        <div style="background-color: #eef7fa; border: 1px solid #bce8f1; padding: 12px 15px; margin: 15px 15px 0 15px; border-radius: 4px;">
+            <form action="<?= \yii\helpers\Url::to(['sync-google-sheet']) ?>" method="post" class="form-inline" style="display: flex; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <input type="hidden" name="<?= Yii::$app->request->csrfParam ?>" value="<?= Yii::$app->request->getCsrfToken() ?>">
+                
+                <strong style="color: #31708f; font-size: 14px; margin-right: 5px;">
+                    <i class="fa fa-google text-info"></i> ดึงข้อมูลจาก Google Sheets:
+                </strong>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-weight: normal; margin-right: 5px;">เลือกวันที่ต้องการดึง:</label>
+                    <div style="width: 180px; display: inline-block; vertical-align: middle;">
+                        <?= DatePicker::widget([
+                            'name' => 'sync_date',
+                            'value' => date('Y-m-d'),
+                            'pluginOptions' => [
+                                'format' => 'yyyy-mm-dd',
+                                'autoclose' => true,
+                                'todayHighlight' => true
+                            ],
+                            'options' => [
+                                'class' => 'form-control',
+                                'placeholder' => 'YYYY-MM-DD',
+                            ]
+                        ]); ?>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-info btn-flat" onclick="return confirm('ต้องการดึงข้อมูลค่าใช้จ่ายรถยนต์จาก Google Sheets ตามวันที่เลือกใช่หรือไม่?');">
+                    <i class="fa fa-refresh"></i> ดึงข้อมูลวันที่เลือก
+                </button>
+
+                <button type="submit" name="sync_date" value="<?= date('Y-m-d') ?>" class="btn btn-default btn-flat" style="background-color: #fff;">
+                    <i class="fa fa-calendar-check-o text-success"></i> ดึงวันปัจจุบัน (<?= date('d/m/Y') ?>)
+                </button>
+
+                <button type="submit" name="sync_date" value="<?= date('Y-m-d', strtotime('-1 day')) ?>" class="btn btn-default btn-flat" style="background-color: #fff;">
+                    <i class="fa fa-calendar text-info"></i> ดึงเมื่อวาน
+                </button>
+
+                <a href="<?= \yii\helpers\Url::to(['sync-google-sheet', 'all' => 1]) ?>" class="btn btn-warning btn-flat" data-method="post" data-confirm="ต้องการดึงข้อมูลย้อนหลังทั้งหมดจาก Google Sheets ใช่หรือไม่? (รายการซ้ำจะถูกข้ามอัตโนมัติ)">
+                    <i class="fa fa-cloud-download"></i> ดึงย้อนหลังทั้งหมด
+                </a>
+            </form>
         </div>
 
         <!-- ฟอร์มค้นหา -->
