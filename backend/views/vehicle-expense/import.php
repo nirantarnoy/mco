@@ -2,6 +2,7 @@
 
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
+use kartik\date\DatePicker;
 
 $this->title = 'นำเข้าข้อมูลค่าใช้จ่ายรถยนต์';
 $this->params['breadcrumbs'][] = ['label' => 'ค่าใช้จ่ายรถยนต์', 'url' => ['list']];
@@ -127,11 +128,21 @@ if ($importErrors) {
             ]); ?>
                 <div class="form-group mr-2">
                     <label for="sync_date" class="mr-2">เลือกวันที่ต้องการดึงข้อมูล:</label>
-                    <?= Html::input('date', 'sync_date', date('Y-m-d'), [
-                        'class' => 'form-control',
-                        'id' => 'sync_date',
-                        'required' => true,
-                    ]) ?>
+                    <div style="width: 220px; display: inline-block; vertical-align: middle;">
+                        <?= DatePicker::widget([
+                            'name' => 'sync_date',
+                            'value' => date('Y-m-d'),
+                            'pluginOptions' => [
+                                'format' => 'yyyy-mm-dd',
+                                'autoclose' => true,
+                                'todayHighlight' => true
+                            ],
+                            'options' => [
+                                'class' => 'form-control',
+                                'placeholder' => 'YYYY-MM-DD',
+                            ]
+                        ]); ?>
+                    </div>
                 </div>
                 <?= Html::submitButton('<i class="fa fa-refresh"></i> ดึงข้อมูลตามวันที่เลือก', [
                     'class' => 'btn btn-info',
