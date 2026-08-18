@@ -204,6 +204,32 @@ class User extends \common\models\User
         return $res;
     }
 
+    public static function isUserAdmin($userId = null)
+    {
+        if (\Yii::$app->user->isGuest) {
+            return false;
+        }
+        $userId = $userId ?: \Yii::$app->user->id;
+
+        if (self::checkhasrole($userId, 'System Administrator') || 
+            self::checkhasrole($userId, 'Administrator') || 
+            self::checkhasrole($userId, 'Admin')) {
+            return true;
+        }
+
+        if (\Yii::$app->user->can('System Administrator') || 
+            \Yii::$app->user->can('Administrator') || 
+            \Yii::$app->user->can('executive-dashboard/index')) {
+            return true;
+        }
+
+        if (\Yii::$app->user->identity && strtolower(\Yii::$app->user->identity->username) === 'admin') {
+            return true;
+        }
+
+        return false;
+    }
+
     public static function findEmployeeNameByUserId($id)
     {
         $emp_name = '';

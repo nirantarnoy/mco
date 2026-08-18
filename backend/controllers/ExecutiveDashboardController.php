@@ -24,6 +24,23 @@ use backend\models\MonthlyAccountClosing;
 
 class ExecutiveDashboardController extends BaseController
 {
+    public function beforeAction($action)
+    {
+        if (!parent::beforeAction($action)) {
+            return false;
+        }
+
+        if (Yii::$app->user->isGuest) {
+            return $this->redirect(['/site/login']);
+        }
+
+        if (!User::isUserAdmin()) {
+            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์เข้าถึงหน้า Executive Dashboard (สิทธิ์เฉพาะผู้ดูแลระบบ / System Administrator เท่านั้น)');
+        }
+
+        return true;
+    }
+
     /**
      * Normalize any date input (DD/MM/YYYY or YYYY-MM-DD or BE year 2569) to standard YYYY-MM-DD
      */

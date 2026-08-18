@@ -6,6 +6,7 @@ use backend\models\Company;
 
 // $this->title = 'Executive Dashboard';
 $this->params['breadcrumbs'][] = 'Executive Dashboard';
+$isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
 ?>
 
 <!-- Google Font Inter & Prompt -->
@@ -318,9 +319,11 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
                     <h6 class="fw-bold mb-0 text-slate-800" style="color: #1e293b; font-family: 'Prompt', sans-serif;">
                         <i class="fas fa-university text-indigo-600 me-2" style="color: #4f46e5;"></i> สรุปเปรียบเทียบบัญชีจริง กับ ใน MCOAutomation
                     </h6>
-                    <button type="button" class="btn btn-closing-action shadow-sm" data-toggle="modal" data-target="#monthlyClosingModal" data-bs-toggle="modal" data-bs-target="#monthlyClosingModal">
-                        <i class="fas fa-file-invoice-dollar me-1"></i> ปิดยอด/จัดเก็บไฟล์ประจำเดือน
-                    </button>
+                    <?php if ($isAdmin): ?>
+                        <button type="button" class="btn btn-closing-action shadow-sm" data-toggle="modal" data-target="#monthlyClosingModal" data-bs-toggle="modal" data-bs-target="#monthlyClosingModal">
+                            <i class="fas fa-file-invoice-dollar me-1"></i> ปิดยอด/จัดเก็บไฟล์ประจำเดือน
+                        </button>
+                    <?php endif; ?>
                 </div>
                 <div class="card-body p-4">
                     <div class="table-responsive">
@@ -408,12 +411,14 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
                                                 <i class="fas fa-download text-sky-600"></i> Statement
                                             </a>
                                         <?php endif; ?>
-                                        <a href="<?= Url::to(['executive-dashboard/delete-monthly-closing', 'id' => $mc->id]) ?>" 
-                                           class="btn btn-outline-rose-modern btn-xs" 
-                                           onclick="return confirm('ยืนยันการลบประวัติปิดยอดเดือน <?= Html::encode($mc->year_month) ?>? ยอดคงเหลือในตารางจะถูกยกเลิกและคืนค่ากลับเป็นค่าตั้งต้น');" 
-                                           title="ลบประวัติและคืนค่ากลับ">
-                                            <i class="fas fa-trash-alt me-1"></i> ลบ
-                                        </a>
+                                        <?php if ($isAdmin): ?>
+                                            <a href="<?= Url::to(['executive-dashboard/delete-monthly-closing', 'id' => $mc->id]) ?>" 
+                                               class="btn btn-outline-rose-modern btn-xs" 
+                                               onclick="return confirm('ยืนยันการลบประวัติปิดยอดเดือน <?= Html::encode($mc->year_month) ?>? ยอดคงเหลือในตารางจะถูกยกเลิกและคืนค่ากลับเป็นค่าตั้งต้น');" 
+                                               title="ลบประวัติและคืนค่ากลับ">
+                                                <i class="fas fa-trash-alt me-1"></i> ลบ
+                                            </a>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
