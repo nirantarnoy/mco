@@ -221,6 +221,8 @@ class ExecutiveDashboardController extends BaseController
             'pendingReceivables' => $pendingReceivables,
             'totalKm' => $totalKm,
             'vehicleCostByKm' => $vehicleCostByKm,
+            'totalVehicleWages' => $totalVehicleWages,
+            'totalWages' => $totalWages,
             'netProfitLoss' => $netProfitLoss,
             'currentAvailableCash' => $currentAvailableCash,
             'totalMainBankBalance' => $totalMainBankBalance,

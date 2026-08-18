@@ -101,42 +101,42 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
         </div>
     <?php endif; ?>
 
-    <!-- 8.8.1 Group Companies Financial Summary (Modern Light Tailwind Cards) -->
-    <div class="row g-4 mb-4">
+    <!-- 8.8.1 Group Companies Financial Summary (Modern Light Tailwind Cards - 5 Columns) -->
+    <div class="row g-3 mb-4">
         <!-- Expenses Card -->
-        <div class="col-md-3">
+        <div class="col-md col-sm-6" style="flex: 1 0 0%;">
             <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover" style="background-color: #ffffff; border-radius: 16px;">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b;">ค่าใช้จ่ายรวม</span>
-                        <div class="p-3 rounded-3" style="background-color: #ffe4e6; color: #e11d48;">
-                            <i class="fas fa-receipt fa-lg"></i>
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b; font-size: 0.8rem;">ค่าใช้จ่ายรวม</span>
+                        <div class="p-2 rounded-3" style="background-color: #ffe4e6; color: #e11d48;">
+                            <i class="fas fa-receipt fa-md"></i>
                         </div>
                     </div>
-                    <h2 class="fw-bold mb-1" style="color: #be123c; font-family: 'Inter', sans-serif;">
+                    <h3 class="fw-bold mb-1" style="color: #be123c; font-family: 'Inter', sans-serif;">
                         <?= number_format($totalExpenses, 2) ?>
-                    </h2>
-                    <div class="small text-slate-500" style="color: #94a3b8;">
-                        <i class="fas fa-info-circle me-1"></i> รวม PO, None PR, ค่ารถ & ค่าแรง
+                    </h3>
+                    <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.75rem;">
+                        <i class="fas fa-info-circle me-1"></i> PO, None PR, รถ & ค่าแรง
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Revenue Card -->
-        <div class="col-md-3">
+        <div class="col-md col-sm-6" style="flex: 1 0 0%;">
             <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover" style="background-color: #ffffff; border-radius: 16px;">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b;">รายรับรวม</span>
-                        <div class="p-3 rounded-3" style="background-color: #d1fae5; color: #059669;">
-                            <i class="fas fa-hand-holding-usd fa-lg"></i>
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b; font-size: 0.8rem;">รายรับรวม</span>
+                        <div class="p-2 rounded-3" style="background-color: #d1fae5; color: #059669;">
+                            <i class="fas fa-hand-holding-usd fa-md"></i>
                         </div>
                     </div>
-                    <h2 class="fw-bold mb-1" style="color: #047857; font-family: 'Inter', sans-serif;">
+                    <h3 class="fw-bold mb-1" style="color: #047857; font-family: 'Inter', sans-serif;">
                         <?= number_format($totalRevenue, 2) ?>
-                    </h2>
-                    <div class="small text-slate-500" style="color: #94a3b8;">
+                    </h3>
+                    <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.75rem;">
                         <i class="fas fa-file-invoice me-1"></i> ตามใบแจ้งหนี้ Invoice
                     </div>
                 </div>
@@ -144,19 +144,19 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
         </div>
 
         <!-- Pending Receivables Card -->
-        <div class="col-md-3">
+        <div class="col-md col-sm-6" style="flex: 1 0 0%;">
             <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover" style="background-color: #ffffff; border-radius: 16px;">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b;">ยอดค้างรับ</span>
-                        <div class="p-3 rounded-3" style="background-color: #fef3c7; color: #d97706;">
-                            <i class="fas fa-hourglass-half fa-lg"></i>
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b; font-size: 0.8rem;">ยอดค้างรับ</span>
+                        <div class="p-2 rounded-3" style="background-color: #fef3c7; color: #d97706;">
+                            <i class="fas fa-hourglass-half fa-md"></i>
                         </div>
                     </div>
-                    <h2 class="fw-bold mb-1" style="color: #b45309; font-family: 'Inter', sans-serif;">
+                    <h3 class="fw-bold mb-1" style="color: #b45309; font-family: 'Inter', sans-serif;">
                         <?= number_format($pendingReceivables, 2) ?>
-                    </h2>
-                    <div class="small text-slate-500" style="color: #94a3b8;">
+                    </h3>
+                    <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.75rem;">
                         <i class="fas fa-user-clock me-1"></i> ลูกหนี้การค้ายังไม่ได้รับชำระ
                     </div>
                 </div>
@@ -164,20 +164,40 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
         </div>
 
         <!-- Car Mileage Cost Card -->
-        <div class="col-md-3">
+        <div class="col-md col-sm-6" style="flex: 1 0 0%;">
             <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover" style="background-color: #ffffff; border-radius: 16px;">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b;">ใช้รถยนต์ (กม.ละ 5 บาท)</span>
-                        <div class="p-3 rounded-3" style="background-color: #e0f2fe; color: #0284c7;">
-                            <i class="fas fa-car fa-lg"></i>
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b; font-size: 0.8rem;">ใช้รถยนต์ (5 บาท/กม.)</span>
+                        <div class="p-2 rounded-3" style="background-color: #e0f2fe; color: #0284c7;">
+                            <i class="fas fa-car fa-md"></i>
                         </div>
                     </div>
-                    <h2 class="fw-bold mb-1" style="color: #0369a1; font-family: 'Inter', sans-serif;">
+                    <h3 class="fw-bold mb-1" style="color: #0369a1; font-family: 'Inter', sans-serif;">
                         <?= number_format($vehicleCostByKm, 2) ?>
-                    </h2>
-                    <div class="small text-slate-500" style="color: #94a3b8;">
+                    </h3>
+                    <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.75rem;">
                         <i class="fas fa-route me-1"></i> <?= number_format($totalKm, 1) ?> กม. x 5.00 บาท
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vehicle Driver Wage Card (Total Wage Card) -->
+        <div class="col-md col-sm-6" style="flex: 1 0 0%;">
+            <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover" style="background-color: #ffffff; border-radius: 16px;">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b; font-size: 0.8rem;">ค่าจ้างใช้รถ (Total Wage)</span>
+                        <div class="p-2 rounded-3" style="background-color: #f3e8ff; color: #7e22ce;">
+                            <i class="fas fa-id-card fa-md"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold mb-1" style="color: #6b21a8; font-family: 'Inter', sans-serif;">
+                        <?= number_format($totalVehicleWages, 2) ?>
+                    </h3>
+                    <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.75rem;">
+                        <i class="fas fa-users-cog me-1"></i> ค่าจ้างคนขับ/ปฏิบัติงานจากการใช้รถ
                     </div>
                 </div>
             </div>
