@@ -21,6 +21,7 @@ use backend\models\BankAccount;
 use backend\models\PettyCashVoucher;
 use backend\models\JobActivityStatus;
 use backend\models\MonthlyAccountClosing;
+use backend\models\User;
 
 class ExecutiveDashboardController extends BaseController
 {
@@ -34,7 +35,7 @@ class ExecutiveDashboardController extends BaseController
             return $this->redirect(['/site/login']);
         }
 
-        if (!User::isUserAdmin()) {
+        if (!\backend\models\User::isUserAdmin()) {
             throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์เข้าถึงหน้า Executive Dashboard (สิทธิ์เฉพาะผู้ดูแลระบบ / System Administrator เท่านั้น)');
         }
 
