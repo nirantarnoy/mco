@@ -342,21 +342,24 @@ class ExecutiveDashboardController extends BaseController
             $mStartDt = $mStart . ' 00:00:00';
             $mEndDt = $mEnd . ' 23:59:59';
 
-            // Revenue for month
+            // Revenue for month (Cash Receipts or Invoiced Revenue for month)
             $invMQuery = Invoice::find()
                 ->where(['status' => Invoice::STATUS_ACTIVE])
+                ->andWhere(['invoice_type' => Invoice::TYPE_RECEIPT])
                 ->andWhere(['between', 'invoice_date', $mStart, $mEnd]);
             if (!empty($companyId) && $companyId != '0') {
                 $invMQuery->andWhere(['company_id' => $companyId]);
             }
             $mRev = (float)(clone $invMQuery)->sum('total_amount');
             if ($mRev == 0) {
-                $jobMQuery = Job::find()->where(['status' => 1])
-                    ->andWhere(['between', 'job_date', $mStartDt, $mEndDt]);
+                $invTaxMQuery = Invoice::find()
+                    ->where(['status' => Invoice::STATUS_ACTIVE])
+                    ->andWhere(['!=', 'invoice_type', Invoice::TYPE_RECEIPT])
+                    ->andWhere(['between', 'invoice_date', $mStart, $mEnd]);
                 if (!empty($companyId) && $companyId != '0') {
-                    $jobMQuery->andWhere(['company_id' => $companyId]);
+                    $invTaxMQuery->andWhere(['company_id' => $companyId]);
                 }
-                $mRev = (float)$jobMQuery->sum('job_amount');
+                $mRev = (float)(clone $invTaxMQuery)->sum('total_amount');
             }
 
             // PO Expenses for month
