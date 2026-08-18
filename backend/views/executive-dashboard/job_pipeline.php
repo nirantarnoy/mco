@@ -123,17 +123,18 @@ $stepsDef = [
                 <table class="table table-custom align-middle mb-0" id="activity-steps-table">
                     <thead>
                         <tr>
-                            <th class="text-center" style="width: 5%">ขั้นตอน</th>
+                            <th class="text-center" style="width: 10%">ขั้นตอน</th>
                             <th style="width: 25%">ชื่อกิจกรรมในระบบ</th>
-                            <th style="width: 30%">รายละเอียด & เอกสารแนบ</th>
-                            <th class="text-center" style="width: 15%">สถานะปัจจุบัน</th>
-                            <th class="text-center" style="width: 25%">การจัดการ (Action / R1,R2 Cancel)</th>
+                            <th style="width: 35%">สถานะประมวลผล & การจัดเก็บเอกสารในระบบ</th>
+                            <th class="text-center" style="width: 15%">สถานะจากระบบ</th>
+                            <th class="text-center" style="width: 15%">การยกเลิก</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($stepsDef as $sNo => $sInfo): 
                             $statusObj = $activityStatuses[$sNo] ?? null;
                             $stVal = $statusObj ? $statusObj->status : JobActivityStatus::STATUS_RED;
+                            $detailText = $stepDetails[$sNo] ?? $sInfo['detail'];
                         ?>
                             <tr id="step-row-<?= $sNo ?>">
                                 <td class="text-center fw-bold fs-6" style="color: #4f46e5;"><?= $sNo ?></td>
@@ -144,45 +145,20 @@ $stepsDef = [
                                     <div class="small text-slate-400" style="color: #94a3b8;"><?= Html::encode($sInfo['detail']) ?></div>
                                 </td>
                                 <td>
-                                    <?php if ($sNo == 10): ?>
-                                        <span class="fw-bold" style="color: <?= $jobProfitPercent >= 20 ? '#047857' : ($jobProfitPercent > 0 ? '#b45309' : '#be123c') ?>;">
-                                            อัตรากำไร: <?= number_format($jobProfitPercent, 2) ?>% 
-                                            (<?= $jobProfitPercent >= 20 ? '🟢 สีเขียว' : ($jobProfitPercent > 0 ? '🟠 สีส้ม' : '🔴 สีแดง') ?>)
-                                        </span>
-                                    <?php elseif ($sNo == 11): ?>
-                                        <span class="fw-semibold" style="color: #334155;">เหลือเวลาทำงาน: <span class="badge-soft badge-soft-info"><?= $daysRemaining ?> วัน</span></span>
-                                    <?php elseif ($sNo == 13): ?>
-                                        <span class="fw-semibold" style="color: #334155;">ระยะทางรวม: <?= number_format($jobKmTotal, 1) ?> กม. (<?= number_format($jobKmCostAt5, 2) ?> บาท)</span>
-                                    <?php elseif ($sNo == 15): ?>
-                                        <span class="fw-bold" style="color: <?= $jobNetProfit >= 0 ? '#047857' : '#be123c' ?>;">
-                                            กำไรสุทธิ: <?= number_format($jobNetProfit, 2) ?> บาท
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="text-slate-400 small" style="color: #94a3b8;">พร้อมแนบ/ดาวน์โหลดไฟล์เอกสารในระบบ</span>
-                                    <?php endif; ?>
+                                    <div class="fw-medium text-slate-700" style="color: #334155;">
+                                        <i class="fas fa-search-plus me-1 text-slate-400"></i> <?= Html::encode($detailText) ?>
+                                    </div>
                                 </td>
                                 <td class="text-center" id="status-badge-container-<?= $sNo ?>">
                                     <?= JobActivityStatus::getStatusLabel($stVal) ?>
                                 </td>
                                 <td class="text-center">
-                                    <div class="btn-group btn-group-sm mb-1" role="group">
-                                        <button type="button" class="btn btn-light-modern btn-change-status px-2" data-step="<?= $sNo ?>" data-status="0" title="ยังไม่ได้ทำ (Red)">
-                                            🔴 Red
-                                        </button>
-                                        <button type="button" class="btn btn-light-modern btn-change-status px-2" data-step="<?= $sNo ?>" data-status="1" title="ทำแล้ว รอจัดเก็บไฟล์ (Orange)">
-                                            🟠 Orange
-                                        </button>
-                                        <button type="button" class="btn btn-light-modern btn-change-status px-2" data-step="<?= $sNo ?>" data-status="2" title="เก็บไฟล์แล้ว (Green)">
-                                            🟢 Green
-                                        </button>
-                                    </div>
-
                                     <?php if ($canCancel): ?>
-                                        <div>
-                                            <button type="button" class="btn btn-xs btn-light-modern btn-cancel-step mt-1" data-step="<?= $sNo ?>" title="ยกเลิกขั้นตอน" style="color: #e11d48; border-color: #fecdd3;">
-                                                <i class="fas fa-ban me-1"></i> กดยกเลิก
-                                            </button>
-                                        </div>
+                                        <button type="button" class="btn btn-xs btn-light-modern btn-cancel-step" data-step="<?= $sNo ?>" title="ยกเลิกขั้นตอน" style="color: #e11d48; border-color: #fecdd3;">
+                                            <i class="fas fa-ban me-1"></i> กดยกเลิก
+                                        </button>
+                                    <?php else: ?>
+                                        <span class="text-slate-400 small">-</span>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -261,30 +237,11 @@ body {
 <?php
 $jobIdVal = $job->id;
 $cancelUrl = Url::to(['executive-dashboard/cancel-step']);
-$updateStatusUrl = Url::to(['executive-dashboard/update-step-status']);
 
 $js = <<<JS
-$('.btn-change-status').on('click', function() {
-    var stepNo = $(this).data('step');
-    var status = $(this).data('status');
-
-    $.ajax({
-        url: '{$updateStatusUrl}',
-        type: 'POST',
-        data: {job_id: {$jobIdVal}, step_no: stepNo, status: status},
-        success: function(res) {
-            if (res.success) {
-                $('#status-badge-container-' + stepNo).html(res.status_html);
-            } else {
-                alert(res.message || 'ไม่สามารถอัปเดตสถานะได้');
-            }
-        }
-    });
-});
-
 $('.btn-cancel-step').on('click', function() {
     var stepNo = $(this).data('step');
-    if (confirm('คุณต้องการกดยกเลิกขั้นตอนกิจกรรมนี้ใช่หรือไม่? (สิทธิ์ R1 / R2)')) {
+    if (confirm('คุณต้องการกดยกเลิกขั้นตอนกิจกรรมนี้ใช่หรือไม่?')) {
         $.ajax({
             url: '{$cancelUrl}',
             type: 'POST',

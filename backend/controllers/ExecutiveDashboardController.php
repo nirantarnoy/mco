@@ -125,14 +125,11 @@ class ExecutiveDashboardController extends BaseController
 
         $searchJobsList = $jobsQuery->orderBy(['id' => SORT_DESC])->limit(50)->all();
 
-        // Map 15-step activity statuses for searchJobsList
-        $jobIds = ArrayHelper::getColumn($searchJobsList, 'id');
+        // Auto-evaluate 15-step activity statuses for all searchJobsList
         $jobActivityMap = [];
-        if (!empty($jobIds)) {
-            $statuses = JobActivityStatus::find()->where(['in', 'job_id', $jobIds])->all();
-            foreach ($statuses as $st) {
-                $jobActivityMap[$st->job_id][$st->step_no] = $st->status;
-            }
+        foreach ($searchJobsList as $jobItem) {
+            $eval = $this->evaluateJobStepStatuses($jobItem);
+            $jobActivityMap[$jobItem->id] = $eval['statuses'];
         }
 
         return $this->render('index', [
@@ -180,6 +177,283 @@ class ExecutiveDashboardController extends BaseController
     }
 
     /**
+     * Automatic evaluation of 15 Activity Steps based on real DB records and documents
+     */
+    public function evaluateJobStepStatuses($job)
+    {
+        if (!$job) {
+            return ['statuses' => [], 'details' => [], 'metrics' => []];
+        }
+
+        $manualStatuses = JobActivityStatus::find()
+            ->where(['job_id' => $job->id])
+            ->indexBy('step_no')
+            ->all();
+
+        $jobRevenue = (float)($job->job_amount ?: ($job->quotation ? $job->quotation->total_amount : 0));
+        $jobPos = Purch::find()->where(['job_id' => $job->id])->all();
+        $jobPoTotal = 0;
+        $jobPoHasDoc = false;
+        foreach ($jobPos as $po) {
+            $jobPoTotal += (float)$po->net_amount;
+            $poDocExists = (new \yii\db\Query())
+                ->from('purch_doc')
+                ->where(['purch_id' => $po->id])
+                ->exists();
+            if ($poDocExists) {
+                $jobPoHasDoc = true;
+            }
+        }
+        $jobNonePrs = PurchaseMaster::find()->where(['job_no' => $job->job_no])->all();
+        $jobNonePrTotal = 0;
+        $jobNonePrHasDoc = false;
+        foreach ($jobNonePrs as $npr) {
+            $jobNonePrTotal += (float)$npr->total_amount;
+            if (!empty($npr->invoice_no) || !empty($npr->refnum) || !empty($npr->cus_po_doc)) {
+                $jobNonePrHasDoc = true;
+            }
+        }
+        $jobVehicleExp = VehicleExpense::find()->where(['job_no' => $job->job_no])->all();
+        $jobKmTotal = 0;
+        $jobVehicleCost = 0;
+        foreach ($jobVehicleExp as $ve) {
+            $jobKmTotal += (float)$ve->total_distance;
+            $jobVehicleCost += (float)($ve->vehicle_cost ?: $ve->total_cost);
+        }
+        $jobKmCostAt5 = $jobKmTotal * 5;
+        $jobTotalExpenses = $jobPoTotal + $jobNonePrTotal + $jobVehicleCost + $jobKmCostAt5;
+        $jobNetProfit = $jobRevenue - $jobTotalExpenses;
+        $jobProfitPercent = $jobRevenue > 0 ? ($jobNetProfit / $jobRevenue) * 100 : 0;
+
+        $dueDate = !empty($job->end_date) ? $job->end_date : $job->job_date;
+        $daysRemaining = 0;
+        if (!empty($dueDate)) {
+            $targetTs = strtotime($dueDate);
+            $todayTs = strtotime(date('Y-m-d'));
+            $daysRemaining = round(($targetTs - $todayTs) / (60 * 60 * 24));
+        }
+
+        $stepStatuses = [];
+        $stepDetails = [];
+
+        for ($step = 1; $step <= 15; $step++) {
+            $existing = $manualStatuses[$step] ?? null;
+            if ($existing && $existing->status == JobActivityStatus::STATUS_CANCELLED) {
+                $stepStatuses[$step] = JobActivityStatus::STATUS_CANCELLED;
+                $stepDetails[$step] = 'ถูกกดยกเลิกขั้นตอนโดยผู้ดูแลระบบ';
+                continue;
+            }
+
+            switch ($step) {
+                case 1:
+                    if (!empty($job->cus_po_doc)) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
+                        $stepDetails[$step] = 'แนบเอกสาร PO ลูกค้าแล้ว (' . $job->cus_po_doc . ')';
+                    } else {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_ORANGE;
+                        $stepDetails[$step] = 'เปิด Job No. แล้ว (รอแนบไฟล์ PO ลูกค้า)';
+                    }
+                    break;
+
+                case 2:
+                    if (!empty($jobPos) || !empty($jobNonePrs)) {
+                        if ($jobPoHasDoc || $jobNonePrHasDoc) {
+                            $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
+                            $stepDetails[$step] = 'เปิดรายการ PO/None PR และแนบไฟล์ครบถ้วน';
+                        } else {
+                            $stepStatuses[$step] = JobActivityStatus::STATUS_ORANGE;
+                            $stepDetails[$step] = 'เปิดรายการ PO/None PR แล้ว (รอจัดเก็บแนบไฟล์)';
+                        }
+                    } else {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_RED;
+                        $stepDetails[$step] = 'ยังไม่มีการเปิด PO หรือ None PR';
+                    }
+                    break;
+
+                case 3:
+                    $hasRec = $job->hasReceiveTransaction($job->id);
+                    if ($hasRec == 100) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
+                        $stepDetails[$step] = 'รับของจาก Vendor และจัดเก็บแนบไฟล์ครบถ้วน';
+                    } elseif ($hasRec > 0) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_ORANGE;
+                        $stepDetails[$step] = 'มีรายการรับของแล้ว (รอจัดเก็บแนบไฟล์)';
+                    } else {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_RED;
+                        $stepDetails[$step] = 'ยังไม่มีรายการรับของจาก Vendor';
+                    }
+                    break;
+
+                case 4:
+                    $hasWithd = $job->hasWithdrawTransaction($job->id);
+                    if ($hasWithd == 100) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
+                        $stepDetails[$step] = 'เบิก/คืนของ และแนบเอกสารเรียบร้อย';
+                    } elseif ($hasWithd > 0) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_ORANGE;
+                        $stepDetails[$step] = 'มีรายการเบิก/คืนของ (รอจัดเก็บแนบไฟล์)';
+                    } else {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_RED;
+                        $stepDetails[$step] = 'ยังไม่มีรายการเบิก/คืนของ';
+                    }
+                    break;
+
+                case 5:
+                    if (!empty($job->jsa_doc)) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
+                        $stepDetails[$step] = 'แนบเอกสาร JSA/เซฟตี้เรียบร้อยแล้ว';
+                    } else {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_RED;
+                        $stepDetails[$step] = 'ยังไม่ได้แนบเอกสาร JSA/เซฟตี้';
+                    }
+                    break;
+
+                case 6:
+                    if ($job->status >= 2) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
+                        $stepDetails[$step] = 'สรุปงาน Engineering เรียบร้อย';
+                    } else {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_ORANGE;
+                        $stepDetails[$step] = 'อยู่ระหว่างดำเนินการ Engineering';
+                    }
+                    break;
+
+                case 7:
+                    if (!empty($job->report_doc)) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
+                        $stepDetails[$step] = 'แนบเอกสาร Final Report เรียบร้อย';
+                    } else {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_RED;
+                        $stepDetails[$step] = 'ยังไม่ได้แนบเอกสาร Final Report';
+                    }
+                    break;
+
+                case 8:
+                    if ($job->status >= 3) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
+                        $stepDetails[$step] = 'ประเมินผลจากลูกค้าเรียบร้อย';
+                    } else {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_RED;
+                        $stepDetails[$step] = 'รอแบบประเมินผลจากลูกค้า';
+                    }
+                    break;
+
+                case 9:
+                    $hasInv = $job->hasDebtNotification($job->id);
+                    if ($hasInv == 100) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
+                        $stepDetails[$step] = 'ออก Invoice และแนบไฟล์เรียบร้อย';
+                    } elseif ($hasInv > 0) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_ORANGE;
+                        $stepDetails[$step] = 'ออก Invoice แล้ว (รอจัดเก็บแนบไฟล์)';
+                    } else {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_RED;
+                        $stepDetails[$step] = 'ยังไม่ได้ออก Invoice';
+                    }
+                    break;
+
+                case 10:
+                    if ($jobProfitPercent >= 20) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
+                        $stepDetails[$step] = 'อัตรากำไร ≥20% (' . number_format($jobProfitPercent, 1) . '%)';
+                    } elseif ($jobProfitPercent > 0) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_ORANGE;
+                        $stepDetails[$step] = 'อัตรากำไร <20% (' . number_format($jobProfitPercent, 1) . '%)';
+                    } else {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_RED;
+                        $stepDetails[$step] = 'ขาดทุน (' . number_format($jobProfitPercent, 1) . '%)';
+                    }
+                    break;
+
+                case 11:
+                    if ($daysRemaining >= 0) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
+                        $stepDetails[$step] = 'เหลือเวลาส่งมอบงาน ' . $daysRemaining . ' วัน';
+                    } else {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_RED;
+                        $stepDetails[$step] = 'เกินกำหนดส่งมอบงาน ' . abs($daysRemaining) . ' วัน';
+                    }
+                    break;
+
+                case 12:
+                    $hasRecp = $job->hasReceipt($job->id);
+                    if ($hasRecp == 100) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
+                        $stepDetails[$step] = 'รับชำระเงินและออกใบเสร็จเรียบร้อย';
+                    } elseif ($hasRecp > 0) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_ORANGE;
+                        $stepDetails[$step] = 'ออกใบเสร็จแล้ว (รอแนบไฟล์หลักฐานโอนเงิน)';
+                    } else {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_RED;
+                        $stepDetails[$step] = 'ยังไม่ได้รับชำระเงิน/ออกใบเสร็จ';
+                    }
+                    break;
+
+                case 13:
+                    if (!empty($jobVehicleExp)) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
+                        $stepDetails[$step] = 'บันทึกการใช้รถยนต์แล้ว ' . number_format($jobKmTotal, 1) . ' กม.';
+                    } else {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_RED;
+                        $stepDetails[$step] = 'ยังไม่มีบันทึกระยะทางใช้รถยนต์';
+                    }
+                    break;
+
+                case 14:
+                    if (!empty($job->jobLines)) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
+                        $stepDetails[$step] = 'บันทึกบุคลากรปฏิบัติงาน ' . count($job->jobLines) . ' รายการ';
+                    } else {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_ORANGE;
+                        $stepDetails[$step] = 'อยู่ระหว่างจัดสรรบุคลากรปฏิบัติงาน';
+                    }
+                    break;
+
+                case 15:
+                    if ($jobNetProfit > 0) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
+                        $stepDetails[$step] = 'สรุปผลกำไรสุทธิ ' . number_format($jobNetProfit, 2) . ' บาท';
+                    } elseif ($jobNetProfit == 0) {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_ORANGE;
+                        $stepDetails[$step] = 'สรุปผลเท่าทุน 0.00 บาท';
+                    } else {
+                        $stepStatuses[$step] = JobActivityStatus::STATUS_RED;
+                        $stepDetails[$step] = 'สรุปผลขาดทุนสุทธิ ' . number_format($jobNetProfit, 2) . ' บาท';
+                    }
+                    break;
+            }
+
+            // Sync step status to JobActivityStatus table
+            if (!$existing || $existing->status != $stepStatuses[$step]) {
+                if (!$existing) {
+                    $existing = new JobActivityStatus();
+                    $existing->job_id = $job->id;
+                    $existing->step_no = $step;
+                    $existing->created_at = time();
+                }
+                $existing->status = $stepStatuses[$step];
+                $existing->save(false);
+            }
+        }
+
+        return [
+            'statuses' => $stepStatuses,
+            'details' => $stepDetails,
+            'metrics' => [
+                'jobRevenue' => $jobRevenue,
+                'jobPoTotal' => $jobPoTotal,
+                'jobNonePrTotal' => $jobNonePrTotal,
+                'jobKmTotal' => $jobKmTotal,
+                'jobKmCostAt5' => $jobKmCostAt5,
+                'jobTotalExpenses' => $jobTotalExpenses,
+                'jobNetProfit' => $jobNetProfit,
+                'jobProfitPercent' => $jobProfitPercent,
+                'daysRemaining' => $daysRemaining,
+            ]
+        ];
+    }
+
+    /**
      * Job Activity Pipeline Detail Page
      */
     public function actionJobPipeline($id)
@@ -189,89 +463,28 @@ class ExecutiveDashboardController extends BaseController
             throw new NotFoundHttpException('ไม่พบข้อมูล Job ที่ต้องการ');
         }
 
-        // Initialize 15 activity statuses for this Job if not created
-        for ($step = 1; $step <= 15; $step++) {
-            $statusModel = JobActivityStatus::findOne(['job_id' => $job->id, 'step_no' => $step]);
-            if (!$statusModel) {
-                $statusModel = new JobActivityStatus();
-                $statusModel->job_id = $job->id;
-                $statusModel->step_no = $step;
-                $statusModel->status = JobActivityStatus::STATUS_RED; // Default Red
-                $statusModel->created_at = time();
-                $statusModel->save(false);
-            }
-        }
+        $eval = $this->evaluateJobStepStatuses($job);
 
         $activityStatuses = JobActivityStatus::find()
             ->where(['job_id' => $job->id])
             ->indexBy('step_no')
             ->all();
 
-        // Financial & Metrics calculations for this specific Job
-        $jobRevenue = (float)($job->job_amount ?: ($job->quotation ? $job->quotation->total_amount : 0));
-
-        // Related POs & Expenses for this Job
-        $jobPos = Purch::find()->where(['job_id' => $job->id])->all();
-        $jobPoTotal = 0;
-        foreach ($jobPos as $po) {
-            $jobPoTotal += (float)$po->net_amount;
-        }
-
-        $jobNonePrs = PurchaseMaster::find()->where(['job_no' => $job->job_no])->all();
-        $jobNonePrTotal = 0;
-        foreach ($jobNonePrs as $npr) {
-            $jobNonePrTotal += (float)$npr->total_amount;
-        }
-
-        $jobVehicleExp = VehicleExpense::find()->where(['job_no' => $job->job_no])->all();
-        $jobKmTotal = 0;
-        $jobVehicleCost = 0;
-        foreach ($jobVehicleExp as $ve) {
-            $jobKmTotal += (float)$ve->total_distance;
-            $jobVehicleCost += (float)($ve->vehicle_cost ?: $ve->total_cost);
-        }
-        $jobKmCostAt5 = $jobKmTotal * 5;
-
-        $jobTotalExpenses = $jobPoTotal + $jobNonePrTotal + $jobVehicleCost + $jobKmCostAt5;
-        $jobNetProfit = $jobRevenue - $jobTotalExpenses;
-        $jobProfitPercent = $jobRevenue > 0 ? ($jobNetProfit / $jobRevenue) * 100 : 0;
-
-        // Auto-update Step 10 & Step 15 Status based on profit percentage
-        $step10 = $activityStatuses[10] ?? null;
-        if ($step10 && $step10->status != JobActivityStatus::STATUS_CANCELLED) {
-            if ($jobProfitPercent >= 20) {
-                $step10->status = JobActivityStatus::STATUS_GREEN;
-            } elseif ($jobProfitPercent > 0) {
-                $step10->status = JobActivityStatus::STATUS_ORANGE;
-            } else {
-                $step10->status = JobActivityStatus::STATUS_RED;
-            }
-            $step10->save(false);
-        }
-
-        // Days remaining calculation
-        $daysRemaining = 0;
-        $dueDate = !empty($job->end_date) ? $job->end_date : $job->job_date;
-        if (!empty($dueDate)) {
-            $targetTs = strtotime($dueDate);
-            $todayTs = strtotime(date('Y-m-d'));
-            $daysRemaining = round(($targetTs - $todayTs) / (60 * 60 * 24));
-        }
-
         $canCancel = $this->checkCanCancelStep();
 
         return $this->render('job_pipeline', [
             'job' => $job,
             'activityStatuses' => $activityStatuses,
-            'jobRevenue' => $jobRevenue,
-            'jobPoTotal' => $jobPoTotal,
-            'jobNonePrTotal' => $jobNonePrTotal,
-            'jobKmTotal' => $jobKmTotal,
-            'jobKmCostAt5' => $jobKmCostAt5,
-            'jobTotalExpenses' => $jobTotalExpenses,
-            'jobNetProfit' => $jobNetProfit,
-            'jobProfitPercent' => $jobProfitPercent,
-            'daysRemaining' => $daysRemaining,
+            'stepDetails' => $eval['details'],
+            'jobRevenue' => $eval['metrics']['jobRevenue'],
+            'jobPoTotal' => $eval['metrics']['jobPoTotal'],
+            'jobNonePrTotal' => $eval['metrics']['jobNonePrTotal'],
+            'jobKmTotal' => $eval['metrics']['jobKmTotal'],
+            'jobKmCostAt5' => $eval['metrics']['jobKmCostAt5'],
+            'jobTotalExpenses' => $eval['metrics']['jobTotalExpenses'],
+            'jobNetProfit' => $eval['metrics']['jobNetProfit'],
+            'jobProfitPercent' => $eval['metrics']['jobProfitPercent'],
+            'daysRemaining' => $eval['metrics']['daysRemaining'],
             'canCancel' => $canCancel,
         ]);
     }
