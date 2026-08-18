@@ -572,7 +572,7 @@ class VehicleExpenseController extends BaseController
     }
 
     /**
-     * แปลงค่าตัวเลขจาก CSV
+     * แปลงค่าตัวเลขจาก CSV (ถอดเครื่องหมายลบออกทั้งหมดให้เป็นค่าบวกเสมอ)
      */
     private function parseNumber($value)
     {
@@ -580,11 +580,11 @@ class VehicleExpenseController extends BaseController
             return 0;
         }
 
-        // ลบ comma และช่องว่าง
-        $value = str_replace([',', ' ', '฿', '"'], '', trim($value));
+        // ลบเครื่องหมายลบ (-), comma, ช่องว่าง และสัญลักษณ์อื่นๆ ออกทั้งหมด
+        $value = str_replace(['-', ',', ' ', '฿', '"'], '', trim($value));
 
-        // แปลงเป็นตัวเลข
-        return floatval($value);
+        // คืนค่าเป็นตัวเลขบวกเสมอ (abs)
+        return abs(floatval($value));
     }
 
     /**

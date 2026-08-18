@@ -322,10 +322,13 @@ $this->params['breadcrumbs'][] = 'รายการค่าใช้จ่า�
 
     <!-- สรุปยอดรวม -->
     <?php
-    $query = clone $dataProvider->query;
-    $totalVehicleCost = $query->sum('vehicle_cost') ?? 0;
-    $totalWage = $query->sum('total_wage') ?? 0;
-    $totalDistance = $query->sum('total_distance') ?? 0;
+    $queryCost = clone $dataProvider->query;
+    $queryWage = clone $dataProvider->query;
+    $queryDist = clone $dataProvider->query;
+
+    $totalVehicleCost = abs(floatval($queryCost->sum('vehicle_cost') ?? 0));
+    $totalWage = abs(floatval($queryWage->sum('total_wage') ?? 0));
+    $totalDistance = abs(floatval($queryDist->sum('total_distance') ?? 0));
     $totalRecords = $dataProvider->totalCount;
     $grandTotal = $totalVehicleCost + $totalWage;
     ?>
