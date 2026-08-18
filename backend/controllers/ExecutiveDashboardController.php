@@ -910,4 +910,27 @@ class ExecutiveDashboardController extends BaseController
 
         return $this->redirect(['index']);
     }
+
+    /**
+     * Delete Monthly Account Closing and Restore Pre-Closing Balance Values
+     */
+    public function actionDeleteMonthlyClosing($id)
+    {
+        $model = MonthlyAccountClosing::findOne($id);
+        if ($model) {
+            $yearMonth = $model->year_month;
+            if (!empty($model->statement_file)) {
+                $filePath = Yii::getAlias('@backend/web/uploads/statements/') . $model->statement_file;
+                if (file_exists($filePath)) {
+                    @unlink($filePath);
+                }
+            }
+            if ($model->delete()) {
+                Yii::$app->session->setFlash('success', 'ลบประวัติปิดยอดเดือน ' . $yearMonth . ' และคืนค่ากลับเป็นค่าตั้งต้นเรียบร้อยแล้ว');
+            } else {
+                Yii::$app->session->setFlash('error', 'ไม่สามารถลบประวัติปิดยอดได้');
+            }
+        }
+        return $this->redirect(['index']);
+    }
 }

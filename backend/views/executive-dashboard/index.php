@@ -402,11 +402,19 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
                                             สดย่อย: <?= number_format($mc->petty_cash_balance, 2) ?> | หลัก: <?= number_format($mc->main_account_balance, 2) ?>
                                         </div>
                                     </div>
-                                    <?php if ($mc->statement_file): ?>
-                                        <a href="<?= Yii::getAlias('@web/uploads/statements/') . $mc->statement_file ?>" target="_blank" class="btn btn-light-modern btn-xs">
-                                            <i class="fas fa-download me-1 text-sky-600"></i> Statement
+                                    <div class="d-flex align-items-center gap-1">
+                                        <?php if ($mc->statement_file): ?>
+                                            <a href="<?= Yii::getAlias('@web/uploads/statements/') . $mc->statement_file ?>" target="_blank" class="btn btn-light-modern btn-xs" title="ดาวน์โหลด Statement">
+                                                <i class="fas fa-download text-sky-600"></i> Statement
+                                            </a>
+                                        <?php endif; ?>
+                                        <a href="<?= Url::to(['executive-dashboard/delete-monthly-closing', 'id' => $mc->id]) ?>" 
+                                           class="btn btn-outline-rose-modern btn-xs" 
+                                           onclick="return confirm('ยืนยันการลบประวัติปิดยอดเดือน <?= Html::encode($mc->year_month) ?>? ยอดคงเหลือในตารางจะถูกยกเลิกและคืนค่ากลับเป็นค่าตั้งต้น');" 
+                                           title="ลบประวัติและคืนค่ากลับ">
+                                            <i class="fas fa-trash-alt me-1"></i> ลบ
                                         </a>
-                                    <?php endif; ?>
+                                    </div>
                                 </div>
                             <?php endforeach; ?>
                         </div>
@@ -739,6 +747,30 @@ body {
     color: #ffffff !important;
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4);
+}
+
+.btn-outline-rose-modern {
+    background-color: #fff1f2;
+    color: #e11d48 !important;
+    border: 1px solid #fecdd3;
+    border-radius: 8px;
+    padding: 0.25rem 0.65rem;
+    font-family: 'Prompt', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    text-decoration: none !important;
+}
+.btn-outline-rose-modern:hover {
+    background-color: #e11d48;
+    color: #ffffff !important;
+    border-color: #be123c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3);
 }
 .transition-hover {
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
