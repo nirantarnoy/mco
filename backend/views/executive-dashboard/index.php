@@ -212,7 +212,7 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
                     <i class="fas fa-chart-pie me-2"></i> สรุปผลกำไร / ขาดทุนสุทธิภาพรวม (Net Profit / Loss)
                 </h5>
                 <span class="small" style="color: <?= $netProfitLoss >= 0 ? '#047857' : '#be123c' ?>;">
-                    คำนวณจาก [ รายรับรวม - (ค่าใช้จ่ายรวม + ค่าใช้รถยนต์ตามระยะทาง) ]
+                    คำนวณจาก [ รายรับรวม - ค่าใช้จ่ายรวมทั้งหมด (PO + None PR + รถยนต์ + ค่าจ้าง) ]
                 </span>
             </div>
             <div class="text-end">

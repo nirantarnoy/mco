@@ -94,15 +94,20 @@ class ExecutiveDashboardController extends BaseController
 
         $totalPoExpenses = (float)(clone $expensesQuery)->sum('net_amount');
         $totalNonePrExpenses = (float)(clone $nonePrQuery)->sum('total_amount');
-        $totalVehicleExpenses = (float)(clone $vehicleQuery)->sum('vehicle_cost');
-        if ($totalVehicleExpenses == 0) {
-            $totalVehicleExpenses = (float)(clone $vehicleQuery)->sum('total_cost');
+        
+        $totalKm = abs((float)(clone $vehicleQuery)->sum('total_distance'));
+        $vehicleCostByKm = $totalKm * 5;
+        $totalVehicleExpenses = abs((float)(clone $vehicleQuery)->sum('vehicle_cost'));
+        if ($totalVehicleExpenses == 0 && $vehicleCostByKm > 0) {
+            $totalVehicleExpenses = $vehicleCostByKm;
         }
-        $totalVehicleWages = (float)(clone $vehicleQuery)->sum('total_wage');
-        $totalDriverReportWages = (float)(clone $wageQuery)->sum('net_total');
+
+        $totalVehicleWages = abs((float)(clone $vehicleQuery)->sum('total_wage'));
+        $totalDriverReportWages = abs((float)(clone $wageQuery)->sum('net_total'));
         $totalWages = $totalDriverReportWages + $totalVehicleWages;
         
-        $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalVehicleExpenses + $totalWages;
+        $effectiveVehicleExpense = max($totalVehicleExpenses, $vehicleCostByKm);
+        $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $effectiveVehicleExpense + $totalWages;
 
         // Total Revenue from Invoices
         $totalRevenue = (float)(clone $invoiceQuery)->sum('total_amount');
@@ -168,15 +173,8 @@ class ExecutiveDashboardController extends BaseController
             }
         }
 
-        // Vehicle Usage Km x 5 THB/km
-        $totalKm = (float)(clone $vehicleQuery)->sum('total_distance');
-        $vehicleCostByKm = $totalKm * 5;
-        if ($vehicleCostByKm == 0 && $totalVehicleExpenses > 0) {
-            $vehicleCostByKm = $totalVehicleExpenses;
-        }
-
-        // Net Profit / Loss for Group
-        $netProfitLoss = $totalRevenue - ($totalExpenses + $vehicleCostByKm);
+        // Net Profit / Loss for Group = Total Revenue - Total Expenses
+        $netProfitLoss = $totalRevenue - $totalExpenses;
 
         // --- Accounting PO Cashflow Alert & Comparison ---
         $latestClosing = MonthlyAccountClosing::find()
