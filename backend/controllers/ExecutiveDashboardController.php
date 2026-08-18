@@ -86,8 +86,13 @@ class ExecutiveDashboardController extends BaseController
 
         $totalPoExpenses = (float)$expensesQuery->sum('net_amount');
         $totalNonePrExpenses = (float)$nonePrQuery->sum('total_amount');
-        $totalVehicleExpenses = (float)$vehicleQuery->sum('total_cost');
-        $totalWages = (float)$wageQuery->sum('net_total');
+        $totalVehicleExpenses = (float)$vehicleQuery->sum('vehicle_cost');
+        if ($totalVehicleExpenses == 0) {
+            $totalVehicleExpenses = (float)$vehicleQuery->sum('total_cost');
+        }
+        $totalVehicleWages = (float)$vehicleQuery->sum('total_wage');
+        $totalDriverReportWages = (float)$wageQuery->sum('net_total');
+        $totalWages = $totalDriverReportWages + $totalVehicleWages;
         
         $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalVehicleExpenses + $totalWages;
 
@@ -291,12 +296,14 @@ class ExecutiveDashboardController extends BaseController
         $jobVehicleExp = VehicleExpense::find()->where(['job_no' => $job->job_no])->all();
         $jobKmTotal = 0;
         $jobVehicleCost = 0;
+        $jobVehicleWage = 0;
         foreach ($jobVehicleExp as $ve) {
             $jobKmTotal += (float)$ve->total_distance;
             $jobVehicleCost += (float)($ve->vehicle_cost ?: $ve->total_cost);
+            $jobVehicleWage += (float)$ve->total_wage;
         }
         $jobKmCostAt5 = $jobKmTotal * 5;
-        $jobTotalExpenses = $jobPoTotal + $jobNonePrTotal + $jobVehicleCost + $jobKmCostAt5;
+        $jobTotalExpenses = $jobPoTotal + $jobNonePrTotal + $jobVehicleCost + $jobKmCostAt5 + $jobVehicleWage;
         $jobNetProfit = $jobRevenue - $jobTotalExpenses;
         $jobProfitPercent = $jobRevenue > 0 ? ($jobNetProfit / $jobRevenue) * 100 : 0;
 
@@ -467,7 +474,8 @@ class ExecutiveDashboardController extends BaseController
                 case 13:
                     if (!empty($jobVehicleExp)) {
                         $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
-                        $stepDetails[$step] = 'บันทึกการใช้รถยนต์แล้ว ' . number_format($jobKmTotal, 1) . ' กม.';
+                        $wageText = $jobVehicleWage > 0 ? ', ค่าจ้าง: ' . number_format($jobVehicleWage, 2) . ' บาท' : '';
+                        $stepDetails[$step] = 'บันทึกการใช้รถยนต์แล้ว ' . number_format($jobKmTotal, 1) . ' กม. (ค่ารถ x5: ' . number_format($jobKmCostAt5, 2) . ' บาท' . $wageText . ')';
                     } else {
                         $stepStatuses[$step] = JobActivityStatus::STATUS_RED;
                         $stepDetails[$step] = 'ยังไม่มีบันทึกระยะทางใช้รถยนต์';
@@ -519,6 +527,8 @@ class ExecutiveDashboardController extends BaseController
                 'jobPoTotal' => $jobPoTotal,
                 'jobNonePrTotal' => $jobNonePrTotal,
                 'jobKmTotal' => $jobKmTotal,
+                'jobVehicleCost' => $jobVehicleCost,
+                'jobVehicleWage' => $jobVehicleWage,
                 'jobKmCostAt5' => $jobKmCostAt5,
                 'jobTotalExpenses' => $jobTotalExpenses,
                 'jobNetProfit' => $jobNetProfit,
@@ -555,6 +565,8 @@ class ExecutiveDashboardController extends BaseController
             'jobPoTotal' => $eval['metrics']['jobPoTotal'],
             'jobNonePrTotal' => $eval['metrics']['jobNonePrTotal'],
             'jobKmTotal' => $eval['metrics']['jobKmTotal'],
+            'jobVehicleCost' => $eval['metrics']['jobVehicleCost'],
+            'jobVehicleWage' => $eval['metrics']['jobVehicleWage'],
             'jobKmCostAt5' => $eval['metrics']['jobKmCostAt5'],
             'jobTotalExpenses' => $eval['metrics']['jobTotalExpenses'],
             'jobNetProfit' => $eval['metrics']['jobNetProfit'],

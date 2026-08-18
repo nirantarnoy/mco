@@ -94,7 +94,12 @@ $stepsDef = [
                 </div>
                 <div class="col-md-3">
                     <div class="small text-slate-400" style="color: #94a3b8;">ค่าใช้รถยนต์ (<?= number_format($jobKmTotal, 1) ?> กม. x 5 บาท)</div>
-                    <div class="fs-5 fw-bold" style="color: #0369a1; font-family: 'Inter', sans-serif;"><?= number_format($jobKmCostAt5, 2) ?> <small class="fs-6">บาท</small></div>
+                    <div class="fs-5 fw-bold" style="color: #0369a1; font-family: 'Inter', sans-serif;"><?= number_format($jobKmCostAt5 + $jobVehicleCost, 2) ?> <small class="fs-6">บาท</small></div>
+                    <?php if ($jobVehicleWage > 0): ?>
+                        <div class="small text-danger fw-bold" style="font-size: 11px; margin-top: 2px;">
+                            + ค่าจ้างใช้รถ: <?= number_format($jobVehicleWage, 2) ?> บาท
+                        </div>
+                    <?php endif; ?>
                 </div>
                 <div class="col-md-3">
                     <div class="small text-slate-400" style="color: #94a3b8;">กำไร/ขาดทุนสุทธิ Job นี้</div>
