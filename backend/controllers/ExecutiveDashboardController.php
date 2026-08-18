@@ -29,17 +29,17 @@ class ExecutiveDashboardController extends BaseController
     public function actionIndex()
     {
         $companyId = Yii::$app->request->get('company_id', '');
-        $fromDate = Yii::$app->request->get('from_date', date('Y-m-01'));
-        $toDate = Yii::$app->request->get('to_date', date('Y-m-t'));
+        $fromDate = Yii::$app->request->get('from_date', '');
+        $toDate = Yii::$app->request->get('to_date', '');
         $searchJobNo = Yii::$app->request->get('search_job_no', '');
         $searchVendor = Yii::$app->request->get('search_vendor', '');
         $searchCustomer = Yii::$app->request->get('search_customer', '');
         $searchProduct = Yii::$app->request->get('search_product', '');
 
-        // --- 8.8.1 Group Companies Financial Calculation ---
+        // --- Group Companies Financial Calculation ---
         $expensesQuery = Purch::find()->where(['approve_status' => 1]);
         $nonePrQuery = PurchaseMaster::find()->where(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED]);
-        $invoiceQuery = Invoice::find();
+        $invoiceQuery = Invoice::find()->where(['status' => Invoice::STATUS_ACTIVE]);
         $vehicleQuery = VehicleExpense::find();
         $wageQuery = DriverWageReport::find();
 
@@ -52,11 +52,36 @@ class ExecutiveDashboardController extends BaseController
         if (!empty($fromDate) && !empty($toDate)) {
             $fromTs = strtotime($fromDate . ' 00:00:00');
             $toTs = strtotime($toDate . ' 23:59:59');
+            $fromDateTime = $fromDate . ' 00:00:00';
+            $toDateTime = $toDate . ' 23:59:59';
 
-            $expensesQuery->andWhere(['between', 'created_at', $fromTs, $toTs]);
-            $nonePrQuery->andWhere(['between', 'created_at', $fromTs, $toTs]);
-            $invoiceQuery->andWhere(['between', 'created_at', $fromTs, $toTs]);
-            $vehicleQuery->andWhere(['between', 'created_at', $fromTs, $toTs]);
+            // Filter PO Expenses by integer timestamp OR string date
+            $expensesQuery->andWhere([
+                'or',
+                ['between', 'created_at', $fromTs, $toTs],
+                ['between', 'purch_date', $fromDateTime, $toDateTime]
+            ]);
+
+            // Filter None PR Expenses by integer timestamp OR string date
+            $nonePrQuery->andWhere([
+                'or',
+                ['between', 'created_at', $fromTs, $toTs],
+                ['between', 'docdat', $fromDate, $toDate]
+            ]);
+
+            // Filter Invoices by invoice_date OR created_at string
+            $invoiceQuery->andWhere([
+                'or',
+                ['between', 'invoice_date', $fromDate, $toDate],
+                ['between', 'created_at', $fromDateTime, $toDateTime]
+            ]);
+
+            // Filter Vehicle Expenses by expense_date OR created_at string
+            $vehicleQuery->andWhere([
+                'or',
+                ['between', 'expense_date', $fromDate, $toDate],
+                ['between', 'created_at', $fromDateTime, $toDateTime]
+            ]);
         }
 
         $totalPoExpenses = (float)$expensesQuery->sum('net_amount');
@@ -66,18 +91,55 @@ class ExecutiveDashboardController extends BaseController
         
         $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalVehicleExpenses + $totalWages;
 
+        // Total Revenue from Invoices
         $totalRevenue = (float)$invoiceQuery->sum('total_amount');
 
-        // Pending Receivables (Active Invoices)
+        // Fallback: If invoices in current filter return 0.00, check Job amount or Quotation total for that filter
+        if ($totalRevenue == 0) {
+            $jobRevQuery = Job::find()->where(['status' => 1]);
+            if (!empty($companyId) && $companyId != '0') {
+                $jobRevQuery->andWhere(['company_id' => $companyId]);
+            }
+            if (!empty($fromDate) && !empty($toDate)) {
+                $jobRevQuery->andWhere([
+                    'or',
+                    ['between', 'created_at', strtotime($fromDate . ' 00:00:00'), strtotime($toDate . ' 23:59:59')],
+                    ['between', 'job_date', $fromDate . ' 00:00:00', $toDate . ' 23:59:59']
+                ]);
+            }
+            $totalRevenue = (float)$jobRevQuery->sum('job_amount');
+
+            if ($totalRevenue == 0) {
+                $quotRevQuery = Quotation::find()->where(['approve_status' => 1]);
+                if (!empty($companyId) && $companyId != '0') {
+                    $quotRevQuery->andWhere(['company_id' => $companyId]);
+                }
+                if (!empty($fromDate) && !empty($toDate)) {
+                    $quotRevQuery->andWhere(['between', 'created_at', strtotime($fromDate . ' 00:00:00'), strtotime($toDate . ' 23:59:59')]);
+                }
+                $totalRevenue = (float)$quotRevQuery->sum('total_amount');
+            }
+        }
+
+        // Pending Receivables (Active Invoices or Active Jobs)
         $unpaidInvoices = Invoice::find()
             ->where(['status' => Invoice::STATUS_ACTIVE])
             ->andFilterWhere(['company_id' => $companyId])
             ->sum('total_amount');
         $pendingReceivables = (float)$unpaidInvoices;
+        if ($pendingReceivables == 0) {
+            $pendingReceivables = (float)Job::find()
+                ->where(['status' => 1])
+                ->andFilterWhere(['company_id' => $companyId])
+                ->sum('job_amount');
+        }
 
         // Vehicle Usage Km x 5 THB/km
         $totalKm = (float)$vehicleQuery->sum('total_distance');
         $vehicleCostByKm = $totalKm * 5;
+        if ($vehicleCostByKm == 0 && $totalVehicleExpenses > 0) {
+            $vehicleCostByKm = $totalVehicleExpenses;
+        }
 
         // Net Profit / Loss for Group
         $netProfitLoss = $totalRevenue - ($totalExpenses + $vehicleCostByKm);
