@@ -105,7 +105,7 @@ class ExecutiveDashboardController extends BaseController
 
         // Monthly Closings History
         $monthlyClosings = MonthlyAccountClosing::find()
-            ->orderByID(SORT_DESC)
+            ->orderBy(['id' => SORT_DESC])
             ->limit(12)
             ->all();
 
