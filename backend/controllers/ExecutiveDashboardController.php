@@ -68,9 +68,9 @@ class ExecutiveDashboardController extends BaseController
 
         $totalRevenue = (float)$invoiceQuery->sum('total_amount');
 
-        // Pending Receivables (Invoices not fully paid)
+        // Pending Receivables (Active Invoices)
         $unpaidInvoices = Invoice::find()
-            ->where(['!=', 'payment_status', 2]) // 2 = Paid
+            ->where(['status' => Invoice::STATUS_ACTIVE])
             ->andFilterWhere(['company_id' => $companyId])
             ->sum('total_amount');
         $pendingReceivables = (float)$unpaidInvoices;
