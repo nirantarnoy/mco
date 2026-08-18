@@ -234,6 +234,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                             <strong><?= Yii::$app->formatter->asDecimal($model->total_amount, 2) ?>
                                                 บาท</strong></h5></td>
                                 </tr>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -243,9 +244,13 @@ $this->params['breadcrumbs'][] = $this->title;
             $preAdvanceRefs = \backend\models\PreAdvanceRef::find()
                 ->where(['ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR, 'ref_id' => $model->id])
                 ->all();
-            if (!empty($preAdvanceRefs)):
             ?>
-                <h5 class="mt-4 mb-3"><i class="fas fa-file-invoice-dollar text-primary me-2"></i> ข้อมูล Pre-Advance / Pay Advance ที่นำไปใช้งาน</h5>
+            <h5 class="mt-4 mb-3"><i class="fas fa-file-invoice-dollar text-primary me-2"></i> ข้อมูล Pre-Advance / Pay Advance ที่นำไปใช้งาน</h5>
+            <?php if (empty($preAdvanceRefs)): ?>
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle me-2"></i> ยังไม่มีการนำรายการนี้ไปทำ Pre-Advance / Pay Advance
+                </div>
+            <?php else: ?>
                 <div class="table-responsive mb-4">
                     <table class="table table-bordered table-striped align-middle">
                         <thead class="table-light">

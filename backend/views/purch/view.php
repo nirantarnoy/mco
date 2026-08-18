@@ -533,6 +533,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                 <?php endif; ?>
                 </tbody>
             </table>
+        </div>
     </div>
     <br/>
 
@@ -540,12 +541,16 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
     $preAdvanceRefs = \backend\models\PreAdvanceRef::find()
         ->where(['ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_PO, 'ref_id' => $model->id])
         ->all();
-    if (!empty($preAdvanceRefs)):
     ?>
-        <div class="pre-advance-history-section mb-4">
-            <h3 class="mb-3">
-                <i class="fas fa-file-invoice-dollar text-primary"></i> ข้อมูล Pre-Advance / Pay Advance ที่นำไปใช้งาน
-            </h3>
+    <div class="pre-advance-history-section mb-4">
+        <h3 class="mb-3">
+            <i class="fas fa-file-invoice-dollar text-primary"></i> ข้อมูล Pre-Advance / Pay Advance ที่นำไปใช้งาน
+        </h3>
+        <?php if (empty($preAdvanceRefs)): ?>
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> ยังไม่มีการนำใบสั่งซื้อนี้ไปทำ Pre-Advance / Pay Advance
+            </div>
+        <?php else: ?>
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
                     <thead class="thead-light">
@@ -591,9 +596,9 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                     </tbody>
                 </table>
             </div>
-        </div>
-        <br/>
-    <?php endif; ?>
+        <?php endif; ?>
+    </div>
+    <br/>
 
     <div class="payment-history-section">
         <h3 class="mb-3">
