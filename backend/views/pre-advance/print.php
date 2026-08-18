@@ -87,13 +87,25 @@ $formatter = \Yii::$app->formatter;
         </thead>
         <tbody>
             <?php 
+            $refNos = [];
+            foreach ($model->preAdvanceRefs as $ref) {
+                if ($ref->ref_type == \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR) {
+                    $m = \backend\models\PurchaseMaster::findOne($ref->ref_id);
+                    if ($m) $refNos[] = $m->docnum;
+                } elseif ($ref->ref_type == \backend\models\PreAdvanceRef::REF_TYPE_PO) {
+                    $m = \backend\models\Purch::findOne($ref->ref_id);
+                    if ($m) $refNos[] = $m->purch_no;
+                }
+            }
+            $refNoStr = implode(', ', $refNos);
+
             $i = 1;
             foreach ($model->preAdvanceLines as $line): 
             ?>
                 <tr>
                     <td class="text-center"><?= $i++ ?></td>
                     <td class="text-center"><?= $line->line_date ? Html::encode($formatter->asDate($line->line_date, 'php:d/m/Y')) : '' ?></td>
-                    <td></td>
+                    <td><?= Html::encode($refNoStr) ?></td>
                     <td></td>
                     <td><?= Html::encode($line->description) ?></td>
                     <td class="text-right"></td>

@@ -17,15 +17,28 @@ $getNonePrByVendorUrl = Url::to(['get-none-pr-by-vendor']);
 $pullMultipleUrl = Url::to(['pull-multiple']);
 $removeAttachmentUrl = Url::to(['remove-attachment']);
 
-$selectedNonePrIds = \backend\models\PreAdvanceRef::find()
-    ->where(['pre_advance_id' => $model->id, 'ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR])
-    ->select('ref_id')
-    ->column();
+$selectedRefRecords = \backend\models\PreAdvanceRef::find()
+    ->where(['pre_advance_id' => $model->id])
+    ->all();
+
 $selectedNonePrList = [];
-if (!empty($selectedNonePrIds)) {
-    $selectedNonePrList = ArrayHelper::map(\backend\models\PurchaseMaster::find()->where(['id' => $selectedNonePrIds])->all(), 'id', function($m) {
-        return $m->docnum;
-    });
+$selectedNonePrIds = [];
+foreach ($selectedRefRecords as $ref) {
+    if ($ref->ref_type == \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR) {
+        $m = \backend\models\PurchaseMaster::findOne($ref->ref_id);
+        if ($m) {
+            $key = 'none_pr_' . $m->id;
+            $selectedNonePrList[$key] = '[None PR] ' . $m->docnum . ' (ยอดรวม: ' . number_format($m->total_amount, 2) . (!empty($m->supnam) ? ' - ' . $m->supnam : '') . ')';
+            $selectedNonePrIds[] = $key;
+        }
+    } elseif ($ref->ref_type == \backend\models\PreAdvanceRef::REF_TYPE_PO) {
+        $m = \backend\models\Purch::findOne($ref->ref_id);
+        if ($m) {
+            $key = 'po_' . $m->id;
+            $selectedNonePrList[$key] = '[PO] ' . $m->purch_no . ' (ยอดรวม: ' . number_format($m->net_amount, 2) . (!empty($m->vendor_name) ? ' - ' . $m->vendor_name : '') . ')';
+            $selectedNonePrIds[] = $key;
+        }
+    }
 }
 ?>
 
@@ -168,13 +181,13 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
 
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label class="form-label">เลือกใบสั่งซื้อ (None PR)</label>
+                    <label class="form-label">เลือกใบสั่งซื้อ / None PR</label>
                     <?= Select2::widget([
                         'name' => 'none_pr_ids[]',
                         'data' => $selectedNonePrList,
-                        'value' => array_keys($selectedNonePrList),
+                        'value' => $selectedNonePrIds,
                         'options' => [
-                            'placeholder' => 'ค้นหา/เลือก None PR...',
+                            'placeholder' => 'ค้นหา/เลือก PO หรือ None PR...',
                             'multiple' => true,
                             'id' => 'none-pr-select'
                         ],
@@ -185,7 +198,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                                 'url' => $getNonePrByVendorUrl,
                                 'dataType' => 'json',
                                 'delay' => 250,
-                                'data' => new JsExpression('function(params) { return {q:params.term, vendor_id: $("#vendor-select").val()}; }'),
+                                'data' => new JsExpression('function(params) { return {q:params.term, vendor_id: $("#vendor-select").val(), pre_advance_id: "' . ($model->id ?: '') . '"}; }'),
                                 'processResults' => new JsExpression('function(data) { return {results: data.results}; }'),
                                 'cache' => true
                             ],

@@ -8,6 +8,7 @@ use yii\db\ActiveRecord;
 class PreAdvanceRef extends ActiveRecord
 {
     const REF_TYPE_NONE_PR = 1;
+    const REF_TYPE_PO = 2;
 
     public static function tableName()
     {

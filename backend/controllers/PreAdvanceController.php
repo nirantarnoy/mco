@@ -114,35 +114,69 @@ class PreAdvanceController extends BaseController
         return $this->redirect(['index']);
     }
 
-    public function actionGetNonePrByVendor($vendor_id = null, $q = null)
+    public function actionGetNonePrByVendor($vendor_id = null, $q = null, $pre_advance_id = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         
-        $query = \backend\models\PurchaseMaster::find()
+        $result = [];
+
+        // 1. None PR (PurchaseMaster)
+        $queryNonePr = \backend\models\PurchaseMaster::find()
             ->where(['approve_status' => \backend\models\PurchaseMaster::APPROVE_STATUS_APPROVED])
             ->andWhere(['status' => \backend\models\PurchaseMaster::STATUS_ACTIVE])
             ->andWhere(['>', 'total_amount', 0]);
             
         if ($vendor_id && $vendor_id !== 'null' && $vendor_id !== '') {
-            $query->andWhere(['supcod' => $vendor_id]);
+            $queryNonePr->andWhere(['supcod' => $vendor_id]);
         }
         
         if ($q) {
-            $query->andWhere(['like', 'docnum', $q]);
+            $queryNonePr->andWhere(['like', 'docnum', $q]);
         }
         
-        $none_prs = $query->limit(20)->all();
+        $none_prs = $queryNonePr->limit(20)->all();
         
-        $result = [];
         foreach ($none_prs as $none_pr) {
-            $isUsed = \backend\models\PreAdvanceRef::find()
-                ->where(['ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR, 'ref_id' => $none_pr->id])
-                ->exists();
+            $isUsedQuery = \backend\models\PreAdvanceRef::find()
+                ->where(['ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR, 'ref_id' => $none_pr->id]);
+            if ($pre_advance_id) {
+                $isUsedQuery->andWhere(['!=', 'pre_advance_id', $pre_advance_id]);
+            }
             
-            if (!$isUsed) {
+            if (!$isUsedQuery->exists()) {
                 $result[] = [
-                    'id' => $none_pr->id,
-                    'text' => $none_pr->docnum . ' (ยอดรวม: ' . number_format($none_pr->total_amount, 2) . ( !empty($none_pr->supnam) ? ' - ' . $none_pr->supnam : '' ) . ')',
+                    'id' => 'none_pr_' . $none_pr->id,
+                    'text' => '[None PR] ' . $none_pr->docnum . ' (ยอดรวม: ' . number_format($none_pr->total_amount, 2) . ( !empty($none_pr->supnam) ? ' - ' . $none_pr->supnam : '' ) . ')',
+                ];
+            }
+        }
+
+        // 2. PO (Purch)
+        $queryPo = \backend\models\Purch::find()
+            ->where(['approve_status' => 1])
+            ->andWhere(['>', 'net_amount', 0]);
+            
+        if ($vendor_id && $vendor_id !== 'null' && $vendor_id !== '') {
+            $queryPo->andWhere(['vendor_id' => $vendor_id]);
+        }
+        
+        if ($q) {
+            $queryPo->andWhere(['like', 'purch_no', $q]);
+        }
+        
+        $pos = $queryPo->limit(20)->all();
+        
+        foreach ($pos as $po) {
+            $isUsedQuery = \backend\models\PreAdvanceRef::find()
+                ->where(['ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_PO, 'ref_id' => $po->id]);
+            if ($pre_advance_id) {
+                $isUsedQuery->andWhere(['!=', 'pre_advance_id', $pre_advance_id]);
+            }
+            
+            if (!$isUsedQuery->exists()) {
+                $result[] = [
+                    'id' => 'po_' . $po->id,
+                    'text' => '[PO] ' . $po->purch_no . ' (ยอดรวม: ' . number_format($po->net_amount, 2) . ( !empty($po->vendor_name) ? ' - ' . $po->vendor_name : '' ) . ')',
                 ];
             }
         }
@@ -161,13 +195,28 @@ class PreAdvanceController extends BaseController
         $vendor_id = null;
         $vendor_name = null;
         
-        foreach ($none_pr_ids as $none_pr_id) {
-            $none_pr = \backend\models\PurchaseMaster::findOne($none_pr_id);
-            if ($none_pr) {
-                $total_amount += $none_pr->total_amount;
-                if (!$vendor_id) {
-                    $vendor_id = $none_pr->supcod;
-                    $vendor_name = $none_pr->supnam;
+        foreach ($none_pr_ids as $item) {
+            if (empty($item)) continue;
+            
+            if (is_string($item) && strpos($item, 'po_') === 0) {
+                $po_id = (int)str_replace('po_', '', $item);
+                $po = \backend\models\Purch::findOne($po_id);
+                if ($po) {
+                    $total_amount += $po->net_amount;
+                    if (!$vendor_id) {
+                        $vendor_id = $po->vendor_id;
+                        $vendor_name = $po->vendor_name;
+                    }
+                }
+            } else {
+                $none_pr_id = (int)str_replace('none_pr_', '', (string)$item);
+                $none_pr = \backend\models\PurchaseMaster::findOne($none_pr_id);
+                if ($none_pr) {
+                    $total_amount += $none_pr->total_amount;
+                    if (!$vendor_id) {
+                        $vendor_id = $none_pr->supcod;
+                        $vendor_name = $none_pr->supnam;
+                    }
                 }
             }
         }
@@ -224,20 +273,42 @@ class PreAdvanceController extends BaseController
         
         PreAdvanceRef::deleteAll(['pre_advance_id' => $model->id]);
         
-        foreach ($none_pr_ids as $none_pr_id) {
-            $none_pr = \backend\models\PurchaseMaster::findOne($none_pr_id);
-            if ($none_pr) {
-                $isUsed = \backend\models\PreAdvanceRef::find()
-                    ->where(['ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR, 'ref_id' => $none_pr->id])
-                    ->andWhere(['!=', 'pre_advance_id', $model->id])
-                    ->exists();
-                
-                if (!$isUsed) {
-                    $ref = new PreAdvanceRef();
-                    $ref->pre_advance_id = $model->id;
-                    $ref->ref_type = PreAdvanceRef::REF_TYPE_NONE_PR;
-                    $ref->ref_id = $none_pr->id;
-                    $ref->save(false);
+        foreach ($none_pr_ids as $item) {
+            if (empty($item)) continue;
+            
+            if (is_string($item) && strpos($item, 'po_') === 0) {
+                $po_id = (int)str_replace('po_', '', $item);
+                $po = \backend\models\Purch::findOne($po_id);
+                if ($po) {
+                    $isUsed = \backend\models\PreAdvanceRef::find()
+                        ->where(['ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_PO, 'ref_id' => $po->id])
+                        ->andWhere(['!=', 'pre_advance_id', $model->id])
+                        ->exists();
+                    
+                    if (!$isUsed) {
+                        $ref = new PreAdvanceRef();
+                        $ref->pre_advance_id = $model->id;
+                        $ref->ref_type = PreAdvanceRef::REF_TYPE_PO;
+                        $ref->ref_id = $po->id;
+                        $ref->save(false);
+                    }
+                }
+            } else {
+                $none_pr_id = (int)str_replace('none_pr_', '', (string)$item);
+                $none_pr = \backend\models\PurchaseMaster::findOne($none_pr_id);
+                if ($none_pr) {
+                    $isUsed = \backend\models\PreAdvanceRef::find()
+                        ->where(['ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR, 'ref_id' => $none_pr->id])
+                        ->andWhere(['!=', 'pre_advance_id', $model->id])
+                        ->exists();
+                    
+                    if (!$isUsed) {
+                        $ref = new PreAdvanceRef();
+                        $ref->pre_advance_id = $model->id;
+                        $ref->ref_type = PreAdvanceRef::REF_TYPE_NONE_PR;
+                        $ref->ref_id = $none_pr->id;
+                        $ref->save(false);
+                    }
                 }
             }
         }

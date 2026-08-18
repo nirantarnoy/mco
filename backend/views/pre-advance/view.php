@@ -34,7 +34,24 @@ $this->params['breadcrumbs'][] = $this->title;
                 'attribute' => 'vendor_id',
                 'value' => $model->vendor ? $model->vendor->name : '-',
             ],
-            'recipient_name',
+            [
+                'label' => 'ใบสั่งซื้อ / None PR อ้างอิง',
+                'value' => function($model) {
+                    $refs = $model->preAdvanceRefs;
+                    if (empty($refs)) return '-';
+                    $labels = [];
+                    foreach ($refs as $ref) {
+                        if ($ref->ref_type == \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR) {
+                            $m = \backend\models\PurchaseMaster::findOne($ref->ref_id);
+                            if ($m) $labels[] = '[None PR] ' . $m->docnum;
+                        } elseif ($ref->ref_type == \backend\models\PreAdvanceRef::REF_TYPE_PO) {
+                            $m = \backend\models\Purch::findOne($ref->ref_id);
+                            if ($m) $labels[] = '[PO] ' . $m->purch_no;
+                        }
+                    }
+                    return !empty($labels) ? implode(', ', $labels) : '-';
+                }
+            ],
             'amount:decimal',
             'remark:ntext',
         ],
