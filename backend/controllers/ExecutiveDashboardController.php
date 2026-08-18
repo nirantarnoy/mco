@@ -295,17 +295,23 @@ class ExecutiveDashboardController extends BaseController
                 $jobNonePrHasDoc = true;
             }
         }
-        $jobVehicleExp = VehicleExpense::find()->where(['job_no' => $job->job_no])->all();
+        $cleanJobNo = trim($job->job_no);
+        $jobVehicleExp = VehicleExpense::find()
+            ->where(['or', ['job_no' => $job->job_no], ['job_no' => $cleanJobNo]])
+            ->orderBy(['expense_date' => SORT_DESC])
+            ->all();
         $jobKmTotal = 0;
         $jobVehicleCost = 0;
         $jobVehicleWage = 0;
         foreach ($jobVehicleExp as $ve) {
             $jobKmTotal += (float)$ve->total_distance;
-            $jobVehicleCost += (float)($ve->vehicle_cost ?: $ve->total_cost);
+            $jobVehicleCost += (float)$ve->vehicle_cost;
             $jobVehicleWage += (float)$ve->total_wage;
         }
         $jobKmCostAt5 = $jobKmTotal * 5;
-        $jobTotalExpenses = $jobPoTotal + $jobNonePrTotal + $jobVehicleCost + $jobKmCostAt5 + $jobVehicleWage;
+        // ถ้าค่าใช้จ่ายรถในระบบเดิมเท่ากับ 0 ให้ใช้ค่าตามระยะทาง x 5 บาท
+        $effectiveVehicleCost = max($jobKmCostAt5, $jobVehicleCost);
+        $jobTotalExpenses = $jobPoTotal + $jobNonePrTotal + $effectiveVehicleCost + $jobVehicleWage;
         $jobNetProfit = $jobRevenue - $jobTotalExpenses;
         $jobProfitPercent = $jobRevenue > 0 ? ($jobNetProfit / $jobRevenue) * 100 : 0;
 
@@ -536,6 +542,7 @@ class ExecutiveDashboardController extends BaseController
                 'jobNetProfit' => $jobNetProfit,
                 'jobProfitPercent' => $jobProfitPercent,
                 'daysRemaining' => $daysRemaining,
+                'jobVehicleExpList' => $jobVehicleExp,
             ]
         ];
     }
@@ -574,6 +581,7 @@ class ExecutiveDashboardController extends BaseController
             'jobNetProfit' => $eval['metrics']['jobNetProfit'],
             'jobProfitPercent' => $eval['metrics']['jobProfitPercent'],
             'daysRemaining' => $eval['metrics']['daysRemaining'],
+            'jobVehicleExpList' => $eval['metrics']['jobVehicleExpList'],
             'canCancel' => $canCancel,
         ]);
     }

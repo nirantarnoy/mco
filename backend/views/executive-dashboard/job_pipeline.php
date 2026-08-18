@@ -173,6 +173,58 @@ $stepsDef = [
         </div>
     </div>
 
+    <?php if (!empty($jobVehicleExpList)): ?>
+        <!-- Vehicle Usage & Driver Wage Details Card -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4" style="background-color: #ffffff; border-radius: 16px;">
+            <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="fw-bold mb-1 text-slate-800" style="color: #1e293b; font-family: 'Prompt', sans-serif;">
+                        <i class="fas fa-car text-indigo-600 me-2" style="color: #4f46e5;"></i> รายละเอียดบันทึกการใช้รถยนต์และค่าจ้างประจำ Job นี้
+                    </h6>
+                    <div class="small text-slate-500" style="color: #64748b;">
+                        พบข้อมูลบันทึกการเดินทางทั้งหมด <?= count($jobVehicleExpList) ?> รายการ | รวมระยะทาง <?= number_format($jobKmTotal, 1) ?> กม. | ค่ารถ <?= number_format($jobKmCostAt5 + $jobVehicleCost, 2) ?> บาท | ค่าจ้างรวม <?= number_format($jobVehicleWage, 2) ?> บาท
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-center" style="width: 5%">#</th>
+                                <th class="text-center" style="width: 15%">วันที่ใช้งาน</th>
+                                <th class="text-center" style="width: 15%">ทะเบียนรถ</th>
+                                <th class="text-end" style="width: 20%">ระยะทาง (กม.)</th>
+                                <th class="text-end" style="width: 20%">ค่าใช้จ่ายรถ (บาท)</th>
+                                <th class="text-end" style="width: 25%">ค่าจ้างรวม (บาท)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php 
+                            $vIdx = 0;
+                            foreach ($jobVehicleExpList as $veItem): 
+                                $vIdx++;
+                            ?>
+                                <tr>
+                                    <td class="text-center text-slate-400"><?= $vIdx ?></td>
+                                    <td class="text-center fw-medium"><?= date('d/m/Y', strtotime($veItem->expense_date)) ?></td>
+                                    <td class="text-center">
+                                        <span class="badge bg-slate-100 text-slate-700 px-2 py-1" style="background-color: #f1f5f9; color: #334155;">
+                                            <?= Html::encode($veItem->vehicle_no ?: '-') ?>
+                                        </span>
+                                    </td>
+                                    <td class="text-end fw-bold" style="color: #0369a1;"><?= number_format($veItem->total_distance, 1) ?> กม.</td>
+                                    <td class="text-end fw-bold" style="color: #047857;"><?= number_format($veItem->vehicle_cost, 2) ?></td>
+                                    <td class="text-end fw-bold" style="color: #7e22ce;"><?= number_format($veItem->total_wage, 2) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <div class="text-end mb-4">
         <a href="<?= Url::to(['executive-dashboard/index']) ?>" class="btn btn-indigo-modern px-4">
             <i class="fas fa-arrow-left me-1"></i> ย้อนกลับไปหน้า Executive Dashboard
