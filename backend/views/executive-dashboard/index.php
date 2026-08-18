@@ -216,8 +216,8 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
                 </span>
             </div>
             <div class="text-end">
-                <h1 class="fw-bold mb-0" style="color: <?= $netProfitLoss >= 0 ? '#047857' : '#be123c' ?>; font-family: 'Inter', sans-serif;">
-                    <?= number_format($netProfitLoss, 2) ?> <small class="fs-6">บาท</small>
+                <h1 class="fw-bold mb-0" style="color: <?= $netProfitLoss >= 0 ? '#047857' : '#be123c' ?>; font-family: 'Inter', 'Prompt', sans-serif;">
+                    <?= number_format($netProfitLoss, 2) ?> <span class="ms-1" style="font-family: 'Prompt', sans-serif; font-size: 1.15rem; font-weight: 600;">บาท</span>
                 </h1>
                 <span class="badge px-3 py-2 rounded-pill fw-bold shadow-sm" style="background-color: <?= $netProfitLoss >= 0 ? '#d1fae5' : '#ffe4e6' ?>; color: <?= $netProfitLoss >= 0 ? '#047857' : '#be123c' ?>; font-size: 0.85rem;">
                     <?php if ($netProfitLoss >= 0): ?>
