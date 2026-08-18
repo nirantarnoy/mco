@@ -179,8 +179,8 @@ $stepsDef = [
 
                                     <?php if ($canCancel): ?>
                                         <div>
-                                            <button type="button" class="btn btn-xs btn-light-modern btn-cancel-step mt-1" data-step="<?= $sNo ?>" title="ยกเลิกขั้นตอน (สิทธิ์ R1/R2)" style="color: #e11d48; border-color: #fecdd3;">
-                                                <i class="fas fa-ban me-1"></i> กดยกเลิก (R1/R2)
+                                            <button type="button" class="btn btn-xs btn-light-modern btn-cancel-step mt-1" data-step="<?= $sNo ?>" title="ยกเลิกขั้นตอน" style="color: #e11d48; border-color: #fecdd3;">
+                                                <i class="fas fa-ban me-1"></i> กดยกเลิก
                                             </button>
                                         </div>
                                     <?php endif; ?>

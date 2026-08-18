@@ -380,9 +380,71 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <?= number_format($jobItem->job_amount ?: ($jobItem->quotation ? $jobItem->quotation->total_amount : 0), 2) ?>
                                     </td>
                                     <td class="text-center">
-                                        <a href="<?= Url::to(['executive-dashboard/job-pipeline', 'id' => $jobItem->id]) ?>" class="badge-soft badge-soft-indigo text-decoration-none">
-                                            <i class="fas fa-tasks me-1"></i> รายละเอียด 15 ขั้นตอน
-                                        </a>
+                                        <?php
+                                            $jobSteps = $jobActivityMap[$jobItem->id] ?? [];
+                                            $currentStepNo = 1;
+                                            $currentStepStatus = 0;
+                                            $greenCount = 0;
+                                            $hasOrange = false;
+                                            
+                                            for ($s = 1; $s <= 15; $s++) {
+                                                $st = $jobSteps[$s] ?? 0;
+                                                if ($st == 2) {
+                                                    $greenCount++;
+                                                    $currentStepNo = $s;
+                                                } elseif ($st == 1) {
+                                                    $hasOrange = true;
+                                                    $currentStepNo = $s;
+                                                    $currentStepStatus = 1;
+                                                }
+                                            }
+                                            
+                                            $isAllDone = ($greenCount >= 15 || ($jobSteps[15] ?? 0) == 2);
+                                            
+                                            $stepNames = [
+                                                1 => '1. เปิด Job No.',
+                                                2 => '2. เปิด PO',
+                                                3 => '3. รับของจาก Vendor',
+                                                4 => '4. เบิก/คืนของ',
+                                                5 => '5. อบรมเซฟตี้ & JSA',
+                                                6 => '6. Engineering จบ',
+                                                7 => '7. Final Report/Cer',
+                                                8 => '8. ประเมินผลลูกค้า',
+                                                9 => '9. ออก Invoice',
+                                                10 => '10. อัตรากำไร %',
+                                                11 => '11. เวลาคงเหลือ',
+                                                12 => '12. เงินเข้าบัญชี',
+                                                13 => '13. ระยะทางรถยนต์',
+                                                14 => '14. จำนวนคน',
+                                                15 => '15. สรุปกำไรขาดทุน',
+                                            ];
+                                        ?>
+                                        <div class="mb-1">
+                                            <?php if ($isAllDone): ?>
+                                                <span class="badge-soft badge-soft-success"><i class="fas fa-check-double me-1"></i> จบงานแล้ว (15/15)</span>
+                                            <?php elseif ($hasOrange): ?>
+                                                <span class="badge-soft badge-soft-warning"><i class="fas fa-spinner fa-spin me-1"></i> <?= $stepNames[$currentStepNo] ?? "ขั้นตอน $currentStepNo" ?></span>
+                                            <?php elseif ($greenCount > 0): ?>
+                                                <span class="badge-soft badge-soft-indigo"><i class="fas fa-play me-1"></i> ขั้นตอน <?= $currentStepNo ?>/15</span>
+                                            <?php else: ?>
+                                                <span class="badge-soft badge-soft-danger"><i class="fas fa-clock me-1"></i> ยังไม่ได้เริ่ม (1/15)</span>
+                                            <?php endif; ?>
+                                        </div>
+
+                                        <!-- Mini 15-Dot Pipeline Visual Bar -->
+                                        <div class="d-flex gap-1 align-items-center justify-content-center mt-1" title="สถานะ 15 ขั้นตอน (🔴 ยังไม่ทำ / 🟠 รอเก็บไฟล์ / 🟢 เรียบร้อย / ⚪ ยกเลิก)">
+                                            <?php for ($s = 1; $s <= 15; $s++): ?>
+                                                <?php 
+                                                    $st = $jobSteps[$s] ?? 0;
+                                                    $dotBg = '#ef4444'; // Red
+                                                    $title = "ขั้นตอน $s: ยังไม่ได้ทำ";
+                                                    if ($st == 2) { $dotBg = '#10b981'; $title = "ขั้นตอน $s: เก็บไฟล์แล้ว (เรียบร้อย)"; }
+                                                    elseif ($st == 1) { $dotBg = '#f59e0b'; $title = "ขั้นตอน $s: ดำเนินการแล้ว รอจัดเก็บไฟล์"; }
+                                                    elseif ($st == 3) { $dotBg = '#94a3b8'; $title = "ขั้นตอน $s: ยกเลิก"; }
+                                                ?>
+                                                <span class="d-inline-block rounded-circle" style="width: 8px; height: 8px; background-color: <?= $dotBg ?>;" title="<?= $title ?>"></span>
+                                            <?php endfor; ?>
+                                        </div>
                                     </td>
                                     <td class="text-center">
                                         <a href="<?= Url::to(['executive-dashboard/job-pipeline', 'id' => $jobItem->id]) ?>" class="btn btn-indigo-modern btn-xs">
@@ -541,6 +603,7 @@ body {
 }
 .badge-soft-info { background-color: #e0f2fe; color: #0369a1; }
 .badge-soft-success { background-color: #d1fae5; color: #047857; }
+.badge-soft-warning { background-color: #fef3c7; color: #b45309; }
 .badge-soft-danger { background-color: #ffe4e6; color: #be123c; }
 .badge-soft-indigo { background-color: #eef2ff; color: #4338ca; }
 </style>

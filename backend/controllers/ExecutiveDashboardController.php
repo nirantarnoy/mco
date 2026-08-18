@@ -125,6 +125,16 @@ class ExecutiveDashboardController extends BaseController
 
         $searchJobsList = $jobsQuery->orderBy(['id' => SORT_DESC])->limit(50)->all();
 
+        // Map 15-step activity statuses for searchJobsList
+        $jobIds = ArrayHelper::getColumn($searchJobsList, 'id');
+        $jobActivityMap = [];
+        if (!empty($jobIds)) {
+            $statuses = JobActivityStatus::find()->where(['in', 'job_id', $jobIds])->all();
+            foreach ($statuses as $st) {
+                $jobActivityMap[$st->job_id][$st->step_no] = $st->status;
+            }
+        }
+
         return $this->render('index', [
             'companyId' => $companyId,
             'fromDate' => $fromDate,
@@ -142,6 +152,7 @@ class ExecutiveDashboardController extends BaseController
             'isCashflowWarning' => $isCashflowWarning,
             'monthlyClosings' => $monthlyClosings,
             'searchJobsList' => $searchJobsList,
+            'jobActivityMap' => $jobActivityMap,
             'searchJobNo' => $searchJobNo,
             'searchVendor' => $searchVendor,
             'searchCustomer' => $searchCustomer,
@@ -150,7 +161,26 @@ class ExecutiveDashboardController extends BaseController
     }
 
     /**
-     * 8.8.3 Job Activity Pipeline Detail Page
+     * Helper to check permission for canceling steps
+     */
+    private function checkCanCancelStep()
+    {
+        if (Yii::$app->user->isGuest) {
+            return false;
+        }
+        $user = Yii::$app->user->identity;
+        if (Yii::$app->user->can('executive-dashboard/cancel-step') || 
+            Yii::$app->user->can('job/delete') || 
+            Yii::$app->user->can('job/update') || 
+            Yii::$app->user->can('admin') || 
+            (isset($user->user_group_id) && in_array($user->user_group_id, [1, 2]))) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Job Activity Pipeline Detail Page
      */
     public function actionJobPipeline($id)
     {
@@ -228,14 +258,7 @@ class ExecutiveDashboardController extends BaseController
             $daysRemaining = round(($targetTs - $todayTs) / (60 * 60 * 24));
         }
 
-        // Check user cancellation role permission (R1 / System Admin, R2 / Executive)
-        $canCancel = false;
-        $user = Yii::$app->user->identity;
-        if ($user) {
-            if ($user->user_group_id == 1 || $user->user_group_id == 2 || Yii::$app->user->can('admin')) {
-                $canCancel = true;
-            }
-        }
+        $canCancel = $this->checkCanCancelStep();
 
         return $this->render('job_pipeline', [
             'job' => $job,
@@ -254,15 +277,14 @@ class ExecutiveDashboardController extends BaseController
     }
 
     /**
-     * AJAX Action: Cancel Activity Step (Role R1 / R2)
+     * AJAX Action: Cancel Activity Step
      */
     public function actionCancelStep()
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
 
-        $user = Yii::$app->user->identity;
-        if (!$user || ($user->user_group_id != 1 && $user->user_group_id != 2 && !Yii::$app->user->can('admin'))) {
-            return ['success' => false, 'message' => 'คุณไม่มีสิทธิ์ในการยกเลิกขั้นตอน (ต้องเป็นสิทธิ์ R1 หรือ R2)'];
+        if (!$this->checkCanCancelStep()) {
+            return ['success' => false, 'message' => 'คุณไม่มีสิทธิ์ในการยกเลิกขั้นตอนนี้'];
         }
 
         $jobId = Yii::$app->request->post('job_id');
