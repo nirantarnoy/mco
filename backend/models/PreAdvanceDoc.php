@@ -15,7 +15,7 @@ class PreAdvanceDoc extends ActiveRecord
     public function rules()
     {
         return [
-            [['pre_advance_id', 'file_size', 'uploaded_at', 'uploaded_by'], 'integer'],
+            [['pre_advance_id', 'ref_type', 'ref_id', 'file_size', 'uploaded_at', 'uploaded_by'], 'integer'],
             [['file_name', 'file_path'], 'string', 'max' => 255],
         ];
     }

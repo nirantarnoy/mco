@@ -40,10 +40,93 @@ foreach ($selectedRefRecords as $ref) {
         }
     }
 }
+
+$existingDocsGrouped = [];
+if (!$model->isNewRecord && !empty($model->preAdvanceDocs)) {
+    foreach ($model->preAdvanceDocs as $doc) {
+        $key = 'general';
+        if ($doc->ref_type == \backend\models\PreAdvanceRef::REF_TYPE_PO && $doc->ref_id) {
+            $key = 'po_' . $doc->ref_id;
+        } elseif ($doc->ref_type == \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR && $doc->ref_id) {
+            $key = 'none_pr_' . $doc->ref_id;
+        }
+        $existingDocsGrouped[$key][] = [
+            'id' => $doc->id,
+            'file_name' => $doc->file_name,
+            'file_path' => $doc->file_path,
+            'file_size' => round($doc->file_size / 1024, 2),
+            'uploaded_by' => $doc->uploaded_by ? \common\models\User::findOne($doc->uploaded_by)->username : '-',
+            'uploaded_at' => date('Y-m-d H:i', $doc->uploaded_at),
+        ];
+    }
+}
+$existingDocsJson = json_encode($existingDocsGrouped);
+$webUploadPath = Yii::getAlias('@web/uploads/pre_advance/');
 ?>
 
 <?php
 $js = <<<JS
+var existingDocs = {$existingDocsJson};
+var webUploadPath = '{$webUploadPath}';
+
+function renderDynamicAttachments() {
+    var container = $('#dynamic-attachment-container');
+    container.empty();
+
+    var selectedData = $('#none-pr-select').select2('data') || [];
+    
+    if (selectedData.length === 0) {
+        container.html('<div class="alert alert-light text-muted border mb-0"><i class="fa fa-info-circle"></i> โปรดเลือกรายการใบสั่งซื้อ / None PR ด้านบนเพื่อแสดงช่องแนบไฟล์แยกตามรายการ</div>');
+    } else {
+        $.each(selectedData, function(i, item) {
+            var key = item.id;
+            var text = item.text || item.id;
+            
+            var cardHtml = '<div class="card border mb-3 shadow-xs">' +
+                '<div class="card-header bg-light d-flex justify-content-between align-items-center py-2">' +
+                    '<div><span class="badge bg-primary text-white me-2">รายการ: ' + key + '</span> <strong>' + text + '</strong></div>' +
+                '</div>' +
+                '<div class="card-body py-3">' +
+                    '<div class="form-group mb-2">' +
+                        '<label class="form-label text-dark small fw-bold">เลือกไฟล์แนบสำหรับรายการนี้ (แนบได้หลายไฟล์):</label>' +
+                        '<input type="file" name="upload_files[' + key + '][]" class="form-control" multiple accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx">' +
+                    '</div>';
+
+            if (existingDocs[key] && existingDocs[key].length > 0) {
+                cardHtml += '<div class="mt-3"><h6>รายการไฟล์แนบเดิมของรายการนี้:</h6><div class="table-responsive"><table class="table table-sm table-bordered mb-0"><thead class="bg-light"><tr><th>ชื่อไฟล์</th><th style="width: 10rem;">ผู้อัปโหลด</th><th style="width: 10rem;">วันที่อัปโหลด</th><th class="text-center" style="width: 6rem;">Action</th></tr></thead><tbody>';
+                $.each(existingDocs[key], function(dIdx, doc) {
+                    cardHtml += '<tr id="doc-row-' + doc.id + '">' +
+                        '<td><a href="' + webUploadPath + doc.file_path + '" target="_blank">' + doc.file_name + '</a> <small class="text-muted">(' + doc.file_size + ' KB)</small></td>' +
+                        '<td>' + doc.uploaded_by + '</td>' +
+                        '<td>' + doc.uploaded_at + '</td>' +
+                        '<td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-remove-doc" data-id="' + doc.id + '"><i class="fa fa-trash"></i> ลบ</button></td>' +
+                    '</tr>';
+                });
+                cardHtml += '</tbody></table></div></div>';
+            }
+
+            cardHtml += '</div></div>';
+            container.append(cardHtml);
+        });
+    }
+
+    var genContainer = $('#existing-docs-general');
+    genContainer.empty();
+    if (existingDocs['general'] && existingDocs['general'].length > 0) {
+        var genHtml = '<div class="mt-2"><h6>รายการไฟล์แนบเดิมทั่วไป:</h6><div class="table-responsive"><table class="table table-sm table-bordered mb-0"><thead class="bg-light"><tr><th>ชื่อไฟล์</th><th style="width: 10rem;">ผู้อัปโหลด</th><th style="width: 10rem;">วันที่อัปโหลด</th><th class="text-center" style="width: 6rem;">Action</th></tr></thead><tbody>';
+        $.each(existingDocs['general'], function(dIdx, doc) {
+            genHtml += '<tr id="doc-row-' + doc.id + '">' +
+                '<td><a href="' + webUploadPath + doc.file_path + '" target="_blank">' + doc.file_name + '</a> <small class="text-muted">(' + doc.file_size + ' KB)</small></td>' +
+                '<td>' + doc.uploaded_by + '</td>' +
+                '<td>' + doc.uploaded_at + '</td>' +
+                '<td class="text-center"><button type="button" class="btn btn-danger btn-xs btn-remove-doc" data-id="' + doc.id + '"><i class="fa fa-trash"></i> ลบ</button></td>' +
+            '</tr>';
+        });
+        genHtml += '</tbody></table></div></div>';
+        genContainer.html(genHtml);
+    }
+}
+
 function addLine(data = null) {
     var tr = $('<tr class="line-item">');
     
@@ -98,6 +181,7 @@ $('#none-pr-select').on('change', function() {
     var none_pr_ids = $(this).val() || [];
     $('#hidden-none-pr-ids').val(JSON.stringify(none_pr_ids));
     pullMultipleData();
+    renderDynamicAttachments();
 });
 
 $(document).ready(function() {
@@ -118,7 +202,7 @@ $(document).ready(function() {
         calculateTotal();
     });
 
-    $('.btn-remove-doc').on('click', function() {
+    $(document).on('click', '.btn-remove-doc', function() {
         var id = $(this).data('id');
         if (confirm('คุณต้องการลบไฟล์นี้ใช่หรือไม่?')) {
             $.ajax({
@@ -135,6 +219,10 @@ $(document).ready(function() {
             });
         }
     });
+
+    setTimeout(function() {
+        renderDynamicAttachments();
+    }, 300);
 });
 JS;
 $this->registerJs($js);
@@ -288,52 +376,22 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
 
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-info text-white">
-            <h5 class="mb-0">ไฟล์แนบเอกสาร</h5>
+            <h5 class="mb-0"><i class="fa fa-paperclip me-1"></i> ไฟล์แนบเอกสาร (จำแนกตามรายการที่เลือก)</h5>
         </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label class="control-label">แนบไฟล์เพิ่มเติม (เลือกได้หลายไฟล์)</label>
-                        <?= Html::fileInput('upload_files[]', null, ['multiple' => true, 'class' => 'form-control', 'accept' => 'image/*,application/pdf,.doc,.docx,.xls,.xlsx']) ?>
+            <div id="dynamic-attachment-container"></div>
+
+            <div class="card border border-secondary mt-3">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><strong>แนบไฟล์เอกสารเพิ่มเติม / ทั่วไป (General Pre-Advance Attachments)</strong></h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-group mb-2">
+                        <input type="file" name="upload_files[general][]" class="form-control" multiple accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx">
                     </div>
+                    <div id="existing-docs-general"></div>
                 </div>
             </div>
-            
-            <?php if (!$model->isNewRecord && !empty($model->preAdvanceDocs)): ?>
-                <div class="mt-3">
-                    <h6>รายการไฟล์แนบเดิม:</h6>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th>ชื่อไฟล์</th>
-                                    <th style="width: 15rem;">ผู้อัปโหลด</th>
-                                    <th style="width: 10rem;">วันที่อัปโหลด</th>
-                                    <th class="text-center" style="width: 10rem;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($model->preAdvanceDocs as $doc): ?>
-                                    <tr id="doc-row-<?= $doc->id ?>">
-                                        <td>
-                                            <?= Html::a($doc->file_name, Yii::getAlias('@web/uploads/pre_advance/') . $doc->file_path, ['target' => '_blank']) ?>
-                                            <small class="text-muted">(<?= round($doc->file_size / 1024, 2) ?> KB)</small>
-                                        </td>
-                                        <td><?= $doc->uploaded_by ? \common\models\User::findOne($doc->uploaded_by)->username : '-' ?></td>
-                                        <td><?= date('Y-m-d H:i', $doc->uploaded_at) ?></td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-danger btn-xs btn-remove-doc" data-id="<?= $doc->id ?>">
-                                                <i class="fa fa-trash"></i> ลบ
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            <?php endif; ?>
         </div>
     </div>
 

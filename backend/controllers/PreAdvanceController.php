@@ -326,24 +326,59 @@ class PreAdvanceController extends BaseController
 
     private function uploadAttachments($model)
     {
-        $files = UploadedFile::getInstancesByName('upload_files');
-        if ($files) {
-            $uploadPath = Yii::getAlias('@backend/web/uploads/pre_advance/');
-            if (!file_exists($uploadPath)) {
-                FileHelper::createDirectory($uploadPath, 0777);
-            }
+        $uploadPath = Yii::getAlias('@backend/web/uploads/pre_advance/');
+        if (!file_exists($uploadPath)) {
+            FileHelper::createDirectory($uploadPath, 0777);
+        }
 
-            foreach ($files as $file) {
-                $newName = time() . '_' . Yii::$app->security->generateRandomString(10) . '.' . $file->extension;
-                if ($file->saveAs($uploadPath . $newName)) {
-                    $doc = new PreAdvanceDoc();
-                    $doc->pre_advance_id = $model->id;
-                    $doc->file_name = $file->baseName . '.' . $file->extension;
-                    $doc->file_path = $newName;
-                    $doc->file_size = $file->size;
-                    $doc->uploaded_at = time();
-                    $doc->uploaded_by = Yii::$app->user->id;
-                    $doc->save(false);
+        $rawFiles = $_FILES['upload_files'] ?? null;
+        if ($rawFiles && is_array($rawFiles['name'])) {
+            foreach ($rawFiles['name'] as $key => $val) {
+                $files = UploadedFile::getInstancesByName("upload_files[{$key}]");
+                if (!$files) continue;
+
+                $refType = null;
+                $refId = null;
+
+                if (is_string($key) && strpos($key, 'po_') === 0) {
+                    $refType = PreAdvanceRef::REF_TYPE_PO;
+                    $refId = (int)str_replace('po_', '', $key);
+                } elseif (is_string($key) && strpos($key, 'none_pr_') === 0) {
+                    $refType = PreAdvanceRef::REF_TYPE_NONE_PR;
+                    $refId = (int)str_replace('none_pr_', '', $key);
+                }
+
+                foreach ($files as $file) {
+                    $newName = time() . '_' . Yii::$app->security->generateRandomString(10) . '.' . $file->extension;
+                    if ($file->saveAs($uploadPath . $newName)) {
+                        $doc = new PreAdvanceDoc();
+                        $doc->pre_advance_id = $model->id;
+                        $doc->ref_type = $refType;
+                        $doc->ref_id = $refId;
+                        $doc->file_name = $file->baseName . '.' . $file->extension;
+                        $doc->file_path = $newName;
+                        $doc->file_size = $file->size;
+                        $doc->uploaded_at = time();
+                        $doc->uploaded_by = Yii::$app->user->id;
+                        $doc->save(false);
+                    }
+                }
+            }
+        } else {
+            $files = UploadedFile::getInstancesByName('upload_files');
+            if ($files) {
+                foreach ($files as $file) {
+                    $newName = time() . '_' . Yii::$app->security->generateRandomString(10) . '.' . $file->extension;
+                    if ($file->saveAs($uploadPath . $newName)) {
+                        $doc = new PreAdvanceDoc();
+                        $doc->pre_advance_id = $model->id;
+                        $doc->file_name = $file->baseName . '.' . $file->extension;
+                        $doc->file_path = $newName;
+                        $doc->file_size = $file->size;
+                        $doc->uploaded_at = time();
+                        $doc->uploaded_by = Yii::$app->user->id;
+                        $doc->save(false);
+                    }
                 }
             }
         }
@@ -360,35 +395,59 @@ class PreAdvanceController extends BaseController
         }
 
         $docs = PreAdvanceDoc::find()->where(['pre_advance_id' => $model->id])->all();
-        $refs = PreAdvanceRef::find()->where(['pre_advance_id' => $model->id])->all();
 
         foreach ($docs as $doc) {
             if (file_exists($uploadPathPreAdvance . $doc->file_path) && !file_exists($uploadPathPurch . $doc->file_path)) {
                 @copy($uploadPathPreAdvance . $doc->file_path, $uploadPathPurch . $doc->file_path);
             }
 
-            foreach ($refs as $ref) {
-                if ($ref->ref_type == PreAdvanceRef::REF_TYPE_PO) {
-                    $exists = \common\models\PurchDoc::find()
-                        ->where(['purch_id' => $ref->ref_id, 'doc_name' => $doc->file_path])
-                        ->exists();
-                    if (!$exists) {
-                        $purchDoc = new \common\models\PurchDoc();
-                        $purchDoc->purch_id = $ref->ref_id;
-                        $purchDoc->doc_name = $doc->file_path;
-                        $purchDoc->doc_type_id = 3;
-                        $purchDoc->save(false);
-                    }
-                } elseif ($ref->ref_type == PreAdvanceRef::REF_TYPE_NONE_PR) {
-                    $exists = \common\models\PurchNonePrDoc::find()
-                        ->where(['purchase_master_id' => $ref->ref_id, 'doc_name' => $doc->file_path])
-                        ->exists();
-                    if (!$exists) {
-                        $nonePrDoc = new \common\models\PurchNonePrDoc();
-                        $nonePrDoc->purchase_master_id = $ref->ref_id;
-                        $nonePrDoc->doc_name = $doc->file_path;
-                        $nonePrDoc->doc_type_id = 3;
-                        $nonePrDoc->save(false);
+            if ($doc->ref_type == PreAdvanceRef::REF_TYPE_PO && $doc->ref_id) {
+                $exists = \common\models\PurchDoc::find()
+                    ->where(['purch_id' => $doc->ref_id, 'doc_name' => $doc->file_path])
+                    ->exists();
+                if (!$exists) {
+                    $purchDoc = new \common\models\PurchDoc();
+                    $purchDoc->purch_id = $doc->ref_id;
+                    $purchDoc->doc_name = $doc->file_path;
+                    $purchDoc->doc_type_id = 3;
+                    $purchDoc->save(false);
+                }
+            } elseif ($doc->ref_type == PreAdvanceRef::REF_TYPE_NONE_PR && $doc->ref_id) {
+                $exists = \common\models\PurchNonePrDoc::find()
+                    ->where(['purchase_master_id' => $doc->ref_id, 'doc_name' => $doc->file_path])
+                    ->exists();
+                if (!$exists) {
+                    $nonePrDoc = new \common\models\PurchNonePrDoc();
+                    $nonePrDoc->purchase_master_id = $doc->ref_id;
+                    $nonePrDoc->doc_name = $doc->file_path;
+                    $nonePrDoc->doc_type_id = 3;
+                    $nonePrDoc->save(false);
+                }
+            } else {
+                $refs = PreAdvanceRef::find()->where(['pre_advance_id' => $model->id])->all();
+                foreach ($refs as $ref) {
+                    if ($ref->ref_type == PreAdvanceRef::REF_TYPE_PO) {
+                        $exists = \common\models\PurchDoc::find()
+                            ->where(['purch_id' => $ref->ref_id, 'doc_name' => $doc->file_path])
+                            ->exists();
+                        if (!$exists) {
+                            $purchDoc = new \common\models\PurchDoc();
+                            $purchDoc->purch_id = $ref->ref_id;
+                            $purchDoc->doc_name = $doc->file_path;
+                            $purchDoc->doc_type_id = 3;
+                            $purchDoc->save(false);
+                        }
+                    } elseif ($ref->ref_type == PreAdvanceRef::REF_TYPE_NONE_PR) {
+                        $exists = \common\models\PurchNonePrDoc::find()
+                            ->where(['purchase_master_id' => $ref->ref_id, 'doc_name' => $doc->file_path])
+                            ->exists();
+                        if (!$exists) {
+                            $nonePrDoc = new \common\models\PurchNonePrDoc();
+                            $nonePrDoc->purchase_master_id = $ref->ref_id;
+                            $nonePrDoc->doc_name = $doc->file_path;
+                            $nonePrDoc->doc_type_id = 3;
+                            $nonePrDoc->save(false);
+                        }
                     }
                 }
             }
