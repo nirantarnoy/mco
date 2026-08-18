@@ -311,7 +311,7 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
                     <h6 class="fw-bold mb-0 text-slate-800" style="color: #1e293b; font-family: 'Prompt', sans-serif;">
                         <i class="fas fa-university text-indigo-600 me-2" style="color: #4f46e5;"></i> สรุปเปรียบเทียบบัญชีจริง กับ ใน MCOAutomation
                     </h6>
-                    <button type="button" class="btn btn-closing-action shadow-sm" data-bs-toggle="modal" data-bs-target="#monthlyClosingModal">
+                    <button type="button" class="btn btn-closing-action shadow-sm" data-toggle="modal" data-target="#monthlyClosingModal" data-bs-toggle="modal" data-bs-target="#monthlyClosingModal">
                         <i class="fas fa-file-invoice-dollar me-1"></i> ปิดยอด/จัดเก็บไฟล์ประจำเดือน
                     </button>
                 </div>
@@ -571,7 +571,7 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
                 <h5 class="modal-title fw-bold text-slate-800" style="color: #1e293b; font-family: 'Prompt', sans-serif;">
                     <i class="fas fa-file-invoice-dollar text-indigo-600 me-2" style="color: #4f46e5;"></i> ปิดยอด/จัดเก็บไฟล์ประจำเดือน
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4">
                 <div class="mb-3">
@@ -604,7 +604,7 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
                 </div>
             </div>
             <div class="modal-footer border-0 pt-0 px-4 pb-4">
-                <button type="button" class="btn btn-light-modern" data-bs-dismiss="modal">ยกเลิก</button>
+                <button type="button" class="btn btn-light-modern" data-dismiss="modal" data-bs-dismiss="modal">ยกเลิก</button>
                 <button type="submit" class="btn btn-indigo-modern"><i class="fas fa-save me-1"></i> บันทึกปิดยอด</button>
             </div>
             <?php ActiveForm::end(); ?>
@@ -948,6 +948,23 @@ document.addEventListener('DOMContentLoaded', function() {
                             return `${context.label}: ${formatted} (${percentage}%)`;
                         }
                     }
+                }
+            }
+        }
+    });
+
+    // Failsafe trigger for Monthly Account Closing Modal
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('[data-target="#monthlyClosingModal"], [data-bs-target="#monthlyClosingModal"]');
+        if (btn) {
+            e.preventDefault();
+            const modalEl = document.getElementById('monthlyClosingModal');
+            if (modalEl) {
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    const modalObj = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    modalObj.show();
+                } else if (typeof $ !== 'undefined' && $.fn.modal) {
+                    $('#monthlyClosingModal').modal('show');
                 }
             }
         }
