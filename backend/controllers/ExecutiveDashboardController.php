@@ -388,9 +388,6 @@ class ExecutiveDashboardController extends BaseController
             $y = (int)date('Y', strtotime($mStart));
             $mon = (int)date('m', strtotime($mStart));
             $wageMQuery = DriverWageReport::find()->where(['report_year' => $y, 'report_month' => $mon]);
-            if (!empty($companyId) && $companyId != '0') {
-                $wageMQuery->andWhere(['company_id' => $companyId]);
-            }
             $mDriverReportWage = abs((float)(clone $wageMQuery)->sum('net_total'));
             $mTotalWages = $mDriverReportWage + $mVehicleWage;
 
