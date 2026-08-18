@@ -47,7 +47,6 @@ class ExecutiveDashboardController extends BaseController
             $expensesQuery->andWhere(['company_id' => $companyId]);
             $nonePrQuery->andWhere(['company_id' => $companyId]);
             $invoiceQuery->andWhere(['company_id' => $companyId]);
-            $wageQuery->andWhere(['company_id' => $companyId]);
         }
 
         if (!empty($fromDate) && !empty($toDate)) {
@@ -55,6 +54,14 @@ class ExecutiveDashboardController extends BaseController
             $toTs = strtotime($toDate . ' 23:59:59');
             $fromDateTime = $fromDate . ' 00:00:00';
             $toDateTime = $toDate . ' 23:59:59';
+
+            $startMonth = (int)date('m', strtotime($fromDate));
+            $startYear = (int)date('Y', strtotime($fromDate));
+            $endMonth = (int)date('m', strtotime($toDate));
+            $endYear = (int)date('Y', strtotime($toDate));
+
+            $startYm = $startYear * 100 + $startMonth;
+            $endYm = $endYear * 100 + $endMonth;
 
             // Filter PO Expenses by integer timestamp OR string date
             $expensesQuery->andWhere([
@@ -84,11 +91,11 @@ class ExecutiveDashboardController extends BaseController
                 ['between', 'created_at', $fromDateTime, $toDateTime]
             ]);
 
-            // Filter Driver Wage Reports
+            // Filter Driver Wage Reports by year/month OR created_at
             $wageQuery->andWhere([
                 'or',
-                ['between', 'created_at', $fromTs, $toTs],
-                ['between', 'report_date', $fromDate, $toDate]
+                ['between', 'created_at', $fromDateTime, $toDateTime],
+                ['between', new \yii\db\Expression('(report_year * 100 + report_month)'), $startYm, $endYm]
             ]);
         }
 
