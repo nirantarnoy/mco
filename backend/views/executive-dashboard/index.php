@@ -146,21 +146,24 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
             </div>
         </div>
 
-        <!-- Pending Receivables Card -->
+        <!-- Pending Receivables Card (Dual Tier AR + Unbilled Jobs) -->
         <div class="col-md col-sm-6" style="flex: 1 0 0%;">
             <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover" style="background-color: #ffffff; border-radius: 16px;">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b; font-size: 0.8rem;">ยอดค้างรับ</span>
-                        <div class="p-2 rounded-3" style="background-color: #fef3c7; color: #d97706;">
+                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b; font-size: 0.8rem;">ยอดค้างรับ (วางบิล AR)</span>
+                        <div class="p-2 rounded-3" style="background-color: #fef3c7; color: #d97706;" title="ภาระค้างรับทั้งสิ้น: <?= number_format($totalReceivableExposure, 2) ?> บาท">
                             <i class="fas fa-hourglass-half fa-md"></i>
                         </div>
                     </div>
                     <h3 class="fw-bold mb-1" style="color: #b45309; font-family: 'Inter', sans-serif;">
                         <?= number_format($pendingReceivables, 2) ?>
                     </h3>
-                    <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.75rem;">
-                        <i class="fas fa-user-clock me-1"></i> ลูกหนี้การค้ายังไม่ได้รับชำระ
+                    <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.72rem;">
+                        <i class="fas fa-file-invoice me-1"></i> วางบิลแล้วค้างชำระ
+                        <?php if ($unbilledJobAmount > 0): ?>
+                            <br><span class="fw-medium text-amber-700" style="color: #d97706;"><i class="fas fa-truck-loading me-1"></i> + งานรอออกบิล: <?= number_format($unbilledJobAmount, 0) ?> ฿</span>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

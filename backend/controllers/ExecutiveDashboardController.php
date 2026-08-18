@@ -188,6 +188,22 @@ class ExecutiveDashboardController extends BaseController
 
         $pendingReceivables = (float)(clone $unpaidInvQuery)->sum('total_amount');
 
+        // Unbilled Jobs Amount (มูลค่างาน Job ที่ยังไม่ได้ทำ Invoice ในช่วงเวลา)
+        $jobPendingQuery = Job::find()->where(['status' => 1]);
+        if (!empty($companyId) && $companyId != '0') {
+            $jobPendingQuery->andWhere(['company_id' => $companyId]);
+        }
+        if (!empty($fromDate) && !empty($toDate)) {
+            $jobPendingQuery->andWhere([
+                'or',
+                ['between', 'job_date', $fromDate . ' 00:00:00', $toDate . ' 23:59:59'],
+                ['and', ['job_date' => null], ['between', 'created_at', strtotime($fromDate . ' 00:00:00'), strtotime($toDate . ' 23:59:59')]]
+            ]);
+        }
+        $totalJobAmountRange = (float)(clone $jobPendingQuery)->sum('job_amount');
+        $unbilledJobAmount = max(0, $totalJobAmountRange - $pendingReceivables);
+        $totalReceivableExposure = $pendingReceivables + $unbilledJobAmount;
+
         // Net Profit / Loss for Group = Total Revenue - Total Expenses
         $netProfitLoss = $totalRevenue - $totalExpenses;
 
@@ -398,6 +414,8 @@ class ExecutiveDashboardController extends BaseController
             'totalPoExpenses' => $totalPoExpenses,
             'totalNonePrExpenses' => $totalNonePrExpenses,
             'pendingReceivables' => $pendingReceivables,
+            'unbilledJobAmount' => $unbilledJobAmount,
+            'totalReceivableExposure' => $totalReceivableExposure,
             'totalKm' => $totalKm,
             'vehicleCostByKm' => $vehicleCostByKm,
             'totalVehicleWages' => $totalVehicleWages,
