@@ -25,13 +25,36 @@ use backend\models\MonthlyAccountClosing;
 class ExecutiveDashboardController extends BaseController
 {
     /**
+     * Normalize any date input (DD/MM/YYYY or YYYY-MM-DD or D/M/YYYY) to standard YYYY-MM-DD
+     */
+    private function normalizeDate($dateStr)
+    {
+        if (empty($dateStr)) return '';
+        $dateStr = str_replace('/', '-', trim($dateStr));
+        $parts = explode('-', $dateStr);
+        if (count($parts) == 3) {
+            if (strlen($parts[0]) == 4) {
+                // YYYY-MM-DD
+                return sprintf('%04d-%02d-%02d', $parts[0], $parts[1], $parts[2]);
+            } else {
+                // DD-MM-YYYY or D-M-YYYY
+                return sprintf('%04d-%02d-%02d', $parts[2], $parts[1], $parts[0]);
+            }
+        }
+        $ts = strtotime($dateStr);
+        return $ts ? date('Y-m-d', $ts) : $dateStr;
+    }
+
+    /**
      * Executive Dashboard 8.8 Main Page
      */
     public function actionIndex()
     {
         $companyId = Yii::$app->request->get('company_id', '');
-        $fromDate = Yii::$app->request->get('from_date', '');
-        $toDate = Yii::$app->request->get('to_date', '');
+        $rawFromDate = Yii::$app->request->get('from_date', '');
+        $rawToDate = Yii::$app->request->get('to_date', '');
+        $fromDate = $this->normalizeDate($rawFromDate);
+        $toDate = $this->normalizeDate($rawToDate);
         $searchJobNo = Yii::$app->request->get('search_job_no', '');
         $searchVendor = Yii::$app->request->get('search_vendor', '');
         $searchCustomer = Yii::$app->request->get('search_customer', '');
