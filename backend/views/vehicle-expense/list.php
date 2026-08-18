@@ -4,8 +4,8 @@ use kartik\grid\GridView;
 use yii\widgets\ActiveForm;
 use kartik\date\DatePicker;
 
-$this->title = 'รายการค่าใช้จ่ายรถยนต์';
-$this->params['breadcrumbs'][] = $this->title;
+//$this->title = 'รายการค่าใช้จ่ายรถยนต์';
+$this->params['breadcrumbs'][] = 'รายการค่าใช้จ่ายรถยนต์';
 ?>
 <!-- Flash Messages -->
 <?php if (Yii::$app->session->hasFlash('success')): ?>
