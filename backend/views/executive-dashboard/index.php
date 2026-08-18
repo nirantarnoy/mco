@@ -300,7 +300,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <td><?= Html::encode($jobItem->customerName) ?></td>
                                     <td><?= $jobItem->company ? Html::encode($jobItem->company->name) : '-' ?></td>
                                     <td class="text-right fw-bold">
-                                        <?= $jobItem->quotation ? number_format($jobItem->quotation->grand_total, 2) : '0.00' ?>
+                                        <?= number_format($jobItem->job_amount ?: ($jobItem->quotation ? $jobItem->quotation->total_amount : 0), 2) ?>
                                     </td>
                                     <td class="text-center">
                                         <a href="<?= Url::to(['executive-dashboard/job-pipeline', 'id' => $jobItem->id]) ?>" class="btn btn-xs btn-outline-primary rounded-pill">

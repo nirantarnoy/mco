@@ -178,10 +178,7 @@ class ExecutiveDashboardController extends BaseController
             ->all();
 
         // Financial & Metrics calculations for this specific Job
-        $jobRevenue = 0;
-        if ($job->quotation) {
-            $jobRevenue = (float)$job->quotation->grand_total;
-        }
+        $jobRevenue = (float)($job->job_amount ?: ($job->quotation ? $job->quotation->total_amount : 0));
 
         // Related POs & Expenses for this Job
         $jobPos = Purch::find()->where(['job_id' => $job->id])->all();
@@ -190,7 +187,7 @@ class ExecutiveDashboardController extends BaseController
             $jobPoTotal += (float)$po->net_amount;
         }
 
-        $jobNonePrs = PurchaseMaster::find()->where(['job_id' => $job->id])->all();
+        $jobNonePrs = PurchaseMaster::find()->where(['job_no' => $job->job_no])->all();
         $jobNonePrTotal = 0;
         foreach ($jobNonePrs as $npr) {
             $jobNonePrTotal += (float)$npr->total_amount;
