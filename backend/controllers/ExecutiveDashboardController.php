@@ -236,10 +236,12 @@ class ExecutiveDashboardController extends BaseController
 
         $currentAvailableCash = $totalMainBankBalance + $totalPettyCashBalance;
 
-        // Pending PO Payables
-        $pendingPoPayables = (float)Purch::find()
-            ->where(['approve_status' => 1])
-            ->sum('net_amount');
+        // Pending PO Payables (filtered by selected company if applicable)
+        $poPayableQuery = Purch::find()->where(['approve_status' => 1]);
+        if (!empty($companyId) && $companyId != '0') {
+            $poPayableQuery->andWhere(['company_id' => $companyId]);
+        }
+        $pendingPoPayables = (float)$poPayableQuery->sum('net_amount');
 
         $isCashflowWarning = ($currentAvailableCash + $pendingReceivables) < $pendingPoPayables;
 
