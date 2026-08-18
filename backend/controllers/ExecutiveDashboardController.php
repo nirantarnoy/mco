@@ -206,8 +206,14 @@ class ExecutiveDashboardController extends BaseController
         $unbilledJobAmount = max(0, $totalJobAmountRange - $pendingReceivables);
         $totalReceivableExposure = $pendingReceivables + $unbilledJobAmount;
 
-        // Net Profit / Loss for Group = Effective Revenue - Total Expenses
-        $netProfitLoss = $effectiveRevenueForProfit - $totalExpenses;
+        // Accrual Revenue for Net Operating Profit calculation (ยอดขายตั้งหนี้ตาม Invoice หรือ Job ในช่วงเวลา)
+        $effectiveAccrualRevenue = max($totalRevenue, $totalInvoicedAmount);
+        if ($effectiveAccrualRevenue == 0) {
+            $effectiveAccrualRevenue = $totalJobAmountRange;
+        }
+
+        // Net Operating Profit / Loss = Accrual Revenue - Total Expenses
+        $netProfitLoss = $effectiveAccrualRevenue - $totalExpenses;
 
         // --- Accounting PO Cashflow Alert & Comparison ---
         $latestClosing = MonthlyAccountClosing::find()
