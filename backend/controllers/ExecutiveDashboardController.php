@@ -57,8 +57,16 @@ class ExecutiveDashboardController extends BaseController
         $companyId = Yii::$app->request->get('company_id', '');
         $rawFromDate = Yii::$app->request->get('from_date', '');
         $rawToDate = Yii::$app->request->get('to_date', '');
-        $fromDate = $this->normalizeDate($rawFromDate);
-        $toDate = $this->normalizeDate($rawToDate);
+        
+        $fromDate = !empty($rawFromDate) ? $this->normalizeDate($rawFromDate) : date('Y-m-01');
+        $toDate = !empty($rawToDate) ? $this->normalizeDate($rawToDate) : date('Y-m-d');
+
+        if (strtotime($fromDate) > strtotime($toDate)) {
+            $tmp = $fromDate;
+            $fromDate = $toDate;
+            $toDate = $tmp;
+        }
+
         $searchJobNo = Yii::$app->request->get('search_job_no', '');
         $searchVendor = Yii::$app->request->get('search_vendor', '');
         $searchCustomer = Yii::$app->request->get('search_customer', '');

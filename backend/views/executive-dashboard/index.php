@@ -23,7 +23,10 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
                 ภาพรวมสรุปการเงินบริษัทในเครือ, แจ้งเตือนกระแสเงินสด PO และติดตามสถานะกิจกรรม 15 ขั้นตอน
             </p>
         </div>
-        <div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-slate-100 text-slate-700 border border-slate-200 px-3 py-2 rounded-pill fw-medium" style="background-color: #f8fafc; color: #334155; border: 1px solid #e2e8f0;">
+                <i class="fas fa-calendar-check me-1" style="color: #4f46e5;"></i> ประมวลผลช่วงวันที่: <?= date('d/m/Y', strtotime($fromDate)) ?> ถึง <?= date('d/m/Y', strtotime($toDate)) ?> (<?= (int)((strtotime($toDate) - strtotime($fromDate)) / 86400) + 1 ?> วัน)
+            </span>
             <span class="badge bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-2 rounded-pill fw-medium" style="background-color: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe;">
                 <i class="fas fa-building me-1"></i> <?= $companyId ? Company::findName($companyId) : 'ทุกบริษัทในเครือ' ?>
             </span>
