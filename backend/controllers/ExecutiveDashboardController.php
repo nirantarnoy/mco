@@ -13,6 +13,7 @@ use backend\models\Job;
 use backend\models\Purch;
 use backend\models\PurchaseMaster;
 use backend\models\Invoice;
+use backend\models\Quotation;
 use backend\models\VehicleExpense;
 use backend\models\DriverWageReport;
 use backend\models\Company;
