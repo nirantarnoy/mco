@@ -85,8 +85,9 @@ class VehicleExpenseController extends BaseController
      */
     public function actionSyncGoogleSheet($date = null)
     {
-        $targetDate = $date ? $date : date('Y-m-d');
-        $syncAll = (Yii::$app->request->get('all') == 1);
+        $postDate = Yii::$app->request->post('sync_date') ?: Yii::$app->request->get('sync_date');
+        $targetDate = $date ?: ($postDate ?: date('Y-m-d'));
+        $syncAll = (Yii::$app->request->get('all') == 1 || Yii::$app->request->post('all') == 1);
 
         try {
             $result = $this->syncGoogleSheetData($syncAll ? null : $targetDate, $syncAll);
@@ -179,6 +180,7 @@ class VehicleExpenseController extends BaseController
         $duplicateCount = 0;
         $errorCount = 0;
         $currentDate = null;
+        $currentJobNo = null;
         $rowIndex = 0;
 
         $transaction = Yii::$app->db->beginTransaction();
@@ -217,11 +219,16 @@ class VehicleExpenseController extends BaseController
                     continue;
                 }
 
-                // วันที่ใช้งาน
+                // จัดการวันที่ (Col A) และ Job ID (Col B) แบบสืบทอดค่า
                 if (!empty($colA)) {
                     $parsedDate = $this->parseDate($colA);
                     if ($parsedDate) {
                         $currentDate = $parsedDate;
+                        $currentJobNo = !empty($colB) ? $this->cleanJobNo($colB) : null;
+                    }
+                } else {
+                    if (!empty($colB)) {
+                        $currentJobNo = $this->cleanJobNo($colB);
                     }
                 }
 
@@ -234,20 +241,7 @@ class VehicleExpenseController extends BaseController
                     continue;
                 }
 
-                // ทำความสะอาด Job No
-                $jobNo = null;
-                if (!empty($colB)) {
-                    if (preg_match('/(RY-[A-Z]{2}\d{2}-\d{6})/i', $colB, $matches)) {
-                        $jobNo = strtoupper($matches[1]);
-                    } elseif (preg_match('/(RY-[A-Z]{2}\d{2}-\d{5})/i', $colB, $matches)) {
-                        $jobNo = strtoupper($matches[1]);
-                    } elseif (preg_match('/(JO\d{10})/i', $colB, $matches)) {
-                        $jobNo = strtoupper($matches[1]);
-                    } else {
-                        $jobNo = trim($colB);
-                    }
-                }
-
+                $jobNo = $currentJobNo;
                 $vehicleNo = !empty($colC) ? trim($colC) : null;
                 $totalDistance = $this->parseNumber($colD);
                 $vehicleCost = $this->parseNumber($colE);
@@ -505,6 +499,23 @@ class VehicleExpenseController extends BaseController
             Yii::error("Import error: " . $e->getMessage(), __METHOD__);
             throw $e;
         }
+    }
+
+    /**
+     * ทำความสะอาดและจัดรูปแบบ Job No
+     */
+    private function cleanJobNo($value)
+    {
+        if (empty($value)) {
+            return null;
+        }
+        $val = trim($value);
+        if (preg_match('/(RY-[A-Z]{2}\d{2}-\d{5,6})/i', $val, $matches)) {
+            return strtoupper($matches[1]);
+        } elseif (preg_match('/(JO\d{10})/i', $val, $matches)) {
+            return strtoupper($matches[1]);
+        }
+        return $val;
     }
 
     /**

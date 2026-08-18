@@ -33,20 +33,23 @@ $this->params['breadcrumbs'][] = $this->title;
 <div class="vehicle-expense-list">
     <div class="box box-primary">
         <div class="box-header with-border">
-            <div class="box-tools">
-                <?= Html::a('<i class="fa fa-refresh"></i> ดึงข้อมูลวันปัจจุบันจาก Google Sheets', ['sync-google-sheet'], [
-                    'class' => 'btn btn-info',
-                    'title' => 'ดึงข้อมูลค่าใช้จ่ายรถประจำวันที่ ' . date('d/m/Y') . ' จาก Google Sheets',
-                    'data' => [
-                        'confirm' => 'ต้องการดึงข้อมูลค่าใช้จ่ายรถประจำวันที่ ' . date('d/m/Y') . ' จาก Google Sheets เข้าสู่ระบบใช่หรือไม่?',
-                        'method' => 'post',
-                    ],
-                ]) ?>
+            <div class="box-tools pull-right">
+                <form action="<?= \yii\helpers\Url::to(['sync-google-sheet']) ?>" method="post" style="display: inline-block; margin-right: 5px;">
+                    <input type="hidden" name="<?= Yii::$app->request->csrfParam ?>" value="<?= Yii::$app->request->getCsrfToken() ?>">
+                    <div class="input-group input-group-sm" style="width: 320px; display: inline-table;">
+                        <input type="date" name="sync_date" value="<?= date('Y-m-d') ?>" class="form-control" title="เลือกวันที่ต้องการดึงข้อมูล">
+                        <span class="input-group-btn">
+                            <button type="submit" class="btn btn-info btn-flat" onclick="return confirm('ต้องการดึงข้อมูลค่าใช้จ่ายรถยนต์จาก Google Sheets ตามวันที่เลือกใช่หรือไม่?');">
+                                <i class="fa fa-refresh"></i> ดึงข้อมูล
+                            </button>
+                        </span>
+                    </div>
+                </form>
                 <?= Html::a('<i class="fa fa-upload"></i> นำเข้าข้อมูล', ['import'], [
-                    'class' => 'btn btn-success',
+                    'class' => 'btn btn-success btn-sm',
                 ]) ?>
-                <?= Html::a('<i class="fa fa-download"></i> ดาวน์โหลด Template', ['download-template'], [
-                    'class' => 'btn btn-info',
+                <?= Html::a('<i class="fa fa-download"></i> Template', ['download-template'], [
+                    'class' => 'btn btn-default btn-sm',
                 ]) ?>
             </div>
         </div>

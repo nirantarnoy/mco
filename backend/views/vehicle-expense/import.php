@@ -117,17 +117,43 @@ if ($importErrors) {
         </div>
         <div class="box-body">
             <p class="text-muted">
-                สามารถดึงข้อมูลค่าใช้จ่ายรถยนต์จาก Google Sheet <code>(gid=952154332)</code> เข้าสู่ระบบโดยตรงโดยไม่ต้องอัปโหลดไฟล์ CSV
+                เลือกวันที่ต้องการดึงข้อมูล หรือใช้ปุ่มลัดเพื่อดึงข้อมูลจาก Google Sheet <code>(gid=952154332)</code> เข้าสู่ระบบโดยตรง
             </p>
-            <div>
-                <?= Html::a('<i class="fa fa-refresh"></i> ดึงข้อมูลวันปัจจุบันจาก Google Sheets (' . date('d/m/Y') . ')', ['sync-google-sheet'], [
-                    'class' => 'btn btn-info btn-lg',
+            
+            <?php $syncForm = ActiveForm::begin([
+                'action' => ['sync-google-sheet'],
+                'method' => 'post',
+                'options' => ['class' => 'form-inline', 'style' => 'margin-bottom: 15px;'],
+            ]); ?>
+                <div class="form-group mr-2">
+                    <label for="sync_date" class="mr-2">เลือกวันที่ต้องการดึงข้อมูล:</label>
+                    <?= Html::input('date', 'sync_date', date('Y-m-d'), [
+                        'class' => 'form-control',
+                        'id' => 'sync_date',
+                        'required' => true,
+                    ]) ?>
+                </div>
+                <?= Html::submitButton('<i class="fa fa-refresh"></i> ดึงข้อมูลตามวันที่เลือก', [
+                    'class' => 'btn btn-info',
+                ]) ?>
+            <?php ActiveForm::end(); ?>
+
+            <hr style="margin: 15px 0;">
+
+            <div class="btn-group">
+                <?= Html::a('<i class="fa fa-calendar-check-o"></i> ดึงข้อมูลวันปัจจุบัน (' . date('d/m/Y') . ')', ['sync-google-sheet', 'sync_date' => date('Y-m-d')], [
+                    'class' => 'btn btn-default',
                     'data' => [
-                        'confirm' => 'ต้องการดึงข้อมูลค่าใช้จ่ายรถประจำวันที่ ' . date('d/m/Y') . ' จาก Google Sheets เข้าสู่ระบบใช่หรือไม่?',
                         'method' => 'post',
                     ],
                 ]) ?>
-                <?= Html::a('<i class="fa fa-cloud-download"></i> ดึงข้อมูลทั้งหมดจาก Google Sheets', ['sync-google-sheet', 'all' => 1], [
+                <?= Html::a('<i class="fa fa-calendar"></i> ดึงข้อมูลเมื่อวาน (' . date('d/m/Y', strtotime('-1 day')) . ')', ['sync-google-sheet', 'sync_date' => date('Y-m-d', strtotime('-1 day'))], [
+                    'class' => 'btn btn-default',
+                    'data' => [
+                        'method' => 'post',
+                    ],
+                ]) ?>
+                <?= Html::a('<i class="fa fa-cloud-download"></i> ดึงข้อมูลย้อนหลังทั้งหมด', ['sync-google-sheet', 'all' => 1], [
                     'class' => 'btn btn-warning',
                     'data' => [
                         'confirm' => 'ต้องการดึงข้อมูลย้อนหลังทั้งหมดจาก Google Sheets เข้าสู่ระบบใช่หรือไม่? (ระบบจะข้ามรายการที่มีอยู่แล้วอัตโนมัติ)',
