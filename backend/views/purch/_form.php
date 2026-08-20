@@ -411,8 +411,14 @@ $this->registerJs($autocompleteJs);
                         ]) ?>
                         <?= $form->field($model, 'note')->textarea([
                             'rows' => 4,
-                            'placeholder' => 'หมายเหตุ'
+                            'placeholder' => 'หมายเหตุ',
+                            'id' => 'purch-note'
                         ]) ?>
+                        <div class="mb-3" style="margin-top:-10px; margin-bottom:15px;">
+                            <button type="button" class="btn btn-sm btn-info" onclick="addServiceRemark()">
+                                <i class="fas fa-file-signature"></i> เพิ่มเงื่อนไขงานบริการ (Service)
+                            </button>
+                        </div>
                     </div>
                     <div class="col-md-4">
                         <?= $form->field($model, 'approve_status')->dropDownList([
@@ -1180,3 +1186,27 @@ function fetchVendorVat(vendorId) {
 JS;
 $this->registerJs($script, static::POS_END);
 ?>
+<script>
+function addServiceRemark() {
+    var remarkText = "PO Remark:\n" +
+        "- Invoice จะต้องออกหลังจากใบสั่งซื้อเท่านั้น\n" +
+        "***ขั้นตอนหลังจากได้รับ PO***\n" +
+        "1. คู่ดำเนินการเซ็นต์ตอบรับบน PO พร้อมประทับตรายางบริษัท และส่ง email ถึงเจ้าหน้าที่จัดซื้อ ภายใน 3 วันนับจากได้รับ PO\n" +
+        "2. กรณีงานจ้างทำของ (Service) กรุณาติดอากรแสตมป์ มูลค่า 1 บาท ต่อ ยอด PO (ก่อน vat) มูลค่า 1,000 บาท หากคำนวณแล้วมีเศษทศนิยม ให้ติดอากรเพิ่มอีก 1 บาท\n" +
+        "3. กรณีเลื่อนการส่งมอบสินค้า/บริการ กรุณาแจ้งล่วงหน้า 7 วันก่อนวันกำหนดส่งมอบ (ระบุใน PO) หากแจ้งล่าช้า หลังวันกำหนดส่งมอบบริษัทขอสงวนสิทธิปรับส่งมอบล่าช้า ตามอัตราปรับที่กำหนด\n" +
+        "4. กรุณาดำเนินการเอกสารใบส่งมอบงวดงานให้เรียบร้อยก่อนวางบิล\n" +
+        "- สำหรับงานไฟฟ้า คู่ค้าจะต้องจัดเตรียม Earth leakage Circuit Breaker (ELCB) portable Panel และส่งรายการอุปกรณ์ให้หน่วยงานซ่อมบำรุงของกลุ่มบริษัท GPSC ตรวจสอบและอนุมัติก่อนเริ่มงาน\n" +
+        "- ผู้รับเหมาทุกคนที่เข้าปฏิบัติงานต้องผ่านการอบรมความปลอดภัยของกลุ่มบริษัท GPSC ก่อนเริ่มปฏิบัติงานและต้องมีความตระหนัก โดยให้ความสำคัญในการปฏิบัติงานเพื่อมิให้เกิดอุบัติเหตุร้ายแรง (Major Accident) ที่จะส่งผลกระทบให้เกิดการหยุดชะงักของกระบวนการผลิต (Unplanned Shutdown)\n" +
+        "- กลุ่มบริษัท GPSC มีนโยบายในการตรวจวัดแอลกอฮอล์ในร่างกายก่อนเข้าทำงาน ผู้รับเหมาต้องให้ความร่วมมือ";
+        
+    var noteField = $('#purch-note');
+    if (noteField.length) {
+        var currentVal = noteField.val();
+        if (currentVal.trim() !== '') {
+            noteField.val(currentVal + '\n\n' + remarkText);
+        } else {
+            noteField.val(remarkText);
+        }
+    }
+}
+</script>
