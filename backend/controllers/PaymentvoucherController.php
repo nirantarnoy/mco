@@ -634,15 +634,25 @@ class PaymentvoucherController extends BaseController
         $debits = Yii::$app->request->post('line_debit', []);
         $credits = Yii::$app->request->post('line_credit', []);
         
-        // ใช้ description1 เป็น base สำหรับ loop
-        foreach ($descriptions1 as $i => $desc1) {
-            // ข้ามถ้าทั้ง 2 ช่องว่าง
-            if (empty($desc1) && empty($descriptions2[$i] ?? '')) continue;
+        // ใช้ array ใด array หนึ่งเป็น base สำหรับ loop
+        $count = max(count($account_codes), count($descriptions1), count($debits));
+        for ($i = 0; $i < $count; $i++) {
+            $desc1 = $descriptions1[$i] ?? '';
+            $desc2 = $descriptions2[$i] ?? '';
+            $accCode = $account_codes[$i] ?? '';
+            $billCode = $bill_codes[$i] ?? '';
+            $debit = floatval($debits[$i] ?? 0);
+            $credit = floatval($credits[$i] ?? 0);
+            
+            // ข้ามถ้าข้อมูลสำคัญทั้งหมดว่างเปล่า
+            if (empty($desc1) && empty($desc2) && empty($accCode) && $debit == 0 && $credit == 0) {
+                continue;
+            }
             
             $line = new PaymentVoucherLine();
             $line->payment_voucher_id = $model->id;
-            $line->account_code = $account_codes[$i] ?? '';
-            $line->bill_code = $bill_codes[$i] ?? '';
+            $line->account_code = $accCode;
+            $line->bill_code = $billCode;
             
             // รวม description 2 ช่องด้วย |||
             $desc2 = $descriptions2[$i] ?? '';

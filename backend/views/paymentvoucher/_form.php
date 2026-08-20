@@ -78,7 +78,12 @@ function addLine(data = null) {
         acc_select.val(data.account_code);
     }
     
-    var td_acc = $('<td>').append(acc_select);
+    var side_select = $('<select class="form-control mt-1 acc-side-select"><option value="dr">Dr (ซ้าย)</option><option value="cr">Cr (ขวา)</option></select>');
+    if (data && data.description2 && !data.description1) {
+        side_select.val('cr');
+    }
+    
+    var td_acc = $('<td>').append(acc_select).append(side_select);
     tr.append(td_acc);
     
     tr.append('<td><input type="text" name="line_bill_code[]" class="form-control" value="' + (data ? data.bill_code : '') + '"></td>');
@@ -195,11 +200,36 @@ $(document).ready(function() {
         calculateTotal();
     });
 
-    // อัตโนมัติ: ดึงชื่อบัญชีมาแสดงในช่อง Description เมื่อเลือกผังบัญชี
+    // อัตโนมัติ: ดึงชื่อบัญชีมาแสดงในช่อง Description เมื่อเลือกผังบัญชี (ซ้าย หรือ ขวา ตามที่เลือก)
     $('#voucher-lines tbody').on('change', 'select[name="line_account_code[]"]', function() {
         var code = $(this).val();
         var name = account_data[code] || '';
-        $(this).closest('tr').find('input[name="line_description1[]"]').val(name);
+        var side = $(this).closest('td').find('.acc-side-select').val();
+        var tr = $(this).closest('tr');
+        
+        if (side === 'dr') {
+            tr.find('input[name="line_description1[]"]').val(name);
+            tr.find('input[name="line_description2[]"]').val('');
+        } else {
+            tr.find('input[name="line_description1[]"]').val('');
+            tr.find('input[name="line_description2[]"]').val(name);
+        }
+    });
+
+    // สลับข้อความเมื่อเปลี่ยนฝั่ง Dr/Cr
+    $('#voucher-lines tbody').on('change', '.acc-side-select', function() {
+        var tr = $(this).closest('tr');
+        var desc1 = tr.find('input[name="line_description1[]"]').val();
+        var desc2 = tr.find('input[name="line_description2[]"]').val();
+        var val = $(this).val();
+        
+        if (val === 'cr' && desc1 !== '' && desc2 === '') {
+            tr.find('input[name="line_description2[]"]').val(desc1);
+            tr.find('input[name="line_description1[]"]').val('');
+        } else if (val === 'dr' && desc2 !== '' && desc1 === '') {
+            tr.find('input[name="line_description1[]"]').val(desc2);
+            tr.find('input[name="line_description2[]"]').val('');
+        }
     });
     
     // อัปเดต hidden inputs เมื่อ Pre-Advance/PO select เปลี่ยน
@@ -519,6 +549,11 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                                                     <?= Html::encode($acc->account_code . ' - ' . $acc->account_name) ?>
                                                 </option>
                                             <?php endforeach; ?>
+                                        </select>
+                                        <?php $side = ($desc2 !== '' && $desc1 === '') ? 'cr' : 'dr'; ?>
+                                        <select class="form-control mt-1 acc-side-select">
+                                            <option value="dr" <?= $side === 'dr' ? 'selected' : '' ?>>Dr (ซ้าย)</option>
+                                            <option value="cr" <?= $side === 'cr' ? 'selected' : '' ?>>Cr (ขวา)</option>
                                         </select>
                                     </td>
                                     <td><input type="text" name="line_bill_code[]" class="form-control" value="<?= Html::encode($line->bill_code) ?>"></td>
