@@ -467,6 +467,10 @@ class Purch extends ActiveRecord
         return $this->hasOne(\backend\models\Vendor::className(), ['id' => 'vendor_id']);
     }
 
+    public function getJob(){
+        return $this->hasOne(\backend\models\Job::className(), ['id' => 'job_id']);
+    }
+
     public static function findPrNo($id){
         $no = '';
         $model = \backend\models\PurchReq::find()->where(['purch_id'=>$id])->one();

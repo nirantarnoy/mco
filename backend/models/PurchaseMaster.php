@@ -190,6 +190,16 @@ class PurchaseMaster extends \yii\db\ActiveRecord
     }
 
     /**
+     * Gets query for [[Job]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getJob()
+    {
+        return $this->hasOne(\backend\models\Job::className(), ['job_no' => 'job_no']);
+    }
+
+    /**
      * Gets query for [[PurchaseDetails]].
      *
      * @return \yii\db\ActiveQuery
