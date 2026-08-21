@@ -263,7 +263,7 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                 <div class="card-body p-4">
                     <h6 class="fw-bold text-danger mb-2">หักค่าใช้จ่ายอันเกิดขึ้นปัจจุบันแต่เกิดขึ้นกับ Job ที่ก่อนหน้า</h6>
                     <h3 class="fw-bold mb-3 text-danger"><?= number_format($pastJobsExpenses, 2) ?> บาท</h3>
-                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3" type="button" data-toggle="collapse" data-bs-toggle="collapse" data-target="#collapsePastExpenses" data-bs-target="#collapsePastExpenses" aria-expanded="false" aria-controls="collapsePastExpenses">
+                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePastExpenses" aria-expanded="false" aria-controls="collapsePastExpenses">
                         <i class="fas fa-list me-1"></i> ดูรายละเอียด Job และเอกสารแนบ
                     </button>
                     <div class="collapse mt-3" id="collapsePastExpenses">
@@ -310,7 +310,7 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                 <div class="card-body p-4">
                     <h6 class="fw-bold text-success mb-2">บวก รายรับปัจจุบันอันเกิดขึ้นจาก Job ก่อนหน้า</h6>
                     <h3 class="fw-bold mb-3 text-success"><?= number_format($pastJobsRevenue, 2) ?> บาท</h3>
-                    <button class="btn btn-sm btn-outline-success rounded-pill px-3" type="button" data-toggle="collapse" data-bs-toggle="collapse" data-target="#collapsePastRevenue" data-bs-target="#collapsePastRevenue" aria-expanded="false" aria-controls="collapsePastRevenue">
+                    <button class="btn btn-sm btn-outline-success rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePastRevenue" aria-expanded="false" aria-controls="collapsePastRevenue">
                         <i class="fas fa-list me-1"></i> ดูรายละเอียด Job และเอกสารแนบ
                     </button>
                     <div class="collapse mt-3" id="collapsePastRevenue">

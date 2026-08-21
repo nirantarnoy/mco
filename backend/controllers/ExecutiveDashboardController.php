@@ -301,18 +301,21 @@ class ExecutiveDashboardController extends BaseController
                 $pastJobExpenseList[] = ['job_no' => $npr->job_no, 'type' => 'Non PR', 'amount' => $amt, 'doc' => $npr->refnum, 'id' => ($npr->job ? $npr->job->id : null)];
             }
             
-            $pastReceiptQuery = clone $receiptQuery;
-            $pastReceiptQuery->innerJoin('job j', 'j.id = invoices.job_id')
+            $pastPaymentQuery = clone $paymentQuery;
+            $pastPaymentQuery->innerJoin('job j', 'j.id = invoices.job_id')
                              ->andWhere(['<', 'j.job_date', $fromDateTime]);
-            foreach($pastReceiptQuery->all() as $r) {
+            foreach($pastPaymentQuery->all() as $payment) {
+                $r = $payment->invoice;
                 $amtNoVat = $r->subtotal - $r->discount_amount;
-                $totalPaid = \backend\models\InvoicePaymentReceipt::find()->where(['invoice_id' => $r->id])->sum('amount') ?: 0;
-                $rIds = \backend\models\InvoicePaymentReceipt::find()->select('id')->where(['invoice_id' => $r->id])->column();
-                if (!empty($rIds)) {
-                    $totalPaid += \backend\models\InvoicePaymentExtra::find()->where(['payment_receipt_id' => $rIds])->sum('amount') ?: 0;
-                }
                 $ratio = ($r->total_amount > 0) ? ($amtNoVat / $r->total_amount) : 1;
-                $paidNoVat = $totalPaid * $ratio;
+                
+                $amt = $payment->amount;
+                $extras = \backend\models\InvoicePaymentExtra::find()
+                    ->where(['payment_receipt_id' => $payment->id])
+                    ->sum('amount') ?: 0;
+                $amt += $extras;
+                
+                $paidNoVat = $amt * $ratio;
                 
                 if ($paidNoVat > 0) {
                     $pastJobsRevenue += $paidNoVat;
