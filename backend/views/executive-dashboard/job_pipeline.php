@@ -82,23 +82,29 @@ $stepsDef = [
                 </div>
             </div>
 
-            <!-- Financial Summary Grid (5 Columns) -->
+            <!-- Financial Summary Grid (6 Columns) -->
             <div class="row g-3 text-center pt-3 border-top" style="border-color: #f1f5f9 !important;">
                 <div class="col-md" style="flex: 1 0 0%;">
                     <div class="small text-slate-400" style="color: #94a3b8;">มูลค่างานรวม (Revenue)</div>
                     <div class="fs-5 fw-bold" style="color: #047857; font-family: 'Inter', sans-serif;"><?= number_format($jobRevenue, 2) ?> <small class="fs-6">บาท</small></div>
                 </div>
                 <div class="col-md" style="flex: 1 0 0%;">
-                    <div class="small text-slate-400" style="color: #94a3b8;">ต้นทุนรวม (PO + None PR)</div>
-                    <div class="fs-5 fw-bold" style="color: #be123c; font-family: 'Inter', sans-serif;"><?= number_format($jobPoTotal + $jobNonePrTotal, 2) ?> <small class="fs-6">บาท</small></div>
+                    <div class="small text-slate-400" style="color: #94a3b8;" title="PO: <?= number_format($jobPoCostWithInterest, 2) ?> | None PR: <?= number_format($jobNonePrCostWithInterest, 2) ?> | Stock: <?= number_format($jobInventoryCostWithInterest, 2) ?>" data-bs-toggle="tooltip">ต้นทุนรวม (ดบ.1%)</div>
+                    <div class="fs-5 fw-bold" style="color: #be123c; font-family: 'Inter', sans-serif;"><?= number_format($jobTotalExpenses, 2) ?> <small class="fs-6">บาท</small></div>
                 </div>
                 <div class="col-md" style="flex: 1 0 0%;">
                     <div class="small text-slate-400" style="color: #94a3b8;">ค่าใช้รถยนต์ (<?= number_format($jobKmTotal, 1) ?> กม. x 5 บ.)</div>
-                    <div class="fs-5 fw-bold" style="color: #0369a1; font-family: 'Inter', sans-serif;"><?= number_format($jobKmCostAt5 + $jobVehicleCost, 2) ?> <small class="fs-6">บาท</small></div>
+                    <div class="fs-5 fw-bold" style="color: #0369a1; font-family: 'Inter', sans-serif;"><?= number_format($jobVehicleCost > $jobKmCostAt5 ? $jobVehicleCost : $jobKmCostAt5, 2) ?> <small class="fs-6">บาท</small></div>
                 </div>
                 <div class="col-md" style="flex: 1 0 0%;">
                     <div class="small text-slate-400" style="color: #94a3b8;">ค่าจ้างใช้งานรถยนต์ (Total Wage)</div>
                     <div class="fs-5 fw-bold" style="color: #7e22ce; font-family: 'Inter', sans-serif;"><?= number_format($jobVehicleWage, 2) ?> <small class="fs-6">บาท</small></div>
+                </div>
+                <div class="col-md" style="flex: 1 0 0%;">
+                    <div class="small text-slate-400" style="color: #94a3b8;">กำไร/ขาดทุนก่อนหักภาษี</div>
+                    <div class="fs-5 fw-bold" style="color: <?= $jobProfitBeforeTax >= 0 ? '#047857' : '#be123c' ?>; font-family: 'Inter', sans-serif;">
+                        <?= number_format($jobProfitBeforeTax, 2) ?> <small class="fs-6">บาท</small>
+                    </div>
                 </div>
                 <div class="col-md" style="flex: 1 0 0%;">
                     <div class="small text-slate-400" style="color: #94a3b8;">กำไร/ขาดทุนสุทธิ Job นี้</div>

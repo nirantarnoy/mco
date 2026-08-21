@@ -121,7 +121,7 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                         <?= number_format($totalExpenses, 2) ?>
                     </h3>
                     <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.75rem;">
-                        <i class="fas fa-info-circle me-1"></i> PO, None PR, รถ & ค่าแรง
+                        <i class="fas fa-info-circle me-1"></i> PO, None PR & เงินสดย่อย
                     </div>
                 </div>
             </div>
@@ -133,8 +133,8 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
             <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover" style="background-color: #ffffff; border-radius: 16px;">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b; font-size: 0.8rem;">รายรับรวม (ใบเสร็จ)</span>
-                        <div class="p-2 rounded-3" style="background-color: #d1fae5; color: #059669;" title="ยอดขายตั้งหนี้ตาม Invoice: <?= number_format($totalInvoicedAmount, 2) ?> บาท">
+                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b; font-size: 0.8rem;">รายรับรวม (รับเสร็จ)</span>
+                        <div class="p-2 rounded-3" style="background-color: #d1fae5; color: #059669;">
                             <i class="fas fa-hand-holding-usd fa-md"></i>
                         </div>
                     </div>
@@ -142,10 +142,7 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                         <?= number_format($totalRevenue, 2) ?>
                     </h3>
                     <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.72rem;">
-                        <i class="fas fa-receipt me-1"></i> เงินสดรับจริง (ใบเสร็จรับเงิน)
-                        <?php if ($totalInvoicedAmount > 0): ?>
-                            <br><span class="fw-medium text-emerald-700" style="color: #047857;"><i class="fas fa-file-invoice-dollar me-1"></i> ตั้งหนี้ Invoice: <?= number_format($totalInvoicedAmount, 0) ?> ฿</span>
-                        <?php endif; ?>
+                        <i class="fas fa-receipt me-1"></i> ใบเสนอราคาที่มี PO จากลูกค้า
                     </div>
                 </div>
             </div>
@@ -157,7 +154,7 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b; font-size: 0.8rem;">ยอดค้างรับ (วางบิล AR)</span>
-                        <div class="p-2 rounded-3" style="background-color: #fef3c7; color: #d97706;" title="ภาระค้างรับทั้งสิ้น: <?= number_format($totalReceivableExposure, 2) ?> บาท">
+                        <div class="p-2 rounded-3" style="background-color: #fef3c7; color: #d97706;">
                             <i class="fas fa-hourglass-half fa-md"></i>
                         </div>
                     </div>
@@ -165,10 +162,27 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                         <?= number_format($pendingReceivables, 2) ?>
                     </h3>
                     <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.72rem;">
-                        <i class="fas fa-file-invoice me-1"></i> วางบิลแล้วค้างชำระ
-                        <?php if ($unbilledJobAmount > 0): ?>
-                            <br><span class="fw-medium text-amber-700" style="color: #d97706;"><i class="fas fa-truck-loading me-1"></i> + งานรอออกบิล: <?= number_format($unbilledJobAmount, 0) ?> ฿</span>
-                        <?php endif; ?>
+                        <i class="fas fa-file-invoice me-1"></i> ที่ออกใบเสร็จแต่ยังไม่ได้บันทึกรับเงิน
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Received Amount Card (New) -->
+        <div class="col-md col-sm-6" style="flex: 1 0 0%;">
+            <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover" style="background-color: #ffffff; border-radius: 16px;">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b; font-size: 0.8rem;">ยอดเงินที่ได้รับ</span>
+                        <div class="p-2 rounded-3" style="background-color: #cffafe; color: #0891b2;">
+                            <i class="fas fa-hand-holding-usd fa-md"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold mb-1" style="color: #0e7490; font-family: 'Inter', sans-serif;">
+                        <?= number_format($totalReceivedAmount, 2) ?>
+                    </h3>
+                    <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.72rem;">
+                        <i class="fas fa-check-circle me-1"></i> ออกใบเสร็จและบันทึกรับเงินแล้ว
                     </div>
                 </div>
             </div>
@@ -223,7 +237,8 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                     <i class="fas fa-chart-pie me-2"></i> สรุปผลกำไร / ขาดทุนสุทธิภาพรวม (Net Profit / Loss)
                 </h5>
                 <span class="small" style="color: <?= $netProfitLoss >= 0 ? '#047857' : '#be123c' ?>;">
-                    คำนวณจากเกณฑ์คงค้างบัญชีบริหาร [ (ยอดขายตั้งหนี้ตาม Invoice หรือ มูลค่างาน Job) - ค่าใช้จ่ายรวมทั้งหมด (PO + None PR + รถยนต์ + ค่าจ้าง) ]
+                    สรุปผลกำไร / ขาดทุนสุทธิภาพรวม = รายละเอียด (ดึงข้อมูลมาจากหัวข้อที่ 2-1) <br>
+                    (รายรับรวม - ยอดค่าใช้จ่าย) * ค่ารถและค่าจ้างจะนำมาคิดตอนทำรายละเอียดของแต่ละ Job
                 </span>
             </div>
             <div class="text-end">
@@ -237,6 +252,103 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                         <i class="fas fa-arrow-down me-1"></i> ขาดทุนสุทธิ (LOSS)
                     <?php endif; ?>
                 </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Drill-down Section for Past Jobs -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #fff0f2; border: 1px solid #fecdd3 !important; border-radius: 16px;">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold text-danger mb-2">หักค่าใช้จ่ายอันเกิดขึ้นปัจจุบันแต่เกิดขึ้นกับ Job ที่ก่อนหน้า</h6>
+                    <h3 class="fw-bold mb-3 text-danger"><?= number_format($pastJobsExpenses, 2) ?> บาท</h3>
+                    <button class="btn btn-sm btn-outline-danger rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePastExpenses" aria-expanded="false" aria-controls="collapsePastExpenses">
+                        <i class="fas fa-list me-1"></i> ดูรายละเอียด Job และเอกสารแนบ
+                    </button>
+                    <div class="collapse mt-3" id="collapsePastExpenses">
+                        <div class="card card-body bg-white border-0 shadow-sm rounded-3">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Job No</th>
+                                            <th>Type</th>
+                                            <th>Document</th>
+                                            <th class="text-end">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach($pastJobExpenseList as $exp): ?>
+                                        <tr>
+                                            <td>
+                                                <?php if(!empty($exp['id'])): ?>
+                                                    <a href="<?= Url::to(['job/view', 'id' => $exp['id']]) ?>" target="_blank" class="text-primary text-decoration-none fw-medium"><?= Html::encode($exp['job_no']) ?></a>
+                                                <?php else: ?>
+                                                    <?= Html::encode($exp['job_no']) ?>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td><span class="badge bg-secondary"><?= Html::encode($exp['type']) ?></span></td>
+                                            <td><?= Html::encode($exp['doc']) ?></td>
+                                            <td class="text-end text-danger"><?= number_format($exp['amount'], 2) ?></td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                        <?php if(empty($pastJobExpenseList)): ?>
+                                        <tr><td colspan="4" class="text-center text-muted">ไม่มีรายการ</td></tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100" style="background-color: #ecfdf5; border: 1px solid #a7f3d0 !important; border-radius: 16px;">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold text-success mb-2">บวก รายรับปัจจุบันอันเกิดขึ้นจาก Job ก่อนหน้า</h6>
+                    <h3 class="fw-bold mb-3 text-success"><?= number_format($pastJobsRevenue, 2) ?> บาท</h3>
+                    <button class="btn btn-sm btn-outline-success rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePastRevenue" aria-expanded="false" aria-controls="collapsePastRevenue">
+                        <i class="fas fa-list me-1"></i> ดูรายละเอียด Job และเอกสารแนบ
+                    </button>
+                    <div class="collapse mt-3" id="collapsePastRevenue">
+                        <div class="card card-body bg-white border-0 shadow-sm rounded-3">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Job No</th>
+                                            <th>Type</th>
+                                            <th>Document</th>
+                                            <th class="text-end">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach($pastJobRevenueList as $rev): ?>
+                                        <tr>
+                                            <td>
+                                                <?php if(!empty($rev['id'])): ?>
+                                                    <a href="<?= Url::to(['job/view', 'id' => $rev['id']]) ?>" target="_blank" class="text-primary text-decoration-none fw-medium"><?= Html::encode($rev['job_no']) ?></a>
+                                                <?php else: ?>
+                                                    <?= Html::encode($rev['job_no']) ?>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td><span class="badge bg-secondary"><?= Html::encode($rev['type']) ?></span></td>
+                                            <td><?= Html::encode($rev['doc']) ?></td>
+                                            <td class="text-end text-success"><?= number_format($rev['amount'], 2) ?></td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                        <?php if(empty($pastJobRevenueList)): ?>
+                                        <tr><td colspan="4" class="text-center text-muted">ไม่มีรายการ</td></tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
