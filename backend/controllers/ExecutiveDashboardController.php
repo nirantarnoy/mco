@@ -172,10 +172,8 @@ class ExecutiveDashboardController extends BaseController
         
         $effectiveVehicleExpense = max($totalVehicleExpenses, $vehicleCostByKm);
 
-        // --- 2. รายรับรวม = ใบเสนอราคาที่ได้รับ PO มีเลข PO จากลูกค้าแล้ว (Jobs with cus_po_doc, NO VAT) ---
-        $jobsWithPoQuery = Job::find()->where(['job.status' => [1, 2]])
-            ->andWhere(['not', ['job.cus_po_doc' => null]])
-            ->andWhere(['!=', 'job.cus_po_doc', '']);
+        // --- 2. รายรับรวม = ใบเสนอราคาที่เอาไปเปิดเป็น PO แล้ว (Job status Open/Closed, NO VAT) ---
+        $jobsWithPoQuery = Job::find()->where(['job.status' => [1, 2]]);
             
         if (!empty($companyId) && $companyId != '0') {
             $jobsWithPoQuery->andWhere(['job.company_id' => $companyId]);
@@ -203,7 +201,7 @@ class ExecutiveDashboardController extends BaseController
         // --- 3. ยอดค้างรับ (ที่ออกใบเสร็จแต่ยังไม่ได้บันทึกรับเงิน) & 4. ยอดเงินที่ได้รับ ---
         $receiptQuery = Invoice::find()
             ->where(['invoices.status' => Invoice::STATUS_ACTIVE])
-            ->andWhere(['invoices.invoice_type' => Invoice::TYPE_RECEIPT]);
+            ->andWhere(['invoices.invoice_type' => [Invoice::TYPE_RECEIPT, '4', 4]]);
             
         if (!empty($companyId) && $companyId != '0') {
             $receiptQuery->andWhere(['invoices.company_id' => $companyId]);
@@ -217,7 +215,6 @@ class ExecutiveDashboardController extends BaseController
         }
 
         $pendingReceivables = 0;
-        $totalReceivedAmount = 0;
 
         foreach ((clone $receiptQuery)->all() as $receipt) {
             $receiptNoVat = $receipt->subtotal - $receipt->discount_amount;
@@ -242,8 +239,36 @@ class ExecutiveDashboardController extends BaseController
             $ratio = ($receiptTotal > 0) ? ($receiptNoVat / $receiptTotal) : 1;
             $paidNoVat = $totalPaid * $ratio;
             
-            $totalReceivedAmount += $paidNoVat;
             $pendingReceivables += max(0, $receiptNoVat - $paidNoVat);
+        }
+
+        // --- 4. ยอดเงินที่ได้รับ (คำนวณจากวันที่รับชำระเงิน payment_date) ---
+        $totalReceivedAmount = 0;
+        $paymentQuery = \backend\models\InvoicePaymentReceipt::find()
+            ->innerJoin('invoices', 'invoices.id = invoice_payment_receipt.invoice_id')
+            ->where(['invoices.status' => Invoice::STATUS_ACTIVE])
+            ->andWhere(['invoices.invoice_type' => [\backend\models\Invoice::TYPE_RECEIPT, '4', 4]]);
+            
+        if (!empty($companyId) && $companyId != '0') {
+            $paymentQuery->andWhere(['invoices.company_id' => $companyId]);
+        }
+        if (!empty($fromDate) && !empty($toDate)) {
+            $paymentQuery->andWhere(['between', 'invoice_payment_receipt.payment_date', $fromDate, $toDate]);
+        }
+
+        foreach ($paymentQuery->all() as $payment) {
+            $receipt = $payment->invoice;
+            $receiptNoVat = $receipt->subtotal - $receipt->discount_amount;
+            $receiptTotal = $receipt->total_amount;
+            $ratio = ($receiptTotal > 0) ? ($receiptNoVat / $receiptTotal) : 1;
+            
+            $amt = $payment->amount;
+            $extras = \backend\models\InvoicePaymentExtra::find()
+                ->where(['payment_receipt_id' => $payment->id])
+                ->sum('amount') ?: 0;
+            $amt += $extras;
+            
+            $totalReceivedAmount += $amt * $ratio;
         }
 
         // --- 5. สรุปผลกำไร / ขาดทุนสุทธิภาพรวม ---
@@ -434,8 +459,8 @@ class ExecutiveDashboardController extends BaseController
             // Revenue for month (Cash Receipts or Invoiced Revenue for month)
             $invMQuery = Invoice::find()
                 ->where(['status' => Invoice::STATUS_ACTIVE])
-                ->andWhere(['invoice_type' => Invoice::TYPE_RECEIPT])
-                ->andWhere(['between', 'invoice_date', $mStart, $mEnd]);
+                ->andWhere(['invoice_type' => [Invoice::TYPE_RECEIPT, '4', 4]])
+                ->andWhere(['between', 'invoice_date', $mStart . ' 00:00:00', $mEnd . ' 23:59:59']);
             if (!empty($companyId) && $companyId != '0') {
                 $invMQuery->andWhere(['company_id' => $companyId]);
             }
@@ -443,8 +468,8 @@ class ExecutiveDashboardController extends BaseController
             if ($mRev == 0) {
                 $invTaxMQuery = Invoice::find()
                     ->where(['status' => Invoice::STATUS_ACTIVE])
-                    ->andWhere(['!=', 'invoice_type', Invoice::TYPE_RECEIPT])
-                    ->andWhere(['between', 'invoice_date', $mStart, $mEnd]);
+                    ->andWhere(['not in', 'invoice_type', [Invoice::TYPE_RECEIPT, '4', 4]])
+                    ->andWhere(['between', 'invoice_date', $mStart . ' 00:00:00', $mEnd . ' 23:59:59']);
                 if (!empty($companyId) && $companyId != '0') {
                     $invTaxMQuery->andWhere(['company_id' => $companyId]);
                 }
@@ -582,7 +607,7 @@ class ExecutiveDashboardController extends BaseController
             ->innerJoin('quotation q', 'q.id = i.quotation_id')
             ->innerJoin('job j', 'j.quotation_id = q.id')
             ->innerJoin('invoice_payment_receipt r', 'r.invoice_id = i.id')
-            ->where(['j.id' => $job->id, 'i.invoice_type' => 'receipt'])
+            ->where(['j.id' => $job->id, 'i.invoice_type' => ['receipt', '4', 4]])
             ->orderBy(['r.payment_date' => SORT_DESC])
             ->scalar();
             

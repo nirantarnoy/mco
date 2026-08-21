@@ -142,7 +142,7 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                         <?= number_format($totalRevenue, 2) ?>
                     </h3>
                     <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.72rem;">
-                        <i class="fas fa-receipt me-1"></i> ใบเสนอราคาที่มี PO จากลูกค้า
+                        <i class="fas fa-receipt me-1"></i> ใบเสนอราคาที่เปิดเป็นใบงาน (PO) แล้ว
                     </div>
                 </div>
             </div>
