@@ -381,6 +381,8 @@ class InvoiceController extends BaseController
         $model->status = Invoice::STATUS_CANCELLED;
         $model->save(false);
 
+        \backend\models\ActionLogModel::logModelAction('cancel', $model, ['message' => 'ยกเลิกเอกสาร: ' . $model->invoice_number]);
+
         Yii::$app->session->setFlash('success', 'ยกเลิกเอกสารเรียบร้อยแล้ว');
         return $this->redirect(['index']);
     }
@@ -393,6 +395,9 @@ class InvoiceController extends BaseController
      */
     public function actionDelete($id)
     {
+        $model = $this->findModel($id);
+        \backend\models\ActionLogModel::logModelAction('delete', $model, ['message' => 'ลบเอกสาร: ' . $model->invoice_number]);
+
         Invoice::deleteAll(['id' => $id]);
         // Optional: Delete related items if not handled by foreign key constraints
         InvoiceItem::deleteAll(['invoice_id' => $id]);
