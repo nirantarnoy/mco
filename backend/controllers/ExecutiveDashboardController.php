@@ -183,10 +183,10 @@ class ExecutiveDashboardController extends BaseController
         }
 
         $totalNonePrExpenses = 0;
-        if (!empty($jobNos) || !empty($jobIds)) {
+        if (!empty($jobNos)) {
             $totalNonePrExpenses = (float)PurchaseMaster::find()
                 ->where(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED])
-                ->andWhere(['or', ['job_no' => $jobNos], ['job_id' => $jobIds]])
+                ->andWhere(['job_no' => $jobNos])
                 ->sum('total_amount - COALESCE(vat_amount, 0)');
         }
         
@@ -482,10 +482,10 @@ class ExecutiveDashboardController extends BaseController
                 $mPetty = (float)PettyCashVoucher::find()->where(['status' => 1, 'job_id' => $mJobIds])->sum('amount');
                 $mTotalExpenses += $mPetty;
             }
-            if (!empty($mJobNos) || !empty($mJobIds)) {
+            if (!empty($mJobNos)) {
                 $mNpr = (float)PurchaseMaster::find()
                     ->where(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED])
-                    ->andWhere(['or', ['job_no' => $mJobNos], ['job_id' => $mJobIds]])
+                    ->andWhere(['job_no' => $mJobNos])
                     ->sum('total_amount - COALESCE(vat_amount, 0)');
                 $mTotalExpenses += $mNpr;
             }
