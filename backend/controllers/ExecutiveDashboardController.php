@@ -145,33 +145,6 @@ class ExecutiveDashboardController extends BaseController
             $wageQuery->andWhere(['between', new \yii\db\Expression('(report_year * 100 + report_month)'), $startYm, $endYm]);
         }
 
-        // --- 1. ภาพรวม ยอดค่าใช้จ่าย (Total Expenses: PO + Non PR + Petty Cash, NO VAT) ---
-        $totalPoExpenses = (float)(clone $expensesQuery)->sum('net_amount') - (float)(clone $expensesQuery)->sum('vat_amount');
-        $totalNonePrExpenses = (float)(clone $nonePrQuery)->sum('total_amount') - (float)(clone $nonePrQuery)->sum('vat_amount');
-        
-        $pettyCashQuery = PettyCashVoucher::find()->where(['status' => 1]);
-        if (!empty($companyId) && $companyId != '0') {
-            $pettyCashQuery->andWhere(['company_id' => $companyId]);
-        }
-        if (!empty($fromDate) && !empty($toDate)) {
-            $pettyCashQuery->andWhere(['between', 'date', $fromDate, $toDate]);
-        }
-        $totalPettyCashExpenses = (float)(clone $pettyCashQuery)->sum('amount');
-        $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalPettyCashExpenses;
-
-        // Vehicle and Wage variables for backward compatibility in view, but excluded from main totalExpenses
-        $totalKm = abs((float)(clone $vehicleQuery)->sum('total_distance'));
-        $vehicleCostByKm = $totalKm * 5;
-        $totalVehicleExpenses = abs((float)(clone $vehicleQuery)->sum('vehicle_cost'));
-        if ($totalVehicleExpenses == 0 && $vehicleCostByKm > 0) {
-            $totalVehicleExpenses = $vehicleCostByKm;
-        }
-        $totalVehicleWages = abs((float)(clone $vehicleQuery)->sum('total_wage'));
-        $totalDriverReportWages = abs((float)(clone $wageQuery)->sum('net_total'));
-        $totalWages = $totalDriverReportWages + $totalVehicleWages;
-        
-        $effectiveVehicleExpense = max($totalVehicleExpenses, $vehicleCostByKm);
-
         // --- 2. รายรับรวม = ใบเสนอราคาที่เอาไปเปิดเป็น PO แล้ว (Job status Open/Closed, NO VAT) ---
         $jobsWithPoQuery = Job::find()->where(['job.status' => [1, 2]]);
             
@@ -189,9 +162,67 @@ class ExecutiveDashboardController extends BaseController
         }
         
         $totalRevenue = 0;
+        $jobIds = [];
+        $jobNos = [];
+        
         foreach ((clone $jobsWithPoQuery)->all() as $j) {
             $totalRevenue += $j->getJobAmountNoVat();
+            $jobIds[] = $j->id;
+            if (!empty(trim($j->job_no))) {
+                $jobNos[] = trim($j->job_no);
+            }
         }
+
+        // --- 1. ภาพรวม ยอดค่าใช้จ่าย (Total Expenses: True Job Costing) ---
+        // คำนวณต้นทุนที่ผูกกับ Job ที่เกิดขึ้นในช่วงเวลานี้เท่านั้น (โดยไม่สนใจวันที่ของเอกสารค่าใช้จ่าย)
+        $totalPoExpenses = 0;
+        if (!empty($jobIds)) {
+            $totalPoExpenses = (float)Purch::find()
+                ->where(['approve_status' => 1, 'job_id' => $jobIds])
+                ->sum('net_amount - COALESCE(vat_amount, 0)');
+        }
+
+        $totalNonePrExpenses = 0;
+        if (!empty($jobNos) || !empty($jobIds)) {
+            $totalNonePrExpenses = (float)PurchaseMaster::find()
+                ->where(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED])
+                ->andWhere(['or', ['job_no' => $jobNos], ['job_id' => $jobIds]])
+                ->sum('total_amount - COALESCE(vat_amount, 0)');
+        }
+        
+        $totalPettyCashExpenses = 0;
+        if (!empty($jobIds)) {
+            $totalPettyCashExpenses = (float)PettyCashVoucher::find()
+                ->where(['status' => 1, 'job_id' => $jobIds])
+                ->sum('amount');
+        }
+
+        $totalKm = 0;
+        $vehicleCostByKm = 0;
+        $totalVehicleExpenses = 0;
+        $totalVehicleWages = 0;
+
+        if (!empty($jobNos)) {
+            $veQuery = VehicleExpense::find()->where(['job_no' => $jobNos]);
+            $totalKm = abs((float)(clone $veQuery)->sum('total_distance'));
+            $jobVehicleCost = abs((float)(clone $veQuery)->sum('vehicle_cost'));
+            $totalVehicleWages = abs((float)(clone $veQuery)->sum('total_wage'));
+            
+            $vehicleCostByKm = $totalKm * 5;
+            $totalVehicleExpenses = max($jobVehicleCost, $vehicleCostByKm);
+        }
+        
+        $totalWages = $totalVehicleWages; // ในแบบ Job Costing ใช้เฉพาะค่าจ้างที่ผูกกับใบงาน
+        
+        $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalPettyCashExpenses + $totalVehicleExpenses + $totalWages;
+
+        // Effective Vehicle Expense is calculated as max(cost, km * 5)
+        $effectiveVehicleExpense = $totalVehicleExpenses;
+
+        // --- 2. รายรับรวม = ใบเสนอราคาที่เอาไปเปิดเป็น PO แล้ว (Job status Open/Closed, NO VAT) ---
+        $jobsWithPoQuery = Job::find()->where(['job.status' => [1, 2]]);
+            
+
 
         // Compatibility for other view vars
         $totalInvoicedAmount = 0;
@@ -206,11 +237,12 @@ class ExecutiveDashboardController extends BaseController
         if (!empty($companyId) && $companyId != '0') {
             $receiptQuery->andWhere(['invoices.company_id' => $companyId]);
         }
-        if (!empty($fromDate) && !empty($toDate)) {
+        if (!empty($toDate)) {
+            // ดึง Invoice ทั้งหมดที่สร้างขึ้นก่อนหรือภายในวันที่เลือก (ไม่สนใจ fromDate) เพื่อหายอดค้างรับสะสม
             $receiptQuery->andWhere([
                 'or',
-                ['between', 'invoices.invoice_date', $fromDate, $toDate],
-                ['and', ['invoices.invoice_date' => null], ['between', 'invoices.created_at', $fromDate . ' 00:00:00', $toDate . ' 23:59:59']]
+                ['<=', 'invoices.invoice_date', $toDate],
+                ['and', ['invoices.invoice_date' => null], ['<=', 'invoices.created_at', $toDate . ' 23:59:59']]
             ]);
         }
 
@@ -280,48 +312,9 @@ class ExecutiveDashboardController extends BaseController
         $pastJobExpenseList = [];
         $pastJobRevenueList = [];
 
+        // ยกเลิกลอจิก Past Jobs Expenses & Revenue เนื่องจากระบบเปลี่ยนไปใช้ Job Costing แล้ว (รายจ่ายจะวิ่งตาม Job)
         if (!empty($fromDate)) {
-            $fromDateTime = $fromDate . ' 00:00:00';
-            
-            $pastPoQuery = clone $expensesQuery;
-            $pastPoQuery->innerJoin('job j', 'j.id = purch.job_id')
-                        ->andWhere(['<', 'j.job_date', $fromDateTime]);
-            foreach($pastPoQuery->all() as $po) {
-                $amt = (float)$po->net_amount - (float)$po->vat_amount;
-                $pastJobsExpenses += $amt;
-                $pastJobExpenseList[] = ['job_no' => $po->job ? $po->job->job_no : '-', 'type' => 'PO', 'amount' => $amt, 'doc' => $po->purch_no, 'id' => $po->job_id];
-            }
-            
-            $pastNprQuery = clone $nonePrQuery;
-            $pastNprQuery->innerJoin('job j', 'j.job_no = purchase_master.job_no')
-                         ->andWhere(['<', 'j.job_date', $fromDateTime]);
-            foreach($pastNprQuery->all() as $npr) {
-                $amt = (float)$npr->total_amount - (float)$npr->vat_amount;
-                $pastJobsExpenses += $amt;
-                $pastJobExpenseList[] = ['job_no' => $npr->job_no, 'type' => 'Non PR', 'amount' => $amt, 'doc' => $npr->refnum, 'id' => ($npr->job ? $npr->job->id : null)];
-            }
-            
-            $pastPaymentQuery = clone $paymentQuery;
-            $pastPaymentQuery->innerJoin('job j', 'j.id = invoices.job_id')
-                             ->andWhere(['<', 'j.job_date', $fromDateTime]);
-            foreach($pastPaymentQuery->all() as $payment) {
-                $r = $payment->invoice;
-                $amtNoVat = $r->subtotal - $r->discount_amount;
-                $ratio = ($r->total_amount > 0) ? ($amtNoVat / $r->total_amount) : 1;
-                
-                $amt = $payment->amount;
-                $extras = \backend\models\InvoicePaymentExtra::find()
-                    ->where(['payment_receipt_id' => $payment->id])
-                    ->sum('amount') ?: 0;
-                $amt += $extras;
-                
-                $paidNoVat = $amt * $ratio;
-                
-                if ($paidNoVat > 0) {
-                    $pastJobsRevenue += $paidNoVat;
-                    $pastJobRevenueList[] = ['job_no' => $r->job ? $r->job->job_no : '-', 'type' => 'Receipt', 'amount' => $paidNoVat, 'doc' => $r->invoice_number, 'id' => $r->job_id];
-                }
-            }
+            // Variables left for view compatibility
         }
 
         // --- Accounting PO Cashflow Alert & Comparison ---
@@ -459,67 +452,64 @@ class ExecutiveDashboardController extends BaseController
             $mStartDt = $mStart . ' 00:00:00';
             $mEndDt = $mEnd . ' 23:59:59';
 
-            // Revenue for month (Cash Receipts or Invoiced Revenue for month)
-            $invMQuery = Invoice::find()
-                ->where(['status' => Invoice::STATUS_ACTIVE])
-                ->andWhere(['invoice_type' => [Invoice::TYPE_RECEIPT, '4', 4]])
-                ->andWhere(['between', 'invoice_date', $mStart . ' 00:00:00', $mEnd . ' 23:59:59']);
+            // Job-Based Revenue & Expenses for chart month
+            $mJobsQuery = Job::find()->where(['job.status' => [1, 2]]);
             if (!empty($companyId) && $companyId != '0') {
-                $invMQuery->andWhere(['company_id' => $companyId]);
+                $mJobsQuery->andWhere(['job.company_id' => $companyId]);
             }
-            $mRev = (float)(clone $invMQuery)->sum('total_amount');
-            if ($mRev == 0) {
-                $invTaxMQuery = Invoice::find()
-                    ->where(['status' => Invoice::STATUS_ACTIVE])
-                    ->andWhere(['not in', 'invoice_type', [Invoice::TYPE_RECEIPT, '4', 4]])
-                    ->andWhere(['between', 'invoice_date', $mStart . ' 00:00:00', $mEnd . ' 23:59:59']);
-                if (!empty($companyId) && $companyId != '0') {
-                    $invTaxMQuery->andWhere(['company_id' => $companyId]);
+            $mJobsQuery->andWhere([
+                'or',
+                ['between', 'job.job_date', $mStart . ' 00:00:00', $mEnd . ' 23:59:59'],
+                ['and', ['job.job_date' => null], ['between', 'job.created_at', strtotime($mStartDt), strtotime($mEndDt)]]
+            ]);
+
+            $mRev = 0;
+            $mJobIds = [];
+            $mJobNos = [];
+            foreach ((clone $mJobsQuery)->all() as $j) {
+                $mRev += $j->getJobAmountNoVat();
+                $mJobIds[] = $j->id;
+                if (!empty(trim($j->job_no))) {
+                    $mJobNos[] = trim($j->job_no);
                 }
-                $mRev = (float)(clone $invTaxMQuery)->sum('total_amount');
             }
 
-            // PO Expenses for month
-            $poMQuery = Purch::find()->where(['approve_status' => 1])
-                ->andWhere(['between', 'purch_date', $mStartDt, $mEndDt]);
-            if (!empty($companyId) && $companyId != '0') {
-                $poMQuery->andWhere(['company_id' => $companyId]);
+            $mTotalExpenses = 0;
+            if (!empty($mJobIds)) {
+                $mPo = (float)Purch::find()->where(['approve_status' => 1, 'job_id' => $mJobIds])->sum('net_amount - COALESCE(vat_amount, 0)');
+                $mTotalExpenses += $mPo;
+
+                $mPetty = (float)PettyCashVoucher::find()->where(['status' => 1, 'job_id' => $mJobIds])->sum('amount');
+                $mTotalExpenses += $mPetty;
             }
-            $mPo = (float)(clone $poMQuery)->sum('net_amount');
-
-            // None PR Expenses for month
-            $nprMQuery = PurchaseMaster::find()->where(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED])
-                ->andWhere(['between', 'docdat', $mStart, $mEnd]);
-            if (!empty($companyId) && $companyId != '0') {
-                $nprMQuery->andWhere(['company_id' => $companyId]);
+            if (!empty($mJobNos) || !empty($mJobIds)) {
+                $mNpr = (float)PurchaseMaster::find()
+                    ->where(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED])
+                    ->andWhere(['or', ['job_no' => $mJobNos], ['job_id' => $mJobIds]])
+                    ->sum('total_amount - COALESCE(vat_amount, 0)');
+                $mTotalExpenses += $mNpr;
             }
-            $mNpr = (float)(clone $nprMQuery)->sum('total_amount');
 
-            // Vehicle Expenses for month
-            $veMQuery = VehicleExpense::find()->andWhere(['between', 'expense_date', $mStart, $mEnd]);
-            $mKm = abs((float)(clone $veMQuery)->sum('total_distance'));
-            $mVehicleCost = abs((float)(clone $veMQuery)->sum('vehicle_cost'));
-            $mVehicleWage = abs((float)(clone $veMQuery)->sum('total_wage'));
-            $mEffVehicleCost = max($mVehicleCost, $mKm * 5);
-
-            // Driver Wage Report for month
-            $y = (int)date('Y', strtotime($mStart));
-            $mon = (int)date('m', strtotime($mStart));
-            $wageMQuery = DriverWageReport::find()->where(['report_year' => $y, 'report_month' => $mon]);
-            $mDriverReportWage = abs((float)(clone $wageMQuery)->sum('net_total'));
-            $mTotalWages = $mDriverReportWage + $mVehicleWage;
-
-            $mTotalExpenses = $mPo + $mNpr + $mEffVehicleCost + $mTotalWages;
-
-            // Receivables for month
-            $recMQuery = Invoice::find()
-                ->where(['status' => Invoice::STATUS_ACTIVE])
-                ->andWhere(['!=', 'invoice_type', Invoice::TYPE_RECEIPT])
-                ->andWhere(['between', 'invoice_date', $mStart, $mEnd]);
-            if (!empty($companyId) && $companyId != '0') {
-                $recMQuery->andWhere(['company_id' => $companyId]);
+            if (!empty($mJobNos)) {
+                $veMQuery = VehicleExpense::find()->where(['job_no' => $mJobNos]);
+                $mKm = abs((float)(clone $veMQuery)->sum('total_distance'));
+                $mVehicleCost = abs((float)(clone $veMQuery)->sum('vehicle_cost'));
+                $mVehicleWage = abs((float)(clone $veMQuery)->sum('total_wage'));
+                $mEffVehicleCost = max($mVehicleCost, $mKm * 5);
+                
+                $mTotalExpenses += $mEffVehicleCost + $mVehicleWage;
             }
-            $mRec = (float)(clone $recMQuery)->sum('total_amount');
+
+            // Cumulative Receivables Approximate for chart
+            $invSubtotal = (float)Invoice::find()->where(['status' => Invoice::STATUS_ACTIVE, 'invoice_type' => [Invoice::TYPE_RECEIPT, '4', 4]])->andWhere(['<=', 'invoice_date', $mEnd])->sum('subtotal - COALESCE(discount_amount, 0)');
+            $paidTotal = (float)\backend\models\InvoicePaymentReceipt::find()
+                ->innerJoin('invoices', 'invoices.id = invoice_payment_receipt.invoice_id')
+                ->where(['invoices.status' => Invoice::STATUS_ACTIVE, 'invoices.invoice_type' => [Invoice::TYPE_RECEIPT, '4', 4]])
+                ->andWhere(['<=', 'invoice_payment_receipt.payment_date', $mEnd])
+                ->sum('invoice_payment_receipt.amount');
+            // Roughly remove VAT ratio from paid total assuming mostly 7%
+            $paidNoVatApprox = $paidTotal / 1.07;
+            $mRec = max(0, $invSubtotal - $paidNoVatApprox);
 
             $chartLabels[] = $mLabel;
             $chartRevenueData[] = round($mRev, 2);
