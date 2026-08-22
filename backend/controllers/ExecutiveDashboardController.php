@@ -197,6 +197,28 @@ class ExecutiveDashboardController extends BaseController
                 ->sum('amount');
         }
 
+        $totalInventoryExpenses = 0;
+        if (!empty($jobIds)) {
+            $stockIssues = (new \yii\db\Query())
+                ->select('l.qty, l.line_price, l.sale_price, p.sale_price as p_sale_price, p.cost_price as p_cost_price')
+                ->from('journal_trans_line l')
+                ->innerJoin('journal_trans t', 't.id = l.journal_trans_id')
+                ->leftJoin('product p', 'p.id = l.product_id')
+                ->where(['t.trans_type_id' => 3, 't.status' => 2, 't.job_id' => $jobIds])
+                ->all();
+                
+            foreach ($stockIssues as $issue) {
+                if (!empty($issue['line_price']) && (float)$issue['line_price'] > 0) {
+                    $totalInventoryExpenses += (float)$issue['line_price'];
+                } elseif (!empty($issue['sale_price']) && (float)$issue['sale_price'] > 0) {
+                    $totalInventoryExpenses += (float)$issue['sale_price'] * (float)$issue['qty'];
+                } else {
+                    $unitPrice = (float)$issue['p_sale_price'] > 0 ? (float)$issue['p_sale_price'] : (float)$issue['p_cost_price'];
+                    $totalInventoryExpenses += $unitPrice * (float)$issue['qty'];
+                }
+            }
+        }
+
         $totalKm = 0;
         $vehicleCostByKm = 0;
         $totalVehicleExpenses = 0;
@@ -214,7 +236,7 @@ class ExecutiveDashboardController extends BaseController
         
         $totalWages = $totalVehicleWages; // ในแบบ Job Costing ใช้เฉพาะค่าจ้างที่ผูกกับใบงาน
         
-        $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalPettyCashExpenses + $totalVehicleExpenses + $totalWages;
+        $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalPettyCashExpenses + $totalVehicleExpenses + $totalWages + $totalInventoryExpenses;
 
         // Effective Vehicle Expense is calculated as max(cost, km * 5)
         $effectiveVehicleExpense = $totalVehicleExpenses;
@@ -481,6 +503,25 @@ class ExecutiveDashboardController extends BaseController
 
                 $mPetty = (float)PettyCashVoucher::find()->where(['status' => 1, 'job_id' => $mJobIds])->sum('amount');
                 $mTotalExpenses += $mPetty;
+
+                $mStockIssues = (new \yii\db\Query())
+                    ->select('l.qty, l.line_price, l.sale_price, p.sale_price as p_sale_price, p.cost_price as p_cost_price')
+                    ->from('journal_trans_line l')
+                    ->innerJoin('journal_trans t', 't.id = l.journal_trans_id')
+                    ->leftJoin('product p', 'p.id = l.product_id')
+                    ->where(['t.trans_type_id' => 3, 't.status' => 2, 't.job_id' => $mJobIds])
+                    ->all();
+                
+                foreach ($mStockIssues as $issue) {
+                    if (!empty($issue['line_price']) && (float)$issue['line_price'] > 0) {
+                        $mTotalExpenses += (float)$issue['line_price'];
+                    } elseif (!empty($issue['sale_price']) && (float)$issue['sale_price'] > 0) {
+                        $mTotalExpenses += (float)$issue['sale_price'] * (float)$issue['qty'];
+                    } else {
+                        $unitPrice = (float)$issue['p_sale_price'] > 0 ? (float)$issue['p_sale_price'] : (float)$issue['p_cost_price'];
+                        $mTotalExpenses += $unitPrice * (float)$issue['qty'];
+                    }
+                }
             }
             if (!empty($mJobNos)) {
                 $mNpr = (float)PurchaseMaster::find()
@@ -522,6 +563,8 @@ class ExecutiveDashboardController extends BaseController
             'fromDate' => $fromDate,
             'toDate' => $toDate,
             'totalExpenses' => $totalExpenses,
+            'totalPettyCashExpenses' => $totalPettyCashExpenses,
+            'totalInventoryExpenses' => $totalInventoryExpenses,
             'totalRevenue' => $totalRevenue,
             'totalInvoicedAmount' => $totalInvoicedAmount,
             'totalPoExpenses' => $totalPoExpenses,

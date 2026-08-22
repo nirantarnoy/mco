@@ -86,7 +86,7 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                 <h5 class="fw-bold mb-1" style="color: #9f1239;"><i class="fas fa-bell me-1"></i> แจ้งเตือนสภาพคล่องกระแสเงินสด!</h5>
                 <p class="mb-0 small" style="color: #be123c;">
                     ยอดเงินรวมปัจจุบันคงเหลือ (<strong><?= number_format($currentAvailableCash, 2) ?></strong> บาท) + ยอดรอรับ (<strong><?= number_format($pendingReceivables, 2) ?></strong> บาท) 
-                    <span class="badge bg-rose-200 text-rose-800">น้อยกว่า</span> ยอดรอชำระ PO (<strong><?= number_format($pendingPoPayables, 2) ?></strong> บาท)
+                    <span class="badge" style="background-color: #fecdd3; color: #9f1239;">น้อยกว่า</span> ยอดรอชำระ PO (<strong><?= number_format($pendingPoPayables, 2) ?></strong> บาท)
                     กรุณาตรวจสอบโอนเติมเงินเข้าบัญชีหลักก่อนการอนุมัติโอนชำระ PO
                 </p>
             </div>
@@ -121,7 +121,7 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                         <?= number_format($totalExpenses, 2) ?>
                     </h3>
                     <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.75rem;">
-                        <i class="fas fa-info-circle me-1"></i> ต้นทุนรวมของ Job ที่เกิดขึ้นในช่วงเวลานี้
+                        <i class="fas fa-info-circle me-1"></i> ต้นทุนรวมของ Job (รวมต้นทุนสต๊อกแล้ว)
                     </div>
                 </div>
             </div>
@@ -309,17 +309,23 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                     </div>
                     <div class="w-100 mt-3 pt-2 border-top">
                         <div class="row g-2 text-center" style="font-size: 0.75rem;">
-                            <div class="col-6">
+                            <div class="col-4">
                                 <span class="fw-semibold" style="color: #e11d48;"><i class="fas fa-circle me-1"></i> PO: <?= number_format($totalPoExpenses, 0) ?></span>
                             </div>
-                            <div class="col-6">
+                            <div class="col-4">
                                 <span class="fw-semibold" style="color: #d97706;"><i class="fas fa-circle me-1"></i> None PR: <?= number_format($totalNonePrExpenses, 0) ?></span>
                             </div>
-                            <div class="col-6">
+                            <div class="col-4">
+                                <span class="fw-semibold" style="color: #059669;"><i class="fas fa-circle me-1"></i> สต๊อก: <?= number_format($totalInventoryExpenses, 0) ?></span>
+                            </div>
+                            <div class="col-4">
                                 <span class="fw-semibold" style="color: #0284c7;"><i class="fas fa-circle me-1"></i> รถยนต์: <?= number_format($vehicleCostByKm, 0) ?></span>
                             </div>
-                            <div class="col-6">
+                            <div class="col-4">
                                 <span class="fw-semibold" style="color: #7e22ce;"><i class="fas fa-circle me-1"></i> ค่าจ้าง: <?= number_format($totalWages, 0) ?></span>
+                            </div>
+                            <div class="col-4">
+                                <span class="fw-semibold" style="color: #64748b;"><i class="fas fa-circle me-1"></i> สดย่อย: <?= number_format($totalPettyCashExpenses, 0) ?></span>
                             </div>
                         </div>
                     </div>
@@ -961,26 +967,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const doughnutCtx = doughnutCanvas.getContext('2d');
     const poExpVal = <?= json_encode(round($totalPoExpenses, 2)) ?>;
     const nonePrVal = <?= json_encode(round($totalNonePrExpenses, 2)) ?>;
+    const invVal = <?= json_encode(round($totalInventoryExpenses, 2)) ?>;
     const vehicleVal = <?= json_encode(round($vehicleCostByKm, 2)) ?>;
     const wagesVal = <?= json_encode(round($totalWages, 2)) ?>;
+    const pettyVal = <?= json_encode(round($totalPettyCashExpenses, 2)) ?>;
 
     new Chart(doughnutCtx, {
         type: 'doughnut',
         data: {
-            labels: ['สั่งซื้อ PO', 'ไม่มี PR (None PR)', 'ค่าใช้รถยนต์', 'ค่าจ้างคนขับ/ปฏิบัติงาน'],
+            labels: ['สั่งซื้อ PO', 'ไม่มี PR (None PR)', 'ต้นทุนสต๊อก', 'ค่าใช้รถยนต์', 'ค่าจ้างปฏิบัติงาน', 'เงินสดย่อย'],
             datasets: [{
-                data: [poExpVal, nonePrVal, vehicleVal, wagesVal],
+                data: [poExpVal, nonePrVal, invVal, vehicleVal, wagesVal, pettyVal],
                 backgroundColor: [
                     '#e11d48', // PO - Rose
                     '#d97706', // None PR - Amber
+                    '#059669', // Inventory - Emerald
                     '#0284c7', // Vehicle - Sky
-                    '#7e22ce'  // Wages - Purple
+                    '#7e22ce', // Wages - Purple
+                    '#64748b'  // Petty - Slate
                 ],
                 hoverBackgroundColor: [
                     '#be123c',
                     '#b45309',
+                    '#047857',
                     '#0369a1',
-                    '#6b21a8'
+                    '#6b21a8',
+                    '#475569'
                 ],
                 borderWidth: 2,
                 borderColor: '#ffffff'
