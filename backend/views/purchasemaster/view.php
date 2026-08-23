@@ -29,6 +29,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php endif; ?>
                     <?= Html::a('<i class="fas fa-edit"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-warning btn-sm']) ?>
                 <?php endif; ?>
+                <?= Html::a('<i class="fas fa-print"></i> พิมพ์เอกสาร (Print)', ['print', 'id' => $model->id], ['class' => 'btn btn-info btn-sm', 'target' => '_blank']) ?>
                 <?= Html::a('<i class="fas fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
                     'class' => 'btn btn-danger btn-sm',
                     'data' => [

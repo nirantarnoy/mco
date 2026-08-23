@@ -191,12 +191,19 @@ $this->params['breadcrumbs'][] = $this->title;
                     ],
                     [
                         'class' => ActionColumn::class,
-                        'template' => '{view} {update} {delete}',
+                        'template' => '{view} {print} {update} {delete}',
                         'buttons' => [
                             'view' => function ($url, $model) {
                                 return Html::a('<i class="fas fa-eye"></i>', ['view', 'id' => $model->id], [
                                     'class' => 'btn btn-info btn-sm',
                                     'title' => 'ดูรายละเอียด',
+                                ]);
+                            },
+                            'print' => function ($url, $model) {
+                                return Html::a('<i class="fas fa-print"></i>', ['print', 'id' => $model->id], [
+                                    'class' => 'btn btn-secondary btn-sm',
+                                    'title' => 'พิมพ์เอกสาร',
+                                    'target' => '_blank',
                                 ]);
                             },
                             'update' => function ($url, $model) {

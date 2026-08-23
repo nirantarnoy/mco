@@ -94,6 +94,22 @@ class PurchasemasterController extends BaseController
     }
 
     /**
+     * Prints a single PurchaseMaster model.
+     * @param int $id ID
+     * @return string
+     * @throws NotFoundHttpException if the model cannot be found
+     */
+    public function actionPrint($id)
+    {
+        $model = $this->findModel($id);
+        $this->layout = false;
+        
+        return $this->render('print', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
      * Creates a new PurchaseMaster model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return string|\yii\web\Response
