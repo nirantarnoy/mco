@@ -394,7 +394,7 @@ class ExecutiveDashboardController extends BaseController
             
             // 1.3 Petty Cash
             $pastPettyItems = \backend\models\PettyCashVoucher::find()
-                ->where(['petty_cash_voucher.status' => \backend\models\PettyCashVoucher::STATUS_ACTIVE])
+                ->where(['petty_cash_voucher.status' => 1])
                 ->andWhere(['between', 'petty_cash_voucher.date', $fromDate, $toDate])
                 ->innerJoin('job j', 'j.id = petty_cash_voucher.job_id')
                 ->andWhere([
