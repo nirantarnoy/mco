@@ -98,7 +98,9 @@ function addLine(data = null) {
 function calculateTotal() {
     var total_debit = 0;
     var total_credit = 0;
+    var hasLines = false;
     $('.line-debit').each(function() {
+        hasLines = true;
         total_debit += parseFloat($(this).val()) || 0;
     });
     $('.line-credit').each(function() {
@@ -106,7 +108,10 @@ function calculateTotal() {
     });
     $('#total-debit').text(total_debit.toFixed(2));
     $('#total-credit').text(total_credit.toFixed(2));
-    $('#paymentvoucher-amount').val(total_debit > 0 ? total_debit : total_credit);
+    
+    if (hasLines) {
+        $('#paymentvoucher-amount').val(total_debit > 0 ? total_debit : total_credit);
+    }
 }
 
 function loadPrPoByVendor(vendorId) {
@@ -435,7 +440,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
 
             <div class="row mb-3">
                 <div class="col-md-4">
-                    <?= $form->field($model, 'amount')->textInput(['type' => 'number', 'step' => '0.01', 'readonly' => true]) ?>
+                    <?= $form->field($model, 'amount')->textInput(['type' => 'number', 'step' => '0.01']) ?>
                 </div>
                 <div class="col-md-4">
                     <?= $form->field($model, 'paid_for')->textInput(['maxlength' => true, 'placeholder' => 'จ่ายสำหรับ PR/PO/QT เลขที่...']) ?>
