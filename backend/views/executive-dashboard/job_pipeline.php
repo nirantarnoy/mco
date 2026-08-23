@@ -32,7 +32,7 @@ $stepsDef = [
 <div class="job-pipeline-container py-3">
 
     <!-- Top Navigation Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 d-print-none">
         <div>
             <a href="<?= Url::to(['executive-dashboard/index']) ?>" class="text-indigo-600 text-decoration-none small fw-medium mb-1 d-inline-block" style="color: #4f46e5;">
                 <i class="fas fa-arrow-left me-1"></i> ย้อนกลับหน้า Executive Dashboard
@@ -41,11 +41,19 @@ $stepsDef = [
                 <i class="fas fa-tasks text-indigo-600 me-2" style="color: #4f46e5;"></i> สถานะกิจกรรม 15 ขั้นตอน
             </h3>
         </div>
-        <div>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-outline-secondary rounded-pill btn-sm px-3 shadow-sm fw-medium" onclick="window.print()" style="font-family: 'Prompt', sans-serif;">
+                <i class="fas fa-print me-1"></i> พิมพ์ Report
+            </button>
             <span class="badge bg-slate-100 text-slate-700 px-3 py-2 rounded-pill fw-medium" style="background-color: #f1f5f9; color: #334155;">
                 Job No: <?= Html::encode($job->job_no) ?>
             </span>
         </div>
+    </div>
+    
+    <div class="d-none d-print-block mb-4 text-center">
+        <h3 class="fw-bold mb-2" style="font-family: 'Prompt', sans-serif;">รายงานสถานะกิจกรรม 15 ขั้นตอน</h3>
+        <h5 class="text-secondary">Job No: <?= Html::encode($job->job_no) ?></h5>
     </div>
 
     <!-- Header Job Summary Light Card -->
@@ -294,6 +302,16 @@ body {
     border-bottom: none;
 }
 .badge-soft-info { background-color: #e0f2fe; color: #0369a1; padding: 0.25rem 0.6rem; border-radius: 9999px; }
+
+@media print {
+    body { background-color: #fff !important; }
+    .job-pipeline-container { padding: 0 !important; }
+    .card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+    .d-print-none, .main-sidebar, .main-header, footer { display: none !important; }
+    .content-wrapper { margin-left: 0 !important; padding-top: 0 !important; background-color: #fff !important; }
+    .table-custom td, .table-custom th { padding: 0.5rem !important; }
+    .badge { border: 1px solid #ccc; color: #000 !important; background-color: #f8f9fa !important; }
+}
 </style>
 
 <?php

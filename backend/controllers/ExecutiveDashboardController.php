@@ -76,7 +76,7 @@ class ExecutiveDashboardController extends BaseController
         $rawFromDate = Yii::$app->request->get('from_date', '');
         $rawToDate = Yii::$app->request->get('to_date', '');
         
-        $fromDate = !empty($rawFromDate) ? $this->normalizeDate($rawFromDate) : date('Y-m-01');
+        $fromDate = !empty($rawFromDate) ? $this->normalizeDate($rawFromDate) : date('Y-01-01');
         $toDate = !empty($rawToDate) ? $this->normalizeDate($rawToDate) : date('Y-m-d');
 
         if (strtotime($fromDate) > strtotime($toDate)) {
@@ -117,21 +117,7 @@ class ExecutiveDashboardController extends BaseController
             $startYm = $startYear * 100 + $startMonth;
             $endYm = $endYear * 100 + $endMonth;
 
-            // Filter PO Expenses by purch_date (or created_at if purch_date is empty)
-            $expensesQuery->andWhere([
-                'or',
-                ['between', 'purch.purch_date', $fromDateTime, $toDateTime],
-                ['and', ['purch.purch_date' => null], ['between', 'purch.created_at', $fromTs, $toTs]]
-            ]);
-
-            // Filter None PR Expenses by docdat (or created_at if docdat is empty)
-            $nonePrQuery->andWhere([
-                'or',
-                ['between', 'purchase_master.docdat', $fromDate, $toDate],
-                ['and', ['purchase_master.docdat' => null], ['between', 'purchase_master.created_at', $fromTs, $toTs]]
-            ]);
-
-            // Filter Invoices by invoice_date (or created_at if invoice_date is empty)
+            // Invoices can stay by date for other cashflow views
             $invoiceQuery->andWhere([
                 'or',
                 ['between', 'invoices.invoice_date', $fromDate, $toDate],
@@ -173,28 +159,21 @@ class ExecutiveDashboardController extends BaseController
             }
         }
 
-        // --- 1. ภาพรวม ยอดค่าใช้จ่าย (Total Expenses: True Job Costing) ---
-        // คำนวณต้นทุนที่ผูกกับ Job ที่เกิดขึ้นในช่วงเวลานี้เท่านั้น (โดยไม่สนใจวันที่ของเอกสารค่าใช้จ่าย)
+        // --- 1. ภาพรวม ยอดค่าใช้จ่าย (Total Expenses - แบบ Job Costing) ---
+        // คำนวณจากเอกสารที่ผูกกับ Job ในช่วงเวลานี้
         $totalPoExpenses = 0;
         if (!empty($jobIds)) {
-            $totalPoExpenses = (float)Purch::find()
-                ->where(['approve_status' => 1, 'job_id' => $jobIds])
-                ->sum('net_amount - COALESCE(vat_amount, 0)');
+            $totalPoExpenses = (float)Purch::find()->where(['approve_status' => 1, 'job_id' => $jobIds])->sum('net_amount - COALESCE(vat_amount, 0)');
         }
-
+        
         $totalNonePrExpenses = 0;
         if (!empty($jobNos)) {
-            $totalNonePrExpenses = (float)PurchaseMaster::find()
-                ->where(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED])
-                ->andWhere(['job_no' => $jobNos])
-                ->sum('total_amount - COALESCE(vat_amount, 0)');
+            $totalNonePrExpenses = (float)PurchaseMaster::find()->where(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED, 'job_no' => $jobNos])->sum('total_amount - COALESCE(vat_amount, 0)');
         }
         
         $totalPettyCashExpenses = 0;
         if (!empty($jobIds)) {
-            $totalPettyCashExpenses = (float)PettyCashVoucher::find()
-                ->where(['status' => 1, 'job_id' => $jobIds])
-                ->sum('amount');
+            $totalPettyCashExpenses = (float)PettyCashVoucher::find()->where(['status' => 1, 'job_id' => $jobIds])->sum('amount');
         }
 
         $totalInventoryExpenses = 0;
@@ -236,7 +215,8 @@ class ExecutiveDashboardController extends BaseController
         
         $totalWages = $totalVehicleWages; // ในแบบ Job Costing ใช้เฉพาะค่าจ้างที่ผูกกับใบงาน
         
-        $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalPettyCashExpenses + $totalVehicleExpenses + $totalWages + $totalInventoryExpenses;
+        // หักค่ารถและค่าจ้างออกจากการคำนวณ Net Profit ภาพรวม (ตามหมายเหตุ)
+        $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalPettyCashExpenses + $totalInventoryExpenses;
 
         // Effective Vehicle Expense is calculated as max(cost, km * 5)
         $effectiveVehicleExpense = $totalVehicleExpenses;
@@ -248,7 +228,23 @@ class ExecutiveDashboardController extends BaseController
 
         // Compatibility for other view vars
         $totalInvoicedAmount = 0;
-        $unbilledJobAmount = 0;
+        
+        $unbilledQuery = Invoice::find()
+            ->where(['invoices.status' => Invoice::STATUS_ACTIVE, 'invoices.is_billed' => 0])
+            ->andWhere(['invoices.invoice_type' => [Invoice::TYPE_TAX_INVOICE, Invoice::TYPE_QUOTATION]]);
+            
+        if (!empty($companyId) && $companyId != '0') {
+            $unbilledQuery->andWhere(['invoices.company_id' => $companyId]);
+        }
+        if (!empty($toDate)) {
+            $unbilledQuery->andWhere([
+                'or',
+                ['<=', 'invoices.invoice_date', $toDate],
+                ['and', ['invoices.invoice_date' => null], ['<=', 'invoices.created_at', $toDate . ' 23:59:59']]
+            ]);
+        }
+        
+        $unbilledJobAmount = (float)$unbilledQuery->sum('total_amount');
         $totalReceivableExposure = 0;
 
         // --- 3. ยอดค้างรับ (ที่ออกใบเสร็จแต่ยังไม่ได้บันทึกรับเงิน) & 4. ยอดเงินที่ได้รับ ---
@@ -328,15 +324,134 @@ class ExecutiveDashboardController extends BaseController
         // --- 5. สรุปผลกำไร / ขาดทุนสุทธิภาพรวม ---
         $netProfitLoss = $totalRevenue - $totalExpenses;
         
-        // --- 6. Past Jobs Expenses & Revenue ---
+        // --- 6. Past Jobs Expenses & Revenue (สำหรับแสดงใน Modal) ---
         $pastJobsExpenses = 0;
         $pastJobsRevenue = 0;
         $pastJobExpenseList = [];
         $pastJobRevenueList = [];
 
-        // ยกเลิกลอจิก Past Jobs Expenses & Revenue เนื่องจากระบบเปลี่ยนไปใช้ Job Costing แล้ว (รายจ่ายจะวิ่งตาม Job)
-        if (!empty($fromDate)) {
-            // Variables left for view compatibility
+        if (!empty($fromDate) && !empty($toDate)) {
+            $fromTs = strtotime($fromDate . ' 00:00:00');
+            
+            // 1. Past Job Expenses (PO, Non-PR, Petty Cash in current period but Job < $fromDate)
+            // 1.1 PO (Purch)
+            $pastPoItems = clone $expensesQuery;
+            $pastPoItems->innerJoin('job j', 'j.id = purch.job_id')
+                ->andWhere([
+                    'or',
+                    ['<', 'j.job_date', date('Y-m-d 00:00:00', $fromTs)],
+                    ['and', ['j.job_date' => null], ['<', 'j.created_at', $fromTs]]
+                ])
+                ->select(['purch.purch_no as doc_no', 'purch.purch_date as doc_date', '(purch.net_amount - COALESCE(purch.vat_amount, 0)) as amount', 'j.job_no', 'j.id as job_id', 'purch.id as doc_id']);
+                
+            foreach($pastPoItems->asArray()->all() as $po) {
+                $pastJobsExpenses += (float)$po['amount'];
+                $pastJobExpenseList[] = [
+                    'type' => 'PO',
+                    'doc_no' => $po['doc_no'],
+                    'doc_date' => $po['doc_date'],
+                    'amount' => (float)$po['amount'],
+                    'job_no' => $po['job_no'],
+                    'job_id' => $po['job_id'],
+                    'detail_url' => \yii\helpers\Url::to(['purch/view', 'id' => $po['doc_id']])
+                ];
+            }
+            
+            // 1.2 Non-PR (PurchaseMaster)
+            $pastNonPrItems = clone $nonePrQuery;
+            $pastNonPrItems->innerJoin('job j', 'j.job_no = purchase_master.job_no')
+                ->andWhere([
+                    'or',
+                    ['<', 'j.job_date', date('Y-m-d 00:00:00', $fromTs)],
+                    ['and', ['j.job_date' => null], ['<', 'j.created_at', $fromTs]]
+                ])
+                ->select(['purchase_master.doc_no', 'purchase_master.docdat as doc_date', '(purchase_master.total_amount - COALESCE(purchase_master.vat_amount, 0)) as amount', 'j.job_no', 'j.id as job_id', 'purchase_master.id as doc_id']);
+                
+            foreach($pastNonPrItems->asArray()->all() as $npr) {
+                $pastJobsExpenses += (float)$npr['amount'];
+                $pastJobExpenseList[] = [
+                    'type' => 'Non-PR',
+                    'doc_no' => $npr['doc_no'],
+                    'doc_date' => $npr['doc_date'],
+                    'amount' => (float)$npr['amount'],
+                    'job_no' => $npr['job_no'],
+                    'job_id' => $npr['job_id'],
+                    'detail_url' => \yii\helpers\Url::to(['purchase-master/view', 'id' => $npr['doc_id']])
+                ];
+            }
+            
+            // 1.3 Petty Cash
+            $pastPettyItems = clone $pettyCashQuery;
+            $pastPettyItems->innerJoin('job j', 'j.id = petty_cash_voucher.job_id')
+                ->andWhere([
+                    'or',
+                    ['<', 'j.job_date', date('Y-m-d 00:00:00', $fromTs)],
+                    ['and', ['j.job_date' => null], ['<', 'j.created_at', $fromTs]]
+                ])
+                ->select(['petty_cash_voucher.pcv_no as doc_no', 'petty_cash_voucher.date as doc_date', 'petty_cash_voucher.amount', 'j.job_no', 'j.id as job_id', 'petty_cash_voucher.id as doc_id']);
+                
+            foreach($pastPettyItems->asArray()->all() as $pcv) {
+                $pastJobsExpenses += (float)$pcv['amount'];
+                $pastJobExpenseList[] = [
+                    'type' => 'Petty Cash',
+                    'doc_no' => $pcv['doc_no'],
+                    'doc_date' => $pcv['doc_date'],
+                    'amount' => (float)$pcv['amount'],
+                    'job_no' => $pcv['job_no'],
+                    'job_id' => $pcv['job_id'],
+                    'detail_url' => \yii\helpers\Url::to(['petty-cash-voucher/view', 'id' => $pcv['doc_id']])
+                ];
+            }
+
+            // 2. Past Job Revenue (Invoices issued in current period but Job < $fromDate)
+            $pastRevQuery = \backend\models\Invoice::find()
+                ->alias('inv')
+                ->innerJoin('job j', 'j.id = inv.job_id')
+                ->where(['inv.status' => \backend\models\Invoice::STATUS_ACTIVE])
+                ->andWhere(['inv.invoice_type' => [\backend\models\Invoice::TYPE_TAX_INVOICE, \backend\models\Invoice::TYPE_RECEIPT, '4', 4, \backend\models\Invoice::TYPE_QUOTATION]])
+                ->andWhere(['between', 'inv.invoice_date', $fromDate, $toDate])
+                ->andWhere([
+                    'or',
+                    ['<', 'j.job_date', date('Y-m-d 00:00:00', $fromTs)],
+                    ['and', ['j.job_date' => null], ['<', 'j.created_at', $fromTs]]
+                ]);
+                
+            if (!empty($companyId) && $companyId != '0') {
+                $pastRevQuery->andWhere(['inv.company_id' => $companyId]);
+            }
+            
+            $pastRevItems = $pastRevQuery->select(['inv.invoice_number as doc_no', 'inv.invoice_date as doc_date', 'inv.total_amount as amount', 'j.job_no', 'j.id as job_id', 'inv.id as doc_id', 'inv.invoice_type'])
+                ->asArray()
+                ->all();
+            
+            $dedupRevJobs = [];
+            foreach($pastRevItems as $rev) {
+                if (!isset($dedupRevJobs[$rev['job_id']])) {
+                    $dedupRevJobs[$rev['job_id']] = $rev;
+                } else {
+                    if ((float)$rev['amount'] > (float)$dedupRevJobs[$rev['job_id']]['amount']) {
+                        $dedupRevJobs[$rev['job_id']] = $rev;
+                    }
+                }
+            }
+            
+            foreach($dedupRevJobs as $rev) {
+                $pastJobsRevenue += (float)$rev['amount'];
+                $typeLabel = 'Invoice';
+                if ($rev['invoice_type'] == 'tax_invoice') $typeLabel = 'Tax Invoice';
+                if ($rev['invoice_type'] == 'receipt' || $rev['invoice_type'] == '4') $typeLabel = 'Receipt';
+                if ($rev['invoice_type'] == 'quotation') $typeLabel = 'Quotation';
+                
+                $pastJobRevenueList[] = [
+                    'type' => $typeLabel,
+                    'doc_no' => $rev['doc_no'],
+                    'doc_date' => $rev['doc_date'],
+                    'amount' => (float)$rev['amount'],
+                    'job_no' => $rev['job_no'],
+                    'job_id' => $rev['job_id'],
+                    'detail_url' => \yii\helpers\Url::to(['invoice/view', 'id' => $rev['doc_id']])
+                ];
+            }
         }
 
         // --- Accounting PO Cashflow Alert & Comparison ---
@@ -377,14 +492,6 @@ class ExecutiveDashboardController extends BaseController
 
         // --- 8.8.4 Advanced Search System ---
         $jobsQuery = Job::find()->with(['company', 'quotation']);
-
-        if (!empty($fromDate) && !empty($toDate)) {
-            $jobsQuery->andWhere([
-                'or',
-                ['between', 'job.job_date', $fromDate . ' 00:00:00', $toDate . ' 23:59:59'],
-                ['and', ['job.job_date' => null], ['between', 'job.created_at', strtotime($fromDate . ' 00:00:00'), strtotime($toDate . ' 23:59:59')]]
-            ]);
-        }
         if (!empty($searchJobNo)) {
             $jobsQuery->andWhere(['like', 'job.job_no', $searchJobNo]);
         }
@@ -594,6 +701,7 @@ class ExecutiveDashboardController extends BaseController
             'searchCustomer' => $searchCustomer,
             'searchProduct' => $searchProduct,
             'totalReceivedAmount' => $totalReceivedAmount,
+            // Pass Past Jobs data to view for modal
             'pastJobsExpenses' => $pastJobsExpenses,
             'pastJobsRevenue' => $pastJobsRevenue,
             'pastJobExpenseList' => $pastJobExpenseList,

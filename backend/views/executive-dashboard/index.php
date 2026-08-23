@@ -39,6 +39,9 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
         <div class="card-body p-4">
             <form method="get" action="<?= Url::to(['executive-dashboard/index']) ?>" class="row g-3 align-items-end">
                 <input type="hidden" name="r" value="executive-dashboard/index">
+                <input type="hidden" name="search_job_no" value="<?= Html::encode($searchJobNo) ?>">
+                <input type="hidden" name="search_customer" value="<?= Html::encode($searchCustomer) ?>">
+                <input type="hidden" name="search_vendor" value="<?= Html::encode($searchVendor) ?>">
                 <div class="col-md-3">
                     <label class="form-label text-slate-700 small fw-semibold" style="color: #334155;">
                         <i class="fas fa-building text-slate-400 me-1"></i> บริษัทในเครือ
@@ -168,6 +171,26 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
             </div>
         </div>
 
+        <!-- Unbilled Receivables Card (New) -->
+        <div class="col-md col-sm-6" style="flex: 1 0 0%;">
+            <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover" style="background-color: #ffffff; border-radius: 16px;">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b; font-size: 0.8rem;">ยอดค้างรับ (ยังไม่วาง AR)</span>
+                        <div class="p-2 rounded-3" style="background-color: #f3f4f6; color: #6b7280;">
+                            <i class="fas fa-file-signature fa-md"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold mb-1" style="color: #374151; font-family: 'Inter', sans-serif;">
+                        <?= number_format($unbilledJobAmount, 2) ?>
+                    </h3>
+                    <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.72rem;">
+                        <i class="fas fa-clock me-1"></i> ใบแจ้งหนี้/กำกับภาษีที่รอวางบิล
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Received Amount Card (New) -->
         <div class="col-md col-sm-6" style="flex: 1 0 0%;">
             <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover" style="background-color: #ffffff; border-radius: 16px;">
@@ -229,32 +252,34 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
         </div>
     </div>
 
-    <!-- Net Profit / Loss Light Banner -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: <?= $netProfitLoss >= 0 ? 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)' : 'linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)' ?>; border: 1px solid <?= $netProfitLoss >= 0 ? '#a7f3d0' : '#fecdd3' ?> !important; border-radius: 16px;">
-        <div class="card-body p-4 d-flex justify-content-between align-items-center">
-            <div>
-                <h5 class="fw-bold mb-1" style="color: <?= $netProfitLoss >= 0 ? '#065f46' : '#9f1239' ?>; font-family: 'Prompt', sans-serif;">
-                    <i class="fas fa-chart-pie me-2"></i> สรุปผลกำไร / ขาดทุนสุทธิภาพรวม (Net Profit / Loss)
-                </h5>
-                <span class="small" style="color: <?= $netProfitLoss >= 0 ? '#047857' : '#be123c' ?>;">
-                    สรุปผลกำไร / ขาดทุนแบบ Job Costing <br>
-                    (รวมต้นทุนทั้งหมดที่ผูกกับ Job ในช่วงเวลาที่เลือก หักลบจากรายรับของ Job นั้นๆ)
-                </span>
-            </div>
-            <div class="text-end">
-                <h1 class="fw-bold mb-0" style="color: <?= $netProfitLoss >= 0 ? '#047857' : '#be123c' ?>; font-family: 'Inter', 'Prompt', sans-serif;">
-                    <?= number_format($netProfitLoss, 2) ?> <span class="ms-1" style="font-family: 'Prompt', sans-serif; font-size: 1.15rem; font-weight: 600;">บาท</span>
-                </h1>
-                <span class="badge px-3 py-2 rounded-pill fw-bold shadow-sm" style="background-color: <?= $netProfitLoss >= 0 ? '#d1fae5' : '#ffe4e6' ?>; color: <?= $netProfitLoss >= 0 ? '#047857' : '#be123c' ?>; font-size: 0.85rem;">
-                    <?php if ($netProfitLoss >= 0): ?>
-                        <i class="fas fa-arrow-up me-1"></i> กำไรสุทธิ (PROFIT)
-                    <?php else: ?>
-                        <i class="fas fa-arrow-down me-1"></i> ขาดทุนสุทธิ (LOSS)
-                    <?php endif; ?>
-                </span>
+    <!-- Net Profit / Loss Light Banner (Clickable) -->
+    <a href="#" data-bs-toggle="modal" data-bs-target="#pastJobDetailsModal" data-toggle="modal" data-target="#pastJobDetailsModal" class="text-decoration-none d-block mb-4">
+        <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover" style="background: <?= $netProfitLoss >= 0 ? 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)' : 'linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)' ?>; border: 1px solid <?= $netProfitLoss >= 0 ? '#a7f3d0' : '#fecdd3' ?> !important; border-radius: 16px; cursor: pointer;">
+            <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="fw-bold mb-1" style="color: <?= $netProfitLoss >= 0 ? '#065f46' : '#9f1239' ?>; font-family: 'Prompt', sans-serif;">
+                        <i class="fas fa-chart-pie me-2"></i> สรุปผลกำไร / ขาดทุนสุทธิภาพรวม (Net Profit / Loss) <small class="ms-2 badge bg-white text-secondary rounded-pill border shadow-sm" style="font-size: 0.65rem;"><i class="fas fa-search me-1"></i> ดูรายละเอียด (Job ก่อนหน้า)</small>
+                    </h5>
+                    <span class="small" style="color: <?= $netProfitLoss >= 0 ? '#047857' : '#be123c' ?>;">
+                        คำนวณจากเกณฑ์คงค้างบัญชีบริหาร (ยอดขายตั้งหนี้ตาม Invoice หรือ มูลค่างาน Job) - ค่าใช้จ่ายรวมทั้งหมด (PO + None PR + สดย่อย + สต๊อก) <br>
+                        *ไม่นำค่ารถและค่าจ้างมาคิดในภาพรวมนี้
+                    </span>
+                </div>
+                <div class="text-end">
+                    <h1 class="fw-bold mb-0" style="color: <?= $netProfitLoss >= 0 ? '#047857' : '#be123c' ?>; font-family: 'Inter', 'Prompt', sans-serif;">
+                        <?= number_format($netProfitLoss, 2) ?> <span class="ms-1" style="font-family: 'Prompt', sans-serif; font-size: 1.15rem; font-weight: 600;">บาท</span>
+                    </h1>
+                    <span class="badge px-3 py-2 rounded-pill fw-bold shadow-sm" style="background-color: <?= $netProfitLoss >= 0 ? '#d1fae5' : '#ffe4e6' ?>; color: <?= $netProfitLoss >= 0 ? '#047857' : '#be123c' ?>; font-size: 0.85rem;">
+                        <?php if ($netProfitLoss >= 0): ?>
+                            <i class="fas fa-arrow-up me-1"></i> กำไรสุทธิ (PROFIT)
+                        <?php else: ?>
+                            <i class="fas fa-arrow-down me-1"></i> ขาดทุนสุทธิ (LOSS)
+                        <?php endif; ?>
+                    </span>
+                </div>
             </div>
         </div>
-    </div>
+    </a>
 
 
 
@@ -468,6 +493,9 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
         <div class="card-body p-4">
             <form method="get" action="<?= Url::to(['executive-dashboard/index']) ?>" class="row g-3 mb-4">
                 <input type="hidden" name="r" value="executive-dashboard/index">
+                <input type="hidden" name="from_date" value="<?= Html::encode($fromDate) ?>">
+                <input type="hidden" name="to_date" value="<?= Html::encode($toDate) ?>">
+                <input type="hidden" name="company_id" value="<?= Html::encode($companyId) ?>">
                 <div class="col-md-3">
                     <input type="text" name="search_job_no" class="form-control form-select-modern" placeholder="ค้นหา Job Number..." value="<?= Html::encode($searchJobNo) ?>">
                 </div>
@@ -599,7 +627,134 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
             </div>
         </div>
     </div>
+</div>
 
+<!-- Past Jobs Details Modal -->
+<div class="modal fade" id="pastJobDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4" style="border-radius: 16px;">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-slate-800" style="color: #1e293b; font-family: 'Prompt', sans-serif;">
+                    <i class="fas fa-search-dollar text-indigo-600 me-2" style="color: #4f46e5;"></i> รายละเอียดรายรับ-รายจ่าย ที่เกิดจาก Job ก่อนหน้า
+                </h5>
+                <button type="button" class="btn-close" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-info rounded-3 border-0 bg-sky-50 text-sky-800 small mb-4" style="background-color: #f0f9ff; color: #075985;">
+                    <i class="fas fa-info-circle me-1"></i> ข้อมูลด้านล่างนี้คือรายการ <b>รายรับ</b> และ <b>รายจ่าย</b> ที่เกิดขึ้นจริงในเดือนที่กำลังสรุปผล (ตาม Filter) <u>แต่ผูกกับ Job ที่ถูกเปิดมาก่อนหน้านี้</u> ซึ่งมีผลกระทบทำให้กำไรภาพรวมแตกต่างจากกำไรแยกตามแต่ละ Job
+                </div>
+
+                <div class="row g-4">
+                    <!-- Column 1: Past Job Expenses -->
+                    <div class="col-lg-6">
+                        <div class="card h-100 border-0 shadow-sm rounded-4" style="background-color: #fff1f2; border: 1px solid #ffe4e6 !important;">
+                            <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold mb-0" style="color: #be123c;">
+                                    <i class="fas fa-minus-circle me-1"></i> หักค่าใช้จ่ายอันเกิดขึ้นปัจจุบัน (แต่เกิดกับ Job ก่อนหน้า)
+                                </h6>
+                                <span class="badge rounded-pill fw-bold" style="background-color: #e11d48; color: white;">
+                                    <?= number_format($pastJobsExpenses, 2) ?>
+                                </span>
+                            </div>
+                            <div class="card-body p-3">
+                                <?php if (empty($pastJobExpenseList)): ?>
+                                    <div class="text-center text-slate-400 py-3 small">ไม่มีข้อมูลค่าใช้จ่ายสำหรับ Job ก่อนหน้า</div>
+                                <?php else: ?>
+                                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                        <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.8rem;">
+                                            <thead class="table-light sticky-top">
+                                                <tr>
+                                                    <th>เลขที่เอกสาร</th>
+                                                    <th>วันที่</th>
+                                                    <th>ประเภท</th>
+                                                    <th>Job No.</th>
+                                                    <th class="text-end">ยอดเงิน</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($pastJobExpenseList as $exp): ?>
+                                                    <tr>
+                                                        <td>
+                                                            <a href="<?= $exp['detail_url'] ?>" target="_blank" class="fw-semibold text-decoration-none text-rose-600" style="color: #e11d48;">
+                                                                <?= Html::encode($exp['doc_no']) ?>
+                                                            </a>
+                                                        </td>
+                                                        <td><?= date('d/m/Y', strtotime($exp['doc_date'])) ?></td>
+                                                        <td><span class="badge bg-secondary"><?= Html::encode($exp['type']) ?></span></td>
+                                                        <td>
+                                                            <a href="<?= Url::to(['executive-dashboard/job-pipeline', 'id' => $exp['job_id']]) ?>" target="_blank" class="text-indigo-600 text-decoration-none">
+                                                                <i class="fas fa-folder-open me-1"></i><?= Html::encode($exp['job_no']) ?>
+                                                            </a>
+                                                        </td>
+                                                        <td class="text-end fw-bold"><?= number_format($exp['amount'], 2) ?></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Past Job Revenue -->
+                    <div class="col-lg-6">
+                        <div class="card h-100 border-0 shadow-sm rounded-4" style="background-color: #f0fdf4; border: 1px solid #dcfce7 !important;">
+                            <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold mb-0" style="color: #15803d;">
+                                    <i class="fas fa-plus-circle me-1"></i> บวกรายรับปัจจุบัน (อันเกิดขึ้นจาก Job ก่อนหน้า)
+                                </h6>
+                                <span class="badge rounded-pill fw-bold" style="background-color: #16a34a; color: white;">
+                                    <?= number_format($pastJobsRevenue, 2) ?>
+                                </span>
+                            </div>
+                            <div class="card-body p-3">
+                                <?php if (empty($pastJobRevenueList)): ?>
+                                    <div class="text-center text-slate-400 py-3 small">ไม่มีข้อมูลรายรับสำหรับ Job ก่อนหน้า</div>
+                                <?php else: ?>
+                                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                        <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.8rem;">
+                                            <thead class="table-light sticky-top">
+                                                <tr>
+                                                    <th>เลขที่เอกสาร</th>
+                                                    <th>วันที่</th>
+                                                    <th>ประเภท</th>
+                                                    <th>Job No.</th>
+                                                    <th class="text-end">ยอดเงิน</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php foreach ($pastJobRevenueList as $rev): ?>
+                                                    <tr>
+                                                        <td>
+                                                            <a href="<?= $rev['detail_url'] ?>" target="_blank" class="fw-semibold text-decoration-none text-emerald-600" style="color: #059669;">
+                                                                <?= Html::encode($rev['doc_no']) ?>
+                                                            </a>
+                                                        </td>
+                                                        <td><?= date('d/m/Y', strtotime($rev['doc_date'])) ?></td>
+                                                        <td><span class="badge bg-secondary"><?= Html::encode($rev['type']) ?></span></td>
+                                                        <td>
+                                                            <a href="<?= Url::to(['executive-dashboard/job-pipeline', 'id' => $rev['job_id']]) ?>" target="_blank" class="text-indigo-600 text-decoration-none">
+                                                                <i class="fas fa-folder-open me-1"></i><?= Html::encode($rev['job_no']) ?>
+                                                            </a>
+                                                        </td>
+                                                        <td class="text-end fw-bold"><?= number_format($rev['amount'], 2) ?></td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex justify-content-end">
+                <button type="button" class="btn btn-light-modern" data-dismiss="modal" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Modal บันทึกปิดยอดประจำเดือน (Tailwind Light Modal) -->

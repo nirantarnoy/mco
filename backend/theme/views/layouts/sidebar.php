@@ -362,6 +362,37 @@
                                     </a>
                                 </li> -->
                             <?php endif; ?>
+
+                              <li class="nav-item">
+                            <a href="index.php?r=check-duplicate/index" class="nav-link check-duplicate">
+                                <i class="far fa-circlez nav-icon"></i>
+                                <p>Check Duplicate</p>
+                            </a>
+                        </li>
+<!--                            --><?php //if (\Yii::$app->user->can('stocktrans/index')): ?>
+<!--                                <li class="nav-item">-->
+<!--                                    <a href="index.php?r=stocktrans" class="nav-link stocktrans">-->
+<!--                                        <i class="far fa-circlez nav-icon"></i>-->
+<!--                                        <p>-->
+<!--                                            ประวัติทำรายการ-->
+<!--                                          -->
+<!--                                        </p>-->
+<!--                                    </a>-->
+<!--                                </li>-->
+<!--                            --><?php //endif;?>
+                        </ul>
+                    </li>
+                <?php endif;?>
+                <?php if(\Yii::$app->user->can('purch/index')):?>
+                    <li class="nav-item has-treeview has-sub">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                            <p>
+                                A&F Dept
+                                <i class="fas fa-angle-left right"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
                             <li class="nav-item">
                                 <a href="index.php?r=pre-advance/index" class="nav-link pre-advance">
                                     <i class="far fa-circlez nav-icon"></i>
@@ -380,23 +411,6 @@
                                     <p>จัดการหัก ณ ที่จ่าย (WHT)</p>
                                 </a>
                             </li>
-                              <li class="nav-item">
-                            <a href="index.php?r=check-duplicate/index" class="nav-link check-duplicate">
-                                <i class="far fa-circlez nav-icon"></i>
-                                <p>Check Duplicate</p>
-                            </a>
-                        </li>
-<!--                            --><?php //if (\Yii::$app->user->can('stocktrans/index')): ?>
-<!--                                <li class="nav-item">-->
-<!--                                    <a href="index.php?r=stocktrans" class="nav-link stocktrans">-->
-<!--                                        <i class="far fa-circlez nav-icon"></i>-->
-<!--                                        <p>-->
-<!--                                            ประวัติทำรายการ-->
-<!--                                          -->
-<!--                                        </p>-->
-<!--                                    </a>-->
-<!--                                </li>-->
-<!--                            --><?php //endif;?>
                         </ul>
                     </li>
                 <?php endif;?>

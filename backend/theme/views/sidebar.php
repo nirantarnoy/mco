@@ -477,6 +477,24 @@
                                 <p>ใบสั่งซื้อ</p>
                             </a>
                         </li>
+
+                        <li class="nav-item">
+                            <a href="index.php?r=check-duplicate/index" class="nav-link check-duplicate">
+                                <i class="far fa-circlez nav-icon"></i>
+                                <p>Check Duplicate</p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item has-treeview has-sub">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-file-invoice-dollar"></i>
+                        <p>
+                            A&F Dept
+                            <i class="fas fa-angle-left right"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
                         <li class="nav-item">
                             <a href="index.php?r=pre-advance/index" class="nav-link pre-advance">
                                 <i class="far fa-circlez nav-icon"></i>
@@ -493,12 +511,6 @@
                             <a href="index.php?r=wht/index" class="nav-link wht">
                                 <i class="far fa-circlez nav-icon"></i>
                                 <p>จัดการหัก ณ ที่จ่าย</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="index.php?r=check-duplicate/index" class="nav-link check-duplicate">
-                                <i class="far fa-circlez nav-icon"></i>
-                                <p>Check Duplicate</p>
                             </a>
                         </li>
                     </ul>
