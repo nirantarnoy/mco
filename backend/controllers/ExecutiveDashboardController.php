@@ -335,14 +335,20 @@ class ExecutiveDashboardController extends BaseController
             
             // 1. Past Job Expenses (PO, Non-PR, Petty Cash in current period but Job < $fromDate)
             // 1.1 PO (Purch)
-            $pastPoItems = clone $expensesQuery;
-            $pastPoItems->innerJoin('job j', 'j.id = purch.job_id')
+            $pastPoItems = \backend\models\Purch::find()
+                ->where(['purch.approve_status' => 1])
+                ->andWhere(['between', 'purch.purch_date', $fromDate, $toDate])
+                ->innerJoin('job j', 'j.id = purch.job_id')
                 ->andWhere([
                     'or',
                     ['<', 'j.job_date', date('Y-m-d 00:00:00', $fromTs)],
                     ['and', ['j.job_date' => null], ['<', 'j.created_at', $fromTs]]
                 ])
                 ->select(['purch.purch_no as doc_no', 'purch.purch_date as doc_date', '(purch.net_amount - COALESCE(purch.vat_amount, 0)) as amount', 'j.job_no', 'j.id as job_id', 'purch.id as doc_id']);
+                
+            if (!empty($companyId) && $companyId != '0') {
+                $pastPoItems->andWhere(['j.company_id' => $companyId]);
+            }
                 
             foreach($pastPoItems->asArray()->all() as $po) {
                 $pastJobsExpenses += (float)$po['amount'];
@@ -358,14 +364,20 @@ class ExecutiveDashboardController extends BaseController
             }
             
             // 1.2 Non-PR (PurchaseMaster)
-            $pastNonPrItems = clone $nonePrQuery;
-            $pastNonPrItems->innerJoin('job j', 'j.job_no = purchase_master.job_no')
+            $pastNonPrItems = \backend\models\PurchaseMaster::find()
+                ->where(['purchase_master.approve_status' => 1])
+                ->andWhere(['between', 'purchase_master.docdat', $fromDate, $toDate])
+                ->innerJoin('job j', 'j.job_no = purchase_master.job_no')
                 ->andWhere([
                     'or',
                     ['<', 'j.job_date', date('Y-m-d 00:00:00', $fromTs)],
                     ['and', ['j.job_date' => null], ['<', 'j.created_at', $fromTs]]
                 ])
                 ->select(['purchase_master.docnum as doc_no', 'purchase_master.docdat as doc_date', '(purchase_master.total_amount - COALESCE(purchase_master.vat_amount, 0)) as amount', 'j.job_no', 'j.id as job_id', 'purchase_master.id as doc_id']);
+                
+            if (!empty($companyId) && $companyId != '0') {
+                $pastNonPrItems->andWhere(['j.company_id' => $companyId]);
+            }
                 
             foreach($pastNonPrItems->asArray()->all() as $npr) {
                 $pastJobsExpenses += (float)$npr['amount'];
@@ -381,14 +393,20 @@ class ExecutiveDashboardController extends BaseController
             }
             
             // 1.3 Petty Cash
-            $pastPettyItems = clone $pettyCashQuery;
-            $pastPettyItems->innerJoin('job j', 'j.id = petty_cash_voucher.job_id')
+            $pastPettyItems = \backend\models\PettyCashVoucher::find()
+                ->where(['petty_cash_voucher.status' => \backend\models\PettyCashVoucher::STATUS_ACTIVE])
+                ->andWhere(['between', 'petty_cash_voucher.date', $fromDate, $toDate])
+                ->innerJoin('job j', 'j.id = petty_cash_voucher.job_id')
                 ->andWhere([
                     'or',
                     ['<', 'j.job_date', date('Y-m-d 00:00:00', $fromTs)],
                     ['and', ['j.job_date' => null], ['<', 'j.created_at', $fromTs]]
                 ])
                 ->select(['petty_cash_voucher.pcv_no as doc_no', 'petty_cash_voucher.date as doc_date', 'petty_cash_voucher.amount', 'j.job_no', 'j.id as job_id', 'petty_cash_voucher.id as doc_id']);
+                
+            if (!empty($companyId) && $companyId != '0') {
+                $pastPettyItems->andWhere(['j.company_id' => $companyId]);
+            }
                 
             foreach($pastPettyItems->asArray()->all() as $pcv) {
                 $pastJobsExpenses += (float)$pcv['amount'];
