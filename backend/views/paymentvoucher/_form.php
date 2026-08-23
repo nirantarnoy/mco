@@ -98,9 +98,7 @@ function addLine(data = null) {
 function calculateTotal() {
     var total_debit = 0;
     var total_credit = 0;
-    var hasLines = false;
     $('.line-debit').each(function() {
-        hasLines = true;
         total_debit += parseFloat($(this).val()) || 0;
     });
     $('.line-credit').each(function() {
@@ -108,10 +106,6 @@ function calculateTotal() {
     });
     $('#total-debit').text(total_debit.toFixed(2));
     $('#total-credit').text(total_credit.toFixed(2));
-    
-    if (hasLines) {
-        $('#paymentvoucher-amount').val(total_debit > 0 ? total_debit : total_credit);
-    }
 }
 
 function loadPrPoByVendor(vendorId) {
