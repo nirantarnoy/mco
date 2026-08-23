@@ -151,10 +151,8 @@ function calculateTotal() {
 }
 
 function loadNonePrByVendor(vendorId) {
-    var prevVal = $('#vendor-select').data('prev-val');
-    if (prevVal !== vendorId) {
-        $('#none-pr-select').val(null).trigger('change');
-    }
+    // สำหรับ Pre-Advance ไม่ต้องล้างรายการ None PR/PO เมื่อเปลี่ยน Vendor 
+    // เพราะใบเสร็จอาจมาจากหลาย Vendor แต่เบิกรวมกัน
     $('#vendor-select').data('prev-val', vendorId);
 }
 
@@ -286,7 +284,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                                 'url' => $getNonePrByVendorUrl,
                                 'dataType' => 'json',
                                 'delay' => 250,
-                                'data' => new JsExpression('function(params) { return {q:params.term, vendor_id: $("#vendor-select").val(), pre_advance_id: "' . ($model->id ?: '') . '"}; }'),
+                                'data' => new JsExpression('function(params) { return {q:params.term, pre_advance_id: "' . ($model->id ?: '') . '"}; }'),
                                 'processResults' => new JsExpression('function(data) { return {results: data.results}; }'),
                                 'cache' => true
                             ],

@@ -98,14 +98,27 @@ function addLine(data = null) {
 function calculateTotal() {
     var total_debit = 0;
     var total_credit = 0;
-    $('.line-debit').each(function() {
-        total_debit += parseFloat($(this).val()) || 0;
+    var bank_deposit_amount = 0;
+    
+    $('#voucher-lines tbody tr.line-item').each(function() {
+        var debit = parseFloat($(this).find('.line-debit').val()) || 0;
+        var credit = parseFloat($(this).find('.line-credit').val()) || 0;
+        var acc_code = $(this).find('select[name="line_account_code[]"]').val();
+        
+        total_debit += debit;
+        total_credit += credit;
+        
+        if (acc_code && account_data[acc_code] && account_data[acc_code].indexOf('เงินฝากกระแสรายวัน') !== -1) {
+            bank_deposit_amount = debit > 0 ? debit : credit;
+        }
     });
-    $('.line-credit').each(function() {
-        total_credit += parseFloat($(this).val()) || 0;
-    });
+    
     $('#total-debit').text(total_debit.toFixed(2));
     $('#total-credit').text(total_credit.toFixed(2));
+    
+    if (bank_deposit_amount > 0) {
+        $('#paymentvoucher-amount').val(bank_deposit_amount);
+    }
 }
 
 function loadPrPoByVendor(vendorId) {
@@ -190,6 +203,11 @@ $(document).ready(function() {
     
     // Event delegation สำหรับ debit/credit inputs
     $('#voucher-lines tbody').on('input', '.line-debit, .line-credit', function() {
+        calculateTotal();
+    });
+    
+    // Event delegation สำหรับเมื่อเลือกบัญชี
+    $('#voucher-lines tbody').on('change', 'select[name="line_account_code[]"]', function() {
         calculateTotal();
     });
     
