@@ -365,7 +365,7 @@ class ExecutiveDashboardController extends BaseController
                     ['<', 'j.job_date', date('Y-m-d 00:00:00', $fromTs)],
                     ['and', ['j.job_date' => null], ['<', 'j.created_at', $fromTs]]
                 ])
-                ->select(['purchase_master.doc_no', 'purchase_master.docdat as doc_date', '(purchase_master.total_amount - COALESCE(purchase_master.vat_amount, 0)) as amount', 'j.job_no', 'j.id as job_id', 'purchase_master.id as doc_id']);
+                ->select(['purchase_master.docnum as doc_no', 'purchase_master.docdat as doc_date', '(purchase_master.total_amount - COALESCE(purchase_master.vat_amount, 0)) as amount', 'j.job_no', 'j.id as job_id', 'purchase_master.id as doc_id']);
                 
             foreach($pastNonPrItems->asArray()->all() as $npr) {
                 $pastJobsExpenses += (float)$npr['amount'];
