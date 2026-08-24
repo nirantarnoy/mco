@@ -764,6 +764,22 @@ class JobController extends BaseController
         // ดึงข้อมูล Job Expense (ค่าใช้จ่ายอื่นๆ)
         $jobExpenses = JobExpense::find()->where(['job_id' => $model->id])->all();
 
+        if (Yii::$app->request->isAjax) {
+            return $this->renderAjax('timeline', [
+                'model' => $model,
+                'purchReqs' => $purchReqs,
+                'purchases' => $purchases,
+                'journalTrans' => $journalTrans,
+                'invoices' => $invoices,
+                'billingInvoices' => $billinginvoices,
+                'pettyCashVouchers' => $pettyCashVouchers,
+                'paymentReceipts' => $paymentReceipts,
+                'vehicleExpense' => $vehicleExpense,
+                'purchasesnonepr' => $purchasesnonepr,
+                'jobExpenses' => $jobExpenses,
+            ]);
+        }
+
         return $this->render('timeline', [
             'model' => $model,
             'purchReqs' => $purchReqs,
@@ -776,6 +792,36 @@ class JobController extends BaseController
             'vehicleExpense' => $vehicleExpense,
             'purchasesnonepr' => $purchasesnonepr,
             'jobExpenses' => $jobExpenses, // ส่งข้อมูลไปที่ view
+        ]);
+    }
+
+    public function actionTimelineModal($id)
+    {
+        $model = $this->findModel($id);
+
+        $purchReqs = $this->getPurchaseRequests($model->id);
+        $purchases = $this->getPurchaseOrders($model->id);
+        $purchasesnonepr = $this->getPurchaseOrdersNonePr($model->id);
+        $journalTrans = $this->getJournalTransactions($model->id);
+        $invoices = $this->getInvoices($model->id);
+        $billinginvoices = $this->getBillingInvoices($model->id);
+        $pettyCashVouchers = $this->getPettyCashVouchers($model->id);
+        $paymentReceipts = $this->getPaymentReceipts($model->id);
+        $vehicleExpense = $this->getJobVehicleExpense($model->job_no);
+        $jobExpenses = JobExpense::find()->where(['job_id' => $model->id])->all();
+
+        return $this->renderAjax('timeline_modal', [
+            'model' => $model,
+            'purchReqs' => $purchReqs,
+            'purchases' => $purchases,
+            'journalTrans' => $journalTrans,
+            'invoices' => $invoices,
+            'billingInvoices' => $billinginvoices,
+            'pettyCashVouchers' => $pettyCashVouchers,
+            'paymentReceipts' => $paymentReceipts,
+            'vehicleExpense' => $vehicleExpense,
+            'purchasesnonepr' => $purchasesnonepr,
+            'jobExpenses' => $jobExpenses,
         ]);
     }
 

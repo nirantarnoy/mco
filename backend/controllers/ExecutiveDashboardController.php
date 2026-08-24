@@ -685,7 +685,7 @@ class ExecutiveDashboardController extends BaseController
 
         // --- 8.9 Calculate Comprehensive Expenses by Company (Independent of Filtered Job) ---
         $companySummaries = [];
-        $allComps = \backend\models\Company::find()->where(['status' => 1])->all();
+        $allComps = \backend\models\Company::find()->all();
         
         $totalAllRev = 0;
         $totalAllPo = 0;
