@@ -683,6 +683,129 @@ class ExecutiveDashboardController extends BaseController
             $chartReceivablesData[] = round($mRec, 2);
         }
 
+        // --- 8.9 Calculate Comprehensive Expenses by Company (Independent of Filtered Job) ---
+        $companySummaries = [];
+        $allComps = \backend\models\Company::find()->where(['status' => 1])->all();
+        
+        $totalAllRev = 0;
+        $totalAllPo = 0;
+        $totalAllNonePr = 0;
+        $totalAllPetty = 0;
+        $totalAllInv = 0;
+        $totalAllVehicle = 0;
+        $totalAllExp = 0;
+        $totalAllNet = 0;
+
+        foreach ($allComps as $comp) {
+            $cId = $comp->id;
+            
+            // Revenue
+            $cJobsWithPo = Job::find()->where(['job.status' => [1, 2], 'job.company_id' => $cId]);
+            if (!empty($fromDate) && !empty($toDate)) {
+                $cJobsWithPo->andWhere([
+                    'or',
+                    ['between', 'job.job_date', $fromDate . ' 00:00:00', $toDate . ' 23:59:59'],
+                    ['and', ['job.job_date' => null], ['between', 'job.created_at', strtotime($fromDate . ' 00:00:00'), strtotime($toDate . ' 23:59:59')]]
+                ]);
+            }
+            $cRev = 0;
+            foreach ($cJobsWithPo->all() as $cj) {
+                $cRev += $cj->getJobAmountNoVat();
+            }
+            
+            // PO
+            $cPoQuery = Purch::find()->where(['approve_status' => 1, 'company_id' => $cId]);
+            if (!empty($fromDate) && !empty($toDate)) {
+                $cPoQuery->andWhere(['between', 'purch_date', $fromDate, $toDate]);
+            }
+            $cPo = (float)$cPoQuery->sum('net_amount - COALESCE(vat_amount, 0)');
+                
+            // Non PR
+            $cNonePrQuery = PurchaseMaster::find()->where(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED, 'company_id' => $cId]);
+            if (!empty($fromDate) && !empty($toDate)) {
+                $cNonePrQuery->andWhere(['between', 'docdat', $fromDate, $toDate]);
+            }
+            $cNonePr = (float)$cNonePrQuery->sum('total_amount - COALESCE(vat_amount, 0)');
+                
+            // Petty Cash
+            $cPettyQuery = PettyCashVoucher::find()->where(['status' => 1, 'company_id' => $cId]);
+            if (!empty($fromDate) && !empty($toDate)) {
+                $cPettyQuery->andWhere(['between', 'date', $fromDate, $toDate]);
+            }
+            $cPetty = (float)$cPettyQuery->sum('amount');
+                
+            // Inventory
+            $stockQ = (new \yii\db\Query())
+                ->select('l.qty, l.line_price, l.sale_price, p.sale_price as p_sale_price, p.cost_price as p_cost_price')
+                ->from('journal_trans_line l')
+                ->innerJoin('journal_trans t', 't.id = l.journal_trans_id')
+                ->innerJoin('job j', 'j.id = t.job_id')
+                ->leftJoin('product p', 'p.id = l.product_id')
+                ->where(['t.trans_type_id' => 3, 't.status' => 2, 'j.company_id' => $cId]);
+            if (!empty($fromDate) && !empty($toDate)) {
+                $stockQ->andWhere(['between', 't.trans_date', $fromDate, $toDate]);
+            }
+            $stockIssues = $stockQ->all();
+            
+            $cInv = 0;
+            foreach ($stockIssues as $issue) {
+                if (!empty($issue['line_price']) && (float)$issue['line_price'] > 0) {
+                    $cInv += (float)$issue['line_price'];
+                } elseif (!empty($issue['sale_price']) && (float)$issue['sale_price'] > 0) {
+                    $cInv += (float)$issue['sale_price'] * (float)$issue['qty'];
+                } else {
+                    $unitPrice = (float)$issue['p_sale_price'] > 0 ? (float)$issue['p_sale_price'] : (float)$issue['p_cost_price'];
+                    $cInv += $unitPrice * (float)$issue['qty'];
+                }
+            }
+
+            // Vehicles
+            $veQ = VehicleExpense::find()->innerJoin('job j', 'j.job_no = vehicle_expense.job_no')->where(['j.company_id' => $cId]);
+            if (!empty($fromDate) && !empty($toDate)) {
+                $veQ->andWhere(['between', 'vehicle_expense.expense_date', $fromDate, $toDate]);
+            }
+            $cKm = abs((float)(clone $veQ)->sum('vehicle_expense.total_distance'));
+            $cVehicleCost = abs((float)(clone $veQ)->sum('vehicle_expense.vehicle_cost'));
+            $cVehicleWage = abs((float)(clone $veQ)->sum('vehicle_expense.total_wage'));
+            $cEffVehicleCost = max($cVehicleCost, $cKm * 5);
+            $cVehicleTotal = $cEffVehicleCost + $cVehicleWage;
+            
+            $cTotalExp = $cPo + $cNonePr + $cPetty + $cInv + $cVehicleTotal;
+            $cNetProfit = $cRev - $cTotalExp;
+
+            $totalAllRev += $cRev;
+            $totalAllPo += $cPo;
+            $totalAllNonePr += $cNonePr;
+            $totalAllPetty += $cPetty;
+            $totalAllInv += $cInv;
+            $totalAllVehicle += $cVehicleTotal;
+            $totalAllExp += $cTotalExp;
+            $totalAllNet += $cNetProfit;
+            
+            $companySummaries[] = [
+                'company_name' => $comp->name,
+                'revenue' => $cRev,
+                'po' => $cPo,
+                'none_pr' => $cNonePr,
+                'petty_cash' => $cPetty,
+                'inventory' => $cInv,
+                'vehicle' => $cVehicleTotal,
+                'total_expenses' => $cTotalExp,
+                'net_profit' => $cNetProfit
+            ];
+        }
+
+        $companySummariesTotals = [
+            'revenue' => $totalAllRev,
+            'po' => $totalAllPo,
+            'none_pr' => $totalAllNonePr,
+            'petty_cash' => $totalAllPetty,
+            'inventory' => $totalAllInv,
+            'vehicle' => $totalAllVehicle,
+            'total_expenses' => $totalAllExp,
+            'net_profit' => $totalAllNet
+        ];
+
         return $this->render('index', [
             'companyId' => $companyId,
             'fromDate' => $fromDate,
@@ -719,11 +842,12 @@ class ExecutiveDashboardController extends BaseController
             'searchCustomer' => $searchCustomer,
             'searchProduct' => $searchProduct,
             'totalReceivedAmount' => $totalReceivedAmount,
-            // Pass Past Jobs data to view for modal
             'pastJobsExpenses' => $pastJobsExpenses,
             'pastJobsRevenue' => $pastJobsRevenue,
             'pastJobExpenseList' => $pastJobExpenseList,
             'pastJobRevenueList' => $pastJobRevenueList,
+            'companySummaries' => $companySummaries,
+            'companySummariesTotals' => $companySummariesTotals,
         ]);
     }
 

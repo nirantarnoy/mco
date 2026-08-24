@@ -477,6 +477,65 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
         </div>
     </div>
 
+    <!-- 8.8.3 Comprehensive Expenses by Company (Independent of Filtered Job) -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4" style="background-color: #ffffff; border-radius: 16px;">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="fw-bold mb-1 text-slate-800" style="color: #1e293b; font-family: 'Prompt', sans-serif;">
+                    <i class="fas fa-building text-indigo-600 me-2" style="color: #4f46e5;"></i> สรุปค่าใช้จ่ายแยกแต่ละบริษัท (ตามช่วงเวลาที่เลือก)
+                </h6>
+                <div class="small text-slate-500" style="color: #64748b;">ข้อมูลด้านล่างนี้จะรวมค่าใช้จ่ายทั้งหมดที่เกิดขึ้นในช่วงเวลาที่เลือก โดย<span class="text-danger fw-bold">ไม่สนใจว่าเอกสารนั้นจะผูกกับ Job ใดๆ หรือไม่</span> (แสดงตามจริง)</div>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table class="table table-custom align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>บริษัท</th>
+                            <th class="text-end text-success">ยอดขาย/รายรับ</th>
+                            <th class="text-end text-danger">PO</th>
+                            <th class="text-end text-warning">None PR</th>
+                            <th class="text-end text-secondary">สดย่อย</th>
+                            <th class="text-end text-info">สต๊อก</th>
+                            <th class="text-end text-primary">รถยนต์+ค่าจ้าง</th>
+                            <th class="text-end fw-bold" style="color: #be123c;">รวมค่าใช้จ่าย</th>
+                            <th class="text-end fw-bold">กำไรสุทธิ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($companySummaries as $c): ?>
+                            <tr>
+                                <td class="fw-semibold text-slate-700"><?= Html::encode($c['company_name']) ?></td>
+                                <td class="text-end fw-bold text-success"><?= number_format($c['revenue'], 2) ?></td>
+                                <td class="text-end text-danger"><?= number_format($c['po'], 2) ?></td>
+                                <td class="text-end text-warning"><?= number_format($c['none_pr'], 2) ?></td>
+                                <td class="text-end text-secondary"><?= number_format($c['petty_cash'], 2) ?></td>
+                                <td class="text-end text-info"><?= number_format($c['inventory'], 2) ?></td>
+                                <td class="text-end text-primary"><?= number_format($c['vehicle'], 2) ?></td>
+                                <td class="text-end fw-bold" style="color: #be123c;"><?= number_format($c['total_expenses'], 2) ?></td>
+                                <td class="text-end fw-bold <?= $c['net_profit'] >= 0 ? 'text-success' : 'text-danger' ?>"><?= number_format($c['net_profit'], 2) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-light">
+                            <td class="fw-bold text-slate-800 text-end">รวมทั้งหมด (Total)</td>
+                            <td class="text-end fw-bold text-success fs-6"><?= number_format($companySummariesTotals['revenue'], 2) ?></td>
+                            <td class="text-end fw-bold text-danger"><?= number_format($companySummariesTotals['po'], 2) ?></td>
+                            <td class="text-end fw-bold text-warning"><?= number_format($companySummariesTotals['none_pr'], 2) ?></td>
+                            <td class="text-end fw-bold text-secondary"><?= number_format($companySummariesTotals['petty_cash'], 2) ?></td>
+                            <td class="text-end fw-bold text-info"><?= number_format($companySummariesTotals['inventory'], 2) ?></td>
+                            <td class="text-end fw-bold text-primary"><?= number_format($companySummariesTotals['vehicle'], 2) ?></td>
+                            <td class="text-end fw-bold fs-6" style="color: #be123c;"><?= number_format($companySummariesTotals['total_expenses'], 2) ?></td>
+                            <td class="text-end fw-bold fs-6 <?= $companySummariesTotals['net_profit'] >= 0 ? 'text-success' : 'text-danger' ?>"><?= number_format($companySummariesTotals['net_profit'], 2) ?></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- 8.8.4 Advanced Search & Drill-Down Section -->
     <div class="card border-0 shadow-sm rounded-4 mb-4" style="background-color: #ffffff; border-radius: 16px;">
         <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
