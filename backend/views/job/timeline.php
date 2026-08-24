@@ -17,205 +17,195 @@ $this->params['breadcrumbs'][] = $this->title;
 
 // Register CSS
 $this->registerCss('
+@import url("https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap");
+
+.job-timeline-view {
+    font-family: "Prompt", sans-serif;
+    color: #334155;
+}
+
 .timeline-container {
     position: relative;
-    padding-left: 40px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    min-height: 100vh;
-    padding-top: 20px;
-    padding-bottom: 20px;
+    padding-left: 45px;
+    background: transparent;
+    padding-top: 10px;
+    padding-bottom: 30px;
 }
 
 .timeline-container::before {
     content: "";
     position: absolute;
-    left: 20px;
-    top: 0;
+    left: 24px;
+    top: 15px;
     bottom: 0;
-    width: 4px;
-    background: linear-gradient(to bottom, #007bff 0%, #17a2b8 25%, #ffc107 50%, #28a745 75%, #343a40 100%);
-    border-radius: 2px;
-    box-shadow: 0 0 10px rgba(0,123,255,0.3);
+    width: 3px;
+    background: #e2e8f0;
+    border-radius: 3px;
 }
 
 .timeline-section {
     position: relative;
-    margin-bottom: 40px;
-    opacity: 1;
-    visibility: visible;
+    margin-bottom: 35px;
     display: block;
 }
 
 .timeline-section::before {
     content: "";
     position: absolute;
-    left: -32px;
-    top: 25px;
-    width: 16px;
-    height: 16px;
+    left: -29px;
+    top: 20px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
-    background: #fff;
-    border: 4px solid #007bff;
+    background: #ffffff;
+    border: 4px solid #4f46e5;
     z-index: 10;
-    box-shadow: 0 0 0 4px rgba(255,255,255,0.8);
+    box-shadow: 0 0 0 4px rgba(255,255,255,1);
 }
 
 .timeline-section:nth-child(2)::before {
-    border-color: #ffc107;
-    box-shadow: 0 0 0 4px rgba(255,255,255,0.8);
+    border-color: #f59e0b;
 }
 
 .timeline-section:nth-child(3)::before {
-    border-color: #6c757d;
-    box-shadow: 0 0 0 4px rgba(255,255,255,0.8);
+    border-color: #0ea5e9;
 }
 
 .timeline-section:nth-child(4)::before {
-    border-color: #28a745;
-    box-shadow: 0 0 0 4px rgba(255,255,255,0.8);
+    border-color: #10b981;
 }
 
 .timeline-section:nth-child(5)::before {
-    border-color: #343a40;
-    box-shadow: 0 0 0 4px rgba(255,255,255,0.8);
+    border-color: #8b5cf6;
+}
+.timeline-section:nth-child(6)::before {
+    border-color: #ec4899;
 }
 
 .timeline-section .card {
     border: none;
-    border-radius: 15px;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     overflow: hidden;
-    background: rgba(255,255,255,0.95);
-}
-
-.timeline-section .card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
-    transition: all 0.3s ease;
+    background: #ffffff;
+    border: 1px solid #f1f5f9;
 }
 
 .timeline-section .card-header {
     border: none;
-    padding: 20px 25px;
+    padding: 16px 24px;
     position: relative;
     overflow: hidden;
+    background: #f8fafc;
+    border-bottom: 1px solid #f1f5f9;
 }
 
 .timeline-section .card-header h5 {
     margin: 0;
     font-weight: 600;
     font-size: 1.1rem;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    color: #1e293b;
 }
 
 .timeline-section .card-body {
-    padding: 25px;
-    background: rgba(255,255,255,0.98);
+    padding: 20px 24px;
+    background: #ffffff;
 }
 
 .timeline-section .table {
-    border-radius: 10px;
+    border-radius: 8px;
     overflow: hidden;
     margin-bottom: 0;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
 
 .timeline-section .table thead th {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background-color: #f8fafc;
     border: none;
-    color: #495057;
+    color: #64748b;
     font-weight: 600;
-    text-transform: uppercase;
     font-size: 0.85rem;
-    letter-spacing: 0.5px;
-    padding: 15px 12px;
+    padding: 12px 16px;
     text-align: center;
+    border-bottom: 1px solid #e2e8f0;
 }
 
 .timeline-section .table tbody tr:hover {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
-    transition: all 0.2s ease;
+    background-color: #f8fafc;
 }
 
 .timeline-section .table td {
     border: none;
-    border-bottom: 1px solid #f1f3f4;
-    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 14px 16px;
     vertical-align: middle;
 }
 
 .badge {
-    font-size: 0.75em;
+    font-size: 0.75rem;
     padding: 6px 12px;
-    border-radius: 20px;
+    border-radius: 9999px;
     font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.alert {
     border: none;
-    border-radius: 12px;
-    padding: 20px 25px;
-    margin-bottom: 0;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
 
 .financial-summary .card {
-    border-radius: 20px;
+    border-radius: 16px;
     transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
 }
 
 .financial-summary .card-body {
-    padding: 25px;
+    padding: 24px;
     text-align: center;
 }
 
 .financial-summary .card h5 {
-    font-size: 0.9rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 15px;
-    opacity: 0.8;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #64748b;
+    margin-bottom: 10px;
 }
 
 .financial-summary .card h3 {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 700;
     margin-bottom: 5px;
+    color: #0f172a;
 }
 
 .progress-timeline {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 20px;
-    padding: 30px;
-    border: 1px solid rgba(0,0,0,0.05);
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
 }
 
 .progress-timeline .progress {
-    height: 35px;
-    border-radius: 20px;
-    background: rgba(0,0,0,0.05);
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    height: 12px;
+    border-radius: 6px;
+    background-color: #f1f5f9;
+    overflow: visible;
 }
 
 .progress-timeline .progress-bar {
-    border-radius: 20px;
+    border-radius: 6px;
     position: relative;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    background: linear-gradient(90deg, #4f46e5 0%, #0ea5e9 100%);
 }
 
-.bg-warning-light {
-    background-color: rgba(255, 193, 7, 0.4) !important; /* 0.4 = โปร่งใส 40% */
-}
-
-.alert-warning-light{
- background-color: rgba(255, 193, 7, 0.4) !important; /* 0.4 = โปร่งใส 40% */
+.progress-timeline .progress-bar::after {
+    content: "";
+    position: absolute;
+    right: -6px;
+    top: -4px;
+    width: 20px;
+    height: 20px;
+    background: #ffffff;
+    border: 4px solid #0ea5e9;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(14,165,233,0.4);
 }
 
 @media (max-width: 768px) {
@@ -289,56 +279,62 @@ if($today > $end){
         <!-- Header Section -->
         <div class="row mb-4">
             <div class="col-md-12">
-                <div class="card border-primary">
-                    <div class="card-header bg-primary text-white">
-                        <div class="row">
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; background-color: #ffffff;">
+                    <div class="card-header bg-white border-bottom" style="padding: 1.25rem 1.5rem; border-top-left-radius: 16px; border-top-right-radius: 16px;">
+                        <div class="row align-items-center">
                             <div class="col-md-8">
-                                <h4 class="mb-0">
-                                    <i class="fas fa-project-diagram"></i>
+                                <h4 class="mb-0 fw-bold" style="font-family: 'Prompt', sans-serif; color: #1e293b;">
+                                    <i class="fas fa-project-diagram me-2 text-indigo-600" style="color: #4f46e5;"></i>
                                     <?= Html::encode($this->title) ?>
                                 </h4>
                             </div>
+                            <?php if (!Yii::$app->request->isAjax): ?>
                             <div class="col-md-4 text-right">
                                 <?= Html::a('<i class="fas fa-arrow-left"></i> กลับ', ['job-report/index'], [
-                                    'class' => 'btn btn-light btn-sm'
+                                    'class' => 'btn btn-light btn-sm rounded-pill shadow-sm px-3 fw-medium'
                                 ]) ?>
                                 <?= Html::a('<i class="fas fa-chart-line"></i> รายงานผู้บริหาร', ['executive-report', 'id' => $model->id], [
-                                    'class' => 'btn btn-success btn-sm'
+                                    'class' => 'btn btn-success btn-sm rounded-pill shadow-sm px-3 fw-medium'
                                 ]) ?>
                                 <?= Html::a('<i class="fas fa-print"></i> พิมพ์', '#', [
-                                    'class' => 'btn btn-info btn-sm',
+                                    'class' => 'btn btn-info btn-sm rounded-pill shadow-sm px-3 fw-medium',
                                     'onclick' => 'window.print(); return false;'
                                 ]) ?>
                             </div>
+                            <?php endif; ?>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-2">
-                                <strong>รหัสใบงาน:</strong><br>
-                                <span class="text-primary h5"><?= Html::encode($model->job_no) ?></span>
+                    <div class="card-body" style="padding: 1.5rem;">
+                        <div class="row g-3">
+                            <div class="col-md-2 col-6">
+                                <div class="text-muted small mb-1">รหัสใบงาน:</div>
+                                <div class="fw-bold" style="color: #4f46e5; font-size: 1.1rem;"><?= Html::encode($model->job_no) ?></div>
                             </div>
-                            <div class="col-md-2">
-                                <strong>วันที่เริ่ม:</strong><br>
-                                <span class="text-info"><?= $model->start_date ? date('d/m/Y', strtotime($model->start_date)) : '-' ?></span>
+                            <div class="col-md-2 col-6">
+                                <div class="text-muted small mb-1">วันที่เริ่ม:</div>
+                                <div class="fw-medium text-dark"><?= $model->start_date ? date('d/m/Y', strtotime($model->start_date)) : '-' ?></div>
                             </div>
-                            <div class="col-md-2">
-                                <strong>ถึงวันที่:</strong><br>
-                                <span class="text-info"><?= $model->end_date ? date('d/m/Y', strtotime($model->end_date)) : '-' ?></span>
+                            <div class="col-md-2 col-6">
+                                <div class="text-muted small mb-1">ถึงวันที่:</div>
+                                <div class="fw-medium text-dark"><?= $model->end_date ? date('d/m/Y', strtotime($model->end_date)) : '-' ?></div>
                             </div>
-                            <div class="col-md-2">
-                                <strong>ครบกำหนดในอีก:</strong><br>
-                                <span class="<?= $is_over==1? 'text-danger' : 'text-success' ?>"><?= $is_over==1? 'เกินกำหนด '. $diff->format("%a").' วัน' : $diff->format("%a").' วัน' ?></span>
+                            <div class="col-md-2 col-6">
+                                <div class="text-muted small mb-1">ครบกำหนดในอีก:</div>
+                                <div class="fw-medium <?= $is_over==1? 'text-danger' : 'text-success' ?>">
+                                    <?= $is_over==1? 'เกินกำหนด '. $diff->format("%a").' วัน' : $diff->format("%a").' วัน' ?>
+                                </div>
                             </div>
-                            <div class="col-md-2">
-                                <strong>สถานะ:</strong><br>
-                                <?= Html::tag('span', $model->getStatusText(), [
-                                    'class' => 'badge badge-' . $model->getStatusColor() . ' p-2'
-                                ]) ?>
+                            <div class="col-md-2 col-6">
+                                <div class="text-muted small mb-1">สถานะ:</div>
+                                <div>
+                                    <?= Html::tag('span', $model->getStatusText(), [
+                                        'class' => 'badge bg-' . $model->getStatusColor() . ' px-2 py-1'
+                                    ]) ?>
+                                </div>
                             </div>
-                            <div class="col-md-2">
-                                <strong>มูลค่างาน:</strong><br>
-                                <span class="text-success h5"><?= number_format($model->job_amount, 2) ?> บาท</span>
+                            <div class="col-md-2 col-6">
+                                <div class="text-muted small mb-1">มูลค่างาน:</div>
+                                <div class="fw-bold text-success" style="font-size: 1.1rem;"><?= number_format($model->job_amount, 2) ?> บาท</div>
                             </div>
                         </div>
                     </div>

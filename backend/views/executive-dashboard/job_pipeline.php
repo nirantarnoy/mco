@@ -42,6 +42,9 @@ $stepsDef = [
             </h3>
         </div>
         <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-primary rounded-pill btn-sm px-3 shadow-sm fw-medium" data-bs-toggle="modal" data-bs-target="#timelineModal" data-toggle="modal" data-target="#timelineModal" style="font-family: 'Prompt', sans-serif; background-color: #4f46e5; border-color: #4f46e5;">
+                <i class="fas fa-file-alt me-1"></i> เอกสาร/กิจกรรมที่เกี่ยวข้อง
+            </button>
             <button type="button" class="btn btn-outline-secondary rounded-pill btn-sm px-3 shadow-sm fw-medium" onclick="window.print()" style="font-family: 'Prompt', sans-serif;">
                 <i class="fas fa-print me-1"></i> พิมพ์ Report
             </button>
@@ -247,6 +250,30 @@ $stepsDef = [
 
 </div>
 
+<!-- Timeline Modal -->
+<div class="modal fade" id="timelineModal" tabindex="-1" aria-labelledby="timelineModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width: 90%;">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title fw-bold" id="timelineModalLabel" style="font-family: 'Prompt', sans-serif; color: #1e293b;">
+            <i class="fas fa-history text-indigo-600 me-2" style="color: #4f46e5;"></i> กิจกรรมและเอกสารที่เกี่ยวข้อง (Timeline)
+        </h5>
+        <button type="button" class="btn-close close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true" class="d-none d-sm-inline">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body p-0" id="timeline-modal-body" style="background-color: #f8fafc;">
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status" style="color: #4f46e5 !important;">
+              <span class="visually-hidden sr-only">Loading...</span>
+            </div>
+            <div class="mt-2 text-muted fw-medium" style="font-family: 'Prompt', sans-serif;">กำลังโหลดข้อมูล...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Tailwind CSS Light Style Custom CSS -->
 <style>
 body {
@@ -317,8 +344,26 @@ body {
 <?php
 $jobIdVal = $job->id;
 $cancelUrl = Url::to(['executive-dashboard/cancel-step']);
+$timelineUrl = Url::to(['job/timeline', 'id' => $job->id]);
 
 $js = <<<JS
+$('#timelineModal').on('show.bs.modal shown.bs.modal', function (e) {
+    var modalBody = $('#timeline-modal-body');
+    if(modalBody.data('loaded')) return;
+    
+    $.ajax({
+        url: '{$timelineUrl}',
+        type: 'GET',
+        success: function(res) {
+            modalBody.html(res);
+            modalBody.data('loaded', true);
+        },
+        error: function() {
+            modalBody.html('<div class="alert alert-danger m-4">เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง</div>');
+        }
+    });
+});
+
 $('.btn-cancel-step').on('click', function() {
     var stepNo = $(this).data('step');
     if (confirm('คุณต้องการกดยกเลิกขั้นตอนกิจกรรมนี้ใช่หรือไม่?')) {
