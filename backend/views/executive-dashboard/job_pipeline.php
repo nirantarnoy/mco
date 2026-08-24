@@ -344,7 +344,7 @@ body {
 <?php
 $jobIdVal = $job->id;
 $cancelUrl = Url::to(['executive-dashboard/cancel-step']);
-$timelineUrl = Url::to(['job/timeline-modal', 'id' => $job->id]);
+$timelineUrl = Url::to(['job/timeline', 'id' => $job->id]);
 
 $js = <<<JS
 $('#timelineModal').on('show.bs.modal shown.bs.modal', function (e) {
