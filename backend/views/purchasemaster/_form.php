@@ -854,6 +854,8 @@ $(function(){
     if ($('#doc_type_id').length) {
         checkDocType($('#doc_type_id')[0]);
     }
+    // Calculate total on load to show correct summary in update mode
+    calculateTotal();
 });
 function checkDocType(e) {
     if ($(e).val() == '3') {
