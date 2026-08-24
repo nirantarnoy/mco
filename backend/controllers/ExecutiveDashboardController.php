@@ -163,7 +163,7 @@ class ExecutiveDashboardController extends BaseController
         // คำนวณจากเอกสารที่ผูกกับ Job ในช่วงเวลานี้
         $totalPoExpenses = 0;
         if (!empty($jobIds)) {
-            $totalPoExpenses = (float)Purch::find()->where(['approve_status' => 1, 'job_id' => $jobIds])->sum('net_amount - COALESCE(vat_amount, 0)');
+            $totalPoExpenses = (float)Purch::find()->where(['approve_status' => 1, 'job_id' => $jobIds])->sum('(net_amount - COALESCE(vat_amount, 0)) * COALESCE(NULLIF(currency_rate, 0), 1)');
         }
         
         $totalNonePrExpenses = 0;
@@ -344,7 +344,7 @@ class ExecutiveDashboardController extends BaseController
                     ['<', 'j.job_date', date('Y-m-d 00:00:00', $fromTs)],
                     ['and', ['j.job_date' => null], ['<', 'j.created_at', $fromTs]]
                 ])
-                ->select(['purch.purch_no as doc_no', 'purch.purch_date as doc_date', '(purch.net_amount - COALESCE(purch.vat_amount, 0)) as amount', 'j.job_no', 'j.id as job_id', 'purch.id as doc_id']);
+                ->select(['purch.purch_no as doc_no', 'purch.purch_date as doc_date', '((purch.net_amount - COALESCE(purch.vat_amount, 0)) * COALESCE(NULLIF(purch.currency_rate, 0), 1)) as amount', 'j.job_no', 'j.id as job_id', 'purch.id as doc_id']);
                 
             if (!empty($companyId) && $companyId != '0') {
                 $pastPoItems->andWhere(['j.company_id' => $companyId]);
@@ -498,7 +498,7 @@ class ExecutiveDashboardController extends BaseController
         if (!empty($companyId) && $companyId != '0') {
             $poPayableQuery->andWhere(['company_id' => $companyId]);
         }
-        $pendingPoPayables = (float)$poPayableQuery->sum('net_amount');
+        $pendingPoPayables = (float)$poPayableQuery->sum('net_amount * COALESCE(NULLIF(currency_rate, 0), 1)');
 
         $isCashflowWarning = ($currentAvailableCash + $pendingReceivables) < $pendingPoPayables;
 
@@ -623,7 +623,7 @@ class ExecutiveDashboardController extends BaseController
 
             $mTotalExpenses = 0;
             if (!empty($mJobIds)) {
-                $mPo = (float)Purch::find()->where(['approve_status' => 1, 'job_id' => $mJobIds])->sum('net_amount - COALESCE(vat_amount, 0)');
+                $mPo = (float)Purch::find()->where(['approve_status' => 1, 'job_id' => $mJobIds])->sum('(net_amount - COALESCE(vat_amount, 0)) * COALESCE(NULLIF(currency_rate, 0), 1)');
                 $mTotalExpenses += $mPo;
 
                 $mPetty = (float)PettyCashVoucher::find()->where(['status' => 1, 'job_id' => $mJobIds])->sum('amount');
@@ -718,7 +718,7 @@ class ExecutiveDashboardController extends BaseController
             if (!empty($fromDate) && !empty($toDate)) {
                 $cPoQuery->andWhere(['between', 'purch_date', $fromDate, $toDate]);
             }
-            $cPo = (float)$cPoQuery->sum('net_amount - COALESCE(vat_amount, 0)');
+            $cPo = (float)$cPoQuery->sum('(net_amount - COALESCE(vat_amount, 0)) * COALESCE(NULLIF(currency_rate, 0), 1)');
                 
             // Non PR
             $cNonePrQuery = PurchaseMaster::find()->where(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED, 'company_id' => $cId]);
@@ -916,7 +916,7 @@ class ExecutiveDashboardController extends BaseController
         $jobPoInterest = 0;
         $jobPoHasDoc = false;
         foreach ($jobPos as $po) {
-            $amt = (float)$po->net_amount;
+            $amt = (float)$po->net_amount * ((float)$po->currency_rate > 0 ? (float)$po->currency_rate : 1);
             $jobPoTotal += $amt;
             if (!empty($po->purch_date)) {
                 $m = $getMonthsDiff($po->purch_date, $receiptDate);
