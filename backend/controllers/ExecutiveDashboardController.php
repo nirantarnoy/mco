@@ -760,7 +760,7 @@ class ExecutiveDashboardController extends BaseController
             }
 
             // Vehicles
-            $veQ = VehicleExpense::find()->innerJoin('job j', 'j.job_no = vehicle_expense.job_no')->where(['j.company_id' => $cId]);
+            $veQ = VehicleExpense::find()->innerJoin('job j', 'j.job_no COLLATE utf8mb4_unicode_ci = vehicle_expense.job_no COLLATE utf8mb4_unicode_ci')->where(['j.company_id' => $cId]);
             if (!empty($fromDate) && !empty($toDate)) {
                 $veQ->andWhere(['between', 'vehicle_expense.expense_date', $fromDate, $toDate]);
             }
