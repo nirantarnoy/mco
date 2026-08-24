@@ -33,7 +33,7 @@ class Wht extends ActiveRecord
             [['ref_id', 'vendor_id', 'wht_type', 'pay_condition', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'company_id'], 'integer'],
             [['base_amount', 'wht_percent', 'wht_amount'], 'number'],
             [['wht_no', 'ref_type'], 'string', 'max' => 50],
-            [['wht_desc', 'other_desc'], 'string', 'max' => 255],
+            [['wht_desc', 'other_desc', 'payer_name'], 'string', 'max' => 255],
             [['wht_no'], 'unique'],
         ];
     }
@@ -54,6 +54,7 @@ class Wht extends ActiveRecord
             'wht_amount' => 'ยอดหักภาษี',
             'wht_desc' => 'ประเภทเงินได้',
             'other_desc' => 'ระบุประเภทเงินได้อื่นๆ',
+            'payer_name' => 'ผู้มีหน้าที่หักภาษี ณ ที่จ่าย',
             'status' => 'สถานะ',
         ];
     }

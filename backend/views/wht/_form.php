@@ -76,6 +76,22 @@ use backend\models\Vendor;
         </div>
     </div>
 
+    <div class="row">
+        <div class="col-md-12">
+            <?= $form->field($model, 'payer_name')->widget(Select2::className(), [
+                'data' => [
+                    'อดิศร ก้อนคำ' => 'อดิศร ก้อนคำ',
+                    'อิสรียะ เกษร' => 'อิสรียะ เกษร',
+                ],
+                'options' => ['placeholder' => 'เลือก หรือ พิมพ์ชื่อผู้มีหน้าที่หักภาษี...'],
+                'pluginOptions' => [
+                    'tags' => true,
+                    'allowClear' => true
+                ],
+            ]) ?>
+        </div>
+    </div>
+
     <?= $form->field($model, 'ref_type')->hiddenInput()->label(false) ?>
     <?= $form->field($model, 'ref_id')->hiddenInput()->label(false) ?>
 

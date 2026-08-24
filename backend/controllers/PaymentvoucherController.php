@@ -619,6 +619,15 @@ class PaymentvoucherController extends BaseController
         ]);
     }
 
+    public function actionPrintCheque($id)
+    {
+        $model = $this->findModel($id);
+        $this->layout = false;
+        return $this->render('print-cheque', [
+            'model' => $model,
+        ]);
+    }
+
     /**
      * บันทึก Voucher Lines
      */

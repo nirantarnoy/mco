@@ -284,7 +284,9 @@ $desc_text = $model->wht_desc == 'อื่นๆ' || $model->wht_desc == 'อ�
             <p><b>ขอรับรองว่าข้อความและตัวเลขดังกล่าวข้างต้นถูกต้องตรงกับความจริงทุกประการ</b></p>
             <br>
             <div style="position: relative; display: inline-block; width: 300px; height: 30px;">
-                <div id="sig-container" style="position: absolute; bottom: 5px; left: 0; width: 100%; text-align: center; z-index: 2;"></div>
+                <div id="sig-container" style="position: absolute; bottom: 5px; left: 0; width: 100%; text-align: center; z-index: 2;">
+                    <span style="font-size: 16px;"><?= $model->payer_name ? Html::encode($model->payer_name) : '' ?></span>
+                </div>
                 <div style="position: absolute; bottom: 0; left: 0; width: 100%;">ลงชื่อ ............................................................................</div>
             </div> ผู้มีหน้าที่หักภาษี ณ ที่จ่าย<br>
             <div id="sig-name" style="margin-top: 5px; font-size: 13px;"></div>

@@ -371,7 +371,7 @@ $fmt = Yii::$app->formatter;
 
     <!-- Footer Logos -->
     <div class="footer-logos">
-        <img src="<?= Yii::getAlias('@web') ?>/uploads/logo/mco_logo_2.png" alt="MCO">
+        <img src="<?= Yii::getAlias('@web') ?>/uploads/Picture1.jpg" alt="MCO Stamp">
     </div>
 
 </body>
