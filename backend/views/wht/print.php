@@ -119,15 +119,16 @@ $desc_text = $model->wht_desc == 'อื่นๆ' || $model->wht_desc == 'อ�
                     <option value="" data-name="">-- ไม่ใช้ Electronic sign --</option>
                     <?php
                     $employees = \backend\models\Employee::find()
-                        ->where(['like', 'first_name', 'อดิศร'])
-                        ->orWhere(['like', 'first_name', 'สิริลักษณ์'])
-                        ->orWhere(['like', 'first_name', 'อิสรียะ'])
+                        ->where(['like', 'fname', 'อดิศร'])
+                        ->orWhere(['like', 'fname', 'สิริลักษณ์'])
+                        ->orWhere(['like', 'fname', 'อิสรียะ'])
                         ->all();
                     foreach ($employees as $emp) {
-                        if ($emp->user_id) {
-                            $sig = \backend\models\User::findEmployeeSignature($emp->user_id);
+                        $user = $emp->user;
+                        if ($user) {
+                            $sig = \backend\models\User::findEmployeeSignature($user->id);
                             $sigUrl = $sig ? Yii::$app->request->baseUrl . '/uploads/employee_signature/' . $sig : '';
-                            echo '<option value="'.$sigUrl.'" data-name="'.$emp->first_name.' '.$emp->last_name.'">'.$emp->first_name.'</option>';
+                            echo '<option value="'.$sigUrl.'" data-name="'.$emp->fname.' '.$emp->lname.'">'.$emp->fname.'</option>';
                         }
                     }
                     ?>

@@ -96,7 +96,34 @@ class WhtController extends BaseController
                 $pv = PaymentVoucher::findOne($ref_id);
                 if ($pv) {
                     $model->vendor_id = $pv->vendor_id;
-                    $model->base_amount = $pv->amount;
+                    
+                    $base_amt = 0;
+                    $refs = \backend\models\PaymentVoucherRef::find()->where(['payment_voucher_id' => $pv->id])->all();
+                    if (!empty($refs)) {
+                        foreach ($refs as $ref) {
+                            if ($ref->ref_type == \backend\models\PaymentVoucherRef::REF_TYPE_PO) {
+                                $po = \backend\models\Purch::findOne($ref->ref_id);
+                                if ($po) {
+                                    $vat_percent = $po->is_vat == 1 ? ($po->vat_percent > 0 ? $po->vat_percent : 7) : 0;
+                                    $wht_percent = $po->whd_tax_per > 0 ? $po->whd_tax_per : 0;
+                                    $multiplier2 = 1 + ($vat_percent / 100) - ($wht_percent / 100);
+                                    $base_amt += $multiplier2 > 0 ? ($ref->amount / $multiplier2) : $ref->amount;
+                                }
+                            } elseif ($ref->ref_type == \backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR) {
+                                $none_pr = \backend\models\PurchaseMaster::findOne($ref->ref_id);
+                                if ($none_pr) {
+                                    $vat_percent = $none_pr->vat_percent > 0 ? $none_pr->vat_percent : 0;
+                                    $wht_percent = $none_pr->tax_percent > 0 ? $none_pr->tax_percent : 0;
+                                    $multiplier2 = 1 + ($vat_percent / 100) - ($wht_percent / 100);
+                                    $base_amt += $multiplier2 > 0 ? ($ref->amount / $multiplier2) : $ref->amount;
+                                }
+                            } else {
+                                $base_amt += $ref->amount;
+                            }
+                        }
+                    }
+                    
+                    $model->base_amount = $base_amt > 0 ? round($base_amt, 2) : $pv->amount;
                 }
             } elseif ($ref_type == 'PRE-ADVANCE') {
                 $pa = PreAdvance::findOne($ref_id);

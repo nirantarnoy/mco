@@ -207,6 +207,17 @@ class PreAdvanceController extends BaseController
                         $vendor_id = $po->vendor_id;
                         $vendor_name = $po->vendor_name;
                     }
+                    
+                    $desc = 'เลขที่: ' . $po->purch_no;
+                    if (!empty($po->ref_no)) {
+                        $desc .= ' (อ้างอิง QT: ' . $po->ref_no . ')';
+                    }
+                    $lines[] = [
+                        'line_date' => date('Y-m-d'),
+                        'description' => $desc,
+                        'amount' => $po->net_amount,
+                        'remark' => $po->vendor_name,
+                    ];
                 }
             } else {
                 $none_pr_id = (int)str_replace('none_pr_', '', (string)$item);
@@ -217,6 +228,17 @@ class PreAdvanceController extends BaseController
                         $vendor_id = $none_pr->supcod;
                         $vendor_name = $none_pr->supnam;
                     }
+                    
+                    $desc = 'เลขที่: ' . $none_pr->docnum;
+                    if (!empty($none_pr->refnum)) {
+                        $desc .= ' (อ้างอิง QT: ' . $none_pr->refnum . ')';
+                    }
+                    $lines[] = [
+                        'line_date' => date('Y-m-d'),
+                        'description' => $desc,
+                        'amount' => $none_pr->total_amount,
+                        'remark' => $none_pr->supnam,
+                    ];
                 }
             }
         }
@@ -227,6 +249,7 @@ class PreAdvanceController extends BaseController
             'none_pr_ids' => $none_pr_ids,
             'vendor_id' => $vendor_id ?? null,
             'vendor_name' => $vendor_name ?? null,
+            'lines' => $lines,
         ];
     }
 
@@ -331,59 +354,24 @@ class PreAdvanceController extends BaseController
             FileHelper::createDirectory($uploadPath, 0777);
         }
 
-        $rawFiles = $_FILES['upload_files'] ?? null;
-        if ($rawFiles && is_array($rawFiles['name'])) {
-            foreach ($rawFiles['name'] as $key => $val) {
-                $files = UploadedFile::getInstancesByName("upload_files[{$key}]");
-                if (!$files) continue;
-
-                $refType = null;
-                $refId = null;
-
-                if (is_string($key) && strpos($key, 'po_') === 0) {
-                    $refType = PreAdvanceRef::REF_TYPE_PO;
-                    $refId = (int)str_replace('po_', '', $key);
-                } elseif (is_string($key) && strpos($key, 'none_pr_') === 0) {
-                    $refType = PreAdvanceRef::REF_TYPE_NONE_PR;
-                    $refId = (int)str_replace('none_pr_', '', $key);
-                }
-
-                foreach ($files as $file) {
-                    $newName = time() . '_' . Yii::$app->security->generateRandomString(10) . '.' . $file->extension;
-                    if ($file->saveAs($uploadPath . $newName)) {
-                        $doc = new PreAdvanceDoc();
-                        $doc->pre_advance_id = $model->id;
-                        $doc->ref_type = $refType;
-                        $doc->ref_id = $refId;
-                        $doc->file_name = $file->baseName . '.' . $file->extension;
-                        $doc->file_path = $newName;
-                        $doc->file_size = $file->size;
-                        $doc->uploaded_at = time();
-                        $doc->uploaded_by = Yii::$app->user->id;
-                        $doc->save(false);
-                    }
-                }
-            }
-        } else {
-            $files = UploadedFile::getInstancesByName('upload_files');
-            if ($files) {
-                foreach ($files as $file) {
-                    $newName = time() . '_' . Yii::$app->security->generateRandomString(10) . '.' . $file->extension;
-                    if ($file->saveAs($uploadPath . $newName)) {
-                        $doc = new PreAdvanceDoc();
-                        $doc->pre_advance_id = $model->id;
-                        $doc->file_name = $file->baseName . '.' . $file->extension;
-                        $doc->file_path = $newName;
-                        $doc->file_size = $file->size;
-                        $doc->uploaded_at = time();
-                        $doc->uploaded_by = Yii::$app->user->id;
-                        $doc->save(false);
-                    }
+        $files = UploadedFile::getInstancesByName('upload_files');
+        if ($files) {
+            foreach ($files as $file) {
+                $newName = time() . '_' . Yii::$app->security->generateRandomString(10) . '.' . $file->extension;
+                if ($file->saveAs($uploadPath . $newName)) {
+                    $doc = new PreAdvanceDoc();
+                    $doc->pre_advance_id = $model->id;
+                    $doc->file_name = $file->baseName . '.' . $file->extension;
+                    $doc->file_path = $newName;
+                    $doc->file_size = $file->size;
+                    $doc->uploaded_at = time();
+                    $doc->uploaded_by = Yii::$app->user->id;
+                    $doc->save(false);
                 }
             }
         }
 
-        $this->syncAttachmentsToSources($model);
+        // $this->syncAttachmentsToSources($model);
     }
 
     private function syncAttachmentsToSources($model)
