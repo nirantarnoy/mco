@@ -249,7 +249,11 @@ $fmt = Yii::$app->formatter;
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($model->purchaseDetails as $detail): ?>
+            <?php 
+            $subtotal = 0;
+            foreach ($model->purchaseDetails as $detail): 
+                $subtotal += (float)$detail->amount;
+            ?>
             <tr>
                 <td><?= Html::encode($detail->stkdes) ?></td>
                 <td><?= number_format($detail->uqnty, 1) ?></td>
@@ -275,17 +279,21 @@ $fmt = Yii::$app->formatter;
 
     <div class="clearfix">
         <div class="totals-section">
+            <?php 
+            $discount = floatval($model->disc);
+            $afterDiscount = $subtotal - $discount;
+            ?>
             <div class="totals-row">
                 <div>Total</div>
-                <div><?= number_format($model->amount, 2) ?></div>
+                <div><?= number_format($subtotal, 2) ?></div>
             </div>
             <div class="totals-row">
                 <div>Discount</div>
-                <div><?= number_format($model->disc_amount ?? 0, 2) ?></div>
+                <div><?= number_format($discount, 2) ?></div>
             </div>
             <div class="totals-row">
                 <div>Amount</div>
-                <div><?= number_format($model->amount - ($model->disc_amount ?? 0), 2) ?></div>
+                <div><?= number_format($afterDiscount, 2) ?></div>
             </div>
             <div class="totals-row">
                 <div>Vat</div>
