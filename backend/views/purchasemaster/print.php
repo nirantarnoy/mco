@@ -8,6 +8,7 @@ $vendor = \backend\models\Vendor::findOne(['code' => $model->supcod]);
 $vendor_email = $vendor ? $vendor->email : '';
 $is_head = $vendor ? $vendor->is_head : 0;
 $branch_name = $vendor ? $vendor->branch_name : '';
+$is_head_office = ($is_head == 1 || empty(trim($branch_name)) || trim($branch_name) === '00000' || trim($branch_name) === '0000');
 
 $fmt = Yii::$app->formatter;
 ?>
@@ -208,11 +209,11 @@ $fmt = Yii::$app->formatter;
     <div class="row-group">
         <div class="field-label">Branch :</div>
         <div style="margin-right: 20px;">
-            <div class="radio-box <?= $is_head == 1 ? 'checked' : '' ?>"></div> สำนักงานใหญ่
+            <div class="radio-box <?= $is_head_office ? 'checked' : '' ?>"></div> สำนักงานใหญ่
         </div>
         <div>
-            <div class="radio-box <?= $is_head != 1 && !empty($branch_name) ? 'checked' : '' ?>"></div> สำนักงานสาขาที่
-            <div class="field-value-inline" style="min-width: 100px;"><?= Html::encode($is_head != 1 ? $branch_name : '') ?></div>
+            <div class="radio-box <?= !$is_head_office ? 'checked' : '' ?>"></div> สำนักงานสาขาที่
+            <div class="field-value-inline" style="min-width: 100px;"><?= Html::encode(!$is_head_office ? $branch_name : '') ?></div>
         </div>
         <div class="field-label" style="margin-left: auto;">Tax ID :</div>
         <div class="field-value" style="flex: 0 0 200px;">
@@ -325,7 +326,7 @@ $fmt = Yii::$app->formatter;
         <div>
             <div class="radio-box <?= !in_array($model->paytrm, ['Advance Payment', 'Immediately', '30 Days']) && !empty($model->paytrm) ? 'checked' : '' ?>"></div> Other
             <div class="field-value-inline" style="min-width: 80px;">
-                <?= Html::encode(!in_array($model->paytrm, ['Advance Payment', 'Immediately', '30 Days']) ? $model->paytrm : '') ?>
+                
             </div>
         </div>
     </div>
@@ -379,7 +380,7 @@ $fmt = Yii::$app->formatter;
 
     <!-- Footer Logos -->
     <div class="footer-logos">
-        <img src="<?= Yii::getAlias('@web') ?>/uploads/Picture1.jpg" alt="MCO Stamp">
+        <img src="<?= Yii::getAlias('@web') ?>/uploads/Picture1.png" alt="MCO Stamp">
     </div>
 
 </body>
