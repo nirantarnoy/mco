@@ -448,7 +448,9 @@ JS
                                     }
                                     ?>
                                     <?= $form->field($model, 'job_no')->widget(\kartik\select2\Select2::className(),[
-                                        'data'=>\yii\helpers\ArrayHelper::map($job_query->all(),'id','job_no'),
+                                        'data'=>\yii\helpers\ArrayHelper::map($job_query->all(),'id', function($model) {
+                                            return $model->job_no . ' - ' . $model->getCustomerName();
+                                        }),
                                         'options'=>['placeholder'=>'ดึงมาจากฐานข้อมูลใบงาน'],
                                         'pluginOptions' => ['allowClear' => true]
                                     ])->label(false) ?>

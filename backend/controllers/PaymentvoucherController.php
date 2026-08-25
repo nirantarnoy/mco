@@ -316,10 +316,7 @@ class PaymentvoucherController extends BaseController
             if ($po->whd_tax_per > 0) {
                 $wht_percent = $po->whd_tax_per;
             }
-            $multiplier = 1 + ($vat_percent / 100);
-            $po_full_before_vat = $multiplier > 0 ? ($po->net_amount / $multiplier) : $po->net_amount;
-            $po_full_wht = $po_full_before_vat * ($wht_percent / 100);
-            $po_target_payment = $po->net_amount - $po_full_wht;
+            $po_target_payment = $po->net_amount;
             
             // คำนวณยอดที่จ่ายไปแล้ว
             $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_PO, $po->id);
@@ -381,10 +378,7 @@ class PaymentvoucherController extends BaseController
             if ($none_pr->tax_percent > 0) {
                 $wht_percent = $none_pr->tax_percent;
             }
-            $multiplier = 1 + ($vat_percent / 100);
-            $none_pr_full_before_vat = $multiplier > 0 ? ($none_pr->total_amount / $multiplier) : $none_pr->total_amount;
-            $none_pr_full_wht = $none_pr_full_before_vat * ($wht_percent / 100);
-            $none_pr_target_payment = $none_pr->total_amount - $none_pr_full_wht;
+            $none_pr_target_payment = $none_pr->total_amount;
             
             // คำนวณยอดที่จ่ายไปแล้ว
             $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, $none_pr->id);
@@ -479,10 +473,7 @@ class PaymentvoucherController extends BaseController
                     $wht_percent = $po->whd_tax_per;
                 }
                 
-                $multiplier = 1 + ($vat_percent / 100);
-                $po_full_before_vat = $multiplier > 0 ? ($po->net_amount / $multiplier) : $po->net_amount;
-                $po_full_wht = $po_full_before_vat * ($wht_percent / 100);
-                $po_target_payment = $po->net_amount - $po_full_wht;
+                $po_target_payment = $po->net_amount;
                 
                 $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_PO, $po->id);
                 
@@ -521,10 +512,7 @@ class PaymentvoucherController extends BaseController
                     $wht_percent = $none_pr->tax_percent;
                 }
                 
-                $multiplier = 1 + ($vat_percent / 100);
-                $none_pr_full_before_vat = $multiplier > 0 ? ($none_pr->total_amount / $multiplier) : $none_pr->total_amount;
-                $none_pr_full_wht = $none_pr_full_before_vat * ($wht_percent / 100);
-                $none_pr_target_payment = $none_pr->total_amount - $none_pr_full_wht;
+                $none_pr_target_payment = $none_pr->total_amount;
                 
                 $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, $none_pr->id);
                 
@@ -750,10 +738,7 @@ class PaymentvoucherController extends BaseController
                     $wht_percent = $po->whd_tax_per;
                 }
                 
-                $multiplier = 1 + ($vat_percent / 100);
-                $po_full_before_vat = $multiplier > 0 ? ($po->net_amount / $multiplier) : $po->net_amount;
-                $po_full_wht = $po_full_before_vat * ($wht_percent / 100);
-                $po_target_payment = $po->net_amount - $po_full_wht;
+                $po_target_payment = $po->net_amount;
 
                 $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_PO, $po->id, $model->id);
                 
@@ -789,10 +774,7 @@ class PaymentvoucherController extends BaseController
                     $wht_percent = $none_pr->tax_percent;
                 }
                 
-                $multiplier = 1 + ($vat_percent / 100);
-                $none_pr_full_before_vat = $multiplier > 0 ? ($none_pr->total_amount / $multiplier) : $none_pr->total_amount;
-                $none_pr_full_wht = $none_pr_full_before_vat * ($wht_percent / 100);
-                $none_pr_target_payment = $none_pr->total_amount - $none_pr_full_wht;
+                $none_pr_target_payment = $none_pr->total_amount;
 
                 $paidAmount = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, $none_pr->id, $model->id);
                 
