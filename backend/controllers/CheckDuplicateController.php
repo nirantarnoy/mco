@@ -24,6 +24,7 @@ class CheckDuplicateController extends BaseController
 
     public function actionIndex()
     {
+        // 1. Customer Code Duplicates
         $customerDuplicates = Customer::find()
             ->select(['code', 'COUNT(code) as cnt'])
             ->groupBy(['code'])
@@ -38,6 +39,22 @@ class CheckDuplicateController extends BaseController
             $customerList[$dup['code']] = Customer::find()->where(['code' => $dup['code']])->all();
         }
 
+        // 2. Customer Name Duplicates
+        $customerNameDuplicates = Customer::find()
+            ->select(['name', 'COUNT(name) as cnt'])
+            ->groupBy(['name'])
+            ->having(['>', 'cnt', 1])
+            ->andWhere(['!=', 'name', ''])
+            ->andWhere(['is not', 'name', null])
+            ->asArray()
+            ->all();
+
+        $customerNameList = [];
+        foreach ($customerNameDuplicates as $dup) {
+            $customerNameList[$dup['name']] = Customer::find()->where(['name' => $dup['name']])->all();
+        }
+
+        // 3. Vendor Code Duplicates
         $vendorDuplicates = Vendor::find()
             ->select(['code', 'COUNT(code) as cnt'])
             ->groupBy(['code'])
@@ -51,10 +68,27 @@ class CheckDuplicateController extends BaseController
         foreach ($vendorDuplicates as $dup) {
             $vendorList[$dup['code']] = Vendor::find()->where(['code' => $dup['code']])->all();
         }
+        
+        // 4. Vendor Name Duplicates
+        $vendorNameDuplicates = Vendor::find()
+            ->select(['name', 'COUNT(name) as cnt'])
+            ->groupBy(['name'])
+            ->having(['>', 'cnt', 1])
+            ->andWhere(['!=', 'name', ''])
+            ->andWhere(['is not', 'name', null])
+            ->asArray()
+            ->all();
+
+        $vendorNameList = [];
+        foreach ($vendorNameDuplicates as $dup) {
+            $vendorNameList[$dup['name']] = Vendor::find()->where(['name' => $dup['name']])->all();
+        }
 
         return $this->render('index', [
             'customerList' => $customerList,
+            'customerNameList' => $customerNameList,
             'vendorList' => $vendorList,
+            'vendorNameList' => $vendorNameList,
         ]);
     }
 

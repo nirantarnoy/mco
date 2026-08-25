@@ -101,6 +101,97 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
     </div>
+
+    <!-- แถวใหม่ สำหรับตรวจสอบชื่อซ้ำ -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">ลูกค้า (Customer) ที่ชื่อซ้ำกัน</h4>
+                </div>
+                <div class="card-body">
+                    <?php if (empty($customerNameList)): ?>
+                        <div class="alert alert-success">ไม่พบข้อมูลลูกค้าที่ชื่อซ้ำกัน</div>
+                    <?php else: ?>
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ชื่อซ้ำ</th>
+                                    <th>รหัสลูกค้าเดิม</th>
+                                    <th>รหัสใหม่</th>
+                                    <th>จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($customerNameList as $name => $models): ?>
+                                    <?php foreach ($models as $index => $model): ?>
+                                    <tr id="row-customer-name-<?= $model->id ?>">
+                                        <?php if ($index === 0): ?>
+                                        <td rowspan="<?= count($models) ?>" class="align-middle text-center text-danger fw-bold">
+                                            <?= Html::encode($name) ?>
+                                        </td>
+                                        <?php endif; ?>
+                                        <td class="align-middle"><?= Html::encode($model->code) ?></td>
+                                        <td class="align-middle">
+                                            <input type="text" class="form-control new-code-input" id="new-code-customer-<?= $model->id ?>" value="<?= Html::encode($model->code) ?>">
+                                        </td>
+                                        <td class="align-middle">
+                                            <button class="btn btn-sm btn-success btn-update" data-type="customer" data-id="<?= $model->id ?>">อัพเดท</button>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header" style="background-color: #fd7e14; color: white;">
+                    <h4 class="mb-0">ผู้ขาย (Vendor) ที่ชื่อซ้ำกัน</h4>
+                </div>
+                <div class="card-body">
+                    <?php if (empty($vendorNameList)): ?>
+                        <div class="alert alert-success">ไม่พบข้อมูลผู้ขายที่ชื่อซ้ำกัน</div>
+                    <?php else: ?>
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ชื่อซ้ำ</th>
+                                    <th>รหัสผู้ขายเดิม</th>
+                                    <th>รหัสใหม่</th>
+                                    <th>จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($vendorNameList as $name => $models): ?>
+                                    <?php foreach ($models as $index => $model): ?>
+                                    <tr id="row-vendor-name-<?= $model->id ?>">
+                                        <?php if ($index === 0): ?>
+                                        <td rowspan="<?= count($models) ?>" class="align-middle text-center text-danger fw-bold">
+                                            <?= Html::encode($name) ?>
+                                        </td>
+                                        <?php endif; ?>
+                                        <td class="align-middle"><?= Html::encode($model->code) ?></td>
+                                        <td class="align-middle">
+                                            <input type="text" class="form-control new-code-input" id="new-code-vendor-<?= $model->id ?>" value="<?= Html::encode($model->code) ?>">
+                                        </td>
+                                        <td class="align-middle">
+                                            <button class="btn btn-sm btn-success btn-update" data-type="vendor" data-id="<?= $model->id ?>">อัพเดท</button>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php
