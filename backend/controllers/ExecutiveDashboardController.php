@@ -1034,20 +1034,9 @@ class ExecutiveDashboardController extends BaseController
         $cleanJobNo = trim($job->job_no);
         $jobVehicleExp = [];
         if (!empty($cleanJobNo)) {
-            $upperJobNo = strtoupper($cleanJobNo);
-            $lowerJobNo = strtolower($cleanJobNo);
-            // Strict exact match for this specific job_no only (case-insensitive) — avoid empty or unassigned vehicle expenses
+            // Strict exact match for this specific job_no only (TRIM exact match)
             $jobVehicleExp = VehicleExpense::find()
-                ->where(['and',
-                    ['not', ['job_no' => null]],
-                    ['!=', 'job_no', ''],
-                    [
-                        'or',
-                        ['job_no' => $cleanJobNo],
-                        ['job_no' => $upperJobNo],
-                        ['job_no' => $lowerJobNo],
-                    ]
-                ])
+                ->where(['TRIM(job_no)' => $cleanJobNo])
                 ->orderBy(['expense_date' => SORT_DESC])
                 ->all();
         }
@@ -1056,12 +1045,15 @@ class ExecutiveDashboardController extends BaseController
         $jobVehicleCost = 0;
         $jobVehicleWage = 0;
         foreach ($jobVehicleExp as $ve) {
-            $jobKmTotal += abs((float)$ve->total_distance);
-            $jobVehicleCost += abs((float)$ve->vehicle_cost);
-            $jobVehicleWage += abs((float)$ve->total_wage);
+            $dist = (float)$ve->total_distance;
+            if ($dist > 0) {
+                $jobKmTotal += $dist;
+            }
+            $jobVehicleCost += max(0, (float)$ve->vehicle_cost);
+            $jobVehicleWage += max(0, (float)$ve->total_wage);
         }
         $jobKmCostAt5 = $jobKmTotal * 5;
-        // ถ้าค่าใช้จ่ายรถในระบบเดิมเท่ากับ 0 ให้ใช้ค่าตามระยะทาง x 5 บาท
+        // ใช้ค่าใช้จ่ายตามระยะทางจริง (x 5 บาท) หรือค่าใช้จ่ายรถที่บันทึก
         $effectiveVehicleCost = max($jobKmCostAt5, $jobVehicleCost);
         
         $jobPoCostWithInterest = $jobPoTotal + $jobPoInterest;
