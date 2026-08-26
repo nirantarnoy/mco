@@ -87,37 +87,108 @@ $formatter = \Yii::$app->formatter;
         </thead>
         <tbody>
             <?php 
-            $refNos = [];
+            // Collect refs mapping
+            $refMap = [];
             foreach ($model->preAdvanceRefs as $ref) {
                 if ($ref->ref_type == \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR) {
                     $m = \backend\models\PurchaseMaster::findOne($ref->ref_id);
-                    if ($m) $refNos[] = $m->docnum;
+                    if ($m) {
+                        $refMap[$m->docnum] = [
+                            'type' => 'NONE_PR',
+                            'docnum' => $m->docnum,
+                            'vendor_name' => $m->supnam,
+                            'qt_no' => $m->refnum,
+                            'total_amount' => (float)$m->total_amount,
+                            'vat_amount' => (float)$m->vat_amount,
+                        ];
+                    }
                 } elseif ($ref->ref_type == \backend\models\PreAdvanceRef::REF_TYPE_PO) {
                     $m = \backend\models\Purch::findOne($ref->ref_id);
-                    if ($m) $refNos[] = $m->purch_no;
+                    if ($m) {
+                        $refMap[$m->purch_no] = [
+                            'type' => 'PO',
+                            'docnum' => $m->purch_no,
+                            'vendor_name' => $m->vendor_name,
+                            'qt_no' => $m->ref_no,
+                            'total_amount' => (float)$m->net_amount,
+                            'vat_amount' => (float)$m->vat_amount,
+                        ];
+                    }
                 }
             }
-            $refNoStr = implode(', ', $refNos);
 
             $i = 1;
-            foreach ($model->preAdvanceLines as $line): 
+            $linesList = $model->preAdvanceLines;
+            $sumBeforeVat = 0;
+            $sumVat = 0;
+            $sumTotal = 0;
+
+            foreach ($linesList as $index => $line):
+                $refNo = '';
+                $qtNo = '';
+                $receiptName = $line->remark; // Vendor name stored in line remark
+                $descText = $line->description;
+                $totalAmount = (float)$line->amount;
+                $vatAmount = 0;
+                $valueBeforeVat = 0;
+
+                // Extract Ref No (e.g. NPR202608170001 or POxxxx)
+                if (preg_match('/เลขที่:\s*([A-Za-z0-9-]+)/u', $descText, $matches)) {
+                    $refNo = $matches[1];
+                } elseif (isset(array_values($refMap)[$index])) {
+                    $refNo = array_values($refMap)[$index]['docnum'];
+                }
+
+                // Extract QT No from description or from refMap
+                if (preg_match('/อ้างอิง\s*QT:\s*([A-Za-z0-9-]+)/u', $descText, $qtMatches)) {
+                    $qtNo = $qtMatches[1];
+                }
+
+                if (!empty($refNo) && isset($refMap[$refNo])) {
+                    $refInfo = $refMap[$refNo];
+                    if (empty($receiptName)) {
+                        $receiptName = $refInfo['vendor_name'];
+                    }
+                    if (empty($qtNo)) {
+                        $qtNo = $refInfo['qt_no'];
+                    }
+                    $vatAmount = $refInfo['vat_amount'];
+                    if ($vatAmount > 0) {
+                        $valueBeforeVat = $totalAmount - $vatAmount;
+                    }
+                }
+
+                // Build clean Description showing QT No prominently as requested
+                $displayDesc = $descText;
+                if (!empty($qtNo)) {
+                    if (strpos($descText, 'QT:') === false && strpos($descText, 'QT :') === false) {
+                        $cleanDesc = trim(preg_replace('/\(อ้างอิง\s*QT:[^\)]+\)/u', '', $descText));
+                        $cleanDesc = trim(preg_replace('/เลขที่:\s*[A-Za-z0-9-]+/u', '', $cleanDesc));
+                        $cleanDesc = ltrim($cleanDesc, ' -:');
+                        $displayDesc = 'QT No: ' . $qtNo . ($cleanDesc ? ' - ' . $cleanDesc : '');
+                    }
+                }
+
+                $sumBeforeVat += $valueBeforeVat;
+                $sumVat += $vatAmount;
+                $sumTotal += $totalAmount;
             ?>
                 <tr>
                     <td class="text-center"><?= $i++ ?></td>
                     <td class="text-center"><?= $line->line_date ? Html::encode($formatter->asDate($line->line_date, 'php:d/m/Y')) : '' ?></td>
-                    <td><?= Html::encode($refNoStr) ?></td>
-                    <td></td>
-                    <td><?= Html::encode($line->description) ?></td>
+                    <td class="text-center"><?= Html::encode($refNo ?: '-') ?></td>
+                    <td><?= Html::encode($receiptName ?: '-') ?></td>
+                    <td><?= Html::encode($displayDesc) ?></td>
+                    <td class="text-right"><?= $valueBeforeVat > 0 ? number_format($valueBeforeVat, 2) : '' ?></td>
+                    <td class="text-right"><?= $vatAmount > 0 ? number_format($vatAmount, 2) : '' ?></td>
                     <td class="text-right"></td>
-                    <td class="text-right"></td>
-                    <td class="text-right"></td>
-                    <td class="text-right"><?= number_format($line->amount, 2) ?></td>
-                    <td><?= Html::encode($line->remark) ?></td>
+                    <td class="text-right"><?= number_format($totalAmount, 2) ?></td>
+                    <td contenteditable="true" style="outline: none; cursor: text;" title="พิมพ์หมายเหตุเพิ่มเติมตรงนี้ได้"></td>
                 </tr>
             <?php endforeach; ?>
             <?php 
             // Add empty rows to fill up space if needed
-            for ($j = $i; $j <= max(15, $i); $j++): 
+            for ($j = $i; $j <= max(12, $i); $j++): 
             ?>
                 <tr>
                     <td class="text-center">&nbsp;</td>
@@ -129,15 +200,15 @@ $formatter = \Yii::$app->formatter;
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td></td>
+                    <td contenteditable="true" style="outline: none; cursor: text;"></td>
                 </tr>
             <?php endfor; ?>
         </tbody>
         <tfoot>
             <tr>
                 <td colspan="5" class="text-center" style="font-weight: bold; font-size: 12pt;">Summary</td>
-                <td></td>
-                <td></td>
+                <td class="text-right"><b><?= $sumBeforeVat > 0 ? number_format($sumBeforeVat, 2) : '' ?></b></td>
+                <td class="text-right"><b><?= $sumVat > 0 ? number_format($sumVat, 2) : '' ?></b></td>
                 <td></td>
                 <td class="text-right"><b><?= number_format($model->amount, 2) ?></b></td>
                 <td></td>
