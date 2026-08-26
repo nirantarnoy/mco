@@ -693,6 +693,7 @@ class ExecutiveDashboardController extends BaseController
         $totalAllPetty = 0;
         $totalAllInv = 0;
         $totalAllVehicle = 0;
+        $totalAllSalary = 0;
         $totalAllExp = 0;
         $totalAllNet = 0;
 
