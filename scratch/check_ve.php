@@ -16,23 +16,10 @@ $config = yii\helpers\ArrayHelper::merge(
 
 $application = new yii\web\Application($config);
 
-$jobs = (new \yii\db\Query())
-    ->from('job j')
-    ->select(['j.id', 'j.job_no', 'j.job_amount'])
-    ->all();
+$jobNo = 'RY-QT26-000084';
+$rows = (new \yii\db\Query())->from('vehicle_expense')->where(['job_no' => $jobNo])->all();
 
-echo "Checking all " . count($jobs) . " jobs:\n";
-foreach($jobs as $j) {
-    $jobObj = \backend\models\Job::findOne($j['id']);
-    if ($jobObj) {
-        $controller = new \backend\controllers\ExecutiveDashboardController('executive-dashboard', Yii::$app);
-        try {
-            $eval = $controller->evaluateJobStepStatuses($jobObj);
-            if ($eval['metrics']['jobKmTotal'] > 10000 || stristr($jobObj->job_no, '000084') !== false) {
-                echo "Match Job ID: {$jobObj->id} | JobNo: '{$jobObj->job_no}' | KmTotal: {$eval['metrics']['jobKmTotal']} | Cost: {$eval['metrics']['jobVehicleCost']} | Wage: {$eval['metrics']['jobVehicleWage']}\n";
-            }
-        } catch (\Throwable $e) {
-            // ignore
-        }
-    }
+echo "Records for '$jobNo': " . count($rows) . "\n";
+foreach($rows as $r) {
+    echo "ID: {$r['id']} | JobNo: {$r['job_no']} | VehicleNo: {$r['vehicle_no']} | Dist: {$r['total_distance']} | Cost: {$r['vehicle_cost']} | Wage: {$r['total_wage']}\n";
 }
