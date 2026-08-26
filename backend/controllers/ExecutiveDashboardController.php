@@ -1045,12 +1045,9 @@ class ExecutiveDashboardController extends BaseController
         $jobVehicleCost = 0;
         $jobVehicleWage = 0;
         foreach ($jobVehicleExp as $ve) {
-            $dist = (float)$ve->total_distance;
-            if ($dist > 0) {
-                $jobKmTotal += $dist;
-            }
-            $jobVehicleCost += max(0, (float)$ve->vehicle_cost);
-            $jobVehicleWage += max(0, (float)$ve->total_wage);
+            $jobKmTotal += abs((float)$ve->total_distance);
+            $jobVehicleCost += abs((float)$ve->vehicle_cost);
+            $jobVehicleWage += abs((float)$ve->total_wage);
         }
         $jobKmCostAt5 = $jobKmTotal * 5;
         // ใช้ค่าใช้จ่ายตามระยะทางจริง (x 5 บาท) หรือค่าใช้จ่ายรถที่บันทึก

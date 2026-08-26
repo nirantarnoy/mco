@@ -262,11 +262,12 @@ $stepsDef = [
                         <thead>
                             <tr>
                                 <th class="text-center" style="width: 5%">#</th>
-                                <th class="text-center" style="width: 15%">วันที่ใช้งาน</th>
-                                <th class="text-center" style="width: 15%">ทะเบียนรถ</th>
+                                <th class="text-center" style="width: 12%">วันที่ใช้งาน</th>
+                                <th class="text-center" style="width: 13%">ทะเบียนรถ</th>
                                 <th class="text-end" style="width: 20%">ระยะทาง (กม.)</th>
                                 <th class="text-end" style="width: 20%">ค่าใช้จ่ายรถ (บาท)</th>
-                                <th class="text-end" style="width: 25%">ค่าจ้างรวม (บาท)</th>
+                                <th class="text-end" style="width: 20%">ค่าจ้างรวม (บาท)</th>
+                                <th class="text-center" style="width: 10%">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -274,8 +275,9 @@ $stepsDef = [
                             $vIdx = 0;
                             foreach ($jobVehicleExpList as $veItem): 
                                 $vIdx++;
+                                $isNegative = ($veItem->total_distance < 0 || $veItem->vehicle_cost < 0);
                             ?>
-                                <tr>
+                                <tr class="<?= $isNegative ? 'table-warning' : '' ?>">
                                     <td class="text-center text-slate-400"><?= $vIdx ?></td>
                                     <td class="text-center fw-medium"><?= date('d/m/Y', strtotime($veItem->expense_date)) ?></td>
                                     <td class="text-center">
@@ -283,9 +285,25 @@ $stepsDef = [
                                             <?= Html::encode($veItem->vehicle_no ?: '-') ?>
                                         </span>
                                     </td>
-                                    <td class="text-end fw-bold" style="color: #0369a1;"><?= number_format($veItem->total_distance, 1) ?> กม.</td>
-                                    <td class="text-end fw-bold" style="color: #047857;"><?= number_format($veItem->vehicle_cost, 2) ?></td>
-                                    <td class="text-end fw-bold" style="color: #7e22ce;"><?= number_format($veItem->total_wage, 2) ?></td>
+                                    <td class="text-end fw-bold" style="color: #0369a1;">
+                                        <?= number_format(abs((float)$veItem->total_distance), 1) ?> กม.
+                                        <?php if ($isNegative): ?>
+                                            <span class="badge bg-danger text-white ms-1" style="font-size: 0.7rem;" title="รายการนี้คีย์ติดลบในระบบฉบับดั้งเดิม (<?= number_format($veItem->total_distance, 1) ?>)">
+                                                <i class="fas fa-exclamation-triangle"></i> ติดลบ
+                                            </span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="text-end fw-bold" style="color: #047857;">
+                                        <?= number_format(abs((float)$veItem->vehicle_cost), 2) ?>
+                                    </td>
+                                    <td class="text-end fw-bold" style="color: #7e22ce;">
+                                        <?= number_format(abs((float)$veItem->total_wage), 2) ?>
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="<?= Url::to(['vehicle-expense/update', 'id' => $veItem->id]) ?>" target="_blank" class="btn btn-xs btn-outline-secondary rounded-pill" title="แก้ไขใบบันทึกการใช้รถใบนี้">
+                                            <i class="fas fa-edit me-1"></i> แก้ไข
+                                        </a>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
