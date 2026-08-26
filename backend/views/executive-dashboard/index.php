@@ -499,6 +499,7 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                             <th class="text-end text-secondary">สดย่อย</th>
                             <th class="text-end text-info">สต๊อก</th>
                             <th class="text-end text-primary">รถยนต์+ค่าจ้าง</th>
+                            <th class="text-end" style="color: #6f42c1;">เงินเดือนพนักงาน</th>
                             <th class="text-end fw-bold" style="color: #be123c;">รวมค่าใช้จ่าย</th>
                             <th class="text-end fw-bold">กำไรสุทธิ</th>
                         </tr>
@@ -513,6 +514,7 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                                 <td class="text-end text-secondary"><?= number_format($c['petty_cash'], 2) ?></td>
                                 <td class="text-end text-info"><?= number_format($c['inventory'], 2) ?></td>
                                 <td class="text-end text-primary"><?= number_format($c['vehicle'], 2) ?></td>
+                                <td class="text-end" style="color: #6f42c1;"><?= number_format($c['salary'] ?? 0, 2) ?></td>
                                 <td class="text-end fw-bold" style="color: #be123c;"><?= number_format($c['total_expenses'], 2) ?></td>
                                 <td class="text-end fw-bold <?= $c['net_profit'] >= 0 ? 'text-success' : 'text-danger' ?>"><?= number_format($c['net_profit'], 2) ?></td>
                             </tr>
@@ -527,6 +529,7 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                             <td class="text-end fw-bold text-secondary"><?= number_format($companySummariesTotals['petty_cash'], 2) ?></td>
                             <td class="text-end fw-bold text-info"><?= number_format($companySummariesTotals['inventory'], 2) ?></td>
                             <td class="text-end fw-bold text-primary"><?= number_format($companySummariesTotals['vehicle'], 2) ?></td>
+                            <td class="text-end fw-bold" style="color: #6f42c1;"><?= number_format($companySummariesTotals['salary'] ?? 0, 2) ?></td>
                             <td class="text-end fw-bold fs-6" style="color: #be123c;"><?= number_format($companySummariesTotals['total_expenses'], 2) ?></td>
                             <td class="text-end fw-bold fs-6 <?= $companySummariesTotals['net_profit'] >= 0 ? 'text-success' : 'text-danger' ?>"><?= number_format($companySummariesTotals['net_profit'], 2) ?></td>
                         </tr>

@@ -714,34 +714,54 @@ class ExecutiveDashboardController extends BaseController
             }
             
             // PO
-            $cPoQuery = Purch::find()->where(['approve_status' => 1, 'company_id' => $cId]);
+            $cPoQuery = Purch::find()->where(['approve_status' => 1]);
+            if ($cId == 1) {
+                $cPoQuery->andWhere(['or', ['company_id' => 1], ['company_id' => null], ['company_id' => 0]]);
+            } else {
+                $cPoQuery->andWhere(['company_id' => $cId]);
+            }
             if (!empty($fromDate) && !empty($toDate)) {
                 $cPoQuery->andWhere(['between', 'purch_date', $fromDate, $toDate]);
             }
             $cPo = (float)$cPoQuery->sum('(net_amount - COALESCE(vat_amount, 0)) * COALESCE(NULLIF(currency_rate, 0), 1)');
                 
             // Non PR
-            $cNonePrQuery = PurchaseMaster::find()->where(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED, 'company_id' => $cId]);
+            $cNonePrQuery = PurchaseMaster::find()->where(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED]);
+            if ($cId == 1) {
+                $cNonePrQuery->andWhere(['or', ['company_id' => 1], ['company_id' => null], ['company_id' => 0]]);
+            } else {
+                $cNonePrQuery->andWhere(['company_id' => $cId]);
+            }
             if (!empty($fromDate) && !empty($toDate)) {
                 $cNonePrQuery->andWhere(['between', 'docdat', $fromDate, $toDate]);
             }
             $cNonePr = (float)$cNonePrQuery->sum('total_amount - COALESCE(vat_amount, 0)');
                 
             // Petty Cash
-            $cPettyQuery = PettyCashVoucher::find()->where(['status' => 1, 'company_id' => $cId]);
+            $cPettyQuery = PettyCashVoucher::find()->where(['status' => 1]);
+            if ($cId == 1) {
+                $cPettyQuery->andWhere(['or', ['company_id' => 1], ['company_id' => null], ['company_id' => 0]]);
+            } else {
+                $cPettyQuery->andWhere(['company_id' => $cId]);
+            }
             if (!empty($fromDate) && !empty($toDate)) {
                 $cPettyQuery->andWhere(['between', 'date', $fromDate, $toDate]);
             }
             $cPetty = (float)$cPettyQuery->sum('amount');
                 
-            // Inventory
+            // Inventory (รวมทั้งที่ผูก Job และไม่ผูก Job)
             $stockQ = (new \yii\db\Query())
                 ->select('l.qty, l.line_price, l.sale_price, p.sale_price as p_sale_price, p.cost_price as p_cost_price')
                 ->from('journal_trans_line l')
                 ->innerJoin('journal_trans t', 't.id = l.journal_trans_id')
-                ->innerJoin('job j', 'j.id = t.job_id')
+                ->leftJoin('job j', 'j.id = t.job_id')
                 ->leftJoin('product p', 'p.id = l.product_id')
-                ->where(['t.trans_type_id' => 3, 't.status' => 2, 'j.company_id' => $cId]);
+                ->where(['t.trans_type_id' => 3, 't.status' => 2]);
+            if ($cId == 1) {
+                $stockQ->andWhere(['or', ['j.company_id' => 1], ['j.company_id' => null], ['t.job_id' => null], ['t.job_id' => 0]]);
+            } else {
+                $stockQ->andWhere(['j.company_id' => $cId]);
+            }
             if (!empty($fromDate) && !empty($toDate)) {
                 $stockQ->andWhere(['between', 't.trans_date', $fromDate, $toDate]);
             }
@@ -759,8 +779,14 @@ class ExecutiveDashboardController extends BaseController
                 }
             }
 
-            // Vehicles
-            $veQ = VehicleExpense::find()->innerJoin('job j', 'j.job_no COLLATE utf8mb4_unicode_ci = vehicle_expense.job_no COLLATE utf8mb4_unicode_ci')->where(['j.company_id' => $cId]);
+            // Vehicles (รวมทั้งที่ผูก Job และไม่ผูก Job)
+            $veQ = VehicleExpense::find()
+                ->leftJoin('job j', 'j.job_no COLLATE utf8mb4_unicode_ci = vehicle_expense.job_no COLLATE utf8mb4_unicode_ci');
+            if ($cId == 1) {
+                $veQ->where(['or', ['j.company_id' => 1], ['j.company_id' => null], ['vehicle_expense.job_no' => null], ['vehicle_expense.job_no' => '']]);
+            } else {
+                $veQ->where(['j.company_id' => $cId]);
+            }
             if (!empty($fromDate) && !empty($toDate)) {
                 $veQ->andWhere(['between', 'vehicle_expense.expense_date', $fromDate, $toDate]);
             }
@@ -770,7 +796,25 @@ class ExecutiveDashboardController extends BaseController
             $cEffVehicleCost = max($cVehicleCost, $cKm * 5);
             $cVehicleTotal = $cEffVehicleCost + $cVehicleWage;
             
-            $cTotalExp = $cPo + $cNonePr + $cPetty + $cInv + $cVehicleTotal;
+            // Company Salary (เงินเดือนพนักงานประจำ)
+            $cSalary = 0;
+            if (!empty($fromDate) && !empty($toDate)) {
+                $startM = (int)date('m', strtotime($fromDate));
+                $startY = (int)date('Y', strtotime($fromDate));
+                $endM = (int)date('m', strtotime($toDate));
+                $endY = (int)date('Y', strtotime($toDate));
+                
+                $cSalary = (float)\backend\models\CompanySalary::find()
+                    ->where(['company_id' => $cId])
+                    ->andWhere(['between', new \yii\db\Expression('(salary_year * 100 + salary_month)'), $startY * 100 + $startM, $endY * 100 + $endM])
+                    ->sum('amount');
+            } else {
+                $cSalary = (float)\backend\models\CompanySalary::find()
+                    ->where(['company_id' => $cId, 'salary_year' => (int)date('Y'), 'salary_month' => (int)date('m')])
+                    ->sum('amount');
+            }
+
+            $cTotalExp = $cPo + $cNonePr + $cPetty + $cInv + $cVehicleTotal + $cSalary;
             $cNetProfit = $cRev - $cTotalExp;
 
             $totalAllRev += $cRev;
@@ -779,6 +823,7 @@ class ExecutiveDashboardController extends BaseController
             $totalAllPetty += $cPetty;
             $totalAllInv += $cInv;
             $totalAllVehicle += $cVehicleTotal;
+            $totalAllSalary += $cSalary;
             $totalAllExp += $cTotalExp;
             $totalAllNet += $cNetProfit;
             
@@ -790,6 +835,7 @@ class ExecutiveDashboardController extends BaseController
                 'petty_cash' => $cPetty,
                 'inventory' => $cInv,
                 'vehicle' => $cVehicleTotal,
+                'salary' => $cSalary,
                 'total_expenses' => $cTotalExp,
                 'net_profit' => $cNetProfit
             ];
@@ -802,6 +848,7 @@ class ExecutiveDashboardController extends BaseController
             'petty_cash' => $totalAllPetty,
             'inventory' => $totalAllInv,
             'vehicle' => $totalAllVehicle,
+            'salary' => $totalAllSalary,
             'total_expenses' => $totalAllExp,
             'net_profit' => $totalAllNet
         ];
@@ -984,13 +1031,14 @@ class ExecutiveDashboardController extends BaseController
 
         $cleanJobNo = trim($job->job_no);
         $upperJobNo = strtoupper($cleanJobNo);
+        $lowerJobNo = strtolower($cleanJobNo);
+        // Exact match only (case-insensitive) — avoid LIKE which may pull in other jobs with similar job_no
         $jobVehicleExp = VehicleExpense::find()
             ->where([
                 'or',
-                ['job_no' => $job->job_no],
                 ['job_no' => $cleanJobNo],
                 ['job_no' => $upperJobNo],
-                ['like', 'job_no', $cleanJobNo]
+                ['job_no' => $lowerJobNo],
             ])
             ->orderBy(['expense_date' => SORT_DESC])
             ->all();
@@ -1276,6 +1324,66 @@ class ExecutiveDashboardController extends BaseController
 
         $canCancel = $this->checkCanCancelStep();
 
+        // Fetch POs & Non-PRs with line items and attached docs for PO Search Modal
+        $jobPosDetail = [];
+
+        // 1. POs
+        $jobPos = Purch::find()->where(['job_id' => $job->id])->all();
+        foreach ($jobPos as $po) {
+            $lines = PurchLine::find()->where(['purch_id' => $po->id])->asArray()->all();
+            $docs = (new \yii\db\Query())->from('purch_doc')->where(['purch_id' => $po->id])->all();
+            $vendorName = $po->vendor_name;
+            if (empty($vendorName) && $po->vendor_id) {
+                $vendor = \backend\models\Vendor::findOne($po->vendor_id);
+                if ($vendor) $vendorName = $vendor->name;
+            }
+            $jobPosDetail[] = [
+                'type' => 'PO',
+                'id' => $po->id,
+                'doc_no' => $po->purch_no ?: ('PO-' . $po->id),
+                'doc_date' => $po->purch_date ?: '-',
+                'vendor_name' => $vendorName ?: 'ไม่ระบุ Vendor',
+                'amount' => (float)$po->net_amount,
+                'status_label' => $po->getApproveStatusLabel(),
+                'lines' => $lines,
+                'docs' => $docs,
+                'detail_url' => \yii\helpers\Url::to(['purch/view', 'id' => $po->id])
+            ];
+        }
+
+        // 2. Non-PRs
+        $jobNonePrs = PurchaseMaster::find()->where(['job_no' => $job->job_no])->all();
+        foreach ($jobNonePrs as $npr) {
+            $lines = (new \yii\db\Query())->from('purchase_master_line')->where(['purchase_master_id' => $npr->id])->all();
+            $vendorName = '';
+            if ($npr->vendor_id) {
+                $vendor = \backend\models\Vendor::findOne($npr->vendor_id);
+                if ($vendor) $vendorName = $vendor->name;
+            }
+            $docs = [];
+            if (!empty($npr->cus_po_doc)) {
+                $docs[] = ['doc_name' => $npr->cus_po_doc, 'title' => 'PO Doc'];
+            }
+            if (!empty($npr->refnum)) {
+                $docs[] = ['doc_name' => $npr->refnum, 'title' => 'Ref Doc'];
+            }
+            if (!empty($npr->invoice_no)) {
+                $docs[] = ['doc_name' => $npr->invoice_no, 'title' => 'Invoice Doc'];
+            }
+            $jobPosDetail[] = [
+                'type' => 'None-PR',
+                'id' => $npr->id,
+                'doc_no' => $npr->docnum ?: ($npr->job_no ?: 'None-PR-' . $npr->id),
+                'doc_date' => $npr->docdat ?: '-',
+                'vendor_name' => $vendorName ?: 'ไม่ระบุ Vendor',
+                'amount' => (float)$npr->total_amount,
+                'status_label' => $npr->approve_status == 1 ? 'อนุมัติ' : 'รอพิจารณา',
+                'lines' => $lines,
+                'docs' => $docs,
+                'detail_url' => \yii\helpers\Url::to(['purchase-master/view', 'id' => $npr->id])
+            ];
+        }
+
         return $this->render('job_pipeline', [
             'job' => $job,
             'activityStatuses' => $activityStatuses,
@@ -1297,6 +1405,7 @@ class ExecutiveDashboardController extends BaseController
             'jobNonePrCostWithInterest' => $eval['metrics']['jobNonePrCostWithInterest'],
             'jobProfitBeforeTax' => $eval['metrics']['jobProfitBeforeTax'],
             'canCancel' => $canCancel,
+            'jobPosDetail' => $jobPosDetail,
         ]);
     }
 

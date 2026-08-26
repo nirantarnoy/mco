@@ -144,9 +144,9 @@ $stepsDef = [
                 <table class="table table-custom align-middle mb-0" id="activity-steps-table">
                     <thead>
                         <tr>
-                            <th class="text-center" style="width: 10%">ขั้นตอน</th>
+                            <th class="text-center" style="width: 8%">ขั้นตอน</th>
                             <th style="width: 25%">ชื่อกิจกรรมในระบบ</th>
-                            <th style="width: 35%">สถานะประมวลผล & การจัดเก็บเอกสารในระบบ</th>
+                            <th style="width: 37%">สถานะประมวลผล & เอกสาร/ไฟล์แนบในระบบ</th>
                             <th class="text-center" style="width: 15%">สถานะจากระบบ</th>
                             <th class="text-center" style="width: 15%">การยกเลิก</th>
                         </tr>
@@ -166,8 +166,61 @@ $stepsDef = [
                                     <div class="small text-slate-400" style="color: #94a3b8;"><?= Html::encode($sInfo['detail']) ?></div>
                                 </td>
                                 <td>
-                                    <div class="fw-medium text-slate-700" style="color: #334155;">
-                                        <i class="fas fa-search-plus me-1 text-slate-400"></i> <?= Html::encode($detailText) ?>
+                                    <div class="fw-medium text-slate-700 mb-2" style="color: #334155;">
+                                        <i class="fas fa-info-circle me-1 text-indigo-500"></i> <?= Html::encode($detailText) ?>
+                                    </div>
+
+                                    <!-- Action / File Attachment Buttons per Step -->
+                                    <div>
+                                        <?php if ($sNo == 1): ?>
+                                            <?php if (!empty($job->cus_po_doc)): ?>
+                                                <?php 
+                                                $poFiles = explode(',', $job->cus_po_doc);
+                                                foreach ($poFiles as $pf): 
+                                                    $cleanPf = trim($pf);
+                                                    if (empty($cleanPf)) continue;
+                                                ?>
+                                                    <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($cleanPf) ?>" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill me-1 mb-1 shadow-sm">
+                                                        <i class="fas fa-file-pdf me-1"></i> ดูไฟล์ PO ลูกค้า (<?= Html::encode($cleanPf) ?>)
+                                                    </a>
+                                                <?php endforeach; ?>
+                                            <?php else: ?>
+                                                <span class="badge bg-light text-muted fw-normal"><i class="fas fa-exclamation-circle me-1"></i> ยังไม่มีไฟล์ PO ลูกค้า</span>
+                                            <?php endif; ?>
+
+                                        <?php elseif ($sNo == 2): ?>
+                                            <button type="button" class="btn btn-xs btn-indigo-modern rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#poSearchModal" data-toggle="modal" data-target="#poSearchModal">
+                                                <i class="fas fa-search me-1"></i> ดูรายการ PO / ค้นหาตาม Vendor & สินค้า (<?= count($jobPosDetail ?? []) ?> รายการ)
+                                            </button>
+
+                                        <?php elseif ($sNo == 3 || $sNo == 4 || $sNo == 6 || $sNo == 9 || $sNo == 12): ?>
+                                            <button type="button" class="btn btn-xs btn-outline-info rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#timelineModal" data-toggle="modal" data-target="#timelineModal">
+                                                <i class="fas fa-file-alt me-1"></i> ดูเอกสาร/ไฟล์แนบใน Timeline
+                                            </button>
+
+                                        <?php elseif ($sNo == 5): ?>
+                                            <?php if (!empty($job->jsa_doc)): ?>
+                                                <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($job->jsa_doc) ?>" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill shadow-sm">
+                                                    <i class="fas fa-file-pdf me-1"></i> ดูไฟล์ JSA/เซฟตี้ (<?= Html::encode($job->jsa_doc) ?>)
+                                                </a>
+                                            <?php else: ?>
+                                                <span class="badge bg-light text-muted fw-normal"><i class="fas fa-exclamation-circle me-1"></i> ยังไม่ได้แนบไฟล์ JSA</span>
+                                            <?php endif; ?>
+
+                                        <?php elseif ($sNo == 7): ?>
+                                            <?php if (!empty($job->report_doc)): ?>
+                                                <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($job->report_doc) ?>" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill shadow-sm">
+                                                    <i class="fas fa-file-pdf me-1"></i> ดูไฟล์ Final Report (<?= Html::encode($job->report_doc) ?>)
+                                                </a>
+                                            <?php else: ?>
+                                                <span class="badge bg-light text-muted fw-normal"><i class="fas fa-exclamation-circle me-1"></i> ยังไม่ได้แนบไฟล์ Final Report</span>
+                                            <?php endif; ?>
+
+                                        <?php elseif ($sNo == 13): ?>
+                                            <a href="#vehicle-details-card" class="btn btn-xs btn-outline-primary rounded-pill shadow-sm">
+                                                <i class="fas fa-car me-1"></i> ดูรายละเอียดใบบันทึกการใช้รถยนต์
+                                            </a>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                                 <td class="text-center" id="status-badge-container-<?= $sNo ?>">
@@ -192,14 +245,14 @@ $stepsDef = [
 
     <?php if (!empty($jobVehicleExpList)): ?>
         <!-- Vehicle Usage & Driver Wage Details Card -->
-        <div class="card border-0 shadow-sm rounded-4 mb-4" style="background-color: #ffffff; border-radius: 16px;">
+        <div class="card border-0 shadow-sm rounded-4 mb-4" id="vehicle-details-card" style="background-color: #ffffff; border-radius: 16px;">
             <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
                 <div>
                     <h6 class="fw-bold mb-1 text-slate-800" style="color: #1e293b; font-family: 'Prompt', sans-serif;">
                         <i class="fas fa-car text-indigo-600 me-2" style="color: #4f46e5;"></i> รายละเอียดบันทึกการใช้รถยนต์และค่าจ้างประจำ Job นี้
                     </h6>
                     <div class="small text-slate-500" style="color: #64748b;">
-                        พบข้อมูลบันทึกการเดินทางทั้งหมด <?= count($jobVehicleExpList) ?> รายการ | รวมระยะทาง <?= number_format($jobKmTotal, 1) ?> กม. | ค่ารถ <?= number_format($jobKmCostAt5 + $jobVehicleCost, 2) ?> บาท | ค่าจ้างรวม <?= number_format($jobVehicleWage, 2) ?> บาท
+                        พบข้อมูลบันทึกการเดินทางทั้งหมด <?= count($jobVehicleExpList) ?> รายการ | รวมระยะทาง <?= number_format($jobKmTotal, 1) ?> กม. | ค่ารถ (ใช้ค่าที่มากกว่า) <?= number_format(max($jobKmCostAt5, $jobVehicleCost), 2) ?> บาท | ค่าจ้างรวม <?= number_format($jobVehicleWage, 2) ?> บาท
                     </div>
                 </div>
             </div>
@@ -253,7 +306,7 @@ $stepsDef = [
 <!-- Timeline Modal -->
 <div class="modal fade" id="timelineModal" tabindex="-1" aria-labelledby="timelineModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width: 90%;">
-    <div class="modal-content">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
       <div class="modal-header bg-light">
         <h5 class="modal-title fw-bold" id="timelineModalLabel" style="font-family: 'Prompt', sans-serif; color: #1e293b;">
             <i class="fas fa-history text-indigo-600 me-2" style="color: #4f46e5;"></i> กิจกรรมและเอกสารที่เกี่ยวข้อง (Timeline)
@@ -274,7 +327,169 @@ $stepsDef = [
   </div>
 </div>
 
-<!-- Tailwind CSS Light Style Custom CSS -->
+<!-- Interactive PO & None-PR Search Modal -->
+<div class="modal fade" id="poSearchModal" tabindex="-1" aria-labelledby="poSearchModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable" style="max-width: 92%;">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+      <div class="modal-header text-white p-4" style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); border-top-left-radius: 20px; border-top-right-radius: 20px;">
+        <div>
+            <h5 class="modal-title fw-bold mb-1" id="poSearchModalLabel" style="font-family: 'Prompt', sans-serif;">
+                <i class="fas fa-file-invoice me-2"></i> รายการ PO และ None-PR ทั้งหมดของ Job No: <?= Html::encode($job->job_no) ?>
+            </h5>
+            <div class="small text-white-50">ค้นหาตาม 1. Vendor 2. รายละเอียดสินค้า (เช่น Duct+S/S, Trane + ACCU, Insulation) และเปิดไฟล์แนบได้ทันที</div>
+        </div>
+        <button type="button" class="btn-close btn-close-white close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true" class="d-none d-sm-inline">&times;</span>
+        </button>
+      </div>
+
+      <div class="modal-body p-4" style="background-color: #f8fafc;">
+        
+        <!-- Live Search Input & Filter Tags -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: #ffffff; border-radius: 16px;">
+            <div class="card-body p-3">
+                <div class="row align-items-center g-3">
+                    <div class="col-md-7">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 rounded-start-pill ps-3" style="color: #4f46e5;">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" id="poSearchKeyword" class="form-control form-control-lg border-start-0 rounded-end-pill fs-6" placeholder="พิมพ์ชื่อ Vendor, รายละเอียดสินค้า (เช่น Duct+S/S, Trane + ACCU, Insulation) หรือเลขที่ PO..." style="font-family: 'Prompt', sans-serif;">
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="d-flex align-items-center gap-1 flex-wrap">
+                            <span class="small text-muted me-1 fw-medium"><i class="fas fa-tags me-1"></i> ตัวอย่างคำค้นหา:</span>
+                            <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill btn-quick-search" data-keyword="Duct+S/S">Duct+S/S</button>
+                            <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill btn-quick-search" data-keyword="Trane">Trane + ACCU</button>
+                            <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill btn-quick-search" data-keyword="Insulation">Insulation</button>
+                            <button type="button" class="btn btn-xs btn-outline-danger rounded-pill btn-quick-search" data-keyword="">ล้างค้นหา</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-2 px-1">
+                    <div class="small text-secondary">
+                        แสดงทั้งหมด <strong class="text-indigo-600" id="showingPoCount"><?= count($jobPosDetail ?? []) ?></strong> รายการ
+                    </div>
+                    <div class="small text-muted">
+                        <i class="fas fa-info-circle me-1"></i> สามารถคลิกปุ่มดูไฟล์แนบ หรือกดเปิดดูเอกสารฉบับเต็มได้
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PO List Table -->
+        <div class="card border-0 shadow-sm rounded-4" style="background: #ffffff; border-radius: 16px;">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle mb-0" id="poSearchTable">
+                        <thead>
+                            <tr>
+                                <th class="text-center" style="width: 4%">#</th>
+                                <th style="width: 15%">ประเภท / เลขที่เอกสาร</th>
+                                <th class="text-center" style="width: 10%">วันที่</th>
+                                <th style="width: 20%">ผู้จำหน่าย (Vendor)</th>
+                                <th style="width: 33%">รายการสินค้า / รายละเอียด</th>
+                                <th class="text-end" style="width: 10%">มูลค่า (บาท)</th>
+                                <th class="text-center" style="width: 8%">ไฟล์แนบ / Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($jobPosDetail)): ?>
+                                <?php 
+                                $poIdx = 0;
+                                foreach ($jobPosDetail as $item): 
+                                    $poIdx++;
+                                    // Build search index string
+                                    $searchText = mb_strtolower($item['doc_no'] . ' ' . $item['vendor_name']);
+                                    if (!empty($item['lines'])) {
+                                        foreach ($item['lines'] as $l) {
+                                            $pName = $l['product_name'] ?? '';
+                                            $pDesc = $l['product_description'] ?? '';
+                                            $searchText .= ' ' . $pName . ' ' . $pDesc;
+                                        }
+                                    }
+                                ?>
+                                    <tr class="po-item-row" data-search="<?= Html::encode(mb_strtolower($searchText)) ?>">
+                                        <td class="text-center fw-bold text-muted"><?= $poIdx ?></td>
+                                        <td>
+                                            <span class="badge <?= $item['type'] == 'PO' ? 'bg-primary' : 'bg-warning text-dark' ?> me-1">
+                                                <?= $item['type'] ?>
+                                            </span>
+                                            <strong class="text-indigo-600" style="color: #4f46e5;"><?= Html::encode($item['doc_no']) ?></strong>
+                                        </td>
+                                        <td class="text-center small text-secondary">
+                                            <?= $item['doc_date'] != '-' ? date('d/m/Y', strtotime($item['doc_date'])) : '-' ?>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold text-slate-800" style="color: #1e293b;"><?= Html::encode($item['vendor_name']) ?></div>
+                                        </td>
+                                        <td>
+                                            <?php if (!empty($item['lines'])): ?>
+                                                <ul class="list-unstyled mb-0 small">
+                                                    <?php foreach ($item['lines'] as $lineItem): ?>
+                                                        <li class="mb-1 pb-1 border-bottom border-light">
+                                                            <i class="fas fa-cube text-indigo-500 me-1" style="color: #6366f1;"></i>
+                                                            <strong class="text-dark"><?= Html::encode($lineItem['product_name'] ?? 'สินค้า') ?></strong>
+                                                            <?php if (!empty($lineItem['product_description'])): ?>
+                                                                <span class="text-secondary ms-1">(<?= Html::encode($lineItem['product_description']) ?>)</span>
+                                                            <?php endif; ?>
+                                                            <div class="text-muted small ms-3">
+                                                                จำนวน: <?= number_format($lineItem['qty'] ?? 0, 1) ?> <?= Html::encode($lineItem['unit'] ?? '') ?>
+                                                                | ราคา/หน่วย: <?= number_format($lineItem['line_price'] ?? 0, 2) ?> บาท
+                                                            </div>
+                                                        </li>
+                                                    <?php endforeach; ?>
+                                                </ul>
+                                            <?php else: ?>
+                                                <span class="text-muted small">- ไม่มีรายละเอียดสินค้า -</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="text-end fw-bold text-danger">
+                                            <?= number_format($item['amount'], 2) ?>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="d-flex flex-column gap-1 align-items-center">
+                                                <?php if (!empty($item['docs'])): ?>
+                                                    <?php foreach ($item['docs'] as $dFile): 
+                                                        $dName = is_array($dFile) ? ($dFile['doc_name'] ?? '') : $dFile;
+                                                        if (empty($dName)) continue;
+                                                    ?>
+                                                        <a href="<?= Yii::$app->request->baseUrl ?>/uploads/purch_doc/<?= Html::encode($dName) ?>" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill w-100" title="ดูไฟล์แนบ">
+                                                            <i class="fas fa-paperclip me-1"></i> ดูไฟล์แนบ
+                                                        </a>
+                                                    <?php endforeach; ?>
+                                                <?php else: ?>
+                                                    <span class="text-muted small">ไม่มีไฟล์แนบ</span>
+                                                <?php endif; ?>
+
+                                                <a href="<?= $item['detail_url'] ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100 mt-1">
+                                                    <i class="fas fa-external-link-alt me-1"></i> เปิดดู PO
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        <i class="fas fa-folder-open fa-2x mb-2 d-block text-slate-300"></i>
+                                        ไม่พบข้อมูล PO หรือ None-PR สำหรับ Job นี้
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom CSS & Styling -->
 <style>
 body {
     background-color: #f8fafc !important;
@@ -285,7 +500,7 @@ body {
     color: #ffffff;
     border: none;
     border-radius: 10px;
-    padding: 0.5rem 1.25rem;
+    padding: 0.4rem 1rem;
     font-weight: 500;
     transition: all 0.2s ease;
 }
@@ -300,7 +515,7 @@ body {
     color: #475569;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     transition: all 0.2s ease;
 }
 .btn-light-modern:hover {
@@ -380,6 +595,27 @@ $('.btn-cancel-step').on('click', function() {
             }
         });
     }
+});
+
+// Live PO & Product Search Filter
+$('#poSearchKeyword').on('keyup input', function() {
+    var kw = $(this).val().toLowerCase().trim();
+    var count = 0;
+    $('.po-item-row').each(function() {
+        var searchIndex = $(this).data('search') || '';
+        if (kw === '' || searchIndex.indexOf(kw) !== -1) {
+            $(this).show();
+            count++;
+        } else {
+            $(this).hide();
+        }
+    });
+    $('#showingPoCount').text(count);
+});
+
+$('.btn-quick-search').on('click', function() {
+    var kw = $(this).data('keyword');
+    $('#poSearchKeyword').val(kw).trigger('keyup');
 });
 JS;
 $this->registerJs($js);
