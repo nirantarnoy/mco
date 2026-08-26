@@ -81,46 +81,39 @@ class VehicleExpenseController extends BaseController
     }
 
     /**
-     * ดึงข้อมูลจาก Google Sheets (วันปัจจุบัน หรือวันที่ระบุ)
+     * ดึงข้อมูลสรุปค่าใช้จ่ายรถยนต์ราย Job จาก Google Sheets (Tab 1: สรุปยอดค่าใช้จ่ายราย JOB No)
      */
     public function actionSyncGoogleSheet($date = null)
     {
-        $postDate = Yii::$app->request->post('sync_date') ?: Yii::$app->request->get('sync_date');
-        $targetDate = $date ?: ($postDate ?: date('Y-m-d'));
-        $syncAll = (Yii::$app->request->get('all') == 1 || Yii::$app->request->post('all') == 1);
+        return $this->actionClearAndSync();
+    }
 
+    /**
+     * เคลียร์ข้อมูลค่าใช้จ่ายรถยนต์เดิมทั้งหมด แล้วนำเข้าสรุปราย Job จาก Google Sheets ใหม่
+     */
+    public function actionClearAndSync()
+    {
         try {
-            $result = $this->syncGoogleSheetData($syncAll ? null : $targetDate, $syncAll);
+            $deletedCount = VehicleExpense::deleteAll();
+            $result = $this->syncGoogleSheetJobSummaryData();
 
-            $formattedDate = date('d/m/Y', strtotime($targetDate));
-
-            if ($syncAll) {
-                Yii::$app->session->setFlash('success',
-                    "นำเข้าข้อมูลทั้งหมดจาก Google Sheets สำเร็จ {$result['success']} รายการ" .
-                    ($result['duplicate'] > 0 ? " (รายการซ้ำที่มีอยู่แล้ว {$result['duplicate']} รายการ)" : "") .
-                    ($result['skipped'] > 0 ? " (ข้ามแถวว่าง/รวม {$result['skipped']} แถว)" : "")
-                );
-            } else {
-                Yii::$app->session->setFlash('success',
-                    "ดึงข้อมูลค่าใช้จ่ายรถประจำวันที่ {$formattedDate} จาก Google Sheets สำเร็จ {$result['success']} รายการ" .
-                    ($result['duplicate'] > 0 ? " (มีในระบบแล้ว {$result['duplicate']} รายการ)" : "") .
-                    ($result['skipped'] > 0 ? " (ข้าม {$result['skipped']} รายการ)" : "")
-                );
-            }
+            Yii::$app->session->setFlash('success',
+                "เคลียร์ข้อมูลเดิม {$deletedCount} รายการ และนำเข้าสรุปค่าใช้จ่ายราย Job จาก Google Sheets สำเร็จ {$result['success']} รายการ"
+            );
         } catch (\Exception $e) {
-            Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการดึงข้อมูลจาก Google Sheets: ' . $e->getMessage());
-            Yii::error("Google Sheets Sync Exception: " . $e->getMessage(), __METHOD__);
+            Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการเคลียร์และ Sync ข้อมูล: ' . $e->getMessage());
+            Yii::error("Clear and Sync Exception: " . $e->getMessage(), __METHOD__);
         }
 
         return $this->redirect(Yii::$app->request->referrer ?: ['list']);
     }
 
     /**
-     * Helper สำหรับดึงข้อมูล CSV จาก Google Sheets และประมวลผล
+     * Helper สำหรับดึงข้อมูล CSV จาก Google Sheets สรุปราย Job No (Tab 1)
      */
-    public function syncGoogleSheetData($targetDate = null, $syncAll = false)
+    public function syncGoogleSheetJobSummaryData()
     {
-        $url = 'https://docs.google.com/spreadsheets/d/1ICudBNBaXrujPiSiNV2oDjA4QY6CUNrogbyBfYyy_XA/export?format=csv&gid=952154332';
+        $url = 'https://docs.google.com/spreadsheets/d/1ICudBNBaXrujPiSiNV2oDjA4QY6CUNrogbyBfYyy_XA/export?format=csv';
 
         $ctx = stream_context_create([
             'http' => [
@@ -194,105 +187,44 @@ class VehicleExpenseController extends BaseController
                     continue;
                 }
 
-                if (count($data) < 7) {
+                $jobNoRaw = trim($data[0] ?? '');
+                $countRaw = trim($data[1] ?? '');
+                $distRaw = trim($data[2] ?? '');
+                $costRaw = trim($data[5] ?? '');
+                $passengerRaw = trim($data[6] ?? '');
+                $wageRaw = trim($data[7] ?? '');
+
+                // ข้ามแถว "รวม" / "ผลรวม" / "Total"
+                if (mb_stripos($jobNoRaw, 'รวม') !== false || mb_stripos($jobNoRaw, 'total') !== false) {
                     $skippedCount++;
                     continue;
                 }
 
-                $colA = trim($data[0] ?? '');
-                $colB = trim($data[1] ?? '');
-                $colC = trim($data[2] ?? '');
-                $colD = trim($data[3] ?? '');
-                $colE = trim($data[4] ?? '');
-                $colF = trim($data[5] ?? '');
-                $colG = trim($data[6] ?? '');
-
-                // ข้ามแถว "รวม" / "ผลรวม" / "Total" (ไม่ว่าจะอยู่ใน Col A, B หรือ C)
-                if (mb_stripos($colA, 'รวม') !== false || mb_stripos($colA, 'total') !== false ||
-                    mb_stripos($colB, 'รวม') !== false || mb_stripos($colB, 'total') !== false ||
-                    mb_stripos($colC, 'รวม') !== false || mb_stripos($colC, 'total') !== false) {
+                if (empty($jobNoRaw)) {
                     $skippedCount++;
                     continue;
                 }
 
-                // ข้ามแถวว่าง
-                if (empty($colA) && empty($colB) && empty($colC) && empty($colD) && empty($colE) && empty($colF) && empty($colG)) {
-                    $skippedCount++;
-                    continue;
-                }
-
-                // จัดการวันที่ (Col A) และ Job ID (Col B) แบบสืบทอดค่า
-                if (!empty($colA)) {
-                    $parsedDate = $this->parseDate($colA);
-                    if ($parsedDate) {
-                        $currentDate = $parsedDate;
-                        $currentJobNo = !empty($colB) ? $this->cleanJobNo($colB) : null;
-                    }
-                } else {
-                    if (!empty($colB)) {
-                        $currentJobNo = $this->cleanJobNo($colB);
-                    }
-                }
-
-                if (!$currentDate) {
-                    $currentDate = date('Y-m-d');
-                }
-
-                // ถ้าระบุ targetDate และไม่ syncAll
-                if (!$syncAll && $targetDate && $currentDate !== $targetDate) {
-                    continue;
-                }
-
-                $jobNo = $currentJobNo;
-                $vehicleNo = !empty($colC) ? trim($colC) : null;
-                $totalDistance = $this->parseNumber($colD);
-                $vehicleCost = $this->parseNumber($colE);
-                $passengerCount = intval($this->parseNumber($colF));
-                $totalWage = $this->parseNumber($colG);
-
-                // ข้ามแถวที่มีค่าติดลบ (เช่น แถวสูตรคำนวณผลรวม/ส่วนต่างใน Google Sheet)
-                if ($totalDistance < 0 || $vehicleCost < 0 || $totalWage < 0) {
-                    $skippedCount++;
-                    continue;
-                }
-
-                // ข้ามแถวที่ไม่มีข้อมูลสำคัญ
-                if (empty($vehicleNo) && $totalDistance == 0 && $vehicleCost == 0 && $totalWage == 0) {
-                    $skippedCount++;
-                    continue;
-                }
-
-                // ตรวจสอบรายการซ้ำ
-                $exists = VehicleExpense::find()->where([
-                    'expense_date' => $currentDate,
-                    'job_no' => $jobNo,
-                    'vehicle_no' => $vehicleNo,
-                    'total_distance' => $totalDistance,
-                    'vehicle_cost' => $vehicleCost,
-                    'passenger_count' => $passengerCount,
-                    'total_wage' => $totalWage,
-                ])->exists();
-
-                if ($exists) {
-                    $duplicateCount++;
-                    continue;
-                }
+                $totalDistance = abs(floatval(str_replace(',', '', $distRaw)));
+                $vehicleCost = abs(floatval(str_replace(',', '', $costRaw)));
+                $passengerCount = intval(str_replace(',', '', $passengerRaw));
+                $totalWage = abs(floatval(str_replace(',', '', $wageRaw)));
 
                 $expense = new VehicleExpense();
-                $expense->expense_date = $currentDate;
-                $expense->job_no = $jobNo;
-                $expense->vehicle_no = $vehicleNo;
+                $expense->expense_date = date('Y-m-d');
+                $expense->job_no = $jobNoRaw;
+                $expense->vehicle_no = 'สรุปราย JOB';
+                $expense->job_description = "สรุปยอดค่าใช้จ่ายราย JOB No จาก Google Sheet ({$jobNoRaw})";
                 $expense->total_distance = $totalDistance;
                 $expense->vehicle_cost = $vehicleCost;
                 $expense->passenger_count = $passengerCount;
                 $expense->total_wage = $totalWage;
                 $expense->import_batch = $batchId;
 
-                if ($expense->save()) {
+                if ($expense->save(false)) {
                     $successCount++;
                 } else {
                     $errorCount++;
-                    Yii::error("Google Sheet Sync Row {$rowIndex} validation error: " . json_encode($expense->errors), __METHOD__);
                 }
             }
 
