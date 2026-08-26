@@ -81,15 +81,17 @@ class VehicleExpenseController extends BaseController
     }
 
     /**
-     * ดึงข้อมูลสรุปค่าใช้จ่ายรถยนต์ราย Job จาก Google Sheets (Tab 1) และทำการ Upsert ตาม Job No
+     * ดึงข้อมูลสรุปค่าใช้จ่ายรถยนต์ราย Job จาก Google Sheets (Tab 1)
+     * ลบข้อมูลเดิมทั้งหมดก่อนเพื่อป้องกันขยะ/ยอดรายวันเดิมค้าง แล้วสร้างเรคคอร์ดสรุป 1 บรรทัดต่อ 1 Job
      */
     public function actionSyncGoogleSheet()
     {
         try {
+            $deletedCount = VehicleExpense::deleteAll();
             $result = $this->syncGoogleSheetJobSummaryData();
 
             Yii::$app->session->setFlash('success',
-                "Sync ข้อมูลจาก Google Sheets สำเร็จ! (อัปเดตยอดสะสมเดิม {$result['updated']} รายการ, เพิ่ม Job ใหม่ {$result['inserted']} รายการ)"
+                "Sync ข้อมูลสำเร็จ! ลบข้อมูลเก่า {$deletedCount} รายการ และนำเข้ายอดสรุปราย Job ใหม่จาก Google Sheets สำเร็จ {$result['inserted']} รายการ"
             );
         } catch (\Exception $e) {
             Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการ Sync ข้อมูลจาก Google Sheets: ' . $e->getMessage());
@@ -218,36 +220,19 @@ class VehicleExpenseController extends BaseController
                 $passengerCount = intval(str_replace(',', '', $passengerRaw));
                 $totalWage = abs(floatval(str_replace(',', '', $wageRaw)));
 
-                // ค้นหาเรคคอร์ดเดิมของ Job No นี้เพื่อทำการอัปเดตยอดสะสม
-                $model = VehicleExpense::find()
-                    ->where(['TRIM(job_no)' => $jobNoRaw])
-                    ->one();
-
-                if ($model) {
-                    $model->expense_date = date('Y-m-d');
-                    $model->total_distance = $totalDistance;
-                    $model->vehicle_cost = $vehicleCost;
-                    $model->passenger_count = $passengerCount;
-                    $model->total_wage = $totalWage;
-                    $model->import_batch = $batchId;
-                    $model->job_description = "อัปเดตยอดสรุปสะสมราย JOB No จาก Google Sheet ({$jobNoRaw})";
-                    if ($model->save(false)) {
-                        $updatedCount++;
-                    }
-                } else {
-                    $model = new VehicleExpense();
-                    $model->expense_date = date('Y-m-d');
-                    $model->job_no = $jobNoRaw;
-                    $model->vehicle_no = 'สรุปราย JOB';
-                    $model->job_description = "สรุปยอดค่าใช้จ่ายราย JOB No จาก Google Sheet ({$jobNoRaw})";
-                    $model->total_distance = $totalDistance;
-                    $model->vehicle_cost = $vehicleCost;
-                    $model->passenger_count = $passengerCount;
-                    $model->total_wage = $totalWage;
-                    $model->import_batch = $batchId;
-                    if ($model->save(false)) {
-                        $insertedCount++;
-                    }
+                // สร้างเรคคอร์ดสรุป 1 บรรทัดต่อ 1 Job No จาก Google Sheet
+                $model = new VehicleExpense();
+                $model->expense_date = date('Y-m-d');
+                $model->job_no = $jobNoRaw;
+                $model->vehicle_no = 'สรุปราย JOB';
+                $model->job_description = "สรุปยอดค่าใช้จ่ายราย JOB No จาก Google Sheet ({$jobNoRaw})";
+                $model->total_distance = $totalDistance;
+                $model->vehicle_cost = $vehicleCost;
+                $model->passenger_count = $passengerCount;
+                $model->total_wage = $totalWage;
+                $model->import_batch = $batchId;
+                if ($model->save(false)) {
+                    $insertedCount++;
                 }
             }
 
