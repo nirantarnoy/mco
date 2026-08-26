@@ -20,7 +20,7 @@ $application = new yii\web\Application($config);
 $url = 'https://docs.google.com/spreadsheets/d/1ICudBNBaXrujPiSiNV2oDjA4QY6CUNrogbyBfYyy_XA/export?format=csv';
 
 echo "=======================================================\n";
-echo "Starting Vehicle Expense Data Clear & Re-Import Script\n";
+echo "Starting Vehicle Expense UPSERT Sync Script (By Job No)\n";
 echo "Source: Google Sheet (สรุปยอดค่าใช้จ่ายราย JOB No)\n";
 echo "URL: $url\n";
 echo "=======================================================\n\n";
@@ -66,15 +66,10 @@ if ($handle === false) {
 $transaction = Yii::$app->db->beginTransaction();
 
 try {
-    // Clear old vehicle_expense data
-    echo "[Step 1] Clearing existing records in vehicle_expense table...\n";
-    $deletedCount = \backend\models\VehicleExpense::deleteAll();
-    echo "  -> Deleted $deletedCount old records.\n\n";
-
-    echo "[Step 2] Importing new summary records from Google Sheet...\n";
     $batchId = 'job_summary_' . date('YmdHis');
     $rowIndex = 0;
-    $successCount = 0;
+    $insertedCount = 0;
+    $updatedCount = 0;
     $skippedCount = 0;
 
     while (($data = fgetcsv($handle, 10000, ',')) !== false) {
@@ -108,20 +103,40 @@ try {
         $passengerCount = intval(str_replace(',', '', $passengerRaw));
         $totalWage = abs(floatval(str_replace(',', '', $wageRaw)));
 
-        $model = new \backend\models\VehicleExpense();
-        $model->expense_date = date('Y-m-d');
-        $model->job_no = $jobNoRaw;
-        $model->vehicle_no = 'สรุปราย JOB';
-        $model->job_description = "สรุปยอดค่าใช้จ่ายราย JOB No จาก Google Sheet ({$jobNoRaw})";
-        $model->total_distance = $totalDistance;
-        $model->vehicle_cost = $vehicleCost;
-        $model->passenger_count = $passengerCount;
-        $model->total_wage = $totalWage;
-        $model->import_batch = $batchId;
+        // Find existing record by job_no
+        $model = \backend\models\VehicleExpense::find()
+            ->where(['TRIM(job_no)' => $jobNoRaw])
+            ->one();
 
-        if ($model->save(false)) {
-            $successCount++;
-            echo "  [+] Row {$rowIndex}: JobNo='{$jobNoRaw}' | Distance={$totalDistance} km | Cost={$vehicleCost} THB | Wage={$totalWage} THB\n";
+        if ($model) {
+            // Update existing record
+            $model->expense_date = date('Y-m-d');
+            $model->total_distance = $totalDistance;
+            $model->vehicle_cost = $vehicleCost;
+            $model->passenger_count = $passengerCount;
+            $model->total_wage = $totalWage;
+            $model->import_batch = $batchId;
+            $model->job_description = "อัปเดตยอดสรุปสะสมราย JOB No จาก Google Sheet ({$jobNoRaw})";
+            if ($model->save(false)) {
+                $updatedCount++;
+                echo "  [UPDATE] Row {$rowIndex}: JobNo='{$jobNoRaw}' | Dist={$totalDistance} km | Cost={$vehicleCost} THB | Wage={$totalWage} THB\n";
+            }
+        } else {
+            // Insert new record
+            $model = new \backend\models\VehicleExpense();
+            $model->expense_date = date('Y-m-d');
+            $model->job_no = $jobNoRaw;
+            $model->vehicle_no = 'สรุปราย JOB';
+            $model->job_description = "สรุปยอดค่าใช้จ่ายราย JOB No จาก Google Sheet ({$jobNoRaw})";
+            $model->total_distance = $totalDistance;
+            $model->vehicle_cost = $vehicleCost;
+            $model->passenger_count = $passengerCount;
+            $model->total_wage = $totalWage;
+            $model->import_batch = $batchId;
+            if ($model->save(false)) {
+                $insertedCount++;
+                echo "  [INSERT] Row {$rowIndex}: JobNo='{$jobNoRaw}' | Dist={$totalDistance} km | Cost={$vehicleCost} THB | Wage={$totalWage} THB\n";
+            }
         }
     }
 
@@ -131,8 +146,8 @@ try {
     $transaction->commit();
 
     echo "\n=======================================================\n";
-    echo "SUCCESS: Cleared $deletedCount old records and imported $successCount summary records.\n";
-    echo "Skipped: $skippedCount rows.\n";
+    echo "SUCCESS: Processed Google Sheet Job Summary Tab\n";
+    echo "Updated: $updatedCount records | Inserted: $insertedCount records | Skipped: $skippedCount rows\n";
     echo "Batch ID: $batchId\n";
     echo "=======================================================\n";
 

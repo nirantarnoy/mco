@@ -112,63 +112,21 @@ if ($importErrors) {
     <div class="box box-info">
         <div class="box-header with-border">
             <h3 class="box-title">
-                <i class="fa fa-google"></i>
-                ดึงข้อมูลอัตโนมัติจาก Google Sheets
+                <i class="fa fa-google text-info"></i>
+                ดึงข้อมูลอัตโนมัติจาก Google Sheets (สรุปราย JOB No)
             </h3>
         </div>
         <div class="box-body">
             <p class="text-muted">
-                เลือกวันที่ต้องการดึงข้อมูล หรือใช้ปุ่มลัดเพื่อดึงข้อมูลจาก Google Sheet <code>(gid=952154332)</code> เข้าสู่ระบบโดยตรง
+                ระบบจะทำการอัปเดตยอดรวมค่าใช้จ่ายรถยนต์สะสมโดยอัตโนมัติตาม Job No จาก Google Sheet หน้า <code>สรุปยอดค่าใช้จ่ายราย JOB No</code>
             </p>
             
-            <?php $syncForm = ActiveForm::begin([
-                'action' => ['sync-google-sheet'],
-                'method' => 'post',
-                'options' => ['class' => 'form-inline', 'style' => 'margin-bottom: 15px;'],
-            ]); ?>
-                <div class="form-group mr-2">
-                    <label for="sync_date" class="mr-2">เลือกวันที่ต้องการดึงข้อมูล:</label>
-                    <div style="width: 220px; display: inline-block; vertical-align: middle;">
-                        <?= DatePicker::widget([
-                            'name' => 'sync_date',
-                            'value' => date('Y-m-d'),
-                            'pluginOptions' => [
-                                'format' => 'yyyy-mm-dd',
-                                'autoclose' => true,
-                                'todayHighlight' => true
-                            ],
-                            'options' => [
-                                'class' => 'form-control',
-                                'placeholder' => 'YYYY-MM-DD',
-                            ]
-                        ]); ?>
-                    </div>
-                </div>
-                <?= Html::submitButton('<i class="fa fa-refresh"></i> ดึงข้อมูลตามวันที่เลือก', [
-                    'class' => 'btn btn-info',
-                ]) ?>
-            <?php ActiveForm::end(); ?>
-
-            <hr style="margin: 15px 0;">
-
-            <div class="btn-group">
-                <?= Html::a('<i class="fa fa-calendar-check-o"></i> ดึงข้อมูลวันปัจจุบัน (' . date('d/m/Y') . ')', ['sync-google-sheet', 'sync_date' => date('Y-m-d')], [
-                    'class' => 'btn btn-default',
+            <div>
+                <?= Html::a('<i class="fa fa-refresh"></i> Sync Data จาก Google Sheet', ['sync-google-sheet'], [
+                    'class' => 'btn btn-info btn-lg',
                     'data' => [
                         'method' => 'post',
-                    ],
-                ]) ?>
-                <?= Html::a('<i class="fa fa-calendar"></i> ดึงข้อมูลเมื่อวาน (' . date('d/m/Y', strtotime('-1 day')) . ')', ['sync-google-sheet', 'sync_date' => date('Y-m-d', strtotime('-1 day'))], [
-                    'class' => 'btn btn-default',
-                    'data' => [
-                        'method' => 'post',
-                    ],
-                ]) ?>
-                <?= Html::a('<i class="fa fa-cloud-download"></i> ดึงข้อมูลย้อนหลังทั้งหมด', ['sync-google-sheet', 'all' => 1], [
-                    'class' => 'btn btn-warning',
-                    'data' => [
-                        'confirm' => 'ต้องการดึงข้อมูลย้อนหลังทั้งหมดจาก Google Sheets เข้าสู่ระบบใช่หรือไม่? (ระบบจะข้ามรายการที่มีอยู่แล้วอัตโนมัติ)',
-                        'method' => 'post',
+                        'confirm' => 'ต้องการ Sync อัปเดตข้อมูลค่าใช้จ่ายรถยนต์สะสมราย Job จาก Google Sheets ใช่หรือไม่?',
                     ],
                 ]) ?>
             </div>

@@ -81,11 +81,22 @@ class VehicleExpenseController extends BaseController
     }
 
     /**
-     * ดึงข้อมูลสรุปค่าใช้จ่ายรถยนต์ราย Job จาก Google Sheets (Tab 1: สรุปยอดค่าใช้จ่ายราย JOB No)
+     * ดึงข้อมูลสรุปค่าใช้จ่ายรถยนต์ราย Job จาก Google Sheets (Tab 1) และทำการ Upsert ตาม Job No
      */
-    public function actionSyncGoogleSheet($date = null)
+    public function actionSyncGoogleSheet()
     {
-        return $this->actionClearAndSync();
+        try {
+            $result = $this->syncGoogleSheetJobSummaryData();
+
+            Yii::$app->session->setFlash('success',
+                "Sync ข้อมูลจาก Google Sheets สำเร็จ! (อัปเดตยอดสะสมเดิม {$result['updated']} รายการ, เพิ่ม Job ใหม่ {$result['inserted']} รายการ)"
+            );
+        } catch (\Exception $e) {
+            Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการ Sync ข้อมูลจาก Google Sheets: ' . $e->getMessage());
+            Yii::error("Google Sheets Sync Exception: " . $e->getMessage(), __METHOD__);
+        }
+
+        return $this->redirect(Yii::$app->request->referrer ?: ['list']);
     }
 
     /**
@@ -109,7 +120,7 @@ class VehicleExpenseController extends BaseController
     }
 
     /**
-     * Helper สำหรับดึงข้อมูล CSV จาก Google Sheets สรุปราย Job No (Tab 1)
+     * Helper สำหรับดึงข้อมูล CSV จาก Google Sheets สรุปราย Job No (Tab 1) และ Upsert ตาม Job No
      */
     public function syncGoogleSheetJobSummaryData()
     {
@@ -158,7 +169,7 @@ class VehicleExpenseController extends BaseController
             }
         }
 
-        $tempFile = tempnam(sys_get_temp_dir(), 'gsheet_');
+        $tempFile = tempnam(sys_get_temp_dir(), 'gsheet_job_');
         file_put_contents($tempFile, $content);
 
         $handle = fopen($tempFile, 'r');
@@ -167,13 +178,10 @@ class VehicleExpenseController extends BaseController
         }
 
         $userId = (Yii::$app instanceof \yii\web\Application && isset(Yii::$app->user)) ? Yii::$app->user->id : 'system';
-        $batchId = 'gsheet_' . date('YmdHis') . '_' . $userId;
-        $successCount = 0;
+        $batchId = 'job_summary_' . date('YmdHis') . '_' . $userId;
+        $insertedCount = 0;
+        $updatedCount = 0;
         $skippedCount = 0;
-        $duplicateCount = 0;
-        $errorCount = 0;
-        $currentDate = null;
-        $currentJobNo = null;
         $rowIndex = 0;
 
         $transaction = Yii::$app->db->beginTransaction();
@@ -210,21 +218,36 @@ class VehicleExpenseController extends BaseController
                 $passengerCount = intval(str_replace(',', '', $passengerRaw));
                 $totalWage = abs(floatval(str_replace(',', '', $wageRaw)));
 
-                $expense = new VehicleExpense();
-                $expense->expense_date = date('Y-m-d');
-                $expense->job_no = $jobNoRaw;
-                $expense->vehicle_no = 'สรุปราย JOB';
-                $expense->job_description = "สรุปยอดค่าใช้จ่ายราย JOB No จาก Google Sheet ({$jobNoRaw})";
-                $expense->total_distance = $totalDistance;
-                $expense->vehicle_cost = $vehicleCost;
-                $expense->passenger_count = $passengerCount;
-                $expense->total_wage = $totalWage;
-                $expense->import_batch = $batchId;
+                // ค้นหาเรคคอร์ดเดิมของ Job No นี้เพื่อทำการอัปเดตยอดสะสม
+                $model = VehicleExpense::find()
+                    ->where(['TRIM(job_no)' => $jobNoRaw])
+                    ->one();
 
-                if ($expense->save(false)) {
-                    $successCount++;
+                if ($model) {
+                    $model->expense_date = date('Y-m-d');
+                    $model->total_distance = $totalDistance;
+                    $model->vehicle_cost = $vehicleCost;
+                    $model->passenger_count = $passengerCount;
+                    $model->total_wage = $totalWage;
+                    $model->import_batch = $batchId;
+                    $model->job_description = "อัปเดตยอดสรุปสะสมราย JOB No จาก Google Sheet ({$jobNoRaw})";
+                    if ($model->save(false)) {
+                        $updatedCount++;
+                    }
                 } else {
-                    $errorCount++;
+                    $model = new VehicleExpense();
+                    $model->expense_date = date('Y-m-d');
+                    $model->job_no = $jobNoRaw;
+                    $model->vehicle_no = 'สรุปราย JOB';
+                    $model->job_description = "สรุปยอดค่าใช้จ่ายราย JOB No จาก Google Sheet ({$jobNoRaw})";
+                    $model->total_distance = $totalDistance;
+                    $model->vehicle_cost = $vehicleCost;
+                    $model->passenger_count = $passengerCount;
+                    $model->total_wage = $totalWage;
+                    $model->import_batch = $batchId;
+                    if ($model->save(false)) {
+                        $insertedCount++;
+                    }
                 }
             }
 
@@ -234,10 +257,10 @@ class VehicleExpenseController extends BaseController
             $transaction->commit();
 
             return [
-                'success' => $successCount,
-                'duplicate' => $duplicateCount,
+                'updated' => $updatedCount,
+                'inserted' => $insertedCount,
                 'skipped' => $skippedCount,
-                'errors' => $errorCount,
+                'batch' => $batchId,
             ];
         } catch (\Exception $e) {
             if (isset($handle) && is_resource($handle)) {

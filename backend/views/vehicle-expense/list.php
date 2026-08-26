@@ -50,12 +50,12 @@ $this->params['breadcrumbs'][] = 'รายการค่าใช้จ่า�
             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                 <div>
                     <strong style="color: #31708f; font-size: 14px; margin-right: 5px;">
-                        <i class="fa fa-google text-info"></i> ดึงข้อมูลจาก Google Sheets (สรุปราย JOB No):
+                        <i class="fa fa-google text-info"></i> Sync ข้อมูลอัตโนมัติจาก Google Sheets (สรุปราย JOB No):
                     </strong>
                 </div>
                 <div>
-                    <a href="<?= \yii\helpers\Url::to(['clear-and-sync']) ?>" class="btn btn-danger btn-flat" data-method="post" data-confirm="คำเตือน: ระบบจะทำการลบข้อมูลค่าใช้จ่ายรถยนต์เดิมทั้งหมด แล้วดึงข้อมูลสรุปราย JOB No จาก Google Sheet ใหม่ทั้งหมด ยืนยันใช่หรือไม่?">
-                        <i class="fa fa-refresh"></i> เคลียร์ข้อมูลเดิม & Sync สรุปราย JOB No ล่าสุด
+                    <a href="<?= \yii\helpers\Url::to(['sync-google-sheet']) ?>" class="btn btn-info btn-flat" data-method="post" data-confirm="ต้องการ Sync อัปเดตข้อมูลสรุปค่าใช้จ่ายรถยนต์สะสมราย Job จาก Google Sheets ใช่หรือไม่?">
+                        <i class="fa fa-refresh"></i> Sync Data จาก Google Sheet
                     </a>
                 </div>
             </div>
@@ -478,66 +478,4 @@ $this->params['breadcrumbs'][] = 'รายการค่าใช้จ่า�
         color: rgba(255,255,255,0.7) !important;
     }
 </style>
-
-<!-- Modal สำหรับเลือกวันที่ดึงข้อมูลจาก Google Sheets -->
-<div class="modal fade" id="syncGoogleSheetModal" tabindex="-1" role="dialog" aria-labelledby="syncGoogleSheetModalLabel">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <?php $form = ActiveForm::begin([
-                'action' => ['sync-google-sheet'],
-                'method' => 'post',
-            ]); ?>
-            <div class="modal-header bg-info">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="syncGoogleSheetModalLabel" style="font-weight: 600;">
-                    <i class="fa fa-google"></i> ดึงข้อมูลจาก Google Sheets
-                </h4>
-            </div>
-            <div class="modal-body" style="padding: 20px;">
-                <p class="text-muted" style="margin-bottom: 15px;">
-                    เลือกวันที่ต้องการดึงข้อมูลค่าใช้จ่ายรถยนต์จาก Google Sheet <code>(gid=952154332)</code> เข้าสู่ระบบ
-                </p>
-                <div class="form-group">
-                    <label class="control-label" style="font-weight: 600; margin-bottom: 8px;">เลือกวันที่ต้องการดึงข้อมูล:</label>
-                    <?= DatePicker::widget([
-                        'name' => 'sync_date',
-                        'value' => date('Y-m-d'),
-                        'pluginOptions' => [
-                            'format' => 'yyyy-mm-dd',
-                            'autoclose' => true,
-                            'todayHighlight' => true
-                        ],
-                        'options' => [
-                            'class' => 'form-control input-lg',
-                            'placeholder' => 'เลือกวันที่ (YYYY-MM-DD)',
-                        ]
-                    ]); ?>
-                </div>
-                <hr style="margin: 20px 0 15px 0;">
-                <div class="form-group text-center">
-                    <label style="display: block; margin-bottom: 8px; font-weight: normal; color: #666;">ปุ่มลัดเลือกวันที่:</label>
-                    <button type="submit" name="sync_date" value="<?= date('Y-m-d') ?>" class="btn btn-default" style="margin-right: 5px;">
-                        <i class="fa fa-calendar-check-o text-success"></i> วันนี้ (<?= date('d/m/Y') ?>)
-                    </button>
-                    <button type="submit" name="sync_date" value="<?= date('Y-m-d', strtotime('-1 day')) ?>" class="btn btn-default" style="margin-right: 5px;">
-                        <i class="fa fa-calendar text-info"></i> เมื่อวาน (<?= date('d/m/Y', strtotime('-1 day')) ?>)
-                    </button>
-                    <?= Html::a('<i class="fa fa-cloud-download text-warning"></i> ดึงย้อนหลังทั้งหมด', ['sync-google-sheet', 'all' => 1], [
-                        'class' => 'btn btn-default',
-                        'data' => [
-                            'method' => 'post',
-                            'confirm' => 'ต้องการดึงข้อมูลย้อนหลังทั้งหมดจาก Google Sheets เข้าสู่ระบบใช่หรือไม่? (รายการซ้ำจะถูกข้ามอัตโนมัติ)',
-                        ],
-                    ]) ?>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">ยกเลิก</button>
-                <button type="submit" class="btn btn-info btn-lg">
-                    <i class="fa fa-refresh"></i> เริ่มดึงข้อมูล
-                </button>
-            </div>
-            <?php ActiveForm::end(); ?>
-        </div>
-    </div>
-</div>
+
