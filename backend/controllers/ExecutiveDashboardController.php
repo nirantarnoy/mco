@@ -11,6 +11,7 @@ use yii\helpers\FileHelper;
 use yii\helpers\ArrayHelper;
 use backend\models\Job;
 use backend\models\Purch;
+use backend\models\PurchLine;
 use backend\models\PurchaseMaster;
 use backend\models\Invoice;
 use backend\models\Quotation;
