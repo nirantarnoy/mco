@@ -7,6 +7,13 @@ use backend\models\Company;
 // $this->title = 'Executive Dashboard';
 $this->params['breadcrumbs'][] = 'Executive Dashboard';
 $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
+$revenueMode = $revenueMode ?? 'job';
+$revenueModeLabels = [
+    'job' => 'ตามมูลค่างานที่เปิด (Job Amount)',
+    'invoice' => 'ตามยอดวางบิลจริง (Accrual Invoiced)',
+    'receipt' => 'ตามยอดรับชำระจริง (Cash Basis)',
+];
+$currentRevenueModeLabel = $revenueModeLabels[$revenueMode] ?? $revenueModeLabels['job'];
 ?>
 
 <!-- Google Font Inter & Prompt -->
@@ -57,17 +64,27 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-slate-700 small fw-semibold" style="color: #334155;">
+                        <i class="fas fa-calculator text-indigo-600 me-1"></i> เกณฑ์การคิดรายรับ
+                    </label>
+                    <select name="revenue_mode" class="form-select form-select-modern">
+                        <option value="job" <?= $revenueMode == 'job' ? 'selected' : '' ?>>1. ตามมูลค่างานที่เปิด (Job Amount)</option>
+                        <option value="invoice" <?= $revenueMode == 'invoice' ? 'selected' : '' ?>>2. ตามยอดวางบิลจริง (Accrued Invoiced)</option>
+                        <option value="receipt" <?= $revenueMode == 'receipt' ? 'selected' : '' ?>>3. ตามยอดรับชำระจริง (Cash Basis)</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label text-slate-700 small fw-semibold" style="color: #334155;">
                         <i class="fas fa-calendar-alt text-slate-400 me-1"></i> ตั้งแต่วันที่
                     </label>
                     <input type="date" name="from_date" class="form-control form-select-modern" value="<?= Html::encode($fromDate) ?>">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label text-slate-700 small fw-semibold" style="color: #334155;">
                         <i class="fas fa-calendar-alt text-slate-400 me-1"></i> ถึงวันที่
                     </label>
                     <input type="date" name="to_date" class="form-control form-select-modern" value="<?= Html::encode($toDate) ?>">
                 </div>
-                <div class="col-md-3 d-flex gap-2">
+                <div class="col-md-2 d-flex gap-2">
                     <button type="submit" class="btn btn-indigo-modern flex-grow-1">
                         <i class="fas fa-search me-1"></i> ประมวลผล
                     </button>
@@ -136,7 +153,7 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
             <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover" style="background-color: #ffffff; border-radius: 16px;">
                 <div class="card-body p-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b; font-size: 0.8rem;">รายรับรวม (รับเสร็จ)</span>
+                        <span class="text-slate-500 small fw-bold uppercase-tracking" style="color: #64748b; font-size: 0.8rem;">รายรับรวม</span>
                         <div class="p-2 rounded-3" style="background-color: #d1fae5; color: #059669;">
                             <i class="fas fa-hand-holding-usd fa-md"></i>
                         </div>
@@ -144,8 +161,8 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                     <h3 class="fw-bold mb-1" style="color: #047857; font-family: 'Inter', sans-serif;">
                         <?= number_format($totalRevenue, 2) ?>
                     </h3>
-                    <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.72rem;">
-                        <i class="fas fa-receipt me-1"></i> มูลค่างาน (Job) ที่เปิดในช่วงเวลานี้
+                    <div class="small text-slate-500" style="color: #64748b; font-size: 0.72rem;">
+                        <i class="fas fa-filter me-1 text-emerald-600"></i> <?= Html::encode($currentRevenueModeLabel) ?>
                     </div>
                 </div>
             </div>
@@ -482,9 +499,11 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
         <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
             <div>
                 <h6 class="fw-bold mb-1 text-slate-800" style="color: #1e293b; font-family: 'Prompt', sans-serif;">
-                    <i class="fas fa-building text-indigo-600 me-2" style="color: #4f46e5;"></i> สรุปค่าใช้จ่ายแยกแต่ละบริษัท (ตามช่วงเวลาที่เลือก)
+                    <i class="fas fa-building text-indigo-600 me-2" style="color: #4f46e5;"></i> สรุปค่าใช้จ่ายและรายรับแยกแต่ละบริษัท (ตามช่วงเวลาที่เลือก)
                 </h6>
-                <div class="small text-slate-500" style="color: #64748b;">ข้อมูลด้านล่างนี้จะรวมค่าใช้จ่ายทั้งหมดที่เกิดขึ้นในช่วงเวลาที่เลือก โดย<span class="text-danger fw-bold">ไม่สนใจว่าเอกสารนั้นจะผูกกับ Job ใดๆ หรือไม่</span> (แสดงตามจริง)</div>
+                <div class="small text-slate-500" style="color: #64748b;">
+                    ข้อมูลด้านล่างนี้จะรวมค่าใช้จ่ายทั้งหมดที่เกิดขึ้นในช่วงเวลาที่เลือก โดย<span class="text-danger fw-bold">ไม่สนใจว่าเอกสารนั้นจะผูกกับ Job ใดๆ หรือไม่</span> | เกณฑ์รายรับ: <span class="badge bg-indigo-50 text-indigo-700 border border-indigo-200"><?= Html::encode($currentRevenueModeLabel) ?></span>
+                </div>
             </div>
         </div>
         <div class="card-body p-4">
@@ -558,6 +577,7 @@ $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
                 <input type="hidden" name="from_date" value="<?= Html::encode($fromDate) ?>">
                 <input type="hidden" name="to_date" value="<?= Html::encode($toDate) ?>">
                 <input type="hidden" name="company_id" value="<?= Html::encode($companyId) ?>">
+                <input type="hidden" name="revenue_mode" value="<?= Html::encode($revenueMode) ?>">
                 <div class="col-md-3">
                     <input type="text" name="search_job_no" class="form-control form-select-modern" placeholder="ค้นหา Job Number..." value="<?= Html::encode($searchJobNo) ?>">
                 </div>

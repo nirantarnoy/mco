@@ -71,11 +71,109 @@ class ExecutiveDashboardController extends BaseController
     /**
      * Executive Dashboard 8.8 Main Page
      */
+    /**
+     * Helper function to calculate revenue based on selected revenue recognition mode
+     */
+    private function getCalculatedRevenue($revenueMode, $companyId = null, $fromDate = null, $toDate = null)
+    {
+        $revenue = 0;
+        if ($revenueMode === 'invoice') {
+            // Accrual / Invoiced Revenue Basis (ใบแจ้งหนี้ / ใบวางบิล / ใบกำกับภาษี)
+            $query = Invoice::find()->where([
+                'status' => Invoice::STATUS_ACTIVE,
+                'invoice_type' => [Invoice::TYPE_BILL_PLACEMENT, Invoice::TYPE_TAX_INVOICE]
+            ]);
+            if (!empty($companyId) && $companyId != '0') {
+                if ($companyId == 1) {
+                    $query->andWhere(['or', ['company_id' => 1], ['company_id' => null], ['company_id' => 0]]);
+                } else {
+                    $query->andWhere(['company_id' => $companyId]);
+                }
+            }
+            if (!empty($fromDate) && !empty($toDate)) {
+                $fromDt = $fromDate . ' 00:00:00';
+                $toDt = $toDate . ' 23:59:59';
+                $query->andWhere([
+                    'or',
+                    ['between', 'invoice_date', $fromDate, $toDate],
+                    ['and', ['invoice_date' => null], ['between', 'created_at', $fromDt, $toDt]]
+                ]);
+            }
+            $revenue = (float)$query->sum('subtotal - COALESCE(discount_amount, 0)');
+        } elseif ($revenueMode === 'receipt') {
+            // Cash Basis / Cash Received (ใบเสร็จรับเงิน & ยอดรับชำระเงินจริง)
+            $query = Invoice::find()->where([
+                'status' => Invoice::STATUS_ACTIVE,
+                'invoice_type' => [Invoice::TYPE_RECEIPT, '4']
+            ]);
+            if (!empty($companyId) && $companyId != '0') {
+                if ($companyId == 1) {
+                    $query->andWhere(['or', ['company_id' => 1], ['company_id' => null], ['company_id' => 0]]);
+                } else {
+                    $query->andWhere(['company_id' => $companyId]);
+                }
+            }
+            if (!empty($fromDate) && !empty($toDate)) {
+                $fromDt = $fromDate . ' 00:00:00';
+                $toDt = $toDate . ' 23:59:59';
+                $query->andWhere([
+                    'or',
+                    ['between', 'invoice_date', $fromDate, $toDate],
+                    ['and', ['invoice_date' => null], ['between', 'created_at', $fromDt, $toDt]]
+                ]);
+            }
+            $revInvoices = (float)$query->sum('subtotal - COALESCE(discount_amount, 0)');
+
+            $payQuery = \backend\models\InvoicePaymentReceipt::find()
+                ->innerJoin('invoices', 'invoices.id = invoice_payment_receipt.invoice_id')
+                ->where(['invoices.status' => Invoice::STATUS_ACTIVE]);
+            if (!empty($companyId) && $companyId != '0') {
+                if ($companyId == 1) {
+                    $payQuery->andWhere(['or', ['invoice_payment_receipt.company_id' => 1], ['invoice_payment_receipt.company_id' => null], ['invoice_payment_receipt.company_id' => 0]]);
+                } else {
+                    $payQuery->andWhere(['invoice_payment_receipt.company_id' => $companyId]);
+                }
+            }
+            if (!empty($fromDate) && !empty($toDate)) {
+                $payQuery->andWhere(['between', 'invoice_payment_receipt.payment_date', $fromDate, $toDate]);
+            }
+            $revPayments = (float)$payQuery->sum('invoice_payment_receipt.amount') / 1.07;
+
+            $revenue = max($revInvoices, $revPayments);
+            if ($revenue == 0 && ($revInvoices > 0 || $revPayments > 0)) {
+                $revenue = $revInvoices + $revPayments;
+            }
+        } else {
+            // Mode 'job': Job Amount (Quotations / Job Forecast)
+            $query = Job::find()->where(['job.status' => [1, 2]]);
+            if (!empty($companyId) && $companyId != '0') {
+                $query->andWhere(['job.company_id' => $companyId]);
+            }
+            if (!empty($fromDate) && !empty($toDate)) {
+                $fromTs = strtotime($fromDate . ' 00:00:00');
+                $toTs = strtotime($toDate . ' 23:59:59');
+                $query->andWhere([
+                    'or',
+                    ['between', 'job.job_date', $fromDate . ' 00:00:00', $toDate . ' 23:59:59'],
+                    ['and', ['job.job_date' => null], ['between', 'job.created_at', $fromTs, $toTs]]
+                ]);
+            }
+            foreach ($query->all() as $j) {
+                $revenue += $j->getJobAmountNoVat();
+            }
+        }
+        return $revenue;
+    }
+
     public function actionIndex()
     {
         $companyId = Yii::$app->request->get('company_id', '');
         $rawFromDate = Yii::$app->request->get('from_date', '');
         $rawToDate = Yii::$app->request->get('to_date', '');
+        $revenueMode = Yii::$app->request->get('revenue_mode', 'job');
+        if (!in_array($revenueMode, ['job', 'invoice', 'receipt'])) {
+            $revenueMode = 'job';
+        }
         
         $fromDate = !empty($rawFromDate) ? $this->normalizeDate($rawFromDate) : date('Y-01-01');
         $toDate = !empty($rawToDate) ? $this->normalizeDate($rawToDate) : date('Y-m-d');
@@ -148,12 +246,11 @@ class ExecutiveDashboardController extends BaseController
             ]);
         }
         
-        $totalRevenue = 0;
+        $totalRevenue = $this->getCalculatedRevenue($revenueMode, $companyId, $fromDate, $toDate);
         $jobIds = [];
         $jobNos = [];
         
         foreach ((clone $jobsWithPoQuery)->all() as $j) {
-            $totalRevenue += $j->getJobAmountNoVat();
             $jobIds[] = $j->id;
             if (!empty(trim($j->job_no))) {
                 $jobNos[] = trim($j->job_no);
@@ -611,11 +708,10 @@ class ExecutiveDashboardController extends BaseController
                 ['and', ['job.job_date' => null], ['between', 'job.created_at', strtotime($mStartDt), strtotime($mEndDt)]]
             ]);
 
-            $mRev = 0;
+            $mRev = $this->getCalculatedRevenue($revenueMode, $companyId, $mStart, $mEnd);
             $mJobIds = [];
             $mJobNos = [];
             foreach ((clone $mJobsQuery)->all() as $j) {
-                $mRev += $j->getJobAmountNoVat();
                 $mJobIds[] = $j->id;
                 if (!empty(trim($j->job_no))) {
                     $mJobNos[] = trim($j->job_no);
@@ -702,18 +798,7 @@ class ExecutiveDashboardController extends BaseController
             $cId = $comp->id;
             
             // Revenue
-            $cJobsWithPo = Job::find()->where(['job.status' => [1, 2], 'job.company_id' => $cId]);
-            if (!empty($fromDate) && !empty($toDate)) {
-                $cJobsWithPo->andWhere([
-                    'or',
-                    ['between', 'job.job_date', $fromDate . ' 00:00:00', $toDate . ' 23:59:59'],
-                    ['and', ['job.job_date' => null], ['between', 'job.created_at', strtotime($fromDate . ' 00:00:00'), strtotime($toDate . ' 23:59:59')]]
-                ]);
-            }
-            $cRev = 0;
-            foreach ($cJobsWithPo->all() as $cj) {
-                $cRev += $cj->getJobAmountNoVat();
-            }
+            $cRev = $this->getCalculatedRevenue($revenueMode, $cId, $fromDate, $toDate);
             
             // PO
             $cPoQuery = Purch::find()->where(['approve_status' => 1]);
@@ -897,6 +982,7 @@ class ExecutiveDashboardController extends BaseController
             'pastJobRevenueList' => $pastJobRevenueList,
             'companySummaries' => $companySummaries,
             'companySummariesTotals' => $companySummariesTotals,
+            'revenueMode' => $revenueMode,
         ]);
     }
 
