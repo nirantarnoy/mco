@@ -996,16 +996,19 @@ if($today > $end){
                                             </tr>
                                             </thead>
                                             <tbody>
-                                            <?php foreach ($billing['items'] as $item): ?>
-                                                <tr>
-                                                    <td><?= Html::encode($item['invoice_number']) ?></td>
-                                                    <td><?= date('d/m/Y', strtotime($item['invoice_date'])) ?></td>
-                                                    <td class="text-right"><?= number_format($item['subtotal'], 2) ?></td>
-                                                    <td class="text-right"><?= number_format($item['vat_amount'], 2) ?></td>
-                                                    <td class="text-right"><?= number_format($item['total_amount'], 2) ?></td>
-                                                    <td class="text-right text-danger"><?= number_format($item['remaining_balance'], 2) ?></td>
-                                                </tr>
-                                            <?php endforeach; ?>
+                                            <?php 
+                                             $bInvoices = !empty($billing['invoices']) ? $billing['invoices'] : (!empty($billing['items']) ? $billing['items'] : []);
+                                             foreach ($bInvoices as $item): 
+                                             ?>
+                                                 <tr>
+                                                     <td><?= Html::encode($item['invoice_number'] ?? '') ?></td>
+                                                     <td><?= !empty($item['invoice_date']) ? date('d/m/Y', strtotime($item['invoice_date'])) : '-' ?></td>
+                                                     <td class="text-right"><?= number_format($item['subtotal'] ?? 0, 2) ?></td>
+                                                     <td class="text-right"><?= number_format($item['vat_amount'] ?? 0, 2) ?></td>
+                                                     <td class="text-right"><?= number_format($item['total_amount'] ?? 0, 2) ?></td>
+                                                     <td class="text-right text-danger"><?= number_format($item['remaining_balance'] ?? 0, 2) ?></td>
+                                                 </tr>
+                                             <?php endforeach; ?>
                                             </tbody>
                                         </table>
                                     </div>
@@ -1153,14 +1156,16 @@ if($today > $end){
                                     <?php
                                     $totalOtherExpense = 0;
                                     foreach ($jobExpenses as $expense):
-                                        $totalOtherExpense += $expense->amount;
+                                        $expAmount = $expense->line_amount ?? (isset($expense->amount) ? $expense->amount : 0);
+                                        $expDate = $expense->trans_date ?? (isset($expense->expense_date) ? $expense->expense_date : null);
+                                        $totalOtherExpense += $expAmount;
                                         ?>
                                         <tr>
-                                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($expense->expense_date)) ?></td>
-                                            <td><?= Html::encode($expense->description) ?></td>
-                                            <td style="text-align: right;" class="font-weight-bold"><?= number_format($expense->amount, 2) ?></td>
-                                            <td><?= Html::encode($expense->remark) ?></td>
-                                            <td style="text-align: center;"><?= $expense->createdBy ? Html::encode($expense->createdBy->username) : '-' ?></td>
+                                            <td style="text-align: center;"><?= !empty($expDate) ? date('d/m/Y', strtotime($expDate)) : '-' ?></td>
+                                            <td><?= Html::encode($expense->description ?? '') ?></td>
+                                            <td style="text-align: right;" class="font-weight-bold"><?= number_format($expAmount, 2) ?></td>
+                                            <td><?= Html::encode(isset($expense->remark) ? $expense->remark : '') ?></td>
+                                            <td style="text-align: center;"><?= (!empty($expense->created_by) && class_exists('\backend\models\User')) ? Html::encode(\backend\models\User::findEmployeeNameByUserId($expense->created_by)) : '-' ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                     </tbody>
