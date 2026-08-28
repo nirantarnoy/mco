@@ -1331,7 +1331,7 @@ class JobController extends BaseController
                 jt.party_id,
                 jt.warehouse_id
             FROM journal_trans jt
-            WHERE jt.job_id = :jobId AND jt.trans_type_id = 3
+            WHERE jt.job_id = :jobId
             ORDER BY jt.trans_date DESC
         ";
 
@@ -1585,8 +1585,15 @@ class JobController extends BaseController
                 jtl.item_condition,
                 jtl.unit_id,
                 jtl.line_total,
-                jtl.is_damage
+                jtl.is_damage,
+                p.code as product_code,
+                p.name as product_name,
+                w.name as warehouse_name,
+                u.name as unit_name
             FROM journal_trans_line jtl
+            LEFT JOIN product p ON p.id = jtl.product_id
+            LEFT JOIN warehouse w ON w.id = jtl.warehouse_id
+            LEFT JOIN unit u ON u.id = jtl.unit_id
             WHERE jtl.journal_trans_id = :journalTransId
             ORDER BY jtl.id
         ";
