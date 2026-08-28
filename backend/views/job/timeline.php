@@ -771,7 +771,6 @@ if($today > $end){
                             </div>
                         <?php endif; ?>
                     </div>
-                </div>
             </div>
 
             <!-- Vehicle Expense Section -->
@@ -803,16 +802,18 @@ if($today > $end){
                                     $totalVehicleCost = 0;
                                     $totalVehicleWage = 0;
                                     foreach ($vehicleExpense as $expanse):
-                                        $totalVehicleCost += $expanse['vehicle_cost'];
-                                        $totalVehicleWage += $expanse['total_wage'];
+                                        $totalVehicleCost += $expanse['vehicle_cost'] ?? 0;
+                                        $totalVehicleWage += $expanse['total_wage'] ?? 0;
+                                        $vNo = !empty($expanse['vehicle_no']) ? $expanse['vehicle_no'] : (!empty($expanse['plate_no']) ? $expanse['plate_no'] : '-');
+                                        $vDate = !empty($expanse['expense_date']) ? $expanse['expense_date'] : (!empty($expanse['trans_date']) ? $expanse['trans_date'] : null);
                                         ?>
                                         <tr>
-                                            <td style="text-align: center;"><?= Html::encode($expanse['vehicle_no']) ?></td>
-                                            <td style="text-align: center;"><?= date('d/m/Y', strtotime($expanse['expense_date'])) ?></td>
-                                            <td style="text-align: right;"><?= number_format($expanse['total_distance'],0) ?></td>
-                                            <td style="text-align: right;"><?= number_format($expanse['vehicle_cost'], 0) ?></td>
-                                            <td style="text-align: right;"><?= number_format($expanse['passenger_count'], 0) ?></td>
-                                            <td style="text-align: right;"><?= number_format($expanse['total_wage'], 0) ?></td>
+                                            <td style="text-align: center;"><?= Html::encode($vNo) ?></td>
+                                            <td style="text-align: center;"><?= !empty($vDate) ? date('d/m/Y', strtotime($vDate)) : '-' ?></td>
+                                            <td style="text-align: right;"><?= number_format($expanse['total_distance'] ?? 0, 0) ?></td>
+                                            <td style="text-align: right;"><?= number_format($expanse['vehicle_cost'] ?? 0, 0) ?></td>
+                                            <td style="text-align: right;"><?= number_format($expanse['passenger_count'] ?? 0, 0) ?></td>
+                                            <td style="text-align: right;"><?= number_format($expanse['total_wage'] ?? 0, 0) ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                     </tbody>

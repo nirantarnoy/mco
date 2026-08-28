@@ -1105,25 +1105,33 @@ $this->registerCss('
                                 $veIdx = 0;
                                 foreach ($vehicleExpense as $ve):
                                     $veIdx++;
-                                    $sText = mb_strtolower('ค่ารถ ยานพาหนะ ' . ($ve['plate_no'] ?? '') . ' ' . ($ve['description'] ?? ''));
+                                    $vNo = !empty($ve['vehicle_no']) ? $ve['vehicle_no'] : (!empty($ve['plate_no']) ? $ve['plate_no'] : 'ไม่ระบุ');
+                                    $vDate = !empty($ve['expense_date']) ? $ve['expense_date'] : (!empty($ve['trans_date']) ? $ve['trans_date'] : null);
+                                    $vDesc = !empty($ve['job_description']) ? $ve['job_description'] : (!empty($ve['description']) ? $ve['description'] : '');
+                                    $vCost = (float)($ve['vehicle_cost'] ?? 0) + (float)($ve['total_wage'] ?? 0);
+                                    if (empty($vCost) && isset($ve['amount'])) {
+                                        $vCost = (float)$ve['amount'];
+                                    }
+                                    $driverName = !empty($ve['driver_name']) ? $ve['driver_name'] : '-';
+                                    $sText = mb_strtolower('ค่ารถ ยานพาหนะ ' . $vNo . ' ' . $vDesc);
                                 ?>
                                     <tr class="timeline-item-row" data-search="<?= Html::encode($sText) ?>">
                                         <td class="text-center fw-bold text-muted"><?= $veIdx ?></td>
                                         <td>
                                             <span class="badge bg-dark text-white me-1">ค่ารถ</span>
-                                            <strong class="text-indigo-600" style="color: #4f46e5;"><?= Html::encode($ve['plate_no'] ?? 'ไม่ระบุ') ?></strong>
+                                            <strong class="text-indigo-600" style="color: #4f46e5;"><?= Html::encode($vNo) ?></strong>
                                         </td>
                                         <td class="text-center text-secondary small">
-                                            <?= date('d/m/Y', strtotime($ve['trans_date'])) ?>
+                                            <?= !empty($vDate) ? date('d/m/Y', strtotime($vDate)) : '-' ?>
                                         </td>
                                         <td>
-                                            <div class="fw-semibold text-slate-800"><?= Html::encode($ve['driver_name'] ?? '-') ?></div>
+                                            <div class="fw-semibold text-slate-800"><?= Html::encode($driverName) ?></div>
                                         </td>
                                         <td class="text-secondary small">
-                                            <?= Html::encode($ve['description'] ?: '- ไม่มีรายละเอียด -') ?>
+                                            <?= Html::encode($vDesc ?: '- ไม่มีรายละเอียด -') ?>
                                         </td>
                                         <td class="text-end fw-bold text-danger">
-                                            <?= number_format($ve['amount'], 2) ?>
+                                            <?= number_format($vCost, 2) ?>
                                         </td>
                                         <td class="text-center">
                                             <span class="text-muted small">-</span>
