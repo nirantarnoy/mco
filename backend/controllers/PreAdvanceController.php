@@ -120,27 +120,58 @@ class PreAdvanceController extends BaseController
         
         $result = [];
 
+        // Resolve vendor filter (can be vendor ID or vendor code)
+        $vendorCode = null;
+        $vendorIdInt = null;
+        if ($vendor_id && $vendor_id !== 'null' && $vendor_id !== '') {
+            if (is_numeric($vendor_id)) {
+                $vModel = \backend\models\Vendor::findOne($vendor_id);
+                if ($vModel) {
+                    $vendorIdInt = (int)$vModel->id;
+                    $vendorCode = $vModel->code;
+                } else {
+                    $vendorIdInt = (int)$vendor_id;
+                    $vendorCode = (string)$vendor_id;
+                }
+            } else {
+                $vModel = \backend\models\Vendor::find()->where(['code' => $vendor_id])->one();
+                if ($vModel) {
+                    $vendorIdInt = (int)$vModel->id;
+                    $vendorCode = $vModel->code;
+                } else {
+                    $vendorCode = (string)$vendor_id;
+                }
+            }
+        }
+
         // 1. None PR (PurchaseMaster)
         $queryNonePr = \backend\models\PurchaseMaster::find()
             ->where(['approve_status' => \backend\models\PurchaseMaster::APPROVE_STATUS_APPROVED])
             ->andWhere(['status' => \backend\models\PurchaseMaster::STATUS_ACTIVE])
             ->andWhere(['>', 'total_amount', 0]);
             
-        if ($vendor_id && $vendor_id !== 'null' && $vendor_id !== '') {
-            $queryNonePr->andWhere(['supcod' => $vendor_id]);
+        if ($vendorCode || $vendorIdInt) {
+            $conds = ['or'];
+            if ($vendorCode) $conds[] = ['supcod' => $vendorCode];
+            if ($vendorIdInt) $conds[] = ['supcod' => $vendorIdInt];
+            $queryNonePr->andWhere($conds);
         }
         
         if ($q) {
             $queryNonePr->andWhere(['like', 'docnum', $q]);
         }
         
-        $none_prs = $queryNonePr->limit(20)->all();
+        $none_prs = $queryNonePr->orderBy(['id' => SORT_DESC])->limit(50)->all();
         
         foreach ($none_prs as $none_pr) {
             $isUsedQuery = \backend\models\PreAdvanceRef::find()
-                ->where(['ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR, 'ref_id' => $none_pr->id]);
+                ->alias('r')
+                ->innerJoin('pre_advance pa', 'r.pre_advance_id = pa.id')
+                ->where(['r.ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR, 'r.ref_id' => $none_pr->id])
+                ->andWhere(['!=', 'pa.status', \backend\models\PreAdvance::STATUS_CANCELLED]);
+
             if ($pre_advance_id) {
-                $isUsedQuery->andWhere(['!=', 'pre_advance_id', $pre_advance_id]);
+                $isUsedQuery->andWhere(['!=', 'r.pre_advance_id', $pre_advance_id]);
             }
             
             if (!$isUsedQuery->exists()) {
@@ -156,21 +187,28 @@ class PreAdvanceController extends BaseController
             ->where(['approve_status' => 1])
             ->andWhere(['>', 'net_amount', 0]);
             
-        if ($vendor_id && $vendor_id !== 'null' && $vendor_id !== '') {
-            $queryPo->andWhere(['vendor_id' => $vendor_id]);
+        if ($vendorCode || $vendorIdInt) {
+            $conds = ['or'];
+            if ($vendorIdInt) $conds[] = ['vendor_id' => $vendorIdInt];
+            if ($vendorCode) $conds[] = ['vendor_id' => $vendorCode];
+            $queryPo->andWhere($conds);
         }
         
         if ($q) {
             $queryPo->andWhere(['like', 'purch_no', $q]);
         }
         
-        $pos = $queryPo->limit(20)->all();
+        $pos = $queryPo->orderBy(['id' => SORT_DESC])->limit(50)->all();
         
         foreach ($pos as $po) {
             $isUsedQuery = \backend\models\PreAdvanceRef::find()
-                ->where(['ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_PO, 'ref_id' => $po->id]);
+                ->alias('r')
+                ->innerJoin('pre_advance pa', 'r.pre_advance_id = pa.id')
+                ->where(['r.ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_PO, 'r.ref_id' => $po->id])
+                ->andWhere(['!=', 'pa.status', \backend\models\PreAdvance::STATUS_CANCELLED]);
+
             if ($pre_advance_id) {
-                $isUsedQuery->andWhere(['!=', 'pre_advance_id', $pre_advance_id]);
+                $isUsedQuery->andWhere(['!=', 'r.pre_advance_id', $pre_advance_id]);
             }
             
             if (!$isUsedQuery->exists()) {
@@ -230,8 +268,9 @@ class PreAdvanceController extends BaseController
                     }
                     
                     $desc = 'เลขที่: ' . $none_pr->docnum;
-                    if (!empty($none_pr->refnum)) {
-                        $desc .= ' (อ้างอิง QT: ' . $none_pr->refnum . ')';
+                    $jobRef = !empty($none_pr->job_no) ? $none_pr->job_no : $none_pr->refnum;
+                    if (!empty($jobRef)) {
+                        $desc .= ' (อ้างอิง QT: ' . $jobRef . ')';
                     }
                     $lines[] = [
                         'line_date' => date('Y-m-d'),

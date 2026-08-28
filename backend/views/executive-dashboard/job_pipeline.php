@@ -185,41 +185,74 @@ $stepsDef = [
                                                     </a>
                                                 <?php endforeach; ?>
                                             <?php else: ?>
-                                                <span class="badge bg-light text-muted fw-normal"><i class="fas fa-exclamation-circle me-1"></i> ยังไม่มีไฟล์ PO ลูกค้า</span>
+                                                <span class="badge bg-light text-muted fw-normal me-2"><i class="fas fa-exclamation-circle me-1"></i> ยังไม่มีไฟล์ PO ลูกค้า</span>
                                             <?php endif; ?>
+                                            <button type="button" class="btn btn-xs btn-outline-indigo rounded-pill shadow-sm btn-open-timeline-search" data-kw="PO" data-bs-toggle="modal" data-bs-target="#timelineModal" data-toggle="modal" data-target="#timelineModal" style="color: #4f46e5; border-color: #c7d2fe;">
+                                                <i class="fas fa-search me-1"></i> ค้นหาเอกสารใบขอซื้อ/PO ในระบบ
+                                            </button>
 
                                         <?php elseif ($sNo == 2): ?>
                                             <button type="button" class="btn btn-xs btn-indigo-modern rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#poSearchModal" data-toggle="modal" data-target="#poSearchModal">
                                                 <i class="fas fa-search me-1"></i> ดูรายการ PO / ค้นหาตาม Vendor & สินค้า (<?= count($jobPosDetail ?? []) ?> รายการ)
                                             </button>
 
-                                        <?php elseif ($sNo == 3 || $sNo == 4 || $sNo == 6 || $sNo == 9 || $sNo == 12): ?>
-                                            <button type="button" class="btn btn-xs btn-outline-info rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#timelineModal" data-toggle="modal" data-target="#timelineModal">
-                                                <i class="fas fa-file-alt me-1"></i> ดูเอกสาร/ไฟล์แนบใน Timeline
+                                        <?php elseif ($sNo == 3): ?>
+                                            <button type="button" class="btn btn-xs btn-outline-info rounded-pill shadow-sm btn-open-timeline-search" data-kw="สั่งซื้อ" data-bs-toggle="modal" data-bs-target="#timelineModal" data-toggle="modal" data-target="#timelineModal">
+                                                <i class="fas fa-search me-1"></i> ค้นหาเอกสารรับของจาก Vendor / Invoice
+                                            </button>
+
+                                        <?php elseif ($sNo == 4): ?>
+                                            <button type="button" class="btn btn-xs btn-outline-info rounded-pill shadow-sm btn-open-timeline-search" data-kw="เบิก" data-bs-toggle="modal" data-bs-target="#timelineModal" data-toggle="modal" data-target="#timelineModal">
+                                                <i class="fas fa-search me-1"></i> ค้นหาเอกสารเบิก/คืนสินค้า (Journal)
                                             </button>
 
                                         <?php elseif ($sNo == 5): ?>
                                             <?php if (!empty($job->jsa_doc)): ?>
-                                                <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($job->jsa_doc) ?>" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill shadow-sm">
+                                                <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($job->jsa_doc) ?>" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill me-1 shadow-sm">
                                                     <i class="fas fa-file-pdf me-1"></i> ดูไฟล์ JSA/เซฟตี้ (<?= Html::encode($job->jsa_doc) ?>)
                                                 </a>
                                             <?php else: ?>
-                                                <span class="badge bg-light text-muted fw-normal"><i class="fas fa-exclamation-circle me-1"></i> ยังไม่ได้แนบไฟล์ JSA</span>
+                                                <span class="badge bg-light text-muted fw-normal me-2"><i class="fas fa-exclamation-circle me-1"></i> ยังไม่ได้แนบไฟล์ JSA</span>
                                             <?php endif; ?>
+                                            <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill shadow-sm btn-open-timeline-search" data-kw="" data-bs-toggle="modal" data-bs-target="#timelineModal" data-toggle="modal" data-target="#timelineModal">
+                                                <i class="fas fa-search me-1"></i> ค้นหาเอกสารทั้งหมด
+                                            </button>
+
+                                        <?php elseif ($sNo == 6): ?>
+                                            <button type="button" class="btn btn-xs btn-outline-info rounded-pill shadow-sm btn-open-timeline-search" data-kw="" data-bs-toggle="modal" data-bs-target="#timelineModal" data-toggle="modal" data-target="#timelineModal">
+                                                <i class="fas fa-search me-1"></i> ค้นหาเอกสาร Engineering / Timeline
+                                            </button>
 
                                         <?php elseif ($sNo == 7): ?>
                                             <?php if (!empty($job->report_doc)): ?>
-                                                <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($job->report_doc) ?>" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill shadow-sm">
+                                                <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($job->report_doc) ?>" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill me-1 shadow-sm">
                                                     <i class="fas fa-file-pdf me-1"></i> ดูไฟล์ Final Report (<?= Html::encode($job->report_doc) ?>)
                                                 </a>
                                             <?php else: ?>
-                                                <span class="badge bg-light text-muted fw-normal"><i class="fas fa-exclamation-circle me-1"></i> ยังไม่ได้แนบไฟล์ Final Report</span>
+                                                <span class="badge bg-light text-muted fw-normal me-2"><i class="fas fa-exclamation-circle me-1"></i> ยังไม่ได้แนบไฟล์ Final Report</span>
                                             <?php endif; ?>
+                                            <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill shadow-sm btn-open-timeline-search" data-kw="" data-bs-toggle="modal" data-bs-target="#timelineModal" data-toggle="modal" data-target="#timelineModal">
+                                                <i class="fas fa-search me-1"></i> ค้นหาเอกสารทั้งหมด
+                                            </button>
+
+                                        <?php elseif ($sNo == 9): ?>
+                                            <button type="button" class="btn btn-xs btn-outline-success rounded-pill shadow-sm btn-open-timeline-search" data-kw="Invoice" data-bs-toggle="modal" data-bs-target="#timelineModal" data-toggle="modal" data-target="#timelineModal">
+                                                <i class="fas fa-search me-1"></i> ค้นหาเอกสาร Invoice & ใบกำกับภาษี
+                                            </button>
+
+                                        <?php elseif ($sNo == 12): ?>
+                                            <button type="button" class="btn btn-xs btn-outline-success rounded-pill shadow-sm btn-open-timeline-search" data-kw="ชำระ" data-bs-toggle="modal" data-bs-target="#timelineModal" data-toggle="modal" data-target="#timelineModal">
+                                                <i class="fas fa-search me-1"></i> ค้นหาเอกสารใบเสร็จ & การชำระเงิน
+                                            </button>
 
                                         <?php elseif ($sNo == 13): ?>
                                             <a href="#vehicle-details-card" class="btn btn-xs btn-outline-primary rounded-pill shadow-sm">
                                                 <i class="fas fa-car me-1"></i> ดูรายละเอียดใบบันทึกการใช้รถยนต์
                                             </a>
+                                        <?php else: ?>
+                                            <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill shadow-sm btn-open-timeline-search" data-kw="" data-bs-toggle="modal" data-bs-target="#timelineModal" data-toggle="modal" data-target="#timelineModal">
+                                                <i class="fas fa-search me-1"></i> ค้นหาเอกสารในระบบ
+                                            </button>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -580,9 +613,23 @@ $cancelUrl = Url::to(['executive-dashboard/cancel-step']);
 $timelineUrl = Url::to(['job/timeline', 'id' => $job->id]);
 
 $js = <<<JS
+var activeTimelineKeyword = '';
+$(document).on('click', '.btn-open-timeline-search', function() {
+    activeTimelineKeyword = $(this).data('kw') || '';
+});
+
 $('#timelineModal').on('show.bs.modal shown.bs.modal', function (e) {
     var modalBody = $('#timeline-modal-body');
-    if(modalBody.data('loaded')) return;
+    var applySearch = function() {
+        if (activeTimelineKeyword !== undefined && activeTimelineKeyword !== '') {
+            $('#timelineSearchKeyword').val(activeTimelineKeyword).trigger('keyup');
+        }
+    };
+    
+    if(modalBody.data('loaded')) {
+        applySearch();
+        return;
+    }
     
     $.ajax({
         url: '{$timelineUrl}',
@@ -590,6 +637,7 @@ $('#timelineModal').on('show.bs.modal shown.bs.modal', function (e) {
         success: function(res) {
             modalBody.html(res);
             modalBody.data('loaded', true);
+            applySearch();
         },
         error: function() {
             modalBody.html('<div class="alert alert-danger m-4">เกิดข้อผิดพลาดในการโหลดข้อมูล กรุณาลองใหม่อีกครั้ง</div>');

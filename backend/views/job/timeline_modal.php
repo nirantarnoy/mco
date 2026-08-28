@@ -272,7 +272,34 @@ if($today > $end){
 
     <div class="job-timeline-view">
 
-
+        <!-- Live Document Search Bar -->
+        <div class="p-3 bg-white border border-light rounded-4 mb-4 shadow-sm" style="border-radius: 16px; border-color: #e2e8f0 !important;">
+            <div class="row align-items-center g-3">
+                <div class="col-md-7">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0 rounded-start-pill ps-3" style="color: #4f46e5;">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" id="timelineSearchKeyword" class="form-control border-start-0 rounded-end-pill fs-6" placeholder="พิมพ์ค้นหาเลขที่เอกสาร, Vendor, ชื่อสินค้า, เลขบิล หรือประเภทเอกสาร..." style="font-family: 'Prompt', sans-serif;">
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="d-flex align-items-center gap-1 flex-wrap">
+                        <span class="small text-muted me-1 fw-medium"><i class="fas fa-tags me-1"></i> ตัวอย่างคำค้นหา:</span>
+                        <button type="button" class="btn btn-xs btn-outline-primary rounded-pill btn-timeline-tag" data-kw="PO">ใบสั่งซื้อ (PO)</button>
+                        <button type="button" class="btn btn-xs btn-outline-warning rounded-pill btn-timeline-tag" data-kw="None">None PR</button>
+                        <button type="button" class="btn btn-xs btn-outline-info rounded-pill btn-timeline-tag" data-kw="เบิก">เบิก-คืนของ</button>
+                        <button type="button" class="btn btn-xs btn-outline-success rounded-pill btn-timeline-tag" data-kw="Invoice">Invoice</button>
+                        <button type="button" class="btn btn-xs btn-outline-danger rounded-pill btn-timeline-tag" data-kw="">ล้างค้นหา</button>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2 px-1">
+                <div class="small text-secondary">
+                    <i class="fas fa-filter me-1 text-indigo-500"></i> แสดงรายการเอกสารที่เกี่ยวข้องของ Job No: <strong class="text-indigo-600"><?= Html::encode($model->job_no) ?></strong>
+                </div>
+            </div>
+        </div>
 
         <!-- Timeline Container -->
         <div class="timeline-container">
@@ -1118,3 +1145,40 @@ if($today > $end){
         </div> <!-- End Timeline Container -->
 
     </div> <!-- End Job Timeline View -->
+
+<script>
+$(document).off('keyup input', '#timelineSearchKeyword').on('keyup input', '#timelineSearchKeyword', function() {
+    var kw = $(this).val().toLowerCase().trim();
+    $('.timeline-section').each(function() {
+        var section = $(this);
+        var sectionTitle = section.find('.card-header').text().toLowerCase();
+        var hasMatch = false;
+        
+        if (kw !== '' && sectionTitle.indexOf(kw) !== -1) {
+            hasMatch = true;
+            section.find('tbody tr').show();
+        } else {
+            section.find('tbody tr').each(function() {
+                var rowText = $(this).text().toLowerCase();
+                if (kw === '' || rowText.indexOf(kw) !== -1) {
+                    $(this).show();
+                    hasMatch = true;
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+
+        if (kw === '' || hasMatch) {
+            section.show();
+        } else {
+            section.hide();
+        }
+    });
+});
+
+$(document).off('click', '.btn-timeline-tag').on('click', '.btn-timeline-tag', function() {
+    var kw = $(this).data('kw');
+    $('#timelineSearchKeyword').val(kw).trigger('keyup');
+});
+</script>

@@ -97,9 +97,11 @@ $formatter = \Yii::$app->formatter;
                             'type' => 'NONE_PR',
                             'docnum' => $m->docnum,
                             'vendor_name' => $m->supnam,
-                            'qt_no' => $m->refnum,
+                            'qt_no' => !empty($m->job_no) ? $m->job_no : $m->refnum,
                             'total_amount' => (float)$m->total_amount,
+                            'value_before_vat' => (float)($m->vatpr0 > 0 ? $m->vatpr0 : ($m->vat_amount > 0 ? ($m->total_amount - $m->vat_amount) : $m->total_amount)),
                             'vat_amount' => (float)$m->vat_amount,
+                            'tax_amount' => (float)$m->tax_amount,
                         ];
                     }
                 } elseif ($ref->ref_type == \backend\models\PreAdvanceRef::REF_TYPE_PO) {
@@ -111,7 +113,9 @@ $formatter = \Yii::$app->formatter;
                             'vendor_name' => $m->vendor_name,
                             'qt_no' => $m->ref_no,
                             'total_amount' => (float)$m->net_amount,
+                            'value_before_vat' => (float)($m->total_amount > 0 ? $m->total_amount : ($m->vat_amount > 0 ? ($m->net_amount - $m->vat_amount) : $m->net_amount)),
                             'vat_amount' => (float)$m->vat_amount,
+                            'tax_amount' => (float)($m->wht_amount ?? 0),
                         ];
                     }
                 }
@@ -121,6 +125,7 @@ $formatter = \Yii::$app->formatter;
             $linesList = $model->preAdvanceLines;
             $sumBeforeVat = 0;
             $sumVat = 0;
+            $sumTax = 0;
             $sumTotal = 0;
 
             foreach ($linesList as $index => $line):
@@ -130,18 +135,19 @@ $formatter = \Yii::$app->formatter;
                 $descText = $line->description;
                 $totalAmount = (float)$line->amount;
                 $vatAmount = 0;
+                $taxAmount = 0;
                 $valueBeforeVat = 0;
 
                 // Extract Ref No (e.g. NPR202608170001 or POxxxx)
                 if (preg_match('/เลขที่:\s*([A-Za-z0-9-]+)/u', $descText, $matches)) {
-                    $refNo = $matches[1];
+                    $refNo = trim($matches[1]);
                 } elseif (isset(array_values($refMap)[$index])) {
                     $refNo = array_values($refMap)[$index]['docnum'];
                 }
 
                 // Extract QT No from description or from refMap
-                if (preg_match('/อ้างอิง\s*QT:\s*([A-Za-z0-9-]+)/u', $descText, $qtMatches)) {
-                    $qtNo = $qtMatches[1];
+                if (preg_match('/อ้างอิง\s*QT:\s*([A-Za-z0-9-\/]+)/u', $descText, $qtMatches)) {
+                    $qtNo = trim($qtMatches[1]);
                 }
 
                 if (!empty($refNo) && isset($refMap[$refNo])) {
@@ -153,24 +159,18 @@ $formatter = \Yii::$app->formatter;
                         $qtNo = $refInfo['qt_no'];
                     }
                     $vatAmount = $refInfo['vat_amount'];
-                    if ($vatAmount > 0) {
-                        $valueBeforeVat = $totalAmount - $vatAmount;
-                    }
+                    $taxAmount = $refInfo['tax_amount'] ?? 0;
+                    $valueBeforeVat = $refInfo['value_before_vat'];
+                } else {
+                    $valueBeforeVat = $totalAmount;
                 }
 
                 // Build clean Description showing QT No prominently as requested
                 $displayDesc = $descText;
-                if (!empty($qtNo)) {
-                    if (strpos($descText, 'QT:') === false && strpos($descText, 'QT :') === false) {
-                        $cleanDesc = trim(preg_replace('/\(อ้างอิง\s*QT:[^\)]+\)/u', '', $descText));
-                        $cleanDesc = trim(preg_replace('/เลขที่:\s*[A-Za-z0-9-]+/u', '', $cleanDesc));
-                        $cleanDesc = ltrim($cleanDesc, ' -:');
-                        $displayDesc = 'QT No: ' . $qtNo . ($cleanDesc ? ' - ' . $cleanDesc : '');
-                    }
-                }
 
                 $sumBeforeVat += $valueBeforeVat;
                 $sumVat += $vatAmount;
+                $sumTax += $taxAmount;
                 $sumTotal += $totalAmount;
             ?>
                 <tr>
@@ -179,9 +179,9 @@ $formatter = \Yii::$app->formatter;
                     <td class="text-center"><?= Html::encode($refNo ?: '-') ?></td>
                     <td><?= Html::encode($receiptName ?: '-') ?></td>
                     <td><?= Html::encode($displayDesc) ?></td>
-                    <td class="text-right"><?= $valueBeforeVat > 0 ? number_format($valueBeforeVat, 2) : '' ?></td>
-                    <td class="text-right"><?= $vatAmount > 0 ? number_format($vatAmount, 2) : '' ?></td>
-                    <td class="text-right"></td>
+                    <td class="text-right"><?= $valueBeforeVat > 0 ? number_format($valueBeforeVat, 2) : '-' ?></td>
+                    <td class="text-right"><?= $vatAmount > 0 ? number_format($vatAmount, 2) : '-' ?></td>
+                    <td class="text-right"><?= $taxAmount > 0 ? number_format($taxAmount, 2) : '-' ?></td>
                     <td class="text-right"><?= number_format($totalAmount, 2) ?></td>
                     <td contenteditable="true" style="outline: none; cursor: text;" title="พิมพ์หมายเหตุเพิ่มเติมตรงนี้ได้"></td>
                 </tr>
@@ -207,10 +207,10 @@ $formatter = \Yii::$app->formatter;
         <tfoot>
             <tr>
                 <td colspan="5" class="text-center" style="font-weight: bold; font-size: 12pt;">Summary</td>
-                <td class="text-right"><b><?= $sumBeforeVat > 0 ? number_format($sumBeforeVat, 2) : '' ?></b></td>
-                <td class="text-right"><b><?= $sumVat > 0 ? number_format($sumVat, 2) : '' ?></b></td>
-                <td></td>
-                <td class="text-right"><b><?= number_format($model->amount, 2) ?></b></td>
+                <td class="text-right"><b><?= $sumBeforeVat > 0 ? number_format($sumBeforeVat, 2) : '-' ?></b></td>
+                <td class="text-right"><b><?= $sumVat > 0 ? number_format($sumVat, 2) : '-' ?></b></td>
+                <td class="text-right"><b><?= $sumTax > 0 ? number_format($sumTax, 2) : '-' ?></b></td>
+                <td class="text-right"><b><?= number_format($sumTotal > 0 ? $sumTotal : $model->amount, 2) ?></b></td>
                 <td></td>
             </tr>
         </tfoot>

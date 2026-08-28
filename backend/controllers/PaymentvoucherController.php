@@ -353,20 +353,46 @@ class PaymentvoucherController extends BaseController
     {
         Yii::$app->response->format = Response::FORMAT_JSON;
         
+        $vendorCode = null;
+        $vendorIdInt = null;
+        if ($vendor_id && $vendor_id !== 'null' && $vendor_id !== '') {
+            if (is_numeric($vendor_id)) {
+                $vModel = \backend\models\Vendor::findOne($vendor_id);
+                if ($vModel) {
+                    $vendorIdInt = (int)$vModel->id;
+                    $vendorCode = $vModel->code;
+                } else {
+                    $vendorIdInt = (int)$vendor_id;
+                    $vendorCode = (string)$vendor_id;
+                }
+            } else {
+                $vModel = \backend\models\Vendor::find()->where(['code' => $vendor_id])->one();
+                if ($vModel) {
+                    $vendorIdInt = (int)$vModel->id;
+                    $vendorCode = $vModel->code;
+                } else {
+                    $vendorCode = (string)$vendor_id;
+                }
+            }
+        }
+
         $query = \backend\models\PurchaseMaster::find()
             ->where(['approve_status' => \backend\models\PurchaseMaster::APPROVE_STATUS_APPROVED])
             ->andWhere(['status' => \backend\models\PurchaseMaster::STATUS_ACTIVE])
             ->andWhere(['>', 'total_amount', 0]);
             
-        if ($vendor_id && $vendor_id !== 'null' && $vendor_id !== '') {
-            $query->andWhere(['supcod' => $vendor_id]);
+        if ($vendorCode || $vendorIdInt) {
+            $conds = ['or'];
+            if ($vendorCode) $conds[] = ['supcod' => $vendorCode];
+            if ($vendorIdInt) $conds[] = ['supcod' => $vendorIdInt];
+            $query->andWhere($conds);
         }
         
         if ($q) {
             $query->andWhere(['like', 'docnum', $q]);
         }
         
-        $none_prs = $query->limit(20)->all();
+        $none_prs = $query->orderBy(['id' => SORT_DESC])->limit(50)->all();
         
         $result = [];
         foreach ($none_prs as $none_pr) {

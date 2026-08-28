@@ -246,6 +246,7 @@ class PurchaseMaster extends \yii\db\ActiveRecord
     public function beforeSave($insert)
     {
         if (parent::beforeSave($insert)) {
+            $this->calculateTotals();
             if (!\Yii::$app->request->isConsoleRequest) {
                 $session_company_id = \Yii::$app->session->get('company_id');
                 if ($this->company_id == null || $this->company_id == '') {
