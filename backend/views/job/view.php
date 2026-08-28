@@ -169,6 +169,58 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 
     <?php
+    $poDocs = \backend\models\JobPoDoc::find()->where(['job_id' => $model->id])->all();
+    if (!empty($poDocs) || !empty($model->cus_po_doc)):
+    ?>
+        <div class="card card-outline card-primary mt-3 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title text-primary mb-0 font-weight-bold">
+                    <i class="fas fa-file-invoice me-2"></i> เอกสารคำสั่งซื้อลูกค้า (PO ลูกค้า)
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    <?php if (!empty($model->cus_po_doc)): ?>
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                            <div>
+                                <i class="far fa-file-pdf text-danger me-2"></i>
+                                <?= Html::a(Html::encode($model->cus_po_doc), 
+                                    Yii::getAlias('@web/uploads/job/' . $model->cus_po_doc), 
+                                    [
+                                        'class' => 'text-primary small',
+                                        'target' => '_blank',
+                                        'data-pjax' => '0'
+                                    ]) 
+                                ?>
+                            </div>
+                        </li>
+                    <?php endif; ?>
+                    <?php if (!empty($poDocs)): ?>
+                        <?php foreach ($poDocs as $doc): ?>
+                            <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                                <div class="text-truncate" style="max-width: 80%;">
+                                    <i class="far fa-file-pdf text-danger me-2"></i>
+                                    <?= Html::a(Html::encode($doc->file_name), 
+                                        Yii::getAlias('@web/uploads/job/' . $doc->file_path), 
+                                        [
+                                            'class' => 'text-primary small',
+                                            'target' => '_blank',
+                                            'data-pjax' => '0'
+                                        ]) 
+                                    ?>
+                                </div>
+                                <span class="badge badge-secondary badge-pill small font-weight-normal">
+                                    <?= Yii::$app->formatter->asShortSize($doc->file_size) ?>
+                                </span>
+                            </li>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </ul>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <?php
     $reportDocs = \backend\models\JobReportDoc::find()->where(['job_id' => $model->id])->all();
     if (!empty($reportDocs)):
         $groupedDocs = [];

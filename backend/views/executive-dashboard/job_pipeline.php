@@ -173,17 +173,30 @@ $stepsDef = [
                                     <!-- Action / File Attachment Buttons per Step -->
                                     <div>
                                         <?php if ($sNo == 1): ?>
-                                            <?php if (!empty($job->cus_po_doc)): ?>
-                                                <?php 
-                                                $poFiles = explode(',', $job->cus_po_doc);
-                                                foreach ($poFiles as $pf): 
-                                                    $cleanPf = trim($pf);
-                                                    if (empty($cleanPf)) continue;
-                                                ?>
-                                                    <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($cleanPf) ?>" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill me-1 mb-1 shadow-sm">
-                                                        <i class="fas fa-file-pdf me-1"></i> ดูไฟล์ PO ลูกค้า (<?= Html::encode($cleanPf) ?>)
-                                                    </a>
-                                                <?php endforeach; ?>
+                                            <?php 
+                                            $poDocsList = \backend\models\JobPoDoc::find()->where(['job_id' => $job->id])->all();
+                                            $hasCusPo = !empty($job->cus_po_doc) || !empty($poDocsList);
+                                            ?>
+                                            <?php if ($hasCusPo): ?>
+                                                <?php if (!empty($job->cus_po_doc)): ?>
+                                                    <?php 
+                                                    $poFiles = explode(',', $job->cus_po_doc);
+                                                    foreach ($poFiles as $pf): 
+                                                        $cleanPf = trim($pf);
+                                                        if (empty($cleanPf)) continue;
+                                                    ?>
+                                                        <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($cleanPf) ?>" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill me-1 mb-1 shadow-sm">
+                                                            <i class="fas fa-file-pdf me-1"></i> ดูไฟล์ PO ลูกค้า (<?= Html::encode($cleanPf) ?>)
+                                                        </a>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
+                                                <?php if (!empty($poDocsList)): ?>
+                                                    <?php foreach ($poDocsList as $pDoc): ?>
+                                                        <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($pDoc->file_path) ?>" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill me-1 mb-1 shadow-sm" title="<?= Html::encode($pDoc->file_name) ?>">
+                                                            <i class="fas fa-file-pdf me-1"></i> ดูไฟล์ PO: <?= Html::encode($pDoc->file_name ?: $pDoc->file_path) ?>
+                                                        </a>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
                                             <?php else: ?>
                                                 <span class="badge bg-light text-muted fw-normal me-2"><i class="fas fa-exclamation-circle me-1"></i> ยังไม่มีไฟล์ PO ลูกค้า</span>
                                             <?php endif; ?>
@@ -224,10 +237,23 @@ $stepsDef = [
                                             </button>
 
                                         <?php elseif ($sNo == 7): ?>
-                                            <?php if (!empty($job->report_doc)): ?>
-                                                <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($job->report_doc) ?>" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill me-1 shadow-sm">
-                                                    <i class="fas fa-file-pdf me-1"></i> ดูไฟล์ Final Report (<?= Html::encode($job->report_doc) ?>)
-                                                </a>
+                                            <?php 
+                                            $reportDocsList = \backend\models\JobReportDoc::find()->where(['job_id' => $job->id])->all();
+                                            $hasReportDoc = !empty($job->report_doc) || !empty($reportDocsList);
+                                            ?>
+                                            <?php if ($hasReportDoc): ?>
+                                                <?php if (!empty($job->report_doc)): ?>
+                                                    <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($job->report_doc) ?>" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill me-1 mb-1 shadow-sm">
+                                                        <i class="fas fa-file-pdf me-1"></i> ดูไฟล์ Final Report (<?= Html::encode($job->report_doc) ?>)
+                                                    </a>
+                                                <?php endif; ?>
+                                                <?php if (!empty($reportDocsList)): ?>
+                                                    <?php foreach ($reportDocsList as $rDoc): ?>
+                                                        <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($rDoc->file_path) ?>" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill me-1 mb-1 shadow-sm" title="<?= Html::encode($rDoc->file_name) ?>">
+                                                            <i class="fas fa-file-pdf me-1"></i> ดูไฟล์ Report: <?= Html::encode($rDoc->file_name ?: $rDoc->file_path) ?>
+                                                        </a>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
                                             <?php else: ?>
                                                 <span class="badge bg-light text-muted fw-normal me-2"><i class="fas fa-exclamation-circle me-1"></i> ยังไม่ได้แนบไฟล์ Final Report</span>
                                             <?php endif; ?>

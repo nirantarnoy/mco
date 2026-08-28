@@ -764,6 +764,10 @@ class JobController extends BaseController
         // ดึงข้อมูล Job Expense (ค่าใช้จ่ายอื่นๆ)
         $jobExpenses = JobExpense::find()->where(['job_id' => $model->id])->all();
 
+        // ดึงข้อมูลไฟล์ PO ลูกค้า และ Final Report
+        $jobPoDocs = \backend\models\JobPoDoc::find()->where(['job_id' => $model->id])->all();
+        $jobReportDocs = \backend\models\JobReportDoc::find()->where(['job_id' => $model->id])->all();
+
         if (Yii::$app->request->isAjax) {
             return $this->renderAjax('timeline_modal', [
                 'model' => $model,
@@ -777,6 +781,8 @@ class JobController extends BaseController
                 'vehicleExpense' => $vehicleExpense,
                 'purchasesnonepr' => $purchasesnonepr,
                 'jobExpenses' => $jobExpenses,
+                'jobPoDocs' => $jobPoDocs,
+                'jobReportDocs' => $jobReportDocs,
             ]);
         }
 
@@ -791,7 +797,9 @@ class JobController extends BaseController
             'paymentReceipts' => $paymentReceipts,
             'vehicleExpense' => $vehicleExpense,
             'purchasesnonepr' => $purchasesnonepr,
-            'jobExpenses' => $jobExpenses, // ส่งข้อมูลไปที่ view
+            'jobExpenses' => $jobExpenses,
+            'jobPoDocs' => $jobPoDocs,
+            'jobReportDocs' => $jobReportDocs,
         ]);
     }
 
@@ -1989,7 +1997,7 @@ class JobController extends BaseController
     {
         $model = $this->findModel($id);
         if ($model && $model->jsa_doc) {
-            $filePath = Yii::getAlias('@webroot/uploads/่job/' . $model->jsa_doc);
+            $filePath = Yii::getAlias('@webroot/uploads/job/' . $model->jsa_doc);
 
             if (file_exists($filePath)) {
                 @unlink($filePath); // ลบไฟล์จริง
@@ -2001,7 +2009,7 @@ class JobController extends BaseController
             Yii::$app->session->setFlash('success', 'ลบไฟล์เรียบร้อยแล้ว');
         }
         if ($model && $model->cus_po_doc != '') {
-            $filePath = Yii::getAlias('@webroot/uploads/่job/' . $model->cus_po_doc);
+            $filePath = Yii::getAlias('@webroot/uploads/job/' . $model->cus_po_doc);
 
             if (file_exists($filePath)) {
                 @unlink($filePath); // ลบไฟล์จริง
@@ -2022,7 +2030,7 @@ class JobController extends BaseController
         $model = JobExpense::findOne($id);
 
         if($model !== null && $model->line_doc){
-            $filePath = Yii::getAlias('@webroot/uploads/่job/'. $model->line_doc);
+            $filePath = Yii::getAlias('@webroot/uploads/job/'. $model->line_doc);
             if(file_exists($filePath)){
                 unlink($filePath);
             }

@@ -286,9 +286,11 @@ if($today > $end){
                 <div class="col-md-5">
                     <div class="d-flex align-items-center gap-1 flex-wrap">
                         <span class="small text-muted me-1 fw-medium"><i class="fas fa-tags me-1"></i> ตัวอย่างคำค้นหา:</span>
-                        <button type="button" class="btn btn-xs btn-outline-primary rounded-pill btn-timeline-tag" data-kw="PO">ใบสั่งซื้อ (PO)</button>
+                        <button type="button" class="btn btn-xs btn-outline-primary rounded-pill btn-timeline-tag" data-kw="PO">PO ลูกค้า/สั่งซื้อ</button>
+                        <button type="button" class="btn btn-xs btn-outline-info rounded-pill btn-timeline-tag" data-kw="JSA">JSA</button>
+                        <button type="button" class="btn btn-xs btn-outline-success rounded-pill btn-timeline-tag" data-kw="Report">Report</button>
                         <button type="button" class="btn btn-xs btn-outline-warning rounded-pill btn-timeline-tag" data-kw="None">None PR</button>
-                        <button type="button" class="btn btn-xs btn-outline-info rounded-pill btn-timeline-tag" data-kw="เบิก">เบิก-คืนของ</button>
+                        <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill btn-timeline-tag" data-kw="เบิก">เบิก-คืนของ</button>
                         <button type="button" class="btn btn-xs btn-outline-success rounded-pill btn-timeline-tag" data-kw="Invoice">Invoice</button>
                         <button type="button" class="btn btn-xs btn-outline-danger rounded-pill btn-timeline-tag" data-kw="">ล้างค้นหา</button>
                     </div>
@@ -303,6 +305,217 @@ if($today > $end){
 
         <!-- Timeline Container -->
         <div class="timeline-container">
+
+            <!-- Customer PO Section (Step 1) -->
+            <?php 
+            $poDocsList = isset($jobPoDocs) ? $jobPoDocs : \backend\models\JobPoDoc::find()->where(['job_id' => $model->id])->all();
+            $hasCustomerPo = !empty($model->cus_po_doc) || !empty($poDocsList);
+            ?>
+            <div class="timeline-section">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold" style="font-family: 'Prompt', sans-serif;">
+                            <i class="fas fa-file-invoice me-2"></i>
+                            1. เอกสารคำสั่งซื้อลูกค้า (Customer PO)
+                            <span class="badge bg-white text-primary ms-2"><?= (!empty($model->cus_po_doc) ? 1 : 0) + count($poDocsList) ?> รายการ</span>
+                        </h5>
+                    </div>
+                    <div class="card-body p-3">
+                        <?php if ($hasCustomerPo): ?>
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm align-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="text-center" style="width: 5%">#</th>
+                                            <th style="width: 35%">ชื่อไฟล์เอกสาร PO</th>
+                                            <th class="text-center" style="width: 20%">วันที่อัปโหลด</th>
+                                            <th class="text-end" style="width: 15%">ขนาดไฟล์</th>
+                                            <th class="text-center" style="width: 25%">เปิดดูไฟล์แนบ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php 
+                                        $cIdx = 0;
+                                        if (!empty($model->cus_po_doc)):
+                                            $cIdx++;
+                                            $cleanPf = trim($model->cus_po_doc);
+                                        ?>
+                                            <tr>
+                                                <td class="text-center fw-bold text-muted"><?= $cIdx ?></td>
+                                                <td>
+                                                    <i class="far fa-file-pdf text-danger me-2"></i>
+                                                    <strong class="text-slate-800"><?= Html::encode($cleanPf) ?></strong>
+                                                    <span class="badge bg-info text-white ms-1">ไฟล์ PO หลัก</span>
+                                                </td>
+                                                <td class="text-center text-muted small">-</td>
+                                                <td class="text-end text-muted small">-</td>
+                                                <td class="text-center">
+                                                    <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($cleanPf) ?>" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill px-3 shadow-sm">
+                                                        <i class="fas fa-external-link-alt me-1"></i> เปิดดูไฟล์ PO
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        <?php endif; ?>
+                                        <?php if (!empty($poDocsList)): ?>
+                                            <?php foreach ($poDocsList as $pDoc): $cIdx++; ?>
+                                                <tr>
+                                                    <td class="text-center fw-bold text-muted"><?= $cIdx ?></td>
+                                                    <td>
+                                                        <i class="far fa-file-pdf text-danger me-2"></i>
+                                                        <strong class="text-slate-800"><?= Html::encode($pDoc->file_name ?: $pDoc->file_path) ?></strong>
+                                                    </td>
+                                                    <td class="text-center text-secondary small">
+                                                        <?= $pDoc->uploaded_at ? date('d/m/Y H:i', $pDoc->uploaded_at) : '-' ?>
+                                                    </td>
+                                                    <td class="text-end text-secondary small">
+                                                        <?= $pDoc->file_size ? Yii::$app->formatter->asShortSize($pDoc->file_size) : '-' ?>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($pDoc->file_path) ?>" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill px-3 shadow-sm">
+                                                            <i class="fas fa-external-link-alt me-1"></i> เปิดดูไฟล์ PO
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-light text-muted mb-0">
+                                <i class="fas fa-exclamation-circle me-1"></i> ยังไม่มีการแนบไฟล์เอกสาร PO ลูกค้าสำหรับ Job นี้
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JSA & Safety Document Section (Step 5) -->
+            <div class="timeline-section">
+                <div class="card border-info shadow-sm">
+                    <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold" style="font-family: 'Prompt', sans-serif;">
+                            <i class="fas fa-user-shield me-2"></i>
+                            5. เอกสารอบรมเซฟตี้ & JSA
+                            <span class="badge bg-white text-info ms-2"><?= !empty($model->jsa_doc) ? 1 : 0 ?> รายการ</span>
+                        </h5>
+                    </div>
+                    <div class="card-body p-3">
+                        <?php if (!empty($model->jsa_doc)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm align-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="text-center" style="width: 5%">#</th>
+                                            <th style="width: 60%">ชื่อไฟล์เอกสาร JSA/เซฟตี้</th>
+                                            <th class="text-center" style="width: 35%">เปิดดูไฟล์แนบ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-center fw-bold text-muted">1</td>
+                                            <td>
+                                                <i class="far fa-file-pdf text-danger me-2"></i>
+                                                <strong class="text-slate-800"><?= Html::encode($model->jsa_doc) ?></strong>
+                                            </td>
+                                            <td class="text-center">
+                                                <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($model->jsa_doc) ?>" target="_blank" class="btn btn-xs btn-outline-info rounded-pill px-3 shadow-sm">
+                                                    <i class="fas fa-external-link-alt me-1"></i> เปิดดูไฟล์ JSA/เซฟตี้
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-light text-muted mb-0">
+                                <i class="fas fa-exclamation-circle me-1"></i> ยังไม่มีการแนบไฟล์เอกสาร JSA/เซฟตี้สำหรับ Job นี้
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Final Report & Certificate Section (Step 7) -->
+            <?php 
+            $reportDocsList = isset($jobReportDocs) ? $jobReportDocs : \backend\models\JobReportDoc::find()->where(['job_id' => $model->id])->all();
+            $hasReportDoc = !empty($model->report_doc) || !empty($reportDocsList);
+            ?>
+            <div class="timeline-section">
+                <div class="card border-success shadow-sm">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold" style="font-family: 'Prompt', sans-serif;">
+                            <i class="fas fa-certificate me-2"></i>
+                            7. เอกสาร Final Report / Certificate
+                            <span class="badge bg-white text-success ms-2"><?= (!empty($model->report_doc) ? 1 : 0) + count($reportDocsList) ?> รายการ</span>
+                        </h5>
+                    </div>
+                    <div class="card-body p-3">
+                        <?php if ($hasReportDoc): ?>
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm align-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="text-center" style="width: 5%">#</th>
+                                            <th style="width: 25%">โฟลเดอร์</th>
+                                            <th style="width: 35%">ชื่อไฟล์เอกสาร Report</th>
+                                            <th class="text-center" style="width: 15%">วันที่อัปโหลด</th>
+                                            <th class="text-center" style="width: 20%">เปิดดูไฟล์แนบ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php 
+                                        $rIdx = 0;
+                                        if (!empty($model->report_doc)):
+                                            $rIdx++;
+                                        ?>
+                                            <tr>
+                                                <td class="text-center fw-bold text-muted"><?= $rIdx ?></td>
+                                                <td><span class="badge bg-secondary">ทั่วไป</span></td>
+                                                <td>
+                                                    <i class="far fa-file-pdf text-danger me-2"></i>
+                                                    <strong class="text-slate-800"><?= Html::encode($model->report_doc) ?></strong>
+                                                    <span class="badge bg-success text-white ms-1">ไฟล์หลัก</span>
+                                                </td>
+                                                <td class="text-center text-muted small">-</td>
+                                                <td class="text-center">
+                                                    <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($model->report_doc) ?>" target="_blank" class="btn btn-xs btn-outline-success rounded-pill px-3 shadow-sm">
+                                                        <i class="fas fa-external-link-alt me-1"></i> เปิดดูไฟล์ Report
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        <?php endif; ?>
+                                        <?php if (!empty($reportDocsList)): ?>
+                                            <?php foreach ($reportDocsList as $rDoc): $rIdx++; ?>
+                                                <tr>
+                                                    <td class="text-center fw-bold text-muted"><?= $rIdx ?></td>
+                                                    <td><span class="badge bg-info"><?= Html::encode($rDoc->folder_name ?: 'ทั่วไป') ?></span></td>
+                                                    <td>
+                                                        <i class="far fa-file-pdf text-danger me-2"></i>
+                                                        <strong class="text-slate-800"><?= Html::encode($rDoc->file_name ?: $rDoc->file_path) ?></strong>
+                                                    </td>
+                                                    <td class="text-center text-secondary small">
+                                                        <?= $rDoc->uploaded_at ? date('d/m/Y H:i', $rDoc->uploaded_at) : '-' ?>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <a href="<?= Yii::$app->request->baseUrl ?>/uploads/job/<?= Html::encode($rDoc->file_path) ?>" target="_blank" class="btn btn-xs btn-outline-success rounded-pill px-3 shadow-sm">
+                                                            <i class="fas fa-external-link-alt me-1"></i> เปิดดูไฟล์ Report
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="alert alert-light text-muted mb-0">
+                                <i class="fas fa-exclamation-circle me-1"></i> ยังไม่มีการแนบไฟล์เอกสาร Final Report สำหรับ Job นี้
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
 
             <!-- Purchase Request Section -->
             <div class="timeline-section">

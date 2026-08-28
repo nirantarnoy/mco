@@ -159,7 +159,7 @@ class ExecutiveDashboardController extends BaseController
                 ]);
             }
             foreach ($query->all() as $j) {
-                $revenue += $j->getJobAmountNoVat();
+                $revenue += (float)$j->job_amount;
             }
         }
         return $revenue;
@@ -1175,9 +1175,11 @@ class ExecutiveDashboardController extends BaseController
 
             switch ($step) {
                 case 1:
-                    if (!empty($job->cus_po_doc)) {
+                    $poDocsList = \backend\models\JobPoDoc::find()->where(['job_id' => $job->id])->all();
+                    if (!empty($job->cus_po_doc) || !empty($poDocsList)) {
                         $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
-                        $stepDetails[$step] = 'แนบเอกสาร PO ลูกค้าแล้ว (' . $job->cus_po_doc . ')';
+                        $count = count($poDocsList) + (!empty($job->cus_po_doc) ? 1 : 0);
+                        $stepDetails[$step] = 'แนบเอกสาร PO ลูกค้าแล้ว (' . $count . ' ไฟล์)';
                     } else {
                         $stepStatuses[$step] = JobActivityStatus::STATUS_ORANGE;
                         $stepDetails[$step] = 'เปิด Job No. แล้ว (รอแนบไฟล์ PO ลูกค้า)';
@@ -1248,9 +1250,11 @@ class ExecutiveDashboardController extends BaseController
                     break;
 
                 case 7:
-                    if (!empty($job->report_doc)) {
+                    $reportDocsList = \backend\models\JobReportDoc::find()->where(['job_id' => $job->id])->all();
+                    if (!empty($job->report_doc) || !empty($reportDocsList)) {
                         $stepStatuses[$step] = JobActivityStatus::STATUS_GREEN;
-                        $stepDetails[$step] = 'แนบเอกสาร Final Report เรียบร้อย';
+                        $count = count($reportDocsList) + (!empty($job->report_doc) ? 1 : 0);
+                        $stepDetails[$step] = 'แนบเอกสาร Final Report เรียบร้อย (' . $count . ' ไฟล์)';
                     } else {
                         $stepStatuses[$step] = JobActivityStatus::STATUS_RED;
                         $stepDetails[$step] = 'ยังไม่ได้แนบเอกสาร Final Report';
