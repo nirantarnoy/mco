@@ -813,25 +813,27 @@ $this->registerCss('
                                 $pcvIdx = 0;
                                 foreach ($pettyCashVouchers as $pcv):
                                     $pcvIdx++;
-                                    $sText = mb_strtolower('เงินสดย่อย pcv ' . $pcv['pcv_no'] . ' ' . ($pcv['payee_name'] ?? '') . ' ' . ($pcv['description'] ?? ''));
+                                    $payeeName = !empty($pcv['payee_name']) ? $pcv['payee_name'] : (!empty($pcv['employee_name']) ? $pcv['employee_name'] : (!empty($pcv['name']) ? $pcv['name'] : ''));
+                                    $pcvDesc = !empty($pcv['description']) ? $pcv['description'] : (!empty($pcv['paid_for']) ? $pcv['paid_for'] : '');
+                                    $sText = mb_strtolower('เงินสดย่อย pcv ' . ($pcv['pcv_no'] ?? '') . ' ' . $payeeName . ' ' . $pcvDesc);
                                 ?>
                                     <tr class="timeline-item-row" data-search="<?= Html::encode($sText) ?>">
                                         <td class="text-center fw-bold text-muted"><?= $pcvIdx ?></td>
                                         <td>
                                             <span class="badge bg-warning text-dark me-1">เงินสดย่อย</span>
-                                            <strong class="text-indigo-600" style="color: #4f46e5;"><?= Html::encode($pcv['pcv_no']) ?></strong>
+                                            <strong class="text-indigo-600" style="color: #4f46e5;"><?= Html::encode($pcv['pcv_no'] ?? '') ?></strong>
                                         </td>
                                         <td class="text-center text-secondary small">
-                                            <?= date('d/m/Y', strtotime($pcv['pcv_date'])) ?>
+                                            <?= !empty($pcv['pcv_date']) ? date('d/m/Y', strtotime($pcv['pcv_date'])) : '-' ?>
                                         </td>
                                         <td>
-                                            <div class="fw-semibold text-slate-800"><?= Html::encode($pcv['payee_name'] ?: 'พนักงาน') ?></div>
+                                            <div class="fw-semibold text-slate-800"><?= Html::encode($payeeName ?: 'พนักงาน') ?></div>
                                         </td>
                                         <td class="text-secondary small">
-                                            <?= Html::encode($pcv['description'] ?: '- ไม่มีรายละเอียด -') ?>
+                                            <?= Html::encode($pcvDesc ?: '- ไม่มีรายละเอียด -') ?>
                                         </td>
                                         <td class="text-end fw-bold text-danger">
-                                            <?= number_format($pcv['amount'], 2) ?>
+                                            <?= number_format($pcv['amount'] ?? 0, 2) ?>
                                         </td>
                                         <td class="text-center">
                                             <div class="d-flex flex-column gap-1 align-items-center">
@@ -1176,16 +1178,16 @@ $this->registerCss('
                                             <?= date('d/m/Y', strtotime($expense->trans_date)) ?>
                                         </td>
                                         <td>
-                                            <div class="fw-semibold text-slate-800"><?= $expense->createdBy ? Html::encode($expense->createdBy->username) : '-' ?></div>
+                                            <div class="fw-semibold text-slate-800"><?= (!empty($expense->created_by) && class_exists('\backend\models\User')) ? Html::encode(\backend\models\User::findEmployeeNameByUserId($expense->created_by)) : '-' ?></div>
                                         </td>
                                         <td class="text-secondary small">
-                                            <?= Html::encode($expense->description) ?>
+                                            <?= Html::encode($expense->description ?? '') ?>
                                             <?php if (!empty($expense->remark)): ?>
                                                 <div class="text-muted ms-1">(<?= Html::encode($expense->remark) ?>)</div>
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-end fw-bold text-danger">
-                                            <?= number_format($expense->line_amount ?: $expense->amount, 2) ?>
+                                            <?= number_format($expense->line_amount ?? 0, 2) ?>
                                         </td>
                                         <td class="text-center">
                                             <span class="text-muted small">-</span>
