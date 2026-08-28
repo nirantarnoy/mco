@@ -42,14 +42,18 @@ class Product extends \common\models\Product
                 'attributes' => [
                     ActiveRecord::EVENT_BEFORE_INSERT => 'created_by',
                 ],
-                'value' => Yii::$app->user->id,
+                'value' => function () {
+                    return (Yii::$app->user && !Yii::$app->user->isGuest) ? Yii::$app->user->id : null;
+                },
             ],
             'timestampuby' => [
                 'class' => \yii\behaviors\AttributeBehavior::className(),
                 'attributes' => [
                     ActiveRecord::EVENT_BEFORE_UPDATE => 'updated_by',
                 ],
-                'value' => Yii::$app->user->id,
+                'value' => function () {
+                    return (Yii::$app->user && !Yii::$app->user->isGuest) ? Yii::$app->user->id : null;
+                },
             ],
             'timestampcompany' => [
                 'class' => \yii\behaviors\AttributeBehavior::className(),
@@ -57,7 +61,13 @@ class Product extends \common\models\Product
                     ActiveRecord::EVENT_BEFORE_INSERT => 'company_id',
                     ActiveRecord::EVENT_BEFORE_UPDATE => 'company_id',
                 ],
-                'value' => (Yii::$app->session->get('company_id') == 100 ? null : Yii::$app->session->get('company_id')),
+                'value' => function () {
+                    if (isset(Yii::$app->session) && Yii::$app->session->has('company_id')) {
+                        $cId = Yii::$app->session->get('company_id');
+                        return $cId == 100 ? null : $cId;
+                    }
+                    return null;
+                },
             ],
          
             'timestampupdate' => [

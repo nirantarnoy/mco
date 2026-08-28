@@ -195,56 +195,62 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <?php
 // Helper Functions
-function getFileIcon($filename) {
-    $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-    $icons = [
-        'pdf' => 'fa-file-pdf text-danger',
-        'doc' => 'fa-file-word text-primary',
-        'docx' => 'fa-file-word text-primary',
-        'xls' => 'fa-file-excel text-success',
-        'xlsx' => 'fa-file-excel text-success',
-        'ppt' => 'fa-file-powerpoint text-warning',
-        'pptx' => 'fa-file-powerpoint text-warning',
-        'jpg' => 'fa-file-image text-info',
-        'jpeg' => 'fa-file-image text-info',
-        'png' => 'fa-file-image text-info',
-        'gif' => 'fa-file-image text-info',
-        'txt' => 'fa-file-alt text-secondary',
-        'zip' => 'fa-file-archive text-dark',
-        'rar' => 'fa-file-archive text-dark',
-    ];
+if (!function_exists('getFileIcon')) {
+    function getFileIcon($filename) {
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $icons = [
+            'pdf' => 'fa-file-pdf text-danger',
+            'doc' => 'fa-file-word text-primary',
+            'docx' => 'fa-file-word text-primary',
+            'xls' => 'fa-file-excel text-success',
+            'xlsx' => 'fa-file-excel text-success',
+            'ppt' => 'fa-file-powerpoint text-warning',
+            'pptx' => 'fa-file-powerpoint text-warning',
+            'jpg' => 'fa-file-image text-info',
+            'jpeg' => 'fa-file-image text-info',
+            'png' => 'fa-file-image text-info',
+            'gif' => 'fa-file-image text-info',
+            'txt' => 'fa-file-alt text-secondary',
+            'zip' => 'fa-file-archive text-dark',
+            'rar' => 'fa-file-archive text-dark',
+        ];
 
-    return $icons[$extension] ?? 'fa-file text-muted';
+        return $icons[$extension] ?? 'fa-file text-muted';
+    }
 }
 
-function getExtensionBadgeColor($extension) {
-    $colors = [
-        'PDF' => 'danger',
-        'DOC' => 'primary',
-        'DOCX' => 'primary',
-        'XLS' => 'success',
-        'XLSX' => 'success',
-        'PPT' => 'warning',
-        'PPTX' => 'warning',
-        'JPG' => 'info',
-        'JPEG' => 'info',
-        'PNG' => 'info',
-        'GIF' => 'info',
-        'TXT' => 'secondary',
-        'ZIP' => 'dark',
-        'RAR' => 'dark',
-    ];
+if (!function_exists('getExtensionBadgeColor')) {
+    function getExtensionBadgeColor($extension) {
+        $colors = [
+            'PDF' => 'danger',
+            'DOC' => 'primary',
+            'DOCX' => 'primary',
+            'XLS' => 'success',
+            'XLSX' => 'success',
+            'PPT' => 'warning',
+            'PPTX' => 'warning',
+            'JPG' => 'info',
+            'JPEG' => 'info',
+            'PNG' => 'info',
+            'GIF' => 'info',
+            'TXT' => 'secondary',
+            'ZIP' => 'dark',
+            'RAR' => 'dark',
+        ];
 
-    return $colors[$extension] ?? 'light';
+        return $colors[$extension] ?? 'light';
+    }
 }
 
-function formatFileSize($bytes) {
-    if ($bytes == 0) return '0 B';
+if (!function_exists('formatFileSize')) {
+    function formatFileSize($bytes) {
+        if ($bytes == 0) return '0 B';
 
-    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-    $power = floor(log($bytes, 1024));
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $power = floor(log($bytes, 1024));
 
-    return round($bytes / pow(1024, $power), 2) . ' ' . $units[$power];
+        return round($bytes / pow(1024, $power), 2) . ' ' . $units[$power];
+    }
 }
 ?>
 
