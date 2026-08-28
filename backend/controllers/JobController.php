@@ -768,6 +768,47 @@ class JobController extends BaseController
         $jobPoDocs = \backend\models\JobPoDoc::find()->where(['job_id' => $model->id])->all();
         $jobReportDocs = \backend\models\JobReportDoc::find()->where(['job_id' => $model->id])->all();
 
+        // เตรียมข้อมูลไฟล์แนบและรายการย่อยสำหรับทุกกิจกรรม
+        foreach ($purchReqs as &$req) {
+            $req['docs'] = $this->getActivityDocuments('purch_req', $req['id']);
+            $req['lines'] = $this->getPurchaseRequestLines($req['id']);
+        }
+        unset($req);
+
+        foreach ($purchases as &$po) {
+            $po['docs'] = $this->getActivityDocuments('purch', $po['id']);
+            $po['lines'] = $this->getPurchaseOrderLines($po['id']);
+        }
+        unset($po);
+
+        foreach ($purchasesnonepr as &$pnone) {
+            $pnone['docs'] = $this->getActivityDocuments('purch', $pnone['id']);
+        }
+        unset($pnone);
+
+        foreach ($journalTrans as &$jt) {
+            $jt['docs'] = $this->getActivityDocuments('journal_trans', $jt['id']);
+            $jt['lines'] = $this->getJournalTransactionLines($jt['id']);
+        }
+        unset($jt);
+
+        foreach ($invoices as &$inv) {
+            $inv['docs'] = $this->getActivityDocuments('invoice', $inv['id']);
+            $inv['items'] = $this->getInvoiceItems($inv['id']);
+        }
+        unset($inv);
+
+        foreach ($billinginvoices as &$bi) {
+            $bi['docs'] = $this->getActivityDocuments('billing', $bi['id']);
+        }
+        unset($bi);
+
+        foreach ($pettyCashVouchers as &$pcv) {
+            $pcv['slips'] = \common\models\PettyCashVoucherDocSlip::find()->where(['petty_cash_voucher_id' => $pcv['id']])->all();
+            $pcv['bills'] = \common\models\PettyCashVoucherDocBill::find()->where(['petty_cash_voucher_id' => $pcv['id']])->all();
+        }
+        unset($pcv);
+
         if (Yii::$app->request->isAjax) {
             return $this->renderAjax('timeline_modal', [
                 'model' => $model,
