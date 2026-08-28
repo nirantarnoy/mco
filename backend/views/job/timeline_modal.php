@@ -311,7 +311,7 @@ $this->registerCss('
                                                         </a>
                                                     <?php endforeach; ?>
                                                 <?php endif; ?>
-                                                <a href="<?= Url::to(['purchreq/view', 'id' => $req['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
+                                                <a href="<?= Url::to(['//purchreq/view', 'id' => $req['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
                                                     <i class="fas fa-external-link-alt me-1"></i> เปิดดู PR
                                                 </a>
                                             </div>
@@ -404,7 +404,7 @@ $this->registerCss('
                                                         </a>
                                                     <?php endforeach; ?>
                                                 <?php endif; ?>
-                                                <a href="<?= Url::to(['purch/view', 'id' => $po['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
+                                                <a href="<?= Url::to(['//purch/view', 'id' => $po['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
                                                     <i class="fas fa-external-link-alt me-1"></i> เปิดดู PO
                                                 </a>
                                             </div>
@@ -444,7 +444,7 @@ $this->registerCss('
                                                         </a>
                                                     <?php endforeach; ?>
                                                 <?php endif; ?>
-                                                <a href="<?= Url::to(['purchase-master/view', 'id' => $pnone['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
+                                                <a href="<?= Url::to(['//purchase-master/view', 'id' => $pnone['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
                                                     <i class="fas fa-external-link-alt me-1"></i> เปิดดู None-PR
                                                 </a>
                                             </div>
@@ -540,7 +540,7 @@ $this->registerCss('
                                                         </a>
                                                     <?php endforeach; ?>
                                                 <?php endif; ?>
-                                                <a href="<?= Url::to(['journaltrans/view', 'id' => $jt['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
+                                                <a href="<?= Url::to(['/journaltrans/view', 'id' => $jt['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
                                                     <i class="fas fa-external-link-alt me-1"></i> เปิดดูใบรับสินค้า
                                                 </a>
                                             </div>
@@ -636,7 +636,7 @@ $this->registerCss('
                                                         </a>
                                                     <?php endforeach; ?>
                                                 <?php endif; ?>
-                                                <a href="<?= Url::to(['journaltrans/view', 'id' => $jt['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
+                                                <a href="<?= Url::to(['/journaltrans/view', 'id' => $jt['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
                                                     <i class="fas fa-external-link-alt me-1"></i> เปิดดูใบเบิก
                                                 </a>
                                             </div>
@@ -849,7 +849,7 @@ $this->registerCss('
                                                         </a>
                                                     <?php endforeach; ?>
                                                 <?php endif; ?>
-                                                <a href="<?= Url::to(['petty-cash-voucher/view', 'id' => $pcv['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
+                                                <a href="<?= Url::to(['//petty-cash-voucher/view', 'id' => $pcv['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
                                                     <i class="fas fa-external-link-alt me-1"></i> เปิดดู PCV
                                                 </a>
                                             </div>
@@ -942,7 +942,7 @@ $this->registerCss('
                                                         </a>
                                                     <?php endforeach; ?>
                                                 <?php endif; ?>
-                                                <a href="<?= Url::to(['invoice/view', 'id' => $inv['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
+                                                <a href="<?= Url::to(['/invoice/view', 'id' => $inv['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
                                                     <i class="fas fa-external-link-alt me-1"></i> เปิดดู Invoice
                                                 </a>
                                             </div>
@@ -984,7 +984,7 @@ $this->registerCss('
                                                         </a>
                                                     <?php endforeach; ?>
                                                 <?php endif; ?>
-                                                <a href="<?= Url::to(['billing-invoice/view', 'id' => $bi['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
+                                                <a href="<?= Url::to(['/billing-invoice/view', 'id' => $bi['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
                                                     <i class="fas fa-external-link-alt me-1"></i> เปิดดูใบวางบิล
                                                 </a>
                                             </div>
@@ -1059,7 +1059,7 @@ $this->registerCss('
                                                         <i class="fas fa-paperclip me-1"></i> ดูสลิป/แนบ
                                                     </a>
                                                 <?php endif; ?>
-                                                <a href="<?= Url::to(['payment-receipt/view', 'id' => $receipt['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
+                                                <a href="<?= Url::to(['/payment-receipt/view', 'id' => $receipt['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
                                                     <i class="fas fa-external-link-alt me-1"></i> เปิดดูใบเสร็จ
                                                 </a>
                                             </div>
