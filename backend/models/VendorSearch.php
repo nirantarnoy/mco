@@ -19,7 +19,7 @@ class VendorSearch extends Vendor
     {
         return [
             [['id', 'vendor_group_id', 'status', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'integer'],
-            [['code', 'name', 'description'], 'safe'],
+            [['code', 'name', 'description', 'account_num', 'bank_name', 'account_name'], 'safe'],
             [['globalSearch'], 'string'],
         ];
     }
@@ -78,6 +78,9 @@ class VendorSearch extends Vendor
                 ['like', 'name', $this->globalSearch],
                 ['like', 'code', $this->globalSearch],
                 ['like', 'description', $this->globalSearch],
+                ['like', 'account_num', $this->globalSearch],
+                ['like', 'bank_name', $this->globalSearch],
+                ['like', 'account_name', $this->globalSearch],
             ]);
         }
         return $dataProvider;

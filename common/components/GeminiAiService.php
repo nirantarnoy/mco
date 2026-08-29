@@ -130,4 +130,105 @@ If a value is not found, use null for strings and 0 for numbers. Ensure the JSON
             throw new Exception('Failed to parse OpenRouter response as JSON: ' . $text);
         }
     }
+
+    /**
+     * Process Bank Book / Passbook Image to extract Account Number, Bank Name, and Account Holder Name.
+     */
+    public function processBankBook($filePath)
+    {
+        if (empty($this->apiKey)) {
+            throw new Exception('OpenRouter API Key is missing. Please configure it in common/config/main-local.php.');
+        }
+
+        if (!file_exists($filePath)) {
+            throw new Exception('File not found: ' . $filePath);
+        }
+
+        $imageData = base64_encode(file_get_contents($filePath));
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $mimeType = 'image/jpeg';
+        if ($ext === 'png') $mimeType = 'image/png';
+        if ($ext === 'webp') $mimeType = 'image/webp';
+        if ($ext === 'pdf') {
+            throw new Exception('OpenRouter Vision models currently support images (JPG, PNG, WEBP). Please convert PDF to image before sending.');
+        }
+
+        $prompt = 'You are an expert Thai bank document and passbook parser. Extract the bank account information from this image and return ONLY a valid JSON object. Do not include markdown formatting or backticks around the JSON.
+The JSON must follow this exact schema:
+{
+    "account_number": "Bank account number (digits only or formatted with dashes e.g. 123-4-56789-0)",
+    "bank_name": "Name of the bank in Thai or English (e.g. กสิกรไทย / KBank, ไทยพาณิชย์ / SCB, กรุงเทพ / Bangkok Bank, กรุงไทย / KTB, etc.)",
+    "account_name": "Account holder name / Account title"
+}
+If a field cannot be found in the image, use null for that field. Ensure the JSON is well-formed.';
+
+        $payload = [
+            'model' => $this->model,
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => [
+                        [
+                            'type' => 'text',
+                            'text' => $prompt
+                        ],
+                        [
+                            'type' => 'image_url',
+                            'image_url' => [
+                                'url' => 'data:' . $mimeType . ';base64,' . $imageData
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+        ];
+
+        $apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $apiUrl);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $this->apiKey,
+            'HTTP-Referer: ' . Yii::$app->request->hostInfo, 
+            'X-Title: MCO Vendor Bank Scanner'
+        ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, Json::encode($payload));
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+
+        $response = curl_exec($ch);
+        $error = curl_error($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($error) {
+            throw new Exception('CURL Error: ' . $error);
+        }
+
+        $result = Json::decode($response);
+
+        if ($httpCode !== 200) {
+            $message = isset($result['error']['message']) ? $result['error']['message'] : 'Unknown API Error';
+            throw new Exception('OpenRouter API Error (HTTP ' . $httpCode . '): ' . $message);
+        }
+
+        $text = $result['choices'][0]['message']['content'] ?? '';
+        $text = preg_replace('/^```json\s*/i', '', $text);
+        $text = preg_replace('/```$/', '', $text);
+        $text = trim($text);
+
+        try {
+            $jsonParsed = Json::decode($text);
+            return [
+                'success' => true,
+                'data' => $jsonParsed,
+                'rawText' => $text
+            ];
+        } catch (\Exception $e) {
+            throw new Exception('Failed to parse OpenRouter response as JSON: ' . $text);
+        }
+    }
 }

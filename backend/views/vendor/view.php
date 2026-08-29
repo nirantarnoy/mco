@@ -31,12 +31,26 @@ $this->params['breadcrumbs'][] = $this->title;
             'code',
             'name',
             'description',
-            'vendor_group_id',
+            'taxid',
+            'bank_name',
+            'account_name',
+            'account_num',
+            [
+                'attribute' => 'bank_account_file',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    if (!empty($model->bank_account_file)) {
+                        return Html::a('<i class="fas fa-file-invoice"></i> ดูหน้าบัญชีธนาคาร', Yii::$app->request->baseUrl . '/uploads/vendor_doc/' . $model->bank_account_file, [
+                            'target' => '_blank',
+                            'class' => 'btn btn-sm btn-info text-white'
+                        ]);
+                    }
+                    return '<span class="text-muted">ไม่มีไฟล์แนบ</span>';
+                }
+            ],
             'status',
-            'created_at',
-            'created_by',
-            'updated_at',
-            'updated_by',
+            'created_at:datetime',
+            'updated_at:datetime',
         ],
     ]) ?>
 

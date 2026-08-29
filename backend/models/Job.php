@@ -268,11 +268,59 @@ class Job extends \common\models\Job
     }
 
     /**
+     * ยอดรวมใบสั่งซื้อทั้งหมด (Purch + PurchaseMaster) ของใบงาน
+     */
+    public function getTotalPoAmount()
+    {
+        $db = Yii::$app->db;
+        $poAmount = $db->createCommand("
+            SELECT SUM(p.net_amount * COALESCE(NULLIF(p.currency_rate, 0), 1))
+            FROM purch p
+            WHERE (p.job_id = :jobId OR p.job_id = :jobNo) AND p.approve_status != 3
+        ", [':jobId' => $this->id, ':jobNo' => $this->job_no])->queryScalar();
+
+        $poNonePrAmount = $db->createCommand("
+            SELECT SUM(COALESCE(p.net_amount, p.total_amount, 0))
+            FROM purchase_master p
+            WHERE (p.job_no = :jobNo OR p.job_no = :jobIdStr OR p.job_id = :jobId) AND p.status != 0
+        ", [':jobNo' => $this->job_no, ':jobIdStr' => (string)$this->id, ':jobId' => $this->id])->queryScalar();
+
+        return (float)($poAmount ?? 0) + (float)($poNonePrAmount ?? 0);
+    }
+
+    /**
+     * ยอดรวมเงินสดย่อยอนุมัติแล้วของใบงาน
+     */
+    public function getTotalPettyCashAmount()
+    {
+        $db = Yii::$app->db;
+        $pcvAmount = $db->createCommand("
+            SELECT SUM(amount)
+            FROM petty_cash_voucher
+            WHERE job_id = :jobId AND approve_status = 1
+        ", [':jobId' => $this->id])->queryScalar();
+
+        return (float)($pcvAmount ?? 0);
+    }
+
+    /**
+     * ต้นทุนรวมทั้งหมดของใบงาน (เบิกสินค้า + ค่าใช้จ่ายทั่วไป + ยานพาหนะ + ใบสั่งซื้อ + เงินสดย่อย)
+     */
+    public function getTotalJobCost()
+    {
+        return $this->getTotalWithdrawAmount() 
+             + $this->getJobexpenseAll() 
+             + $this->getVehicleExpenseAll() 
+             + $this->getTotalPoAmount() 
+             + $this->getTotalPettyCashAmount();
+    }
+
+    /**
      * คำนวณกำไร/ขาดทุน
      */
     public function getProfitLoss()
     {
-        return $this->job_amount - ($this->getTotalWithdrawAmount() + $this->getJobexpenseAll() + $this->getVehicleExpenseAll());
+        return $this->job_amount - $this->getTotalJobCost();
     }
 
     /**

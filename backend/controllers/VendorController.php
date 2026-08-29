@@ -96,6 +96,18 @@ class VendorController extends BaseController
         if ($this->request->isPost) {
             if ($model->load($this->request->post())) {
 
+                $uploadedBankFile = UploadedFile::getInstance($model, 'bank_account_file');
+                if (!empty($uploadedBankFile)) {
+                    $path = 'uploads/vendor_doc/';
+                    if (!file_exists($path)) {
+                        mkdir($path, 0777, true);
+                    }
+                    $fileName = 'bank_book_' . time() . '_' . rand(100, 999) . '.' . $uploadedBankFile->getExtension();
+                    if ($uploadedBankFile->saveAs($path . $fileName)) {
+                        $model->bank_account_file = $fileName;
+                    }
+                }
+
                 $address = \Yii::$app->request->post('cus_address');
                 $street = \Yii::$app->request->post('cus_street');
                 $district_id = \Yii::$app->request->post('district_id');
@@ -146,8 +158,26 @@ class VendorController extends BaseController
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $oldBankFile = $model->bank_account_file;
 
         if ($this->request->isPost && $model->load($this->request->post())) {
+
+            $uploadedBankFile = UploadedFile::getInstance($model, 'bank_account_file');
+            if (!empty($uploadedBankFile)) {
+                $path = 'uploads/vendor_doc/';
+                if (!file_exists($path)) {
+                    mkdir($path, 0777, true);
+                }
+                $fileName = 'bank_book_' . time() . '_' . rand(100, 999) . '.' . $uploadedBankFile->getExtension();
+                if ($uploadedBankFile->saveAs($path . $fileName)) {
+                    $model->bank_account_file = $fileName;
+                    if (!empty($oldBankFile) && file_exists($path . $oldBankFile) && $oldBankFile !== $fileName) {
+                        @unlink($path . $oldBankFile);
+                    }
+                }
+            } else {
+                $model->bank_account_file = $oldBankFile;
+            }
 
             $address = \Yii::$app->request->post('cus_address');
             $street = \Yii::$app->request->post('cus_street');
@@ -190,6 +220,57 @@ class VendorController extends BaseController
         return $this->render('update', [
             'model' => $model,
         ]);
+    }
+
+    /**
+     * Action to scan bank book file using Gemini AI OCR
+     */
+    public function actionScanBankBook()
+    {
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        ini_set('memory_limit', '512M');
+        set_time_limit(120);
+
+        $file = UploadedFile::getInstanceByName('bank_book_file');
+        if (!$file) {
+            return ['success' => false, 'message' => 'กรุณาเลือกไฟล์รูปภาพหน้าบัญชีธนาคาร'];
+        }
+
+        if (!in_array(strtolower($file->extension), ['jpg', 'jpeg', 'png', 'webp'])) {
+            return ['success' => false, 'message' => 'รองรับเฉพาะไฟล์รูปภาพ JPG, JPEG, PNG และ WEBP'];
+        }
+
+        $tempDir = \Yii::getAlias('@runtime/vendor_bank_ocr');
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0777, true);
+        }
+        $filePath = $tempDir . '/' . time() . '_' . $file->baseName . '.' . $file->extension;
+
+        if ($file->saveAs($filePath)) {
+            try {
+                $service = \Yii::$app->geminiAi;
+                $result = $service->processBankBook($filePath);
+                if (file_exists($filePath)) @unlink($filePath);
+
+                if (!$result['success']) {
+                    return ['success' => false, 'message' => 'เกิดข้อผิดพลาดในการประมวลผล Gemini AI'];
+                }
+
+                $data = $result['data'] ?? [];
+                return [
+                    'success' => true,
+                    'account_number' => $data['account_number'] ?? '',
+                    'bank_name' => $data['bank_name'] ?? '',
+                    'account_name' => $data['account_name'] ?? '',
+                    'message' => 'สแกนสำเร็จด้วย Gemini AI'
+                ];
+            } catch (\Exception $e) {
+                if (file_exists($filePath)) @unlink($filePath);
+                return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
+            }
+        }
+
+        return ['success' => false, 'message' => 'ไม่สามารถบันทึกไฟล์ชั่วคราวได้'];
     }
 
     /**

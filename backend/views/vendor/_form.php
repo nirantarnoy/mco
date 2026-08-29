@@ -47,7 +47,7 @@ if($model->isNewRecord) {
 <?php endif; ?>
 <div class="customer-form">
 
-    <?php $form = ActiveForm::begin(); ?>
+    <?php $form = ActiveForm::begin(['options' => ['enctype' => 'multipart/form-data']]); ?>
 
     <div class="row">
         <div class="col-lg-1"></div>
@@ -153,13 +153,51 @@ if($model->isNewRecord) {
         <div class="row">
             <div class="col-lg-1"></div>
             <div class="col-lg-10">
-                <div class="row">
-                    <div class="col-lg-3"> <?= $form->field($model, 'zipcode')->textInput(['maxlength' => true]) ?></div>
-                </div>
-                <div class="col-lg-1"></div>
-            </div>
-        </div>
+                <div class="card card-outline card-info" style="border: 1px solid #17a2b8; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-top: 15px; margin-bottom: 20px;">
+                    <div class="card-header" style="background-color: #e9f7f9; border-bottom: 1px solid #17a2b8; padding: 12px 20px;">
+                        <h5 class="card-title" style="margin: 0; color: #117a8b; font-weight: bold;">
+                            <i class="fas fa-university me-2"></i> ข้อมูลบัญชีธนาคาร (Bank Account Information)
+                        </h5>
+                    </div>
+                    <div class="card-body" style="padding: 20px;">
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <?= $form->field($model, 'bank_name')->textInput(['maxlength' => true, 'id' => 'vendor-bank_name', 'placeholder' => 'เช่น กสิกรไทย, ไทยพาณิชย์']) ?>
+                            </div>
+                            <div class="col-lg-4">
+                                <?= $form->field($model, 'account_name')->textInput(['maxlength' => true, 'id' => 'vendor-account_name', 'placeholder' => 'ชื่อบัญชี']) ?>
+                            </div>
+                            <div class="col-lg-4">
+                                <?= $form->field($model, 'account_num')->textInput(['maxlength' => true, 'id' => 'vendor-account_num', 'placeholder' => 'เลขที่บัญชีธนาคาร']) ?>
+                            </div>
+                        </div>
 
+                        <div class="row style="margin-top: 10px;">
+                            <div class="col-lg-7">
+                                <?= $form->field($model, 'bank_account_file')->fileInput(['id' => 'bank-account-file-input', 'accept' => 'image/*'])->label('แนบรูปภาพหน้าบัญชีธนาคาร (สมุดบัญชี/Passbook)') ?>
+                                <?php if (!empty($model->bank_account_file)): ?>
+                                    <div class="mt-1">
+                                        <span class="text-muted"><i class="fas fa-paperclip"></i> ไฟล์ปัจจุบัน: </span>
+                                        <a href="<?= Yii::$app->request->baseUrl . '/uploads/vendor_doc/' . $model->bank_account_file ?>" target="_blank" class="btn btn-sm btn-outline-info ms-1">
+                                            <i class="fas fa-eye"></i> ดูหน้าบัญชีที่แนบไว้
+                                        </a>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="col-lg-5 align-self-center text-lg-end mt-2 mt-lg-0">
+                                <button type="button" class="btn btn-info text-white" id="btn-scan-bank-book" style="font-weight: 500;">
+                                    <i class="fas fa-robot me-1"></i> สแกนด้วย Gemini AI
+                                </button>
+                                <div id="scan-loading" style="display: none;" class="mt-2 text-info">
+                                    <i class="fas fa-spinner fa-spin me-1"></i> กำลังอ่านข้อมูลด้วย Gemini AI...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-1"></div>
+        </div>
 
         <div class="row" style="display: none;">
             <div class="col-lg-6">
@@ -343,11 +381,56 @@ if($model->isNewRecord) {
     $url_to_getdistrict = \yii\helpers\Url::to(['vendor/showdistrict'], true);
     $url_to_getzipcode = \yii\helpers\Url::to(['vendor/showzipcode'], true);
     $url_to_getAddress = \yii\helpers\Url::to(['vendor/showaddress'], true);
+    $url_scan_bank_book = \yii\helpers\Url::to(['vendor/scan-bank-book'], true);
 
 
     $js = <<<JS
 $(function () {
-    
+    $('#btn-scan-bank-book').on('click', function() {
+        var fileInput = $('#bank-account-file-input')[0];
+        if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+            alert('กรุณาแนบหรือเลือกไฟล์รูปภาพหน้าบัญชีธนาคารก่อนทำการสแกน');
+            return;
+        }
+
+        var formData = new FormData();
+        formData.append('bank_book_file', fileInput.files[0]);
+
+        $('#btn-scan-bank-book').prop('disabled', true);
+        $('#scan-loading').show();
+
+        $.ajax({
+            url: "{$url_scan_bank_book}",
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function(res) {
+                $('#btn-scan-bank-book').prop('disabled', false);
+                $('#scan-loading').hide();
+
+                if (res.success) {
+                    if (res.account_number) {
+                        $('#vendor-account_num').val(res.account_number);
+                    }
+                    if (res.bank_name) {
+                        $('#vendor-bank_name').val(res.bank_name);
+                    }
+                    if (res.account_name) {
+                        $('#vendor-account_name').val(res.account_name);
+                    }
+                    alert('อ่านข้อมูลสำเร็จด้วย Gemini AI!\nเลขที่บัญชี: ' + (res.account_number || '-') + '\nธนาคาร: ' + (res.bank_name || '-') + '\nชื่อบัญชี: ' + (res.account_name || '-'));
+                } else {
+                    alert('เกิดข้อผิดพลาด: ' + res.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                $('#btn-scan-bank-book').prop('disabled', false);
+                $('#scan-loading').hide();
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์: ' + error);
+            }
+        });
+    });
 });
 function getCity(e){
     $.post("$url_to_getcity"+"&id="+e.val(),function(data){

@@ -1154,6 +1154,8 @@ class JobController extends BaseController
      */
     protected function getPurchaseRequests($jobId)
     {
+        $job = Job::findOne($jobId);
+        $jobNo = $job ? $job->job_no : (string)$jobId;
         $query = "
             SELECT 
                 pr.id,
@@ -1167,13 +1169,16 @@ class JobController extends BaseController
                 pr.created_by,
                 em.fname,
                 em.lname
-            FROM purch_req pr INNER JOIN user ON user.id = pr.created_by INNER JOIN employee as em ON em.id = user.emp_ref_id
-            WHERE pr.job_id = :jobId
+            FROM purch_req pr 
+            LEFT JOIN user ON user.id = pr.created_by 
+            LEFT JOIN employee as em ON em.id = user.emp_ref_id
+            WHERE pr.job_id = :jobId OR pr.job_id = :jobNo
             ORDER BY pr.purch_req_date DESC
         ";
 
         $command = Yii::$app->db->createCommand($query);
-        $command->bindParam(':jobId', $jobId);
+        $command->bindValue(':jobId', $jobId);
+        $command->bindValue(':jobNo', $jobNo);
 
         return $command->queryAll();
     }
@@ -1263,6 +1268,8 @@ class JobController extends BaseController
      */
     protected function getPurchaseOrders($jobId)
     {
+        $job = Job::findOne($jobId);
+        $jobNo = $job ? $job->job_no : (string)$jobId;
         $query = "
             SELECT 
                 p.id,
@@ -1276,20 +1283,24 @@ class JobController extends BaseController
                 (p.net_amount * COALESCE(NULLIF(p.currency_rate, 0), 1)) as net_amount,
                 p.payment_note,
                 p.delivery_note,
-                vd.name as vendor_name
-            FROM purch p INNER JOIN vendor as vd ON vd.id = p.vendor_id
-            WHERE p.job_id = :jobId
+                COALESCE(vd.name, '') as vendor_name
+            FROM purch p 
+            LEFT JOIN vendor as vd ON vd.id = p.vendor_id
+            WHERE p.job_id = :jobId OR p.job_id = :jobNo
             ORDER BY p.purch_date DESC
         ";
 
         $command = Yii::$app->db->createCommand($query);
-        $command->bindParam(':jobId', $jobId);
+        $command->bindValue(':jobId', $jobId);
+        $command->bindValue(':jobNo', $jobNo);
 
         return $command->queryAll();
     }
 
     protected function getPurchaseOrdersNonePr($jobId)
     {
+        $job = Job::findOne($jobId);
+        $jobNo = $job ? $job->job_no : (string)$jobId;
         $query = "
             SELECT 
                 p.id,
@@ -1297,14 +1308,18 @@ class JobController extends BaseController
                 p.docdat as purch_date,
                 p.supcod as vendor_id,
                 p.total_amount,
-                vd.name as vendor_name
-            FROM purchase_master p INNER JOIN vendor as vd ON vd.id = p.supcod
-            WHERE p.job_no = :jobId
+                p.net_amount,
+                COALESCE(vd.name, p.supnam, '') as vendor_name
+            FROM purchase_master p 
+            LEFT JOIN vendor as vd ON (vd.id = p.supcod OR vd.code = p.supcod)
+            WHERE (p.job_no = :jobNo OR p.job_no = :jobIdStr OR (p.job_id IS NOT NULL AND p.job_id = :jobId))
             ORDER BY p.docdat DESC
         ";
 
         $command = Yii::$app->db->createCommand($query);
-        $command->bindParam(':jobId', $jobId);
+        $command->bindValue(':jobNo', $jobNo);
+        $command->bindValue(':jobIdStr', (string)$jobId);
+        $command->bindValue(':jobId', $jobId);
 
         return $command->queryAll();
     }
@@ -1316,6 +1331,8 @@ class JobController extends BaseController
      */
     protected function getJournalTransactions($jobId)
     {
+        $job = Job::findOne($jobId);
+        $jobNo = $job ? $job->job_no : (string)$jobId;
         $query = "
             SELECT 
                 jt.id,
@@ -1331,12 +1348,13 @@ class JobController extends BaseController
                 jt.party_id,
                 jt.warehouse_id
             FROM journal_trans jt
-            WHERE jt.job_id = :jobId
+            WHERE jt.job_id = :jobId OR jt.job_id = :jobNo
             ORDER BY jt.trans_date DESC
         ";
 
         $command = Yii::$app->db->createCommand($query);
-        $command->bindParam(':jobId', $jobId);
+        $command->bindValue(':jobId', $jobId);
+        $command->bindValue(':jobNo', $jobNo);
 
         return $command->queryAll();
     }
