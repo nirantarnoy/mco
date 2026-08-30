@@ -51,3 +51,15 @@ phpunit.phar
 /backend/config/*key*.json
 /console/config/client_secret.json
 /console/config/token.json
+
+# ignore scratch and test directories
+/scratch/
+scratch/
+scratch/*
+
+# ignore local config files containing secret keys
+*-local.php
+/common/config/*local*
+/backend/config/*local*
+/frontend/config/*local*
+/console/config/*local*

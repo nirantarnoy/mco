@@ -172,7 +172,7 @@ if($model->isNewRecord) {
                             </div>
                         </div>
 
-                        <div class="row style="margin-top: 10px;">
+                        <div class="row" style="margin-top: 10px;">
                             <div class="col-lg-7">
                                 <?= $form->field($model, 'bank_account_file')->fileInput(['id' => 'bank-account-file-input', 'accept' => 'image/*'])->label('แนบรูปภาพหน้าบัญชีธนาคาร (สมุดบัญชี/Passbook)') ?>
                                 <?php if (!empty($model->bank_account_file)): ?>
@@ -419,15 +419,43 @@ $(function () {
                     if (res.account_name) {
                         $('#vendor-account_name').val(res.account_name);
                     }
-                    alert('อ่านข้อมูลสำเร็จด้วย Gemini AI!\nเลขที่บัญชี: ' + (res.account_number || '-') + '\nธนาคาร: ' + (res.bank_name || '-') + '\nชื่อบัญชี: ' + (res.account_name || '-'));
+                    var msg = 'อ่านข้อมูลสำเร็จด้วย Gemini AI!\\nเลขที่บัญชี: ' + (res.account_number || '-') + '\\nธนาคาร: ' + (res.bank_name || '-') + '\\nชื่อบัญชี: ' + (res.account_name || '-');
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สแกนสำเร็จด้วย Gemini AI',
+                            html: '<b>เลขที่บัญชี:</b> ' + (res.account_number || '-') + '<br>' +
+                                  '<b>ธนาคาร:</b> ' + (res.bank_name || '-') + '<br>' +
+                                  '<b>ชื่อบัญชี:</b> ' + (res.account_name || '-'),
+                            confirmButtonText: 'ตกลง'
+                        });
+                    } else {
+                        alert(msg);
+                    }
                 } else {
-                    alert('เกิดข้อผิดพลาด: ' + res.message);
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: res.message || 'ไม่สามารถประมวลผลได้'
+                        });
+                    } else {
+                        alert('เกิดข้อผิดพลาด: ' + (res.message || 'ไม่สามารถประมวลผลได้'));
+                    }
                 }
             },
             error: function(xhr, status, error) {
                 $('#btn-scan-bank-book').prop('disabled', false);
                 $('#scan-loading').hide();
-                alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์: ' + error);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาดในการเชื่อมต่อ',
+                        text: error || 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้'
+                    });
+                } else {
+                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์: ' + error);
+                }
             }
         });
     });
