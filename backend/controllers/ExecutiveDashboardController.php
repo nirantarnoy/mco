@@ -1445,7 +1445,7 @@ class ExecutiveDashboardController extends BaseController
                     'raw_product_description' => $rawPDesc ?: '',
                     'product_code' => $pCode,
                     'qty' => (float)$pl->qty,
-                    'unit' => $pl->unit ?: '',
+                    'unit' => isset($pl->unit_id) ? \backend\models\Unit::findName($pl->unit_id) : (isset($pl->unit) ? $pl->unit : ''),
                     'line_price' => (float)$pl->line_price,
                     'line_total' => (float)$pl->line_total,
                     'note' => $pNote ?: '',
