@@ -1692,58 +1692,86 @@ class ExecutiveDashboardController extends BaseController
         $jobId = $job->id;
         $jobNo = trim($job->job_no);
 
-        // Extract core job number (e.g., ARC-QT26-000062 -> QT26-000062)
+        // Core variations of job_no (e.g. "ARC-QT26-000062" -> core = "QT26-000062", num = "000062")
         $jobNoCore = $jobNo;
         if (preg_match('/[A-Z]+-(.+)/i', $jobNo, $m)) {
             $jobNoCore = trim($m[1]);
+        }
+        $jobNoNum = '';
+        if (preg_match('/(\d{5,})/', $jobNo, $m)) {
+            $jobNoNum = $m[1];
         }
 
         $poIds = [];
 
         // 1. Direct match by job_id
         if ($jobId) {
-            $directIds = Purch::find()->select('id')->where(['job_id' => $jobId])->column();
+            $directIds = Purch::find()->select('id')
+                ->where(['or', ['job_id' => $jobId], ['job_id' => (string)$jobId]])
+                ->column();
             $poIds = array_merge($poIds, $directIds);
         }
 
-        // 2. Linked via Purchase Request (purch_req where job_id matches and purch_id is set)
+        // 2. Linked via Purchase Request (purch_req where job_id matches or purch_req_no contains job_no)
+        $prQuery = (new \yii\db\Query())
+            ->select('purch_id')
+            ->from('purch_req')
+            ->where(['is not', 'purch_id', null])
+            ->andWhere(['>', 'purch_id', 0]);
+
+        $prWhere = ['or'];
         if ($jobId) {
-            $prPoIds = (new \yii\db\Query())
-                ->select('purch_id')
-                ->from('purch_req')
-                ->where(['job_id' => $jobId])
-                ->andWhere(['is not', 'purch_id', null])
-                ->andWhere(['>', 'purch_id', 0])
-                ->column();
-            $poIds = array_merge($poIds, $prPoIds);
+            $prWhere[] = ['job_id' => $jobId];
+            $prWhere[] = ['job_id' => (string)$jobId];
+        }
+        if (!empty($jobNo)) {
+            $prWhere[] = ['like', 'purch_req_no', $jobNo];
+        }
+        if (!empty($jobNoCore) && $jobNoCore !== $jobNo) {
+            $prWhere[] = ['like', 'purch_req_no', $jobNoCore];
+        }
+        if (!empty($jobNoNum)) {
+            $prWhere[] = ['like', 'purch_req_no', $jobNoNum];
         }
 
-        // 3. Match by PO number, ref_no, or note containing full job_no or core job_no
+        $prPoIds = $prQuery->andWhere($prWhere)->column();
+        $poIds = array_merge($poIds, $prPoIds);
+
+        // 3. Match by PO number, ref_no, note, delivery_note, special_note
+        $whereOr = ['or'];
         if (!empty($jobNo)) {
-            $whereOr = [
-                'or',
-                ['like', 'purch_no', $jobNo],
-                ['like', 'ref_no', $jobNo],
-                ['like', 'note', $jobNo],
-            ];
-            if (!empty($jobNoCore) && $jobNoCore !== $jobNo) {
-                $whereOr[] = ['like', 'purch_no', $jobNoCore];
-                $whereOr[] = ['like', 'ref_no', $jobNoCore];
-            }
+            $whereOr[] = ['like', 'purch_no', $jobNo];
+            $whereOr[] = ['like', 'ref_no', $jobNo];
+            $whereOr[] = ['like', 'note', $jobNo];
+        }
+        if (!empty($jobNoCore) && $jobNoCore !== $jobNo) {
+            $whereOr[] = ['like', 'purch_no', $jobNoCore];
+            $whereOr[] = ['like', 'ref_no', $jobNoCore];
+            $whereOr[] = ['like', 'note', $jobNoCore];
+        }
+        if (!empty($jobNoNum)) {
+            $whereOr[] = ['like', 'purch_no', $jobNoNum];
+            $whereOr[] = ['like', 'ref_no', $jobNoNum];
+        }
+        if (count($whereOr) > 1) {
             $byNoPoIds = Purch::find()->select('id')->where($whereOr)->column();
             $poIds = array_merge($poIds, $byNoPoIds);
         }
 
-        // 4. Match by purch_line doc_ref_no or note containing job_no or core job_no
+        // 4. Match by purch_line doc_ref_no or note
+        $lineWhereOr = ['or'];
         if (!empty($jobNo)) {
-            $lineWhereOr = [
-                'or',
-                ['like', 'doc_ref_no', $jobNo],
-                ['like', 'note', $jobNo],
-            ];
-            if (!empty($jobNoCore) && $jobNoCore !== $jobNo) {
-                $lineWhereOr[] = ['like', 'doc_ref_no', $jobNoCore];
-            }
+            $lineWhereOr[] = ['like', 'doc_ref_no', $jobNo];
+            $lineWhereOr[] = ['like', 'note', $jobNo];
+        }
+        if (!empty($jobNoCore) && $jobNoCore !== $jobNo) {
+            $lineWhereOr[] = ['like', 'doc_ref_no', $jobNoCore];
+            $lineWhereOr[] = ['like', 'note', $jobNoCore];
+        }
+        if (!empty($jobNoNum)) {
+            $lineWhereOr[] = ['like', 'doc_ref_no', $jobNoNum];
+        }
+        if (count($lineWhereOr) > 1) {
             $linePoIds = (new \yii\db\Query())
                 ->select('purch_id')
                 ->from('purch_line')
@@ -1767,24 +1795,42 @@ class ExecutiveDashboardController extends BaseController
     {
         if (!$job) return [];
 
+        $jobId = (string)$job->id;
         $jobNo = trim($job->job_no);
+
         $jobNoCore = $jobNo;
         if (preg_match('/[A-Z]+-(.+)/i', $jobNo, $m)) {
             $jobNoCore = trim($m[1]);
         }
+        $jobNoNum = '';
+        if (preg_match('/(\d{5,})/', $jobNo, $m)) {
+            $jobNoNum = $m[1];
+        }
 
         $whereOr = [
             'or',
+            ['job_no' => $jobId],
             ['job_no' => $jobNo],
             ['like', 'job_no', $jobNo],
             ['like', 'docnum', $jobNo],
             ['like', 'refnum', $jobNo],
             ['like', 'remark', $jobNo],
+            ['like', 'additional_note', $jobNo],
         ];
+
         if (!empty($jobNoCore) && $jobNoCore !== $jobNo) {
+            $whereOr[] = ['job_no' => $jobNoCore];
             $whereOr[] = ['like', 'job_no', $jobNoCore];
             $whereOr[] = ['like', 'docnum', $jobNoCore];
             $whereOr[] = ['like', 'refnum', $jobNoCore];
+            $whereOr[] = ['like', 'remark', $jobNoCore];
+            $whereOr[] = ['like', 'additional_note', $jobNoCore];
+        }
+
+        if (!empty($jobNoNum)) {
+            $whereOr[] = ['like', 'job_no', $jobNoNum];
+            $whereOr[] = ['like', 'docnum', $jobNoNum];
+            $whereOr[] = ['like', 'refnum', $jobNoNum];
         }
 
         return PurchaseMaster::find()->where($whereOr)->all();
