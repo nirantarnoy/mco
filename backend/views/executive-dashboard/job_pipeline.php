@@ -478,16 +478,25 @@ $stepsDef = [
                                 foreach ($jobPosDetail as $item): 
                                     $poIdx++;
                                     // Build search index string
-                                    $searchText = mb_strtolower($item['doc_no'] . ' ' . $item['vendor_name']);
+                                    $searchTerms = [];
+                                    $searchTerms[] = $item['doc_no'];
+                                    $searchTerms[] = $item['vendor_name'];
+                                    $searchTerms[] = $item['type'];
                                     if (!empty($item['lines'])) {
                                         foreach ($item['lines'] as $l) {
-                                            $pName = $l['product_name'] ?? '';
-                                            $pDesc = $l['product_description'] ?? '';
-                                            $searchText .= ' ' . $pName . ' ' . $pDesc;
+                                            if (!empty($l['product_name'])) $searchTerms[] = $l['product_name'];
+                                            if (!empty($l['raw_product_name'])) $searchTerms[] = $l['raw_product_name'];
+                                            if (!empty($l['product_description'])) $searchTerms[] = $l['product_description'];
+                                            if (!empty($l['raw_product_description'])) $searchTerms[] = $l['raw_product_description'];
+                                            if (!empty($l['product_code'])) $searchTerms[] = $l['product_code'];
+                                            if (!empty($l['note'])) $searchTerms[] = $l['note'];
+                                            if (!empty($l['stkdes'])) $searchTerms[] = $l['stkdes'];
+                                            if (!empty($l['stkcod'])) $searchTerms[] = $l['stkcod'];
                                         }
                                     }
+                                    $searchText = mb_strtolower(implode(' ', array_filter($searchTerms)));
                                 ?>
-                                    <tr class="po-item-row" data-search="<?= Html::encode(mb_strtolower($searchText)) ?>">
+                                    <tr class="po-item-row" data-search="<?= Html::encode($searchText) ?>">
                                         <td class="text-center fw-bold text-muted"><?= $poIdx ?></td>
                                         <td>
                                             <span class="badge <?= $item['type'] == 'PO' ? 'bg-primary' : 'bg-warning text-dark' ?> me-1">
@@ -504,16 +513,22 @@ $stepsDef = [
                                         <td>
                                             <?php if (!empty($item['lines'])): ?>
                                                 <ul class="list-unstyled mb-0 small">
-                                                    <?php foreach ($item['lines'] as $lineItem): ?>
+                                                    <?php foreach ($item['lines'] as $lineItem): 
+                                                        $pName = $lineItem['product_name'] ?? $lineItem['stkdes'] ?? 'สินค้า';
+                                                        $pDesc = $lineItem['product_description'] ?? '';
+                                                    ?>
                                                         <li class="mb-1 pb-1 border-bottom border-light">
                                                             <i class="fas fa-cube text-indigo-500 me-1" style="color: #6366f1;"></i>
-                                                            <strong class="text-dark"><?= Html::encode($lineItem['product_name'] ?? 'สินค้า') ?></strong>
-                                                            <?php if (!empty($lineItem['product_description'])): ?>
-                                                                <span class="text-secondary ms-1">(<?= Html::encode($lineItem['product_description']) ?>)</span>
+                                                            <strong class="text-dark"><?= Html::encode($pName) ?></strong>
+                                                            <?php if (!empty($lineItem['note'])): ?>
+                                                                <span class="badge bg-light text-secondary ms-1" title="Note"><i class="far fa-sticky-note me-1 text-indigo-500"></i><?= Html::encode($lineItem['note']) ?></span>
+                                                            <?php endif; ?>
+                                                            <?php if (!empty($pDesc)): ?>
+                                                                <span class="text-secondary ms-1">(<?= Html::encode($pDesc) ?>)</span>
                                                             <?php endif; ?>
                                                             <div class="text-muted small ms-3">
                                                                 จำนวน: <?= number_format($lineItem['qty'] ?? 0, 1) ?> <?= Html::encode($lineItem['unit'] ?? '') ?>
-                                                                | ราคา/หน่วย: <?= number_format($lineItem['line_price'] ?? 0, 2) ?> บาท
+                                                                | ราคา/หน่วย: <?= number_format($lineItem['line_price'] ?? ($lineItem['unitpr'] ?? 0), 2) ?> บาท
                                                             </div>
                                                         </li>
                                                     <?php endforeach; ?>
@@ -691,11 +706,28 @@ $('.btn-cancel-step').on('click', function() {
 
 // Live PO & Product Search Filter
 $('#poSearchKeyword').on('keyup input', function() {
-    var kw = $(this).val().toLowerCase().trim();
+    var rawKw = $(this).val().toLowerCase().trim();
+    if (rawKw === '') {
+        $('.po-item-row').show();
+        $('#showingPoCount').text($('.po-item-row').length);
+        return;
+    }
+    
+    var keywords = rawKw.split(/[\s+]+/).filter(function(k) { return k.length > 0; });
     var count = 0;
+
     $('.po-item-row').each(function() {
-        var searchIndex = $(this).data('search') || '';
-        if (kw === '' || searchIndex.indexOf(kw) !== -1) {
+        var rawSearch = $(this).attr('data-search') || '';
+        var searchIndex = rawSearch.toLowerCase()
+            .replace(/&quot;/g, '"')
+            .replace(/&#039;/g, "'")
+            .replace(/&amp;/g, '&');
+        
+        var matched = keywords.every(function(kw) {
+            return searchIndex.indexOf(kw) !== -1;
+        });
+
+        if (matched) {
             $(this).show();
             count++;
         } else {

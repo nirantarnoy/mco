@@ -1419,7 +1419,38 @@ class ExecutiveDashboardController extends BaseController
         // 1. POs
         $jobPos = Purch::find()->where(['job_id' => $job->id])->all();
         foreach ($jobPos as $po) {
-            $lines = PurchLine::find()->where(['purch_id' => $po->id])->asArray()->all();
+            $rawLines = PurchLine::find()->where(['purch_id' => $po->id])->all();
+            $lines = [];
+            foreach ($rawLines as $pl) {
+                $rawPName = $pl->product_name;
+                $rawPDesc = $pl->product_description;
+                $pNote = $pl->note;
+                $pCode = '';
+                $pName = $rawPName;
+                $pDesc = $rawPDesc;
+
+                if ($pl->product) {
+                    $pCode = $pl->product->code ?: '';
+                    if (empty($pName)) {
+                        $pName = $pl->product->name;
+                    }
+                    if (empty($pDesc)) {
+                        $pDesc = $pl->product->description;
+                    }
+                }
+                $lines[] = [
+                    'product_name' => $pName ?: 'สินค้า',
+                    'product_description' => $pDesc ?: '',
+                    'raw_product_name' => $rawPName ?: '',
+                    'raw_product_description' => $rawPDesc ?: '',
+                    'product_code' => $pCode,
+                    'qty' => (float)$pl->qty,
+                    'unit' => $pl->unit ?: '',
+                    'line_price' => (float)$pl->line_price,
+                    'line_total' => (float)$pl->line_total,
+                    'note' => $pNote ?: '',
+                ];
+            }
             $docs = (new \yii\db\Query())->from('purch_doc')->where(['purch_id' => $po->id])->all();
             $vendorName = $po->vendor_name;
             if (empty($vendorName) && $po->vendor_id) {
@@ -1443,7 +1474,23 @@ class ExecutiveDashboardController extends BaseController
         // 2. Non-PRs
         $jobNonePrs = PurchaseMaster::find()->where(['job_no' => $job->job_no])->all();
         foreach ($jobNonePrs as $npr) {
-            $lines = (new \yii\db\Query())->from('purchase_master_line')->where(['purchase_master_id' => $npr->id])->all();
+            $rawLines = (new \yii\db\Query())->from('purchase_master_line')->where(['purchase_master_id' => $npr->id])->all();
+            $lines = [];
+            foreach ($rawLines as $npl) {
+                $pName = $npl['stkdes'] ?: ($npl['stkcod'] ?: 'สินค้า');
+                $pCode = $npl['stkcod'] ?? '';
+                $pDesc = (!empty($pCode) && $pName !== $pCode) ? ('รหัสสินค้า: ' . $pCode) : '';
+                $lines[] = [
+                    'product_name' => $pName,
+                    'product_description' => $pDesc,
+                    'product_code' => $pCode,
+                    'qty' => (float)($npl['qty'] ?? 0),
+                    'unit' => $npl['unit'] ?? '',
+                    'line_price' => (float)($npl['unitpr'] ?? 0),
+                    'line_total' => (float)($npl['total_amount'] ?? 0),
+                    'note' => '',
+                ];
+            }
             $vendorName = '';
             if ($npr->vendor_id) {
                 $vendor = \backend\models\Vendor::findOne($npr->vendor_id);
