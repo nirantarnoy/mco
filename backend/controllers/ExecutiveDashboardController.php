@@ -1428,6 +1428,13 @@ class ExecutiveDashboardController extends BaseController
                 $pCode = '';
                 $pName = $rawPName;
                 $pDesc = $rawPDesc;
+                $brand = '';
+                $modelName = '';
+
+                if ($pl->product_id) {
+                    $brand = \backend\models\Product::findBrand($pl->product_id);
+                    $modelName = \backend\models\Product::findModelName($pl->product_id);
+                }
 
                 if ($pl->product) {
                     $pCode = $pl->product->code ?: '';
@@ -1443,6 +1450,8 @@ class ExecutiveDashboardController extends BaseController
                     'product_description' => $pDesc ?: '',
                     'raw_product_name' => $rawPName ?: '',
                     'raw_product_description' => $rawPDesc ?: '',
+                    'brand' => $brand ?: '',
+                    'model_name' => $modelName ?: '',
                     'product_code' => $pCode,
                     'qty' => (float)$pl->qty,
                     'unit' => isset($pl->unit_id) ? \backend\models\Unit::findName($pl->unit_id) : (isset($pl->unit) ? $pl->unit : ''),

@@ -488,6 +488,13 @@ $stepsDef = [
                                             if (!empty($l['raw_product_name'])) $searchTerms[] = $l['raw_product_name'];
                                             if (!empty($l['product_description'])) $searchTerms[] = $l['product_description'];
                                             if (!empty($l['raw_product_description'])) $searchTerms[] = $l['raw_product_description'];
+                                            if (!empty($l['brand'])) {
+                                                $searchTerms[] = $l['brand'];
+                                                $searchTerms[] = '(' . $l['brand'] . ')';
+                                                $searchTerms[] = '(' . $l['brand'];
+                                                $searchTerms[] = $l['brand'] . ')';
+                                            }
+                                            if (!empty($l['model_name'])) $searchTerms[] = $l['model_name'];
                                             if (!empty($l['product_code'])) $searchTerms[] = $l['product_code'];
                                             if (!empty($l['note'])) $searchTerms[] = $l['note'];
                                             if (!empty($l['stkdes'])) $searchTerms[] = $l['stkdes'];
@@ -724,7 +731,10 @@ $('#poSearchKeyword').on('keyup input', function() {
             .replace(/&amp;/g, '&');
         
         var matched = keywords.every(function(kw) {
-            return searchIndex.indexOf(kw) !== -1;
+            var cleanKw = kw.replace(/^[()]+|[()]+$/g, '').trim();
+            if (searchIndex.indexOf(kw) !== -1) return true;
+            if (cleanKw !== '' && searchIndex.indexOf(cleanKw) !== -1) return true;
+            return false;
         });
 
         if (matched) {
