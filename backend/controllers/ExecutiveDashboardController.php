@@ -1483,7 +1483,11 @@ class ExecutiveDashboardController extends BaseController
         // 2. Non-PRs
         $jobNonePrs = $this->getJobNonePrs($job);
         foreach ($jobNonePrs as $npr) {
-            $rawLines = (new \yii\db\Query())->from('purchase_master_line')->where(['purchase_master_id' => $npr->id])->all();
+            try {
+                $rawLines = (new \yii\db\Query())->from('purchase_detail')->where(['purchase_master_id' => $npr->id])->all();
+            } catch (\Exception $e) {
+                $rawLines = [];
+            }
             $lines = [];
             foreach ($rawLines as $npl) {
                 $pName = $npl['stkdes'] ?: ($npl['stkcod'] ?: 'สินค้า');
@@ -1493,15 +1497,19 @@ class ExecutiveDashboardController extends BaseController
                     'product_name' => $pName,
                     'product_description' => $pDesc,
                     'product_code' => $pCode,
-                    'qty' => (float)($npl['qty'] ?? 0),
+                    'qty' => (float)($npl['uqnty'] ?? ($npl['qty'] ?? 0)),
                     'unit' => $npl['unit'] ?? '',
                     'line_price' => (float)($npl['unitpr'] ?? 0),
-                    'line_total' => (float)($npl['total_amount'] ?? 0),
-                    'note' => '',
+                    'line_total' => (float)($npl['amount'] ?? ($npl['total_amount'] ?? 0)),
+                    'note' => $npl['remark'] ?? '',
                 ];
             }
-            $vendorName = '';
-            if ($npr->vendor_id) {
+            $vendorName = $npr->supnam ?? '';
+            if (empty($vendorName) && !empty($npr->supcod)) {
+                $vendor = \backend\models\Vendor::find()->where(['code' => $npr->supcod])->one();
+                if ($vendor) $vendorName = $vendor->name;
+            }
+            if (empty($vendorName) && isset($npr->vendor_id) && $npr->vendor_id) {
                 $vendor = \backend\models\Vendor::findOne($npr->vendor_id);
                 if ($vendor) $vendorName = $vendor->name;
             }
