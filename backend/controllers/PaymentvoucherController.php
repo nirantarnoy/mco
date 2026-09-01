@@ -300,8 +300,14 @@ class PaymentvoucherController extends BaseController
             $query->andWhere(['vendor_id' => $vendor_id]);
         }
         
-        if ($q) {
-            $query->andWhere(['like', 'purch_no', $q]);
+        if ($q !== null && trim($q) !== '') {
+            $searchTerm = trim($q);
+            $query->andWhere([
+                'or',
+                ['like', 'purch_no', $searchTerm],
+                ['like', 'ref_no', $searchTerm],
+                ['like', 'vendor_name', $searchTerm],
+            ]);
         }
         
         $pos = $query->limit(20)->all();
@@ -388,8 +394,15 @@ class PaymentvoucherController extends BaseController
             $query->andWhere($conds);
         }
         
-        if ($q) {
-            $query->andWhere(['like', 'docnum', $q]);
+        if ($q !== null && trim($q) !== '') {
+            $searchTerm = trim($q);
+            $query->andWhere([
+                'or',
+                ['like', 'docnum', $searchTerm],
+                ['like', 'refnum', $searchTerm],
+                ['like', 'job_no', $searchTerm],
+                ['like', 'supnam', $searchTerm],
+            ]);
         }
         
         $none_prs = $query->orderBy(['id' => SORT_DESC])->limit(50)->all();

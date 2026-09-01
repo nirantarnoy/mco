@@ -233,7 +233,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                             'ajax' => [
                                 'url' => $getNonePrByVendorUrl,
                                 'dataType' => 'json',
-                                'delay' => 250,
+                                'delay' => 300,
                                 'data' => new JsExpression('function(params) { return {q:params.term, pre_advance_id: "' . ($model->id ?: '') . '", vendor_id: $("#vendor-select").val()}; }'),
                                 'processResults' => new JsExpression('function(data) { return {results: data.results}; }'),
                                 'cache' => true

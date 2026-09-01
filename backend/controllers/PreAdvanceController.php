@@ -144,12 +144,38 @@ class PreAdvanceController extends BaseController
             }
         }
 
+        // Fetch used references once in a single query to eliminate N+1 queries
+        $usedRefsQuery = \backend\models\PreAdvanceRef::find()
+            ->alias('r')
+            ->select(['r.ref_type', 'r.ref_id'])
+            ->innerJoin('pre_advance pa', 'r.pre_advance_id = pa.id')
+            ->where(['!=', 'pa.status', \backend\models\PreAdvance::STATUS_CANCELLED]);
+
+        if ($pre_advance_id) {
+            $usedRefsQuery->andWhere(['!=', 'r.pre_advance_id', $pre_advance_id]);
+        }
+
+        $usedRefs = $usedRefsQuery->asArray()->all();
+        $usedNonePrIds = [];
+        $usedPoIds = [];
+        foreach ($usedRefs as $ref) {
+            if ($ref['ref_type'] === \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR) {
+                $usedNonePrIds[] = (int)$ref['ref_id'];
+            } elseif ($ref['ref_type'] === \backend\models\PreAdvanceRef::REF_TYPE_PO) {
+                $usedPoIds[] = (int)$ref['ref_id'];
+            }
+        }
+
         // 1. None PR (PurchaseMaster)
         $queryNonePr = \backend\models\PurchaseMaster::find()
             ->where(['approve_status' => \backend\models\PurchaseMaster::APPROVE_STATUS_APPROVED])
             ->andWhere(['status' => \backend\models\PurchaseMaster::STATUS_ACTIVE])
             ->andWhere(['>', 'total_amount', 0]);
             
+        if (!empty($usedNonePrIds)) {
+            $queryNonePr->andWhere(['not in', 'id', $usedNonePrIds]);
+        }
+
         if ($vendorCode || $vendorIdInt) {
             $conds = ['or'];
             if ($vendorCode) $conds[] = ['supcod' => $vendorCode];
@@ -157,35 +183,34 @@ class PreAdvanceController extends BaseController
             $queryNonePr->andWhere($conds);
         }
         
-        if ($q) {
-            $queryNonePr->andWhere(['like', 'docnum', $q]);
+        if ($q !== null && trim($q) !== '') {
+            $searchTerm = trim($q);
+            $queryNonePr->andWhere([
+                'or',
+                ['like', 'docnum', $searchTerm],
+                ['like', 'refnum', $searchTerm],
+                ['like', 'job_no', $searchTerm],
+                ['like', 'supnam', $searchTerm],
+            ]);
         }
         
         $none_prs = $queryNonePr->orderBy(['id' => SORT_DESC])->limit(50)->all();
         
         foreach ($none_prs as $none_pr) {
-            $isUsedQuery = \backend\models\PreAdvanceRef::find()
-                ->alias('r')
-                ->innerJoin('pre_advance pa', 'r.pre_advance_id = pa.id')
-                ->where(['r.ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR, 'r.ref_id' => $none_pr->id])
-                ->andWhere(['!=', 'pa.status', \backend\models\PreAdvance::STATUS_CANCELLED]);
-
-            if ($pre_advance_id) {
-                $isUsedQuery->andWhere(['!=', 'r.pre_advance_id', $pre_advance_id]);
-            }
-            
-            if (!$isUsedQuery->exists()) {
-                $result[] = [
-                    'id' => 'none_pr_' . $none_pr->id,
-                    'text' => '[None PR] ' . $none_pr->docnum . ' (ยอดรวม: ' . number_format($none_pr->total_amount, 2) . ( !empty($none_pr->supnam) ? ' - ' . $none_pr->supnam : '' ) . ')',
-                ];
-            }
+            $result[] = [
+                'id' => 'none_pr_' . $none_pr->id,
+                'text' => '[None PR] ' . $none_pr->docnum . ' (ยอดรวม: ' . number_format($none_pr->total_amount, 2) . ( !empty($none_pr->supnam) ? ' - ' . $none_pr->supnam : '' ) . ')',
+            ];
         }
 
         // 2. PO (Purch)
         $queryPo = \backend\models\Purch::find()
             ->where(['approve_status' => 1])
             ->andWhere(['>', 'net_amount', 0]);
+
+        if (!empty($usedPoIds)) {
+            $queryPo->andWhere(['not in', 'id', $usedPoIds]);
+        }
             
         if ($vendorCode || $vendorIdInt) {
             $conds = ['or'];
@@ -194,29 +219,23 @@ class PreAdvanceController extends BaseController
             $queryPo->andWhere($conds);
         }
         
-        if ($q) {
-            $queryPo->andWhere(['like', 'purch_no', $q]);
+        if ($q !== null && trim($q) !== '') {
+            $searchTerm = trim($q);
+            $queryPo->andWhere([
+                'or',
+                ['like', 'purch_no', $searchTerm],
+                ['like', 'ref_no', $searchTerm],
+                ['like', 'vendor_name', $searchTerm],
+            ]);
         }
         
         $pos = $queryPo->orderBy(['id' => SORT_DESC])->limit(50)->all();
         
         foreach ($pos as $po) {
-            $isUsedQuery = \backend\models\PreAdvanceRef::find()
-                ->alias('r')
-                ->innerJoin('pre_advance pa', 'r.pre_advance_id = pa.id')
-                ->where(['r.ref_type' => \backend\models\PreAdvanceRef::REF_TYPE_PO, 'r.ref_id' => $po->id])
-                ->andWhere(['!=', 'pa.status', \backend\models\PreAdvance::STATUS_CANCELLED]);
-
-            if ($pre_advance_id) {
-                $isUsedQuery->andWhere(['!=', 'r.pre_advance_id', $pre_advance_id]);
-            }
-            
-            if (!$isUsedQuery->exists()) {
-                $result[] = [
-                    'id' => 'po_' . $po->id,
-                    'text' => '[PO] ' . $po->purch_no . ' (ยอดรวม: ' . number_format($po->net_amount, 2) . ( !empty($po->vendor_name) ? ' - ' . $po->vendor_name : '' ) . ')',
-                ];
-            }
+            $result[] = [
+                'id' => 'po_' . $po->id,
+                'text' => '[PO] ' . $po->purch_no . ' (ยอดรวม: ' . number_format($po->net_amount, 2) . ( !empty($po->vendor_name) ? ' - ' . $po->vendor_name : '' ) . ')',
+            ];
         }
         
         return ['results' => $result];
