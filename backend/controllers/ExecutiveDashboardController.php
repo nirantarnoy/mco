@@ -1046,7 +1046,7 @@ class ExecutiveDashboardController extends BaseController
             return max(0, $months);
         };
 
-        $jobPos = Purch::find()->where(['job_id' => $job->id])->all();
+        $jobPos = $this->getJobPos($job);
         $jobPoTotal = 0;
         $jobPoInterest = 0;
         $jobPoHasDoc = false;
@@ -1061,7 +1061,7 @@ class ExecutiveDashboardController extends BaseController
             if ($poDocExists) $jobPoHasDoc = true;
         }
         
-        $jobNonePrs = PurchaseMaster::find()->where(['job_no' => $job->job_no])->all();
+        $jobNonePrs = $this->getJobNonePrs($job);
         $jobNonePrTotal = 0;
         $jobNonePrInterest = 0;
         $jobNonePrHasDoc = false;
@@ -1417,7 +1417,7 @@ class ExecutiveDashboardController extends BaseController
         $jobPosDetail = [];
 
         // 1. POs
-        $jobPos = Purch::find()->where(['job_id' => $job->id])->all();
+        $jobPos = $this->getJobPos($job);
         foreach ($jobPos as $po) {
             $rawLines = PurchLine::find()->where(['purch_id' => $po->id])->all();
             $lines = [];
@@ -1481,7 +1481,7 @@ class ExecutiveDashboardController extends BaseController
         }
 
         // 2. Non-PRs
-        $jobNonePrs = PurchaseMaster::find()->where(['job_no' => $job->job_no])->all();
+        $jobNonePrs = $this->getJobNonePrs($job);
         foreach ($jobNonePrs as $npr) {
             $rawLines = (new \yii\db\Query())->from('purchase_master_line')->where(['purchase_master_id' => $npr->id])->all();
             $lines = [];
@@ -1680,5 +1680,113 @@ class ExecutiveDashboardController extends BaseController
             }
         }
         return $this->redirect(['index']);
+    }
+
+    /**
+     * Helper to retrieve all POs linked to a Job (via direct job_id, PR link, PO number, or line item ref)
+     */
+    private function getJobPos($job)
+    {
+        if (!$job) return [];
+
+        $jobId = $job->id;
+        $jobNo = trim($job->job_no);
+
+        // Extract core job number (e.g., ARC-QT26-000062 -> QT26-000062)
+        $jobNoCore = $jobNo;
+        if (preg_match('/[A-Z]+-(.+)/i', $jobNo, $m)) {
+            $jobNoCore = trim($m[1]);
+        }
+
+        $poIds = [];
+
+        // 1. Direct match by job_id
+        if ($jobId) {
+            $directIds = Purch::find()->select('id')->where(['job_id' => $jobId])->column();
+            $poIds = array_merge($poIds, $directIds);
+        }
+
+        // 2. Linked via Purchase Request (purch_req where job_id matches and purch_id is set)
+        if ($jobId) {
+            $prPoIds = (new \yii\db\Query())
+                ->select('purch_id')
+                ->from('purch_req')
+                ->where(['job_id' => $jobId])
+                ->andWhere(['is not', 'purch_id', null])
+                ->andWhere(['>', 'purch_id', 0])
+                ->column();
+            $poIds = array_merge($poIds, $prPoIds);
+        }
+
+        // 3. Match by PO number, ref_no, or note containing full job_no or core job_no
+        if (!empty($jobNo)) {
+            $whereOr = [
+                'or',
+                ['like', 'purch_no', $jobNo],
+                ['like', 'ref_no', $jobNo],
+                ['like', 'note', $jobNo],
+            ];
+            if (!empty($jobNoCore) && $jobNoCore !== $jobNo) {
+                $whereOr[] = ['like', 'purch_no', $jobNoCore];
+                $whereOr[] = ['like', 'ref_no', $jobNoCore];
+            }
+            $byNoPoIds = Purch::find()->select('id')->where($whereOr)->column();
+            $poIds = array_merge($poIds, $byNoPoIds);
+        }
+
+        // 4. Match by purch_line doc_ref_no or note containing job_no or core job_no
+        if (!empty($jobNo)) {
+            $lineWhereOr = [
+                'or',
+                ['like', 'doc_ref_no', $jobNo],
+                ['like', 'note', $jobNo],
+            ];
+            if (!empty($jobNoCore) && $jobNoCore !== $jobNo) {
+                $lineWhereOr[] = ['like', 'doc_ref_no', $jobNoCore];
+            }
+            $linePoIds = (new \yii\db\Query())
+                ->select('purch_id')
+                ->from('purch_line')
+                ->where($lineWhereOr)
+                ->column();
+            $poIds = array_merge($poIds, $linePoIds);
+        }
+
+        $poIds = array_unique(array_filter($poIds));
+        if (empty($poIds)) {
+            return [];
+        }
+
+        return Purch::find()->where(['in', 'id', $poIds])->all();
+    }
+
+    /**
+     * Helper to retrieve all None-PRs (PurchaseMaster) linked to a Job
+     */
+    private function getJobNonePrs($job)
+    {
+        if (!$job) return [];
+
+        $jobNo = trim($job->job_no);
+        $jobNoCore = $jobNo;
+        if (preg_match('/[A-Z]+-(.+)/i', $jobNo, $m)) {
+            $jobNoCore = trim($m[1]);
+        }
+
+        $whereOr = [
+            'or',
+            ['job_no' => $jobNo],
+            ['like', 'job_no', $jobNo],
+            ['like', 'docnum', $jobNo],
+            ['like', 'refnum', $jobNo],
+            ['like', 'remark', $jobNo],
+        ];
+        if (!empty($jobNoCore) && $jobNoCore !== $jobNo) {
+            $whereOr[] = ['like', 'job_no', $jobNoCore];
+            $whereOr[] = ['like', 'docnum', $jobNoCore];
+            $whereOr[] = ['like', 'refnum', $jobNoCore];
+        }
+
+        return PurchaseMaster::find()->where($whereOr)->all();
     }
 }
