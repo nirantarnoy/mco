@@ -521,8 +521,11 @@ $stepsDef = [
                                             <?php if (!empty($item['lines'])): ?>
                                                 <ul class="list-unstyled mb-0 small">
                                                     <?php foreach ($item['lines'] as $lineItem): 
-                                                        $pName = $lineItem['product_name'] ?? $lineItem['stkdes'] ?? 'สินค้า';
-                                                        $pDesc = $lineItem['product_description'] ?? '';
+                                                        $pName = trim($lineItem['product_name'] ?? $lineItem['stkdes'] ?? 'สินค้า');
+                                                        $pDesc = trim($lineItem['product_description'] ?? '');
+                                                        $pBrand = trim($lineItem['brand'] ?? '');
+                                                        $pModel = trim($lineItem['model_name'] ?? '');
+                                                        $showDesc = ($pDesc !== '' && mb_strtolower($pDesc) !== mb_strtolower($pName)) ? $pDesc : '';
                                                     ?>
                                                         <li class="mb-1 pb-1 border-bottom border-light">
                                                             <i class="fas fa-cube text-indigo-500 me-1" style="color: #6366f1;"></i>
@@ -530,8 +533,14 @@ $stepsDef = [
                                                             <?php if (!empty($lineItem['note'])): ?>
                                                                 <span class="badge bg-light text-secondary ms-1" title="Note"><i class="far fa-sticky-note me-1 text-indigo-500"></i><?= Html::encode($lineItem['note']) ?></span>
                                                             <?php endif; ?>
-                                                            <?php if (!empty($pDesc)): ?>
-                                                                <span class="text-secondary ms-1">(<?= Html::encode($pDesc) ?>)</span>
+                                                            <?php if (!empty($showDesc)): ?>
+                                                                <span class="text-secondary ms-1">(<?= Html::encode($showDesc) ?>)</span>
+                                                            <?php endif; ?>
+                                                            <?php if (!empty($pBrand)): ?>
+                                                                <span class="text-indigo-600 fw-bold ms-1">(<?= Html::encode($pBrand) ?>)</span>
+                                                            <?php endif; ?>
+                                                            <?php if (!empty($pModel)): ?>
+                                                                <span class="badge bg-slate-100 text-slate-700 ms-1"><?= Html::encode($pModel) ?></span>
                                                             <?php endif; ?>
                                                             <div class="text-muted small ms-3">
                                                                 จำนวน: <?= number_format($lineItem['qty'] ?? 0, 1) ?> <?= Html::encode($lineItem['unit'] ?? '') ?>
