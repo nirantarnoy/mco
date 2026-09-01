@@ -720,11 +720,65 @@ $('.btn-cancel-step').on('click', function() {
     }
 });
 
-// Live PO & Product Search Filter
+function highlightKeywordsInRow(rowEl, keywords) {
+    var jRow = $(rowEl);
+    // 1. Remove previous highlights
+    jRow.find('mark.highlight-kw').each(function() {
+        var parent = this.parentNode;
+        $(this).replaceWith(this.childNodes);
+        if (parent) parent.normalize();
+    });
+
+    if (!keywords || keywords.length === 0) return;
+
+    // 2. Prepare clean keywords
+    var cleanKeywords = [];
+    keywords.forEach(function(k) {
+        var clean = k.replace(/^[()]+|[()]+$/g, '').trim();
+        if (k.length > 0) cleanKeywords.push(k);
+        if (clean.length > 0 && clean !== k) cleanKeywords.push(clean);
+    });
+
+    if (cleanKeywords.length === 0) return;
+
+    cleanKeywords = cleanKeywords.filter(function(v, i, a) { return a.indexOf(v) === i; });
+    var escapedKw = cleanKeywords.map(function(k) {
+        return k.replace(/[.*+?^\${}()|[\]\\]/g, '\\$&');
+    }).join('|');
+    
+    if (!escapedKw) return;
+    var regex = new RegExp('(' + escapedKw + ')', 'gi');
+
+    // 3. Walk text nodes inside cells
+    jRow.find('td').each(function() {
+        var jTd = $(this);
+        if (jTd.hasClass('text-center') && jTd.find('a').length > 0) return;
+
+        function walkNode(node) {
+            if (node.nodeType === 3) {
+                var val = node.nodeValue;
+                if (val && regex.test(val)) {
+                    var span = document.createElement('span');
+                    span.innerHTML = val.replace(regex, '<mark class="highlight-kw" style="background-color: #fef08a; color: #854d0e; padding: 1px 4px; border-radius: 4px; font-weight: 700; border: 1px solid #fde047;">\$1</mark>');
+                    node.parentNode.replaceChild(span, node);
+                }
+            } else if (node.nodeType === 1 && node.childNodes && !/^(script|style|mark|a|button)$/i.test(node.tagName)) {
+                for (var i = 0; i < node.childNodes.length; i++) {
+                    walkNode(node.childNodes[i]);
+                }
+            }
+        }
+        walkNode(jTd[0]);
+    });
+}
+
+// Live PO & Product Search Filter with Yellow Text Highlighting
 $('#poSearchKeyword').on('keyup input', function() {
     var rawKw = $(this).val().toLowerCase().trim();
     if (rawKw === '') {
-        $('.po-item-row').show();
+        $('.po-item-row').show().each(function() {
+            highlightKeywordsInRow(this, []);
+        });
         $('#showingPoCount').text($('.po-item-row').length);
         return;
     }
@@ -733,7 +787,9 @@ $('#poSearchKeyword').on('keyup input', function() {
     var count = 0;
 
     $('.po-item-row').each(function() {
-        var rawSearch = $(this).attr('data-search') || '';
+        var itemRow = this;
+        var jRow = $(itemRow);
+        var rawSearch = jRow.attr('data-search') || '';
         var searchIndex = rawSearch.toLowerCase()
             .replace(/&quot;/g, '"')
             .replace(/&#039;/g, "'")
@@ -747,10 +803,12 @@ $('#poSearchKeyword').on('keyup input', function() {
         });
 
         if (matched) {
-            $(this).show();
+            jRow.show();
+            highlightKeywordsInRow(itemRow, keywords);
             count++;
         } else {
-            $(this).hide();
+            jRow.hide();
+            highlightKeywordsInRow(itemRow, []);
         }
     });
     $('#showingPoCount').text(count);
