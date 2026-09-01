@@ -250,23 +250,44 @@ class ExecutiveDashboardController extends BaseController
         $jobIds = [];
         $jobNos = [];
         
+        $totalPoExpenses = 0;
+        $totalNonePrExpenses = 0;
+        $allPoIds = [];
+        $allNonePrIds = [];
+
         foreach ((clone $jobsWithPoQuery)->all() as $j) {
             $jobIds[] = $j->id;
             if (!empty(trim($j->job_no))) {
                 $jobNos[] = trim($j->job_no);
             }
+
+            $jPos = $this->getJobPos($j);
+            foreach ($jPos as $po) {
+                if ($po->approve_status == 1) {
+                    $allPoIds[] = $po->id;
+                }
+            }
+
+            $jNonePrs = $this->getJobNonePrs($j);
+            foreach ($jNonePrs as $npr) {
+                if ($npr->approve_status == PurchaseMaster::APPROVE_STATUS_APPROVED) {
+                    $allNonePrIds[] = $npr->id;
+                }
+            }
         }
 
-        // --- 1. ภาพรวม ยอดค่าใช้จ่าย (Total Expenses - แบบ Job Costing) ---
-        // คำนวณจากเอกสารที่ผูกกับ Job ในช่วงเวลานี้
-        $totalPoExpenses = 0;
-        if (!empty($jobIds)) {
-            $totalPoExpenses = (float)Purch::find()->where(['approve_status' => 1, 'job_id' => $jobIds])->sum('(net_amount - COALESCE(vat_amount, 0)) * COALESCE(NULLIF(currency_rate, 0), 1)');
+        $allPoIds = array_unique(array_filter($allPoIds));
+        if (!empty($allPoIds)) {
+            $totalPoExpenses = (float)Purch::find()
+                ->where(['in', 'id', $allPoIds])
+                ->sum('(net_amount - COALESCE(vat_amount, 0)) * COALESCE(NULLIF(currency_rate, 0), 1)');
         }
         
-        $totalNonePrExpenses = 0;
-        if (!empty($jobNos)) {
-            $totalNonePrExpenses = (float)PurchaseMaster::find()->where(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED, 'job_no' => $jobNos])->sum('total_amount - COALESCE(vat_amount, 0)');
+        $allNonePrIds = array_unique(array_filter($allNonePrIds));
+        if (!empty($allNonePrIds)) {
+            $totalNonePrExpenses = (float)PurchaseMaster::find()
+                ->where(['in', 'id', $allNonePrIds])
+                ->sum('total_amount - COALESCE(vat_amount, 0)');
         }
         
         $totalPettyCashExpenses = 0;
@@ -711,18 +732,41 @@ class ExecutiveDashboardController extends BaseController
             $mRev = $this->getCalculatedRevenue($revenueMode, $companyId, $mStart, $mEnd);
             $mJobIds = [];
             $mJobNos = [];
+            $mPoIds = [];
+            $mNonePrIds = [];
+
             foreach ((clone $mJobsQuery)->all() as $j) {
                 $mJobIds[] = $j->id;
                 if (!empty(trim($j->job_no))) {
                     $mJobNos[] = trim($j->job_no);
                 }
+
+                $jPos = $this->getJobPos($j);
+                foreach ($jPos as $po) {
+                    if ($po->approve_status == 1) {
+                        $mPoIds[] = $po->id;
+                    }
+                }
+
+                $jNonePrs = $this->getJobNonePrs($j);
+                foreach ($jNonePrs as $npr) {
+                    if ($npr->approve_status == PurchaseMaster::APPROVE_STATUS_APPROVED) {
+                        $mNonePrIds[] = $npr->id;
+                    }
+                }
             }
 
             $mTotalExpenses = 0;
-            if (!empty($mJobIds)) {
-                $mPo = (float)Purch::find()->where(['approve_status' => 1, 'job_id' => $mJobIds])->sum('(net_amount - COALESCE(vat_amount, 0)) * COALESCE(NULLIF(currency_rate, 0), 1)');
-                $mTotalExpenses += $mPo;
 
+            $mPoIds = array_unique(array_filter($mPoIds));
+            if (!empty($mPoIds)) {
+                $mPo = (float)Purch::find()
+                    ->where(['in', 'id', $mPoIds])
+                    ->sum('(net_amount - COALESCE(vat_amount, 0)) * COALESCE(NULLIF(currency_rate, 0), 1)');
+                $mTotalExpenses += $mPo;
+            }
+
+            if (!empty($mJobIds)) {
                 $mPetty = (float)PettyCashVoucher::find()->where(['status' => 1, 'job_id' => $mJobIds])->sum('amount');
                 $mTotalExpenses += $mPetty;
 
@@ -745,10 +789,11 @@ class ExecutiveDashboardController extends BaseController
                     }
                 }
             }
-            if (!empty($mJobNos)) {
+
+            $mNonePrIds = array_unique(array_filter($mNonePrIds));
+            if (!empty($mNonePrIds)) {
                 $mNpr = (float)PurchaseMaster::find()
-                    ->where(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED])
-                    ->andWhere(['job_no' => $mJobNos])
+                    ->where(['in', 'id', $mNonePrIds])
                     ->sum('total_amount - COALESCE(vat_amount, 0)');
                 $mTotalExpenses += $mNpr;
             }
