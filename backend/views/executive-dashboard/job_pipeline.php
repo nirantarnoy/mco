@@ -720,6 +720,12 @@ $('.btn-cancel-step').on('click', function() {
     }
 });
 
+function escapeRegExp(str) {
+    return str.split('').map(function(ch) {
+        return ('.*+?^\${}()|[]\\\\'.indexOf(ch) !== -1) ? ('\\\\' + ch) : ch;
+    }).join('');
+}
+
 function highlightKeywordsInRow(rowEl, keywords) {
     var jRow = $(rowEl);
     // 1. Remove previous highlights
@@ -743,7 +749,7 @@ function highlightKeywordsInRow(rowEl, keywords) {
 
     cleanKeywords = cleanKeywords.filter(function(v, i, a) { return a.indexOf(v) === i; });
     var escapedKw = cleanKeywords.map(function(k) {
-        return k.replace(/[.*+?^\${}()|[\]\\]/g, '\\$&');
+        return escapeRegExp(k);
     }).join('|');
     
     if (!escapedKw) return;
@@ -759,7 +765,9 @@ function highlightKeywordsInRow(rowEl, keywords) {
                 var val = node.nodeValue;
                 if (val && regex.test(val)) {
                     var span = document.createElement('span');
-                    span.innerHTML = val.replace(regex, '<mark class="highlight-kw" style="background-color: #fef08a; color: #854d0e; padding: 1px 4px; border-radius: 4px; font-weight: 700; border: 1px solid #fde047;">\$1</mark>');
+                    span.innerHTML = val.replace(regex, function(m) {
+                        return '<mark class="highlight-kw" style="background-color: #fef08a; color: #854d0e; padding: 1px 4px; border-radius: 4px; font-weight: 700; border: 1px solid #fde047;">' + m + '</mark>';
+                    });
                     node.parentNode.replaceChild(span, node);
                 }
             } else if (node.nodeType === 1 && node.childNodes && !/^(script|style|mark|a|button)$/i.test(node.tagName)) {
