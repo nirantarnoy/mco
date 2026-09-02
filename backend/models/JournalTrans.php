@@ -340,6 +340,11 @@ class JournalTrans extends ActiveRecord
         return $this->hasMany(JournalTransAricat::class, ['journal_trans_id' => 'id']);
     }
 
+    public function getQuotation()
+    {
+        return $this->hasOne(Quotation::class, ['id' => 'trans_ref_id']);
+    }
+
     /**
      * คำนวณยอดรวมของ JournalTrans
      */

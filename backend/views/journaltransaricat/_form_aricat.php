@@ -563,11 +563,24 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
             <?= $form->field($model, 'trans_type_id')->hiddenInput(['value' => JournalTrans::TRANS_TYPE_ARICAT_NEW])->label(false)?>
 
             <?= $form->field($model, 'stock_type_id')->hiddenInput(['value' => JournalTrans::STOCK_TYPE_IN])->label(false) ?>
+            
             <?= $form->field($model, 'employer_id')->widget(Select2::className(),
                 [
                     'data' => ArrayHelper::map(Employer::find()->where(['status' => 1])->asArray()->all(), 'id', 'name'),
                     'options' => ['placeholder' => '--เลือกนายจ้าง--'],
                     'pluginOptions' => ['allowClear' => true]])->label('นายจ้าง (Employer)') ?>
+
+            <?= $form->field($model, 'job_id')->widget(Select2::className(), [
+                'data' => ArrayHelper::map(
+                    \backend\models\Job::find()->orderBy(['id' => SORT_DESC])->all(),
+                    'id',
+                    function ($job) {
+                        return $job->job_no . ($job->customerName ? ' - ' . $job->customerName : '');
+                    }
+                ),
+                'options' => ['placeholder' => '-- เลือก Job No (ใบงาน) --'],
+                'pluginOptions' => ['allowClear' => true]
+            ])->label('อ้างอิง Job No (ใบงาน)') ?>
         </div>
 
         <div class="col-md-6">
@@ -577,8 +590,19 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                     'options' => ['placeholder' => '--เลือกหน่วยงาน--'],
                     'pluginOptions' => ['allowClear' => true]])->label('หน่วยงาน (Agency)') ?>
 
+            <?= $form->field($model, 'trans_ref_id')->widget(Select2::className(), [
+                'data' => ArrayHelper::map(
+                    \backend\models\Quotation::find()->orderBy(['id' => SORT_DESC])->all(),
+                    'id',
+                    function ($q) {
+                        return $q->quotation_no . ($q->customer_name ? ' - ' . $q->customer_name : '');
+                    }
+                ),
+                'options' => ['placeholder' => '-- เลือกใบเสนอราคา (ACT-QT) --'],
+                'pluginOptions' => ['allowClear' => true]
+            ])->label('อ้างอิงใบเสนอราคา (Quotation ACT-QT)') ?>
 
-            <?= $form->field($model, 'remark')->textarea(['rows' => 3, 'placeholder' => 'ใส่ / หรือระบุชื่อผู้ดูแลราชการ และหมายเหตุเพิ่มเติม...'])->label('รายชื่อผู้ดูแลราชการ / หมายเหตุ') ?>
+            <?= $form->field($model, 'remark')->textarea(['rows' => 2, 'placeholder' => 'ใส่ / หรือระบุชื่อผู้ดูแลราชการ และหมายเหตุเพิ่มเติม...'])->label('รายชื่อผู้ดูแลราชการ / หมายเหตุ') ?>
         </div>
     </div>
 
