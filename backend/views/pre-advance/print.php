@@ -89,34 +89,49 @@ $formatter = \Yii::$app->formatter;
             <?php 
             // Collect refs mapping
             $refMap = [];
+            $refList = [];
             foreach ($model->preAdvanceRefs as $ref) {
                 if ($ref->ref_type == \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR) {
                     $m = \backend\models\PurchaseMaster::findOne($ref->ref_id);
                     if ($m) {
-                        $refMap[$m->docnum] = [
+                        $vName = !empty($m->supnam) ? $m->supnam : ($m->vendor ? $m->vendor->name : '');
+                        $valBeforeVat = (float)($m->vatpr0 > 0 ? $m->vatpr0 : ($m->vat_amount > 0 ? ($m->total_amount - $m->vat_amount) : $m->total_amount));
+                        $info = [
                             'type' => 'NONE_PR',
                             'docnum' => $m->docnum,
-                            'vendor_name' => $m->supnam,
+                            'vendor_name' => $vName,
                             'qt_no' => !empty($m->job_no) ? $m->job_no : $m->refnum,
                             'total_amount' => (float)$m->total_amount,
-                            'value_before_vat' => (float)($m->vatpr0 > 0 ? $m->vatpr0 : ($m->vat_amount > 0 ? ($m->total_amount - $m->vat_amount) : $m->total_amount)),
-                            'vat_amount' => (float)$m->vat_amount,
-                            'tax_amount' => (float)$m->tax_amount,
+                            'value_before_vat' => $valBeforeVat,
+                            'vat_amount' => (float)($m->vat_amount ?? 0),
+                            'tax_amount' => (float)($m->tax_amount ?? 0),
                         ];
+                        $refMap[$m->docnum] = $info;
+                        $refList[] = $info;
                     }
                 } elseif ($ref->ref_type == \backend\models\PreAdvanceRef::REF_TYPE_PO) {
                     $m = \backend\models\Purch::findOne($ref->ref_id);
                     if ($m) {
-                        $refMap[$m->purch_no] = [
+                        $vName = !empty($m->vendor_name) ? $m->vendor_name : ($m->vendor ? $m->vendor->name : '');
+                        $whdTax = (float)($m->whd_tax_amount ?? 0);
+                        $vatAmt = (float)($m->vat_amount ?? 0);
+                        $netAmt = (float)$m->net_amount;
+                        $totAmt = (float)($m->total_amount ?? 0);
+                        $discAmt = (float)($m->discount_total_amount ?? 0);
+                        $valBeforeVat = ($totAmt > 0) ? ($totAmt - $discAmt) : ($netAmt - $vatAmt + $whdTax);
+
+                        $info = [
                             'type' => 'PO',
                             'docnum' => $m->purch_no,
-                            'vendor_name' => $m->vendor_name,
+                            'vendor_name' => $vName,
                             'qt_no' => $m->ref_no,
-                            'total_amount' => (float)$m->net_amount,
-                            'value_before_vat' => (float)($m->total_amount > 0 ? $m->total_amount : ($m->vat_amount > 0 ? ($m->net_amount - $m->vat_amount) : $m->net_amount)),
-                            'vat_amount' => (float)$m->vat_amount,
-                            'tax_amount' => (float)($m->wht_amount ?? 0),
+                            'total_amount' => $netAmt,
+                            'value_before_vat' => $valBeforeVat,
+                            'vat_amount' => $vatAmt,
+                            'tax_amount' => $whdTax,
                         ];
+                        $refMap[$m->purch_no] = $info;
+                        $refList[] = $info;
                     }
                 }
             }
@@ -131,27 +146,43 @@ $formatter = \Yii::$app->formatter;
             foreach ($linesList as $index => $line):
                 $refNo = '';
                 $qtNo = '';
-                $receiptName = $line->remark; // Vendor name stored in line remark
+                $rawRemark = trim($line->remark ?? '');
+                $receiptName = (empty($rawRemark) || strtolower($rawRemark) === 'null' || $rawRemark === '-') ? '' : $rawRemark;
                 $descText = $line->description;
                 $totalAmount = (float)$line->amount;
                 $vatAmount = 0;
                 $taxAmount = 0;
                 $valueBeforeVat = 0;
 
-                // Extract Ref No (e.g. NPR202608170001 or POxxxx)
-                if (preg_match('/เลขที่:\s*([A-Za-z0-9-]+)/u', $descText, $matches)) {
+                // Extract Ref No (e.g. NPR202608170001 or PO-00293-QT26-00084.108)
+                if (preg_match('/เลขที่:\s*([A-Za-z0-9-.\/_]+)/u', $descText, $matches)) {
                     $refNo = trim($matches[1]);
-                } elseif (isset(array_values($refMap)[$index])) {
-                    $refNo = array_values($refMap)[$index]['docnum'];
                 }
 
-                // Extract QT No from description or from refMap
-                if (preg_match('/อ้างอิง\s*QT:\s*([A-Za-z0-9-\/]+)/u', $descText, $qtMatches)) {
+                // Extract QT No from description
+                if (preg_match('/อ้างอิง\s*QT:\s*([A-Za-z0-9-.\/_]+)/u', $descText, $qtMatches)) {
                     $qtNo = trim($qtMatches[1]);
                 }
 
+                // Find matching refInfo
+                $refInfo = null;
                 if (!empty($refNo) && isset($refMap[$refNo])) {
                     $refInfo = $refMap[$refNo];
+                } elseif (isset($refList[$index])) {
+                    $refInfo = $refList[$index];
+                } else {
+                    foreach ($refMap as $k => $info) {
+                        if (!empty($refNo) && (strpos($k, $refNo) !== false || strpos($refNo, $k) !== false)) {
+                            $refInfo = $info;
+                            break;
+                        }
+                    }
+                }
+
+                if ($refInfo) {
+                    if (empty($refNo)) {
+                        $refNo = $refInfo['docnum'];
+                    }
                     if (empty($receiptName)) {
                         $receiptName = $refInfo['vendor_name'];
                     }
@@ -159,13 +190,20 @@ $formatter = \Yii::$app->formatter;
                         $qtNo = $refInfo['qt_no'];
                     }
                     $vatAmount = $refInfo['vat_amount'];
-                    $taxAmount = $refInfo['tax_amount'] ?? 0;
+                    $taxAmount = $refInfo['tax_amount'];
                     $valueBeforeVat = $refInfo['value_before_vat'];
-                } else {
+                }
+
+                // Fallback for vendor name if still empty
+                if (empty($receiptName) || strtolower($receiptName) === 'null') {
+                    $receiptName = $model->vendor ? $model->vendor->name : '';
+                }
+
+                if ($valueBeforeVat == 0) {
                     $valueBeforeVat = $totalAmount;
                 }
 
-                // Build clean Description showing QT No prominently as requested
+                // Build clean Description
                 $displayDesc = $descText;
 
                 $sumBeforeVat += $valueBeforeVat;

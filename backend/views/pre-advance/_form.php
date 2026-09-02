@@ -77,9 +77,13 @@ function addLine(data = null) {
     var date_val = data && data.line_date ? data.line_date : '';
     tr.append('<td><input type="date" name="line_date[]" class="form-control" value="' + date_val + '"></td>');
     
-    tr.append('<td><input type="text" name="line_description[]" class="form-control" value="' + (data ? data.description : '') + '"></td>');
-    tr.append('<td><input type="number" name="line_amount[]" class="form-control line-amount" step="0.01" value="' + (data ? data.amount : '0.00') + '"></td>');
-    tr.append('<td><input type="text" name="line_remark[]" class="form-control" value="' + (data ? data.remark : '') + '"></td>');
+    var desc_val = data && data.description ? data.description : '';
+    var amount_val = data && data.amount !== undefined ? data.amount : '0.00';
+    var remark_val = data && data.remark && data.remark !== 'null' && data.remark !== 'NULL' ? data.remark : '';
+
+    tr.append('<td><input type="text" name="line_description[]" class="form-control" value="' + desc_val + '"></td>');
+    tr.append('<td><input type="number" name="line_amount[]" class="form-control line-amount" step="0.01" value="' + amount_val + '"></td>');
+    tr.append('<td><input type="text" name="line_remark[]" class="form-control" value="' + remark_val + '"></td>');
     
     tr.append('<td class="text-center"><button type="button" class="btn btn-danger btn-sm btn-remove-line"><i class="fa fa-trash"></i></button></td>');
     $('#voucher-lines tbody').append(tr);
@@ -300,7 +304,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                                     <td><input type="date" name="line_date[]" class="form-control" value="<?= Html::encode($line->line_date) ?>"></td>
                                     <td><input type="text" name="line_description[]" class="form-control" value="<?= Html::encode($line->description) ?>"></td>
                                     <td><input type="number" name="line_amount[]" class="form-control line-amount" step="0.01" value="<?= $line->amount ?>"></td>
-                                    <td><input type="text" name="line_remark[]" class="form-control" value="<?= Html::encode($line->remark) ?>"></td>
+                                    <td><input type="text" name="line_remark[]" class="form-control" value="<?= (empty($line->remark) || strtolower(trim($line->remark)) === 'null') ? '' : Html::encode($line->remark) ?>"></td>
                                     <td class="text-center">
                                         <button type="button" class="btn btn-danger btn-sm btn-remove-line">
                                             <i class="fa fa-trash"></i>

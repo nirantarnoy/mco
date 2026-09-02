@@ -260,9 +260,10 @@ class PreAdvanceController extends BaseController
                 $po = \backend\models\Purch::findOne($po_id);
                 if ($po) {
                     $total_amount += $po->net_amount;
+                    $vName = !empty($po->vendor_name) ? $po->vendor_name : ($po->vendor ? $po->vendor->name : '');
                     if (!$vendor_id) {
                         $vendor_id = $po->vendor_id;
-                        $vendor_name = $po->vendor_name;
+                        $vendor_name = $vName;
                     }
                     
                     $desc = 'เลขที่: ' . $po->purch_no;
@@ -273,7 +274,7 @@ class PreAdvanceController extends BaseController
                         'line_date' => date('Y-m-d'),
                         'description' => $desc,
                         'amount' => $po->net_amount,
-                        'remark' => $po->vendor_name,
+                        'remark' => $vName ?: '',
                     ];
                 }
             } else {
@@ -281,9 +282,10 @@ class PreAdvanceController extends BaseController
                 $none_pr = \backend\models\PurchaseMaster::findOne($none_pr_id);
                 if ($none_pr) {
                     $total_amount += $none_pr->total_amount;
+                    $vName = !empty($none_pr->supnam) ? $none_pr->supnam : ($none_pr->vendor ? $none_pr->vendor->name : '');
                     if (!$vendor_id) {
                         $vendor_id = $none_pr->supcod;
-                        $vendor_name = $none_pr->supnam;
+                        $vendor_name = $vName;
                     }
                     
                     $desc = 'เลขที่: ' . $none_pr->docnum;
@@ -295,7 +297,7 @@ class PreAdvanceController extends BaseController
                         'line_date' => date('Y-m-d'),
                         'description' => $desc,
                         'amount' => $none_pr->total_amount,
-                        'remark' => $none_pr->supnam,
+                        'remark' => $vName ?: '',
                     ];
                 }
             }
@@ -332,12 +334,17 @@ class PreAdvanceController extends BaseController
         foreach ($descriptions as $i => $desc) {
             if (empty($desc) && empty($amounts[$i])) continue;
             
+            $rem = trim($remarks[$i] ?? '');
+            if (strtolower($rem) === 'null') {
+                $rem = '';
+            }
+
             $line = new PreAdvanceLine();
             $line->pre_advance_id = $model->id;
             $line->line_date = $dates[$i] ?? null;
             $line->description = $desc;
             $line->amount = $amounts[$i] ?? 0;
-            $line->remark = $remarks[$i] ?? '';
+            $line->remark = $rem;
             $line->save(false);
         }
     }
