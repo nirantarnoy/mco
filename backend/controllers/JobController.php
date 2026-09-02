@@ -782,7 +782,7 @@ class JobController extends BaseController
         unset($po);
 
         foreach ($purchasesnonepr as &$pnone) {
-            $pnone['docs'] = $this->getActivityDocuments('purch', $pnone['id']);
+            $pnone['docs'] = $this->getActivityDocuments('purch_none_pr', $pnone['id']);
         }
         unset($pnone);
 
@@ -1879,7 +1879,7 @@ class JobController extends BaseController
         $foreignKey = $this->getDocumentForeignKey($type);
 
         $doc_name = 'doc';
-        if($tableName =='purch_req_doc' || $tableName == 'purch_doc' || $tableName == 'journal_trans_doc'){
+        if($tableName =='purch_req_doc' || $tableName == 'purch_doc' || $tableName == 'journal_trans_doc' || $tableName == 'purch_none_pr_doc'){
             $doc_name = 'doc_name';
         }
 
@@ -1940,6 +1940,7 @@ class JobController extends BaseController
         $tableMap = [
             'purch_req' => 'purch_req_doc',
             'purch' => 'purch_doc',
+            'purch_none_pr' => 'purch_none_pr_doc',
             'journal_trans' => 'journal_trans_doc',
             'invoice' => 'invoice_doc',
             'billing' => 'invoice_doc', // ใช้ตารางเดียวกับ invoice
@@ -1958,6 +1959,7 @@ class JobController extends BaseController
         $keyMap = [
             'purch_req' => 'purch_req_id',
             'purch' => 'purch_id',
+            'purch_none_pr' => 'purchase_master_id',
             'journal_trans' => 'journal_trans_id',
             'invoice' => 'invoice_id',
             'billing' => 'invoice_id',
@@ -2004,7 +2006,7 @@ class JobController extends BaseController
         if ($type == 'purch_req') {
             return Yii::getAlias('@webroot/uploads/purch_req_doc/' . $filename);
         }
-        if ($type == 'purchase' || $type == 'purch') {
+        if ($type == 'purchase' || $type == 'purch' || $type == 'purch_none_pr') {
             return Yii::getAlias('@webroot/uploads/purch_doc/' . $filename);
         }
         if ($type == 'journal_trans') {

@@ -1117,7 +1117,8 @@ class ExecutiveDashboardController extends BaseController
                 $m = $getMonthsDiff($npr->docdat, $receiptDate);
                 $jobNonePrInterest += $amt * 0.01 * $m;
             }
-            if (!empty($npr->invoice_no) || !empty($npr->refnum) || !empty($npr->cus_po_doc)) {
+            $nonePrDocExists = (new \yii\db\Query())->from('purch_none_pr_doc')->where(['purchase_master_id' => $npr->id])->exists();
+            if ($nonePrDocExists) {
                 $jobNonePrHasDoc = true;
             }
         }
@@ -1558,15 +1559,12 @@ class ExecutiveDashboardController extends BaseController
                 $vendor = \backend\models\Vendor::findOne($npr->vendor_id);
                 if ($vendor) $vendorName = $vendor->name;
             }
-            $docs = [];
-            if (!empty($npr->cus_po_doc)) {
-                $docs[] = ['doc_name' => $npr->cus_po_doc, 'title' => 'PO Doc'];
-            }
-            if (!empty($npr->refnum)) {
-                $docs[] = ['doc_name' => $npr->refnum, 'title' => 'Ref Doc'];
-            }
-            if (!empty($npr->invoice_no)) {
-                $docs[] = ['doc_name' => $npr->invoice_no, 'title' => 'Invoice Doc'];
+            $docs = (new \yii\db\Query())->from('purch_none_pr_doc')->where(['purchase_master_id' => $npr->id])->all();
+            if (empty($docs) && !empty($npr->cus_po_doc)) {
+                $filePath = Yii::getAlias('@webroot/uploads/purch_doc/' . $npr->cus_po_doc);
+                if (file_exists($filePath)) {
+                    $docs[] = ['doc_name' => $npr->cus_po_doc, 'title' => 'PO Doc'];
+                }
             }
             $jobPosDetail[] = [
                 'type' => 'None-PR',
