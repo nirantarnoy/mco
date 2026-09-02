@@ -95,9 +95,25 @@ $formatter = \Yii::$app->formatter;
                     $m = \backend\models\PurchaseMaster::findOne($ref->ref_id);
                     if ($m) {
                         $vName = !empty($m->supnam) ? $m->supnam : ($m->vendor ? $m->vendor->name : '');
-                        $valBeforeVat = (float)($m->vatpr0 > 0 ? $m->vatpr0 : ($m->vat_amount > 0 ? ($m->total_amount - $m->vat_amount) : $m->total_amount));
-                        $vatAmt = (float)($m->vat_amount ?? 0);
                         
+                        // Extract exact values from PurchaseMaster fields (None-PR)
+                        $totNetAmt = (float)($m->total_amount ?? 0); // รวมสุทธิ (e.g. 4718.70)
+                        $vatAmt = (float)($m->vat_amount ?? 0);       // VAT 7% (e.g. 308.70)
+                        $taxAmt = (float)($m->tax_amount ?? 0);       // TAX WHT (e.g. 0.00)
+                        $valBeforeVat = (float)($m->amount ?? 0);     // รวมเงินก่อน VAT (e.g. 4410.00)
+
+                        if ($valBeforeVat == 0 && (float)($m->vatpr0 ?? 0) > 0) {
+                            $valBeforeVat = (float)$m->vatpr0;
+                        }
+
+                        if ($valBeforeVat == 0 && $totNetAmt > 0) {
+                            if ($vatAmt > 0) {
+                                $valBeforeVat = $totNetAmt - $vatAmt + $taxAmt;
+                            } else {
+                                $valBeforeVat = $totNetAmt;
+                            }
+                        }
+
                         // Check Vendor is_vat setting
                         $isVendorVat = false;
                         if (!empty($m->vendor_id)) {
@@ -114,21 +130,24 @@ $formatter = \Yii::$app->formatter;
                         }
 
                         if ($vatAmt == 0) {
-                            if ($m->total_amount > $valBeforeVat && $valBeforeVat > 0) {
-                                $vatAmt = $m->total_amount - $valBeforeVat;
+                            if ($totNetAmt > $valBeforeVat && $valBeforeVat > 0) {
+                                $vatAmt = $totNetAmt - $valBeforeVat;
                             } elseif ($isVendorVat || ($m->vat_percent ?? 0) > 0 || (isset($m->vat_type) && $m->vat_type > 0)) {
                                 $vatAmt = round($valBeforeVat * 0.07, 2);
                             }
                         }
+
+                        $finalTotal = $totNetAmt > 0 ? $totNetAmt : ($valBeforeVat + $vatAmt - $taxAmt);
+
                         $info = [
                             'type' => 'NONE_PR',
                             'docnum' => $m->docnum,
                             'vendor_name' => $vName,
                             'qt_no' => !empty($m->job_no) ? $m->job_no : $m->refnum,
-                            'total_amount' => (float)$m->total_amount,
+                            'total_amount' => $finalTotal,
                             'value_before_vat' => $valBeforeVat,
                             'vat_amount' => $vatAmt,
-                            'tax_amount' => (float)($m->tax_amount ?? 0),
+                            'tax_amount' => $taxAmt,
                             'is_vendor_vat' => $isVendorVat,
                         ];
                         $refMap[$m->docnum] = $info;
