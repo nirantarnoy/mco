@@ -256,7 +256,7 @@ $formatter = \Yii::$app->formatter;
                     $refInfo = $refList[$index];
                 }
 
-                if ($refInfo) {
+                if ($refInfo && (float)($refInfo['value_before_vat'] ?? 0) > 0) {
                     if (empty($refNo)) {
                         $refNo = $refInfo['docnum'];
                     }
@@ -266,42 +266,47 @@ $formatter = \Yii::$app->formatter;
                     if (empty($qtNo)) {
                         $qtNo = $refInfo['qt_no'];
                     }
+                    $valueBeforeVat = (float)$refInfo['value_before_vat'];
                     $vatAmount = (float)$refInfo['vat_amount'];
                     $taxAmount = (float)$refInfo['tax_amount'];
-                    $valueBeforeVat = (float)$refInfo['value_before_vat'];
+                    $lineNetTotal = (float)$refInfo['total_amount'];
+                    if ($lineNetTotal == 0) {
+                        $lineNetTotal = $valueBeforeVat + $vatAmount - $taxAmount;
+                    }
+                } else {
+                    $lineNetTotal = $totalAmount;
+
+                    // Check if Vendor has is_vat enabled or description mentions VAT
+                    $hasVat = false;
+                    if (!empty($receiptName)) {
+                        $vModelLine = \backend\models\Vendor::find()->where(['name' => $receiptName])->one();
+                        if ($vModelLine && (int)$vModelLine->is_vat === 1) {
+                            $hasVat = true;
+                        }
+                    }
+                    if (!$hasVat && $model->vendor_id) {
+                        $vModelMain = \backend\models\Vendor::findOne($model->vendor_id);
+                        if ($vModelMain && (int)$vModelMain->is_vat === 1) {
+                            $hasVat = true;
+                        }
+                    }
+                    if (!$hasVat && (strpos(strtolower($descText), 'vat') !== false || strpos($descText, 'ภาษี') !== false || strpos(strtolower($descText), '7%') !== false)) {
+                        $hasVat = true;
+                    }
+
+                    if ($hasVat && $lineNetTotal > 0) {
+                        $valueBeforeVat = round($lineNetTotal / 1.07, 2);
+                        $vatAmount = round($lineNetTotal - $valueBeforeVat, 2);
+                    } else {
+                        $valueBeforeVat = $lineNetTotal;
+                        $vatAmount = 0;
+                    }
                 }
 
                 // Fallback for vendor name if still empty
                 if (empty($receiptName) || strtolower($receiptName) === 'null') {
                     $receiptName = $model->vendor ? $model->vendor->name : '';
                 }
-
-                if ($valueBeforeVat == 0) {
-                    $valueBeforeVat = $totalAmount;
-                }
-
-                // Fallback for VAT amount: Check Vendor is_vat setting or text keywords
-                if ($vatAmount == 0 && $valueBeforeVat > 0) {
-                    $isVendorVatLine = false;
-                    if (!empty($receiptName)) {
-                        $vModelLine = \backend\models\Vendor::find()->where(['name' => $receiptName])->one();
-                        if ($vModelLine && (int)$vModelLine->is_vat === 1) {
-                            $isVendorVatLine = true;
-                        }
-                    }
-                    if (!$isVendorVatLine && $model->vendor_id) {
-                        $vModelMain = \backend\models\Vendor::findOne($model->vendor_id);
-                        if ($vModelMain && (int)$vModelMain->is_vat === 1) {
-                            $isVendorVatLine = true;
-                        }
-                    }
-
-                    if ($isVendorVatLine || strpos(strtolower($descText), 'vat') !== false || strpos($descText, 'ภาษี') !== false || strpos(strtolower($descText), '7%') !== false) {
-                        $vatAmount = round($valueBeforeVat * 0.07, 2);
-                    }
-                }
-
-                $lineNetTotal = $valueBeforeVat + $vatAmount - $taxAmount;
 
                 // Build clean Description
                 $displayDesc = $descText;
