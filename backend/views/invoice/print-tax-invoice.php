@@ -654,12 +654,20 @@ window.addEventListener('afterprint', function() {
         <div style="display: flex; align-items: center; gap: 10px;">
             <label for="headerSelect" style="font-weight: bold; margin: 0;">เลือกหัวบริษัท:</label>
             <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
-                <option value="mco" selected>M.C.O. Company Limited (Default)</option>
+                <option value="mco">M.C.O. Company Limited (Default)</option>
                 <?php
+                $isAricatDefault = false;
+                if (isset($model->company_id) && $model->company_id == 3) {
+                    $isAricatDefault = true;
+                } elseif (isset($model->company) && stripos($model->company->name, 'ARICAT') !== false) {
+                    $isAricatDefault = true;
+                }
+                
                 $companies = \backend\models\Company::find()->all();
                 foreach ($companies as $comp) {
                     if (strtoupper($comp->name) !== 'M.C.O. COMPANY LIMITED') {
-                        echo '<option value="' . Html::encode($comp->name) . '">' . Html::encode($comp->name) . '</option>';
+                        $selected = ($isAricatDefault && stripos($comp->name, 'ARICAT') !== false) ? 'selected' : '';
+                        echo '<option value="' . Html::encode($comp->name) . '" ' . $selected . '>' . Html::encode($comp->name) . '</option>';
                     }
                 }
                 ?>
@@ -695,25 +703,25 @@ window.addEventListener('afterprint', function() {
     <!-- Header -->
     <div class="header" style="display: flex; align-items: center; justify-content: space-between; min-height: 100px;">
         <div class="logox" style="min-width: 180px;">
-            <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 180px;" alt="">
+            <img id="companyLogo" src="<?= $isAricatDefault ? '../../backend/web/uploads/logo/aricat.png' : '../../backend/web/uploads/logo/mco_logo_2.png' ?>" style="max-width: 180px;" alt="">
         </div>
         <div class="company-info" style="flex: 1; text-align: left; padding-left: 80px;">
-            <div class="company-name-thai" style="text-align: left;">บริษัท <span id="companyNameThai">เอ็ม. ซี. โอ.</span> จำกัด (สำนักงานใหญ่)</div>
-            <div class="company-name-eng"><span id="companyNameEng">M.C.O. COMPANY LIMITED</span></div>
+            <div class="company-name-thai" style="text-align: left;">บริษัท <span id="companyNameThai"><?= $isAricatDefault ? 'นำคนต่างด้าวมาทำงานในประเทศ อริแคท(ประเทศไทย)' : 'เอ็ม. ซี. โอ.' ?></span> จำกัด (สำนักงานใหญ่)</div>
+            <div class="company-name-eng"><span id="companyNameEng"><?= $isAricatDefault ? 'ARICAT (THAILAND) CO., LTD.' : 'M.C.O. COMPANY LIMITED' ?></span></div>
             <div class="company-address" id="addressThai">
-                8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์ 66-(0)-3861-9559
+                <?= $isAricatDefault ? '50/5 หมู่ที่ 4 ตำบลห้วยกะปิ อำเภอเมืองชลบุรี จังหวัดชลบุรี 20000 โทร. 061 - 9784489' : '8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์ 66-(0)-3861-9559' ?>
             </div>
             <div class="company-address" id="addressEng">
-                8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559
+                <?= $isAricatDefault ? '50/5 Moo 4, Huai Kapi, Mueang Chon Buri, Chon Buri 20000 Tel. 061 - 9784489' : '8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559' ?>
             </div>
         </div>
         <div class="company-tax-id" style="min-width: 180px; text-align: right; font-weight: bold; font-size: 18px;">
-            TAXID: 0215543000985
+            TAXID: <?= $isAricatDefault ? '0215557000320' : '0215543000985' ?>
         </div>
     </div>
     <div class="row">
         <div class="col-lg-12" style="text-align: center">
-            <div class="invoice-title-section">
+            <div class="invoice-title-section" style="<?= $isAricatDefault ? 'background-color: #002060; color: #fff; padding: 6px 15px; border-radius: 4px;' : '' ?>">
                 <div class="invoice-title">ใบกำกับภาษี</div>
                 <div class="invoice-subtitle">Tax Invoice</div>
             </div>
@@ -911,23 +919,44 @@ window.addEventListener('afterprint', function() {
         const companyNameEngDiv = document.querySelector('.company-name-eng');
         const companyNameThai = document.getElementById('companyNameThai');
         const companyNameEng = document.getElementById('companyNameEng');
+        const companyLogo = document.getElementById('companyLogo');
+        const addressThai = document.getElementById('addressThai');
+        const addressEng = document.getElementById('addressEng');
+        const taxIdDiv = document.querySelector('.company-tax-id');
+        const titleSection = document.querySelector('.invoice-title-section');
+        const noteItems = document.querySelectorAll('.note-item');
 
         if (selectedValue === 'mco') {
-            // Restore Default MCO Layout (Thai + Eng)
             if (companyNameThaiDiv) companyNameThaiDiv.style.display = 'block';
             if (companyNameEngDiv) companyNameEngDiv.style.display = 'block';
-
             if (companyNameThai) companyNameThai.textContent = 'เอ็ม. ซี. โอ.';
             if (companyNameEng) companyNameEng.textContent = 'M. C. O. COMPANY LIMITED';
+            if (companyLogo) companyLogo.src = '../../backend/web/uploads/logo/mco_logo_2.png';
+            if (addressThai) addressThai.textContent = '8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)-38875258-59 แฟ๊กซ์ 66-(0)-3861-9559';
+            if (addressEng) addressEng.textContent = '8/18 Koh-Kloy-Rd., Cherngnoen, Muang, Rayong 21000 Tel. 66-(0)3887-5258-59 Fax. 66-(0)3861-9559';
+            if (taxIdDiv) taxIdDiv.textContent = 'TAXID: 0215543000985';
+            if (titleSection) { titleSection.style.backgroundColor = ''; titleSection.style.color = ''; titleSection.style.padding = ''; }
+            if (noteItems.length >= 3) {
+                noteItems[2].textContent = '3. สามารถชำระผ่านช่องทางธนาคารกรุงเทพจำกัด (มหาชน) สาขาระยอง ชื่อบัญชี บจ.เอ็ม.ซี.โอ. เลขบัญชี 277-3-02318-5 บัญชีกระแสรายวัน';
+            }
+        } else if (selectedValue.toUpperCase().includes('ARICAT')) {
+            if (companyNameThaiDiv) companyNameThaiDiv.style.display = 'block';
+            if (companyNameEngDiv) companyNameEngDiv.style.display = 'block';
+            if (companyNameThai) companyNameThai.textContent = 'นำคนต่างด้าวมาทำงานในประเทศ อริแคท(ประเทศไทย)';
+            if (companyNameEng) companyNameEng.textContent = 'ARICAT (THAILAND) CO., LTD.';
+            if (companyLogo) companyLogo.src = '../../backend/web/uploads/logo/aricat.png';
+            if (addressThai) addressThai.textContent = '50/5 หมู่ที่ 4 ตำบลห้วยกะปิ อำเภอเมืองชลบุรี จังหวัดชลบุรี 20000 โทร. 061 - 9784489';
+            if (addressEng) addressEng.textContent = '50/5 Moo 4, Huai Kapi, Mueang Chon Buri, Chon Buri 20000 Tel. 061 - 9784489';
+            if (taxIdDiv) taxIdDiv.textContent = 'TAXID: 0215557000320';
+            if (titleSection) { titleSection.style.backgroundColor = '#002060'; titleSection.style.color = '#fff'; titleSection.style.padding = '6px 15px'; titleSection.style.borderRadius = '4px'; }
+            if (noteItems.length >= 3) {
+                noteItems[2].textContent = '3. สามารถชำระผ่านช่องทางธนาคารกรุงเทพ สาขาระยอง ชื่อบัญชี บริษัท นำคนต่างด้าวมาทำงานในประเทศ อริแคท (ประเทศไทย) จำกัด เลขที่บัญชี 277-3-08214-0';
+            }
         } else {
-            // Other Company -> Show Name Only
-
-            // Hide Thai Line
             if (companyNameThaiDiv) companyNameThaiDiv.style.display = 'none';
-
-            // Show Eng Line and set to selected name
             if (companyNameEngDiv) companyNameEngDiv.style.display = 'block';
             if (companyNameEng) companyNameEng.textContent = selectedValue;
+            if (titleSection) { titleSection.style.backgroundColor = ''; titleSection.style.color = ''; titleSection.style.padding = ''; }
         }
     }
 

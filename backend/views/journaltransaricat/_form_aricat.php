@@ -531,16 +531,33 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
     ]); ?>
 
     <div class="row">
+        <div class="col-md-12 mb-3">
+            <div class="card border-info shadow-sm">
+                <div class="card-body bg-light py-2">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <strong class="text-info" style="font-family: 'Prompt', sans-serif;"><i class="fas fa-project-diagram me-2"></i> สเต็ปงาน ARICAT Workflow:</strong>
+                        <span class="badge bg-primary">1. เริ่มดำเนินการ (ใบเสนอราคา ACT-QT / ใบรับคำขอ)</span>
+                        <span class="badge bg-warning text-dark">2. บันทึกค่าใช้จ่าย (ใบเสร็จ / สลิปโอน)</span>
+                        <span class="badge bg-purple text-white" style="background-color: #8b5cf6;">3. รออนุมัติ (ยื่นเรื่องราชการ)</span>
+                        <span class="badge bg-success">4. รับชำระเงิน (ใบกำกับ/ใบเสร็จ)</span>
+                        <span class="badge bg-emerald text-white" style="background-color: #10b981;">5. เสร็จสิ้น</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
         <div class="col-md-6">
             <?php $model->trans_date = $model->isNewRecord ? date('Y-m-d') : date('Y-m-d', strtotime($model->trans_date)); ?>
             <?= $form->field($model, 'trans_date')->widget(DatePicker::class, [
-                'options' => ['placeholder' => 'Select transaction date'],
+                'options' => ['placeholder' => 'เลือกวันที่รายการ'],
                 'pluginOptions' => [
                     'autoclose' => true,
                     'format' => 'yyyy-mm-dd',
                     'todayHighlight' => true,
                 ]
-            ]) ?>
+            ])->label('วันที่รายการ (Date)') ?>
 
             <?php $crate_type = $_GET['type']??null; ?>
             <?= $form->field($model, 'trans_type_id')->hiddenInput(['value' => JournalTrans::TRANS_TYPE_ARICAT_NEW])->label(false)?>
@@ -550,7 +567,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                 [
                     'data' => ArrayHelper::map(Employer::find()->where(['status' => 1])->asArray()->all(), 'id', 'name'),
                     'options' => ['placeholder' => '--เลือกนายจ้าง--'],
-                    'pluginOptions' => ['allowClear' => true]]) ?>
+                    'pluginOptions' => ['allowClear' => true]])->label('นายจ้าง (Employer)') ?>
         </div>
 
         <div class="col-md-6">
@@ -558,10 +575,10 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                 [
                     'data' => ArrayHelper::map(Agency::find()->where(['status' => 1])->asArray()->all(), 'id', 'name'),
                     'options' => ['placeholder' => '--เลือกหน่วยงาน--'],
-                    'pluginOptions' => ['allowClear' => true]]) ?>
+                    'pluginOptions' => ['allowClear' => true]])->label('หน่วยงาน (Agency)') ?>
 
 
-            <?= $form->field($model, 'remark')->textarea(['rows' => 3]) ?>
+            <?= $form->field($model, 'remark')->textarea(['rows' => 3, 'placeholder' => 'ใส่ / หรือระบุชื่อผู้ดูแลราชการ และหมายเหตุเพิ่มเติม...'])->label('รายชื่อผู้ดูแลราชการ / หมายเหตุ') ?>
         </div>
     </div>
 

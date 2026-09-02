@@ -267,10 +267,18 @@ $currencyCode = $quotation->currency ? $quotation->currency->code : 'Baht';
     <div class="no-print" style="margin-bottom: 15px; padding: 10px; background: #f5f5f5; border-radius: 5px;">
         <label for="headerSelect" style="font-weight: bold; margin-right: 10px;">เลือกหัวบริษัท:</label>
         <select id="headerSelect" onchange="changeHeader()" style="padding: 5px 10px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
+            <option value="mco">M.C.O. Company Limited (Default)</option>
             <?php
+            $isAricatDefault = false;
+            if (isset($quotation->company_id) && $quotation->company_id == 3) {
+                $isAricatDefault = true;
+            }
             $companies = \backend\models\Company::find()->all();
             foreach ($companies as $comp) {
-                echo '<option value="' . Html::encode($comp->name) . '">' . Html::encode($comp->name) . '</option>';
+                if (strtoupper($comp->name) !== 'M.C.O. COMPANY LIMITED') {
+                    $selected = ($isAricatDefault && stripos($comp->name, 'ARICAT') !== false) ? 'selected' : '';
+                    echo '<option value="' . Html::encode($comp->name) . '" ' . $selected . '>' . Html::encode($comp->name) . '</option>';
+                }
             }
             ?>
         </select>
@@ -860,6 +868,39 @@ $currencyCode = $quotation->currency ? $quotation->currency->code : 'Baht';
             signatureBoxes[2].textContent = translations.signatureLabels.purchaser[lang];
             signatureBoxes[6].textContent = translations.signatureLabels.quotedBy[lang];
             signatureBoxes[11].textContent = translations.signatureLabels.authorizedSignature[lang];
+        }
+    }
+
+    function changeHeader() {
+        const headerSelect = document.getElementById('headerSelect');
+        const selectedValue = headerSelect.value;
+        const companyName = document.getElementById('companyName');
+        const companyLogo = document.getElementById('companyLogo');
+        const companyAddr1 = document.getElementById('companyAddress1');
+        const companyAddr2 = document.getElementById('companyAddress2');
+        const companyAddr3 = document.getElementById('companyAddress3');
+        const companyAddr4 = document.getElementById('companyAddress4');
+        const titleDiv = document.querySelector('.quotation-title');
+
+        if (selectedValue === 'mco') {
+            if (companyName) companyName.textContent = 'M.C.O. COMPANY LIMITED';
+            if (companyLogo) companyLogo.src = '../../backend/web/uploads/logo/mco_logo.png';
+            if (companyAddr1) companyAddr1.textContent = '8/18 Koh-kloy Road,';
+            if (companyAddr2) companyAddr2.textContent = 'Tambon Cherngnern,';
+            if (companyAddr3) companyAddr3.textContent = 'Amphur Muang ,';
+            if (companyAddr4) companyAddr4.textContent = 'Rayong 21000 Thailand.';
+            if (titleDiv) { titleDiv.style.backgroundColor = ''; titleDiv.style.color = ''; titleDiv.style.padding = ''; }
+        } else if (selectedValue.toUpperCase().includes('ARICAT')) {
+            if (companyName) companyName.textContent = 'บริษัท นำคนต่างด้าวมาทำงานในประเทศ อริแคท(ประเทศไทย) จำกัด (สำนักงานใหญ่)';
+            if (companyLogo) companyLogo.src = '../../backend/web/uploads/logo/aricat.png';
+            if (companyAddr1) companyAddr1.textContent = '50/5 หมู่ที่ 4 ตำบลห้วยกะปิ';
+            if (companyAddr2) companyAddr2.textContent = 'อำเภอเมืองชลบุรี จังหวัดชลบุรี 20000';
+            if (companyAddr3) companyAddr3.textContent = 'เลขประจำตัวผู้เสียภาษี 0215557000320';
+            if (companyAddr4) companyAddr4.textContent = 'โทร. 061 - 9784489';
+            if (titleDiv) { titleDiv.style.backgroundColor = '#00A859'; titleDiv.style.color = '#fff'; titleDiv.style.padding = '6px 15px'; titleDiv.style.borderRadius = '4px'; }
+        } else {
+            if (companyName) companyName.textContent = selectedValue;
+            if (titleDiv) { titleDiv.style.backgroundColor = ''; titleDiv.style.color = ''; titleDiv.style.padding = ''; }
         }
     }
 </script>

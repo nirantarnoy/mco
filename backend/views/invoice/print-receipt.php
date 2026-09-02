@@ -353,12 +353,20 @@ use yii\helpers\Html; ?>
         <div style="display: flex; align-items: center; gap: 10px;">
             <label for="headerSelect" style="font-weight: bold; margin: 0;">เลือกหัวบริษัท:</label>
             <select id="headerSelect" onchange="changeHeader()" style="padding: 8px 15px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc;">
-                <option value="mco" selected>M.C.O. Company Limited (Default)</option>
+                <option value="mco">M.C.O. Company Limited (Default)</option>
                 <?php
+                $isAricatDefault = false;
+                if (isset($model->company_id) && $model->company_id == 3) {
+                    $isAricatDefault = true;
+                } elseif (isset($model->company) && stripos($model->company->name, 'ARICAT') !== false) {
+                    $isAricatDefault = true;
+                }
+                
                 $companies = \backend\models\Company::find()->all();
                 foreach ($companies as $comp) {
                     if (strtoupper($comp->name) !== 'M.C.O. COMPANY LIMITED') {
-                        echo '<option value="' . Html::encode($comp->name) . '">' . Html::encode($comp->name) . '</option>';
+                        $selected = ($isAricatDefault && stripos($comp->name, 'ARICAT') !== false) ? 'selected' : '';
+                        echo '<option value="' . Html::encode($comp->name) . '" ' . $selected . '>' . Html::encode($comp->name) . '</option>';
                     }
                 }
                 ?>
@@ -383,17 +391,17 @@ use yii\helpers\Html; ?>
     <!-- Header Section -->
     <div class="receipt-header-section" style="display: flex; align-items: center; justify-content: space-between; min-height: 100px;">
         <div class="receipt-logo-section" style="min-width: 180px;">
-            <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 190px;" alt="">
+            <img id="companyLogo" src="<?= $isAricatDefault ? '../../backend/web/uploads/logo/aricat.png' : '../../backend/web/uploads/logo/mco_logo_2.png' ?>" style="max-width: 190px;" alt="">
         </div>
         <div class="receipt-company-info" style="flex: 1; text-align: left; padding-left: 80px;">
-            <div class="receipt-company-name-thai" id="companyNameThai" style="text-decoration: none; font-size: 32px; text-align: left;">บริษัท เอ็ม. ซี. โอ. จำกัด (สำนักงานใหญ่)</div>
-            <div class="receipt-company-name-eng" id="companyNameEng" style="font-size: 26px; margin-top: -5px;">M.C.O. COMPANY LIMITED</div>
+            <div class="receipt-company-name-thai" id="companyNameThai" style="text-decoration: none; font-size: 28px; text-align: left;">บริษัท <span id="companyNameThaiText"><?= $isAricatDefault ? 'นำคนต่างด้าวมาทำงานในประเทศ อริแคท(ประเทศไทย)' : 'เอ็ม. ซี. โอ.' ?></span> จำกัด (สำนักงานใหญ่)</div>
+            <div class="receipt-company-name-eng" id="companyNameEng" style="font-size: 22px; margin-top: -5px;"><?= $isAricatDefault ? 'ARICAT (THAILAND) CO., LTD.' : 'M.C.O. COMPANY LIMITED' ?></div>
             <div class="receipt-company-address" id="addressThai" style="font-size: 13px; line-height: 1.2;">
-                8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)3887-5258-59 แฟกซ์ 66-(0)3861-9559
+                <?= $isAricatDefault ? '50/5 หมู่ที่ 4 ตำบลห้วยกะปิ อำเภอเมืองชลบุรี จังหวัดชลบุรี 20000 โทร. 061 - 9784489' : '8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)3887-5258-59 แฟกซ์ 66-(0)3861-9559' ?>
             </div>
         </div>
         <div class="tax-info" style="min-width: 180px; text-align: right; font-weight: bold; font-size: 16px;">
-            TAXID: 0215543000985
+            TAXID: <?= $isAricatDefault ? '0215557000320' : '0215543000985' ?>
         </div>
     </div>
 
@@ -403,7 +411,7 @@ use yii\helpers\Html; ?>
             <strong id="taxIdLabel" style="font-size: 12px; margin-top: 10px; display: inline-block;">(สำนักงานใหญ่)</strong>
         </div>
         <div class="receipt-col">
-            <div class="receipt-title">ใบเสร็จรับเงิน<br>RECEIPT</div>
+            <div class="receipt-title" style="<?= $isAricatDefault ? 'background-color: #C58900; color: #fff; padding: 6px 15px; border-radius: 4px;' : '' ?>">ใบเสร็จรับเงิน<br>RECEIPT</div>
         </div>
         <div class="receipt-col"></div>
     </div>
@@ -639,26 +647,33 @@ use yii\helpers\Html; ?>
         const selectedValue = headerSelect.value;
 
         const companyNameThai = document.getElementById('companyNameThai');
+        const companyNameThaiText = document.getElementById('companyNameThaiText');
         const companyNameEng = document.getElementById('companyNameEng');
+        const companyLogo = document.getElementById('companyLogo');
+        const addressThai = document.getElementById('addressThai');
+        const taxInfo = document.querySelector('.tax-info');
+        const titleDiv = document.querySelector('.receipt-title');
 
         if (selectedValue === 'mco') {
-            // Restore MCO Layout
-            if (companyNameThai) {
-                companyNameThai.style.display = 'block';
-                companyNameThai.textContent = 'บริษัท เอ็ม.ซี.โอ. จำกัด';
-            }
-            if (companyNameEng) {
-                companyNameEng.style.display = 'block';
-                companyNameEng.textContent = 'M.C.O. COMPANY LIMITED';
-            }
+            if (companyNameThai) companyNameThai.style.display = 'block';
+            if (companyNameThaiText) companyNameThaiText.textContent = 'เอ็ม. ซี. โอ.';
+            if (companyNameEng) { companyNameEng.style.display = 'block'; companyNameEng.textContent = 'M.C.O. COMPANY LIMITED'; }
+            if (companyLogo) companyLogo.src = '../../backend/web/uploads/logo/mco_logo_2.png';
+            if (addressThai) addressThai.textContent = '8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000 โทร 66-(0)3887-5258-59 แฟกซ์ 66-(0)3861-9559';
+            if (taxInfo) taxInfo.textContent = 'TAXID: 0215543000985';
+            if (titleDiv) { titleDiv.style.backgroundColor = ''; titleDiv.style.color = ''; titleDiv.style.padding = ''; }
+        } else if (selectedValue.toUpperCase().includes('ARICAT')) {
+            if (companyNameThai) companyNameThai.style.display = 'block';
+            if (companyNameThaiText) companyNameThaiText.textContent = 'นำคนต่างด้าวมาทำงานในประเทศ อริแคท(ประเทศไทย)';
+            if (companyNameEng) { companyNameEng.style.display = 'block'; companyNameEng.textContent = 'ARICAT (THAILAND) CO., LTD.'; }
+            if (companyLogo) companyLogo.src = '../../backend/web/uploads/logo/aricat.png';
+            if (addressThai) addressThai.textContent = '50/5 หมู่ที่ 4 ตำบลห้วยกะปิ อำเภอเมืองชลบุรี จังหวัดชลบุรี 20000 โทร. 061 - 9784489';
+            if (taxInfo) taxInfo.textContent = 'TAXID: 0215557000320';
+            if (titleDiv) { titleDiv.style.backgroundColor = '#C58900'; titleDiv.style.color = '#fff'; titleDiv.style.padding = '6px 15px'; titleDiv.style.borderRadius = '4px'; }
         } else {
-            // Other Company - Show Name Only (using the Eng container)
             if (companyNameThai) companyNameThai.style.display = 'none';
-
-            if (companyNameEng) {
-                companyNameEng.style.display = 'block';
-                companyNameEng.textContent = selectedValue;
-            }
+            if (companyNameEng) { companyNameEng.style.display = 'block'; companyNameEng.textContent = selectedValue; }
+            if (titleDiv) { titleDiv.style.backgroundColor = ''; titleDiv.style.color = ''; titleDiv.style.padding = ''; }
         }
     }
 

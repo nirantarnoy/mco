@@ -43,9 +43,35 @@ use yii\widgets\ActiveForm;
 
     <div class="row">
         <div class="col-lg-1"></div>
-        <div class="col-lg-3">
+        <div class="col-lg-10 mb-3">
+            <div class="card border-success shadow-sm">
+                <div class="card-header bg-success text-white py-2">
+                    <strong style="font-family: 'Prompt', sans-serif;"><i class="fas fa-folder-open me-2"></i> รายการเอกสารแนบประกอบนายจ้าง (ARICAT 10 รายการ)</strong>
+                </div>
+                <div class="card-body bg-light py-2">
+                    <ol class="mb-0 small text-dark" style="columns: 2; -webkit-columns: 2; -moz-columns: 2; line-height: 1.8;">
+                        <li>หนังสือจดทะเบียนบริษัท (กรมพัฒนาธุรกิจการค้า)</li>
+                        <li>หนังสือรับรองกรรมการบริษัท (อายุไม่เกิน 6 เดือน)</li>
+                        <li>แบบคำขอรับแรงงานต่างด้าว (ตท.1) จากกรมจัดหางาน</li>
+                        <li>สัญญาจ้างแรงงาน (ภาษาไทย + ภาษาของแรงงาน)</li>
+                        <li>หนังสือมอบอำนาจ (กรณีมอบบุคคลอื่นดำเนินการแทน)</li>
+                        <li>แผนผังองค์กร หรือ แผนที่ตั้งบริษัท</li>
+                        <li>สำเนาบัตรประชาชน / พาสปอร์ตของกรรมการบริษัท</li>
+                        <li>ทะเบียนบ้านบริษัท หรือ สัญญาเช่าสถานที่ตั้งสำนักงาน</li>
+                        <li>ใบอนุญาตประกอบกิจการ (ใบ รง.4 ถ้ามี)</li>
+                        <li>รายชื่อแรงงานที่ต้องการ (ตำแหน่ง, จำนวน, หน่วยงาน)</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-1"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-1"></div>
+        <div class="col-lg-10">
             <input type="hidden" name="old_doc" value="<?= $model->doc ?>">
-            <?= $form->field($model, 'doc[]')->fileInput(['maxlength' => true,'multiple' =>true])->label('ไฟล์แนบ ') ?>
+            <?= $form->field($model, 'doc[]')->fileInput(['maxlength' => true,'multiple' =>true])->label('แนบไฟล์เอกสารประกอบนายจ้าง (สามารถเลือกได้หลายไฟล์พร้อมกัน)') ?>
         </div>
         <div class="col-lg-1"></div>
     </div>

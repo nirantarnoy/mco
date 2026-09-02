@@ -1211,6 +1211,142 @@ $this->registerCss('
             </div>
         </div>
 
+        <!-- ARICAT Workflow & Document Attachments Section -->
+        <?php
+        $isAricatJob = ($model->company_id == 3) || ($model->company && stripos($model->company->name, 'ARICAT') !== false);
+        if ($isAricatJob):
+            // Check attached employer & worker docs
+            $employerDocs = [];
+            $workerDocs = [];
+            if ($model->customer_id) {
+                $empDocModel = \common\models\EmployerDoc::find()->where(['employer_id' => $model->customer_id])->all();
+                if (!empty($empDocModel)) {
+                    $employerDocs = $empDocModel;
+                }
+            }
+            $workerDocModel = \common\models\WorkerDoc::find()->all();
+            if (!empty($workerDocModel)) {
+                $workerDocs = array_slice($workerDocModel, 0, 15);
+            }
+
+            // ARICAT 5-Stage Status Pipeline Map
+            $aricatStages = [
+                1 => ['name' => '1. เริ่มดำเนินการ', 'desc' => 'ออกใบเสนอราคา ACT-QT / แนบใบรับคำขอ', 'icon' => 'fa-play-circle', 'color' => '#0284c7'],
+                2 => ['name' => '2. บันทึกค่าใช้จ่าย', 'desc' => 'แนบใบเสร็จและสลิปการโอนเงิน', 'icon' => 'fa-receipt', 'color' => '#d97706'],
+                3 => ['name' => '3. รออนุมัติ', 'desc' => 'ยื่นเอกสารแล้ว รอเอกสารออกจากราชการ', 'icon' => 'fa-hourglass-half', 'color' => '#8b5cf6'],
+                4 => ['name' => '4. รับชำระหนี้', 'desc' => 'ออกใบกำกับภาษีและใบเสร็จรับเงิน', 'icon' => 'fa-file-invoice-dollar', 'color' => '#059669'],
+                5 => ['name' => '5. เสร็จสิ้น', 'desc' => 'ดาวน์โหลดเอกสารฉบับสมบูรณ์', 'icon' => 'fa-check-circle', 'color' => '#10b981'],
+            ];
+
+            // Determine active stage based on job status or invoice completion
+            $currentStage = 1;
+            if (!empty($invoices)) {
+                $currentStage = 4;
+            }
+            if ($model->status == Job::JOB_STATUS_CLOSED) {
+                $currentStage = 5;
+            }
+        ?>
+        <div class="card timeline-section-card border-0 shadow-sm mb-4" style="border: 2px solid #00A859 !important; border-radius: 16px;">
+            <div class="card-header text-white d-flex justify-content-between align-items-center" style="background-color: #00A859;">
+                <h5 class="mb-0 fw-bold" style="font-family: 'Prompt', sans-serif;">
+                    <i class="fas fa-passport me-2"></i> ระบบส่วนงาน ARICAT (บริษัท นำคนต่างด้าวมาทำงานในประเทศ อริแคท(ประเทศไทย) จำกัด)
+                </h5>
+                <span class="badge bg-white text-success fw-bold px-3 py-2 rounded-pill">บริษัท ARICAT</span>
+            </div>
+            <div class="card-body p-4">
+                
+                <!-- ARICAT 5-Step Workflow Status Line -->
+                <h6 class="fw-bold mb-3 text-slate-800" style="color: #0f172a;"><i class="fas fa-project-diagram me-2 text-success"></i> สเต็ปงานลักษณะการทำงาน (Workflow Status)</h6>
+                <div class="row g-2 mb-4 text-center">
+                    <?php foreach ($aricatStages as $stNum => $stInfo): 
+                        $isActive = ($stNum <= $currentStage);
+                        $bgStyle = $isActive ? "background-color: {$stInfo['color']}; color: #ffffff;" : "background-color: #f1f5f9; color: #64748b;";
+                    ?>
+                        <div class="col-md" style="flex: 1;">
+                            <div class="p-3 rounded-4 shadow-sm h-100" style="<?= $bgStyle ?> transition: all 0.3s ease;">
+                                <i class="fas <?= $stInfo['icon'] ?> fa-2x mb-2"></i>
+                                <div class="fw-bold small mb-1"><?= Html::encode($stInfo['name']) ?></div>
+                                <div class="small" style="font-size: 0.75rem; opacity: 0.9;"><?= Html::encode($stInfo['desc']) ?></div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- ARICAT Employer & Government Documents Checklist Tabs -->
+                <div class="row g-4">
+                    <!-- 📌 ฝ่ายนายจ้าง (10 items) -->
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 border" style="background-color: #f8fafc; border-color: #e2e8f0 !important;">
+                            <h6 class="fw-bold text-primary mb-3">
+                                <i class="fas fa-building me-2"></i> 📌 เอกสารฝ่ายนายจ้าง (บริษัท MCO / นายจ้าง 10 รายการ)
+                            </h6>
+                            <ol class="ps-3 mb-0 small text-slate-700" style="line-height: 1.8;">
+                                <li>หนังสือจดทะเบียนบริษัท (ออกโดยกรมพัฒนาธุรกิจการค้า)</li>
+                                <li>หนังสือรับรองกรรมการบริษัท (อายุไม่เกิน 6 เดือน)</li>
+                                <li>แบบคำขอรับแรงงานต่างด้าว (ตท.1) จากกรมจัดหางาน</li>
+                                <li>สัญญาจ้างแรงงาน (ภาษาไทย + ภาษาของแรงงาน)</li>
+                                <li>หนังสือมอบอำนาจ (กรณีมอบบุคคลอื่นดำเนินการแทน)</li>
+                                <li>แผนผังองค์กร หรือ แผนที่ตั้งบริษัท</li>
+                                <li>สำเนาบัตรประชาชน / พาสปอร์ตของกรรมการบริษัท</li>
+                                <li>ทะเบียนบ้านบริษัท หรือ สัญญาเช่าสถานที่ตั้งสำนักงาน</li>
+                                <li>ใบอนุญาตประกอบกิจการ (ใบ รง.4 ถ้ามี)</li>
+                                <li>รายชื่อแรงงานที่ต้องการ (ตำแหน่ง, จำนวน, หน่วยงาน)</li>
+                            </ol>
+                            <?php if (!empty($employerDocs)): ?>
+                                <div class="mt-3 pt-2 border-top">
+                                    <span class="fw-bold small text-success"><i class="fas fa-paperclip me-1"></i> ไฟล์แนบฝ่ายนายจ้างในระบบ:</span>
+                                    <div class="d-flex flex-wrap gap-1 mt-2">
+                                        <?php foreach ($employerDocs as $eDoc): ?>
+                                            <a href="<?= Yii::$app->request->baseUrl ?>/uploads/aricat/<?= Html::encode($eDoc->doc) ?>" target="_blank" class="btn btn-xs btn-outline-success rounded-pill">
+                                                <i class="fas fa-file-download me-1"></i> <?= Html::encode($eDoc->doc) ?>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- 🏛️ ฝ่ายราชการ (9 items) -->
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 border" style="background-color: #f8fafc; border-color: #e2e8f0 !important;">
+                            <h6 class="fw-bold text-indigo-600 mb-3" style="color: #4f46e5;">
+                                <i class="fas fa-landmark me-2"></i> 🏛️ เอกสารฝ่ายราชการ (กรมการจัดหางาน 9 รายการ)
+                            </h6>
+                            <ol class="ps-3 mb-0 small text-slate-700" style="line-height: 1.8;">
+                                <li>บันทึกข้อตกลง MOU ระหว่างประเทศ (ไทย-กัมพูชา/เมียนมา/ลาว/เวียดนาม)</li>
+                                <li>หนังสืออนุญาตให้นำแรงงานต่างด้าวเข้ามาทำงาน (กรมจัดหางาน)</li>
+                                <li>แบบ ตท.2 และ ตท.3 (เอกสารตอบกลับจากกรมแรงงาน)</li>
+                                <li>ทะเบียนแรงงานเข้าเมือง (ตามระบบของรัฐ)</li>
+                                <li>ใบตรวจโรคจากโรงพยาบาลที่กำหนด (แบบฟอร์ม ตม.1)</li>
+                                <li>ใบอนุญาตทำงาน (Work Permit)</li>
+                                <li>วีซ่าประเภท Non-LA (เพื่อทำงานในประเทศไทย)</li>
+                                <li>หนังสือแจ้งการจัดส่งแรงงานจากรัฐต้นทาง</li>
+                                <li>เอกสารการรับแรงงาน ณ จุดผ่านแดนที่ได้รับอนุญาต</li>
+                            </ol>
+                            <?php if (!empty($workerDocs)): ?>
+                                <div class="mt-3 pt-2 border-top">
+                                    <span class="fw-bold small text-primary"><i class="fas fa-paperclip me-1"></i> ไฟล์แนบแรงงาน/ราชการในระบบ:</span>
+                                    <div class="d-flex flex-wrap gap-1 mt-2">
+                                        <?php foreach ($workerDocs as $wDoc): ?>
+                                            <a href="<?= Yii::$app->request->baseUrl ?>/uploads/aricat/<?= Html::encode($wDoc->doc) ?>" target="_blank" class="btn btn-xs btn-outline-primary rounded-pill">
+                                                <i class="fas fa-file-download me-1"></i> <?= Html::encode($wDoc->doc) ?>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <?php endif; ?>
+
     </div> <!-- End Timeline Sections Wrapper -->
 
 </div> <!-- End Job Timeline View -->

@@ -46,9 +46,34 @@ use yii\widgets\ActiveForm;
         </div>
         <div class="row">
             <div class="col-lg-1"></div>
-            <div class="col-lg-3">
+            <div class="col-lg-10 mb-3">
+                <div class="card border-primary shadow-sm">
+                    <div class="card-header bg-primary text-white py-2">
+                        <strong style="font-family: 'Prompt', sans-serif;"><i class="fas fa-passport me-2"></i> รายการเอกสารประกอบลูกจ้างและราชการ (ARICAT 9 รายการ)</strong>
+                    </div>
+                    <div class="card-body bg-light py-2">
+                        <ol class="mb-0 small text-dark" style="columns: 2; -webkit-columns: 2; -moz-columns: 2; line-height: 1.8;">
+                            <li>บันทึกข้อตกลง MOU ระหว่างประเทศ (ไทย-กัมพูชา/เมียนมา/ลาว/เวียดนาม)</li>
+                            <li>หนังสืออนุญาตให้นำแรงงานต่างด้าวเข้ามาทำงาน (กรมจัดหางาน)</li>
+                            <li>แบบ ตท.2 และ ตท.3 (เอกสารตอบกลับจากกรมแรงงาน)</li>
+                            <li>ทะเบียนแรงงานเข้าเมือง (ตามระบบของรัฐ)</li>
+                            <li>ใบตรวจโรคจากโรงพยาบาลที่กำหนด (แบบฟอร์ม ตม.1)</li>
+                            <li>ใบอนุญาตทำงาน (Work Permit)</li>
+                            <li>วีซ่าประเภท Non-LA (เพื่อทำงานในประเทศไทย)</li>
+                            <li>หนังสือแจ้งการจัดส่งแรงงานจากรัฐต้นทาง</li>
+                            <li>เอกสารการรับแรงงาน ณ จุดผ่านแดนที่ได้รับอนุญาต</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-1"></div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-1"></div>
+            <div class="col-lg-10">
                 <input type="hidden" name="old_doc" value="<?= $model->doc ?>">
-                <?= $form->field($model, 'doc[]')->fileInput(['maxlength' => true,'multiple' => true,])->label('ไฟล์แนบ ') ?>
+                <?= $form->field($model, 'doc[]')->fileInput(['maxlength' => true,'multiple' => true,])->label('แนบไฟล์เอกสารประกอบลูกจ้าง/ราชการ (สามารถเลือกได้หลายไฟล์พร้อมกัน)') ?>
             </div>
             <div class="col-lg-1"></div>
         </div>
