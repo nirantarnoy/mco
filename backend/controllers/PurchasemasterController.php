@@ -951,4 +951,220 @@ class PurchasemasterController extends BaseController
         }
         return 0;
     }
+
+    /**
+     * Receive stock for None PR (PurchaseMaster)
+     */
+    public function actionReceive($id)
+    {
+        $purchModel = $this->findModel($id);
+
+        if ($purchModel->status == PurchaseMaster::STATUS_CANCELLED) {
+            Yii::$app->session->setFlash('error', 'ใบซื้อนี้ถูกยกเลิกแล้ว');
+            return $this->redirect(['view', 'id' => $id]);
+        }
+
+        // Get details with remaining quantities
+        $receivedMap = $purchModel->getReceivedQtyPerDetail();
+        $detailsWithRemaining = [];
+        foreach ($purchModel->purchaseDetails as $detail) {
+            $productId = PurchaseMaster::findProductIdByStkcod($detail->stkcod);
+            $ordered = (float)$detail->uqnty;
+            $rec = $receivedMap[$detail->id] ?? ($productId ? ($receivedMap['prod_' . $productId] ?? 0) : 0);
+            $remaining = max(0, $ordered - $rec);
+
+            $detailsWithRemaining[] = [
+                'detail' => $detail,
+                'product_id' => $productId,
+                'ordered_qty' => $ordered,
+                'received_qty' => $rec,
+                'remaining_qty' => $remaining,
+            ];
+        }
+
+        if (Yii::$app->request->isPost) {
+            $receiveData = Yii::$app->request->post('receive', []);
+            $warehouseId = Yii::$app->request->post('line_warehouse_id');
+            $remark = Yii::$app->request->post('remark', '');
+            $uploaded = UploadedFile::getInstancesByName('file_doc');
+
+            if (empty($warehouseId)) {
+                Yii::$app->session->setFlash('error', 'กรุณาเลือกคลังสินค้า');
+            } else {
+                $result = $this->processNonePrReceive($purchModel, $receiveData, $warehouseId, $remark);
+
+                if ($result['success']) {
+                    if (!empty($uploaded)) {
+                        $loop = 0;
+                        foreach ($uploaded as $file) {
+                            $upfiles = "purch_none_pr_receive_" . time() . "_" . $loop . "." . $file->getExtension();
+                            if ($file->saveAs('uploads/purch_doc/' . $upfiles)) {
+                                $model_doc = new \common\models\PurchNonePrDoc();
+                                $model_doc->purchase_master_id = $id;
+                                $model_doc->doc_type_id = 1;
+                                $model_doc->doc_name = $upfiles;
+                                $model_doc->created_by = Yii::$app->user->id;
+                                $model_doc->created_at = time();
+                                $model_doc->save(false);
+                            }
+                            $loop++;
+                        }
+                    }
+
+                    Yii::$app->session->setFlash('success', $result['message']);
+                    return $this->redirect(['view', 'id' => $purchModel->id]);
+                } else {
+                    Yii::$app->session->setFlash('error', $result['message']);
+                }
+            }
+        }
+
+        return $this->render('receive', [
+            'purchModel' => $purchModel,
+            'detailsWithRemaining' => $detailsWithRemaining,
+            'warehouses' => \backend\models\Warehouse::getWarehouseList(),
+        ]);
+    }
+
+    private function processNonePrReceive($purchModel, $receiveData, $warehouseId, $remark)
+    {
+        $transaction = Yii::$app->db->beginTransaction();
+        try {
+            $validItems = [];
+            $totalQty = 0;
+
+            foreach ($receiveData as $detailId => $qty) {
+                $qty = floatval($qty);
+                if ($qty > 0) {
+                    $validItems[$detailId] = $qty;
+                    $totalQty += $qty;
+                }
+            }
+
+            if (empty($validItems)) {
+                return ['success' => false, 'message' => 'กรุณาระบุจำนวนสินค้าที่ต้องการรับเข้า'];
+            }
+
+            // Create Journal Transaction
+            $journalTrans = new \backend\models\JournalTrans();
+            $journalTrans->trans_date = date('Y-m-d H:i:s');
+            $journalTrans->trans_type_id = \backend\models\JournalTrans::TRANS_TYPE_NONE_PR_RECEIVE;
+            $journalTrans->stock_type_id = \backend\models\JournalTrans::STOCK_TYPE_IN;
+            $journalTrans->trans_ref_id = $purchModel->id;
+            $journalTrans->warehouse_id = 0;
+            $journalTrans->customer_name = $purchModel->supnam;
+            $journalTrans->status = 0;
+            $journalTrans->po_rec_status = 1;
+            $journalTrans->qty = $totalQty;
+            $journalTrans->remark = $remark;
+
+            if (!$journalTrans->save()) {
+                throw new \Exception('ไม่สามารถสร้าง Journal Transaction ได้: ' . implode(', ', $journalTrans->getFirstErrors()));
+            }
+
+            // Generate Lot No
+            $todayPrefix = date('ymd');
+            $lastLotLine = \backend\models\JournalTransLine::find()
+                ->where(['like', 'lot_no', $todayPrefix . '%', false])
+                ->orderBy(['lot_no' => SORT_DESC])
+                ->one();
+                
+            $nextSeq = 1;
+            if ($lastLotLine && $lastLotLine->lot_no) {
+                $lastSeq = substr($lastLotLine->lot_no, 6);
+                if (is_numeric($lastSeq)) {
+                    $nextSeq = intval($lastSeq) + 1;
+                }
+            }
+            $currentLotNo = $todayPrefix . sprintf('%04d', $nextSeq);
+
+            $loop_index = 0;
+            foreach ($validItems as $detailId => $qty) {
+                $line_warehouse_id = is_array($warehouseId) ? ($warehouseId[$loop_index] ?? $warehouseId[0]) : $warehouseId;
+                $loop_index++;
+
+                $detail = \backend\models\PurchaseDetail::findOne($detailId);
+                if (!$detail || $detail->purchase_master_id != $purchModel->id) {
+                    throw new \Exception("ไม่พบรายการสินค้า (Detail ID: $detailId)");
+                }
+
+                $productId = PurchaseMaster::findProductIdByStkcod($detail->stkcod);
+                if (!$productId) {
+                    throw new \Exception("ไม่พบรหัสสินค้า '{$detail->stkcod}' ในฐานข้อมูลสินค้า (Product Master) ไม่สามารถรับเข้าคลังได้");
+                }
+
+                $journalTransLine = new \backend\models\JournalTransLine();
+                $journalTransLine->journal_trans_id = $journalTrans->id;
+                $journalTransLine->product_id = $productId;
+                $journalTransLine->warehouse_id = $line_warehouse_id;
+                $journalTransLine->qty = $qty;
+                $journalTransLine->lot_no = $currentLotNo;
+                $journalTransLine->remark = 'NPR Detail #' . $detail->id . ' | ' . $detail->stkdes . ' (' . $purchModel->docnum . ')';
+                $journalTransLine->sale_price = (float)$detail->unitpr;
+
+                if (!$journalTransLine->save()) {
+                    throw new \Exception('ไม่สามารถสร้าง Journal Transaction Line ได้: ' . implode(', ', $journalTransLine->getFirstErrors()));
+                }
+            }
+
+            if (!$journalTrans->approve()) {
+                throw new \Exception('ไม่สามารถอนุมัติรายการสต็อกได้');
+            }
+
+            $transaction->commit();
+            return [
+                'success' => true,
+                'message' => 'บันทึกรับสินค้าเข้าคลังเรียบร้อยแล้ว (เลขที่เอกสารรับ: ' . $journalTrans->journal_no . ', Lot No: ' . $currentLotNo . ')'
+            ];
+        } catch (\Exception $e) {
+            $transaction->rollBack();
+            return ['success' => false, 'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()];
+        }
+    }
+
+    public function actionCancelReceive($id)
+    {
+        $journalTrans = \backend\models\JournalTrans::findOne($id);
+
+        if (!$journalTrans) {
+            Yii::$app->session->setFlash('error', 'ไม่พบรายการรับสินค้า');
+            return $this->redirect(['index']);
+        }
+
+        if ($journalTrans->status == \backend\models\JournalTrans::STATUS_CANCELLED) {
+            Yii::$app->session->setFlash('warning', 'รายการนี้ถูกยกเลิกแล้ว');
+            return $this->redirect(['view', 'id' => $journalTrans->trans_ref_id]);
+        }
+
+        try {
+            if ($journalTrans->cancel()) {
+                Yii::$app->session->setFlash('success', 'ยกเลิกการรับสินค้าเรียบร้อยแล้ว เลขที่เอกสาร: ' . $journalTrans->journal_no);
+            } else {
+                Yii::$app->session->setFlash('error', 'ไม่สามารถยกเลิกรายการได้');
+            }
+        } catch (\Exception $e) {
+            Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+        }
+
+        return $this->redirect(['view', 'id' => $journalTrans->trans_ref_id]);
+    }
+
+    public function actionReceiveHistory($id)
+    {
+        $purchModel = $this->findModel($id);
+
+        $receiveHistory = \backend\models\JournalTrans::find()
+            ->where([
+                'trans_ref_id' => $id,
+                'trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_NONE_PR_RECEIVE
+            ])
+            ->with(['journalTransLines', 'journalTransLines.product', 'journalTransLines.warehouse'])
+            ->orderBy(['created_at' => SORT_DESC])
+            ->all();
+
+        return $this->render('receive-history', [
+            'purchModel' => $purchModel,
+            'receiveHistory' => $receiveHistory,
+        ]);
+    }
 }

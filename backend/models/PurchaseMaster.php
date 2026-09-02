@@ -328,4 +328,91 @@ class PurchaseMaster extends \yii\db\ActiveRecord
 
         return '<span class="badge badge-success" title="สร้าง PV และชำระเงินแล้ว">สร้าง PV แล้ว (จ่ายแล้ว)</span>';
     }
+
+    const RECEIVE_STATUS_NONE = 0;
+    const RECEIVE_STATUS_PARTIAL = 1;
+    const RECEIVE_STATUS_COMPLETED = 2;
+
+    public static function findProductIdByStkcod($stkcod)
+    {
+        if (empty($stkcod)) return null;
+        if (is_numeric($stkcod)) {
+            $product = Product::findOne((int)$stkcod);
+            if ($product) return $product->id;
+        }
+        $product = Product::findOne(['code' => $stkcod]);
+        if ($product) return $product->id;
+
+        $product = Product::find()
+            ->where(['like', 'code', $stkcod])
+            ->orWhere(['like', 'name', $stkcod])
+            ->one();
+        return $product ? $product->id : null;
+    }
+
+    public function getReceivedQtyPerDetail()
+    {
+        $journalTransList = JournalTrans::find()
+            ->where([
+                'trans_ref_id' => $this->id,
+                'trans_type_id' => JournalTrans::TRANS_TYPE_NONE_PR_RECEIVE,
+                'status' => JournalTrans::STATUS_APPROVED
+            ])
+            ->all();
+
+        $received = [];
+        foreach ($journalTransList as $jt) {
+            foreach ($jt->journalTransLines as $jtl) {
+                if ($jtl->status == JournalTransLine::STATUS_CANCELLED) continue;
+                if (preg_match('/NPR Detail #(\d+)/', $jtl->remark, $matches)) {
+                    $detailId = (int)$matches[1];
+                    $received[$detailId] = ($received[$detailId] ?? 0) + (float)$jtl->qty;
+                } else {
+                    $received['prod_' . $jtl->product_id] = ($received['prod_' . $jtl->product_id] ?? 0) + (float)$jtl->qty;
+                }
+            }
+        }
+        return $received;
+    }
+
+    public function getReceiveStatus()
+    {
+        $details = $this->purchaseDetails;
+        if (empty($details)) {
+            return self::RECEIVE_STATUS_NONE;
+        }
+
+        $receivedMap = $this->getReceivedQtyPerDetail();
+        $totalOrdered = 0;
+        $totalReceived = 0;
+
+        foreach ($details as $detail) {
+            $ordered = (float)$detail->uqnty;
+            $totalOrdered += $ordered;
+            $rec = $receivedMap[$detail->id] ?? ($receivedMap['prod_' . static::findProductIdByStkcod($detail->stkcod)] ?? 0);
+            $totalReceived += min($ordered, $rec);
+        }
+
+        if ($totalReceived <= 0) {
+            return self::RECEIVE_STATUS_NONE;
+        } elseif ($totalReceived >= $totalOrdered) {
+            return self::RECEIVE_STATUS_COMPLETED;
+        } else {
+            return self::RECEIVE_STATUS_PARTIAL;
+        }
+    }
+
+    public function getReceiveStatusBadge()
+    {
+        $status = $this->getReceiveStatus();
+        switch ($status) {
+            case self::RECEIVE_STATUS_COMPLETED:
+                return '<span class="badge badge-success"><i class="fas fa-check-circle mr-1"></i>รับสินค้าครบแล้ว</span>';
+            case self::RECEIVE_STATUS_PARTIAL:
+                return '<span class="badge badge-warning text-dark"><i class="fas fa-clock mr-1"></i>รับบางส่วน</span>';
+            case self::RECEIVE_STATUS_NONE:
+            default:
+                return '<span class="badge badge-secondary"><i class="fas fa-box mr-1"></i>ยังไม่ได้รับ</span>';
+        }
+    }
 }

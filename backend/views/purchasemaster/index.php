@@ -204,14 +204,32 @@ $this->params['breadcrumbs'][] = $this->title;
                         ],
                     ],
                     [
+                        'label' => 'สถานะรับเข้าคลัง',
+                        'format' => 'raw',
+                        'headerOptions' => ['style' => 'width: 140px; text-align: center;'],
+                        'contentOptions' => ['style' => 'text-align: center;'],
+                        'value' => function ($model) {
+                            return $model->getReceiveStatusBadge();
+                        },
+                    ],
+                    [
                         'class' => ActionColumn::class,
-                        'template' => '{view} {print} {update} {delete}',
+                        'template' => '{view} {receive} {print} {update} {delete}',
                         'buttons' => [
                             'view' => function ($url, $model) {
                                 return Html::a('<i class="fas fa-eye"></i>', ['view', 'id' => $model->id], [
                                     'class' => 'btn btn-info btn-sm',
                                     'title' => 'ดูรายละเอียด',
                                 ]);
+                            },
+                            'receive' => function ($url, $model) {
+                                if ($model->status != \backend\models\PurchaseMaster::STATUS_CANCELLED && ($model->approve_status == \backend\models\PurchaseMaster::APPROVE_STATUS_APPROVED || $model->status == \backend\models\PurchaseMaster::STATUS_ACTIVE)) {
+                                    return Html::a('<i class="fas fa-box"></i>', ['receive', 'id' => $model->id], [
+                                        'class' => 'btn btn-success btn-sm',
+                                        'title' => 'รับสินค้าเข้าคลัง',
+                                    ]);
+                                }
+                                return '';
                             },
                             'print' => function ($url, $model) {
                                 return Html::a('<i class="fas fa-print"></i>', ['print', 'id' => $model->id], [

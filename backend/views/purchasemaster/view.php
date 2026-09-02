@@ -27,6 +27,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             ],
                         ]) ?>
                     <?php endif; ?>
+                    <?= Html::a('<i class="fas fa-box"></i> รับสินค้าเข้าคลัง', ['receive', 'id' => $model->id], ['class' => 'btn btn-success btn-sm']) ?>
+                    <?= Html::a('<i class="fas fa-history"></i> ประวัติรับสินค้า', ['receive-history', 'id' => $model->id], ['class' => 'btn btn-outline-info btn-sm']) ?>
                     <?= Html::a('<i class="fas fa-edit"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-warning btn-sm']) ?>
                 <?php endif; ?>
                 <?= Html::a('<i class="fas fa-print"></i> พิมพ์เอกสาร (Print)', ['print', 'id' => $model->id], ['class' => 'btn btn-info btn-sm', 'target' => '_blank']) ?>
@@ -173,20 +175,31 @@ $this->params['breadcrumbs'][] = $this->title;
                         <th class="text-center" width="50">ลำดับ</th>
                         <th width="120">รหัสสินค้า</th>
                         <th>รายละเอียด</th>
-                        <th class="text-center" width="100">จำนวน</th>
-                        <th class="text-right" width="120">ราคา/หน่วย</th>
-                        <th class="text-center" width="100">ส่วนลด</th>
-                        <th class="text-right" width="120">จำนวนเงิน</th>
+                        <th class="text-center" width="90">สั่งซื้อ</th>
+                        <th class="text-center" width="90">รับแล้ว</th>
+                        <th class="text-center" width="90">ค้างรับ</th>
+                        <th class="text-right" width="110">ราคา/หน่วย</th>
+                        <th class="text-center" width="80">ส่วนลด</th>
+                        <th class="text-right" width="110">จำนวนเงิน</th>
                     </tr>
                     </thead>
                     <tbody>
                     <?php if (!empty($model->purchaseDetails)): ?>
-                        <?php foreach ($model->purchaseDetails as $index => $detail): ?>
+                        <?php 
+                        $receivedMap = $model->getReceivedQtyPerDetail();
+                        foreach ($model->purchaseDetails as $index => $detail): 
+                            $productId = \backend\models\PurchaseMaster::findProductIdByStkcod($detail->stkcod);
+                            $ordered = (float)$detail->uqnty;
+                            $rec = $receivedMap[$detail->id] ?? ($productId ? ($receivedMap['prod_' . $productId] ?? 0) : 0);
+                            $rem = max(0, $ordered - $rec);
+                        ?>
                             <tr>
                                 <td class="text-center"><?= $index + 1 ?></td>
                                 <td><?= Html::encode($detail->stkcod) ?></td>
                                 <td><?= Html::encode($detail->stkdes) ?></td>
-                                <td class="text-center"><?= Yii::$app->formatter->asDecimal($detail->uqnty, 2) ?></td>
+                                <td class="text-center"><?= Yii::$app->formatter->asDecimal($ordered, 2) ?></td>
+                                <td class="text-center text-success font-weight-bold"><?= Yii::$app->formatter->asDecimal($rec, 2) ?></td>
+                                <td class="text-center text-danger font-weight-bold"><?= Yii::$app->formatter->asDecimal($rem, 2) ?></td>
                                 <td class="text-right"><?= Yii::$app->formatter->asDecimal($detail->unitpr, 2) ?></td>
                                 <td class="text-center"><?= Html::encode($detail->disc) ?></td>
                                 <td class="text-right"><?= Yii::$app->formatter->asDecimal($detail->amount, 2) ?></td>

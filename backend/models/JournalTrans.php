@@ -47,6 +47,9 @@ class JournalTrans extends ActiveRecord
 
     const TRANS_TYPE_ADJUST_STOCK = 8;
 
+    const TRANS_TYPE_NONE_PR_RECEIVE = 9;
+    const TRANS_TYPE_CANCEL_NONE_PR_RECEIVE = 10;
+
     // Stock Types
     const STOCK_TYPE_IN = 1;
     const STOCK_TYPE_OUT = 2;
@@ -251,6 +254,8 @@ class JournalTrans extends ActiveRecord
             self::TRANS_TYPE_RETURN_BORROW => 'Return Borrow',
             self::TRANS_TYPE_ARICAT_NEW => 'Aricat',
             self::TRANS_TYPE_ADJUST_STOCK => 'Adjust Stock',
+            self::TRANS_TYPE_NONE_PR_RECEIVE => 'None PR Receive',
+            self::TRANS_TYPE_CANCEL_NONE_PR_RECEIVE => 'Cancel None PR Receive',
         ];
     }
 
@@ -302,6 +307,8 @@ class JournalTrans extends ActiveRecord
             self::TRANS_TYPE_RETURN_BORROW => 'RBR',
             self::TRANS_TYPE_ARICAT_NEW => 'ARC',
             self::TRANS_TYPE_ADJUST_STOCK => 'AIN',
+            self::TRANS_TYPE_NONE_PR_RECEIVE => 'NPR',
+            self::TRANS_TYPE_CANCEL_NONE_PR_RECEIVE => 'CNR',
         ];
 
         $prefix = $transTypes[$this->trans_type_id] ?? 'TRN';
