@@ -188,14 +188,23 @@ $fmt = Yii::$app->formatter;
     </div>
 
     <!-- Doc Info -->
+    <?php
+    $jobNo = \backend\models\Job::findJobNo($model->job_no);
+    if (empty($jobNo) && !empty($model->job_no)) {
+        $jobNo = $model->job_no;
+    }
+    if (empty($jobNo) && !empty($model->refnum)) {
+        $jobNo = $model->refnum;
+    }
+    ?>
     <div class="row-group">
         <div class="field-label">Date:</div>
         <div class="field-value" style="flex: 0 0 200px; margin-right: 50px;">
             <?= $fmt->asDate($model->docdat, 'php:d/m/Y') ?>
         </div>
         <div class="field-label" style="margin-left: auto;">NPR No. :</div>
-        <div class="field-value" style="flex: 0 0 250px;">
-            <?= Html::encode($model->docnum) ?>
+        <div class="field-value" style="flex: 0 0 280px;">
+            <?= Html::encode($model->docnum) . (!empty($jobNo) ? ' / ' . Html::encode($jobNo) : '') ?>
         </div>
     </div>
 
@@ -297,11 +306,11 @@ $fmt = Yii::$app->formatter;
                 <div><?= number_format($afterDiscount, 2) ?></div>
             </div>
             <div class="totals-row">
-                <div>Vat</div>
+                <div>Vat <?= ($model->vat_percent !== null && $model->vat_percent !== '') ? '(' . (float)$model->vat_percent . '%)' : '' ?></div>
                 <div><?= number_format($model->vat_amount, 2) ?></div>
             </div>
             <div class="totals-row">
-                <div>WHT</div>
+                <div>WHT <?= ($model->tax_percent !== null && $model->tax_percent !== '') ? '(' . (float)$model->tax_percent . '%)' : '' ?></div>
                 <div><?= number_format($model->tax_amount, 2) ?></div>
             </div>
             <div class="totals-row">

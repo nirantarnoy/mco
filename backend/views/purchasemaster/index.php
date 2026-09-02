@@ -97,6 +97,20 @@ $this->params['breadcrumbs'][] = $this->title;
                         'visible' => \Yii::$app->session->get('company_id') == 100,
                     ],
                     [
+                        'attribute' => 'job_no',
+                        'label' => 'JOB / Quotation No.',
+                        'value' => function ($model) {
+                            $jobNo = \backend\models\Job::findJobNo($model->job_no);
+                            if (empty($jobNo) && !empty($model->job_no)) {
+                                $jobNo = $model->job_no;
+                            }
+                            if (empty($jobNo) && !empty($model->refnum)) {
+                                $jobNo = $model->refnum;
+                            }
+                            return !empty($jobNo) ? $jobNo : '-';
+                        }
+                    ],
+                    [
                         'attribute' => 'supcod',
                         'value' => function ($model) {
                             return \backend\models\Vendor::findCode($model->supcod);

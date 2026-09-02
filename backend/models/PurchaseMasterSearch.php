@@ -88,9 +88,22 @@ class PurchaseMasterSearch extends PurchaseMaster
         $query->andFilterWhere(['like', 'docnum', $this->docnum])
             ->andFilterWhere(['like', 'supcod', $this->supcod])
             ->andFilterWhere(['like', 'supnam', $this->supnam])
-            ->andFilterWhere(['like', 'job_no', $this->job_no])
-            ->andFilterWhere(['like', 'paytrm', $this->paytrm])
-            ->andFilterWhere(['like', 'taxid', $this->taxid])
+            ->andFilterWhere(['like', 'paytrm', $this->paytrm]);
+
+        if (!empty($this->job_no)) {
+            $jobIds = \backend\models\Job::find()
+                ->select('id')
+                ->where(['like', 'job_no', $this->job_no])
+                ->column();
+            $query->andFilterWhere([
+                'or',
+                ['like', 'purchase_master.job_no', $this->job_no],
+                ['like', 'purchase_master.refnum', $this->job_no],
+                ['in', 'purchase_master.job_no', $jobIds]
+            ]);
+        }
+
+        $query->andFilterWhere(['like', 'taxid', $this->taxid])
             ->andFilterWhere(['like', 'discod', $this->discod])
             ->andFilterWhere(['like', 'addr01', $this->addr01])
             ->andFilterWhere(['like', 'addr02', $this->addr02])
