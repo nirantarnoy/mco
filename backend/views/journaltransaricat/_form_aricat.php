@@ -572,15 +572,18 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 
             <?= $form->field($model, 'job_id')->widget(Select2::className(), [
                 'data' => ArrayHelper::map(
-                    \backend\models\Job::find()->orderBy(['id' => SORT_DESC])->all(),
+                    \backend\models\Job::find()
+                        ->where(['or', ['company_id' => 3], ['like', 'job_no', 'ACT']])
+                        ->orderBy(['id' => SORT_DESC])
+                        ->all(),
                     'id',
                     function ($job) {
                         return $job->job_no . ($job->customerName ? ' - ' . $job->customerName : '');
                     }
                 ),
-                'options' => ['placeholder' => '-- เลือก Job No (ใบงาน) --'],
+                'options' => ['placeholder' => '-- เลือก Job No (ARICAT LABOR) --'],
                 'pluginOptions' => ['allowClear' => true]
-            ])->label('อ้างอิง Job No (ใบงาน)') ?>
+            ])->label('อ้างอิง Job No (ใบงาน ARICAT LABOR)') ?>
         </div>
 
         <div class="col-md-6">
@@ -592,7 +595,10 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 
             <?= $form->field($model, 'trans_ref_id')->widget(Select2::className(), [
                 'data' => ArrayHelper::map(
-                    \backend\models\Quotation::find()->orderBy(['id' => SORT_DESC])->all(),
+                    \backend\models\Quotation::find()
+                        ->where(['or', ['company_id' => 3], ['like', 'quotation_no', 'ACT-QT']])
+                        ->orderBy(['id' => SORT_DESC])
+                        ->all(),
                     'id',
                     function ($q) {
                         return $q->quotation_no . ($q->customer_name ? ' - ' . $q->customer_name : '');
