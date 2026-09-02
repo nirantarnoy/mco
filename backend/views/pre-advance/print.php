@@ -97,10 +97,26 @@ $formatter = \Yii::$app->formatter;
                         $vName = !empty($m->supnam) ? $m->supnam : ($m->vendor ? $m->vendor->name : '');
                         $valBeforeVat = (float)($m->vatpr0 > 0 ? $m->vatpr0 : ($m->vat_amount > 0 ? ($m->total_amount - $m->vat_amount) : $m->total_amount));
                         $vatAmt = (float)($m->vat_amount ?? 0);
+                        
+                        // Check Vendor is_vat setting
+                        $isVendorVat = false;
+                        if (!empty($m->vendor_id)) {
+                            $vModel = \backend\models\Vendor::findOne($m->vendor_id);
+                            if ($vModel && (int)$vModel->is_vat === 1) {
+                                $isVendorVat = true;
+                            }
+                        }
+                        if (!$isVendorVat && !empty($vName)) {
+                            $vModel = \backend\models\Vendor::find()->where(['name' => $vName])->one();
+                            if ($vModel && (int)$vModel->is_vat === 1) {
+                                $isVendorVat = true;
+                            }
+                        }
+
                         if ($vatAmt == 0) {
                             if ($m->total_amount > $valBeforeVat && $valBeforeVat > 0) {
                                 $vatAmt = $m->total_amount - $valBeforeVat;
-                            } elseif (($m->vat_percent ?? 0) > 0 || (isset($m->vat_type) && $m->vat_type > 0)) {
+                            } elseif ($isVendorVat || ($m->vat_percent ?? 0) > 0 || (isset($m->vat_type) && $m->vat_type > 0)) {
                                 $vatAmt = round($valBeforeVat * 0.07, 2);
                             }
                         }
@@ -113,6 +129,7 @@ $formatter = \Yii::$app->formatter;
                             'value_before_vat' => $valBeforeVat,
                             'vat_amount' => $vatAmt,
                             'tax_amount' => (float)($m->tax_amount ?? 0),
+                            'is_vendor_vat' => $isVendorVat,
                         ];
                         $refMap[$m->docnum] = $info;
                         $refList[] = $info;
@@ -128,10 +145,25 @@ $formatter = \Yii::$app->formatter;
                         $discAmt = (float)($m->discount_total_amount ?? 0);
                         $valBeforeVat = ($totAmt > 0) ? ($totAmt - $discAmt) : ($netAmt - $vatAmt + $whdTax);
 
+                        // Check Vendor is_vat setting
+                        $isVendorVat = false;
+                        if (!empty($m->vendor_id)) {
+                            $vModel = \backend\models\Vendor::findOne($m->vendor_id);
+                            if ($vModel && (int)$vModel->is_vat === 1) {
+                                $isVendorVat = true;
+                            }
+                        }
+                        if (!$isVendorVat && !empty($vName)) {
+                            $vModel = \backend\models\Vendor::find()->where(['name' => $vName])->one();
+                            if ($vModel && (int)$vModel->is_vat === 1) {
+                                $isVendorVat = true;
+                            }
+                        }
+
                         if ($vatAmt == 0) {
                             if ($netAmt > $valBeforeVat && $valBeforeVat > 0) {
                                 $vatAmt = $netAmt - $valBeforeVat;
-                            } elseif (($m->vat_percent ?? 0) > 0 || (isset($m->vat_type) && $m->vat_type > 0) || strpos(strtolower($m->note ?? ''), 'vat') !== false) {
+                            } elseif ($isVendorVat || ($m->vat_percent ?? 0) > 0 || (isset($m->vat_type) && $m->vat_type > 0) || strpos(strtolower($m->note ?? ''), 'vat') !== false) {
                                 $vatAmt = round($valBeforeVat * 0.07, 2);
                             }
                         }
@@ -145,6 +177,7 @@ $formatter = \Yii::$app->formatter;
                             'value_before_vat' => $valBeforeVat,
                             'vat_amount' => $vatAmt,
                             'tax_amount' => $whdTax,
+                            'is_vendor_vat' => $isVendorVat,
                         ];
                         $refMap[$m->purch_no] = $info;
                         $refList[] = $info;
@@ -228,9 +261,23 @@ $formatter = \Yii::$app->formatter;
                     $valueBeforeVat = $totalAmount;
                 }
 
-                // Fallback for VAT amount if still 0 but description or reference indicates 7% VAT
+                // Fallback for VAT amount: Check Vendor is_vat setting or text keywords
                 if ($vatAmount == 0 && $valueBeforeVat > 0) {
-                    if (strpos(strtolower($descText), 'vat') !== false || strpos($descText, 'ภาษี') !== false || strpos(strtolower($descText), '7%') !== false) {
+                    $isVendorVatLine = false;
+                    if (!empty($receiptName)) {
+                        $vModelLine = \backend\models\Vendor::find()->where(['name' => $receiptName])->one();
+                        if ($vModelLine && (int)$vModelLine->is_vat === 1) {
+                            $isVendorVatLine = true;
+                        }
+                    }
+                    if (!$isVendorVatLine && $model->vendor_id) {
+                        $vModelMain = \backend\models\Vendor::findOne($model->vendor_id);
+                        if ($vModelMain && (int)$vModelMain->is_vat === 1) {
+                            $isVendorVatLine = true;
+                        }
+                    }
+
+                    if ($isVendorVatLine || strpos(strtolower($descText), 'vat') !== false || strpos($descText, 'ภาษี') !== false || strpos(strtolower($descText), '7%') !== false) {
                         $vatAmount = round($valueBeforeVat * 0.07, 2);
                     }
                 }
