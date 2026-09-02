@@ -203,13 +203,15 @@ $formatter = \Yii::$app->formatter;
                     $valueBeforeVat = $totalAmount;
                 }
 
+                $lineNetTotal = $valueBeforeVat + $vatAmount - $taxAmount;
+
                 // Build clean Description
                 $displayDesc = $descText;
 
                 $sumBeforeVat += $valueBeforeVat;
                 $sumVat += $vatAmount;
                 $sumTax += $taxAmount;
-                $sumTotal += $totalAmount;
+                $sumTotal += $lineNetTotal;
             ?>
                 <tr>
                     <td class="text-center"><?= $i++ ?></td>
@@ -220,7 +222,7 @@ $formatter = \Yii::$app->formatter;
                     <td class="text-right"><?= $valueBeforeVat > 0 ? number_format($valueBeforeVat, 2) : '-' ?></td>
                     <td class="text-right"><?= $vatAmount > 0 ? number_format($vatAmount, 2) : '-' ?></td>
                     <td class="text-right"><?= $taxAmount > 0 ? number_format($taxAmount, 2) : '-' ?></td>
-                    <td class="text-right"><?= number_format($totalAmount, 2) ?></td>
+                    <td class="text-right"><?= number_format($lineNetTotal, 2) ?></td>
                     <td contenteditable="true" style="outline: none; cursor: text;" title="พิมพ์หมายเหตุเพิ่มเติมตรงนี้ได้"></td>
                 </tr>
             <?php endforeach; ?>
