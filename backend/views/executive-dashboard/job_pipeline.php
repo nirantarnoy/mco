@@ -3,27 +3,39 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 use backend\models\JobActivityStatus;
 
-$this->title = 'สถานะกิจกรรม MCOAutomation: Job ' . Html::encode($job->job_no);
+$isAricatJob = ($job->company_id == 3) || ($job->company && stripos($job->company->name, 'ARICAT') !== false);
+
+if ($isAricatJob) {
+    $this->title = 'สถานะกิจกรรม ARICAT Workflow: Job ' . Html::encode($job->job_no);
+    $stepsDef = [
+        1 => ['name' => '1. เริ่มดำเนินการ', 'detail' => 'ออกใบเสนอราคา ACT-QT / แนบใบรับคำขอ', 'icon' => 'fa-play-circle'],
+        2 => ['name' => '2. บันทึกค่าใช้จ่าย', 'detail' => 'แนบใบเสร็จและสลิปการโอนเงิน', 'icon' => 'fa-receipt'],
+        3 => ['name' => '3. รออนุมัติ', 'detail' => 'ยื่นเอกสารแล้ว รอเอกสารออกจากราชการ', 'icon' => 'fa-hourglass-half'],
+        4 => ['name' => '4. รับชำระหนี้', 'detail' => 'ออกใบกำกับภาษีและใบเสร็จรับเงิน', 'icon' => 'fa-file-invoice-dollar'],
+        5 => ['name' => '5. เสร็จสิ้น', 'detail' => 'ดาวน์โหลดเอกสารฉบับสมบูรณ์', 'icon' => 'fa-check-circle'],
+    ];
+} else {
+    $this->title = 'สถานะกิจกรรม MCOAutomation: Job ' . Html::encode($job->job_no);
+    $stepsDef = [
+        1 => ['name' => '1. เปิด Job No.', 'detail' => 'แนบ PO ลูกค้า', 'icon' => 'fa-folder-open'],
+        2 => ['name' => '2. เปิด PO และไม่เปิด PO', 'detail' => 'แนบใบเซ็นรับ PO จาก Vendor + ใบโอนเงิน (กำหนดวันเตือน)', 'icon' => 'fa-file-invoice'],
+        3 => ['name' => '3. รับของจาก Vendor', 'detail' => 'Invoice ใบรับสินค้า', 'icon' => 'fa-truck-loading'],
+        4 => ['name' => '4. เบิกของ / คืนของ', 'detail' => 'กำหนดวันเตือนคืนสินค้า', 'icon' => 'fa-boxes'],
+        5 => ['name' => '5. อบรมเซฟตี้ & JSA', 'detail' => 'แนบเอกสารอบรมที่ลูกค้าอนุมัติ (ลูกค้าดาวน์โหลดได้)', 'icon' => 'fa-user-shield'],
+        6 => ['name' => '6. Engineering จบ', 'detail' => 'พิจารณาและสรุปแบบการออกแบบ', 'icon' => 'fa-drafting-compass'],
+        7 => ['name' => '7. ออก Final Report / Certificate', 'detail' => 'ลูกค้าตรวจรับงาน (ลูกค้าดาวน์โหลดได้)', 'icon' => 'fa-certificate'],
+        8 => ['name' => '8. ประเมินผลจากลูกค้า', 'detail' => 'แบบฟอร์มประเมินให้ลูกค้ากรอก/ดาวน์โหลด', 'icon' => 'fa-star'],
+        9 => ['name' => '9. ออก Invoice', 'detail' => 'ใบเซ็นรับสินค้า/บริการจากลูกค้า', 'icon' => 'fa-file-signature'],
+        10 => ['name' => '10. อัตรากำไรสุทธิ %', 'detail' => '🟢 กำไร ≥20% | 🟠 กำไร <20% | 🔴 ขาดทุน', 'icon' => 'fa-chart-pie'],
+        11 => ['name' => '11. เหลือเวลาทำงานกี่วัน', 'detail' => 'นับถอยหลังวันส่งมอบงานตามสัญญา', 'icon' => 'fa-hourglass-half'],
+        12 => ['name' => '12. ใบเสร็จเงินเข้าบัญชีหรือยัง', 'detail' => 'แนบหลักฐานการโอนเงินชำระจากลูกค้า', 'icon' => 'fa-receipt'],
+        13 => ['name' => '13. ระยะทางใช้รถยนต์ (กม.)', 'detail' => 'คำนวณ กม.ละ 5.00 บาท จากระบบบันทึกรถยนต์', 'icon' => 'fa-car'],
+        14 => ['name' => '14. จำนวนบุคลากรปฏิบัติงาน', 'detail' => 'จำนวนพนักงาน/ช่างที่ลงปฏิบัติงาน', 'icon' => 'fa-users'],
+        15 => ['name' => '15. คำนวณสรุปกำไรขาดทุนประจำ Job', 'detail' => 'สรุปรายได้ หัก ต้นทุนและค่าใช้จ่ายรวม', 'icon' => 'fa-calculator'],
+    ];
+}
 $this->params['breadcrumbs'][] = ['label' => 'Executive Dashboard', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
-
-$stepsDef = [
-    1 => ['name' => '1. เปิด Job No.', 'detail' => 'แนบ PO ลูกค้า', 'icon' => 'fa-folder-open'],
-    2 => ['name' => '2. เปิด PO และไม่เปิด PO', 'detail' => 'แนบใบเซ็นรับ PO จาก Vendor + ใบโอนเงิน (กำหนดวันเตือน)', 'icon' => 'fa-file-invoice'],
-    3 => ['name' => '3. รับของจาก Vendor', 'detail' => 'Invoice ใบรับสินค้า', 'icon' => 'fa-truck-loading'],
-    4 => ['name' => '4. เบิกของ / คืนของ', 'detail' => 'กำหนดวันเตือนคืนสินค้า', 'icon' => 'fa-boxes'],
-    5 => ['name' => '5. อบรมเซฟตี้ & JSA', 'detail' => 'แนบเอกสารอบรมที่ลูกค้าอนุมัติ (ลูกค้าดาวน์โหลดได้)', 'icon' => 'fa-user-shield'],
-    6 => ['name' => '6. Engineering จบ', 'detail' => 'พิจารณาและสรุปแบบการออกแบบ', 'icon' => 'fa-drafting-compass'],
-    7 => ['name' => '7. ออก Final Report / Certificate', 'detail' => 'ลูกค้าตรวจรับงาน (ลูกค้าดาวน์โหลดได้)', 'icon' => 'fa-certificate'],
-    8 => ['name' => '8. ประเมินผลจากลูกค้า', 'detail' => 'แบบฟอร์มประเมินให้ลูกค้ากรอก/ดาวน์โหลด', 'icon' => 'fa-star'],
-    9 => ['name' => '9. ออก Invoice', 'detail' => 'ใบเซ็นรับสินค้า/บริการจากลูกค้า', 'icon' => 'fa-file-signature'],
-    10 => ['name' => '10. อัตรากำไรสุทธิ %', 'detail' => '🟢 กำไร ≥20% | 🟠 กำไร <20% | 🔴 ขาดทุน', 'icon' => 'fa-chart-pie'],
-    11 => ['name' => '11. เหลือเวลาทำงานกี่วัน', 'detail' => 'นับถอยหลังวันส่งมอบงานตามสัญญา', 'icon' => 'fa-hourglass-half'],
-    12 => ['name' => '12. ใบเสร็จเงินเข้าบัญชีหรือยัง', 'detail' => 'แนบหลักฐานการโอนเงินชำระจากลูกค้า', 'icon' => 'fa-receipt'],
-    13 => ['name' => '13. ระยะทางใช้รถยนต์ (กม.)', 'detail' => 'คำนวณ กม.ละ 5.00 บาท จากระบบบันทึกรถยนต์', 'icon' => 'fa-car'],
-    14 => ['name' => '14. จำนวนบุคลากรปฏิบัติงาน', 'detail' => 'จำนวนพนักงาน/ช่างที่ลงปฏิบัติงาน', 'icon' => 'fa-users'],
-    15 => ['name' => '15. คำนวณสรุปกำไรขาดทุนประจำ Job', 'detail' => 'สรุปรายได้ หัก ต้นทุนและค่าใช้จ่ายรวม', 'icon' => 'fa-calculator'],
-];
 ?>
 
 <!-- Google Font Inter & Prompt -->
@@ -38,7 +50,7 @@ $stepsDef = [
                 <i class="fas fa-arrow-left me-1"></i> ย้อนกลับหน้า Executive Dashboard
             </a>
             <h3 class="fw-bold text-slate-800 mb-0" style="color: #0f172a; font-family: 'Prompt', sans-serif;">
-                <i class="fas fa-tasks text-indigo-600 me-2" style="color: #4f46e5;"></i> สถานะกิจกรรม 15 ขั้นตอน
+                <i class="fas fa-tasks text-indigo-600 me-2" style="color: #4f46e5;"></i> สถานะกิจกรรม <?= $isAricatJob ? 'ARICAT 5 ขั้นตอน' : '15 ขั้นตอน' ?>
             </h3>
         </div>
         <div class="d-flex align-items-center gap-2">
@@ -55,7 +67,7 @@ $stepsDef = [
     </div>
     
     <div class="d-none d-print-block mb-4 text-center">
-        <h3 class="fw-bold mb-2" style="font-family: 'Prompt', sans-serif;">รายงานสถานะกิจกรรม 15 ขั้นตอน</h3>
+        <h3 class="fw-bold mb-2" style="font-family: 'Prompt', sans-serif;">รายงานสถานะกิจกรรม <?= $isAricatJob ? 'ARICAT 5 ขั้นตอน' : '15 ขั้นตอน' ?></h3>
         <h5 class="text-secondary">Job No: <?= Html::encode($job->job_no) ?></h5>
     </div>
 
@@ -132,7 +144,7 @@ $stepsDef = [
         <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex justify-content-between align-items-center">
             <div>
                 <h6 class="fw-bold mb-1 text-slate-800" style="color: #1e293b; font-family: 'Prompt', sans-serif;">
-                    <i class="fas fa-list-check text-indigo-600 me-2" style="color: #4f46e5;"></i> สถานะกิจกรรม 15 ขั้นตอนใน MCOAutomation
+                    <i class="fas fa-list-check text-indigo-600 me-2" style="color: #4f46e5;"></i> สถานะกิจกรรม <?= $isAricatJob ? 'ARICAT Workflow (5 ขั้นตอน)' : '15 ขั้นตอนใน MCOAutomation' ?>
                 </h6>
                 <div class="small text-slate-500" style="color: #64748b;">
                     🔴 สีแดง: ยังไม่ได้ทำ | 🟠 สีส้ม: ทำแล้วรอจัดเก็บไฟล์ | 🟢 สีเขียว: เก็บไฟล์แล้ว | ⚪ ยกเลิก: สิทธิ์ R1/R2

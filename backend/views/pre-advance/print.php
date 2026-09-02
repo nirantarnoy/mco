@@ -96,6 +96,14 @@ $formatter = \Yii::$app->formatter;
                     if ($m) {
                         $vName = !empty($m->supnam) ? $m->supnam : ($m->vendor ? $m->vendor->name : '');
                         $valBeforeVat = (float)($m->vatpr0 > 0 ? $m->vatpr0 : ($m->vat_amount > 0 ? ($m->total_amount - $m->vat_amount) : $m->total_amount));
+                        $vatAmt = (float)($m->vat_amount ?? 0);
+                        if ($vatAmt == 0) {
+                            if ($m->total_amount > $valBeforeVat && $valBeforeVat > 0) {
+                                $vatAmt = $m->total_amount - $valBeforeVat;
+                            } elseif (($m->vat_percent ?? 0) > 0 || (isset($m->vat_type) && $m->vat_type > 0)) {
+                                $vatAmt = round($valBeforeVat * 0.07, 2);
+                            }
+                        }
                         $info = [
                             'type' => 'NONE_PR',
                             'docnum' => $m->docnum,
@@ -103,7 +111,7 @@ $formatter = \Yii::$app->formatter;
                             'qt_no' => !empty($m->job_no) ? $m->job_no : $m->refnum,
                             'total_amount' => (float)$m->total_amount,
                             'value_before_vat' => $valBeforeVat,
-                            'vat_amount' => (float)($m->vat_amount ?? 0),
+                            'vat_amount' => $vatAmt,
                             'tax_amount' => (float)($m->tax_amount ?? 0),
                         ];
                         $refMap[$m->docnum] = $info;
@@ -119,6 +127,14 @@ $formatter = \Yii::$app->formatter;
                         $totAmt = (float)($m->total_amount ?? 0);
                         $discAmt = (float)($m->discount_total_amount ?? 0);
                         $valBeforeVat = ($totAmt > 0) ? ($totAmt - $discAmt) : ($netAmt - $vatAmt + $whdTax);
+
+                        if ($vatAmt == 0) {
+                            if ($netAmt > $valBeforeVat && $valBeforeVat > 0) {
+                                $vatAmt = $netAmt - $valBeforeVat;
+                            } elseif (($m->vat_percent ?? 0) > 0 || (isset($m->vat_type) && $m->vat_type > 0) || strpos(strtolower($m->note ?? ''), 'vat') !== false) {
+                                $vatAmt = round($valBeforeVat * 0.07, 2);
+                            }
+                        }
 
                         $info = [
                             'type' => 'PO',
@@ -164,19 +180,28 @@ $formatter = \Yii::$app->formatter;
                     $qtNo = trim($qtMatches[1]);
                 }
 
-                // Find matching refInfo
+                // Find matching refInfo (Exact, Substring, or Index)
                 $refInfo = null;
-                if (!empty($refNo) && isset($refMap[$refNo])) {
-                    $refInfo = $refMap[$refNo];
-                } elseif (isset($refList[$index])) {
-                    $refInfo = $refList[$index];
-                } else {
-                    foreach ($refMap as $k => $info) {
-                        if (!empty($refNo) && (strpos($k, $refNo) !== false || strpos($refNo, $k) !== false)) {
-                            $refInfo = $info;
-                            break;
+                if (!empty($refNo)) {
+                    if (isset($refMap[$refNo])) {
+                        $refInfo = $refMap[$refNo];
+                    } else {
+                        foreach ($refMap as $k => $info) {
+                            if ($k === $refNo || strpos($refNo, $k) !== false || strpos($k, $refNo) !== false) {
+                                $refInfo = $info;
+                                break;
+                            }
+                            $kBase = preg_replace('/-QT[A-Za-z0-9.-]+$/i', '', $k);
+                            $refBase = preg_replace('/-QT[A-Za-z0-9.-]+$/i', '', $refNo);
+                            if (!empty($kBase) && (strpos($refNo, $kBase) !== false || strpos($refBase, $kBase) !== false)) {
+                                $refInfo = $info;
+                                break;
+                            }
                         }
                     }
+                }
+                if (!$refInfo && isset($refList[$index])) {
+                    $refInfo = $refList[$index];
                 }
 
                 if ($refInfo) {
@@ -189,9 +214,9 @@ $formatter = \Yii::$app->formatter;
                     if (empty($qtNo)) {
                         $qtNo = $refInfo['qt_no'];
                     }
-                    $vatAmount = $refInfo['vat_amount'];
-                    $taxAmount = $refInfo['tax_amount'];
-                    $valueBeforeVat = $refInfo['value_before_vat'];
+                    $vatAmount = (float)$refInfo['vat_amount'];
+                    $taxAmount = (float)$refInfo['tax_amount'];
+                    $valueBeforeVat = (float)$refInfo['value_before_vat'];
                 }
 
                 // Fallback for vendor name if still empty
@@ -201,6 +226,13 @@ $formatter = \Yii::$app->formatter;
 
                 if ($valueBeforeVat == 0) {
                     $valueBeforeVat = $totalAmount;
+                }
+
+                // Fallback for VAT amount if still 0 but description or reference indicates 7% VAT
+                if ($vatAmount == 0 && $valueBeforeVat > 0) {
+                    if (strpos(strtolower($descText), 'vat') !== false || strpos($descText, 'ภาษี') !== false || strpos(strtolower($descText), '7%') !== false) {
+                        $vatAmount = round($valueBeforeVat * 0.07, 2);
+                    }
                 }
 
                 $lineNetTotal = $valueBeforeVat + $vatAmount - $taxAmount;
