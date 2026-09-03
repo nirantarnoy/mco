@@ -1308,18 +1308,17 @@ class JobController extends BaseController
                 p.docdat as purch_date,
                 p.supcod as vendor_id,
                 p.total_amount,
-                p.net_amount,
+                (p.total_amount - COALESCE(p.vat_amount, 0)) as net_amount,
                 COALESCE(vd.name, p.supnam, '') as vendor_name
             FROM purchase_master p 
             LEFT JOIN vendor as vd ON (vd.id = p.supcod OR vd.code = p.supcod)
-            WHERE (p.job_no = :jobNo OR p.job_no = :jobIdStr OR (p.job_id IS NOT NULL AND p.job_id = :jobId))
+            WHERE (p.job_no = :jobNo OR p.job_no = :jobIdStr)
             ORDER BY p.docdat DESC
         ";
 
         $command = Yii::$app->db->createCommand($query);
         $command->bindValue(':jobNo', $jobNo);
         $command->bindValue(':jobIdStr', (string)$jobId);
-        $command->bindValue(':jobId', $jobId);
 
         return $command->queryAll();
     }
