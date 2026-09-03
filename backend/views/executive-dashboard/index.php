@@ -141,7 +141,7 @@ $currentRevenueModeLabel = $revenueModeLabels[$revenueMode] ?? $revenueModeLabel
                         <?= number_format($totalExpenses, 2) ?>
                     </h3>
                     <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.75rem;">
-                        <i class="fas fa-info-circle me-1"></i> ต้นทุนรวมของ Job (รวมต้นทุนสต๊อกแล้ว)
+                        <i class="fas fa-info-circle me-1"></i> ค่าใช้จ่ายรวม (PO, None-PR, สดย่อย, สต๊อก, ค่ารถ, ค่าจ้าง, เงินเดือน)
                     </div>
                 </div>
             </div>
@@ -278,8 +278,7 @@ $currentRevenueModeLabel = $revenueModeLabels[$revenueMode] ?? $revenueModeLabel
                         <i class="fas fa-chart-pie me-2"></i> สรุปผลกำไร / ขาดทุนสุทธิภาพรวม (Net Profit / Loss) <small class="ms-2 badge bg-white text-secondary rounded-pill border shadow-sm" style="font-size: 0.65rem;"><i class="fas fa-search me-1"></i> ดูรายละเอียด (Job ก่อนหน้า)</small>
                     </h5>
                     <span class="small" style="color: <?= $netProfitLoss >= 0 ? '#047857' : '#be123c' ?>;">
-                        คำนวณจากเกณฑ์คงค้างบัญชีบริหาร (ยอดขายตั้งหนี้ตาม Invoice หรือ มูลค่างาน Job) - ค่าใช้จ่ายรวมทั้งหมด (PO + None PR + สดย่อย + สต๊อก) <br>
-                        *ไม่นำค่ารถและค่าจ้างมาคิดในภาพรวมนี้
+                        คำนวณจากเกณฑ์คงค้างบัญชีบริหาร: รายรับรวม - ค่าใช้จ่ายรวมทั้งหมดของบริษัท (PO + None PR + สดย่อย + สต๊อก + ค่ารถยนต์ + ค่าจ้าง + เงินเดือนพนักงาน)
                     </span>
                 </div>
                 <div class="text-end">

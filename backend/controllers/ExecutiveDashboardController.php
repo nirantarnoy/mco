@@ -276,12 +276,25 @@ class ExecutiveDashboardController extends BaseController
 
         $vehicleCostByKm = $totalKm * 5;
         $totalWages = $totalVehicleWages; // ในแบบ Job Costing ใช้เฉพาะค่าจ้างที่ผูกกับใบงาน
-        
-        // หักค่ารถและค่าจ้างออกจากการคำนวณ Net Profit ภาพรวม (ตามหมายเหตุ)
-        $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalPettyCashExpenses + $totalInventoryExpenses;
-
-        // Effective Vehicle Expense is calculated as max(cost, km * 5)
         $effectiveVehicleExpense = $totalVehicleExpenses;
+
+        $totalSalaryExpenses = 0;
+        if (!empty($fromDate) && !empty($toDate)) {
+            $startM = (int)date('m', strtotime($fromDate));
+            $startY = (int)date('Y', strtotime($fromDate));
+            $endM = (int)date('m', strtotime($toDate));
+            $endY = (int)date('Y', strtotime($toDate));
+            
+            $salaryQ = \backend\models\CompanySalary::find()
+                ->andWhere(['between', new \yii\db\Expression('(salary_year * 100 + salary_month)'), $startY * 100 + $startM, $endY * 100 + $endM]);
+            if (!empty($companyId) && $companyId != '0') {
+                $salaryQ->andWhere(['company_id' => $companyId]);
+            }
+            $totalSalaryExpenses = (float)$salaryQ->sum('amount');
+        }
+        
+        // รวมค่าใช้จ่ายทั้งหมดของบริษัท (PO + None PR + Petty Cash + Stock + ค่ารถยนต์ + ค่าจ้าง + เงินเดือนพนักงาน)
+        $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalPettyCashExpenses + $totalInventoryExpenses + $effectiveVehicleExpense + $totalWages + $totalSalaryExpenses;
 
         // --- 2. รายรับรวม = ใบเสนอราคาที่เอาไปเปิดเป็น PO แล้ว (Job status Open/Closed, NO VAT) ---
         $jobsWithPoQuery = Job::find()->where(['job.status' => [1, 2]]);
@@ -948,6 +961,7 @@ class ExecutiveDashboardController extends BaseController
             'vehicleCostByKm' => $vehicleCostByKm,
             'totalVehicleWages' => $totalVehicleWages,
             'totalWages' => $totalWages,
+            'totalSalaryExpenses' => $totalSalaryExpenses,
             'netProfitLoss' => $netProfitLoss,
             'currentAvailableCash' => $currentAvailableCash,
             'totalMainBankBalance' => $totalMainBankBalance,
