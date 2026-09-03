@@ -144,7 +144,7 @@ class ExecutiveDashboardController extends BaseController
                 $revenue = $revInvoices + $revPayments;
             }
         } else {
-            // Mode 'job': Job Amount (Quotations / Job Forecast)
+            // Mode 'job': Job Amount (เฉพาะ Job ที่วางบิลแล้วเท่านั้น)
             $query = Job::find()->where(['job.status' => [1, 2]]);
             if (!empty($companyId) && $companyId != '0') {
                 $query->andWhere(['job.company_id' => $companyId]);
@@ -159,7 +159,21 @@ class ExecutiveDashboardController extends BaseController
                 ]);
             }
             foreach ($query->all() as $j) {
-                $revenue += (float)($j->job_amount ?: ($j->quotation ? $j->quotation->total_amount : 0));
+                // ตรวจสอบว่า Job นี้วางบิลแล้วหรือยัง (มี Invoice สมบูรณ์ หรือสถานะ Job ปิดงาน 2)
+                $hasInvoice = (new \yii\db\Query())
+                    ->from('invoices')
+                    ->where(['status' => Invoice::STATUS_ACTIVE])
+                    ->andWhere(['or',
+                        ['job_id' => $j->id],
+                        ['and', ['!=', 'quotation_id', null], ['quotation_id' => $j->quotation_id]],
+                        ['like', 'po_number', trim($j->job_no)],
+                        ['like', 'invoice_number', trim($j->job_no)]
+                    ])
+                    ->exists();
+
+                if ($hasInvoice || $j->status == 2) {
+                    $revenue += (float)($j->job_amount ?: ($j->quotation ? $j->quotation->total_amount : 0));
+                }
             }
         }
         return $revenue;

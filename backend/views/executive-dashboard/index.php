@@ -9,7 +9,7 @@ $this->params['breadcrumbs'][] = 'Executive Dashboard';
 $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
 $revenueMode = $revenueMode ?? 'job';
 $revenueModeLabels = [
-    'job' => 'ตามมูลค่างานที่เปิด (Job Amount)',
+    'job' => 'ตามมูลค่างานที่วางบิลแล้ว (Billed Job Amount)',
     'invoice' => 'ตามยอดวางบิลจริง (Accrual Invoiced)',
     'receipt' => 'ตามยอดรับชำระจริง (Cash Basis)',
 ];
