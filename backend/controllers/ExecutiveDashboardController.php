@@ -159,7 +159,7 @@ class ExecutiveDashboardController extends BaseController
                 ]);
             }
             foreach ($query->all() as $j) {
-                $revenue += (float)$j->job_amount;
+                $revenue += (float)($j->job_amount ?: ($j->quotation ? $j->quotation->total_amount : 0));
             }
         }
         return $revenue;
@@ -252,86 +252,29 @@ class ExecutiveDashboardController extends BaseController
         
         $totalPoExpenses = 0;
         $totalNonePrExpenses = 0;
-        $allPoIds = [];
-        $allNonePrIds = [];
+        $totalPettyCashExpenses = 0;
+        $totalInventoryExpenses = 0;
+        $totalKm = 0;
+        $totalVehicleExpenses = 0;
+        $totalVehicleWages = 0;
 
         foreach ((clone $jobsWithPoQuery)->all() as $j) {
+            $eval = $this->evaluateJobStepStatuses($j);
             $jobIds[] = $j->id;
             if (!empty(trim($j->job_no))) {
                 $jobNos[] = trim($j->job_no);
             }
 
-            $jPos = $this->getJobPos($j);
-            foreach ($jPos as $po) {
-                if ($po->approve_status == 1) {
-                    $allPoIds[] = $po->id;
-                }
-            }
-
-            $jNonePrs = $this->getJobNonePrs($j);
-            foreach ($jNonePrs as $npr) {
-                if ($npr->approve_status == PurchaseMaster::APPROVE_STATUS_APPROVED) {
-                    $allNonePrIds[] = $npr->id;
-                }
-            }
+            $totalPoExpenses += (float)($eval['metrics']['jobPoCostWithInterest'] ?? 0);
+            $totalNonePrExpenses += (float)($eval['metrics']['jobNonePrCostWithInterest'] ?? 0);
+            $totalPettyCashExpenses += (float)($eval['metrics']['jobPettyCashTotal'] ?? 0);
+            $totalInventoryExpenses += (float)($eval['metrics']['jobInventoryCostWithInterest'] ?? 0);
+            $totalKm += (float)($eval['metrics']['jobKmTotal'] ?? 0);
+            $totalVehicleExpenses += (float)($eval['metrics']['effectiveVehicleCost'] ?? 0);
+            $totalVehicleWages += (float)($eval['metrics']['jobVehicleWage'] ?? 0);
         }
 
-        $allPoIds = array_unique(array_filter($allPoIds));
-        if (!empty($allPoIds)) {
-            $totalPoExpenses = (float)Purch::find()
-                ->where(['in', 'id', $allPoIds])
-                ->sum('(net_amount - COALESCE(vat_amount, 0)) * COALESCE(NULLIF(currency_rate, 0), 1)');
-        }
-        
-        $allNonePrIds = array_unique(array_filter($allNonePrIds));
-        if (!empty($allNonePrIds)) {
-            $totalNonePrExpenses = (float)PurchaseMaster::find()
-                ->where(['in', 'id', $allNonePrIds])
-                ->sum('total_amount - COALESCE(vat_amount, 0)');
-        }
-        
-        $totalPettyCashExpenses = 0;
-        if (!empty($jobIds)) {
-            $totalPettyCashExpenses = (float)PettyCashVoucher::find()->where(['status' => 1, 'job_id' => $jobIds])->sum('amount');
-        }
-
-        $totalInventoryExpenses = 0;
-        if (!empty($jobIds)) {
-            $stockIssues = (new \yii\db\Query())
-                ->select('l.qty, l.line_price, l.sale_price, p.sale_price as p_sale_price, p.cost_price as p_cost_price')
-                ->from('journal_trans_line l')
-                ->innerJoin('journal_trans t', 't.id = l.journal_trans_id')
-                ->leftJoin('product p', 'p.id = l.product_id')
-                ->where(['t.trans_type_id' => 3, 't.status' => 2, 't.job_id' => $jobIds])
-                ->all();
-                
-            foreach ($stockIssues as $issue) {
-                if (!empty($issue['line_price']) && (float)$issue['line_price'] > 0) {
-                    $totalInventoryExpenses += (float)$issue['line_price'];
-                } elseif (!empty($issue['sale_price']) && (float)$issue['sale_price'] > 0) {
-                    $totalInventoryExpenses += (float)$issue['sale_price'] * (float)$issue['qty'];
-                } else {
-                    $unitPrice = (float)$issue['p_sale_price'] > 0 ? (float)$issue['p_sale_price'] : (float)$issue['p_cost_price'];
-                    $totalInventoryExpenses += $unitPrice * (float)$issue['qty'];
-                }
-            }
-        }
-
-        $totalKm = 0;
-        $vehicleCostByKm = 0;
-        $totalVehicleExpenses = 0;
-        $totalVehicleWages = 0;
-
-        if (!empty($jobNos)) {
-            $veQuery = VehicleExpense::find()->where(['job_no' => $jobNos]);
-            $totalKm = abs((float)(clone $veQuery)->sum('total_distance'));
-            $jobVehicleCost = abs((float)(clone $veQuery)->sum('vehicle_cost'));
-            $totalVehicleWages = abs((float)(clone $veQuery)->sum('total_wage'));
-            
-            $vehicleCostByKm = $totalKm * 5;
-            $totalVehicleExpenses = max($jobVehicleCost, $vehicleCostByKm);
-        }
-        
+        $vehicleCostByKm = $totalKm * 5;
         $totalWages = $totalVehicleWages; // ในแบบ Job Costing ใช้เฉพาะค่าจ้างที่ผูกกับใบงาน
         
         // หักค่ารถและค่าจ้างออกจากการคำนวณ Net Profit ภาพรวม (ตามหมายเหตุ)
@@ -628,7 +571,7 @@ class ExecutiveDashboardController extends BaseController
             ->all();
 
         // --- 8.8.4 Advanced Search System ---
-        $jobsQuery = Job::find()->with(['company', 'quotation']);
+        $jobsQuery = Job::find()->where(['job.status' => [1, 2]])->with(['company', 'quotation']);
         if (!empty($searchJobNo)) {
             $jobsQuery->andWhere(['like', 'job.job_no', $searchJobNo]);
         }
@@ -1055,8 +998,32 @@ class ExecutiveDashboardController extends BaseController
      */
     public function evaluateJobStepStatuses($job)
     {
-        if (!$job) {
-            return ['statuses' => [], 'details' => [], 'metrics' => []];
+        if (!$job || $job->status == Job::JOB_STATUS_CANCELLED) {
+            return [
+                'statuses' => array_fill(1, 15, JobActivityStatus::STATUS_CANCELLED),
+                'details' => array_fill(1, 15, 'Job ถูกยกเลิกรายการ'),
+                'metrics' => [
+                    'jobRevenue' => 0,
+                    'jobPoTotal' => 0,
+                    'jobNonePrTotal' => 0,
+                    'jobPettyCashTotal' => 0,
+                    'inventoryTotal' => 0,
+                    'jobKmTotal' => 0,
+                    'jobVehicleCost' => 0,
+                    'jobVehicleWage' => 0,
+                    'jobKmCostAt5' => 0,
+                    'effectiveVehicleCost' => 0,
+                    'jobTotalExpenses' => 0,
+                    'jobNetProfit' => 0,
+                    'jobProfitPercent' => 0,
+                    'daysRemaining' => 0,
+                    'jobVehicleExpList' => [],
+                    'jobInventoryCostWithInterest' => 0,
+                    'jobPoCostWithInterest' => 0,
+                    'jobNonePrCostWithInterest' => 0,
+                    'jobProfitBeforeTax' => 0,
+                ]
+            ];
         }
 
         $manualStatuses = JobActivityStatus::find()
@@ -1096,7 +1063,8 @@ class ExecutiveDashboardController extends BaseController
         $jobPoInterest = 0;
         $jobPoHasDoc = false;
         foreach ($jobPos as $po) {
-            $amt = (float)$po->net_amount * ((float)$po->currency_rate > 0 ? (float)$po->currency_rate : 1);
+            $netNoVat = (float)$po->net_amount - (float)($po->vat_amount ?: 0);
+            $amt = $netNoVat * ((float)$po->currency_rate > 0 ? (float)$po->currency_rate : 1);
             $jobPoTotal += $amt;
             if (!empty($po->purch_date)) {
                 $m = $getMonthsDiff($po->purch_date, $receiptDate);
@@ -1111,7 +1079,7 @@ class ExecutiveDashboardController extends BaseController
         $jobNonePrInterest = 0;
         $jobNonePrHasDoc = false;
         foreach ($jobNonePrs as $npr) {
-            $amt = (float)$npr->total_amount;
+            $amt = (float)$npr->total_amount - (float)($npr->vat_amount ?: 0);
             $jobNonePrTotal += $amt;
             if (!empty($npr->docdat)) {
                 $m = $getMonthsDiff($npr->docdat, $receiptDate);
@@ -1122,6 +1090,9 @@ class ExecutiveDashboardController extends BaseController
                 $jobNonePrHasDoc = true;
             }
         }
+
+        // Petty Cash Expenses (Active vouchers only)
+        $jobPettyCashTotal = (float)PettyCashVoucher::find()->where(['status' => 1, 'job_id' => $job->id])->sum('amount');
         
         // Inventory Cost (1.5% interest)
         $inventoryTotal = 0;
@@ -1189,9 +1160,9 @@ class ExecutiveDashboardController extends BaseController
         $jobNonePrCostWithInterest = $jobNonePrTotal + $jobNonePrInterest;
         $jobInventoryCostWithInterest = $inventoryTotal + $inventoryInterest;
         
-        $jobTotalExpenses = $jobPoCostWithInterest + $jobNonePrCostWithInterest + $jobInventoryCostWithInterest;
+        $jobTotalExpenses = $jobPoCostWithInterest + $jobNonePrCostWithInterest + $jobInventoryCostWithInterest + $jobPettyCashTotal;
         
-        // กำไร/ขาดทุนก่อนหักภาษี = Revenue - Total Expenses (Po+NonePr+Inventory) - Vehicle - Wage - 2% of Revenue
+        // กำไร/ขาดทุนก่อนหักภาษี = Revenue - Total Expenses (Po+NonePr+Inventory+PettyCash) - Vehicle - Wage - 2% of Revenue
         $revenueNet2Percent = $jobRevenue * 0.02;
         $jobProfitBeforeTax = $jobRevenue - $jobTotalExpenses - $effectiveVehicleCost - $jobVehicleWage - $revenueNet2Percent;
         
@@ -1423,10 +1394,13 @@ class ExecutiveDashboardController extends BaseController
                 'jobRevenue' => $jobRevenue,
                 'jobPoTotal' => $jobPoTotal,
                 'jobNonePrTotal' => $jobNonePrTotal,
+                'jobPettyCashTotal' => $jobPettyCashTotal,
+                'inventoryTotal' => $inventoryTotal,
                 'jobKmTotal' => $jobKmTotal,
                 'jobVehicleCost' => $jobVehicleCost,
                 'jobVehicleWage' => $jobVehicleWage,
                 'jobKmCostAt5' => $jobKmCostAt5,
+                'effectiveVehicleCost' => $effectiveVehicleCost,
                 'jobTotalExpenses' => $jobTotalExpenses,
                 'jobNetProfit' => $jobNetProfit,
                 'jobProfitPercent' => $jobProfitPercent,
@@ -1599,6 +1573,7 @@ class ExecutiveDashboardController extends BaseController
             'jobInventoryCostWithInterest' => $eval['metrics']['jobInventoryCostWithInterest'],
             'jobPoCostWithInterest' => $eval['metrics']['jobPoCostWithInterest'],
             'jobNonePrCostWithInterest' => $eval['metrics']['jobNonePrCostWithInterest'],
+            'jobPettyCashTotal' => $eval['metrics']['jobPettyCashTotal'],
             'jobProfitBeforeTax' => $eval['metrics']['jobProfitBeforeTax'],
             'canCancel' => $canCancel,
             'jobPosDetail' => $jobPosDetail,
@@ -1836,7 +1811,11 @@ class ExecutiveDashboardController extends BaseController
             return [];
         }
 
-        return Purch::find()->where(['in', 'id', $poIds])->all();
+        return Purch::find()
+            ->where(['in', 'id', $poIds])
+            ->andWhere(['approve_status' => 1])
+            ->andWhere(['!=', 'status', Purch::STATUS_CANCELLED])
+            ->all();
     }
 
     /**
@@ -1884,6 +1863,10 @@ class ExecutiveDashboardController extends BaseController
             $whereOr[] = ['like', 'refnum', $jobNoNum];
         }
 
-        return PurchaseMaster::find()->where($whereOr)->all();
+        return PurchaseMaster::find()
+            ->where($whereOr)
+            ->andWhere(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED])
+            ->andWhere(['!=', 'status', PurchaseMaster::STATUS_CANCELLED])
+            ->all();
     }
 }
