@@ -112,7 +112,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <div class="fs-5 fw-bold" style="color: #047857; font-family: 'Inter', sans-serif;"><?= number_format($jobRevenue, 2) ?> <small class="fs-6">บาท</small></div>
                 </div>
                 <div class="col-md" style="flex: 1 0 0%;">
-                    <div class="small text-slate-400" style="color: #94a3b8;" title="PO: <?= number_format($jobPoCostWithInterest, 2) ?> | None PR: <?= number_format($jobNonePrCostWithInterest, 2) ?> | สดย่อย: <?= number_format($jobPettyCashTotal ?? 0, 2) ?> | Stock: <?= number_format($jobInventoryCostWithInterest, 2) ?>" data-bs-toggle="tooltip">ต้นทุนรวม</div>
+                    <div class="small text-slate-400" style="color: #94a3b8;" title="PO: <?= number_format($jobPoCostWithInterest, 2) ?> | None PR: <?= number_format($jobNonePrCostWithInterest, 2) ?> | สดย่อย: <?= number_format($jobPettyCashTotal ?? 0, 2) ?> | Stock: <?= number_format($jobInventoryCostWithInterest, 2) ?> | ค่ารถ: <?= number_format($jobVehicleCost > $jobKmCostAt5 ? $jobVehicleCost : $jobKmCostAt5, 2) ?> | ค่าจ้าง: <?= number_format($jobVehicleWage, 2) ?>" data-bs-toggle="tooltip">ต้นทุนรวม</div>
                     <div class="fs-5 fw-bold" style="color: #be123c; font-family: 'Inter', sans-serif;"><?= number_format($jobTotalExpenses, 2) ?> <small class="fs-6">บาท</small></div>
                 </div>
                 <div class="col-md" style="flex: 1 0 0%;">

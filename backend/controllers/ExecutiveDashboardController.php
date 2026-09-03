@@ -293,8 +293,8 @@ class ExecutiveDashboardController extends BaseController
             $totalSalaryExpenses = (float)$salaryQ->sum('amount');
         }
         
-        // ค่าใช้จ่ายรวมภาพรวมของ Job (PO + None PR + Petty Cash + Stock)
-        $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalPettyCashExpenses + $totalInventoryExpenses;
+        // ค่าใช้จ่ายรวมภาพรวมของ Job (PO + None PR + Petty Cash + Stock + ค่ารถ + ค่าจ้าง)
+        $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalPettyCashExpenses + $totalInventoryExpenses + $effectiveVehicleExpense + $totalVehicleWages;
 
         // --- 2. รายรับรวม = ใบเสนอราคาที่เอาไปเปิดเป็น PO แล้ว (Job status Open/Closed, NO VAT) ---
         $jobsWithPoQuery = Job::find()->where(['job.status' => [1, 2]]);
@@ -1209,11 +1209,11 @@ class ExecutiveDashboardController extends BaseController
         $jobNonePrCostWithInterest = $jobNonePrTotal + $jobNonePrInterest;
         $jobInventoryCostWithInterest = $inventoryTotal + $inventoryInterest;
         
-        $jobTotalExpenses = $jobPoCostWithInterest + $jobNonePrCostWithInterest + $jobInventoryCostWithInterest + $jobPettyCashTotal;
+        $jobTotalExpenses = $jobPoCostWithInterest + $jobNonePrCostWithInterest + $jobInventoryCostWithInterest + $jobPettyCashTotal + $effectiveVehicleCost + $jobVehicleWage;
         
-        // กำไร/ขาดทุนก่อนหักภาษี = Revenue - Total Expenses (Po+NonePr+Inventory+PettyCash) - Vehicle - Wage - 2% of Revenue
+        // กำไร/ขาดทุนก่อนหักภาษี = Revenue - Total Expenses (Po+NonePr+Inventory+PettyCash+Vehicle+Wage) - 2% of Revenue
         $revenueNet2Percent = $jobRevenue * 0.02;
-        $jobProfitBeforeTax = $jobRevenue - $jobTotalExpenses - $effectiveVehicleCost - $jobVehicleWage - $revenueNet2Percent;
+        $jobProfitBeforeTax = $jobRevenue - $jobTotalExpenses - $revenueNet2Percent;
         
         // กำไร/ขาดทุนสุทธิ = Profit before tax - 20%
         $jobNetProfit = $jobProfitBeforeTax - ($jobProfitBeforeTax > 0 ? ($jobProfitBeforeTax * 0.20) : 0);
