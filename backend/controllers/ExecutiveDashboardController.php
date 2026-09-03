@@ -936,6 +936,7 @@ class ExecutiveDashboardController extends BaseController
             $totalAllNet += $cNetProfit;
             
             $companySummaries[] = [
+                'company_id' => $comp->id,
                 'company_name' => $comp->name,
                 'revenue' => $cRev,
                 'po' => $cPo,
@@ -960,6 +961,34 @@ class ExecutiveDashboardController extends BaseController
             'total_expenses' => $totalAllExp,
             'net_profit' => $totalAllNet
         ];
+
+        // Synchronize top summary cards and Net Profit banner with Section 8.8.3 company summaries
+        if (!empty($companyId) && $companyId != '0') {
+            foreach ($companySummaries as $cs) {
+                if (isset($cs['company_id']) && $cs['company_id'] == $companyId) {
+                    $totalRevenue = $cs['revenue'];
+                    $totalPoExpenses = $cs['po'];
+                    $totalNonePrExpenses = $cs['none_pr'];
+                    $totalPettyCashExpenses = $cs['petty_cash'];
+                    $totalInventoryExpenses = $cs['inventory'];
+                    $effectiveVehicleExpense = $cs['vehicle'];
+                    $totalSalaryExpenses = $cs['salary'];
+                    $totalExpenses = $cs['total_expenses'];
+                    $netProfitLoss = $cs['net_profit'];
+                    break;
+                }
+            }
+        } else {
+            $totalRevenue = $companySummariesTotals['revenue'];
+            $totalPoExpenses = $companySummariesTotals['po'];
+            $totalNonePrExpenses = $companySummariesTotals['none_pr'];
+            $totalPettyCashExpenses = $companySummariesTotals['petty_cash'];
+            $totalInventoryExpenses = $companySummariesTotals['inventory'];
+            $effectiveVehicleExpense = $companySummariesTotals['vehicle'];
+            $totalSalaryExpenses = $companySummariesTotals['salary'];
+            $totalExpenses = $companySummariesTotals['total_expenses'];
+            $netProfitLoss = $companySummariesTotals['net_profit'];
+        }
 
         return $this->render('index', [
             'companyId' => $companyId,
