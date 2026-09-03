@@ -77,7 +77,76 @@ class ExecutiveDashboardController extends BaseController
     private function getCalculatedRevenue($revenueMode, $companyId = null, $fromDate = null, $toDate = null)
     {
         $revenue = 0;
-        if ($revenueMode === 'invoice') {
+        if ($revenueMode === 'ar') {
+            // Mode 'ar': Combined AR (ยอดค้างรับวางบิล AR + ยอดค้างรับยังไม่วาง AR)
+            $unbilledQuery = Invoice::find()
+                ->where(['invoices.status' => Invoice::STATUS_ACTIVE, 'invoices.is_billed' => 0])
+                ->andWhere(['invoices.invoice_type' => [Invoice::TYPE_TAX_INVOICE, Invoice::TYPE_QUOTATION]]);
+                
+            if (!empty($companyId) && $companyId != '0') {
+                if ($companyId == 1) {
+                    $unbilledQuery->andWhere(['or', ['invoices.company_id' => 1], ['invoices.company_id' => null], ['invoices.company_id' => 0]]);
+                } else {
+                    $unbilledQuery->andWhere(['invoices.company_id' => $companyId]);
+                }
+            }
+            if (!empty($toDate)) {
+                $unbilledQuery->andWhere([
+                    'or',
+                    ['<=', 'invoices.invoice_date', $toDate],
+                    ['and', ['invoices.invoice_date' => null], ['<=', 'invoices.created_at', $toDate . ' 23:59:59']]
+                ]);
+            }
+            $unbilledAmt = (float)$unbilledQuery->sum('total_amount');
+
+            $receiptQuery = Invoice::find()
+                ->where(['invoices.status' => Invoice::STATUS_ACTIVE])
+                ->andWhere(['invoices.invoice_type' => [Invoice::TYPE_RECEIPT, '4', 4]]);
+                
+            if (!empty($companyId) && $companyId != '0') {
+                if ($companyId == 1) {
+                    $receiptQuery->andWhere(['or', ['invoices.company_id' => 1], ['invoices.company_id' => null], ['invoices.company_id' => 0]]);
+                } else {
+                    $receiptQuery->andWhere(['invoices.company_id' => $companyId]);
+                }
+            }
+            if (!empty($toDate)) {
+                $receiptQuery->andWhere([
+                    'or',
+                    ['<=', 'invoices.invoice_date', $toDate],
+                    ['and', ['invoices.invoice_date' => null], ['<=', 'invoices.created_at', $toDate . ' 23:59:59']]
+                ]);
+            }
+
+            $pendingRec = 0;
+            foreach ($receiptQuery->all() as $receipt) {
+                $receiptNoVat = $receipt->subtotal - $receipt->discount_amount;
+                $receiptTotal = $receipt->total_amount;
+                
+                $totalPaid = \backend\models\InvoicePaymentReceipt::find()
+                    ->where(['invoice_id' => $receipt->id])
+                    ->sum('amount') ?: 0;
+                
+                $receipt_ids = \backend\models\InvoicePaymentReceipt::find()
+                    ->select('id')
+                    ->where(['invoice_id' => $receipt->id])
+                    ->column();
+
+                if (!empty($receipt_ids)) {
+                    $total_extras = \backend\models\InvoicePaymentExtra::find()
+                        ->where(['payment_receipt_id' => $receipt_ids])
+                        ->sum('amount') ?: 0;
+                    $totalPaid += $total_extras;
+                }
+
+                $ratio = ($receiptTotal > 0) ? ($receiptNoVat / $receiptTotal) : 1;
+                $paidNoVat = $totalPaid * $ratio;
+                
+                $pendingRec += max(0, $receiptNoVat - $paidNoVat);
+            }
+
+            $revenue = $pendingRec + $unbilledAmt;
+        } elseif ($revenueMode === 'invoice') {
             // Accrual / Invoiced Revenue Basis (ใบแจ้งหนี้ / ใบวางบิล / ใบกำกับภาษี)
             $query = Invoice::find()->where([
                 'status' => Invoice::STATUS_ACTIVE,
@@ -178,9 +247,9 @@ class ExecutiveDashboardController extends BaseController
         $companyId = Yii::$app->request->get('company_id', '');
         $rawFromDate = Yii::$app->request->get('from_date', '');
         $rawToDate = Yii::$app->request->get('to_date', '');
-        $revenueMode = Yii::$app->request->get('revenue_mode', 'job');
-        if (!in_array($revenueMode, ['job', 'invoice', 'receipt'])) {
-            $revenueMode = 'job';
+        $revenueMode = Yii::$app->request->get('revenue_mode', 'ar');
+        if (!in_array($revenueMode, ['ar', 'job', 'invoice', 'receipt'])) {
+            $revenueMode = 'ar';
         }
         
         $fromDate = !empty($rawFromDate) ? $this->normalizeDate($rawFromDate) : date('Y-01-01');
