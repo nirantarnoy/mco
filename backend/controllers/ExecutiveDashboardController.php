@@ -554,16 +554,20 @@ class ExecutiveDashboardController extends BaseController
             ->one();
 
         $totalMainBankBalance = $latestClosing ? (float)$latestClosing->main_account_balance : 0;
-        $totalPettyCashBalance = $latestClosing ? (float)$latestClosing->petty_cash_balance : (float)PettyCashVoucher::find()
-            ->where(['status' => 1])
-            ->andFilterWhere(['company_id' => $companyId])
-            ->sum('amount');
+        $totalPettyCashBalance = $latestClosing ? (float)$latestClosing->petty_cash_balance : 0;
 
         if ($totalPettyCashBalance == 0) {
-            $totalPettyCashBalance = (float)PettyCashVoucher::find()
-                ->where(['status' => 1])
-                ->andFilterWhere(['company_id' => $companyId])
-                ->sum('amount');
+            $pcvBalQ = PettyCashVoucher::find()->where(['!=', 'status', 3]);
+            if (!empty($companyId) && $companyId != '0') {
+                if ($companyId == 1) {
+                    $pcvBalQ->andWhere(['or', ['company_id' => 1], ['company_id' => 0], ['company_id' => null]]);
+                } else {
+                    $pcvBalQ->andWhere(['company_id' => $companyId]);
+                }
+            }
+            foreach ($pcvBalQ->all() as $pcv) {
+                $totalPettyCashBalance += (float)$pcv->amount > 0 ? (float)$pcv->amount : (float)$pcv->calculateTotalAmount();
+            }
         }
 
         $currentAvailableCash = $totalMainBankBalance + $totalPettyCashBalance;
@@ -832,16 +836,26 @@ class ExecutiveDashboardController extends BaseController
             $cNonePr = (float)$cNonePrQuery->sum('total_amount - COALESCE(vat_amount, 0)');
                 
             // Petty Cash
-            $cPettyQuery = PettyCashVoucher::find()->where(['status' => 1]);
+            $cPettyQuery = PettyCashVoucher::find()
+                ->where(['!=', 'status', 3]);
             if ($cId == 1) {
                 $cPettyQuery->andWhere(['or', ['company_id' => 1], ['company_id' => null], ['company_id' => 0]]);
             } else {
                 $cPettyQuery->andWhere(['company_id' => $cId]);
             }
             if (!empty($fromDate) && !empty($toDate)) {
-                $cPettyQuery->andWhere(['between', 'date', $fromDate, $toDate]);
+                $fromTsStr = $fromDate . ' 00:00:00';
+                $toTsStr = $toDate . ' 23:59:59';
+                $cPettyQuery->andWhere([
+                    'or',
+                    ['between', 'date', $fromDate, $toDate],
+                    ['between', 'created_at', $fromTsStr, $toTsStr]
+                ]);
             }
-            $cPetty = (float)$cPettyQuery->sum('amount');
+            $cPetty = 0;
+            foreach ($cPettyQuery->all() as $pcv) {
+                $cPetty += (float)$pcv->amount > 0 ? (float)$pcv->amount : (float)$pcv->calculateTotalAmount();
+            }
                 
             // Inventory (รวมทั้งที่ผูก Job และไม่ผูก Job)
             $stockQ = (new \yii\db\Query())
@@ -1111,8 +1125,23 @@ class ExecutiveDashboardController extends BaseController
             }
         }
 
-        // Petty Cash Expenses (Active vouchers only)
-        $jobPettyCashTotal = (float)PettyCashVoucher::find()->where(['status' => 1, 'job_id' => $job->id])->sum('amount');
+        // Petty Cash Expenses (Active vouchers, non-cancelled)
+        $pcvQuery = PettyCashVoucher::find()
+            ->where(['!=', 'status', 3])
+            ->andWhere([
+                'or',
+                ['job_id' => $job->id],
+                ['and', ['!=', 'quotation_id', null], ['quotation_id' => $job->quotation_id]]
+            ]);
+        if (!empty($job->job_no)) {
+            $cleanJn = trim($job->job_no);
+            $pcvQuery->orWhere(['and', ['!=', 'status', 3], ['like', 'paid_for', $cleanJn]]);
+            $pcvQuery->orWhere(['and', ['!=', 'status', 3], ['like', 'pcv_no', $cleanJn]]);
+        }
+        $jobPettyCashTotal = 0;
+        foreach ($pcvQuery->all() as $pcv) {
+            $jobPettyCashTotal += (float)$pcv->amount > 0 ? (float)$pcv->amount : (float)$pcv->calculateTotalAmount();
+        }
         
         // Inventory Cost (1.5% interest)
         $inventoryTotal = 0;
