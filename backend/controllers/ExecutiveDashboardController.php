@@ -556,7 +556,9 @@ class ExecutiveDashboardController extends BaseController
         $currentAvailableCash = $totalMainBankBalance + $totalPettyCashBalance;
 
         // Pending PO Payables (filtered by selected company if applicable)
-        $poPayableQuery = Purch::find()->where(['approve_status' => 1]);
+        $poPayableQuery = Purch::find()
+            ->where(['or', ['!=', 'approve_status', 2], ['approve_status' => null]])
+            ->andWhere(['!=', 'status', Purch::STATUS_CANCELLED]);
         if (!empty($companyId) && $companyId != '0') {
             $poPayableQuery->andWhere(['company_id' => $companyId]);
         }
@@ -1813,7 +1815,7 @@ class ExecutiveDashboardController extends BaseController
 
         return Purch::find()
             ->where(['in', 'id', $poIds])
-            ->andWhere(['approve_status' => 1])
+            ->andWhere(['or', ['!=', 'approve_status', 2], ['approve_status' => null]])
             ->andWhere(['!=', 'status', Purch::STATUS_CANCELLED])
             ->all();
     }
@@ -1865,7 +1867,7 @@ class ExecutiveDashboardController extends BaseController
 
         return PurchaseMaster::find()
             ->where($whereOr)
-            ->andWhere(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED])
+            ->andWhere(['or', ['!=', 'approve_status', 2], ['approve_status' => null]])
             ->andWhere(['!=', 'status', PurchaseMaster::STATUS_CANCELLED])
             ->all();
     }
