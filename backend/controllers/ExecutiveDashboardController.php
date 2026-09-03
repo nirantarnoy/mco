@@ -293,8 +293,8 @@ class ExecutiveDashboardController extends BaseController
             $totalSalaryExpenses = (float)$salaryQ->sum('amount');
         }
         
-        // รวมค่าใช้จ่ายทั้งหมดของบริษัท (PO + None PR + Petty Cash + Stock + ค่ารถยนต์ + ค่าจ้าง + เงินเดือนพนักงาน)
-        $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalPettyCashExpenses + $totalInventoryExpenses + $effectiveVehicleExpense + $totalWages + $totalSalaryExpenses;
+        // ค่าใช้จ่ายรวมภาพรวมของ Job (PO + None PR + Petty Cash + Stock)
+        $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalPettyCashExpenses + $totalInventoryExpenses;
 
         // --- 2. รายรับรวม = ใบเสนอราคาที่เอาไปเปิดเป็น PO แล้ว (Job status Open/Closed, NO VAT) ---
         $jobsWithPoQuery = Job::find()->where(['job.status' => [1, 2]]);
@@ -804,7 +804,9 @@ class ExecutiveDashboardController extends BaseController
             $cRev = $this->getCalculatedRevenue($revenueMode, $cId, $fromDate, $toDate);
             
             // PO
-            $cPoQuery = Purch::find()->where(['approve_status' => 1]);
+            $cPoQuery = Purch::find()
+                ->where(['or', ['!=', 'approve_status', 2], ['approve_status' => null]])
+                ->andWhere(['!=', 'status', Purch::STATUS_CANCELLED]);
             if ($cId == 1) {
                 $cPoQuery->andWhere(['or', ['company_id' => 1], ['company_id' => null], ['company_id' => 0]]);
             } else {
@@ -816,7 +818,9 @@ class ExecutiveDashboardController extends BaseController
             $cPo = (float)$cPoQuery->sum('(net_amount - COALESCE(vat_amount, 0)) * COALESCE(NULLIF(currency_rate, 0), 1)');
                 
             // Non PR
-            $cNonePrQuery = PurchaseMaster::find()->where(['approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED]);
+            $cNonePrQuery = PurchaseMaster::find()
+                ->where(['or', ['!=', 'approve_status', 2], ['approve_status' => null]])
+                ->andWhere(['!=', 'status', PurchaseMaster::STATUS_CANCELLED]);
             if ($cId == 1) {
                 $cNonePrQuery->andWhere(['or', ['company_id' => 1], ['company_id' => null], ['company_id' => 0]]);
             } else {
