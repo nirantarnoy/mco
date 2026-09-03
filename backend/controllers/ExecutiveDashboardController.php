@@ -1055,6 +1055,17 @@ class ExecutiveDashboardController extends BaseController
                     break;
                 }
             }
+            $companySummariesTotals = [
+                'revenue' => $totalRevenue,
+                'po' => $totalPoExpenses,
+                'none_pr' => $totalNonePrExpenses,
+                'petty_cash' => $totalPettyCashExpenses,
+                'inventory' => $totalInventoryExpenses,
+                'vehicle' => $effectiveVehicleExpense,
+                'salary' => $totalSalaryExpenses,
+                'total_expenses' => $totalExpenses,
+                'net_profit' => $netProfitLoss
+            ];
         } else {
             $totalRevenue = $companySummariesTotals['revenue'];
             $totalPoExpenses = $companySummariesTotals['po'];
