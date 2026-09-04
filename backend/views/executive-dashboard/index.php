@@ -143,7 +143,7 @@ $currentRevenueModeLabel = $revenueModeLabels[$revenueMode] ?? $revenueModeLabel
                         <?= number_format($totalExpenses, 2) ?>
                     </h3>
                     <div class="small text-slate-500" style="color: #94a3b8; font-size: 0.75rem;">
-                        <i class="fas fa-info-circle me-1"></i> ต้นทุนรวม (PO + None-PR + สดย่อย + สต๊อก + ค่ารถ + ค่าจ้าง)
+                        <i class="fas fa-info-circle me-1"></i> ต้นทุนรวม (PO + None-PR + สดย่อย + สต๊อก + เงินเดือนพนักงาน)
                     </div>
                 </div>
             </div>
@@ -280,7 +280,7 @@ $currentRevenueModeLabel = $revenueModeLabels[$revenueMode] ?? $revenueModeLabel
                         <i class="fas fa-chart-pie me-2"></i> สรุปผลกำไร / ขาดทุนสุทธิภาพรวม (Net Profit / Loss) <small class="ms-2 badge bg-white text-secondary rounded-pill border shadow-sm" style="font-size: 0.65rem;"><i class="fas fa-search me-1"></i> ดูรายละเอียด (Job ก่อนหน้า)</small>
                     </h5>
                     <span class="small" style="color: <?= $netProfitLoss >= 0 ? '#047857' : '#be123c' ?>;">
-                        คำนวณจากเกณฑ์คงค้างบัญชีบริหาร: รายรับรวม - ต้นทุนรวมทั้งหมด (PO + None PR + สดย่อย + สต๊อก + ค่าใช้รถยนต์ + ค่าจ้าง)
+                        คำนวณจากเกณฑ์คงค้างบัญชีบริหาร: รายรับรวม - ต้นทุนรวมทั้งหมด (PO + None PR + สดย่อย + สต๊อก + เงินเดือนพนักงาน)
                     </span>
                 </div>
                 <div class="text-end">

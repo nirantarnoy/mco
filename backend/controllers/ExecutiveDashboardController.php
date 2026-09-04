@@ -466,8 +466,8 @@ class ExecutiveDashboardController extends BaseController
             $totalSalaryExpenses = (float)$salaryQ->sum('amount');
         }
         
-        // ค่าใช้จ่ายรวมภาพรวมของ Job (PO + None PR + Petty Cash + Stock + ค่ารถ + ค่าจ้าง)
-        $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalPettyCashExpenses + $totalInventoryExpenses + $effectiveVehicleExpense + $totalVehicleWages;
+        // ค่าใช้จ่ายรวมภาพรวมของ Executive Dashboard (PO + None PR + Petty Cash + Stock)
+        $totalExpenses = $totalPoExpenses + $totalNonePrExpenses + $totalPettyCashExpenses + $totalInventoryExpenses;
 
         // --- 2. รายรับรวม = ใบเสนอราคาที่เอาไปเปิดเป็น PO แล้ว (Job status Open/Closed, NO VAT) ---
         $jobsWithPoQuery = Job::find()->where(['job.status' => [1, 2]]);
@@ -951,15 +951,7 @@ class ExecutiveDashboardController extends BaseController
                 $mTotalExpenses += $mNpr;
             }
 
-            if (!empty($mJobNos)) {
-                $veMQuery = VehicleExpense::find()->where(['job_no' => $mJobNos]);
-                $mKm = abs((float)(clone $veMQuery)->sum('total_distance'));
-                $mVehicleCost = abs((float)(clone $veMQuery)->sum('vehicle_cost'));
-                $mVehicleWage = abs((float)(clone $veMQuery)->sum('total_wage'));
-                $mEffVehicleCost = max($mVehicleCost, $mKm * 5);
-                
-                $mTotalExpenses += $mEffVehicleCost + $mVehicleWage;
-            }
+            // (ค่าใช้จ่ายรถและค่าจ้างใช้รถให้หักเฉพาะในหน้า Job Pipeline ตามนโยบายการเงิน)
 
             // Cumulative Receivables Approximate for chart
             $invSubtotal = (float)Invoice::find()->where(['status' => Invoice::STATUS_ACTIVE, 'invoice_type' => [Invoice::TYPE_RECEIPT, '4', 4]])->andWhere(['<=', 'invoice_date', $mEnd])->sum('subtotal - COALESCE(discount_amount, 0)');
@@ -1119,7 +1111,8 @@ class ExecutiveDashboardController extends BaseController
                     ->sum('amount');
             }
 
-            $cTotalExp = $cPo + $cNonePr + $cPetty + $cInv + $cVehicleTotal + $cSalary;
+            // ค่าใช้จ่ายรวมหน้า Executive Dashboard ไม่หักค่าใช้จ่ายรถและค่าจ้างใช้รถ (หักเฉพาะหน้า Job Pipeline)
+            $cTotalExp = $cPo + $cNonePr + $cPetty + $cInv + $cSalary;
             $cNetProfit = $cRev - $cTotalExp;
 
             $totalAllRev += $cRev;
