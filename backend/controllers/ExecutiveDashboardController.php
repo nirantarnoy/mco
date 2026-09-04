@@ -1771,10 +1771,18 @@ class ExecutiveDashboardController extends BaseController
                 if ($vendor) $vendorName = $vendor->name;
             }
             $rate = $this->getExchangeRate($po->currency_id, $po->currency_rate ?: $po->exchange_rate);
+            $currencyCode = 'THB';
+            if (!empty($po->currency_id)) {
+                $code = \backend\models\Currency::findCode($po->currency_id);
+                if (!empty($code)) {
+                    $currencyCode = strtoupper(trim($code));
+                }
+            }
             $jobPosDetail[] = [
                 'type' => 'PO',
                 'id' => $po->id,
                 'doc_no' => $po->purch_no ?: ('PO-' . $po->id),
+                'currency_code' => $currencyCode,
                 'doc_date' => $po->purch_date ?: '-',
                 'vendor_name' => $vendorName ?: 'ไม่ระบุ Vendor',
                 'amount' => (float)$po->net_amount * $rate,
@@ -1829,6 +1837,7 @@ class ExecutiveDashboardController extends BaseController
                 'type' => 'None-PR',
                 'id' => $npr->id,
                 'doc_no' => $npr->docnum ?: ($npr->job_no ?: 'None-PR-' . $npr->id),
+                'currency_code' => 'THB',
                 'doc_date' => $npr->docdat ?: '-',
                 'vendor_name' => $vendorName ?: 'ไม่ระบุ Vendor',
                 'amount' => (float)$npr->total_amount,

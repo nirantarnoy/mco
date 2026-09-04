@@ -476,11 +476,12 @@ $this->params['breadcrumbs'][] = $this->title;
                             <tr>
                                 <th class="text-center" style="width: 4%">#</th>
                                 <th style="width: 15%">ประเภท / เลขที่เอกสาร</th>
+                                <th class="text-center" style="width: 8%">สกุลเงิน</th>
                                 <th class="text-center" style="width: 10%">วันที่</th>
-                                <th style="width: 20%">ผู้จำหน่าย (Vendor)</th>
-                                <th style="width: 33%">รายการสินค้า / รายละเอียด</th>
+                                <th style="width: 18%">ผู้จำหน่าย (Vendor)</th>
+                                <th style="width: 28%">รายการสินค้า / รายละเอียด</th>
                                 <th class="text-end" style="width: 10%">มูลค่า (บาท)</th>
-                                <th class="text-center" style="width: 8%">ไฟล์แนบ / Action</th>
+                                <th class="text-center" style="width: 7%">ไฟล์แนบ / Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -494,6 +495,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     $searchTerms[] = $item['doc_no'];
                                     $searchTerms[] = $item['vendor_name'];
                                     $searchTerms[] = $item['type'];
+                                    $searchTerms[] = $item['currency_code'] ?? 'THB';
                                     if (!empty($item['lines'])) {
                                         foreach ($item['lines'] as $l) {
                                             if (!empty($l['product_name'])) $searchTerms[] = $l['product_name'];
@@ -522,6 +524,17 @@ $this->params['breadcrumbs'][] = $this->title;
                                                 <?= $item['type'] ?>
                                             </span>
                                             <strong class="text-indigo-600" style="color: #4f46e5;"><?= Html::encode($item['doc_no']) ?></strong>
+                                        </td>
+                                        <td class="text-center">
+                                            <?php if (($item['currency_code'] ?? 'THB') !== 'THB'): ?>
+                                                <span class="badge bg-indigo-100 text-indigo-800 border border-indigo-200 fw-bold px-2 py-1" style="background-color: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe;">
+                                                    <i class="fas fa-globe me-1"></i><?= Html::encode($item['currency_code'] ?? 'THB') ?>
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="badge bg-slate-100 text-slate-700 border border-slate-200 px-2 py-1" style="background-color: #f8fafc; color: #475569; border: 1px solid #e2e8f0;">
+                                                    THB
+                                                </span>
+                                            <?php endif; ?>
                                         </td>
                                         <td class="text-center small text-secondary">
                                             <?= $item['doc_date'] != '-' ? date('d/m/Y', strtotime($item['doc_date'])) : '-' ?>
@@ -592,7 +605,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="7" class="text-center py-4 text-muted">
+                                    <td colspan="8" class="text-center py-4 text-muted">
                                         <i class="fas fa-folder-open fa-2x mb-2 d-block text-slate-300"></i>
                                         ไม่พบข้อมูล PO หรือ None-PR สำหรับ Job นี้
                                     </td>
