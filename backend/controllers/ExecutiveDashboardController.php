@@ -352,8 +352,15 @@ class ExecutiveDashboardController extends BaseController
         $searchProduct = Yii::$app->request->get('search_product', '');
 
         // --- Group Companies Financial Calculation ---
-        $expensesQuery = Purch::find()->where(['purch.approve_status' => 1]);
-        $nonePrQuery = PurchaseMaster::find()->where(['purchase_master.approve_status' => PurchaseMaster::APPROVE_STATUS_APPROVED]);
+        $expensesQuery = Purch::find()
+            ->where(['!=', 'purch.status', Purch::STATUS_CANCELLED])
+            ->andWhere(['or', ['purch.approve_status' => null], ['not in', 'purch.approve_status', [2, 3, 100]]]);
+
+        $nonePrQuery = PurchaseMaster::find()
+            ->where(['!=', 'purchase_master.status', PurchaseMaster::STATUS_CANCELLED])
+            ->andWhere(['!=', 'purchase_master.status', 100])
+            ->andWhere(['or', ['purchase_master.approve_status' => null], ['not in', 'purchase_master.approve_status', [2, 3, 100]]]);
+
         $invoiceQuery = Invoice::find()->where(['invoices.status' => Invoice::STATUS_ACTIVE]);
         $vehicleQuery = VehicleExpense::find();
         $wageQuery = DriverWageReport::find();
@@ -577,8 +584,8 @@ class ExecutiveDashboardController extends BaseController
             // 1. Past Job Expenses (PO, Non-PR, Petty Cash in current period but Job < $fromDate)
             // 1.1 PO (Purch)
             $pastPoItems = \backend\models\Purch::find()
-                ->where(['purch.approve_status' => 1])
-                ->andWhere(['!=', 'purch.status', Purch::STATUS_CANCELLED])
+                ->where(['!=', 'purch.status', Purch::STATUS_CANCELLED])
+                ->andWhere(['or', ['purch.approve_status' => null], ['not in', 'purch.approve_status', [2, 3, 100]]])
                 ->andWhere(['between', 'purch.purch_date', $fromDate, $toDate])
                 ->innerJoin('job j', 'j.id = purch.job_id')
                 ->andWhere(['j.status' => [Job::JOB_STATUS_OPEN, Job::JOB_STATUS_CLOSED]])
@@ -597,7 +604,7 @@ class ExecutiveDashboardController extends BaseController
             }
                 
             foreach($pastPoItems->all() as $po) {
-                $netNoVat = (float)$po->net_amount - (float)($po->vat_amount ?: 0);
+                $netNoVat = (float)$po->net_amount > 0 ? ((float)$po->net_amount - (float)($po->vat_amount ?: 0)) : ((float)$po->total_amount - (float)($po->discount_total_amount ?: 0));
                 $rate = $this->getExchangeRate($po->currency_id, $po->currency_rate ?: $po->exchange_rate);
                 $amt = $netNoVat * $rate;
                 $pastJobsExpenses += $amt;
@@ -614,7 +621,9 @@ class ExecutiveDashboardController extends BaseController
             
             // 1.2 Non-PR (PurchaseMaster)
             $pastNonPrItems = \backend\models\PurchaseMaster::find()
-                ->where(['purchase_master.approve_status' => 1])
+                ->where(['!=', 'purchase_master.status', PurchaseMaster::STATUS_CANCELLED])
+                ->andWhere(['!=', 'purchase_master.status', 100])
+                ->andWhere(['or', ['purchase_master.approve_status' => null], ['not in', 'purchase_master.approve_status', [2, 3, 100]]])
                 ->andWhere(['between', 'purchase_master.docdat', $fromDate, $toDate])
                 ->innerJoin('job j', 'j.job_no = purchase_master.job_no')
                 ->andWhere(['j.status' => [Job::JOB_STATUS_OPEN, Job::JOB_STATUS_CLOSED]])
@@ -751,14 +760,14 @@ class ExecutiveDashboardController extends BaseController
 
         // Pending PO Payables (filtered by selected company if applicable)
         $poPayableQuery = Purch::find()
-            ->where(['or', ['!=', 'approve_status', 2], ['approve_status' => null]])
-            ->andWhere(['!=', 'status', Purch::STATUS_CANCELLED]);
+            ->where(['!=', 'status', Purch::STATUS_CANCELLED])
+            ->andWhere(['or', ['approve_status' => null], ['not in', 'approve_status', [2, 3, 100]]]);
         if (!empty($companyId) && $companyId != '0') {
             $poPayableQuery->andWhere(['company_id' => $companyId]);
         }
         $pendingPoPayables = 0;
         foreach ($poPayableQuery->all() as $po) {
-            $netNoVat = (float)$po->net_amount;
+            $netNoVat = (float)$po->net_amount > 0 ? ((float)$po->net_amount - (float)($po->vat_amount ?: 0)) : ((float)$po->total_amount - (float)($po->discount_total_amount ?: 0));
             $rate = $this->getExchangeRate($po->currency_id, $po->currency_rate ?: $po->exchange_rate);
             $pendingPoPayables += $netNoVat * $rate;
         }
@@ -887,16 +896,12 @@ class ExecutiveDashboardController extends BaseController
 
                 $jPos = $this->getJobPos($j);
                 foreach ($jPos as $po) {
-                    if ($po->approve_status == 1) {
-                        $mPoIds[] = $po->id;
-                    }
+                    $mPoIds[] = $po->id;
                 }
 
                 $jNonePrs = $this->getJobNonePrs($j);
                 foreach ($jNonePrs as $npr) {
-                    if ($npr->approve_status == PurchaseMaster::APPROVE_STATUS_APPROVED) {
-                        $mNonePrIds[] = $npr->id;
-                    }
+                    $mNonePrIds[] = $npr->id;
                 }
             }
 
@@ -995,8 +1000,8 @@ class ExecutiveDashboardController extends BaseController
             
             // PO
             $cPoQuery = Purch::find()
-                ->where(['or', ['!=', 'approve_status', 2], ['approve_status' => null]])
-                ->andWhere(['!=', 'status', Purch::STATUS_CANCELLED]);
+                ->where(['!=', 'purch.status', Purch::STATUS_CANCELLED])
+                ->andWhere(['or', ['purch.approve_status' => null], ['not in', 'purch.approve_status', [2, 3, 100]]]);
             if ($cId == 1) {
                 $cPoQuery->andWhere(['or', ['company_id' => 1], ['company_id' => null], ['company_id' => 0]]);
             } else {
@@ -1007,15 +1012,16 @@ class ExecutiveDashboardController extends BaseController
             }
             $cPo = 0;
             foreach ($cPoQuery->all() as $po) {
-                $netNoVat = (float)$po->net_amount - (float)($po->vat_amount ?: 0);
+                $netNoVat = (float)$po->net_amount > 0 ? ((float)$po->net_amount - (float)($po->vat_amount ?: 0)) : ((float)$po->total_amount - (float)($po->discount_total_amount ?: 0));
                 $rate = $this->getExchangeRate($po->currency_id, $po->currency_rate ?: $po->exchange_rate);
                 $cPo += $netNoVat * $rate;
             }
                 
             // Non PR
             $cNonePrQuery = PurchaseMaster::find()
-                ->where(['or', ['!=', 'approve_status', 2], ['approve_status' => null]])
-                ->andWhere(['!=', 'status', PurchaseMaster::STATUS_CANCELLED]);
+                ->where(['!=', 'purchase_master.status', PurchaseMaster::STATUS_CANCELLED])
+                ->andWhere(['!=', 'purchase_master.status', 100])
+                ->andWhere(['or', ['purchase_master.approve_status' => null], ['not in', 'purchase_master.approve_status', [2, 3, 100]]]);
             if ($cId == 1) {
                 $cNonePrQuery->andWhere(['or', ['company_id' => 1], ['company_id' => null], ['company_id' => 0]]);
             } else {
@@ -2106,9 +2112,9 @@ class ExecutiveDashboardController extends BaseController
         }
 
         return Purch::find()
-            ->where(['in', 'id', $poIds])
-            ->andWhere(['or', ['!=', 'approve_status', 2], ['approve_status' => null]])
-            ->andWhere(['!=', 'status', Purch::STATUS_CANCELLED])
+            ->where(['in', 'purch.id', $poIds])
+            ->andWhere(['!=', 'purch.status', Purch::STATUS_CANCELLED])
+            ->andWhere(['or', ['purch.approve_status' => null], ['not in', 'purch.approve_status', [2, 3, 100]]])
             ->all();
     }
 
@@ -2159,8 +2165,9 @@ class ExecutiveDashboardController extends BaseController
 
         return PurchaseMaster::find()
             ->where($whereOr)
-            ->andWhere(['or', ['!=', 'approve_status', 2], ['approve_status' => null]])
-            ->andWhere(['!=', 'status', PurchaseMaster::STATUS_CANCELLED])
+            ->andWhere(['!=', 'purchase_master.status', PurchaseMaster::STATUS_CANCELLED])
+            ->andWhere(['!=', 'purchase_master.status', 100])
+            ->andWhere(['or', ['purchase_master.approve_status' => null], ['not in', 'purchase_master.approve_status', [2, 3, 100]]])
             ->all();
     }
 }
