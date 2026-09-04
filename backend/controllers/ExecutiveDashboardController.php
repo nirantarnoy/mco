@@ -213,18 +213,15 @@ class ExecutiveDashboardController extends BaseController
                 $revenue = $revInvoices + $revPayments;
             }
         } else {
-            // Mode 'job': Job Amount (เฉพาะ Job ที่เปิดและอนุมัติแล้วเท่านั้น)
+            // Mode 'job': Job Amount (นำมูลค่างานของใบ Job ที่ Active (Open/Closed) มารวมทั้งหมด)
             $query = Job::find()
-                ->where(['job.status' => [Job::JOB_STATUS_OPEN, Job::JOB_STATUS_CLOSED]])
-                ->joinWith('quotation q', false)
-                ->andWhere([
-                    'or',
-                    ['q.id' => null],
-                    ['q.approve_status' => 1],
-                    ['q.status' => [1, 2]]
-                ]);
+                ->where(['job.status' => [Job::JOB_STATUS_OPEN, Job::JOB_STATUS_CLOSED]]);
             if (!empty($companyId) && $companyId != '0') {
-                $query->andWhere(['job.company_id' => $companyId]);
+                if ($companyId == 1) {
+                    $query->andWhere(['or', ['job.company_id' => 1], ['job.company_id' => null], ['job.company_id' => 0]]);
+                } else {
+                    $query->andWhere(['job.company_id' => $companyId]);
+                }
             }
             if (!empty($fromDate) && !empty($toDate)) {
                 $fromTs = strtotime($fromDate . ' 00:00:00');
@@ -247,9 +244,9 @@ class ExecutiveDashboardController extends BaseController
         $companyId = Yii::$app->request->get('company_id', '');
         $rawFromDate = Yii::$app->request->get('from_date', '');
         $rawToDate = Yii::$app->request->get('to_date', '');
-        $revenueMode = Yii::$app->request->get('revenue_mode', 'ar');
+        $revenueMode = Yii::$app->request->get('revenue_mode', 'job');
         if (!in_array($revenueMode, ['ar', 'job', 'invoice', 'receipt'])) {
-            $revenueMode = 'ar';
+            $revenueMode = 'job';
         }
         
         $fromDate = !empty($rawFromDate) ? $this->normalizeDate($rawFromDate) : date('Y-01-01');
@@ -311,7 +308,11 @@ class ExecutiveDashboardController extends BaseController
         $jobsWithPoQuery = Job::find()->where(['job.status' => [1, 2]]);
             
         if (!empty($companyId) && $companyId != '0') {
-            $jobsWithPoQuery->andWhere(['job.company_id' => $companyId]);
+            if ($companyId == 1) {
+                $jobsWithPoQuery->andWhere(['or', ['job.company_id' => 1], ['job.company_id' => null], ['job.company_id' => 0]]);
+            } else {
+                $jobsWithPoQuery->andWhere(['job.company_id' => $companyId]);
+            }
         }
         if (!empty($fromDate) && !empty($toDate)) {
             $fromTs = strtotime($fromDate . ' 00:00:00');

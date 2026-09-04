@@ -7,14 +7,14 @@ use backend\models\Company;
 // $this->title = 'Executive Dashboard';
 $this->params['breadcrumbs'][] = 'Executive Dashboard';
 $isAdmin = !Yii::$app->user->isGuest && \backend\models\User::isUserAdmin();
-$revenueMode = $revenueMode ?? 'ar';
+$revenueMode = $revenueMode ?? 'job';
 $revenueModeLabels = [
+    'job' => 'ตามมูลค่างานของใบ Job ที่ Active (Active Job Amount)',
     'ar' => 'ตามผลรวมยอดค้างรับ (วางบิล AR + ยังไม่วาง AR)',
-    'job' => 'ตามมูลค่างานที่เปิดและอนุมัติแล้ว (Approved Job Amount)',
     'invoice' => 'ตามยอดวางบิลจริง (Accrual Invoiced)',
     'receipt' => 'ตามยอดรับชำระจริง (Cash Basis)',
 ];
-$currentRevenueModeLabel = $revenueModeLabels[$revenueMode] ?? $revenueModeLabels['ar'];
+$currentRevenueModeLabel = $revenueModeLabels[$revenueMode] ?? $revenueModeLabels['job'];
 ?>
 
 <!-- Google Font Inter & Prompt -->
@@ -68,8 +68,8 @@ $currentRevenueModeLabel = $revenueModeLabels[$revenueMode] ?? $revenueModeLabel
                         <i class="fas fa-calculator text-indigo-600 me-1"></i> เกณฑ์การคิดรายรับ
                     </label>
                     <select name="revenue_mode" class="form-select form-select-modern">
-                        <option value="ar" <?= $revenueMode == 'ar' ? 'selected' : '' ?>>1. ตามผลรวมยอดค้างรับ (วางบิล AR + ยังไม่วาง AR)</option>
-                        <option value="job" <?= $revenueMode == 'job' ? 'selected' : '' ?>>2. ตามมูลค่างานที่เปิดและอนุมัติแล้ว (Approved Job Amount)</option>
+                        <option value="job" <?= $revenueMode == 'job' ? 'selected' : '' ?>>1. ตามมูลค่างานของใบ Job ที่ Active (Active Job Amount)</option>
+                        <option value="ar" <?= $revenueMode == 'ar' ? 'selected' : '' ?>>2. ตามผลรวมยอดค้างรับ (วางบิล AR + ยังไม่วาง AR)</option>
                         <option value="invoice" <?= $revenueMode == 'invoice' ? 'selected' : '' ?>>3. ตามยอดวางบิลจริง (Accrued Invoiced)</option>
                         <option value="receipt" <?= $revenueMode == 'receipt' ? 'selected' : '' ?>>4. ตามยอดรับชำระจริง (Cash Basis)</option>
                     </select>
