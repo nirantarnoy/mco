@@ -71,6 +71,91 @@ class ExecutiveDashboardController extends BaseController
     /**
      * Executive Dashboard 8.8 Main Page
      */
+    private $_exchangeRateCache = [];
+
+    /**
+     * Helper to get exchange rate for foreign currency to THB.
+     * If existingRate is specified (>0 and != 1), uses it. Otherwise, if foreign currency, fetches rate from live API.
+     */
+    private function getExchangeRate($currencyRef, $existingRate = 0)
+    {
+        $existingRate = (float)$existingRate;
+        
+        $currencyCode = 'THB';
+        if (empty($currencyRef)) {
+            $currencyCode = 'THB';
+        } elseif (is_numeric($currencyRef)) {
+            if ($currencyRef == 1) {
+                $currencyCode = 'THB';
+            } else {
+                $curr = \backend\models\Currency::findOne($currencyRef);
+                if ($curr && !empty($curr->code)) {
+                    $currencyCode = strtoupper(trim($curr->code));
+                }
+            }
+        } else {
+            $currencyCode = strtoupper(trim((string)$currencyRef));
+        }
+
+        if ($currencyCode === 'THB' || empty($currencyCode)) {
+            return 1.0;
+        }
+
+        // If rate in DB is specified and valid (>0 and != 1)
+        if ($existingRate > 0 && $existingRate != 1.0) {
+            return $existingRate;
+        }
+
+        // In-memory cache
+        if (isset($this->_exchangeRateCache[$currencyCode])) {
+            return $this->_exchangeRateCache[$currencyCode];
+        }
+
+        // Yii cache (1 day)
+        $cacheKey = 'fx_rate_' . $currencyCode . '_' . date('Y-m-d');
+        $cachedRate = Yii::$app->cache ? Yii::$app->cache->get($cacheKey) : false;
+        if ($cachedRate !== false && (float)$cachedRate > 0) {
+            $this->_exchangeRateCache[$currencyCode] = (float)$cachedRate;
+            return (float)$cachedRate;
+        }
+
+        // Fetch live exchange rate from open.er-api.com
+        $rate = 1.0;
+        try {
+            $url = "https://open.er-api.com/v6/latest/" . urlencode($currencyCode);
+            $ctx = stream_context_create([
+                'http' => [
+                    'timeout' => 3,
+                ]
+            ]);
+            $json = @file_get_contents($url, false, $ctx);
+            if ($json) {
+                $data = json_decode($json, true);
+                if (isset($data['rates']['THB']) && (float)$data['rates']['THB'] > 0) {
+                    $rate = (float)$data['rates']['THB'];
+                }
+            }
+        } catch (\Exception $e) {
+            $fallbackRates = [
+                'USD' => 33.0,
+                'EUR' => 38.0,
+                'JPY' => 0.22,
+                'GBP' => 43.0,
+                'CNY' => 4.6,
+                'SGD' => 25.5,
+                'AUD' => 22.0,
+            ];
+            $rate = $fallbackRates[$currencyCode] ?? 1.0;
+        }
+
+        if ($rate > 0 && Yii::$app->cache) {
+            Yii::$app->cache->set($cacheKey, $rate, 86400);
+        }
+        $this->_exchangeRateCache[$currencyCode] = $rate;
+
+        return $rate;
+    }
+
     /**
      * Helper function to calculate revenue based on selected revenue recognition mode
      */
@@ -213,7 +298,7 @@ class ExecutiveDashboardController extends BaseController
                 $revenue = $revInvoices + $revPayments;
             }
         } else {
-            // Mode 'job': Job Amount (นำมูลค่างานของใบ Job ที่ Active (Open/Closed) มารวมทั้งหมด)
+            // Mode 'job': Job Amount (เฉพาะ Job ที่ active - status Open/Closed)
             $query = Job::find()
                 ->where(['job.status' => [Job::JOB_STATUS_OPEN, Job::JOB_STATUS_CLOSED]]);
             if (!empty($companyId) && $companyId != '0') {
@@ -233,7 +318,10 @@ class ExecutiveDashboardController extends BaseController
                 ]);
             }
             foreach ($query->all() as $j) {
-                $revenue += (float)($j->job_amount ?: ($j->quotation ? $j->quotation->total_amount : 0));
+                $baseAmt = (float)($j->job_amount ?: ($j->quotation ? $j->quotation->total_amount : 0));
+                $currencyRef = $j->quotation ? $j->quotation->currency_id : null;
+                $rate = $this->getExchangeRate($currencyRef);
+                $revenue += $baseAmt * $rate;
             }
         }
         return $revenue;
@@ -490,29 +578,37 @@ class ExecutiveDashboardController extends BaseController
             // 1.1 PO (Purch)
             $pastPoItems = \backend\models\Purch::find()
                 ->where(['purch.approve_status' => 1])
+                ->andWhere(['!=', 'purch.status', Purch::STATUS_CANCELLED])
                 ->andWhere(['between', 'purch.purch_date', $fromDate, $toDate])
                 ->innerJoin('job j', 'j.id = purch.job_id')
+                ->andWhere(['job.status' => [Job::JOB_STATUS_OPEN, Job::JOB_STATUS_CLOSED]])
                 ->andWhere([
                     'or',
                     ['<', 'j.job_date', date('Y-m-d 00:00:00', $fromTs)],
                     ['and', ['j.job_date' => null], ['<', 'j.created_at', $fromTs]]
-                ])
-                ->select(['purch.purch_no as doc_no', 'purch.purch_date as doc_date', '((purch.net_amount - COALESCE(purch.vat_amount, 0)) * COALESCE(NULLIF(purch.currency_rate, 0), 1)) as amount', 'j.job_no', 'j.id as job_id', 'purch.id as doc_id']);
+                ]);
                 
             if (!empty($companyId) && $companyId != '0') {
-                $pastPoItems->andWhere(['j.company_id' => $companyId]);
+                if ($companyId == 1) {
+                    $pastPoItems->andWhere(['or', ['j.company_id' => 1], ['j.company_id' => null], ['j.company_id' => 0]]);
+                } else {
+                    $pastPoItems->andWhere(['j.company_id' => $companyId]);
+                }
             }
                 
-            foreach($pastPoItems->asArray()->all() as $po) {
-                $pastJobsExpenses += (float)$po['amount'];
+            foreach($pastPoItems->all() as $po) {
+                $netNoVat = (float)$po->net_amount - (float)($po->vat_amount ?: 0);
+                $rate = $this->getExchangeRate($po->currency_id, $po->currency_rate ?: $po->exchange_rate);
+                $amt = $netNoVat * $rate;
+                $pastJobsExpenses += $amt;
                 $pastJobExpenseList[] = [
                     'type' => 'PO',
-                    'doc_no' => $po['doc_no'],
-                    'doc_date' => $po['doc_date'],
-                    'amount' => (float)$po['amount'],
-                    'job_no' => $po['job_no'],
-                    'job_id' => $po['job_id'],
-                    'detail_url' => \yii\helpers\Url::to(['purch/view', 'id' => $po['doc_id']])
+                    'doc_no' => $po->purch_no,
+                    'doc_date' => $po->purch_date,
+                    'amount' => $amt,
+                    'job_no' => $po->job ? $po->job->job_no : '',
+                    'job_id' => $po->job_id,
+                    'detail_url' => \yii\helpers\Url::to(['purch/view', 'id' => $po->id])
                 ];
             }
             
@@ -657,7 +753,12 @@ class ExecutiveDashboardController extends BaseController
         if (!empty($companyId) && $companyId != '0') {
             $poPayableQuery->andWhere(['company_id' => $companyId]);
         }
-        $pendingPoPayables = (float)$poPayableQuery->sum('net_amount * COALESCE(NULLIF(currency_rate, 0), 1)');
+        $pendingPoPayables = 0;
+        foreach ($poPayableQuery->all() as $po) {
+            $netNoVat = (float)$po->net_amount;
+            $rate = $this->getExchangeRate($po->currency_id, $po->currency_rate ?: $po->exchange_rate);
+            $pendingPoPayables += $netNoVat * $rate;
+        }
 
         $isCashflowWarning = ($currentAvailableCash + $pendingReceivables) < $pendingPoPayables;
 
@@ -800,9 +901,13 @@ class ExecutiveDashboardController extends BaseController
 
             $mPoIds = array_unique(array_filter($mPoIds));
             if (!empty($mPoIds)) {
-                $mPo = (float)Purch::find()
-                    ->where(['in', 'id', $mPoIds])
-                    ->sum('(net_amount - COALESCE(vat_amount, 0)) * COALESCE(NULLIF(currency_rate, 0), 1)');
+                $mPoList = Purch::find()->where(['in', 'id', $mPoIds])->all();
+                $mPo = 0;
+                foreach ($mPoList as $po) {
+                    $netNoVat = (float)$po->net_amount - (float)($po->vat_amount ?: 0);
+                    $rate = $this->getExchangeRate($po->currency_id, $po->currency_rate ?: $po->exchange_rate);
+                    $mPo += $netNoVat * $rate;
+                }
                 $mTotalExpenses += $mPo;
             }
 
@@ -897,7 +1002,12 @@ class ExecutiveDashboardController extends BaseController
             if (!empty($fromDate) && !empty($toDate)) {
                 $cPoQuery->andWhere(['between', 'purch_date', $fromDate, $toDate]);
             }
-            $cPo = (float)$cPoQuery->sum('(net_amount - COALESCE(vat_amount, 0)) * COALESCE(NULLIF(currency_rate, 0), 1)');
+            $cPo = 0;
+            foreach ($cPoQuery->all() as $po) {
+                $netNoVat = (float)$po->net_amount - (float)($po->vat_amount ?: 0);
+                $rate = $this->getExchangeRate($po->currency_id, $po->currency_rate ?: $po->exchange_rate);
+                $cPo += $netNoVat * $rate;
+            }
                 
             // Non PR
             $cNonePrQuery = PurchaseMaster::find()
@@ -1183,7 +1293,10 @@ class ExecutiveDashboardController extends BaseController
             ->indexBy('step_no')
             ->all();
 
-        $jobRevenue = (float)($job->job_amount ?: ($job->quotation ? $job->quotation->total_amount : 0));
+        $currencyRef = $job->quotation ? $job->quotation->currency_id : null;
+        $jobFxRate = $this->getExchangeRate($currencyRef);
+        $baseJobRevenue = (float)($job->job_amount ?: ($job->quotation ? $job->quotation->total_amount : 0));
+        $jobRevenue = $baseJobRevenue * $jobFxRate;
         
         // Find Receipt Date for Interest Calculation
         $latestReceipt = (new \yii\db\Query())
@@ -1216,7 +1329,8 @@ class ExecutiveDashboardController extends BaseController
         $jobPoHasDoc = false;
         foreach ($jobPos as $po) {
             $netNoVat = (float)$po->net_amount - (float)($po->vat_amount ?: 0);
-            $amt = $netNoVat * ((float)$po->currency_rate > 0 ? (float)$po->currency_rate : 1);
+            $rate = $this->getExchangeRate($po->currency_id, $po->currency_rate ?: $po->exchange_rate);
+            $amt = $netNoVat * $rate;
             $jobPoTotal += $amt;
             if (!empty($po->purch_date)) {
                 $m = $getMonthsDiff($po->purch_date, $receiptDate);
@@ -1653,13 +1767,14 @@ class ExecutiveDashboardController extends BaseController
                 $vendor = \backend\models\Vendor::findOne($po->vendor_id);
                 if ($vendor) $vendorName = $vendor->name;
             }
+            $rate = $this->getExchangeRate($po->currency_id, $po->currency_rate ?: $po->exchange_rate);
             $jobPosDetail[] = [
                 'type' => 'PO',
                 'id' => $po->id,
                 'doc_no' => $po->purch_no ?: ('PO-' . $po->id),
                 'doc_date' => $po->purch_date ?: '-',
                 'vendor_name' => $vendorName ?: 'ไม่ระบุ Vendor',
-                'amount' => (float)$po->net_amount,
+                'amount' => (float)$po->net_amount * $rate,
                 'status_label' => $po->getApproveStatusLabel(),
                 'lines' => $lines,
                 'docs' => $docs,
