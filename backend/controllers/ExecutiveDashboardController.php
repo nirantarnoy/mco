@@ -581,7 +581,7 @@ class ExecutiveDashboardController extends BaseController
                 ->andWhere(['!=', 'purch.status', Purch::STATUS_CANCELLED])
                 ->andWhere(['between', 'purch.purch_date', $fromDate, $toDate])
                 ->innerJoin('job j', 'j.id = purch.job_id')
-                ->andWhere(['job.status' => [Job::JOB_STATUS_OPEN, Job::JOB_STATUS_CLOSED]])
+                ->andWhere(['j.status' => [Job::JOB_STATUS_OPEN, Job::JOB_STATUS_CLOSED]])
                 ->andWhere([
                     'or',
                     ['<', 'j.job_date', date('Y-m-d 00:00:00', $fromTs)],
@@ -617,6 +617,7 @@ class ExecutiveDashboardController extends BaseController
                 ->where(['purchase_master.approve_status' => 1])
                 ->andWhere(['between', 'purchase_master.docdat', $fromDate, $toDate])
                 ->innerJoin('job j', 'j.job_no = purchase_master.job_no')
+                ->andWhere(['j.status' => [Job::JOB_STATUS_OPEN, Job::JOB_STATUS_CLOSED]])
                 ->andWhere([
                     'or',
                     ['<', 'j.job_date', date('Y-m-d 00:00:00', $fromTs)],
@@ -646,6 +647,7 @@ class ExecutiveDashboardController extends BaseController
                 ->where(['petty_cash_voucher.status' => 1])
                 ->andWhere(['between', 'petty_cash_voucher.date', $fromDate, $toDate])
                 ->innerJoin('job j', 'j.id = petty_cash_voucher.job_id')
+                ->andWhere(['j.status' => [Job::JOB_STATUS_OPEN, Job::JOB_STATUS_CLOSED]])
                 ->andWhere([
                     'or',
                     ['<', 'j.job_date', date('Y-m-d 00:00:00', $fromTs)],
@@ -677,6 +679,7 @@ class ExecutiveDashboardController extends BaseController
                 ->where(['inv.status' => \backend\models\Invoice::STATUS_ACTIVE])
                 ->andWhere(['inv.invoice_type' => [\backend\models\Invoice::TYPE_TAX_INVOICE, \backend\models\Invoice::TYPE_RECEIPT, '4', 4, \backend\models\Invoice::TYPE_QUOTATION]])
                 ->andWhere(['between', 'inv.invoice_date', $fromDate, $toDate])
+                ->andWhere(['j.status' => [Job::JOB_STATUS_OPEN, Job::JOB_STATUS_CLOSED]])
                 ->andWhere([
                     'or',
                     ['<', 'j.job_date', date('Y-m-d 00:00:00', $fromTs)],
