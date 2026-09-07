@@ -296,9 +296,9 @@ $desc_text = $model->wht_desc == 'อื่นๆ' || $model->wht_desc == 'อ�
             </span>
             
             <!-- ตรายางบริษัท (จำลองตำแหน่งตามรูปภาพ) -->
-            <div id="stamp-container" style="position: absolute; right: 80px; top: 10px; width: 100px; height: 100px; border: 1px dashed #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0.3; z-index: 1;">
-                <span id="stamp-text" style="font-size: 10px; transform: rotate(-15deg);">ประทับตรา<br>นิติบุคคล</span>
-                <img id="stamp-img" src="" style="display:none; max-width: 100px; max-height: 100px; border-radius: 50%; mix-blend-mode: multiply;">
+            <div id="stamp-container" style="position: absolute; right: 80px; top: 10px; width: 100px; height: 100px; border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0.8; z-index: 1;">
+                <span id="stamp-text" style="font-size: 10px; transform: rotate(-15deg); display: none;">ประทับตรา<br>นิติบุคคล</span>
+                <img id="stamp-img" src="<?= Yii::$app->request->baseUrl ?>/uploads/logo/mco_stamp.png" style="display: block; max-width: 100px; max-height: 100px; border-radius: 50%; mix-blend-mode: multiply;">
             </div>
         </div>
 
@@ -338,12 +338,14 @@ $desc_text = $model->wht_desc == 'อื่นๆ' || $model->wht_desc == 'อ�
             } else {
                 nameContainer.innerHTML = '';
             }
-        document.addEventListener('DOMContentLoaded', function() {
-            var stampVal = document.getElementById('stamp-selector').value;
-            if (stampVal) {
-                updateStamp(stampVal);
+        }
+
+        (function() {
+            var stampSelect = document.getElementById('stamp-selector');
+            if (stampSelect && stampSelect.value) {
+                updateStamp(stampSelect.value);
             }
-        });
+        })();
         </script>
 
         <div style="margin-top: 30px; font-size: 11px; border-top: 1px solid #000; padding-top: 10px;">
