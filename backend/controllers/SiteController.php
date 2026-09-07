@@ -668,6 +668,7 @@ class SiteController extends BaseController
         // Render HTML Preview Wrapper (prevents IDM intercept, enables print button & new tab preview)
         $this->layout = false;
         
+        $directUrl = Yii::$app->request->baseUrl . '/uploads/' . ($folder ? $folder . '/' : '') . rawurlencode($file);
         $rawUrl = \yii\helpers\Url::to(['site/view-file', 'folder' => $folder, 'file' => $file, 'raw' => 1]);
         $downloadUrl = \yii\helpers\Url::to(['site/view-file', 'folder' => $folder, 'file' => $file, 'download' => 1]);
         $encodedFile = \yii\helpers\Html::encode($file);
@@ -830,6 +831,7 @@ class SiteController extends BaseController
             iframe { height: 100vh !important; }
             .img-container { padding: 0 !important; background: #fff !important; }
             .img-preview { max-width: 100% !important; max-height: none !important; box-shadow: none !important; }
+            #pdf-canvas-container canvas { margin: 0 !important; box-shadow: none !important; }
         }
     </style>
 </head>
@@ -858,10 +860,15 @@ class SiteController extends BaseController
 
     <div class="content-area">
         <?php if ($isPdf): ?>
-            <iframe id="pdfFrame" src="<?= $rawUrl ?>"></iframe>
+            <div id="pdf-wrapper" style="width:100%; height:100%; position:relative;">
+                <object id="pdfObject" data="<?= $directUrl ?>#toolbar=1" type="application/pdf" style="width:100%; height:100%;">
+                    <iframe id="pdfFrame" src="<?= $directUrl ?>" style="width:100%; height:100%; border:none;"></iframe>
+                </object>
+                <div id="pdf-canvas-container" style="display:none; width:100%; height:100%; overflow:auto; background:#525659; padding:20px 0; text-align:center;"></div>
+            </div>
         <?php elseif ($isImage): ?>
             <div class="img-container">
-                <img id="previewImg" class="img-preview" src="<?= $rawUrl ?>" alt="<?= $encodedFile ?>" />
+                <img id="previewImg" class="img-preview" src="<?= $directUrl ?>" alt="<?= $encodedFile ?>" />
             </div>
         <?php else: ?>
             <div class="office-notice">
@@ -875,10 +882,15 @@ class SiteController extends BaseController
         <?php endif; ?>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+
         function triggerPrint() {
             var frame = document.getElementById('pdfFrame');
-            if (frame) {
+            if (frame && frame.contentWindow) {
                 try {
                     frame.contentWindow.focus();
                     frame.contentWindow.print();
@@ -889,6 +901,44 @@ class SiteController extends BaseController
             }
             window.print();
         }
+
+        <?php if ($isPdf): ?>
+        window.addEventListener('DOMContentLoaded', function() {
+            if (typeof pdfjsLib !== 'undefined') {
+                pdfjsLib.getDocument('<?= $directUrl ?>').promise.then(function(pdf) {
+                    var container = document.getElementById('pdf-canvas-container');
+                    var obj = document.getElementById('pdfObject');
+                    if (!container) return;
+                    container.innerHTML = '';
+                    container.style.display = 'block';
+                    if (obj) obj.style.display = 'none';
+
+                    for (var pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                        (function(num) {
+                            pdf.getPage(num).then(function(page) {
+                                var viewport = page.getViewport({ scale: 1.5 });
+                                var canvas = document.createElement('canvas');
+                                canvas.style.margin = '15px auto';
+                                canvas.style.display = 'block';
+                                canvas.style.boxShadow = '0 4px 20px rgba(0,0,0,0.5)';
+                                canvas.style.background = '#fff';
+                                canvas.style.borderRadius = '4px';
+
+                                var context = canvas.getContext('2d');
+                                canvas.height = viewport.height;
+                                canvas.width = viewport.width;
+
+                                container.appendChild(canvas);
+                                page.render({ canvasContext: context, viewport: viewport });
+                            });
+                        })(pageNum);
+                    }
+                }).catch(function(err) {
+                    console.log('PDF.js render fallback error:', err);
+                });
+            }
+        });
+        <?php endif; ?>
     </script>
 </body>
 </html>
