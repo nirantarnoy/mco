@@ -1793,11 +1793,11 @@ class JobController extends BaseController
         }
 
         // ตั้งค่า header สำหรับการแสดงผล
-        $response = Yii::$app->response;
-        $response->headers->set('Content-Type', $this->getMimeType($document_name));
-        $response->headers->set('Content-Disposition', 'inline; filename="' . $document_name . '"');
-
-        return $response->sendFile($filePath);
+        $mimeType = $this->getMimeType($document_name);
+        return Yii::$app->response->sendFile($filePath, $document_name, [
+            'inline' => true,
+            'mimeType' => $mimeType,
+        ]);
     }
 
     /**
@@ -1859,11 +1859,11 @@ class JobController extends BaseController
         }
 
         // ตั้งค่า header สำหรับการพิมพ์
-        $response = Yii::$app->response;
-        $response->headers->set('Content-Type', $this->getMimeType($document_name));
-        $response->headers->set('Content-Disposition', 'inline; filename="print_' . $document_name . '"');
-
-        return $response->sendFile($filePath);
+        $mimeType = $this->getMimeType($document_name);
+        return Yii::$app->response->sendFile($filePath, $document_name, [
+            'inline' => true,
+            'mimeType' => $mimeType,
+        ]);
     }
 
     /**

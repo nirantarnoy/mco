@@ -30,7 +30,7 @@ class SiteController extends BaseController
                         'allow' => true,
                     ],
                     [
-                        'actions' => ['logout', 'index', 'changepassword','grab','logoutdriver','change-company','changecompany','google-auth','google-callback'],
+                        'actions' => ['logout', 'index', 'changepassword','grab','logoutdriver','change-company','changecompany','google-auth','google-callback', 'view-file'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -607,6 +607,42 @@ class SiteController extends BaseController
 
         fclose($output);
         exit;
+    }
+
+    /**
+     * Streams an uploaded file inline for browser preview without triggering IDM download manager
+     * @param string $folder
+     * @param string $file
+     * @return \yii\web\Response
+     * @throws NotFoundHttpException
+     */
+    public function actionViewFile($folder = '', $file = '')
+    {
+        $folder = preg_replace('/[^a-zA-Z0-9_\-\/]/', '', $folder);
+        $file = basename($file);
+
+        if (empty($file)) {
+            throw new \yii\web\NotFoundHttpException('ไม่ระบุชื่อไฟล์');
+        }
+
+        $baseUploadDir = Yii::getAlias('@backend/web/uploads/');
+        $fullPath = realpath($baseUploadDir . ($folder ? $folder . '/' : '') . $file);
+
+        if (!$fullPath || !file_exists($fullPath) || strpos($fullPath, realpath($baseUploadDir)) !== 0) {
+            throw new \yii\web\NotFoundHttpException('ไม่พบไฟล์เอกสาร: ' . \yii\helpers\Html::encode($file));
+        }
+
+        $mimeType = \yii\helpers\FileHelper::getMimeTypeByExtension($fullPath) ?: 'application/octet-stream';
+
+        $response = Yii::$app->response;
+        $response->headers->set('Content-Type', $mimeType);
+        $response->headers->set('Content-Disposition', 'inline; filename="' . rawurlencode($file) . '"');
+        $response->headers->set('Cache-Control', 'public, max-age=86400');
+
+        return $response->sendFile($fullPath, $file, [
+            'inline' => true,
+            'mimeType' => $mimeType,
+        ]);
     }
 
 }
