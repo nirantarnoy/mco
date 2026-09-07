@@ -519,7 +519,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                                 <?php foreach ($model->paymentVoucherDocs as $doc): ?>
                                     <tr id="doc-row-<?= $doc->id ?>">
                                         <td>
-                                            <?= Html::a($doc->file_name, Yii::getAlias('@web/uploads/payment_voucher/') . $doc->file_path, ['target' => '_blank']) ?>
+                                            <?= Html::a($doc->file_name, Url::to(['site/view-file', 'folder' => 'payment_voucher', 'file' => $doc->file_path]), ['target' => '_blank']) ?>
                                             <small class="text-muted">(<?= round($doc->file_size / 1024, 2) ?> KB)</small>
                                         </td>
                                         <td><?= $doc->uploaded_by ? \common\models\User::findOne($doc->uploaded_by)->username : '-' ?></td>

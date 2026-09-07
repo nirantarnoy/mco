@@ -384,7 +384,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                                     <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
                                     <td><?= $value->doc ?></td>
                                     <td style="text-align: center">
-                                        <a href="<?= Yii::$app->request->BaseUrl . '/uploads/pettycash_doc_slip/' . $value->doc ?>" target="_blank">ดูเอกสาร</a>
+                                        <a href="<?= \yii\helpers\Url::to(['site/view-file', 'folder' => 'pettycash_doc_slip', 'file' => $value->doc]) ?>" target="_blank">ดูเอกสาร</a>
                                     </td>
                                     <td style="text-align: center">
                                         <div class="btn btn-danger" data-var="<?= trim($value->doc) ?>" onclick="delete_doc($(this),1)">ลบ</div>
@@ -418,7 +418,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                                     <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
                                     <td><?= $value->doc ?></td>
                                     <td style="text-align: center">
-                                        <a href="<?= Yii::$app->request->BaseUrl . '/uploads/pettycash_doc_bill/' . $value->doc ?>" target="_blank">ดูเอกสาร</a>
+                                        <a href="<?= \yii\helpers\Url::to(['site/view-file', 'folder' => 'pettycash_doc_bill', 'file' => $value->doc]) ?>" target="_blank">ดูเอกสาร</a>
                                     </td>
                                     <td style="text-align: center">
                                         <div class="btn btn-danger" data-var="<?= trim($value->doc) ?>" onclick="delete_doc($(this),2)">ลบ</div>

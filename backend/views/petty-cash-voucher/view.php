@@ -271,7 +271,7 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                             <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
                             <td><?= $value->doc ?></td>
                             <td style="text-align: center">
-                                <a href="<?= Yii::$app->request->BaseUrl . '/uploads/pettycash_doc_slip/' . $value->doc ?>"
+                                <a href="<?= \yii\helpers\Url::to(['site/view-file', 'folder' => 'pettycash_doc_slip', 'file' => $value->doc]) ?>"
                                    target="_blank">
                                     ดูเอกสาร
                                 </a>
@@ -312,7 +312,7 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                             <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
                             <td><?= $value->doc ?></td>
                             <td style="text-align: center">
-                                <a href="<?= Yii::$app->request->BaseUrl . '/uploads/pettycash_doc_bill/' . $value->doc ?>"
+                                <a href="<?= \yii\helpers\Url::to(['site/view-file', 'folder' => 'pettycash_doc_bill', 'file' => $value->doc]) ?>"
                                    target="_blank">
                                     ดูเอกสาร
                                 </a>
