@@ -616,7 +616,16 @@ class SiteController extends BaseController
      * @return \yii\web\Response
      * @throws NotFoundHttpException
      */
-    public function actionViewFile($folder = '', $file = '')
+    /**
+     * Views an uploaded file inline for browser preview & printing without triggering IDM download manager
+     * @param string $folder
+     * @param string $file
+     * @param int $raw
+     * @param int $download
+     * @return \yii\web\Response|string
+     * @throws NotFoundHttpException
+     */
+    public function actionViewFile($folder = '', $file = '', $raw = 0, $download = 0)
     {
         $folder = preg_replace('/[^a-zA-Z0-9_\-\/]/', '', $folder);
         $file = basename($file);
@@ -633,16 +642,258 @@ class SiteController extends BaseController
         }
 
         $mimeType = \yii\helpers\FileHelper::getMimeTypeByExtension($fullPath) ?: 'application/octet-stream';
+        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
 
-        $response = Yii::$app->response;
-        $response->headers->set('Content-Type', $mimeType);
-        $response->headers->set('Content-Disposition', 'inline; filename="' . rawurlencode($file) . '"');
-        $response->headers->set('Cache-Control', 'public, max-age=86400');
+        // If force download requested
+        if ($download == 1) {
+            return Yii::$app->response->sendFile($fullPath, $file, [
+                'inline' => false,
+                'mimeType' => $mimeType,
+            ]);
+        }
 
-        return $response->sendFile($fullPath, $file, [
-            'inline' => true,
-            'mimeType' => $mimeType,
-        ]);
+        // If raw binary content requested (e.g. inside iframe or img src)
+        if ($raw == 1) {
+            $response = Yii::$app->response;
+            $response->headers->set('Content-Type', $mimeType);
+            $response->headers->set('Content-Disposition', 'inline; filename="' . rawurlencode($file) . '"');
+            $response->headers->set('Cache-Control', 'public, max-age=86400');
+
+            return $response->sendFile($fullPath, $file, [
+                'inline' => true,
+                'mimeType' => $mimeType,
+            ]);
+        }
+
+        // Render HTML Preview Wrapper (prevents IDM intercept, enables print button & new tab preview)
+        $this->layout = false;
+        
+        $rawUrl = \yii\helpers\Url::to(['site/view-file', 'folder' => $folder, 'file' => $file, 'raw' => 1]);
+        $downloadUrl = \yii\helpers\Url::to(['site/view-file', 'folder' => $folder, 'file' => $file, 'download' => 1]);
+        $encodedFile = \yii\helpers\Html::encode($file);
+        $encodedFolder = \yii\helpers\Html::encode($folder);
+
+        $isPdf = ($ext === 'pdf' || $mimeType === 'application/pdf');
+        $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp']);
+
+        ob_start();
+        ?>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>พรีวิวเอกสาร - <?= $encodedFile ?></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html { height: 100%; font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #323639; color: #fff; overflow: hidden; }
+        
+        .toolbar {
+            height: 50px;
+            background: #1e222d;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            position: relative;
+            z-index: 10;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 50%;
+        }
+
+        .badge-folder {
+            background: #3b82f6;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .btn-group-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-print {
+            background: #10b981;
+            color: #fff;
+        }
+        .btn-print:hover { background: #059669; }
+
+        .btn-download {
+            background: #374151;
+            color: #e5e7eb;
+            border: 1px solid #4b5563;
+        }
+        .btn-download:hover { background: #4b5563; color: #fff; }
+
+        .btn-close-tab {
+            background: #ef4444;
+            color: #fff;
+        }
+        .btn-close-tab:hover { background: #dc2626; }
+
+        .content-area {
+            height: calc(100vh - 50px);
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #525659;
+        }
+
+        .img-container {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: #323639;
+        }
+
+        .img-preview {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            background: #fff;
+            border-radius: 4px;
+        }
+
+        .office-notice {
+            text-align: center;
+            background: #1f2937;
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid #374151;
+            max-width: 500px;
+        }
+
+        .office-notice i {
+            font-size: 64px;
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+
+        .office-notice h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .office-notice p {
+            color: #9ca3af;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        @media print {
+            .no-print { display: none !important; }
+            body, html { height: auto !important; background: #fff !important; color: #000 !important; overflow: visible !important; }
+            .content-area { height: auto !important; }
+            iframe { height: 100vh !important; }
+            .img-container { padding: 0 !important; background: #fff !important; }
+            .img-preview { max-width: 100% !important; max-height: none !important; box-shadow: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="toolbar no-print">
+        <div class="file-info">
+            <i class="<?= $isPdf ? 'far fa-file-pdf text-danger' : ($isImage ? 'far fa-file-image text-info' : 'far fa-file-alt text-warning') ?>" style="font-size: 20px;"></i>
+            <span><?= $encodedFile ?></span>
+            <?php if (!empty($folder)): ?>
+                <span class="badge-folder"><?= $encodedFolder ?></span>
+            <?php endif; ?>
+        </div>
+        <div class="btn-group-actions">
+            <button type="button" onclick="triggerPrint()" class="btn-action btn-print" title="พิมพ์เอกสาร">
+                <i class="fas fa-print"></i> พิมพ์เอกสาร (Print)
+            </button>
+            <a href="<?= $downloadUrl ?>" class="btn-action btn-download" title="ดาวน์โหลดไฟล์">
+                <i class="fas fa-download"></i> ดาวน์โหลด
+            </a>
+            <button type="button" onclick="window.close()" class="btn-action btn-close-tab" title="ปิดหน้าต่างนี้">
+                <i class="fas fa-times"></i> ปิด
+            </button>
+        </div>
+    </div>
+
+    <div class="content-area">
+        <?php if ($isPdf): ?>
+            <iframe id="pdfFrame" src="<?= $rawUrl ?>"></iframe>
+        <?php elseif ($isImage): ?>
+            <div class="img-container">
+                <img id="previewImg" class="img-preview" src="<?= $rawUrl ?>" alt="<?= $encodedFile ?>" />
+            </div>
+        <?php else: ?>
+            <div class="office-notice">
+                <i class="far fa-file-word"></i>
+                <h3><?= $encodedFile ?></h3>
+                <p>ไฟล์ประเภท <strong><?= strtoupper($ext) ?></strong> ไม่สามารถพรีวิวในเบราว์เซอร์ได้โดยตรง กรุณากดปุ่มดาวน์โหลดเพื่อเปิดด้วยโปรแกรมบนเครื่อง</p>
+                <a href="<?= $downloadUrl ?>" class="btn-action btn-print" style="justify-content: center;">
+                    <i class="fas fa-download"></i> ดาวน์โหลดไฟล์
+                </a>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <script>
+        function triggerPrint() {
+            var frame = document.getElementById('pdfFrame');
+            if (frame) {
+                try {
+                    frame.contentWindow.focus();
+                    frame.contentWindow.print();
+                    return;
+                } catch (e) {
+                    console.log('Frame print fallback:', e);
+                }
+            }
+            window.print();
+        }
+    </script>
+</body>
+</html>
+        <?php
+        return ob_get_clean();
     }
 
 }

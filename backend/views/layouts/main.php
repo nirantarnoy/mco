@@ -82,12 +82,13 @@ AppAsset::register($this);
 <?php
 $viewFileUrl = \yii\helpers\Url::to(['/site/view-file']);
 $this->registerJs("
-$(document).on('click', 'a[href*=\"/uploads/\"]', function(e) {
+$(document).on('click', 'a[href*=\"uploads/\"]', function(e) {
     var href = $(this).attr('href');
     if (!href) return;
-    if (href.indexOf('r=') !== -1 || href.indexOf('site/view-file') !== -1) return;
+    if (href.indexOf('site/view-file') !== -1 || href.indexOf('site%2Fview-file') !== -1) return;
+    if ($(this).attr('download')) return;
 
-    var match = href.match(/\/uploads\/(.+)$/i);
+    var match = href.match(/uploads\/(.+)$/i);
     if (match && match[1]) {
         var cleanPath = match[1].split('?')[0].split('#')[0];
         var parts = cleanPath.split('/');
