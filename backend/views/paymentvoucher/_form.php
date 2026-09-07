@@ -3,7 +3,10 @@
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
+use kartik\select2\Select2Asset;
 use kartik\date\DatePicker;
+
+Select2Asset::register($this);
 use yii\helpers\ArrayHelper;
 use yii\helpers\Url;
 use backend\models\PaymentVoucher;
@@ -73,7 +76,7 @@ var account_data = {$account_data_json};
 function addLine(data = null) {
     var tr = $('<tr class="line-item">');
     
-    var acc_select = $('<select name="line_account_code[]" class="form-control">').append(account_options);
+    var acc_select = $('<select name="line_account_code[]" class="form-control acc-code-select2" style="width: 100%;">').append(account_options);
     if (data && data.account_code) {
         acc_select.val(data.account_code);
     }
@@ -93,6 +96,12 @@ function addLine(data = null) {
     tr.append('<td><input type="number" name="line_credit[]" class="form-control line-credit" step="0.01" value="' + (data ? data.credit : '0.00') + '"></td>');
     tr.append('<td class="text-center"><button type="button" class="btn btn-danger btn-sm btn-remove-line"><i class="fa fa-trash"></i></button></td>');
     $('#voucher-lines tbody').append(tr);
+
+    acc_select.select2({
+        width: '100%',
+        placeholder: '-- เลือก --',
+        allowClear: true
+    });
 }
 
 function calculateTotal() {
@@ -192,6 +201,12 @@ $('#pr-select, #po-select, #none-pr-select').on('change', function() {
 
 $(document).ready(function() {
     calculateTotal();
+
+    $('.acc-code-select2').select2({
+        width: '100%',
+        placeholder: '-- เลือก --',
+        allowClear: true
+    });
     
     // ตั้งค่า prev-val เริ่มต้น
     $('#vendor-select').data('prev-val', $('#vendor-select').val());
@@ -558,7 +573,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                                 ?>
                                 <tr class="line-item">
                                     <td>
-                                        <select name="line_account_code[]" class="form-control">
+                                        <select name="line_account_code[]" class="form-control acc-code-select2" style="width: 100%;">
                                             <option value="">-- เลือก --</option>
                                             <?php foreach ($chart_of_accounts as $acc): ?>
                                                 <?php if($acc->account_type == 1) continue; ?>
@@ -627,6 +642,10 @@ $this->registerJs($script);
 .card-header { font-weight: 600; }
 .form-label { font-weight: 500; }
 #voucher-lines th { text-align: center; }
-#voucher-lines td { padding: 8px; }
+#voucher-lines td { padding: 8px; vertical-align: middle; }
 .btn-lg { border-radius: 30px; }
+.select2-container { width: 100% !important; }
+.select2-container .select2-selection--single { height: 38px; }
+.select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 38px; }
+.select2-container--default .select2-selection--single .select2-selection__arrow { height: 36px; }
 </style>

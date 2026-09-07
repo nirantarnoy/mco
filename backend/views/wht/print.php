@@ -96,8 +96,8 @@ $desc_text = $model->wht_desc == 'อื่นๆ' || $model->wht_desc == 'อ�
         .checked::after { content: '✓'; }
 
         @media print {
-            body { padding: 0; }
-            .no-print { display: none; }
+            body { padding: 0; margin: 0; }
+            .no-print { display: none !important; }
         }
     </style>
 </head>
@@ -109,7 +109,7 @@ $desc_text = $model->wht_desc == 'อื่นๆ' || $model->wht_desc == 'อ�
                 <label>ตราประทับ:</label>
                 <select id="stamp-selector" onchange="updateStamp(this.value)" style="padding: 3px;">
                     <option value="">-- ไม่ใช้ตราประทับ --</option>
-                    <option value="<?= Yii::$app->request->baseUrl ?>/uploads/logo/mco_logo.png">MCO</option>
+                    <option value="<?= Yii::$app->request->baseUrl ?>/uploads/logo/mco_stamp.png" selected>MCO</option>
                     <option value="<?= Yii::$app->request->baseUrl ?>/uploads/logo/aricat.png">บจก. อริแคท ต่างด้าว</option>
                 </select>
             </span>
@@ -338,7 +338,12 @@ $desc_text = $model->wht_desc == 'อื่นๆ' || $model->wht_desc == 'อ�
             } else {
                 nameContainer.innerHTML = '';
             }
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            var stampVal = document.getElementById('stamp-selector').value;
+            if (stampVal) {
+                updateStamp(stampVal);
+            }
+        });
         </script>
 
         <div style="margin-top: 30px; font-size: 11px; border-top: 1px solid #000; padding-top: 10px;">

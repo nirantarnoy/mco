@@ -467,7 +467,14 @@
                         </ul>
                     </li>
                 <?php endif;?>
-                <?php if(\Yii::$app->user->can('journaltransaricat/index')):?>
+                <?php
+                $currentUser = !Yii::$app->user->isGuest ? Yii::$app->user->identity : null;
+                $isMcoAdmin = ($currentUser && $currentUser->username === 'mcoadmin');
+                $sessionCompName = Yii::$app->session->get('company_name', '');
+                $isAricatCompany = (!empty($sessionCompName) && stripos($sessionCompName, 'ARICAT') !== false);
+                $showAricatMenu = ($isMcoAdmin || $isAricatCompany) && \Yii::$app->user->can('journaltransaricat/index');
+                ?>
+                <?php if ($showAricatMenu): ?>
                     <li class="nav-item has-treeview has-sub">
                         <a href="#" class="nav-link">
                             <i class="nav-icon fas fa-archive"></i>
@@ -509,17 +516,6 @@
                                 </a>
                             </li>
                             <?php //endif; ?>
-                            <!--                            --><?php //if (\Yii::$app->user->can('stocktrans/index')): ?>
-                            <!--                                <li class="nav-item">-->
-                            <!--                                    <a href="index.php?r=stocktrans" class="nav-link stocktrans">-->
-                            <!--                                        <i class="far fa-circlez nav-icon"></i>-->
-                            <!--                                        <p>-->
-                            <!--                                            ประวัติทำรายการ-->
-                            <!--                                          -->
-                            <!--                                        </p>-->
-                            <!--                                    </a>-->
-                            <!--                                </li>-->
-                            <!--                            --><?php //endif;?>
                         </ul>
                     </li>
                 <?php endif;?>
