@@ -355,17 +355,45 @@ $fmt = Yii::$app->formatter;
     </div>
 
     <!-- Signatures -->
+    <?php
+    // Requestor / Creator info
+    $requestor_sig = '';
+    $requestor_name = '';
+    if ($model->created_by) {
+        $requestor_sig = \backend\models\User::findEmployeeSignature($model->created_by);
+        $requestor_name = \backend\models\User::findEmployeeNameByUserId($model->created_by);
+        if (empty($requestor_name)) {
+            $u = \common\models\User::findOne($model->created_by);
+            $requestor_name = $u ? $u->username : '';
+        }
+    }
+
+    // Approver info
+    $approve_sig = '';
+    $approver_name = '';
+    $approve_date_val = '';
+    if ($model->approve_status == \backend\models\PurchaseMaster::APPROVE_STATUS_APPROVED) {
+        $approver_id = $model->updated_by ?: $model->created_by;
+        if ($approver_id) {
+            $approve_sig = \backend\models\User::findEmployeeSignature($approver_id);
+            $approver_name = \backend\models\User::findEmployeeNameByUserId($approver_id);
+            if (empty($approver_name)) {
+                $u = \common\models\User::findOne($approver_id);
+                $approver_name = $u ? $u->username : '';
+            }
+        }
+        $approve_date_val = $model->updated_at ? $fmt->asDate($model->updated_at, 'php:d/m/Y') : ($model->docdat ? $fmt->asDate($model->docdat, 'php:d/m/Y') : '');
+    }
+    ?>
     <div class="sign-section">
         <div class="sign-box">
             <div class="row-group">
                 <div class="field-label">Request / Prepare By :</div>
-                <div class="field-value">
-                    <?php 
-                    if ($model->created_by) {
-                        $user = \common\models\User::findOne($model->created_by);
-                        echo $user ? Html::encode($user->username) : '';
-                    }
-                    ?>
+                <div class="field-value" style="display: flex; align-items: center; justify-content: flex-start; gap: 8px; min-height: 35px;">
+                    <?php if (!empty($requestor_sig)): ?>
+                        <img src="<?= Yii::getAlias('@web') ?>/uploads/employee_signature/<?= Html::encode($requestor_sig) ?>" alt="Signature" style="max-height: 32px; max-width: 120px;">
+                    <?php endif; ?>
+                    <span><?= Html::encode($requestor_name) ?></span>
                 </div>
             </div>
             <div class="row-group" style="margin-top: 20px;">
@@ -378,11 +406,18 @@ $fmt = Yii::$app->formatter;
         <div class="sign-box">
             <div class="row-group">
                 <div class="field-label">Authorized By :</div>
-                <div class="field-value"></div>
+                <div class="field-value" style="display: flex; align-items: center; justify-content: flex-start; gap: 8px; min-height: 35px;">
+                    <?php if (!empty($approve_sig)): ?>
+                        <img src="<?= Yii::getAlias('@web') ?>/uploads/employee_signature/<?= Html::encode($approve_sig) ?>" alt="Authorized Signature" style="max-height: 32px; max-width: 120px;">
+                    <?php endif; ?>
+                    <span><?= Html::encode($approver_name) ?></span>
+                </div>
             </div>
             <div class="row-group" style="margin-top: 20px;">
                 <div class="field-label">Date :</div>
-                <div class="field-value"></div>
+                <div class="field-value">
+                    <?= Html::encode($approve_date_val) ?>
+                </div>
             </div>
         </div>
     </div>
