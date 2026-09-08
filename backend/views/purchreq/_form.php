@@ -822,8 +822,8 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <td><?= $value->doc_name ?></td>
                                 <td style="text-align: center">
                                     <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_req_doc/' . $value->doc_name ?>"
-                                       target="_blank">
-                                        ดูเอกสาร
+                                       target="_blank" class="btn btn-outline-info btn-sm">
+                                        <i class="fas fa-search"></i> ดูเอกสาร
                                     </a>
                                 </td>
                                 <td style="text-align: center">

@@ -715,7 +715,7 @@ $this->registerJs($autocompleteJs);
                                 <?php if ($deposit_doc_show != ''): ?>
                                     <?php echo Html::a(
                                         'ดูเอกสาร',
-                                        ['purch/showdoc', 'filename' => $deposit_doc_show],
+                                        Yii::$app->request->baseUrl . '/uploads/purch_doc/' . $deposit_doc_show,
                                         [
                                             'target' => '_blank',
                                             'data-pjax' => '0',
@@ -770,7 +770,7 @@ $this->registerJs($autocompleteJs);
                                 <?php if ($receive_doc_show != ''): ?>
                                     <?php echo Html::a(
                                         'ดูเอกสาร',
-                                        ['purch/showdoc', 'filename' => $receive_doc_show],
+                                        Yii::$app->request->baseUrl . '/uploads/purch_doc/' . $receive_doc_show,
                                         [
                                             'target' => '_blank',
                                             'data-pjax' => '0',
@@ -838,7 +838,7 @@ $this->registerJs($autocompleteJs);
                                    // $url = Yii::$app->request->hostInfo . Yii::$app->request->baseUrl . '/uploads/purch_doc/' . $model_purch_vendor_bill->bill_doc;
                                     echo Html::a(
                                         'ดูเอกสาร',
-                                        ['purch/showdoc', 'filename' => $model_purch_vendor_bill->bill_doc],
+                                        Yii::$app->request->baseUrl . '/uploads/purch_doc/' . $model_purch_vendor_bill->bill_doc,
                                         [
                                             'target' => '_blank',
                                             'data-pjax' => '0',
@@ -970,10 +970,9 @@ $this->registerJs($autocompleteJs);
                                 <td><?= \backend\helpers\PurchDocType::getTypeById($value->doc_type_id) ?></td>
                                 <td style="text-align: center">
                                     <?php
-                                    $url = \Yii::$app->request->hostInfo . \Yii::$app->request->baseUrl . '/uploads/purch_doc/' . $value->doc_name;
                                     echo Html::a(
                                         'ดูเอกสาร',
-                                        ['purch/showdoc', 'filename' => $value->doc_name],
+                                        Yii::$app->request->baseUrl . '/uploads/purch_doc/' . $value->doc_name,
                                         [
                                             'target' => '_blank',
                                             'data-pjax' => '0',

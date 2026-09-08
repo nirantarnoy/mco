@@ -701,8 +701,8 @@ JS
                             ?>
                             <?php if ($deposit_doc_show!=''): ?>
                                 <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $deposit_doc_show ?>"
-                                   target="_blank">
-                                    ดูเอกสาร
+                                   target="_blank" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-search"></i> ดูเอกสาร
                                 </a>
                             <?php endif; ?>
                         </div>
@@ -751,8 +751,8 @@ JS
                             ?>
                             <?php if ($receive_doc_show!=''): ?>
                                 <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $receive_doc_show ?>"
-                                   target="_blank">
-                                    ดูเอกสาร
+                                   target="_blank" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-search"></i> ดูเอกสาร
                                 </a>
                             <?php endif; ?>
                         </div>
@@ -824,8 +824,8 @@ JS
                             </td>
                             <td style="text-align: center">
                                 <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_doc/' . $value->doc_name ?>"
-                                   target="_blank">
-                                    ดูเอกสาร
+                                   target="_blank" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-search"></i> ดูเอกสาร
                                 </a>
                             </td>
                             <td style="text-align: center">

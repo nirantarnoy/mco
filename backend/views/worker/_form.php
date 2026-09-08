@@ -98,8 +98,8 @@ use yii\widgets\ActiveForm;
                                 <td><?= $value->doc ?></td>
                                 <td style="text-align: center">
                                     <a href="<?= Yii::$app->request->BaseUrl . '/uploads/aricat/' . $value->doc ?>"
-                                       target="_blank">
-                                        ดูเอกสาร
+                                       target="_blank" class="btn btn-outline-info btn-sm">
+                                        <i class="fas fa-search"></i> ดูเอกสาร
                                     </a>
                                 </td>
                                 <td style="text-align: center">

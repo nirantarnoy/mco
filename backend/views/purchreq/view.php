@@ -480,8 +480,8 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
                             <td><?= $value->doc_name ?></td>
                             <td style="text-align: center">
                                 <a href="<?= Yii::$app->request->BaseUrl . '/uploads/purch_req_doc/' . $value->doc_name ?>"
-                                   target="_blank">
-                                    ดูเอกสาร
+                                   target="_blank" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-search"></i> ดูเอกสาร
                                 </a>
                             </td>
                             <td style="text-align: center">

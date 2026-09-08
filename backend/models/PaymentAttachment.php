@@ -165,6 +165,14 @@ class PaymentAttachment extends ActiveRecord
     }
 
     /**
+     * Get view URL (Direct URL)
+     */
+    public function getViewUrl()
+    {
+        return Yii::$app->request->baseUrl . '/' . $this->file_path;
+    }
+
+    /**
      * Delete file from filesystem
      */
     public function deleteFile()

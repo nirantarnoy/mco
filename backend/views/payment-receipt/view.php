@@ -259,6 +259,15 @@ $this->params['breadcrumbs'][] = $this->title;
                                     </div>
                                     <div>
                                         <?= Html::a(
+                                            '<i class="fas fa-eye"></i>',
+                                            $attachment->getViewUrl(),
+                                            [
+                                                'class' => 'btn btn-sm btn-outline-info me-1',
+                                                'title' => 'ดูเอกสาร',
+                                                'target' => '_blank'
+                                            ]
+                                        ) ?>
+                                        <?= Html::a(
                                             '<i class="fas fa-download"></i>',
                                             $attachment->getDownloadUrl(),
                                             [
