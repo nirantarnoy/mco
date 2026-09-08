@@ -84,6 +84,11 @@ class PreAdvanceController extends BaseController
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        
+        if (!empty($model->approved_by)) {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถแก้ไขเอกสารที่อนุมัติแล้วได้');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
 
         if ($model->load(Yii::$app->request->post())) {
             $transaction = Yii::$app->db->beginTransaction();
@@ -110,7 +115,13 @@ class PreAdvanceController extends BaseController
 
     public function actionDelete($id)
     {
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id);
+        if (!empty($model->approved_by)) {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถลบเอกสารที่อนุมัติแล้วได้');
+            return $this->redirect(['index']);
+        }
+        $model->delete();
+        Yii::$app->session->setFlash('success', 'ลบเอกสารสำเร็จ');
         return $this->redirect(['index']);
     }
 

@@ -29,6 +29,19 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             'remark',
             [
+                'label' => 'สถานะ',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    if (!empty($model->approved_by)) {
+                        return '<span class="badge badge-success">อนุมัติแล้ว</span>';
+                    } elseif (!empty($model->checked_by)) {
+                        return '<span class="badge badge-info">ตรวจสอบแล้ว</span>';
+                    } else {
+                        return '<span class="badge badge-warning">รอตรวจสอบ</span>';
+                    }
+                }
+            ],
+            [
                 'class' => 'yii\grid\ActionColumn',
                 'template' => '{view} {update} {print} {delete}',
                 'buttons' => [
@@ -41,6 +54,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         ]);
                     },
                     'update' => function ($url, $model, $key) {
+                        if (!empty($model->approved_by)) {
+                            return ''; // Hide update if approved (optional but good practice)
+                        }
                         return Html::a('<span class="fas fa-edit" aria-hidden="true"></span>', $url, [
                             'class' => 'btn btn-sm btn-primary'
                         ]);
@@ -51,6 +67,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         ]);
                     },
                     'delete' => function ($url, $model, $key) {
+                        if (!empty($model->approved_by)) {
+                            return ''; // Prevent delete if approved
+                        }
                         return Html::a('<span class="fas fa-trash-alt" aria-hidden="true"></span>', $url, [
                             'class' => 'btn btn-sm btn-danger',
                             'data' => [
