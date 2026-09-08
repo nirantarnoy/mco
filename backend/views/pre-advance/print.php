@@ -362,19 +362,40 @@ $formatter = \Yii::$app->formatter;
     <table class="sign-table">
         <tr>
             <td>
+                <?php
+                $requestor_signature = \backend\models\User::findEmployeeSignature($model->created_by);
+                if(!empty($requestor_signature)): ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" style="max-width: 140px;max-height: 55px; margin-bottom: 5px;" alt="Request By Signature"><br>
+                <?php else: ?>
+                    <div style="height: 60px;"></div>
+                <?php endif; ?>
                 <span class="sign-line"></span><br>
                 ผู้ขอเบิก (Requested By)<br>
-                วันที่ _______/_______/_______
+                วันที่ <?= $model->created_at ? \Yii::$app->formatter->asDate($model->created_at, 'php:d/m/Y') : '_______/_______/_______' ?>
             </td>
             <td>
+                <?php
+                $checker_signature = \backend\models\User::findEmployeeSignature($model->checked_by);
+                if(!empty($checker_signature)): ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?=$checker_signature?>" style="max-width: 140px;max-height: 55px; margin-bottom: 5px;" alt="Checker Signature"><br>
+                <?php else: ?>
+                    <div style="height: 60px;"></div>
+                <?php endif; ?>
                 <span class="sign-line"></span><br>
                 ผู้ตรวจสอบ (Checked By)<br>
-                วันที่ _______/_______/_______
+                วันที่ <?= $model->checked_at ? \Yii::$app->formatter->asDate($model->checked_at, 'php:d/m/Y') : '_______/_______/_______' ?>
             </td>
             <td>
+                <?php
+                $approver_signature = \backend\models\User::findEmployeeSignature($model->approved_by);
+                if(!empty($approver_signature)): ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?=$approver_signature?>" style="max-width: 140px;max-height: 55px; margin-bottom: 5px;" alt="Approver Signature"><br>
+                <?php else: ?>
+                    <div style="height: 60px;"></div>
+                <?php endif; ?>
                 <span class="sign-line"></span><br>
                 ผู้อนุมัติ (Approved By)<br>
-                วันที่ _______/_______/_______
+                วันที่ <?= $model->approved_at ? \Yii::$app->formatter->asDate($model->approved_at, 'php:d/m/Y') : '_______/_______/_______' ?>
             </td>
         </tr>
     </table>

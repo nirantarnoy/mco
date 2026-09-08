@@ -114,6 +114,50 @@ class PreAdvanceController extends BaseController
         return $this->redirect(['index']);
     }
 
+    public function actionCheck($id)
+    {
+        $model = $this->findModel($id);
+        $model->checked_by = Yii::$app->user->id;
+        $model->checked_at = date('Y-m-d H:i:s');
+        if ($model->save(false)) {
+            Yii::$app->session->setFlash('success', 'ตรวจสอบรายการแล้ว');
+        }
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    public function actionUncheck($id)
+    {
+        $model = $this->findModel($id);
+        $model->checked_by = null;
+        $model->checked_at = null;
+        if ($model->save(false)) {
+            Yii::$app->session->setFlash('success', 'ยกเลิกการตรวจสอบแล้ว');
+        }
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    public function actionApprove($id)
+    {
+        $model = $this->findModel($id);
+        $model->approved_by = Yii::$app->user->id;
+        $model->approved_at = date('Y-m-d H:i:s');
+        if ($model->save(false)) {
+            Yii::$app->session->setFlash('success', 'อนุมัติรายการแล้ว');
+        }
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    public function actionUnapprove($id)
+    {
+        $model = $this->findModel($id);
+        $model->approved_by = null;
+        $model->approved_at = null;
+        if ($model->save(false)) {
+            Yii::$app->session->setFlash('success', 'ยกเลิกการอนุมัติแล้ว');
+        }
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
     public function actionGetNonePrByVendor($vendor_id = null, $q = null, $pre_advance_id = null)
     {
         Yii::$app->response->format = Response::FORMAT_JSON;

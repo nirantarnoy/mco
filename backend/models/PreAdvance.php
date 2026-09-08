@@ -41,8 +41,8 @@ class PreAdvance extends ActiveRecord
     public function rules()
     {
         return [
-            [['trans_date'], 'safe'],
-            [['vendor_id', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'company_id'], 'integer'],
+            [['trans_date', 'checked_at', 'approved_at'], 'safe'],
+            [['vendor_id', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'company_id', 'checked_by', 'approved_by'], 'integer'],
             [['amount'], 'number'],
             [['pre_advance_no'], 'string', 'max' => 50],
             [['recipient_name'], 'string', 'max' => 255],
@@ -70,6 +70,10 @@ class PreAdvance extends ActiveRecord
             'created_by' => 'Created By',
             'updated_by' => 'Updated By',
             'company_id' => 'Company ID',
+            'checked_by' => 'Checked By',
+            'checked_at' => 'Checked At',
+            'approved_by' => 'Approved By',
+            'approved_at' => 'Approved At',
         ];
     }
 

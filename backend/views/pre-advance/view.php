@@ -15,6 +15,52 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= Html::a('Update', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
         <?= Html::a('Print', ['print', 'id' => $model->id], ['class' => 'btn btn-info', 'target' => '_blank']) ?>
         <?= Html::a('สร้างใบหัก ณ ที่จ่าย (WHT)', ['/wht/create', 'ref_type' => 'PRE-ADVANCE', 'ref_id' => $model->id], ['class' => 'btn btn-warning', 'target' => '_blank']) ?>
+        
+        <?php 
+        $isChecker = \backend\models\User::isUserAdmin() || Yii::$app->user->can('pre_advance_checker') || Yii::$app->user->can('checker');
+        $isApprover = \backend\models\User::isUserAdmin() || Yii::$app->user->can('pre_advance_approver') || Yii::$app->user->can('approver');
+        ?>
+        
+        <?php if ($isChecker): ?>
+            <?php if (empty($model->checked_by)): ?>
+                <?= Html::a('ตรวจสอบรายการ', ['check', 'id' => $model->id], [
+                    'class' => 'btn btn-success',
+                    'data' => [
+                        'confirm' => 'ยืนยันการตรวจสอบรายการนี้?',
+                        'method' => 'post',
+                    ],
+                ]) ?>
+            <?php else: ?>
+                <?= Html::a('ยกเลิกตรวจสอบ', ['uncheck', 'id' => $model->id], [
+                    'class' => 'btn btn-secondary',
+                    'data' => [
+                        'confirm' => 'ยืนยันการยกเลิกตรวจสอบรายการนี้?',
+                        'method' => 'post',
+                    ],
+                ]) ?>
+            <?php endif; ?>
+        <?php endif; ?>
+
+        <?php if ($isApprover): ?>
+            <?php if (empty($model->approved_by)): ?>
+                <?= Html::a('อนุมัติรายการ', ['approve', 'id' => $model->id], [
+                    'class' => 'btn btn-success',
+                    'data' => [
+                        'confirm' => 'ยืนยันการอนุมัติรายการนี้?',
+                        'method' => 'post',
+                    ],
+                ]) ?>
+            <?php else: ?>
+                <?= Html::a('ยกเลิกอนุมัติ', ['unapprove', 'id' => $model->id], [
+                    'class' => 'btn btn-secondary',
+                    'data' => [
+                        'confirm' => 'ยืนยันการยกเลิกอนุมัติรายการนี้?',
+                        'method' => 'post',
+                    ],
+                ]) ?>
+            <?php endif; ?>
+        <?php endif; ?>
+
         <?= Html::a('Delete', ['delete', 'id' => $model->id], [
             'class' => 'btn btn-danger',
             'data' => [
@@ -54,6 +100,24 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             'amount:decimal',
             'remark:ntext',
+            [
+                'attribute' => 'checked_by',
+                'value' => function($model) {
+                    if (empty($model->checked_by)) return '-';
+                    $empName = \backend\models\User::findEmployeeNameByUserId($model->checked_by);
+                    return !empty($empName) ? $empName : \backend\models\User::findName($model->checked_by);
+                }
+            ],
+            'checked_at:datetime',
+            [
+                'attribute' => 'approved_by',
+                'value' => function($model) {
+                    if (empty($model->approved_by)) return '-';
+                    $empName = \backend\models\User::findEmployeeNameByUserId($model->approved_by);
+                    return !empty($empName) ? $empName : \backend\models\User::findName($model->approved_by);
+                }
+            ],
+            'approved_at:datetime',
         ],
     ]) ?>
 
