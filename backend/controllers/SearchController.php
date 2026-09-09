@@ -145,7 +145,7 @@ class SearchController extends BaseController
                     $q = DeliveryNote::find()->joinWith(['deliveryNoteLines'])->groupBy('delivery_note.id');
                     $cond = ['or'];
                     foreach ($keywords as $keyword) {
-                        $cond[] = ['like', 'delivery_note.delivery_no', $keyword];
+                        $cond[] = ['like', 'delivery_note.dn_no', $keyword];
                     }
                     if (!empty($productIds)) {
                         $cond[] = ['in', 'delivery_note_line.product_id', $productIds];
