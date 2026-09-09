@@ -162,13 +162,13 @@ class SearchController extends BaseController
                 
                 // 8. Query Invoice
                 if (class_exists('backend\models\Invoice')) {
-                    $q = Invoice::find()->joinWith(['invoiceItems'])->groupBy('invoice.id');
+                    $q = Invoice::find()->joinWith(['items'])->groupBy('invoice.id');
                     $cond = ['or'];
                     foreach ($keywords as $keyword) {
-                        $cond[] = ['like', 'invoice.invoice_no', $keyword];
+                        $cond[] = ['like', 'invoice.invoice_number', $keyword]; // Also fixed invoice_no to invoice_number if needed? Wait let's check Invoice model
                     }
                     if (!empty($productIds)) {
-                        $cond[] = ['in', 'invoice_item.product_id', $productIds];
+                        $cond[] = ['in', 'invoice_items.product_id', $productIds];
                     }
                     $q->where($cond);
                     foreach ($q->all() as $m) {
