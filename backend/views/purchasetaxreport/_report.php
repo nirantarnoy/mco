@@ -21,7 +21,7 @@ if ($companyId) {
     $company = Company::findOne($companyId);
     if ($company) {
         $companyName = $company->name;
-        $companyAddress = trim($company->address_1 . ' ' . $company->address_2 . ' ' . $company->address_3);
+        $companyAddress = $company->description;
     }
 }
 ?>
