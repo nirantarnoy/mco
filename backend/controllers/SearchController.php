@@ -146,9 +146,9 @@ class SearchController extends BaseController
                     $cond = ['or'];
                     foreach ($keywords as $keyword) {
                         $cond[] = ['like', 'delivery_note.dn_no', $keyword];
-                    }
-                    if (!empty($productIds)) {
-                        $cond[] = ['in', 'delivery_note_line.product_id', $productIds];
+                        $cond[] = ['like', 'delivery_note_line.item_no', $keyword];
+                        $cond[] = ['like', 'delivery_note_line.part_no', $keyword];
+                        $cond[] = ['like', 'delivery_note_line.description', $keyword];
                     }
                     $q->where($cond);
                     foreach ($q->all() as $m) {

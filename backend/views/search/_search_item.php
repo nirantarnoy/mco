@@ -96,8 +96,8 @@ $config = [
         'amount' => null,
         'lines' => isset($obj->deliveryNoteLines) ? $obj->deliveryNoteLines : [],
         'url' => ['delivery-note/view', 'id' => $obj->id],
-        'product_rel' => 'product',
-        'product_id_field' => 'product_id',
+        'product_rel' => null,
+        'product_id_field' => 'item_no',
     ],
     'invoice' => [
         'title' => 'ใบแจ้งหนี้ (Invoice)',
@@ -161,6 +161,9 @@ $conf = $config[$type];
                                 if ($type == 'npr') {
                                     $code = $line->stkcod;
                                     $name = $line->stkdes;
+                                } elseif ($type == 'dn') {
+                                    $code = $line->item_no ?: $line->part_no;
+                                    $name = $line->description;
                                 } else {
                                     $rel = $conf['product_rel'];
                                     if ($rel && isset($line->$rel)) {
