@@ -513,6 +513,12 @@
                                 <p>จัดการหัก ณ ที่จ่าย</p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="index.php?r=purchasetaxreport/index" class="nav-link purchasetaxreport">
+                                <i class="far fa-circlez nav-icon"></i>
+                                <p>รายงานภาษีซื้อ</p>
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <li class="nav-item has-treeview has-sub">

@@ -3,10 +3,16 @@ namespace backend\controllers;
 
 use Yii;
 use yii\web\Controller;
-use yii\data\ActiveDataProvider;
+use yii\data\ArrayDataProvider;
 use backend\models\Job;
-use backend\models\JobLine;
+use backend\models\Quotation;
+use backend\models\Purch;
+use backend\models\PurchaseMaster;
+use backend\models\Orders;
+use backend\models\DeliveryNote;
+use backend\models\Invoice;
 use backend\models\Product;
+use yii\helpers\ArrayHelper;
 
 class SearchController extends BaseController
 {
@@ -14,43 +20,174 @@ class SearchController extends BaseController
     {
         $searchQuery = Yii::$app->request->get('q', '');
         $dataProvider = null;
+        $results = [];
 
         if (!empty($searchQuery)) {
-            // แยกคำค้นหาด้วยเครื่องหมาย comma
-            $keywords = array_map('trim', explode(',', $searchQuery));
-            $keywords = array_filter($keywords); // ลบค่าว่าง
-
-            $query = Job::find()
-                ->joinWith(['jobLines', 'jobLines.product'])
-                ->groupBy('job.id');
-
-            // สร้าง condition สำหรับแต่ละ keyword
+            $keywords = array_filter(array_map('trim', explode(',', $searchQuery)));
+            
             if (!empty($keywords)) {
-                $orConditions = ['or'];
-
+                // 1. Find matching Products first
+                $productQuery = Product::find();
+                $prodConditions = ['or'];
                 foreach ($keywords as $keyword) {
-                    $orConditions[] = ['like', 'job.job_no', $keyword];
-                    $orConditions[] = ['like', 'job.quotation_id', $keyword];
-                    $orConditions[] = ['like', 'job.status', $keyword];
-                    $orConditions[] = ['like', 'job.summary_note', $keyword];
-                    $orConditions[] = ['like', 'job_line.note', $keyword];
-                    $orConditions[] = ['like', 'product.code', $keyword];
-                    $orConditions[] = ['like', 'product.name', $keyword];
-                    $orConditions[] = ['like', 'product.description', $keyword];
+                    $prodConditions[] = ['like', 'code', $keyword];
+                    $prodConditions[] = ['like', 'name', $keyword];
+                }
+                $productQuery->where($prodConditions);
+                $matchedProducts = $productQuery->all();
+                
+                $productIds = ArrayHelper::getColumn($matchedProducts, 'id');
+                $productCodes = ArrayHelper::getColumn($matchedProducts, 'code');
+
+                // 2. Query Jobs
+                if (class_exists('backend\models\Job')) {
+                    $q = Job::find()->joinWith(['jobLines'])->groupBy('job.id');
+                    $cond = ['or'];
+                    foreach ($keywords as $keyword) {
+                        $cond[] = ['like', 'job.job_no', $keyword];
+                        $cond[] = ['like', 'job.summary_note', $keyword];
+                    }
+                    if (!empty($productIds)) {
+                        $cond[] = ['in', 'job_line.product_id', $productIds];
+                    }
+                    $q->where($cond);
+                    foreach ($q->all() as $m) {
+                        $results[] = [
+                            'type' => 'job',
+                            'model' => $m,
+                            'date' => $m->created_at
+                        ];
+                    }
                 }
 
-                $query->where($orConditions);
+                // 3. Query Quotation
+                if (class_exists('backend\models\Quotation')) {
+                    $q = Quotation::find()->joinWith(['quotationLines'])->groupBy('quotation.id');
+                    $cond = ['or'];
+                    foreach ($keywords as $keyword) {
+                        $cond[] = ['like', 'quotation.quotation_no', $keyword];
+                    }
+                    if (!empty($productIds)) {
+                        $cond[] = ['in', 'quotation_line.product_id', $productIds];
+                    }
+                    $q->where($cond);
+                    foreach ($q->all() as $m) {
+                        $results[] = [
+                            'type' => 'quotation',
+                            'model' => $m,
+                            'date' => $m->created_at
+                        ];
+                    }
+                }
+
+                // 4. Query Purchase Order (Purch)
+                if (class_exists('backend\models\Purch')) {
+                    $q = Purch::find()->joinWith(['purchLines'])->groupBy('purch.id');
+                    $cond = ['or'];
+                    foreach ($keywords as $keyword) {
+                        $cond[] = ['like', 'purch.purch_no', $keyword];
+                    }
+                    if (!empty($productIds)) {
+                        $cond[] = ['in', 'purch_line.product_id', $productIds];
+                    }
+                    $q->where($cond);
+                    foreach ($q->all() as $m) {
+                        $results[] = [
+                            'type' => 'po',
+                            'model' => $m,
+                            'date' => $m->created_at
+                        ];
+                    }
+                }
+
+                // 5. Query Purchase Master (NPR)
+                if (class_exists('backend\models\PurchaseMaster')) {
+                    $q = PurchaseMaster::find()->joinWith(['purchaseDetails'])->groupBy('purchase_master.id');
+                    $cond = ['or'];
+                    foreach ($keywords as $keyword) {
+                        $cond[] = ['like', 'purchase_master.docnum', $keyword];
+                    }
+                    if (!empty($productCodes)) {
+                        $cond[] = ['in', 'purchase_detail.stkcod', $productCodes];
+                    }
+                    $q->where($cond);
+                    foreach ($q->all() as $m) {
+                        $results[] = [
+                            'type' => 'npr',
+                            'model' => $m,
+                            'date' => $m->created_at
+                        ];
+                    }
+                }
+
+                // 6. Query Sales Order (Orders)
+                if (class_exists('backend\models\Orders')) {
+                    $q = Orders::find()->joinWith(['ordersLines'])->groupBy('orders.id');
+                    $cond = ['or'];
+                    foreach ($keywords as $keyword) {
+                        $cond[] = ['like', 'orders.order_no', $keyword];
+                    }
+                    if (!empty($productIds)) {
+                        $cond[] = ['in', 'orders_line.product_id', $productIds];
+                    }
+                    $q->where($cond);
+                    foreach ($q->all() as $m) {
+                        $results[] = [
+                            'type' => 'so',
+                            'model' => $m,
+                            'date' => $m->created_at
+                        ];
+                    }
+                }
+                
+                // 7. Query Delivery Note
+                if (class_exists('backend\models\DeliveryNote')) {
+                    $q = DeliveryNote::find()->joinWith(['deliveryNoteLines'])->groupBy('delivery_note.id');
+                    $cond = ['or'];
+                    foreach ($keywords as $keyword) {
+                        $cond[] = ['like', 'delivery_note.delivery_no', $keyword];
+                    }
+                    if (!empty($productIds)) {
+                        $cond[] = ['in', 'delivery_note_line.product_id', $productIds];
+                    }
+                    $q->where($cond);
+                    foreach ($q->all() as $m) {
+                        $results[] = [
+                            'type' => 'dn',
+                            'model' => $m,
+                            'date' => $m->created_at
+                        ];
+                    }
+                }
+                
+                // 8. Query Invoice
+                if (class_exists('backend\models\Invoice')) {
+                    $q = Invoice::find()->joinWith(['invoiceItems'])->groupBy('invoice.id');
+                    $cond = ['or'];
+                    foreach ($keywords as $keyword) {
+                        $cond[] = ['like', 'invoice.invoice_no', $keyword];
+                    }
+                    if (!empty($productIds)) {
+                        $cond[] = ['in', 'invoice_item.product_id', $productIds];
+                    }
+                    $q->where($cond);
+                    foreach ($q->all() as $m) {
+                        $results[] = [
+                            'type' => 'invoice',
+                            'model' => $m,
+                            'date' => $m->created_at
+                        ];
+                    }
+                }
             }
 
-            $dataProvider = new ActiveDataProvider([
-                'query' => $query,
+            // Sort results by date descending
+            ArrayHelper::multisort($results, 'date', SORT_DESC);
+
+            $dataProvider = new ArrayDataProvider([
+                'allModels' => $results,
                 'pagination' => [
                     'pageSize' => 20,
-                ],
-                'sort' => [
-                    'defaultOrder' => [
-                        'created_at' => SORT_DESC,
-                    ]
                 ],
             ]);
         }
