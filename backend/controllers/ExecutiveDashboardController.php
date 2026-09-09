@@ -912,7 +912,7 @@ class ExecutiveDashboardController extends BaseController
                 $mPoList = Purch::find()->where(['in', 'id', $mPoIds])->all();
                 $mPo = 0;
                 foreach ($mPoList as $po) {
-                    $netNoVat = (float)$po->net_amount - (float)($po->vat_amount ?: 0);
+                    $netNoVat = (float)$po->net_amount > 0 ? ((float)$po->net_amount - (float)($po->vat_amount ?: 0)) : ((float)$po->total_amount - (float)($po->discount_total_amount ?: 0));
                     $rate = $this->getExchangeRate($po->currency_id, $po->currency_rate ?: $po->exchange_rate);
                     $mPo += $netNoVat * $rate;
                 }
@@ -1330,7 +1330,7 @@ class ExecutiveDashboardController extends BaseController
         $jobPoInterest = 0;
         $jobPoHasDoc = false;
         foreach ($jobPos as $po) {
-            $netNoVat = (float)$po->net_amount - (float)($po->vat_amount ?: 0);
+            $netNoVat = (float)$po->net_amount > 0 ? ((float)$po->net_amount - (float)($po->vat_amount ?: 0)) : ((float)$po->total_amount - (float)($po->discount_total_amount ?: 0));
             $rate = $this->getExchangeRate($po->currency_id, $po->currency_rate ?: $po->exchange_rate);
             $amt = $netNoVat * $rate;
             $jobPoTotal += $amt;
@@ -1777,6 +1777,7 @@ class ExecutiveDashboardController extends BaseController
                     $currencyCode = strtoupper(trim($code));
                 }
             }
+            $netNoVat = (float)$po->net_amount > 0 ? ((float)$po->net_amount - (float)($po->vat_amount ?: 0)) : ((float)$po->total_amount - (float)($po->discount_total_amount ?: 0));
             $jobPosDetail[] = [
                 'type' => 'PO',
                 'id' => $po->id,
@@ -1784,7 +1785,7 @@ class ExecutiveDashboardController extends BaseController
                 'currency_code' => $currencyCode,
                 'doc_date' => $po->purch_date ?: '-',
                 'vendor_name' => $vendorName ?: 'ไม่ระบุ Vendor',
-                'amount' => (float)$po->net_amount * $rate,
+                'amount' => $netNoVat * $rate,
                 'status_label' => $po->getApproveStatusLabel(),
                 'lines' => $lines,
                 'docs' => $docs,
