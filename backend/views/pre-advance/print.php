@@ -139,6 +139,15 @@ $formatter = \Yii::$app->formatter;
 
                         $finalTotal = $totNetAmt > 0 ? $totNetAmt : ($valBeforeVat + $vatAmt - $taxAmt);
 
+                        $details = [];
+                        if ($m->purchaseDetails) {
+                            foreach ($m->purchaseDetails as $pd) {
+                                if (!empty($pd->stkdes)) {
+                                    $details[] = $pd->stkdes;
+                                }
+                            }
+                        }
+
                         $info = [
                             'type' => 'NONE_PR',
                             'docnum' => $m->docnum,
@@ -149,6 +158,7 @@ $formatter = \Yii::$app->formatter;
                             'vat_amount' => $vatAmt,
                             'tax_amount' => $taxAmt,
                             'is_vendor_vat' => $isVendorVat,
+                            'details' => implode(', ', $details),
                         ];
                         $refMap[$m->docnum] = $info;
                         $refList[] = $info;
@@ -187,6 +197,16 @@ $formatter = \Yii::$app->formatter;
                             }
                         }
 
+                        $details = [];
+                        if ($m->purchLines) {
+                            foreach ($m->purchLines as $pl) {
+                                $txt = trim($pl->product_name . ' ' . $pl->product_description);
+                                if (!empty($txt)) {
+                                    $details[] = $txt;
+                                }
+                            }
+                        }
+
                         $info = [
                             'type' => 'PO',
                             'docnum' => $m->purch_no,
@@ -197,6 +217,7 @@ $formatter = \Yii::$app->formatter;
                             'vat_amount' => $vatAmt,
                             'tax_amount' => $whdTax,
                             'is_vendor_vat' => $isVendorVat,
+                            'details' => implode(', ', $details),
                         ];
                         $refMap[$m->purch_no] = $info;
                         $refList[] = $info;
@@ -310,6 +331,9 @@ $formatter = \Yii::$app->formatter;
 
                 // Build clean Description
                 $displayDesc = $descText;
+                if ($refInfo && !empty($refInfo['details'])) {
+                    $displayDesc .= ' (' . $refInfo['details'] . ')';
+                }
 
                 $sumBeforeVat += $valueBeforeVat;
                 $sumVat += $vatAmount;
