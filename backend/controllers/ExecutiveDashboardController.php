@@ -632,7 +632,7 @@ class ExecutiveDashboardController extends BaseController
                     ['<', 'j.job_date', date('Y-m-d 00:00:00', $fromTs)],
                     ['and', ['j.job_date' => null], ['<', 'j.created_at', $fromTs]]
                 ])
-                ->select(['purchase_master.docnum as doc_no', 'purchase_master.docdat as doc_date', '(purchase_master.total_amount - COALESCE(purchase_master.vat_amount, 0)) as amount', 'j.job_no', 'j.id as job_id', 'purchase_master.id as doc_id']);
+                ->select(['purchase_master.docnum as doc_no', 'purchase_master.docdat as doc_date', '(purchase_master.total_amount - COALESCE(purchase_master.vat_amount, 0) + COALESCE(purchase_master.tax_amount, 0)) as amount', 'j.job_no', 'j.id as job_id', 'purchase_master.id as doc_id']);
                 
             if (!empty($companyId) && $companyId != '0') {
                 $pastNonPrItems->andWhere(['j.company_id' => $companyId]);
@@ -947,7 +947,7 @@ class ExecutiveDashboardController extends BaseController
             if (!empty($mNonePrIds)) {
                 $mNpr = (float)PurchaseMaster::find()
                     ->where(['in', 'id', $mNonePrIds])
-                    ->sum('total_amount - COALESCE(vat_amount, 0)');
+                    ->sum('total_amount - COALESCE(vat_amount, 0) + COALESCE(tax_amount, 0)');
                 $mTotalExpenses += $mNpr;
             }
 
@@ -1022,7 +1022,7 @@ class ExecutiveDashboardController extends BaseController
             if (!empty($fromDate) && !empty($toDate)) {
                 $cNonePrQuery->andWhere(['between', 'docdat', $fromDate, $toDate]);
             }
-            $cNonePr = (float)$cNonePrQuery->sum('total_amount - COALESCE(vat_amount, 0)');
+            $cNonePr = (float)$cNonePrQuery->sum('total_amount - COALESCE(vat_amount, 0) + COALESCE(tax_amount, 0)');
                 
             // Petty Cash
             $cPettyQuery = PettyCashVoucher::find()
@@ -1347,7 +1347,7 @@ class ExecutiveDashboardController extends BaseController
         $jobNonePrInterest = 0;
         $jobNonePrHasDoc = false;
         foreach ($jobNonePrs as $npr) {
-            $amt = (float)$npr->total_amount - (float)($npr->vat_amount ?: 0);
+            $amt = (float)$npr->total_amount - (float)($npr->vat_amount ?: 0) + (float)($npr->tax_amount ?: 0);
             $jobNonePrTotal += $amt;
             if (!empty($npr->docdat)) {
                 $m = $getMonthsDiff($npr->docdat, $receiptDate);
