@@ -198,8 +198,17 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                 ],
                                 [
                                     'attribute' => 'currency_id',
+                                    'label' => 'สกุลเงิน',
                                     'value' => function ($data) {
-                                        return \backend\models\Currency::findCode($data->currency_id);
+                                        $currency = \backend\models\Currency::findCode($data->currency_id);
+                                        return $currency ? $currency : 'THB';
+                                    }
+                                ],
+                                [
+                                    'attribute' => 'currency_rate',
+                                    'label' => 'อัตราแลกเปลี่ยน',
+                                    'value' => function ($data) {
+                                        return $data->currency_rate > 0 ? number_format($data->currency_rate, 4) : '1.0000';
                                     }
                                 ],
                                 [
@@ -237,6 +246,13 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                     'attribute' => 'net_amount',
                                     'label' => 'ยอดรวมทั้งสิ้น',
                                     'format' => ['currency', 'THB'],
+                                ],
+                                [
+                                    'label' => 'ยอดรวมทั้งสิ้น (THB)',
+                                    'value' => function ($data) {
+                                        $rate = $data->currency_rate > 0 ? $data->currency_rate : 1;
+                                        return number_format($data->net_amount * $rate, 2) . ' ฿';
+                                    }
                                 ],
                                 [
                                     'attribute' => 'total_text',

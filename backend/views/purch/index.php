@@ -172,6 +172,25 @@ $this->params['breadcrumbs'][] = $this->title;
                 },
             ],
             [
+                'attribute' => 'currency_id',
+                'label' => 'สกุลเงิน',
+                'headerOptions' => ['style' => 'width: 80px; text-align: center;'],
+                'contentOptions' => ['style' => 'text-align: center;'],
+                'value' => function ($model) {
+                    $currency = \backend\models\Currency::findCode($model->currency_id);
+                    return $currency ? $currency : 'THB';
+                },
+            ],
+            [
+                'label' => 'ยอดเงิน (THB)',
+                'headerOptions' => ['style' => 'width: 120px; text-align: right;'],
+                'contentOptions' => ['style' => 'text-align: right;'],
+                'value' => function ($model) {
+                    $rate = $model->currency_rate > 0 ? $model->currency_rate : 1;
+                    return number_format($model->net_amount * $rate, 2);
+                },
+            ],
+            [
                 'label' => 'เอกสารแนบ',
                 'headerOptions' => ['style' => 'width: 250px; text-align: center;'],
                 'contentOptions' => ['style' => 'text-align: center;'],
