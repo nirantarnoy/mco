@@ -378,7 +378,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                             'label' => 'ราคา/หน่วย',
                             'headerOptions' => ['style' => 'width: 120px; text-align: right;'],
                             'contentOptions' => ['style' => 'text-align: right;'],
-                            'format' => ['currency', 'THB'],
+                            'format' => ['decimal', 2],
                         ],
                         [
                             'attribute' => 'unit_id',
@@ -391,7 +391,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                             'label' => 'ราคารวม',
                             'headerOptions' => ['style' => 'width: 120px; text-align: right;'],
                             'contentOptions' => ['style' => 'text-align: right;'],
-                            'format' => ['currency', 'THB'],
+                            'format' => ['decimal', 2],
                             'pageSummary' => true,
                             'pageSummaryFunc' => GridView::F_SUM,
                             'pageSummaryOptions' => ['style' => 'text-align: right;'],
