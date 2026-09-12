@@ -176,9 +176,19 @@ $this->params['breadcrumbs'][] = $this->title;
                 'label' => 'สกุลเงิน',
                 'headerOptions' => ['style' => 'width: 80px; text-align: center;'],
                 'contentOptions' => ['style' => 'text-align: center;'],
+                'filter' => \yii\helpers\ArrayHelper::map(\backend\models\Currency::find()->all(), 'id', 'code'),
                 'value' => function ($model) {
                     $currency = \backend\models\Currency::findCode($model->currency_id);
                     return $currency ? $currency : 'THB';
+                },
+            ],
+            [
+                'attribute' => 'currency_rate',
+                'label' => 'อัตราแลกเปลี่ยน',
+                'headerOptions' => ['style' => 'width: 100px; text-align: right;'],
+                'contentOptions' => ['style' => 'text-align: right;'],
+                'value' => function ($model) {
+                    return $model->currency_rate > 0 ? number_format($model->currency_rate, 4) : '1.0000';
                 },
             ],
             [
@@ -340,6 +350,7 @@ $this->params['breadcrumbs'][] = $this->title;
 <style>
     .kv-grid-table {
         font-size: 14px;
+        white-space: nowrap;
     }
 
     .grid-view .summary {

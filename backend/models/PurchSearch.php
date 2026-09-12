@@ -18,7 +18,7 @@ class PurchSearch extends Purch
     public function rules()
     {
         return [
-            [['id', 'vendor_id', 'status', 'approve_status', 'created_by', 'updated_by'], 'integer'],
+            [['id', 'vendor_id', 'status', 'approve_status', 'created_by', 'updated_by', 'currency_id'], 'integer'],
             [['purch_no', 'purch_date', 'vendor_name', 'note', 'date_from', 'date_to'], 'safe'],
             [['total_amount'], 'number'],
         ];
@@ -83,6 +83,7 @@ class PurchSearch extends Purch
             'p.created_by' => $this->created_by,
             'p.updated_at' => $this->updated_at,
             'p.updated_by' => $this->updated_by,
+            'p.currency_id' => $this->currency_id,
         ]);
 
         if ($this->purch_date) {
