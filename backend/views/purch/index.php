@@ -168,7 +168,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 'headerOptions' => ['style' => 'width: 120px; text-align: right;'],
                 'contentOptions' => ['style' => 'text-align: right;'],
                 'value' => function ($model) {
-                    return number_format($model->net_amount, 2);
+                    $curr = \backend\models\Currency::findCode($model->currency_id) ?: 'THB';
+                    return number_format($model->net_amount, 2) . ' ' . $curr;
                 },
             ],
             [
