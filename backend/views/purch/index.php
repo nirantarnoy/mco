@@ -46,14 +46,14 @@ $this->params['breadcrumbs'][] = $this->title;
                 'options' => ['data-pjax' => 1],
             ]); ?>
             <div class="row align-items-end">
-                <div class="col-md-3 mb-2 mb-md-0">
+                <div class="col-md-2 mb-2 mb-md-0">
                     <label class="form-label font-weight-bold">วันที่เริ่มต้น</label>
                     <?= Html::textInput('date_from', $searchModel->date_from, [
                         'class' => 'form-control',
                         'type' => 'date',
                     ]) ?>
                 </div>
-                <div class="col-md-3 mb-2 mb-md-0">
+                <div class="col-md-2 mb-2 mb-md-0">
                     <label class="form-label font-weight-bold">วันที่สิ้นสุด</label>
                     <?= Html::textInput('date_to', $searchModel->date_to, [
                         'class' => 'form-control',
@@ -72,6 +72,18 @@ $this->params['breadcrumbs'][] = $this->title;
                             'id', 
                             'name'
                         ),
+                        'options' => ['placeholder' => 'ทั้งหมด'],
+                        'pluginOptions' => [
+                            'allowClear' => true
+                        ],
+                    ]) ?>
+                </div>
+                <div class="col-md-2 mb-2 mb-md-0">
+                    <label class="form-label font-weight-bold">สกุลเงิน</label>
+                    <?= Select2::widget([
+                        'name' => 'PurchSearch[currency_id]',
+                        'value' => $searchModel->currency_id,
+                        'data' => \yii\helpers\ArrayHelper::map(\backend\models\Currency::find()->all(), 'id', 'code'),
                         'options' => ['placeholder' => 'ทั้งหมด'],
                         'pluginOptions' => [
                             'allowClear' => true
@@ -176,7 +188,6 @@ $this->params['breadcrumbs'][] = $this->title;
                 'label' => 'สกุลเงิน',
                 'headerOptions' => ['style' => 'width: 80px; text-align: center;'],
                 'contentOptions' => ['style' => 'text-align: center;'],
-                'filter' => \yii\helpers\ArrayHelper::map(\backend\models\Currency::find()->all(), 'id', 'code'),
                 'value' => function ($model) {
                     $currency = \backend\models\Currency::findCode($model->currency_id);
                     return $currency ? $currency : 'THB';
