@@ -215,8 +215,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                     'attribute' => 'total_amount',
                                     'label' => 'ยอดรวม',
                                     'value' => function ($data) {
-                                        $curr = \backend\models\Currency::findCode($data->currency_id) ?: 'THB';
-                                        return number_format($data->total_amount, 2) . ' ' . $curr;
+                                        return number_format($data->total_amount, 2);
                                     }
                                 ],
                                 [
@@ -229,31 +228,27 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                     'attribute' => 'discount_amount',
                                     'label' => 'ส่วนลด (จำนวนเงิน)',
                                     'value' => function ($model) {
-                                        $curr = \backend\models\Currency::findCode($model->currency_id) ?: 'THB';
-                                        return number_format($model->discount_amount, 2) . ' ' . $curr;
+                                        return number_format($model->discount_amount, 2);
                                     }
                                 ],
                                 [
                                     'attribute' => 'vat_amount',
                                     'label' => 'VAT (จำนวนเงิน)',
                                     'value' => function ($model) {
-                                        $curr = \backend\models\Currency::findCode($model->currency_id) ?: 'THB';
-                                        return number_format($model->vat_amount, 2) . ' ' . $curr;
+                                        return number_format($model->vat_amount, 2);
                                     }
                                 ],
                                 [
                                     'attribute' => 'whd_tax_amount',
                                     'value' => function ($model) {
-                                        $curr = \backend\models\Currency::findCode($model->currency_id) ?: 'THB';
-                                        return number_format($model->whd_tax_amount, 2) . ' ' . $curr;
+                                        return number_format($model->whd_tax_amount, 2);
                                     }
                                 ],
                                 [
                                     'attribute' => 'net_amount',
                                     'label' => 'ยอดรวมทั้งสิ้น',
                                     'value' => function ($data) {
-                                        $curr = \backend\models\Currency::findCode($data->currency_id) ?: 'THB';
-                                        return number_format($data->net_amount, 2) . ' ' . $curr;
+                                        return number_format($data->net_amount, 2);
                                     }
                                 ],
                                 [
