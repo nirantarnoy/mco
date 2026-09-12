@@ -20,7 +20,7 @@ class PurchaseMasterSearch extends PurchaseMaster
     public function rules()
     {
         return [
-            [['id', 'status', 'approve_status', 'created_by', 'updated_by', 'company_id'], 'integer'],
+            [['id', 'status', 'approve_status', 'created_by', 'updated_by', 'company_id', 'currency_id'], 'integer'],
             [['docnum', 'docdat', 'supcod', 'supnam', 'job_no', 'paytrm', 'duedat', 'taxid', 'discod', 'addr01', 'addr02', 'addr03', 'zipcod', 'telnum', 'orgnum', 'refnum', 'vatdat', 'disc', 'remark', 'date_from', 'date_to'], 'safe'],
             [['vatpr0', 'amount', 'unitpr', 'vat_percent', 'vat_amount', 'tax_percent', 'tax_amount', 'total_amount'], 'number'],
         ];
@@ -83,6 +83,7 @@ class PurchaseMasterSearch extends PurchaseMaster
             'approve_status' => $this->approve_status,
             'created_by' => $this->created_by,
             'updated_by' => $this->updated_by,
+            'currency_id' => $this->currency_id,
         ]);
 
         $query->andFilterWhere(['like', 'docnum', $this->docnum])

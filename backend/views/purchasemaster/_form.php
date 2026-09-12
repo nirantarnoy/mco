@@ -480,6 +480,22 @@ JS
                                     <?= $form->field($model, 'remark')->textInput(['placeholder'=>'กรอกข้อมูลเอง'])->label(false) ?>
                                 </div>
                             </div>
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">สกุลเงิน</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'currency_id')->widget(\kartik\select2\Select2::className(),[
+                                        'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Currency::find()->all(),'id','code'),
+                                        'options'=>['placeholder'=>'สกุลเงิน'],
+                                        'pluginOptions' => ['allowClear' => true]
+                                    ])->label(false) ?>
+                                </div>
+                            </div>
+                            <div class="form-group row mb-2">
+                                <label class="col-sm-4 col-form-label">อัตราแลกเปลี่ยน</label>
+                                <div class="col-sm-8">
+                                    <?= $form->field($model, 'exchange_rate')->textInput(['type' => 'number', 'step' => '0.0001'])->label(false) ?>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

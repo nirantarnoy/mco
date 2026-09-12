@@ -45,6 +45,13 @@ $this->params['breadcrumbs'][] = $this->title;
                     <div class="col-md-3">
                         <?= $form->field($searchModel, 'supnam')->textInput(['class' => 'form-control'])->label('ชื่อผู้จำหน่าย') ?>
                     </div>
+                    <div class="col-md-3 mt-2">
+                        <?= $form->field($searchModel, 'currency_id')->widget(\kartik\select2\Select2::className(),[
+                            'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Currency::find()->all(),'id','code'),
+                            'options'=>['placeholder'=>'ทั้งหมด'],
+                            'pluginOptions' => ['allowClear' => true]
+                        ])->label('สกุลเงิน') ?>
+                    </div>
                 </div>
 
                 <div class="row">
@@ -165,10 +172,33 @@ $this->params['breadcrumbs'][] = $this->title;
                         }
                     ],
                     [
+                        'attribute' => 'currency_id',
+                        'label' => 'สกุลเงิน',
+                        'headerOptions' => ['style' => 'width: 80px; text-align: center;'],
+                        'contentOptions' => ['style' => 'text-align: center;'],
+                        'value' => function($model) {
+                            $currency = \backend\models\Currency::find()->where(['id' => $model->currency_id])->one();
+                            return $currency ? $currency->code : '';
+                        },
+                        'filter' => false,
+                    ],
+                    [
+                        'attribute' => 'exchange_rate',
+                        'label' => 'อัตราแลกเปลี่ยน',
+                        'headerOptions' => ['style' => 'width: 100px; text-align: right;'],
+                        'contentOptions' => ['style' => 'text-align: right;'],
+                        'format' => ['decimal', 4],
+                    ],
+                    [
                         'attribute' => 'total_amount',
                         'label' => 'ยอดรวม',
-                        'format' => ['decimal', 2],
+                        'format' => 'raw',
                         'contentOptions' => ['class' => 'text-right'],
+                        'value' => function ($model) {
+                            $originalAmount = number_format($model->total_amount, 2);
+                            $thbAmount = number_format($model->total_amount * ($model->exchange_rate ?: 1), 2);
+                            return $originalAmount . '<br><small class="text-muted">(THB: ' . $thbAmount . ')</small>';
+                        }
                     ],
                     [
                         'attribute' => 'status',

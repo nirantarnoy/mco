@@ -84,10 +84,10 @@ class PurchaseMaster extends \yii\db\ActiveRecord
     {
         return [
             [['docnum', 'docdat'], 'required'],
-            [['docdat', 'duedat', 'vatdat'], 'safe'],
-            [['vatpr0', 'amount', 'unitpr', 'vat_percent', 'vat_amount', 'tax_percent', 'tax_amount', 'total_amount'], 'number'],
+            [['docdat', 'duedat', 'vatdat', 'created_at', 'updated_at', 'vat_period'], 'safe'],
+            [['status', 'approve_status', 'created_by', 'updated_by', 'department_id', 'company_id', 'currency_id', 'is_deposit'], 'integer'],
+            [['vatpr0', 'amount', 'unitpr', 'vat_percent', 'vat_amount', 'tax_percent', 'tax_amount', 'total_amount', 'exchange_rate'], 'number'],
             [['remark'], 'string'],
-            [['status', 'approve_status', 'created_at', 'updated_at', 'created_by', 'updated_by','is_deposit', 'department_id', 'company_id'], 'integer'],
             [['docnum', 'job_no', 'discod', 'orgnum', 'disc'], 'string', 'max' => 50],
             [['supcod', 'taxid'], 'string', 'max' => 20],
             [['supnam', 'addr01', 'addr02', 'addr03', 'invoice_no', 'vat_period', 'additional_note', 'refnum'], 'string', 'max' => 255],
@@ -145,6 +145,8 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             'vat_period' => 'ยื่นภาษีรวมในงวด',
             'additional_note' => 'อื่นเพิ่มเติม',
             'company_id' => 'เว็บไซต์/บริษัท',
+            'currency_id' => 'สกุลเงิน',
+            'exchange_rate' => 'อัตราแลกเปลี่ยน',
         ];
     }
 
