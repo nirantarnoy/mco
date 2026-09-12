@@ -205,10 +205,10 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                     }
                                 ],
                                 [
-                                    'attribute' => 'currency_rate',
+                                    'attribute' => 'exchange_rate',
                                     'label' => 'อัตราแลกเปลี่ยน',
                                     'value' => function ($data) {
-                                        return $data->currency_rate > 0 ? number_format($data->currency_rate, 4) : '1.0000';
+                                        return $data->exchange_rate > 0 ? number_format($data->exchange_rate, 4) : '1.0000';
                                     }
                                 ],
                                 [
@@ -254,8 +254,8 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                 [
                                     'label' => 'ยอดรวมทั้งสิ้น (THB)',
                                     'value' => function ($data) {
-                                        $rate = $data->currency_rate > 0 ? $data->currency_rate : 1;
-                                        return number_format($data->net_amount * $rate, 2) . ' ฿';
+                                        $rate = $data->exchange_rate > 0 ? $data->exchange_rate : 1;
+                                        return number_format($data->net_amount * $rate, 2);
                                     }
                                 ],
                                 [

@@ -187,12 +187,12 @@ $this->params['breadcrumbs'][] = $this->title;
                 },
             ],
             [
-                'attribute' => 'currency_rate',
+                'attribute' => 'exchange_rate',
                 'label' => 'อัตราแลกเปลี่ยน',
                 'headerOptions' => ['style' => 'width: 100px; text-align: right;'],
                 'contentOptions' => ['style' => 'text-align: right;'],
                 'value' => function ($model) {
-                    return $model->currency_rate > 0 ? number_format($model->currency_rate, 4) : '1.0000';
+                    return $model->exchange_rate > 0 ? number_format($model->exchange_rate, 4) : '1.0000';
                 },
             ],
             [
@@ -200,7 +200,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'headerOptions' => ['style' => 'width: 120px; text-align: right;'],
                 'contentOptions' => ['style' => 'text-align: right;'],
                 'value' => function ($model) {
-                    $rate = $model->currency_rate > 0 ? $model->currency_rate : 1;
+                    $rate = $model->exchange_rate > 0 ? $model->exchange_rate : 1;
                     return number_format($model->net_amount * $rate, 2);
                 },
             ],
