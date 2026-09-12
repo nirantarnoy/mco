@@ -158,15 +158,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'label' => 'วันที่',
                 'headerOptions' => ['style' => 'width: 120px;'],
                 'format' => ['date', 'php:m/d/Y'],
-                'filter' => kartik\date\DatePicker::widget([
-                    'model' => $searchModel,
-                    'attribute' => 'purch_date',
-                    'options' => ['placeholder' => 'เลือกวันที่'],
-                    'pluginOptions' => [
-                        'autoclose' => true,
-                        'format' => 'yyyy-mm-dd',
-                    ]
-                ]),
+                'filter' => false,
             ],
             [
                 'attribute' => 'vendor_name',
@@ -188,6 +180,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'label' => 'สกุลเงิน',
                 'headerOptions' => ['style' => 'width: 80px; text-align: center;'],
                 'contentOptions' => ['style' => 'text-align: center;'],
+                'filter' => false,
                 'value' => function ($model) {
                     $currency = \backend\models\Currency::findCode($model->currency_id);
                     return $currency ? $currency : 'THB';
