@@ -293,13 +293,9 @@ class OcrController extends BaseController
         $model->invoice_number = $data['invoice_number'] ?? null;
         
         if (!empty($data['invoice_date'])) {
-            // Gemini is prompted to return YYYY-MM-DD
-            $dateStr = $data['invoice_date'];
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
-                $model->invoice_date = $dateStr;
-            } else {
-                $parsed = $this->parseDateString($dateStr);
-                if ($parsed) $model->invoice_date = $parsed;
+            $parsed = $this->parseDateString($data['invoice_date']);
+            if ($parsed) {
+                $model->invoice_date = $parsed;
             }
         }
 
@@ -737,14 +733,32 @@ class OcrController extends BaseController
      */
     protected function parseDateString($dateStr)
     {
-        $parts = preg_split('/[\/\.-]/', $dateStr);
+        $parts = preg_split('/[\/\.-]/', trim($dateStr));
         if (count($parts) == 3) {
-            $d = (int)$parts[0];
-            $m = (int)$parts[1];
-            $y = (int)$parts[2];
-            if ($y < 100) $y += 2000;
-            if ($y > 2400) $y -= 543;
-            return sprintf('%04d-%02d-%02d', $y, $m, $d);
+            $p0 = (int)$parts[0];
+            $p1 = (int)$parts[1];
+            $p2 = (int)$parts[2];
+            
+            // Determine which is year and which is day
+            if ($p0 > 31) {
+                $y = $p0;
+                $m = $p1;
+                $d = $p2;
+            } else {
+                $d = $p0;
+                $m = $p1;
+                $y = $p2;
+            }
+
+            if ($y < 100) {
+                if ($y >= 50) $y += 2500; // Assume BE (e.g. 69 -> 2569)
+                else $y += 2000; // Assume CE (e.g. 26 -> 2026)
+            }
+            if ($y > 2400) $y -= 543; // Convert BE to CE
+
+            if ($m >= 1 && $m <= 12 && $d >= 1 && $d <= 31) {
+                return sprintf('%04d-%02d-%02d', $y, $m, $d);
+            }
         }
         return null;
     }
@@ -756,7 +770,11 @@ class OcrController extends BaseController
     {
         if (count($m) >= 4) {
             if (strlen($m[1]) == 4) { // YYYY-MM-DD
-                return sprintf('%04d-%02d-%02d', (int)$m[1], (int)$m[2], (int)$m[3]);
+                $y = (int)$m[1];
+                $mNum = (int)$m[2];
+                $d = (int)$m[3];
+                if ($y > 2400) $y -= 543;
+                return sprintf('%04d-%02d-%02d', $y, $mNum, $d);
             }
             $d = (int)$m[1];
             $monthStr = $m[2];
@@ -766,7 +784,7 @@ class OcrController extends BaseController
                 'ม.ค.' => 1, 'ก.พ.' => 2, 'มี.ค.' => 3, 'เม.ย.' => 4, 'พ.ค.' => 5, 'มิ.ย.' => 6,
                 'ก.ค.' => 7, 'ส.ค.' => 8, 'ก.ย.' => 9, 'ต.ค.' => 10, 'พ.ย.' => 11, 'ธ.ค.' => 12,
                 'มกราคม' => 1, 'กุมภาพันธ์' => 2, 'มีนาคม' => 3, 'เมษายน' => 4, 'พฤษภาคม' => 5, 'มิถุนายน' => 6,
-                'กรกฎาคม' => 7, 'สิงหาคม' => 8, 'กันยายน' => 9, 'ตูลายน' => 10, 'พฤศจิกายน' => 11, 'ธันวาคม' => 12,
+                'กรกฎาคม' => 7, 'สิงหาคม' => 8, 'กันยายน' => 9, 'ตุลาคม' => 10, 'พฤศจิกายน' => 11, 'ธันวาคม' => 12,
                 'jan' => 1, 'feb' => 2, 'mar' => 3, 'apr' => 4, 'may' => 5, 'jun' => 6,
                 'jul' => 7, 'aug' => 8, 'sep' => 9, 'oct' => 10, 'nov' => 11, 'dec' => 12
             ];
@@ -774,9 +792,15 @@ class OcrController extends BaseController
             $monthLower = mb_strtolower($monthStr, 'UTF-8');
             $mNum = is_numeric($monthStr) ? (int)$monthStr : ($months[$monthLower] ?? 1);
 
-            if ($y < 100) $y += 2000;
+            if ($y < 100) {
+                if ($y >= 50) $y += 2500;
+                else $y += 2000;
+            }
             if ($y > 2400) $y -= 543;
-            return sprintf('%04d-%02d-%02d', $y, $mNum, $d);
+            
+            if ($mNum >= 1 && $mNum <= 12 && $d >= 1 && $d <= 31) {
+                return sprintf('%04d-%02d-%02d', $y, $mNum, $d);
+            }
         }
         return null;
     }

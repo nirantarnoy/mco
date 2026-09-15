@@ -213,6 +213,25 @@
                                 <p>รายงานสต็อกการ์ด</p>
                             </a>
                         </li>
+                        <?php if (\Yii::$app->user->can('journaltrans/index')): ?>
+                            <li class="nav-item">
+                                <a href="index.php?r=journaltrans/index" class="nav-link journaltrans">
+                                    <i class="far fa-circlez nav-icon"></i>
+                                    <p>บันทึกรายการต่างๆ</p>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+                        <?php if (\Yii::$app->user->can('stocktrans/index')): ?>
+                            <li class="nav-item">
+                                <a href="index.php?r=stocktrans" class="nav-link stocktrans">
+                                    <i class="far fa-circlez nav-icon"></i>
+                                    <p>
+                                        ประวัติทำรายการ
+                                        <!--                                <span class="right badge badge-danger">New</span>-->
+                                    </p>
+                                </a>
+                            </li>
+                        <?php endif;?>
                     </ul>
                 </li>
                 <?php endif;?>
@@ -226,25 +245,6 @@
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
-                            <?php if (\Yii::$app->user->can('journaltrans/index')): ?>
-                                <li class="nav-item">
-                                    <a href="index.php?r=journaltrans/index" class="nav-link journaltrans">
-                                        <i class="far fa-circlez nav-icon"></i>
-                                        <p>บันทึกรายการต่างๆ</p>
-                                    </a>
-                                </li>
-                            <?php endif; ?>
-                            <?php if (\Yii::$app->user->can('stocktrans/index')): ?>
-                                <li class="nav-item">
-                                    <a href="index.php?r=stocktrans" class="nav-link stocktrans">
-                                        <i class="far fa-circlez nav-icon"></i>
-                                        <p>
-                                            ประวัติทำรายการ
-                                            <!--                                <span class="right badge badge-danger">New</span>-->
-                                        </p>
-                                    </a>
-                                </li>
-                            <?php endif;?>
                             <?php if (\Yii::$app->user->can('pettycashvoucher/index')): ?>
                                 <li class="nav-item">
                                     <a href="index.php?r=petty-cash-voucher/index" class="nav-link petty-cash-voucher">
