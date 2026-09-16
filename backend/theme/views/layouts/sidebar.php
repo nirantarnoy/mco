@@ -269,6 +269,14 @@
                                     </a>
                                 </li>
                             <?php //endif; ?>
+                            <?php //if (\Yii::$app->user->can('pettycashsetting/index')): ?>
+                                <li class="nav-item">
+                                    <a href="index.php?r=petty-cash-setting/index" class="nav-link petty-cash-setting">
+                                        <i class="fas fa-cog nav-icon"></i>
+                                        <p>ตั้งค่าวงเงินสดย่อย</p>
+                                    </a>
+                                </li>
+                            <?php //endif; ?>
                             <?php if (\Yii::$app->user->can('invoice/index')): ?>
                                 <li class="nav-item">
                                     <a href="index.php?r=invoice/index" class="nav-link invoice">

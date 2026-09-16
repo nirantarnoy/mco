@@ -69,9 +69,9 @@ class PettyCashAdvanceController extends BaseController
             // ตรวจสอบว่าสามารถเบิกได้หรือไม่ (แจ้งเตือนเท่านั้น)
             if (!PettyCashAdvance::canRequestAdvance($model->amount)) {
                 $currentBalance = PettyCashAdvance::getCurrentBalance();
-                $maxRequest = PettyCashAdvance::MAX_AMOUNT - $currentBalance;
+                $maxRequest = PettyCashAdvance::getMaxAmount() - $currentBalance;
                 \Yii::$app->session->setFlash('warning',
-                    "ยอดเงินเกินวงเงินสูงสุด " . number_format(PettyCashAdvance::MAX_AMOUNT) . " บาท
+                    "ยอดเงินเกินวงเงินสูงสุด " . number_format(PettyCashAdvance::getMaxAmount()) . " บาท
                     <br>ยอดคงเหลือปัจจุบัน: " . number_format($currentBalance, 2) . " บาท");
             }
 
