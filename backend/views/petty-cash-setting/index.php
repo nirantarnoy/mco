@@ -23,19 +23,6 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label for="max_amount"><?= Html::encode($maxAmount->description) ?></label>
-                        <div class="input-group">
-                            <input type="number" step="0.01" class="form-control" id="max_amount" name="max_amount" value="<?= Html::encode($maxAmount->setting_value) ?>" required>
-                            <div class="input-group-append">
-                                <span class="input-group-text">บาท</span>
-                            </div>
-                        </div>
-                        <small class="form-text text-muted">วงเงินสูงสุดที่สามารถเบิกได้ทั้งหมด</small>
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="form-group">
                         <label for="min_amount"><?= Html::encode($minAmount->description) ?></label>
                         <div class="input-group">
                             <input type="number" step="0.01" class="form-control" id="min_amount" name="min_amount" value="<?= Html::encode($minAmount->setting_value) ?>" required>
@@ -44,6 +31,19 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
                         </div>
                         <small class="form-text text-muted">ถ้ายอดคงเหลือน้อยกว่าหรือเท่ากับค่านี้ ระบบจะแจ้งเตือนให้เบิกชดเชย</small>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="max_amount"><?= Html::encode($maxAmount->description) ?></label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" class="form-control" id="max_amount" name="max_amount" value="<?= Html::encode($maxAmount->setting_value) ?>" required>
+                            <div class="input-group-append">
+                                <span class="input-group-text">บาท</span>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">วงเงินสูงสุดที่สามารถเบิกได้ทั้งหมด</small>
                     </div>
                 </div>
             </div>
