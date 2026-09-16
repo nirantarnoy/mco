@@ -2,6 +2,7 @@
 namespace backend\models;
 
 use backend\models\PettyCashVoucher;
+use backend\models\SystemSetting;
 use Yii;
 use yii\db\ActiveRecord;
 use yii\behaviors\TimestampBehavior;
@@ -14,8 +15,15 @@ class PettyCashAdvance extends ActiveRecord
     const STATUS_REJECTED = 'rejected';
     const STATUS_PAID = 'paid';
 
-    const MAX_AMOUNT = 30000;
-    const MIN_AMOUNT = 3000;
+    public static function getMaxAmount()
+    {
+        return (float) SystemSetting::getValue('petty_cash_max_amount', 30000);
+    }
+
+    public static function getMinAmount()
+    {
+        return (float) SystemSetting::getValue('petty_cash_min_amount', 3000);
+    }
 
     public static function tableName()
     {
@@ -103,12 +111,12 @@ class PettyCashAdvance extends ActiveRecord
     public static function canRequestAdvance($amount)
     {
         $currentBalance = static::getCurrentBalance();
-        return ($currentBalance + $amount) <= static::MAX_AMOUNT;
+        return ($currentBalance + $amount) <= static::getMaxAmount();
     }
 
     public static function needsRefill()
     {
-        return static::getCurrentBalance() <= static::MIN_AMOUNT;
+        return static::getCurrentBalance() <= static::getMinAmount();
     }
 
     public function beforeSave($insert){

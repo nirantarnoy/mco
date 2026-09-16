@@ -11,8 +11,8 @@ use yii\widgets\Pjax;
 $this->title = 'การจัดการเงินทดแทนสดย่อย';
 $this->params['breadcrumbs'][] = $this->title;
 
-$maxAmount = \backend\models\PettyCashAdvance::MAX_AMOUNT;
-$minAmount = \backend\models\PettyCashAdvance::MIN_AMOUNT;
+$maxAmount = \backend\models\PettyCashAdvance::getMaxAmount();
+$minAmount = \backend\models\PettyCashAdvance::getMinAmount();
 ?>
 
     <div class="petty-cash-advance-index">
@@ -120,6 +120,9 @@ $minAmount = \backend\models\PettyCashAdvance::MIN_AMOUNT;
             <div class="col-md-6 text-right">
                 <?= Html::a('<i class="fas fa-sync-alt"></i> รีเฟรช', ['index'], [
                     'class' => 'btn btn-outline-primary'
+                ]) ?>
+                <?= Html::a('<i class="fas fa-cog"></i> ตั้งค่าวงเงิน', ['/petty-cash-setting/index'], [
+                    'class' => 'btn btn-outline-secondary ml-2'
                 ]) ?>
             </div>
         </div>
