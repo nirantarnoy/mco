@@ -158,8 +158,8 @@ $status = $statusLabels[$model->status] ?? ['label' => $model->status, 'class' =
             <!-- สถานะวงเงิน -->
             <?php
             $currentBalance = \backend\models\PettyCashAdvance::getCurrentBalance();
-            $maxAmount = \backend\models\PettyCashAdvance::MAX_AMOUNT;
-            $minAmount = \backend\models\PettyCashAdvance::MIN_AMOUNT;
+            $maxAmount = \backend\models\PettyCashAdvance::getMaxAmount();
+            $minAmount = \backend\models\PettyCashAdvance::getMinAmount();
             $needsRefill = \backend\models\PettyCashAdvance::needsRefill();
             ?>
 

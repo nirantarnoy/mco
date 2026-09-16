@@ -88,8 +88,8 @@ class PettyCashVoucherController extends BaseController
         // ตรวจสอบสถานะวงเงิน
         $currentBalance = PettyCashAdvance::getCurrentBalance();
         $needsRefill = PettyCashAdvance::needsRefill();
-        $maxAmount = PettyCashAdvance::MAX_AMOUNT;
-        $minAmount = PettyCashAdvance::MIN_AMOUNT;
+        $maxAmount = PettyCashAdvance::getMaxAmount();
+        $minAmount = PettyCashAdvance::getMinAmount();
 
         // แจ้งเตือนถ้าเงินเหลือน้อย
         if ($needsRefill) {
@@ -155,8 +155,8 @@ class PettyCashVoucherController extends BaseController
         // ตรวจสอบสถานะวงเงิน
         $currentBalance = PettyCashAdvance::getCurrentBalance();
         $needsRefill = PettyCashAdvance::needsRefill();
-        $maxAmount = PettyCashAdvance::MAX_AMOUNT;
-        $minAmount = PettyCashAdvance::MIN_AMOUNT;
+        $maxAmount = PettyCashAdvance::getMaxAmount();
+        $minAmount = PettyCashAdvance::getMinAmount();
 
         // แจ้งเตือนถ้าเงินเหลือน้อย
         if ($needsRefill) {
@@ -561,7 +561,7 @@ class PettyCashVoucherController extends BaseController
         $currentBalance = PettyCashAdvance::getCurrentBalance();
 
         // วงเงินสดย่อย
-        $pettyCashLimit = PettyCashAdvance::MAX_AMOUNT;
+        $pettyCashLimit = PettyCashAdvance::getMaxAmount();
 
         // ปิด layout สำหรับการพิมพ์
         $this->layout = false;
@@ -605,7 +605,7 @@ class PettyCashVoucherController extends BaseController
         }
 
         // ข้อมูลวงเงิน (สมมติว่าดึงจาก PettyCashAdvance หรือ Config)
-        $pettyCashLimit = PettyCashAdvance::MAX_AMOUNT;
+        $pettyCashLimit = PettyCashAdvance::getMaxAmount();
         $currentBalance = PettyCashAdvance::getCurrentBalance(); // ยอดคงเหลือปัจจุบัน (Real-time)
         
         // หมายเหตุ: ยอดคงเหลือในรายงานควรจะเป็นยอด ณ วันที่สิ้นสุดรายงาน หรือยอดปัจจุบัน?

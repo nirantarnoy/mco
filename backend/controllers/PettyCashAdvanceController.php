@@ -181,8 +181,8 @@ class PettyCashAdvanceController extends BaseController
 
         return [
             'currentBalance' => PettyCashAdvance::getCurrentBalance(),
-            'maxAmount' => PettyCashAdvance::MAX_AMOUNT,
-            'minAmount' => PettyCashAdvance::MIN_AMOUNT,
+            'maxAmount' => PettyCashAdvance::getMaxAmount(),
+            'minAmount' => PettyCashAdvance::getMinAmount(),
             'needsRefill' => PettyCashAdvance::needsRefill(),
         ];
     }
@@ -222,7 +222,7 @@ class PettyCashAdvanceController extends BaseController
         $currentBalance = $this->getCurrentBalance();
 
         // วงเงินสดย่อย
-        $pettyCashLimit = PettyCashAdvance::MAX_AMOUNT;
+        $pettyCashLimit = PettyCashAdvance::getMaxAmount();
 
         // เงินสดย่อยเบิกเกิน (ถ้ามี)
         $overAdvance = max(0, $totalAdvanceAmount - $totalUsedAmount - $pettyCashLimit);
@@ -296,7 +296,7 @@ class PettyCashAdvanceController extends BaseController
         $currentBalance = PettyCashAdvance::getCurrentBalance();
 
         // วงเงินสดย่อย
-        $pettyCashLimit = PettyCashAdvance::MAX_AMOUNT;
+        $pettyCashLimit = PettyCashAdvance::getMaxAmount();
 
         // ปิด layout สำหรับการพิมพ์
         $this->layout = false;
@@ -329,7 +329,7 @@ class PettyCashAdvanceController extends BaseController
         // คำนวณยอดต่างๆ
         $totalAdvanceAmount = array_sum(array_column($advances, 'amount'));
         $currentBalance = PettyCashAdvance::getCurrentBalance();
-        $pettyCashLimit = PettyCashAdvance::MAX_AMOUNT;
+        $pettyCashLimit = PettyCashAdvance::getMaxAmount();
 
         // สร้าง Excel data
         $data = [];

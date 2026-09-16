@@ -27,8 +27,8 @@ class PettyCashReportController extends BaseController
     public function actionIndex()
     {
         $currentBalance = PettyCashAdvance::getCurrentBalance();
-        $maxAmount = PettyCashAdvance::MAX_AMOUNT;
-        $minAmount = PettyCashAdvance::MIN_AMOUNT;
+        $maxAmount = PettyCashAdvance::getMaxAmount();
+        $minAmount = PettyCashAdvance::getMinAmount();
         $needsRefill = PettyCashAdvance::needsRefill();
 
         // ข้อมูลการเบิกทดแทน
