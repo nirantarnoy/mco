@@ -235,12 +235,12 @@
                     </ul>
                 </li>
                 <?php endif;?>
-                <?php if(\Yii::$app->user->can('journaltrans/index')):?>
+                <?php if(\Yii::$app->user->can('pettycashvoucher/index')):?>
                     <li class="nav-item has-treeview has-sub">
                         <a href="#" class="nav-link">
-                            <i class="nav-icon fas fa-tags"></i>
+                            <i class="nav-icon fas fa-wallet"></i>
                             <p>
-                                ทำรายการ
+                                เงินสดย่อย
                                 <i class="fas fa-angle-left right"></i>
                             </p>
                         </a>
@@ -277,6 +277,20 @@
                                     </a>
                                 </li>
                             <?php //endif; ?>
+                        </ul>
+                    </li>
+                <?php endif;?>
+                <?php if(\Yii::$app->user->can('invoice/index')):?>
+                    <li class="nav-item has-treeview has-sub">
+                        <a href="#" class="nav-link">
+                            <i class="nav-icon fas fa-file-invoice"></i>
+                            <p>
+                                เอกสารวางบิล/ใบเสร็จ
+                                <i class="fas fa-angle-left right"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+
                             <?php if (\Yii::$app->user->can('invoice/index')): ?>
                                 <li class="nav-item">
                                     <a href="index.php?r=invoice/index" class="nav-link invoice">
