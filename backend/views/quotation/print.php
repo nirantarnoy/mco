@@ -310,7 +310,10 @@ $currencyCode = $quotation->currency ? $quotation->currency->code : 'Baht';
                         <span class="info-label" style="font-weight: 900; font-size: 20px; -webkit-text-stroke: 0.5px black;">&nbsp;Company Name :</span>
                     </div>
                     <div>
-                        <span class="label-font" style="font-weight: bold;">&nbsp;<span id="companyName">M.C.O. COMPANY LIMITED</span></span>
+                        <span class="label-font" style="font-weight: bold;">&nbsp;<span id="companyName">M.C.O. COMPANY LIMITED (Head office)</span></span>
+                    </div>
+                    <div class="text-infomation">
+                        <span class="label-font" style="font-weight: bold;">&nbsp;<span id="companyEmail">Tax ID 0215543000985</span></span>
                     </div>
                     <div class="text-infomation">
                         <span class="label-font" style="font-weight: bold;">&nbsp;<span id="companyAddress1">8/18 Koh-kloy Road,</span></span>
@@ -327,6 +330,7 @@ $currencyCode = $quotation->currency ? $quotation->currency->code : 'Baht';
                     <div class="text-infomation">
                         <span class="label-font" style="font-weight: bold;">&nbsp;<span id="companyEmail">info@thai-mco.com</span></span>
                     </div>
+                    
                 </div>
             </td>
             <td style="width: 50%;border: none;text-align: right;vertical-align: top;">
