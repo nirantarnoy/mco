@@ -84,6 +84,20 @@ $this->params['breadcrumbs'][] = $this->title;
             'name',
             'full_address',
             'contact_name',
+            [
+                'label' => 'ข้อมูลบัญชีธนาคาร',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    $bank_info = [];
+                    if (!empty($model->account_name)) {
+                        $bank_info[] = $model->account_name;
+                    }
+                    if (!empty($model->bank_name)) {
+                        $bank_info[] = $model->bank_name;
+                    }
+                    return implode('<br>', $bank_info);
+                },
+            ],
             'phone',
             'email',
             //'status',
