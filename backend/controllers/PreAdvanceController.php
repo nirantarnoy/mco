@@ -214,9 +214,9 @@ class PreAdvanceController extends BaseController
         $usedNonePrIds = [];
         $usedPoIds = [];
         foreach ($usedRefs as $ref) {
-            if ($ref['ref_type'] === \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR) {
+            if ((int)$ref['ref_type'] === \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR) {
                 $usedNonePrIds[] = (int)$ref['ref_id'];
-            } elseif ($ref['ref_type'] === \backend\models\PreAdvanceRef::REF_TYPE_PO) {
+            } elseif ((int)$ref['ref_type'] === \backend\models\PreAdvanceRef::REF_TYPE_PO) {
                 $usedPoIds[] = (int)$ref['ref_id'];
             }
         }

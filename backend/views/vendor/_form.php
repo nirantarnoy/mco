@@ -165,9 +165,17 @@ if($model->isNewRecord) {
                                 <?= $form->field($model, 'bank_name')->textInput(['maxlength' => true, 'id' => 'vendor-bank_name', 'placeholder' => 'เช่น กสิกรไทย, ไทยพาณิชย์']) ?>
                             </div>
                             <div class="col-lg-4">
-                                <?= $form->field($model, 'account_name')->textInput(['maxlength' => true, 'id' => 'vendor-account_name', 'placeholder' => 'ชื่อบัญชี']) ?>
+                                <?= $form->field($model, 'bank_branch')->textInput(['maxlength' => true, 'id' => 'vendor-bank_branch', 'placeholder' => 'สาขา']) ?>
                             </div>
                             <div class="col-lg-4">
+                                <?= $form->field($model, 'bank_province')->textInput(['maxlength' => true, 'id' => 'vendor-bank_province', 'placeholder' => 'จังหวัด']) ?>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <?= $form->field($model, 'account_name')->textInput(['maxlength' => true, 'id' => 'vendor-account_name', 'placeholder' => 'ชื่อบัญชี']) ?>
+                            </div>
+                            <div class="col-lg-6">
                                 <?= $form->field($model, 'account_num')->textInput(['maxlength' => true, 'id' => 'vendor-account_num', 'placeholder' => 'เลขที่บัญชีธนาคาร']) ?>
                             </div>
                         </div>
