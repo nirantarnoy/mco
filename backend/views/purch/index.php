@@ -167,6 +167,25 @@ $this->params['breadcrumbs'][] = $this->title;
                 'value' => 'vendor.name',
             ],
             [
+                'label' => 'ข้อมูลบัญชีธนาคาร',
+                'headerOptions' => ['style' => 'width: 200px;'],
+                'format' => 'raw',
+                'value' => function ($model) {
+                    $vendor = $model->vendor;
+                    if ($vendor) {
+                        $bank_info = [];
+                        if (!empty($vendor->account_name)) {
+                            $bank_info[] = $vendor->account_name;
+                        }
+                        if (!empty($vendor->bank_name)) {
+                            $bank_info[] = $vendor->bank_name;
+                        }
+                        return implode('<br>', $bank_info);
+                    }
+                    return '';
+                },
+            ],
+            [
                 'attribute' => 'net_amount',
                 'label' => 'ยอดเงินรวม',
                 'headerOptions' => ['style' => 'width: 120px; text-align: right;'],
