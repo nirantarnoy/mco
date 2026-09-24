@@ -619,7 +619,7 @@ $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
         <div><strong>Payment :</strong><span> <?= Html::encode($purchase->payment_note ?? '') ?></span></div>
         <div><strong>Note 1.</strong> กรณีส่งสินค้าล่าช้ากว่ากำหนด ผู้ขาย/ผู้รับจ้าง ยอมให้ปรับเป็นรายวันในอัตรา 0.5% ของราคาทั้งหมด ทั้งนี้สูงสุดไม่เกินร้อยละ 10 ของราคาดังกล่าว</div>
         <?php if (!empty($purchase->note)): ?>
-            <div><strong>หมายเหตุ:</strong> <?= Html::encode($purchase->note) ?></div>
+            <div><strong>หมายเหตุ:</strong> <?= nl2br(Html::encode($purchase->note)) ?></div>
         <?php endif; ?>
     </div>
 

@@ -347,7 +347,7 @@ $this->title = 'พิมพ์ใบขอซื้อ: ' . $model->purch_req_n
     <div class="notes">
         <strong>Note 1:</strong> กรณีสินค้าผิดจากที่สั่ง ให้แจ้งคืนภายใน 0.5% ชั่วโมงนับจากวันที่ได้รับสินค้า 15 วันหลังจากนั้น<br>
         <?php if ($model->note): ?>
-            <strong>หมายเหตุ:</strong> <?= Html::encode($model->note) ?>
+            <strong>หมายเหตุ:</strong> <?= nl2br(Html::encode($model->note)) ?>
         <?php endif; ?>
     </div>
 

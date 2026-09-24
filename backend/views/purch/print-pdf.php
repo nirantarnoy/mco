@@ -387,7 +387,7 @@ $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
         <div><strong>Payment :</strong></div>
         <div><strong>Note 1.</strong> กรณีสินค้าหรือบริการนั้นต้องนำเข้าจากต่างประเทศให้เป็นหน้าที่ของผู้ขายต้องรับผิดชอบในการดำเนินการ 0.5% จากราคาทั้งหมด ถ้าผู้ขายไม่ทำการจัดส่งตามเวลา 10 ของราคาทั้งหมด</div>
         <?php if (!empty($purchase->note)): ?>
-            <div><strong>หมายเหตุ:</strong> <?= Html::encode($purchase->note) ?></div>
+            <div><strong>หมายเหตุ:</strong> <?= nl2br(Html::encode($purchase->note)) ?></div>
         <?php endif; ?>
     </div>
 

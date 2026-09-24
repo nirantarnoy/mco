@@ -734,7 +734,7 @@ $contact_name = $vendor_info !== null ? ($vendor_info['contact_name'] ?? '') : '
         <div style="margin-left: 60px;">3. For the late delivery the penalty will be 0.5% of the Total Amount per day.</div>
         <div><strong>NOTE 2 :</strong></div>
         <?php if (!empty($purchase->note)): ?>
-            <div><strong>REMARK:</strong> <?= Html::encode($purchase->note) ?></div>
+            <div><strong>REMARK:</strong> <?= nl2br(Html::encode($purchase->note)) ?></div>
         <?php endif; ?>
     </div>
 

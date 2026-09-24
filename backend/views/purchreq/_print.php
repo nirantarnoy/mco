@@ -474,7 +474,7 @@ $approverDate = '';
         <div class="form-row">
             <span class="form-label">คำอธิบายเพิ่มเติม :</span>
             <span class="form-value" style="min-width: 90%;">
-                <?= Html::encode($model->note) ?>
+                <?= nl2br(Html::encode($model->note)) ?>
             </span>
         </div>
     </div>

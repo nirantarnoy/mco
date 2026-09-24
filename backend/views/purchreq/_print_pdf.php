@@ -187,7 +187,7 @@ $logoPath = Yii::getAlias('@webroot') . '/uploads/logo/mco_logo_2.png';
             <td>
                 <span class="form-label">คำอธิบายเพิ่มเติม :</span>
                 <span class="form-value" style="width: 80%;">
-                    <?= Html::encode($model->note) ?>
+                    <?= nl2br(Html::encode($model->note)) ?>
                 </span>
             </td>
         </tr>
