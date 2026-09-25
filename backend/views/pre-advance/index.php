@@ -10,6 +10,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= Html::a('Create Pre-Advance', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
 
+    <div class="table-responsive">
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         'columns' => [
@@ -93,7 +94,14 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
         ],
     ]); ?>
+    </div>
 </div>
+
+<style>
+    .pre-advance-index .table {
+        white-space: nowrap;
+    }
+</style>
 
 <!-- Modal สำหรับแสดงลำดับการดำเนินงาน -->
 <div class="modal fade" id="seqModal" tabindex="-1" aria-hidden="true">

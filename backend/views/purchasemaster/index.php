@@ -77,7 +77,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
                 <?php ActiveForm::end(); ?>
             </div>
-
+            
+            <div class="table-responsive">
             <?= GridView::widget([
                 'dataProvider' => $dataProvider,
                 'filterModel' => $searchModel,
@@ -317,10 +318,17 @@ $this->params['breadcrumbs'][] = $this->title;
                     ],
                 ],
             ]); ?>
+            </div>
         </div>
     </div>
 
 </div>
+
+<style>
+    .purchase-master-index .table {
+        white-space: nowrap;
+    }
+</style>
 
 <!-- Modal สำหรับแสดงลำดับการดำเนินงาน -->
 <div class="modal fade" id="seqModal" tabindex="-1" aria-hidden="true">
