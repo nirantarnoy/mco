@@ -417,4 +417,73 @@ class PurchaseMaster extends \yii\db\ActiveRecord
                 return '<span class="badge badge-secondary"><i class="fas fa-box mr-1"></i>ยังไม่ได้รับ</span>';
         }
     }
+
+    /**
+     * Get document sequence data for timeline
+     */
+    public function getDocumentSequenceData()
+    {
+        $steps = [];
+        // 1. สร้าง
+        $steps[] = ['name' => 'สร้างบันทึกซื้อ', 'status' => 1, 'date' => $this->created_at ? date('d/m/Y H:i', $this->created_at) : ''];
+        
+        // 2. อนุมัติ
+        if ($this->approve_status == self::APPROVE_STATUS_APPROVED) {
+            $steps[] = ['name' => 'อนุมัติแล้ว', 'status' => 1, 'date' => ''];
+        } else if ($this->approve_status == self::APPROVE_STATUS_REJECTED) {
+            $steps[] = ['name' => 'ไม่อนุมัติ', 'status' => 2, 'date' => ''];
+        } else {
+            $steps[] = ['name' => 'รออนุมัติ', 'status' => 0, 'date' => ''];
+        }
+
+        // 3. รับสินค้า
+        $recvStatus = $this->getReceiveStatus();
+        if ($recvStatus == self::RECEIVE_STATUS_COMPLETED) {
+            $steps[] = ['name' => 'รับสินค้าครบแล้ว', 'status' => 1, 'date' => ''];
+        } else if ($recvStatus == self::RECEIVE_STATUS_PARTIAL) {
+            $steps[] = ['name' => 'รับสินค้าบางส่วน', 'status' => 1, 'date' => ''];
+        } else {
+            $steps[] = ['name' => 'รับสินค้า', 'status' => 0, 'date' => ''];
+        }
+
+        // 4. PV / จ่ายเงิน
+        $refs = \backend\models\PaymentVoucherRef::find()
+            ->alias('r')
+            ->innerJoin('payment_voucher pv', 'r.payment_voucher_id = pv.id')
+            ->where(['r.ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, 'r.ref_id' => $this->id])
+            ->andWhere(['!=', 'pv.status', \backend\models\PaymentVoucher::STATUS_CANCELLED])
+            ->all();
+
+        $has_pv = false;
+        $has_paid = false;
+        foreach ($refs as $ref) {
+            $has_pv = true;
+            if ($ref->paymentVoucher->status == \backend\models\PaymentVoucher::STATUS_COMPLETED || $ref->paymentVoucher->status == \backend\models\PaymentVoucher::STATUS_ACTIVE) { 
+                $has_paid = true;
+            }
+        }
+
+        if ($has_paid) {
+            $steps[] = ['name' => 'ชำระเงินแล้ว', 'status' => 1, 'date' => ''];
+        } else if ($has_pv) {
+            $steps[] = ['name' => 'สร้าง PV (รอชำระ)', 'status' => 1, 'date' => ''];
+        } else {
+            $steps[] = ['name' => 'สร้าง PV / ชำระเงิน', 'status' => 0, 'date' => ''];
+        }
+
+        $html = '<ul class="list-unstyled mb-0 text-start px-2 py-1">';
+        $latest = 'สร้างเอกสาร';
+        foreach ($steps as $s) {
+            $icon = $s['status'] == 1 ? '<i class="fas fa-check-circle text-success me-2"></i>' : ($s['status'] == 2 ? '<i class="fas fa-times-circle text-danger me-2"></i>' : '<i class="far fa-circle text-muted me-2"></i>');
+            $textClass = $s['status'] == 1 ? 'text-success fw-bold' : ($s['status'] == 2 ? 'text-danger fw-bold' : 'text-muted');
+            $html .= '<li class="mb-2 ' . $textClass . '">' . $icon . $s['name'] . ($s['date'] ? ' <small class="text-secondary ms-1">('.$s['date'].')</small>' : '') . '</li>';
+            if ($s['status'] == 1) $latest = $s['name'];
+        }
+        $html .= '</ul>';
+
+        return [
+            'latest' => $latest,
+            'html' => $html
+        ];
+    }
 }

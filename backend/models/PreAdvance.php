@@ -164,4 +164,68 @@ class PreAdvance extends ActiveRecord
             'เงินสำรองส่วนตัวบัญชีคุณณัฏฐชัย' => 'เงินสำรองส่วนตัวบัญชีคุณณัฏฐชัย',
         ];
     }
+
+    /**
+     * Get document sequence data for timeline
+     */
+    public function getDocumentSequenceData()
+    {
+        $steps = [];
+        // 1. สร้างใบเบิก
+        $steps[] = ['name' => 'สร้างใบเบิก', 'status' => 1, 'date' => $this->created_at ? date('d/m/Y H:i', $this->created_at) : ''];
+        
+        // 2. ตรวจสอบ
+        if ($this->checked_at) {
+            $steps[] = ['name' => 'ตรวจสอบแล้ว', 'status' => 1, 'date' => date('d/m/Y H:i', strtotime($this->checked_at))];
+        } else {
+            $steps[] = ['name' => 'รอตรวจสอบ', 'status' => 0, 'date' => ''];
+        }
+
+        // 3. อนุมัติ
+        if ($this->approved_at) {
+            $steps[] = ['name' => 'อนุมัติแล้ว', 'status' => 1, 'date' => date('d/m/Y H:i', strtotime($this->approved_at))];
+        } else {
+            $steps[] = ['name' => 'รออนุมัติ', 'status' => 0, 'date' => ''];
+        }
+
+        // 4. จ่ายเงิน/PV
+        $refs = \backend\models\PaymentVoucherRef::find()
+            ->alias('r')
+            ->innerJoin('payment_voucher pv', 'r.payment_voucher_id = pv.id')
+            ->where(['r.ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PRE_ADVANCE, 'r.ref_id' => $this->id])
+            ->andWhere(['!=', 'pv.status', \backend\models\PaymentVoucher::STATUS_CANCELLED])
+            ->all();
+
+        $has_pv = false;
+        $has_paid = false;
+        foreach ($refs as $ref) {
+            $has_pv = true;
+            if ($ref->paymentVoucher->status == \backend\models\PaymentVoucher::STATUS_COMPLETED || $ref->paymentVoucher->status == \backend\models\PaymentVoucher::STATUS_ACTIVE) { 
+                $has_paid = true;
+            }
+        }
+
+        if ($has_paid) {
+            $steps[] = ['name' => 'จ่ายเงินแล้ว', 'status' => 1, 'date' => ''];
+        } else if ($has_pv) {
+            $steps[] = ['name' => 'สร้าง PV (รอจ่าย)', 'status' => 1, 'date' => ''];
+        } else {
+            $steps[] = ['name' => 'สร้าง PV / จ่ายเงิน', 'status' => 0, 'date' => ''];
+        }
+
+        $html = '<ul class="list-unstyled mb-0 text-start px-2 py-1">';
+        $latest = 'สร้างใบเบิก';
+        foreach ($steps as $s) {
+            $icon = $s['status'] == 1 ? '<i class="fas fa-check-circle text-success me-2"></i>' : ($s['status'] == 2 ? '<i class="fas fa-times-circle text-danger me-2"></i>' : '<i class="far fa-circle text-muted me-2"></i>');
+            $textClass = $s['status'] == 1 ? 'text-success fw-bold' : ($s['status'] == 2 ? 'text-danger fw-bold' : 'text-muted');
+            $html .= '<li class="mb-2 ' . $textClass . '">' . $icon . $s['name'] . ($s['date'] ? ' <small class="text-secondary ms-1">('.$s['date'].')</small>' : '') . '</li>';
+            if ($s['status'] == 1) $latest = $s['name'];
+        }
+        $html .= '</ul>';
+
+        return [
+            'latest' => $latest,
+            'html' => $html
+        ];
+    }
 }

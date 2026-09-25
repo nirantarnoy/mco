@@ -29,6 +29,17 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             'remark',
             [
+                'label' => 'การดำเนินงาน',
+                'format' => 'raw',
+                'headerOptions' => ['style' => 'width: 150px; text-align: center;'],
+                'contentOptions' => ['style' => 'text-align: center;'],
+                'value' => function ($model) {
+                    $seqData = $model->getDocumentSequenceData();
+                    return '<div class="mb-1"><span class="badge badge-info">' . $seqData['latest'] . '</span></div>' .
+                           '<button type="button" class="btn btn-xs btn-outline-secondary" onclick="showSeqModal(this)" data-html="' . htmlspecialchars($seqData['html'], ENT_QUOTES, 'UTF-8') . '"><i class="fas fa-list"></i> ลำดับ</button>';
+                },
+            ],
+            [
                 'label' => 'สถานะ',
                 'format' => 'raw',
                 'value' => function ($model) {
@@ -83,3 +94,24 @@ $this->params['breadcrumbs'][] = $this->title;
         ],
     ]); ?>
 </div>
+
+<!-- Modal สำหรับแสดงลำดับการดำเนินงาน -->
+<div class="modal fade" id="seqModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fs-6"><i class="fas fa-tasks"></i> ลำดับการดำเนินงาน</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body" id="seqModalBody">
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function showSeqModal(btn) {
+    var html = $(btn).data('html');
+    $('#seqModalBody').html(html);
+    $('#seqModal').modal('show');
+}
+</script>

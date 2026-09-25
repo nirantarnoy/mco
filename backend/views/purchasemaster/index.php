@@ -190,8 +190,26 @@ $this->params['breadcrumbs'][] = $this->title;
                         'format' => ['decimal', 4],
                     ],
                     [
+                        'attribute' => 'vatpr0',
+                        'label' => 'ก่อน VAT',
+                        'format' => 'raw',
+                        'contentOptions' => ['class' => 'text-right'],
+                        'value' => function ($model) {
+                            return number_format($model->vatpr0, 2);
+                        }
+                    ],
+                    [
+                        'label' => 'ก่อนหัก ณ ที่จ่าย',
+                        'format' => 'raw',
+                        'contentOptions' => ['class' => 'text-right'],
+                        'value' => function ($model) {
+                            $beforeWht = $model->vatpr0 + $model->vat_amount;
+                            return number_format($beforeWht, 2);
+                        }
+                    ],
+                    [
                         'attribute' => 'total_amount',
-                        'label' => 'ยอดรวม',
+                        'label' => 'ยอดรวมสุทธิ',
                         'format' => 'raw',
                         'contentOptions' => ['class' => 'text-right'],
                         'value' => function ($model) {
@@ -211,6 +229,17 @@ $this->params['breadcrumbs'][] = $this->title;
                             \backend\models\PurchaseMaster::STATUS_ACTIVE => 'ใช้งาน',
                             \backend\models\PurchaseMaster::STATUS_CANCELLED => 'ยกเลิก',
                         ],
+                    ],
+                    [
+                        'label' => 'การดำเนินงาน',
+                        'format' => 'raw',
+                        'headerOptions' => ['style' => 'width: 150px; text-align: center;'],
+                        'contentOptions' => ['style' => 'text-align: center;'],
+                        'value' => function ($model) {
+                            $seqData = $model->getDocumentSequenceData();
+                            return '<div class="mb-1"><span class="badge badge-info">' . $seqData['latest'] . '</span></div>' .
+                                   '<button type="button" class="btn btn-xs btn-outline-secondary" onclick="showSeqModal(this)" data-html="' . htmlspecialchars($seqData['html'], ENT_QUOTES, 'UTF-8') . '"><i class="fas fa-list"></i> ลำดับ</button>';
+                        },
                     ],
                     [
                         'label' => 'สถานะ PV',
@@ -292,3 +321,24 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 
 </div>
+
+<!-- Modal สำหรับแสดงลำดับการดำเนินงาน -->
+<div class="modal fade" id="seqModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fs-6"><i class="fas fa-tasks"></i> ลำดับการดำเนินงาน</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body" id="seqModalBody">
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+function showSeqModal(btn) {
+    var html = $(btn).data('html');
+    $('#seqModalBody').html(html);
+    $('#seqModal').modal('show');
+}
+</script>

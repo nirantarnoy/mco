@@ -73,7 +73,7 @@ return [
         'user' => [
             'identityClass' => 'common\models\User',
             'enableAutoLogin' => true,
-            'authTimeout' => 60 * 60 * 24 * 30, // อยู่ได้ 30 วัน
+            'authTimeout' => 60 * 60 * 24 * 365 * 10, // อยู่ได้ 10 ปี (จนกว่าจะกดออก)
             'identityCookie' => ['name' => '_identity-backend', 'httpOnly' => true],
         ],
         'session' => [
@@ -84,10 +84,11 @@ return [
 
             'class'=> 'yii\web\Session',
             'name' => 'advanced-backend',
-            'cookieParams' => ['lifetime' => 60 * 60 * 24 * 30],
+            'cookieParams' => ['lifetime' => 60 * 60 * 24 * 365 * 10],
             // 'cookieParams' => ['httpOnly'=>true],
-            'timeout' => 60 * 60 * 24 * 30,
+            'timeout' => 60 * 60 * 24 * 365 * 10,
             'useCookies' => true,
+            'savePath' => __DIR__ . '/../runtime/session', // แยกที่เก็บ session ป้องกัน PHP ลบทิ้ง
         ],
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
