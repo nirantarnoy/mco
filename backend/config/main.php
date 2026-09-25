@@ -6,6 +6,11 @@ $params = array_merge(
     require __DIR__ . '/params-local.php'
 );
 
+$sessionPath = __DIR__ . '/../runtime/session';
+if (!is_dir($sessionPath)) {
+    @mkdir($sessionPath, 0775, true);
+}
+
 return [
     'id' => 'app-backend',
     'basePath' => dirname(__DIR__),
