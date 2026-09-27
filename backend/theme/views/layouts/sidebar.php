@@ -416,6 +416,12 @@
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
+                                <a href="index.php?r=account-payable/worklist" class="nav-link account-payable">
+                                    <i class="far fa-circlez nav-icon text-danger"></i>
+                                    <p>รายการรอตั้งหนี้ (AP)</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a href="index.php?r=pre-advance/index" class="nav-link pre-advance">
                                     <i class="far fa-circlez nav-icon"></i>
                                     <p>Payment Advance</p>
