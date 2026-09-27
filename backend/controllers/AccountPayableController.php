@@ -6,6 +6,7 @@ use Yii;
 use yii\filters\VerbFilter;
 use yii\data\ArrayDataProvider;
 use backend\models\Purch;
+use backend\models\PurchaseMaster;
 use backend\models\SystemSetting;
 
 class AccountPayableController extends BaseController
