@@ -312,6 +312,15 @@ class PurchasemasterController extends BaseController
                     $deposit_amount = \Yii::$app->request->post('deposit_amount');
                     $deposit_doc = UploadedFile::getInstanceByName('deposit_doc');
 
+                    $is_revise = \Yii::$app->request->post('save_revise') == '1';
+                    if ($is_revise) {
+                        $oldModel = $this->findModel($id);
+                        $current_rev = $oldModel->rev ?? 0;
+                        $next_rev = $current_rev + 1;
+                        \backend\models\DocumentRevision::createNprRevision($oldModel, $current_rev);
+                        $model->rev = $next_rev;
+                    }
+
                     // บันทึก Master
                     if ($model->save()) {
 

@@ -857,9 +857,15 @@ JS
         </div>
     </div>
 
-    <div class="form-group mt-3">
+    <div class="form-group mt-3 d-flex align-items-center">
         <?= Html::submitButton('<i class="fas fa-save"></i> บันทึก', ['class' => 'btn btn-success']) ?>
-        <?= Html::a('<i class="fas fa-times"></i> ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
+        <?php if (!$model->isNewRecord): ?>
+            <label class="ml-3" style="margin-left: 20px; cursor: pointer;">
+                <input type="checkbox" name="save_revise" value="1" style="transform: scale(1.5); margin-right: 5px;">
+                <b>บันทึกเป็น Revise เพื่อเก็บประวัติ (เพิ่มครั้งที่แก้ไข)</b>
+            </label>
+        <?php endif; ?>
+        <?= Html::a('<i class="fas fa-times"></i> ยกเลิก', ['index'], ['class' => 'btn btn-secondary', 'style' => 'margin-left: auto;']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

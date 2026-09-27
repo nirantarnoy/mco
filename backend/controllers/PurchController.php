@@ -473,6 +473,14 @@ class PurchController extends BaseController
             if ($valid) {
                 $transaction = Yii::$app->db->beginTransaction();
                 try {
+                    $is_revise = \Yii::$app->request->post('save_revise') == '1';
+                    if ($is_revise) {
+                        // Create snapshot of OLD data before saving new data
+                        $oldModel = $this->findModel($id);
+                        \backend\models\DocumentRevision::createPurchRevision($oldModel);
+                        $model->rev = (int)$model->rev + 1;
+                    }
+
                     if ($model->save()) {
                         $totalAmount = 0;
                         $discountAmount = 0;

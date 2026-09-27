@@ -84,7 +84,7 @@ class AccountPayableController extends BaseController
                     'id' => $po->id,
                     'doc_no' => $po->purch_no,
                     'date' => $po->purch_date,
-                    'vendor_name' => $po->vendor_name,
+                    'vendor_name' => $po->vendor_name ?: \backend\models\Purch::findVendorName($po->vendor_id),
                     'amount' => $po->net_amount,
                     'status_text' => $has_draft ? 'สร้าง PV แล้ว (ยังไม่จ่าย)' : 'รอตั้งหนี้ (PV)',
                     'status_color' => $has_draft ? 'warning' : 'danger',

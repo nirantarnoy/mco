@@ -85,8 +85,13 @@ $this->params['breadcrumbs'][] = $this->title;
                 'tableOptions' => ['class' => 'table table-striped table-bordered table-hover'],
                 'columns' => [
                     ['class' => 'yii\grid\SerialColumn'],
-
                     'docnum',
+                    [
+                        'attribute' => 'rev',
+                        'label' => 'Rev',
+                        'headerOptions' => ['style' => 'width: 50px; text-align: center;'],
+                        'contentOptions' => ['style' => 'text-align: center;'],
+                    ],
                     [
                         'attribute' => 'docdat',
                         'value' => function ($model) {

@@ -15,7 +15,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">ใบซื้อเลขที่: <?= Html::encode($this->title) ?></h3>
+            <h3 class="card-title">ใบซื้อเลขที่: <?= Html::encode($this->title) ?> <?= $model->rev > 0 ? '(ครั้งที่แก้ไข: ' . $model->rev . ')' : '' ?></h3>
             <div class="card-tools">
                 <?php if ($model->status != \backend\models\PurchaseMaster::STATUS_CANCELLED): ?>
                     <?php if ($model->approve_status == \backend\models\PurchaseMaster::APPROVE_STATUS_PENDING): ?>
@@ -51,6 +51,13 @@ $this->params['breadcrumbs'][] = $this->title;
                         'model' => $model,
                         'attributes' => [
                             'docnum',
+                            [
+                                'attribute' => 'rev',
+                                'label' => 'ครั้งที่แก้ไข',
+                                'value' => function ($model) {
+                                    return $model->rev;
+                                }
+                            ],
                             [
                                 'attribute' => 'docdat',
                                 'value' => function ($model) {

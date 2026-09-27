@@ -855,12 +855,20 @@ $this->registerJs($autocompleteJs);
         </div>
 
 
-        <div class="d-flex justify-content-between">
-            <?php if ($model->status != 3 || $model->isNewRecord || \Yii::$app->user->can('purch/approve')): ?>
-                <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
-                    'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
-                ]) ?>
-            <?php endif; ?>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <?php if ($model->status != 3 || $model->isNewRecord || \Yii::$app->user->can('purch/approve')): ?>
+                    <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
+                        'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
+                    ]) ?>
+                <?php endif; ?>
+                <?php if (!$model->isNewRecord): ?>
+                    <label class="ml-3" style="margin-left: 20px; cursor: pointer;">
+                        <input type="checkbox" name="save_revise" value="1" style="transform: scale(1.5); margin-right: 5px;">
+                        <b>บันทึกเป็น Revise เพื่อเก็บประวัติ (เพิ่มครั้งที่แก้ไข)</b>
+                    </label>
+                <?php endif; ?>
+            </div>
             <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
         </div>
         <br/>

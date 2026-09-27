@@ -11,7 +11,7 @@ use yii\data\ActiveDataProvider;
 /* @var $this yii\web\View */
 /* @var $model backend\models\Purch */
 
-$this->title = 'ใบสั่งซื้อ: ' . $model->purch_no;
+$this->title = 'ใบสั่งซื้อ: ' . $model->purch_no . ($model->rev > 0 ? ' (ครั้งที่แก้ไข: ' . $model->rev . ')' : '');
 $this->params['breadcrumbs'][] = ['label' => 'ใบสั่งซื้อ', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 \yii\web\YiiAsset::register($this);
