@@ -22,6 +22,7 @@ class PaymentVoucherRef extends \yii\db\ActiveRecord
     const REF_TYPE_PR = 1;
     const REF_TYPE_PO = 2;
     const REF_TYPE_NONE_PR = 3;
+    const REF_TYPE_PRE_ADVANCE = 4;
 
     /**
      * {@inheritdoc}
@@ -85,5 +86,13 @@ class PaymentVoucherRef extends \yii\db\ActiveRecord
     public function getPurch()
     {
         return $this->hasOne(Purch::className(), ['id' => 'ref_id'])->andWhere(['ref_type' => self::REF_TYPE_PO]);
+    }
+
+    /**
+     * ดึงข้อมูล Pre-Advance
+     */
+    public function getPreAdvance()
+    {
+        return $this->hasOne(PreAdvance::className(), ['id' => 'ref_id'])->andWhere(['ref_type' => self::REF_TYPE_PRE_ADVANCE]);
     }
 }
