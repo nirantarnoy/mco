@@ -14,7 +14,7 @@ use backend\models\PurchReq;
 $this->title = 'ใบขอซื้อ';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="purch-req-index" style="overflow: hidden;">
+<div class="purch-req-index" style="max-width: 100%; overflow-x: hidden;">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="d-flex align-items-center">
@@ -45,8 +45,7 @@ $this->params['breadcrumbs'][] = $this->title;
         'striped' => false,
         'condensed' => false,
         'responsive' => false,
-        'responsiveWrap' => false,
-        'containerOptions' => ['style' => 'overflow-x: auto; max-width: 100%;'],
+        'responsiveWrap' => true,
         'hover' => true,
         'floatHeader' => false,
         'showPageSummary' => false,

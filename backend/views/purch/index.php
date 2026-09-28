@@ -16,10 +16,10 @@ use kartik\select2\Select2;
 $this->title = 'คำสั่งซื้อ';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="purch-index">
+<div class="purch-index" style="max-width: 100%; overflow-x: hidden;">
 
-    <div class="row mb-3">
-        <div class="col-md-6 d-flex align-items-center">
+    <div class="row m-0 mb-3">
+        <div class="col-md-6 d-flex align-items-center px-0">
             <span class="me-2">แสดง</span>
             <?= Html::dropDownList('per-page', Yii::$app->request->get('per-page', 20), [
                 10 => '10',
@@ -113,8 +113,7 @@ $this->params['breadcrumbs'][] = $this->title;
         'striped' => false,
         'condensed' => false,
         'responsive' => false,
-        'responsiveWrap' => false,
-        'containerOptions' => ['style' => 'overflow-x: auto; max-width: 100%;'],
+        'responsiveWrap' => true,
         'hover' => true,
         'floatHeader' => false,
         'showPageSummary' => false,
