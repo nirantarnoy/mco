@@ -911,8 +911,12 @@ $this->registerJs($autocompleteJs);
                                       enctype="multipart/form-data">
                                     <input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
                                     <input type="hidden" name="id" value="<?= $model->id ?>">
-                                    <input type="hidden" name="doc_type_id" value="2">
-                                    <label for="">เอกสารแนบ ใบกำกับภาษี</label>
+                                    <label for="">ประเภทเอกสารแนบ</label>
+                                    <select name="doc_type_id" class="form-control" style="margin-bottom: 10px;">
+                                        <option value="4">ใบแจ้งหนี้ / ใบวางบิล</option>
+                                        <option value="2">ใบกำกับภาษี</option>
+                                        <option value="5">ใบเสร็จรับเงิน</option>
+                                    </select>
                                     <input type="file" name="file_doc[]" multiple>
                                     <div style="height: 10px;"></div>
                                     <div class="row">

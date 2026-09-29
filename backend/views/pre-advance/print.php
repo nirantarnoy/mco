@@ -331,6 +331,28 @@ $formatter = \Yii::$app->formatter;
 
                 // Build clean Description
                 $displayDesc = $descText;
+                
+                // Auto-correct wrong QT reference in description if we found the correct one
+                if ($refInfo && !empty($refInfo['qt_no'])) {
+                    if (preg_match('/(อ้างอิง\s*QT:\s*)([A-Za-z0-9-.\/_]+)/u', $displayDesc, $qtMatch)) {
+                        if ($qtMatch[2] !== $refInfo['qt_no']) {
+                            // Replace with correct qt_no
+                            $displayDesc = preg_replace('/(อ้างอิง\s*QT:\s*)([A-Za-z0-9-.\/_]+)/u', '${1}' . $refInfo['qt_no'], $displayDesc);
+                        }
+                    }
+                    // Also check if the refNo part has incorrect QT
+                    if (preg_match('/(เลขที่:\s*)([A-Za-z0-9-.\/_]+)/u', $displayDesc, $refMatch)) {
+                        $fullRef = $refMatch[2];
+                        if (strpos($fullRef, '-QT') !== false) {
+                            $base = preg_replace('/-QT[A-Za-z0-9.-]+$/i', '', $fullRef);
+                            $newRef = $base . '-' . $refInfo['qt_no'];
+                            if ($fullRef !== $newRef) {
+                                $displayDesc = preg_replace('/(เลขที่:\s*)([A-Za-z0-9-.\/_]+)/u', '${1}' . $newRef, $displayDesc);
+                            }
+                        }
+                    }
+                }
+
                 if ($refInfo && !empty($refInfo['details'])) {
                     $displayDesc .= ' (' . $refInfo['details'] . ')';
                 }
