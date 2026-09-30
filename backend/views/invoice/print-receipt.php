@@ -387,9 +387,67 @@ use yii\helpers\Html; ?>
     </div>
 </div>
 
-<div class="receipt-container">
+<?php
+// Check if we are referencing another document (Invoice or Bill Placement)
+// First evaluate $refNo logic from earlier lines 452-486 so we can use it here
+$totalModel = $model;
+$refNo = '';
+$refDate = '';
+
+if ($model->invoice_type == 'receipt' || $model->invoice_type == 'bill_placement') {
+     $refInvoice = \backend\models\Invoice::findOne($model->quotation_id);
+     if($refInvoice){
+         $refNo = $refInvoice->invoice_number;
+         $refDate = $refInvoice->invoice_date;
+     } else {
+         $refQuotation = \backend\models\Quotation::findOne($model->quotation_id);
+         if($refQuotation){
+             $refNo = $refQuotation->quotation_no;
+             $refDate = $refQuotation->quotation_date;
+         }
+     }
+
+     if (empty($refNo)) {
+        $relation = \backend\models\InvoiceRelation::find()->where(['child_invoice_id' => $model->id])->one();
+        if ($relation && $relation->parentInvoice) {
+            $refNo = $relation->parentInvoice->invoice_number;
+            $refDate = $relation->parentInvoice->invoice_date;
+        }
+     }
+} else {
+     $refQuotation = \backend\models\Quotation::findOne($model->quotation_id);
+     if($refQuotation){
+         $refNo = $refQuotation->quotation_no;
+         $refDate = $refQuotation->quotation_date;
+     }
+}
+
+$isRefDocument = ($model->invoice_type == 'receipt' || $model->invoice_type == 'bill_placement') && !empty($refNo);
+
+$itemsPerPage = 12;
+
+if ($isRefDocument) {
+    $chunks = [ [ 'parent' => true ] ];
+} else {
+    $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
+    $chunks = array_chunk($model_line, $itemsPerPage);
+    if (empty($chunks)) $chunks = [[]];
+}
+
+$totalPages = count($chunks);
+
+foreach ($chunks as $pageIndex => $chunk):
+    $pageNumber = $pageIndex + 1;
+    $isLastPage = ($pageNumber == $totalPages);
+?>
+<div class="receipt-container" style="<?= $totalPages > 1 ? 'page-break-after: always;' : '' ?>">
     <!-- Header Section -->
-    <div class="receipt-header-section" style="display: flex; align-items: center; justify-content: space-between; min-height: 100px;">
+    <div class="receipt-header-section" style="display: flex; align-items: center; justify-content: space-between; min-height: 100px; position: relative;">
+        <?php if ($totalPages > 1): ?>
+            <div style="position: absolute; top: 0; right: 0; font-size: 16px; font-weight: bold; color: #d32f2f;">
+                Page <?= $pageNumber ?> / <?= $totalPages ?>
+            </div>
+        <?php endif; ?>
         <div class="receipt-logo-section" style="min-width: 180px;">
             <img id="companyLogo" src="<?= $isAricatDefault ? '../../backend/web/uploads/logo/aricat.png' : '../../backend/web/uploads/logo/mco_logo_2.png' ?>" style="max-width: 190px;" alt="">
         </div>
@@ -447,42 +505,7 @@ use yii\helpers\Html; ?>
                 TAXID: <?= Html::encode($model->customer_tax_id ?: '') ?>
             </td>
             <?php
-            // Determine the model to use for totals and reference info
-            $totalModel = $model;
-            $refNo = '';
-            $refDate = '';
-            
-            if ($model->invoice_type == 'receipt' || $model->invoice_type == 'bill_placement') {
-                 // Try finding in Invoice table (Reference to Tax Invoice)
-                 $refInvoice = \backend\models\Invoice::findOne($model->quotation_id);
-                 if($refInvoice){
-                     $refNo = $refInvoice->invoice_number;
-                     $refDate = $refInvoice->invoice_date;
-                 } else {
-                     // Try finding in Quotation table if not found in Invoice table
-                     $refQuotation = \backend\models\Quotation::findOne($model->quotation_id);
-                     if($refQuotation){
-                         $refNo = $refQuotation->quotation_no;
-                         $refDate = $refQuotation->quotation_date;
-                     }
-                 }
-
-                 // If still not found, try to find through InvoiceRelation table
-                 if (empty($refNo)) {
-                    $relation = \backend\models\InvoiceRelation::find()->where(['child_invoice_id' => $model->id])->one();
-                    if ($relation && $relation->parentInvoice) {
-                        $refNo = $relation->parentInvoice->invoice_number;
-                        $refDate = $relation->parentInvoice->invoice_date;
-                    }
-                 }
-            } else {
-                 // For Quotation / Tax Invoice types, usually reference is a Quotation record
-                 $refQuotation = \backend\models\Quotation::findOne($model->quotation_id);
-                 if($refQuotation){
-                     $refNo = $refQuotation->quotation_no;
-                     $refDate = $refQuotation->quotation_date;
-                 }
-            }
+            // $refNo and $refDate are already computed above.
             ?>
             <td class="receipt-label-cell" style="border-right: none;">อ้างถึงเลขที่ใบแจ้งหนี้<br>RFQ.IV</td>
             <td class="receipt-data-cell"><?= Html::encode($refNo) ?></td>
@@ -506,9 +529,6 @@ use yii\helpers\Html; ?>
         </thead>
         <tbody>
             <?php
-            // Check if we are referencing another document (Invoice or Bill Placement)
-            $isRefDocument = ($model->invoice_type == 'receipt' || $model->invoice_type == 'bill_placement') && !empty($refNo);
-            
             if ($isRefDocument) {
                 // Display summary row for referenced document
                 ?>
@@ -524,11 +544,12 @@ use yii\helpers\Html; ?>
                 <?php
             } else {
                 // Display detailed items for standard invoice/quotation
-                $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
-                if (!empty($model_line)): 
-                    foreach ($model_line as $index => $item): ?>
+                if (!empty($chunk)): 
+                    foreach ($chunk as $idx => $item): 
+                        $globalIndex = ($pageIndex * $itemsPerPage) + $idx + 1;
+                        ?>
                         <tr>
-                            <td style="text-align: center;"><b><?= $index + 1 ?></b></td>
+                            <td style="text-align: center;"><b><?= $globalIndex ?></b></td>
                             <td class="receipt-text-left"><?= nl2br(Html::encode(\backend\helpers\ProductHelper::cleanDescription($item->item_description))) ?></td>
                             <td><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
                             <td class="receipt-text-right"><?= number_format($item->unit_price, 2) ?></td>
@@ -538,7 +559,13 @@ use yii\helpers\Html; ?>
                 endif; 
             }
             ?>
-            <?php for ($i = 0; $i < 1; $i++): ?>
+            <?php
+            $displayedRows = $isRefDocument ? 1 : count($chunk);
+            $emptyRows = $itemsPerPage - $displayedRows;
+            if ($emptyRows < 0) $emptyRows = 0;
+            
+            for ($i = 0; $i < $emptyRows; $i++): 
+            ?>
                 <tr>
                     <td>&nbsp;</td>
                     <td>&nbsp;</td>
@@ -548,7 +575,7 @@ use yii\helpers\Html; ?>
                 </tr>
             <?php endfor; ?>
         </tbody>
-        <tfoot>
+        <tfoot style="<?= !$isLastPage ? 'visibility: hidden;' : '' ?>">
             <tr>
                 <td colspan="3" rowspan="2" style="border-top: 1px solid #000; border-right: none; border-bottom: none; border-left: none;">
                     <div class="receipt-footer-note">
@@ -586,7 +613,7 @@ use yii\helpers\Html; ?>
     </table>
 
     <!-- Payment and Signature Section -->
-    <table class="receipt-payment-signature-table">
+    <table class="receipt-payment-signature-table" style="<?= !$isLastPage ? 'visibility: hidden;' : '' ?>">
         <tr>
             <td style="width: 35%; padding: 15px 8px; vertical-align: middle;">
                 <div style="display: flex; align-items: center; gap: 12px;">

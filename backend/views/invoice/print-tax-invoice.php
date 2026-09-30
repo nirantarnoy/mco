@@ -299,7 +299,9 @@ body {
     margin-top: 10px;
     display: flex;
     justify-content: space-between;
-    gap: 20px;
+    gap: 15px; /* Reduced gap slightly */
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .summary-left {
@@ -307,13 +309,15 @@ body {
     border: 1px solid #000;
     padding: 12px;
     height: fit-content;
+    box-sizing: border-box;
 }
 
 .summary-right {
-    width: 300px;
+    flex: 0 0 300px; /* Use flex basis instead of width */
     height: fit-content;
-    border: 1px solid #000;
+    border: 1px solid #000 !important; /* Force border */
     padding: 0;
+    box-sizing: border-box;
 }
 
 .summary-row {
@@ -528,48 +532,51 @@ window.createPrintCopies = function() {
     const existingCopies = document.querySelectorAll('.print-copy');
     existingCopies.forEach(copy => copy.remove());
     
-    let originalContainer = document.querySelector('.print-container.original');
-    if (!originalContainer) {
-        const container = document.querySelector('.print-container');
-        if (container) {
-            container.classList.add('original');
-            originalContainer = container;
+    let originalContainers = document.querySelectorAll('.print-container.original');
+    if (originalContainers.length === 0) {
+        const containers = document.querySelectorAll('.print-container');
+        containers.forEach(container => container.classList.add('original'));
+        originalContainers = document.querySelectorAll('.print-container.original');
+    }
+    
+    if (originalContainers.length === 0) return;
+    
+    // Add original label to the first copy of each page
+    originalContainers.forEach(container => {
+        const originalTitleSection = container.querySelector('.invoice-title-section');
+        if (originalTitleSection && !originalTitleSection.querySelector('.copy-label')) {
+            const originalLabel = document.createElement('div');
+            originalLabel.className = 'copy-label original';
+            originalLabel.textContent = 'ต้นฉบับ';
+            originalTitleSection.appendChild(originalLabel);
         }
-    }
+    });
     
-    if (!originalContainer) return;
-    
-    // Add original label to the first copy
-    const originalTitleSection = originalContainer.querySelector('.invoice-title-section');
-    if (originalTitleSection && !originalTitleSection.querySelector('.copy-label')) {
-        const originalLabel = document.createElement('div');
-        originalLabel.className = 'copy-label original';
-        originalLabel.textContent = 'ต้นฉบับ';
-        originalTitleSection.appendChild(originalLabel);
-    }
-    
-    // Create 2 copies
+    // Create 2 copies of all pages
+    const parentNode = originalContainers[0].parentNode;
     for (let i = 1; i <= 2; i++) {
-        const copy = originalContainer.cloneNode(true);
-        copy.classList.remove('original');
-        copy.classList.add('print-copy');
-        
-        // Add copy label next to invoice title
-        const titleSection = copy.querySelector('.invoice-title-section');
-        if (titleSection) {
-            // Remove existing label if any
-            const existingLabel = titleSection.querySelector('.copy-label');
-            if (existingLabel) {
-                existingLabel.remove();
+        originalContainers.forEach(originalContainer => {
+            const copy = originalContainer.cloneNode(true);
+            copy.classList.remove('original');
+            copy.classList.add('print-copy');
+            
+            // Add copy label next to invoice title
+            const titleSection = copy.querySelector('.invoice-title-section');
+            if (titleSection) {
+                // Remove existing label if any
+                const existingLabel = titleSection.querySelector('.copy-label');
+                if (existingLabel) {
+                    existingLabel.remove();
+                }
+                
+                const copyLabel = document.createElement('div');
+                copyLabel.className = 'copy-label copy';
+                copyLabel.textContent = 'สำเนา';
+                titleSection.appendChild(copyLabel);
             }
             
-            const copyLabel = document.createElement('div');
-            copyLabel.className = 'copy-label copy';
-            copyLabel.textContent = 'สำเนา';
-            titleSection.appendChild(copyLabel);
-        }
-        
-        originalContainer.parentNode.appendChild(copy);
+            parentNode.appendChild(copy);
+        });
     }
 };
 
@@ -699,9 +706,28 @@ window.addEventListener('afterprint', function() {
     </div>
 </div>
 
+    <?php
+    $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
+    $itemsPerPage = 12;
+    $chunks = array_chunk($model_line, $itemsPerPage);
+    $totalPages = count($chunks);
+    if ($totalPages == 0) {
+        $totalPages = 1;
+        $chunks = [[]];
+    }
+    
+    foreach ($chunks as $pageIndex => $chunk):
+        $pageNumber = $pageIndex + 1;
+        $isLastPage = ($pageNumber == $totalPages);
+    ?>
 <div class="print-container original">
     <!-- Header -->
-    <div class="header" style="display: flex; align-items: center; justify-content: space-between; min-height: 100px;">
+    <div class="header" style="display: flex; align-items: center; justify-content: space-between; min-height: 100px; position: relative;">
+        <?php if ($totalPages > 1): ?>
+            <div style="position: absolute; top: 0; right: 0; font-size: 16px; font-weight: bold; color: #d32f2f;">
+                Page <?= $pageNumber ?> / <?= $totalPages ?>
+            </div>
+        <?php endif; ?>
         <div class="logox" style="min-width: 180px;">
             <img id="companyLogo" src="<?= $isAricatDefault ? '../../backend/web/uploads/logo/aricat.png' : '../../backend/web/uploads/logo/mco_logo_2.png' ?>" style="max-width: 180px;" alt="">
         </div>
@@ -813,13 +839,12 @@ window.addEventListener('afterprint', function() {
                 </tr>
             </thead>
             <tbody>
-                <?php
-                $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
-                ?>
-                <?php if (!empty($model_line)): ?>
-                    <?php foreach ($model_line as $index => $item): ?>
+                <?php if (!empty($chunk)): ?>
+                    <?php foreach ($chunk as $idx => $item): 
+                        $globalIndex = ($pageIndex * $itemsPerPage) + $idx + 1;
+                    ?>
                         <tr>
-                            <td style=" padding:8px;text-align:center"><?= $index + 1 ?></td>
+                            <td style=" padding:8px;text-align:center"><?= $globalIndex ?></td>
                     <td class="text-left" style=" padding:8px;"><?= nl2br(Html::encode(\backend\helpers\ProductHelper::cleanDescription($item->item_description))) ?></td>
                     <td style="padding:8px;text-align:center"><?= is_numeric($item->quantity) ? (float)$item->quantity : $item->quantity ?> <?= Html::encode(\backend\models\Unit::findName($item->unit_id)) ?></td>
                             <td class=" text-right" style="padding:8px;"><?= number_format($item->unit_price, 2) ?></td>
@@ -831,7 +856,7 @@ window.addEventListener('afterprint', function() {
         <?php endif; ?>
 
         <!-- Empty rows for spacing -->
-        <?php for ($i = count($model_line); $i < 12; $i++): ?>
+        <?php for ($i = count($chunk); $i < $itemsPerPage; $i++): ?>
             <tr class="empty-row">
                 <td style="padding:8px;">&nbsp;</td>
                 <td style="padding:8px;">&nbsp;</td>
@@ -844,8 +869,8 @@ window.addEventListener('afterprint', function() {
         </table>
     </div>
 
-    <!-- Summary Section -->
-    <div class="summary-section">
+    <!-- Summary Section (Only show on last page) -->
+    <div class="summary-section" style="<?= !$isLastPage ? 'visibility: hidden;' : '' ?>">
         <div class="summary-left" style="border: 1px solid #000; padding: 10px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                 <span style="font-weight: 800;">ส่วนลด / Discount</span>
@@ -864,7 +889,7 @@ window.addEventListener('afterprint', function() {
                 </span>
             </div>
         </div>
-        <div class="summary-right" style="border: 1px solid #000;">
+        <div class="summary-right">
             <div class="summary-row" style="border-bottom: 1px solid #000;">
                 <span class="label-subtotal">รวมเงิน<br>Total</span>
                 <span class="value-subtotal"><?= number_format($model->subtotal - $model->discount_amount, 2) ?></span>
@@ -873,23 +898,23 @@ window.addEventListener('afterprint', function() {
                 <span class="label-vat">ภาษีมูลค่าเพิ่ม<br>VAT <?= $model->vat_percent ?>%</span>
                 <span class="value-vat"><?= number_format($model->vat_amount, 2) ?></span>
             </div>
-            <div class="summary-row total" style="background-color: #f0f0f0;">
+            <div class="summary-row total" style="background-color: #f0f0f0; border-bottom: none;">
                 <span class="label-grand-total">รวมเงินทั้งสิ้น<br>TOTAL</span>
                 <span class="value-grand-total"><?= number_format($model->total_amount, 2) ?></span>
             </div>
         </div>
     </div>
 
-    <!-- Notes Section -->
-    <div class="notes-section">
+    <!-- Notes Section (Only show on last page) -->
+    <div class="notes-section" style="<?= !$isLastPage ? 'visibility: hidden;' : '' ?>">
         <div class="notes-title">หมายเหตุ :</div>
         <div class="note-item">1. ตามรายการข้างต้น แม้จะได้ส่งมอบสินค้าแก่ผู้ซื้อแล้วก็ยังเป็นทรัพย์สินของบริษัทฯ จนกว่าจะได้รับชำระเงินครบถ้วน</div>
         <div class="note-item">2. สินค้าที่ซื้อไปเกินกว่า 7 วัน ทางบริษัทฯ ใคร่ขอสงวนสิทธิ์ไม่รับคืนสินค้า และคิดดอกเบี้ยร้อยละ 1.5 ต่อเดือน</div>
         <div class="note-item">3. สามารถชำระผ่านช่องทางธนาคารกรุงเทพจำกัด (มหาชน) สาขาระยอง ชื่อบัญชี บจ.เอ็ม.ซี.โอ. เลขบัญชี 277-3-02318-5 บัญชีกระแสรายวัน</div>
     </div>
 
-    <!-- Signature Section -->
-    <div class="signature-section">
+    <!-- Signature Section (Only show on last page) -->
+    <div class="signature-section" style="<?= !$isLastPage ? 'visibility: hidden;' : '' ?>">
         <div class="signature-box">
             <div class="signature-title">ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง</div>
             <div class="signature-line"></div>
@@ -910,6 +935,7 @@ window.addEventListener('afterprint', function() {
         </div>
     </div>
 </div>
+<?php endforeach; ?>
 <script>
     function changeHeader() {
         const headerSelect = document.getElementById('headerSelect');

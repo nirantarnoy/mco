@@ -345,44 +345,47 @@ window.createPrintCopies = function() {
     const existingCopies = document.querySelectorAll('.print-copy');
     existingCopies.forEach(copy => copy.remove());
     
-    let originalContainer = document.querySelector('.print-container.original');
-    if (!originalContainer) {
-        const container = document.querySelector('.print-container');
-        if (container) {
-            container.classList.add('original');
-            originalContainer = container;
+    let originalContainers = document.querySelectorAll('.print-container.original');
+    if (originalContainers.length === 0) {
+        const containers = document.querySelectorAll('.print-container');
+        containers.forEach(container => container.classList.add('original'));
+        originalContainers = document.querySelectorAll('.print-container.original');
+    }
+    
+    if (originalContainers.length === 0) return;
+    
+    originalContainers.forEach(container => {
+        const originalTitleSection = container.querySelector('.invoice-title-section');
+        if (originalTitleSection && !originalTitleSection.querySelector('.copy-label')) {
+            const originalLabel = document.createElement('div');
+            originalLabel.className = 'copy-label original';
+            originalLabel.textContent = 'ต้นฉบับ';
+            originalTitleSection.appendChild(originalLabel);
         }
-    }
+    });
     
-    if (!originalContainer) return;
-    
-    const originalTitleSection = originalContainer.querySelector('.invoice-title-section');
-    if (originalTitleSection && !originalTitleSection.querySelector('.copy-label')) {
-        const originalLabel = document.createElement('div');
-        originalLabel.className = 'copy-label original';
-        originalLabel.textContent = 'ต้นฉบับ';
-        originalTitleSection.appendChild(originalLabel);
-    }
-    
+    const parentNode = originalContainers[0].parentNode;
     for (let i = 1; i <= 2; i++) {
-        const copy = originalContainer.cloneNode(true);
-        copy.classList.remove('original');
-        copy.classList.add('print-copy');
-        
-        const titleSection = copy.querySelector('.invoice-title-section');
-        if (titleSection) {
-            const existingLabel = titleSection.querySelector('.copy-label');
-            if (existingLabel) {
-                existingLabel.remove();
+        originalContainers.forEach(originalContainer => {
+            const copy = originalContainer.cloneNode(true);
+            copy.classList.remove('original');
+            copy.classList.add('print-copy');
+            
+            const titleSection = copy.querySelector('.invoice-title-section');
+            if (titleSection) {
+                const existingLabel = titleSection.querySelector('.copy-label');
+                if (existingLabel) {
+                    existingLabel.remove();
+                }
+                
+                const copyLabel = document.createElement('div');
+                copyLabel.className = 'copy-label copy';
+                copyLabel.textContent = 'สำเนา';
+                titleSection.appendChild(copyLabel);
             }
             
-            const copyLabel = document.createElement('div');
-            copyLabel.className = 'copy-label copy';
-            copyLabel.textContent = 'สำเนา';
-            titleSection.appendChild(copyLabel);
-        }
-        
-        originalContainer.parentNode.appendChild(copy);
+            parentNode.appendChild(copy);
+        });
     }
 };
 
@@ -488,8 +491,45 @@ window.addEventListener('afterprint', function() {
     </div>
 </div>
 
+<?php
+$relation = \backend\models\InvoiceRelation::find()
+    ->where(['child_invoice_id' => $model->id])
+    ->one();
+
+$parentInvoice = null;
+if ($relation) {
+    $parentInvoice = \backend\models\Invoice::findOne($relation->parent_invoice_id);
+}
+
+$model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
+$itemsPerPage = 12;
+
+$totalAmount = 0;
+foreach ($model_line as $item) {
+    $totalAmount += $item->amount;
+}
+
+if ($parentInvoice) {
+    $chunks = [ [ 'parent' => true ] ];
+    $totalAmount = $parentInvoice->total_amount;
+} else {
+    $chunks = array_chunk($model_line, $itemsPerPage);
+    if (empty($chunks)) $chunks = [[]];
+}
+
+$totalPages = count($chunks);
+
+foreach ($chunks as $pageIndex => $chunk):
+    $pageNumber = $pageIndex + 1;
+    $isLastPage = ($pageNumber == $totalPages);
+?>
 <div class="print-container original">
-    <div class="header-section" style="display: flex; align-items: center; justify-content: space-between; min-height: 100px;">
+    <div class="header-section" style="display: flex; align-items: center; justify-content: space-between; min-height: 100px; position: relative;">
+        <?php if ($totalPages > 1): ?>
+            <div style="position: absolute; top: 0; right: 0; font-size: 16px; font-weight: bold; color: #d32f2f;">
+                Page <?= $pageNumber ?> / <?= $totalPages ?>
+            </div>
+        <?php endif; ?>
         <div class="mco-logo" style="min-width: 180px;">
             <img id="companyLogo" src="../../backend/web/uploads/logo/mco_logo_2.png" style="max-width: 180px;" alt="">
         </div>
@@ -557,25 +597,10 @@ window.addEventListener('afterprint', function() {
         </thead>
         <tbody>
             <?php
-            $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
-            $totalAmount = 0;
-            $itemCount = 0;
-            $max_rows = 20;
+            $itemCount = $pageIndex * $itemsPerPage;
 
-            // หา parent invoice จาก invoice_relations
-            $relation = \backend\models\InvoiceRelation::find()
-                ->where(['child_invoice_id' => $model->id])
-                ->one();
-
-            $parentInvoice = null;
-            if ($relation) {
-                $parentInvoice = \backend\models\Invoice::findOne($relation->parent_invoice_id);
-            }
-
-            // ถ้ามี parent invoice ให้แสดงแค่แถวเดียว
             if ($parentInvoice) {
                 $itemCount = 1;
-                $totalAmount = $parentInvoice->total_amount;
             ?>
                 <tr>
                     <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= $itemCount ?></td>
@@ -585,13 +610,11 @@ window.addEventListener('afterprint', function() {
                     <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= $parentInvoice->due_date ? Yii::$app->formatter->asDate($parentInvoice->due_date, 'php:d/m/Y') : '' ?></td>
                     <td class="text-right" style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= number_format($parentInvoice->total_amount, 2) ?></td>
                 </tr>
-                <?php
+            <?php
             } else {
-                // ถ้าไม่มี parent invoice ให้แสดงแบบเดิม (แต่ละ item)
-                if (!empty($model_line)):
-                    foreach (array_slice($model_line, 0, $max_rows) as $index => $item):
+                if (!empty($chunk)):
+                    foreach ($chunk as $index => $item):
                         $itemCount++;
-                        $totalAmount += $item->amount;
                 ?>
                         <tr>
                             <td style="border-top:none; border-left:1px solid #000; border-right:1px solid #000; border-bottom:none; padding:8px;font-weight: bold"><?= $itemCount ?></td>
@@ -609,8 +632,9 @@ window.addEventListener('afterprint', function() {
 
             <?php
             // Fill empty rows
-            $emptyRows = $max_rows - $itemCount;
-            if ($itemCount == 0) $emptyRows = 13;
+            $displayedRows = $parentInvoice ? 1 : count($chunk);
+            $emptyRows = $itemsPerPage - $displayedRows;
+            if ($emptyRows < 0) $emptyRows = 0;
 
             for ($i = 0; $i < $emptyRows; $i++):
             ?>
@@ -635,7 +659,7 @@ window.addEventListener('afterprint', function() {
                 <?php endif; ?>
             <?php endfor; ?>
         </tbody>
-        <tfoot>
+        <tfoot style="<?= !$isLastPage ? 'visibility: hidden;' : '' ?>">
             <tr>
                 <td colspan="6" style="font-weight: 800; font-size: 18px; padding: 10px; -webkit-text-stroke: 0.25px black;">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
@@ -659,7 +683,7 @@ window.addEventListener('afterprint', function() {
 
     <br>
 
-    <div class="signature-section">
+    <div class="signature-section" style="<?= !$isLastPage ? 'visibility: hidden;' : '' ?>">
         <table style="width: 100%;padding: 10px">
             <tr>
                 <td style="width: 50%;font-size: 18px;text-align: left;padding-left: 40px;font-weight: 800;-webkit-text-stroke: 0.25px black;">
@@ -678,6 +702,7 @@ window.addEventListener('afterprint', function() {
         </table>
     </div>
 </div>
+<?php endforeach; ?>
 <script>
     // ฟังก์ชันแปลงเดือนภาษาอังกฤษเป็นภาษาไทยแบบย่อ
     function convertToThaiMonth(dateStr) {
