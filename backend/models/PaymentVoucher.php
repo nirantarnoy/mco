@@ -44,6 +44,7 @@ class PaymentVoucher extends ActiveRecord
 
     const STATUS_DRAFT = 0;
     const STATUS_ACTIVE = 1;
+    const STATUS_COMPLETED = 2;
     const STATUS_CANCELLED = 100;
 
     /**
