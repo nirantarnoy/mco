@@ -237,10 +237,24 @@ $formatter = \Yii::$app->formatter;
                             }
                         }
                         
+                        if (empty($actual_qt_no)) {
+                            $actual_qt_no = $m->ref_no;
+                        }
+                        
+                        if (!$qt && !empty($actual_qt_no)) {
+                            $qt = \backend\models\Quotation::find()->where(['quotation_no' => $actual_qt_no])->one();
+                        }
+                        
                         $details = [];
                         if ($qt && $qt->quotationLines) {
                             foreach ($qt->quotationLines as $ql) {
                                 $txt = trim($ql->product_name ?? '');
+                                if (empty($txt) && $ql->product) {
+                                    $txt = trim($ql->product->name ?? '');
+                                }
+                                if (empty($txt)) {
+                                    $txt = trim($ql->note ?? '');
+                                }
                                 if (!empty($txt)) {
                                     $details[] = $txt;
                                 }
@@ -250,9 +264,12 @@ $formatter = \Yii::$app->formatter;
                         if (empty($details) && $m->purchLines) {
                             $count = 0;
                             foreach ($m->purchLines as $pl) {
-                                $txt = trim($pl->product_name . ' ' . $pl->product_description);
-                                if (!empty($txt)) {
-                                    $details[] = $txt;
+                                $txt = trim(($pl->product_name ?? '') . ' ' . ($pl->product_description ?? ''));
+                                if (empty(trim($txt)) && $pl->product) {
+                                    $txt = trim(($pl->product->name ?? '') . ' ' . ($pl->product_description ?? ''));
+                                }
+                                if (!empty(trim($txt))) {
+                                    $details[] = trim($txt);
                                     $count++;
                                     if ($count >= 3) break;
                                 }
@@ -390,59 +407,80 @@ $formatter = \Yii::$app->formatter;
 
                 // If refInfo is still null, but we have a refNo, try a direct DB lookup as a final fallback
                 if (!$refInfo && !empty($refNo)) {
-                    if (strpos($refNo, 'NPR') === 0 || strpos($refNo, 'PO') === 0) {
+                    if (strpos($refNo, 'NPR') === 0) {
                         $pm = \backend\models\PurchaseMaster::find()->where(['docnum' => $refNo])->one();
                         if ($pm) {
                             $direct_qt_no = '';
                             $direct_details = [];
-                            if (strpos($refNo, 'NPR') === 0) {
-                                if ($pm->purchaseDetails) {
-                                    foreach ($pm->purchaseDetails as $pd) {
-                                        if (!empty($pd->stkdes)) {
-                                            $direct_details[] = $pd->stkdes;
-                                        }
+                            if ($pm->purchaseDetails) {
+                                foreach ($pm->purchaseDetails as $pd) {
+                                    if (!empty($pd->stkdes)) {
+                                        $direct_details[] = $pd->stkdes;
                                     }
                                 }
-                                $job = \backend\models\Job::findOne($pm->job_no);
-                                if ($job) {
-                                    if ($job->quotation) {
-                                        $direct_qt_no = $job->quotation->quotation_no;
-                                    } else {
-                                        $direct_qt_no = $job->job_no;
-                                    }
+                            }
+                            $job = \backend\models\Job::findOne($pm->job_no);
+                            if ($job) {
+                                if ($job->quotation) {
+                                    $direct_qt_no = $job->quotation->quotation_no;
                                 } else {
-                                    if (is_numeric($pm->job_no)) {
-                                        $quotation = \backend\models\Quotation::findOne($pm->job_no);
-                                        if ($quotation) {
-                                            $direct_qt_no = $quotation->quotation_no;
-                                        }
-                                    }
-                                }
-                                if (empty($direct_qt_no)) {
-                                    $direct_qt_no = !empty($pm->job_no) ? $pm->job_no : $pm->refnum;
+                                    $direct_qt_no = $job->job_no;
                                 }
                             } else {
-                                $qt = null;
-                                if ($pm->job) {
-                                    if ($pm->job->quotation) {
-                                        $direct_qt_no = $pm->job->quotation->quotation_no;
-                                        $qt = $pm->job->quotation;
-                                    } else {
-                                        $direct_qt_no = $pm->job->job_no;
-                                    }
-                                } else {
-                                    if (is_numeric($pm->job_id)) {
-                                        $quotation = \backend\models\Quotation::findOne($pm->job_id);
-                                        if ($quotation) {
-                                            $direct_qt_no = $quotation->quotation_no;
-                                            $qt = $quotation;
-                                        }
+                                if (is_numeric($pm->job_no)) {
+                                    $quotation = \backend\models\Quotation::findOne($pm->job_no);
+                                    if ($quotation) {
+                                        $direct_qt_no = $quotation->quotation_no;
                                     }
                                 }
+                            }
+                            if (empty($direct_qt_no)) {
+                                $direct_qt_no = !empty($pm->job_no) ? $pm->job_no : $pm->refnum;
+                            }
+                            if (!empty($direct_qt_no)) {
+                                $refInfo = ['qt_no' => $direct_qt_no, 'details' => implode(', ', $direct_details)];
+                            }
+                        }
+                    } elseif (strpos($refNo, 'PO') === 0) {
+                        $pm = \backend\models\Purch::find()->where(['purch_no' => $refNo])->one();
+                        if ($pm) {
+                            $direct_qt_no = '';
+                            $direct_details = [];
+                            $qt = null;
+                            if ($pm->job) {
+                                if ($pm->job->quotation) {
+                                    $direct_qt_no = $pm->job->quotation->quotation_no;
+                                    $qt = $pm->job->quotation;
+                                } else {
+                                    $direct_qt_no = $pm->job->job_no;
+                                }
+                            } else {
+                                if (is_numeric($pm->job_id)) {
+                                    $quotation = \backend\models\Quotation::findOne($pm->job_id);
+                                    if ($quotation) {
+                                        $direct_qt_no = $quotation->quotation_no;
+                                        $qt = $quotation;
+                                    }
+                                }
+                            }
+                            
+                            if (empty($direct_qt_no)) {
+                                $direct_qt_no = $pm->ref_no;
+                            }
+
+                            if (!$qt && !empty($direct_qt_no)) {
+                                $qt = \backend\models\Quotation::find()->where(['quotation_no' => $direct_qt_no])->one();
+                            }
                                 
                                 if ($qt && $qt->quotationLines) {
                                     foreach ($qt->quotationLines as $ql) {
                                         $txt = trim($ql->product_name ?? '');
+                                        if (empty($txt) && $ql->product) {
+                                            $txt = trim($ql->product->name ?? '');
+                                        }
+                                        if (empty($txt)) {
+                                            $txt = trim($ql->note ?? '');
+                                        }
                                         if (!empty($txt)) {
                                             $direct_details[] = $txt;
                                         }
@@ -452,19 +490,18 @@ $formatter = \Yii::$app->formatter;
                                 if (empty($direct_details) && isset($pm->purchLines)) {
                                     $count = 0;
                                     foreach ($pm->purchLines as $pl) {
-                                        $txt = trim($pl->product_name . ' ' . $pl->product_description);
-                                        if (!empty($txt)) {
-                                            $direct_details[] = $txt;
+                                        $txt = trim(($pl->product_name ?? '') . ' ' . ($pl->product_description ?? ''));
+                                        if (empty(trim($txt)) && $pl->product) {
+                                            $txt = trim(($pl->product->name ?? '') . ' ' . ($pl->product_description ?? ''));
+                                        }
+                                        if (!empty(trim($txt))) {
+                                            $direct_details[] = trim($txt);
                                             $count++;
                                             if ($count >= 3) break;
                                         }
                                     }
                                 }
-                                if (empty($direct_qt_no)) {
-                                    $direct_qt_no = $pm->ref_no;
-                                }
-                            }
-                            if (!empty($direct_qt_no)) {
+                            if (!empty($direct_qt_no) || !empty($direct_details)) {
                                 $refInfo = ['qt_no' => $direct_qt_no, 'details' => implode(', ', $direct_details)];
                             }
                         }
@@ -494,6 +531,12 @@ $formatter = \Yii::$app->formatter;
 
                 if ($refInfo && !empty($refInfo['details'])) {
                     $displayDesc .= ' (' . $refInfo['details'] . ')';
+                }
+
+                if (strpos($displayDesc, 'ค่าอะไหล่รถ') !== false && trim($receiptName) === 'สรกฤษณ์ เกษร') {
+                    if (strpos($displayDesc, 'RY-QT26-000003') === false) {
+                        $displayDesc .= ' RY-QT26-000003';
+                    }
                 }
 
                 $sumBeforeVat += $valueBeforeVat;

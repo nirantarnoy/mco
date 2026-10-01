@@ -44,7 +44,8 @@ class AccountPayableController extends BaseController
 
         // 1. Get POs that are received but no PV (or PV not completed)
         $poQuery = Purch::find()
-            ->where(['status' => Purch::STATUS_COMPLETED]); // รับสินค้าครบแล้ว
+            ->where(['status' => Purch::STATUS_COMPLETED]) // รับสินค้าครบแล้ว
+            ->andWhere(['is_ap_closed' => 0]);
             
         if ($company_id && $company_id != 100) {
             $poQuery->andWhere(['company_id' => $company_id]);
@@ -99,7 +100,8 @@ class AccountPayableController extends BaseController
         
         // 2. Get None PRs that are received but no PV
         $nprQuery = PurchaseMaster::find()
-            ->where(['!=', 'status', PurchaseMaster::STATUS_CANCELLED]);
+            ->where(['!=', 'status', PurchaseMaster::STATUS_CANCELLED])
+            ->andWhere(['is_ap_closed' => 0]);
             
         if ($company_id && $company_id != 100) {
             $nprQuery->andWhere(['company_id' => $company_id]);
