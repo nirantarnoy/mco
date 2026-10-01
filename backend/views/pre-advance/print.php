@@ -149,9 +149,15 @@ $formatter = \Yii::$app->formatter;
                         }
 
                         $actual_qt_no = '';
-                        if ($m->job && $m->job->quotation) {
-                            $actual_qt_no = $m->job->quotation->quotation_no;
+                        $job = \backend\models\Job::findOne($m->job_no);
+                        if ($job) {
+                            if ($job->quotation) {
+                                $actual_qt_no = $job->quotation->quotation_no;
+                            } else {
+                                $actual_qt_no = $job->job_no;
+                            }
                         }
+                        
                         if (empty($actual_qt_no)) {
                             $actual_qt_no = !empty($m->job_no) ? $m->job_no : $m->refnum;
                         }
