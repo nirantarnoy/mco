@@ -156,6 +156,13 @@ $formatter = \Yii::$app->formatter;
                             } else {
                                 $actual_qt_no = $job->job_no;
                             }
+                        } else {
+                            if (is_numeric($m->job_no)) {
+                                $quotation = \backend\models\Quotation::findOne($m->job_no);
+                                if ($quotation) {
+                                    $actual_qt_no = $quotation->quotation_no;
+                                }
+                            }
                         }
                         
                         if (empty($actual_qt_no)) {
@@ -222,9 +229,21 @@ $formatter = \Yii::$app->formatter;
                         }
 
                         $actual_qt_no = '';
-                        if ($m->job && $m->job->quotation) {
-                            $actual_qt_no = $m->job->quotation->quotation_no;
+                        if ($m->job) {
+                            if ($m->job->quotation) {
+                                $actual_qt_no = $m->job->quotation->quotation_no;
+                            } else {
+                                $actual_qt_no = $m->job->job_no;
+                            }
+                        } else {
+                            if (is_numeric($m->job_id)) {
+                                $quotation = \backend\models\Quotation::findOne($m->job_id);
+                                if ($quotation) {
+                                    $actual_qt_no = $quotation->quotation_no;
+                                }
+                            }
                         }
+                        
                         if (empty($actual_qt_no)) {
                             $actual_qt_no = $m->ref_no;
                         }
