@@ -379,7 +379,15 @@ $formatter = \Yii::$app->formatter;
                         $pm = \backend\models\PurchaseMaster::find()->where(['docnum' => $refNo])->one();
                         if ($pm) {
                             $direct_qt_no = '';
+                            $direct_details = [];
                             if (strpos($refNo, 'NPR') === 0) {
+                                if ($pm->purchaseDetails) {
+                                    foreach ($pm->purchaseDetails as $pd) {
+                                        if (!empty($pd->stkdes)) {
+                                            $direct_details[] = $pd->stkdes;
+                                        }
+                                    }
+                                }
                                 $job = \backend\models\Job::findOne($pm->job_no);
                                 if ($job) {
                                     if ($job->quotation) {
@@ -400,6 +408,14 @@ $formatter = \Yii::$app->formatter;
                                 }
                             } else {
                                 // PO
+                                if (isset($pm->purchLines)) {
+                                    foreach ($pm->purchLines as $pl) {
+                                        $txt = trim($pl->product_name . ' ' . $pl->product_description);
+                                        if (!empty($txt)) {
+                                            $direct_details[] = $txt;
+                                        }
+                                    }
+                                }
                                 if ($pm->job) {
                                     if ($pm->job->quotation) {
                                         $direct_qt_no = $pm->job->quotation->quotation_no;
@@ -419,7 +435,7 @@ $formatter = \Yii::$app->formatter;
                                 }
                             }
                             if (!empty($direct_qt_no)) {
-                                $refInfo = ['qt_no' => $direct_qt_no];
+                                $refInfo = ['qt_no' => $direct_qt_no, 'details' => implode(', ', $direct_details)];
                             }
                         }
                     }
@@ -448,11 +464,6 @@ $formatter = \Yii::$app->formatter;
 
                 if ($refInfo && !empty($refInfo['details'])) {
                     $displayDesc .= ' (' . $refInfo['details'] . ')';
-                }
-
-                // DEBUG INJECTION
-                if ($refInfo) {
-                    $displayDesc .= ' [DEBUG: qt_no=' . $refInfo['qt_no'] . ', m_job_no=' . (isset($m->job_no) ? $m->job_no : 'N/A') . ']';
                 }
 
                 $sumBeforeVat += $valueBeforeVat;
