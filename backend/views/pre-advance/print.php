@@ -218,20 +218,12 @@ $formatter = \Yii::$app->formatter;
                             }
                         }
 
-                        $details = [];
-                        if ($m->purchLines) {
-                            foreach ($m->purchLines as $pl) {
-                                $txt = trim($pl->product_name . ' ' . $pl->product_description);
-                                if (!empty($txt)) {
-                                    $details[] = $txt;
-                                }
-                            }
-                        }
-
+                        $qt = null;
                         $actual_qt_no = '';
                         if ($m->job) {
                             if ($m->job->quotation) {
                                 $actual_qt_no = $m->job->quotation->quotation_no;
+                                $qt = $m->job->quotation;
                             } else {
                                 $actual_qt_no = $m->job->job_no;
                             }
@@ -240,6 +232,29 @@ $formatter = \Yii::$app->formatter;
                                 $quotation = \backend\models\Quotation::findOne($m->job_id);
                                 if ($quotation) {
                                     $actual_qt_no = $quotation->quotation_no;
+                                    $qt = $quotation;
+                                }
+                            }
+                        }
+                        
+                        $details = [];
+                        if ($qt && $qt->quotationLines) {
+                            foreach ($qt->quotationLines as $ql) {
+                                $txt = trim($ql->product_name ?? '');
+                                if (!empty($txt)) {
+                                    $details[] = $txt;
+                                }
+                            }
+                        }
+
+                        if (empty($details) && $m->purchLines) {
+                            $count = 0;
+                            foreach ($m->purchLines as $pl) {
+                                $txt = trim($pl->product_name . ' ' . $pl->product_description);
+                                if (!empty($txt)) {
+                                    $details[] = $txt;
+                                    $count++;
+                                    if ($count >= 3) break;
                                 }
                             }
                         }
@@ -407,18 +422,11 @@ $formatter = \Yii::$app->formatter;
                                     $direct_qt_no = !empty($pm->job_no) ? $pm->job_no : $pm->refnum;
                                 }
                             } else {
-                                // PO
-                                if (isset($pm->purchLines)) {
-                                    foreach ($pm->purchLines as $pl) {
-                                        $txt = trim($pl->product_name . ' ' . $pl->product_description);
-                                        if (!empty($txt)) {
-                                            $direct_details[] = $txt;
-                                        }
-                                    }
-                                }
+                                $qt = null;
                                 if ($pm->job) {
                                     if ($pm->job->quotation) {
                                         $direct_qt_no = $pm->job->quotation->quotation_no;
+                                        $qt = $pm->job->quotation;
                                     } else {
                                         $direct_qt_no = $pm->job->job_no;
                                     }
@@ -427,6 +435,28 @@ $formatter = \Yii::$app->formatter;
                                         $quotation = \backend\models\Quotation::findOne($pm->job_id);
                                         if ($quotation) {
                                             $direct_qt_no = $quotation->quotation_no;
+                                            $qt = $quotation;
+                                        }
+                                    }
+                                }
+                                
+                                if ($qt && $qt->quotationLines) {
+                                    foreach ($qt->quotationLines as $ql) {
+                                        $txt = trim($ql->product_name ?? '');
+                                        if (!empty($txt)) {
+                                            $direct_details[] = $txt;
+                                        }
+                                    }
+                                }
+
+                                if (empty($direct_details) && isset($pm->purchLines)) {
+                                    $count = 0;
+                                    foreach ($pm->purchLines as $pl) {
+                                        $txt = trim($pl->product_name . ' ' . $pl->product_description);
+                                        if (!empty($txt)) {
+                                            $direct_details[] = $txt;
+                                            $count++;
+                                            if ($count >= 3) break;
                                         }
                                     }
                                 }
