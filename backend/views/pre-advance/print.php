@@ -148,11 +148,19 @@ $formatter = \Yii::$app->formatter;
                             }
                         }
 
+                        $actual_qt_no = '';
+                        if ($m->job && $m->job->quotation) {
+                            $actual_qt_no = $m->job->quotation->quotation_no;
+                        }
+                        if (empty($actual_qt_no)) {
+                            $actual_qt_no = !empty($m->job_no) ? $m->job_no : $m->refnum;
+                        }
+
                         $info = [
                             'type' => 'NONE_PR',
                             'docnum' => $m->docnum,
                             'vendor_name' => $vName,
-                            'qt_no' => !empty($m->job_no) ? $m->job_no : $m->refnum,
+                            'qt_no' => $actual_qt_no,
                             'total_amount' => $finalTotal,
                             'value_before_vat' => $valBeforeVat,
                             'vat_amount' => $vatAmt,
@@ -207,11 +215,19 @@ $formatter = \Yii::$app->formatter;
                             }
                         }
 
+                        $actual_qt_no = '';
+                        if ($m->job && $m->job->quotation) {
+                            $actual_qt_no = $m->job->quotation->quotation_no;
+                        }
+                        if (empty($actual_qt_no)) {
+                            $actual_qt_no = $m->ref_no;
+                        }
+
                         $info = [
                             'type' => 'PO',
                             'docnum' => $m->purch_no,
                             'vendor_name' => $vName,
-                            'qt_no' => $m->ref_no,
+                            'qt_no' => $actual_qt_no,
                             'total_amount' => $netAmt,
                             'value_before_vat' => $valBeforeVat,
                             'vat_amount' => $vatAmt,

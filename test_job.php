@@ -1,12 +1,16 @@
 <?php
-require __DIR__ . '/vendor/autoload.php';
-require __DIR__ . '/vendor/yiisoft/yii2/Yii.php';
-$config = require __DIR__ . '/backend/config/main.php';
+require 'vendor/autoload.php';
+require 'vendor/yiisoft/yii2/Yii.php';
+require 'common/config/bootstrap.php';
+require 'backend/config/bootstrap.php';
+$config = yii\helpers\ArrayHelper::merge(
+    require 'common/config/main.php',
+    require 'common/config/main-local.php',
+    require 'backend/config/main.php',
+    require 'backend/config/main-local.php'
+);
 (new yii\web\Application($config));
-$jobs = \backend\models\Job::find()->where(['not', ['quotation_id' => null]])->orderBy(['id' => SORT_DESC])->limit(5)->all();
-foreach($jobs as $job) {
-    $q = $job->quotation;
-    if($q) {
-        echo 'Job: ' . $job->job_no . ', sum_note: ' . $job->summary_note . ', Cust: ' . $q->customer_name . ', Note: ' . $q->note . "\n";
-    }
+$models = \backend\models\PurchaseMaster::find()->where(['in', 'docnum', ['NPR202608280004', 'NPR202608280005', 'NPR202609050001', 'NPR202609050002']])->all();
+foreach($models as $m) {
+    echo $m->docnum . ' job: ' . $m->job_no . ' ref: ' . $m->refnum . PHP_EOL;
 }
