@@ -241,8 +241,17 @@ $formatter = \Yii::$app->formatter;
                             $actual_qt_no = $m->ref_no;
                         }
                         
+                        if (empty($actual_qt_no) && !empty($m->purch_no)) {
+                            if (preg_match('/-(QT[A-Za-z0-9-]+)(?:\.|$)/i', $m->purch_no, $match)) {
+                                $actual_qt_no = $match[1];
+                            }
+                        }
+                        
                         if (!$qt && !empty($actual_qt_no)) {
-                            $qt = \backend\models\Quotation::find()->where(['quotation_no' => $actual_qt_no])->one();
+                            $qt = \backend\models\Quotation::find()->where(['like', 'quotation_no', $actual_qt_no])->one();
+                        }
+                        if ($qt) {
+                            $actual_qt_no = $qt->quotation_no;
                         }
                         
                         $details = [];
@@ -467,9 +476,19 @@ $formatter = \Yii::$app->formatter;
                             if (empty($direct_qt_no)) {
                                 $direct_qt_no = $pm->ref_no;
                             }
+                            
+                            if (empty($direct_qt_no) && !empty($pm->purch_no)) {
+                                if (preg_match('/-(QT[A-Za-z0-9-]+)(?:\.|$)/i', $pm->purch_no, $match)) {
+                                    $direct_qt_no = $match[1];
+                                }
+                            }
 
                             if (!$qt && !empty($direct_qt_no)) {
-                                $qt = \backend\models\Quotation::find()->where(['quotation_no' => $direct_qt_no])->one();
+                                $qt = \backend\models\Quotation::find()->where(['like', 'quotation_no', $direct_qt_no])->one();
+                            }
+                                
+                            if ($qt) {
+                                $direct_qt_no = $qt->quotation_no;
                             }
                                 
                                 if ($qt && $qt->quotationLines) {
