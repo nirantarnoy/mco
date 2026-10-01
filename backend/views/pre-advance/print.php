@@ -506,7 +506,7 @@ $formatter = \Yii::$app->formatter;
                                     }
                                 }
 
-                                if (empty($direct_details) && isset($pm->purchLines)) {
+                                if (empty($direct_details) && !empty($pm->purchLines)) {
                                     $count = 0;
                                     foreach ($pm->purchLines as $pl) {
                                         $txt = trim(($pl->product_name ?? '') . ' ' . ($pl->product_description ?? ''));
