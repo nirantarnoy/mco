@@ -372,6 +372,58 @@ $formatter = \Yii::$app->formatter;
 
                 // Build clean Description
                 $displayDesc = $descText;
+
+                // If refInfo is still null, but we have a refNo, try a direct DB lookup as a final fallback
+                if (!$refInfo && !empty($refNo)) {
+                    if (strpos($refNo, 'NPR') === 0 || strpos($refNo, 'PO') === 0) {
+                        $pm = \backend\models\PurchaseMaster::find()->where(['docnum' => $refNo])->one();
+                        if ($pm) {
+                            $direct_qt_no = '';
+                            if (strpos($refNo, 'NPR') === 0) {
+                                $job = \backend\models\Job::findOne($pm->job_no);
+                                if ($job) {
+                                    if ($job->quotation) {
+                                        $direct_qt_no = $job->quotation->quotation_no;
+                                    } else {
+                                        $direct_qt_no = $job->job_no;
+                                    }
+                                } else {
+                                    if (is_numeric($pm->job_no)) {
+                                        $quotation = \backend\models\Quotation::findOne($pm->job_no);
+                                        if ($quotation) {
+                                            $direct_qt_no = $quotation->quotation_no;
+                                        }
+                                    }
+                                }
+                                if (empty($direct_qt_no)) {
+                                    $direct_qt_no = !empty($pm->job_no) ? $pm->job_no : $pm->refnum;
+                                }
+                            } else {
+                                // PO
+                                if ($pm->job) {
+                                    if ($pm->job->quotation) {
+                                        $direct_qt_no = $pm->job->quotation->quotation_no;
+                                    } else {
+                                        $direct_qt_no = $pm->job->job_no;
+                                    }
+                                } else {
+                                    if (is_numeric($pm->job_id)) {
+                                        $quotation = \backend\models\Quotation::findOne($pm->job_id);
+                                        if ($quotation) {
+                                            $direct_qt_no = $quotation->quotation_no;
+                                        }
+                                    }
+                                }
+                                if (empty($direct_qt_no)) {
+                                    $direct_qt_no = $pm->ref_no;
+                                }
+                            }
+                            if (!empty($direct_qt_no)) {
+                                $refInfo = ['qt_no' => $direct_qt_no];
+                            }
+                        }
+                    }
+                }
                 
                 // Auto-correct wrong QT reference in description if we found the correct one
                 if ($refInfo && !empty($refInfo['qt_no'])) {
@@ -396,6 +448,11 @@ $formatter = \Yii::$app->formatter;
 
                 if ($refInfo && !empty($refInfo['details'])) {
                     $displayDesc .= ' (' . $refInfo['details'] . ')';
+                }
+
+                // DEBUG INJECTION
+                if ($refInfo) {
+                    $displayDesc .= ' [DEBUG: qt_no=' . $refInfo['qt_no'] . ', m_job_no=' . (isset($m->job_no) ? $m->job_no : 'N/A') . ']';
                 }
 
                 $sumBeforeVat += $valueBeforeVat;
