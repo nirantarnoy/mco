@@ -277,6 +277,9 @@ $formatter = \Yii::$app->formatter;
                                 if (empty(trim($txt)) && $pl->product) {
                                     $txt = trim(($pl->product->name ?? '') . ' ' . ($pl->product_description ?? ''));
                                 }
+                                if (empty(trim($txt))) {
+                                    $txt = trim($pl->note ?? '');
+                                }
                                 if (!empty(trim($txt))) {
                                     $details[] = trim($txt);
                                     $count++;
@@ -512,6 +515,9 @@ $formatter = \Yii::$app->formatter;
                                         $txt = trim(($pl->product_name ?? '') . ' ' . ($pl->product_description ?? ''));
                                         if (empty(trim($txt)) && $pl->product) {
                                             $txt = trim(($pl->product->name ?? '') . ' ' . ($pl->product_description ?? ''));
+                                        }
+                                        if (empty(trim($txt))) {
+                                            $txt = trim($pl->note ?? '');
                                         }
                                         if (!empty(trim($txt))) {
                                             $direct_details[] = trim($txt);
