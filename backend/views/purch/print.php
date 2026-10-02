@@ -440,7 +440,7 @@ $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
                 <div>8/18 ถนนเกาะกลอย ตำบลเชิงเนิน อำเภอเมือง จ.ระยอง 21000</div>
                 <div>เลขประจำตัวผู้เสียภาษี  0215543000985  </div>
                 <div>Tel : (038) 875258-9,0946984555</div>
-                <div>e-mail : info@thai-mco.com</div>
+                <div>e-mail : <span id="display-email">info@thai-mco.com</span></div>
                 <div style="margin-top: 10px;"><strong>SUPPLIER :</strong></div>
                 <div style="white-space: nowrap;"><strong><?= Html::encode($purchase->vendor->name ?? '') ?></strong> 
                     <?php if($purchase->vendor->is_head == 1): ?>
@@ -676,6 +676,15 @@ function getEmpRequestor($purch_id) {
 <!-- Print Buttons -->
 <?php if (isset($showButtons) && $showButtons): ?>
     <div class="no-print" style="text-align: center; margin: 20px;">
+        <div style="margin-bottom: 15px; display: flex; justify-content: center; align-items: center; gap: 10px;">
+            <label for="emailSelect" style="font-weight: bold; font-size: 16px;">เลือก E-mail / Select Email:</label>
+            <select id="emailSelect" onchange="changeEmail()" style="padding: 5px; font-size: 16px; border-radius: 4px;">
+                <option value="info@thai-mco.com">info@thai-mco.com</option>
+                <option value="napaphat@thai-mco.com">napaphat@thai-mco.com</option>
+                <option value="sorkit@thai-mco.com">sorkit@thai-mco.com</option>
+                <option value="nattachai@aricatstudio.com">nattachai@aricatstudio.com</option>
+            </select>
+        </div>
         <button onclick="window.print()" class="btn btn-primary" style="font-size: 20px;font-weight: bold;">
             <i class="glyphicon glyphicon-print"></i> Print
         </button>
@@ -691,6 +700,14 @@ function getEmpRequestor($purch_id) {
 <?php endif; ?>
 
 <script>
+    function changeEmail() {
+        const emailSelect = document.getElementById('emailSelect');
+        const displayEmail = document.getElementById('display-email');
+        if (displayEmail && emailSelect) {
+            displayEmail.textContent = emailSelect.value;
+        }
+    }
+
     // ฟังก์ชันสำหรับ Print to PDF
     function printToPDF() {
         // alert('เคล็ดลับสำหรับ PDF คุณภาพสูง:\n\n' +
