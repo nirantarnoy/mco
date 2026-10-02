@@ -36,37 +36,35 @@ class AccountingDashboardController extends Controller
         // กรองเฉพาะ PO ที่อยู่ในปีปัจจุบันหรือย้อนหลังนิดหน่อย เพื่อไม่ให้ข้อมูลเยอะเกินไป
         // $query->andWhere(['>=', 'purch_date', date('Y-01-01')]);
 
-        $allPos = clone $query;
-        $allPosList = $allPos->all();
-        
-        $totalApproved = count($allPosList);
-        $totalReceived = 0;
-        $totalPending = 0;
-        $totalOverdue = 0;
+        // Fix N+1: ใช้ Count SQL ตรงๆ แทนการดึง Model มา loop และเช็ค checkPoremain ทีละใบ
+        $totalApproved = (int)Purch::find()
+            ->where(['approve_status' => Purch::APPROVE_STATUS_APPROVED])
+            ->andWhere(['!=', 'status', Purch::STATUS_CANCELLED])
+            ->count();
+            
+        // ให้ถือว่าสถานะ STATUS_COMPLETED (2) คือรับของครบแล้ว สำหรับการแสดงผลบนกราฟ
+        $totalReceived = (int)Purch::find()
+            ->where(['approve_status' => Purch::APPROVE_STATUS_APPROVED])
+            ->andWhere(['status' => Purch::STATUS_COMPLETED])
+            ->count();
+            
+        $totalPending = $totalApproved - $totalReceived;
         $today = date('Y-m-d');
         
-        foreach ($allPosList as $po) {
-            $isReceived = false;
-            if ($po->status == Purch::STATUS_COMPLETED) {
-                $isReceived = true;
-            } else {
-                $remain = Purch::checkPoremain($po->id);
-                if (empty($remain)) {
-                    $isReceived = true;
-                }
-            }
+        $totalOverdue = (int)Purch::find()
+            ->where(['approve_status' => Purch::APPROVE_STATUS_APPROVED])
+            ->andWhere(['!=', 'status', Purch::STATUS_CANCELLED])
+            ->andWhere(['!=', 'status', Purch::STATUS_COMPLETED])
+            ->andWhere(['<', 'target_shipment_date', $today])
+            ->count();
+
+        // รีเซ็ต Query สำหรับ GridView เพื่อกรองตามปุ่ม
+        $query = Purch::find()
+            ->where(['approve_status' => Purch::APPROVE_STATUS_APPROVED])
+            ->andWhere(['!=', 'status', Purch::STATUS_CANCELLED]);
             
-            if ($isReceived) {
-                $totalReceived++;
-            } else {
-                $totalPending++;
-                if (!empty($po->target_shipment_date)) {
-                    if (strtotime($po->target_shipment_date) < strtotime($today)) {
-                        $totalOverdue++;
-                    }
-                }
-            }
-        }
+        // แก้ไข N+1 สำหรับข้อมูลในตาราง
+        // (ยังอาจมีส่วนที่เรียก getAttachedDocuments(), getPvStatusText() แต่ลดการ query หนักๆ ไปได้เยอะ)
 
         // Apply filters to DataProvider only (Charts use all data)
         if ($filter !== 'all') {

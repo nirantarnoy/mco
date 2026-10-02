@@ -3,6 +3,7 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 use yii\grid\GridView;
+use yii\widgets\Pjax;
 
 $this->title = 'แดชบอร์ดภาพรวมบัญชี (Accounting Dashboard)';
 $this->params['breadcrumbs'][] = $this->title;
@@ -100,20 +101,22 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/chart.js', ['position' => \y
                 <i class="fas fa-info-circle me-2"></i> หน้านี้แสดงภาพรวมของ PO ที่ผ่านการอนุมัติแล้ว เพื่อติดตามวันที่รับสินค้าและเอกสารที่เกี่ยวข้อง
             </div>
             
+            <?php Pjax::begin(['id' => 'accounting-dashboard-pjax', 'timeout' => 5000]); ?>
+            
             <div class="mb-4 d-flex flex-wrap gap-2">
-                <a href="<?= Url::to(['index', 'filter' => 'all']) ?>" class="btn <?= $filter === 'all' ? 'btn-primary' : 'btn-outline-primary' ?> shadow-sm">
+                <a href="<?= Url::to(['index', 'filter' => 'all']) ?>" class="btn <?= $filter === 'all' ? 'btn-primary' : 'btn-outline-primary' ?> shadow-sm" data-pjax="1">
                     ทั้งหมด
                 </a>
-                <a href="<?= Url::to(['index', 'filter' => '3days']) ?>" class="btn <?= $filter === '3days' ? 'btn-warning text-dark font-weight-bold' : 'btn-outline-warning text-dark' ?> shadow-sm">
+                <a href="<?= Url::to(['index', 'filter' => '3days']) ?>" class="btn <?= $filter === '3days' ? 'btn-warning text-dark font-weight-bold' : 'btn-outline-warning text-dark' ?> shadow-sm" data-pjax="1">
                     จะรับสินค้าใน 3 วัน
                 </a>
-                <a href="<?= Url::to(['index', 'filter' => '5days']) ?>" class="btn <?= $filter === '5days' ? 'btn-warning text-dark font-weight-bold' : 'btn-outline-warning text-dark' ?> shadow-sm">
+                <a href="<?= Url::to(['index', 'filter' => '5days']) ?>" class="btn <?= $filter === '5days' ? 'btn-warning text-dark font-weight-bold' : 'btn-outline-warning text-dark' ?> shadow-sm" data-pjax="1">
                     จะรับสินค้าใน 5 วัน
                 </a>
-                <a href="<?= Url::to(['index', 'filter' => '7days']) ?>" class="btn <?= $filter === '7days' ? 'btn-warning text-dark font-weight-bold' : 'btn-outline-warning text-dark' ?> shadow-sm">
+                <a href="<?= Url::to(['index', 'filter' => '7days']) ?>" class="btn <?= $filter === '7days' ? 'btn-warning text-dark font-weight-bold' : 'btn-outline-warning text-dark' ?> shadow-sm" data-pjax="1">
                     จะรับสินค้าใน 7 วัน
                 </a>
-                <a href="<?= Url::to(['index', 'filter' => 'overdue']) ?>" class="btn <?= $filter === 'overdue' ? 'btn-danger font-weight-bold' : 'btn-outline-danger' ?> shadow-sm">
+                <a href="<?= Url::to(['index', 'filter' => 'overdue']) ?>" class="btn <?= $filter === 'overdue' ? 'btn-danger font-weight-bold' : 'btn-outline-danger' ?> shadow-sm" data-pjax="1">
                     เกินกำหนด
                 </a>
             </div>
@@ -195,6 +198,36 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/chart.js', ['position' => \y
                         }
                     ],
                     [
+                        'label' => 'เวลา (ล่าช้า/คงเหลือ)',
+                        'format' => 'raw',
+                        'value' => function($model) use ($today) {
+                            if (empty($model->target_shipment_date)) return '<span class="text-muted">-</span>';
+                            if ($model->status == \backend\models\Purch::STATUS_COMPLETED) {
+                                return '<span class="text-success"><i class="fas fa-check"></i> เรียบร้อย</span>';
+                            }
+                            
+                            $diff = floor((strtotime($model->target_shipment_date) - strtotime($today)) / (60 * 60 * 24));
+                            if ($diff < 0) {
+                                return '<span class="text-danger fw-bold"><i class="fas fa-exclamation-circle"></i> ล่าช้า ' . abs($diff) . ' วัน</span>';
+                            } elseif ($diff == 0) {
+                                return '<span class="text-warning fw-bold text-dark">กำหนดส่งวันนี้!</span>';
+                            } else {
+                                return '<span class="text-info">อีก ' . $diff . ' วัน</span>';
+                            }
+                        }
+                    ],
+                    [
+                        'label' => 'การติดตาม',
+                        'format' => 'raw',
+                        'value' => function($model) {
+                            if ($model->status == \backend\models\Purch::STATUS_COMPLETED) {
+                                return '<span class="text-muted">-</span>';
+                            }
+                            // Placeholder button for follow up since no DB column yet
+                            return '<button class="btn btn-xs btn-outline-secondary" onclick="alert(\'ระบบบันทึกการติดตามกำลังอยู่ในระหว่างการพัฒนา\')" title="บันทึกการติดตาม"><i class="fas fa-comment-dots"></i> ยังไม่ติดตาม</button>';
+                        }
+                    ],
+                    [
                         'label' => 'เอกสารแนบ',
                         'format' => 'raw',
                         'value' => function($model) {
@@ -243,6 +276,8 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/chart.js', ['position' => \y
                 ],
             ]); ?>
             </div>
+            
+            <?php Pjax::end(); ?>
         </div>
     </div>
     
