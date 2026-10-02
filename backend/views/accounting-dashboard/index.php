@@ -20,7 +20,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/chart.js', ['position' => \y
 <div class="accounting-dashboard-index">
     <!-- Summary Cards -->
     <div class="row mb-4">
-        <div class="col-md-3 col-sm-6 mb-2">
+        <div class="col-lg col-md-4 col-sm-6 mb-2">
             <div class="info-box shadow-sm h-100">
                 <span class="info-box-icon bg-info"><i class="fas fa-file-invoice"></i></span>
                 <div class="info-box-content">
@@ -29,7 +29,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/chart.js', ['position' => \y
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6 mb-2">
+        <div class="col-lg col-md-4 col-sm-6 mb-2">
             <div class="info-box shadow-sm h-100">
                 <span class="info-box-icon bg-success"><i class="fas fa-check-circle"></i></span>
                 <div class="info-box-content">
@@ -38,21 +38,30 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/chart.js', ['position' => \y
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6 mb-2">
+        <div class="col-lg col-md-4 col-sm-6 mb-2">
             <div class="info-box shadow-sm h-100">
                 <span class="info-box-icon bg-warning"><i class="fas fa-clock"></i></span>
                 <div class="info-box-content">
-                    <span class="info-box-text text-muted font-weight-bold">รอรับสินค้า (ค้างรับ)</span>
+                    <span class="info-box-text text-muted font-weight-bold">รอรับสินค้า</span>
                     <span class="info-box-number" style="font-size: 1.5rem;"><?= $totalPending ?> <small class="font-weight-normal">ใบ</small></span>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6 mb-2">
+        <div class="col-lg col-md-4 col-sm-6 mb-2">
             <div class="info-box shadow-sm h-100">
                 <span class="info-box-icon bg-danger"><i class="fas fa-exclamation-triangle"></i></span>
                 <div class="info-box-content">
                     <span class="info-box-text text-danger font-weight-bold">เกินกำหนดรับ</span>
                     <span class="info-box-number text-danger" style="font-size: 1.5rem;"><?= $totalOverdue ?> <small class="font-weight-normal">ใบ</small></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg col-md-4 col-sm-6 mb-2">
+            <div class="info-box shadow-sm h-100">
+                <span class="info-box-icon bg-primary"><i class="fas fa-wallet"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text text-primary font-weight-bold">ทำบัญชี (PV) แล้ว</span>
+                    <span class="info-box-number text-primary" style="font-size: 1.5rem;"><?= $totalAccounted ?> <small class="font-weight-normal">ใบ</small></span>
                 </div>
             </div>
         </div>

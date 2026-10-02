@@ -57,6 +57,16 @@ class AccountingDashboardController extends Controller
             ->andWhere(['!=', 'status', Purch::STATUS_COMPLETED])
             ->andWhere(['<', 'target_shipment_date', $today])
             ->count();
+            
+        // จำนวน PO ที่ดำเนินการทางบัญชีแล้ว (สร้าง PV แล้ว)
+        $totalAccounted = (int)Purch::find()
+            ->innerJoin('payment_voucher_ref pvr', 'pvr.ref_id = purch.id')
+            ->innerJoin('payment_voucher pv', 'pv.id = pvr.payment_voucher_id')
+            ->where(['purch.approve_status' => Purch::APPROVE_STATUS_APPROVED])
+            ->andWhere(['!=', 'purch.status', Purch::STATUS_CANCELLED])
+            ->andWhere(['pvr.ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PO])
+            ->andWhere(['!=', 'pv.status', \backend\models\PaymentVoucher::STATUS_CANCELLED])
+            ->count('DISTINCT purch.id');
 
         // รีเซ็ต Query สำหรับ GridView เพื่อกรองตามปุ่ม
         $query = Purch::find()
@@ -105,6 +115,7 @@ class AccountingDashboardController extends Controller
             'totalReceived' => $totalReceived,
             'totalPending' => $totalPending,
             'totalOverdue' => $totalOverdue,
+            'totalAccounted' => $totalAccounted,
             'filter' => $filter,
         ]);
     }
