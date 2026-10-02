@@ -1041,7 +1041,7 @@ class PurchController extends BaseController
         $model->approve_by = Yii::$app->user->id;
         $model->approve_date = date('Y-m-d H:i:s');
 
-        if ($model->save()) {
+        if ($model->save(false)) {
             Yii::$app->session->setFlash('success', 'อนุมัติใบสั่งซื้อเรียบร้อยแล้ว');
         } else {
             Yii::$app->session->setFlash('error', 'ไม่สามารถอนุมัติใบสั่งซื้อได้');
