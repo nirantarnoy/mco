@@ -291,19 +291,19 @@ $desc_text = $model->wht_desc == 'อื่นๆ' || $model->wht_desc == 'อ�
 
         <div style="margin-top: 20px; text-align: center; position: relative;">
             <p><b>ขอรับรองว่าข้อความและตัวเลขดังกล่าวข้างต้นถูกต้องตรงกับความจริงทุกประการ</b></p>
-            <div style="display: inline-block; width: 450px; text-align: center; margin-top: 10px;">
+            <div style="display: inline-block; width: 550px; text-align: center; margin-top: 10px;">
                 <div style="display: flex; align-items: flex-end; justify-content: center;">
-                    <span style="margin-right: 10px; padding-bottom: 2px;">ลงชื่อ</span>
-                    <div style="position: relative; width: 250px; border-bottom: 1px dotted #000; height: 45px;">
+                    <span style="margin-right: 10px; padding-bottom: 2px; white-space: nowrap;">ลงชื่อ</span>
+                    <div style="position: relative; width: 300px; border-bottom: 1px dotted #000; height: 45px;">
                         <div class="sig-container" style="position: absolute; bottom: 2px; left: 0; width: 100%; text-align: center; z-index: 2;">
                             <span style="font-size: 16px;"><?= $model->payer_name ? Html::encode($model->payer_name) : '' ?></span>
                         </div>
                     </div>
-                    <span style="margin-left: 10px; padding-bottom: 2px;">ผู้มีหน้าที่หักภาษี ณ ที่จ่าย</span>
+                    <span style="margin-left: 10px; padding-bottom: 2px; white-space: nowrap;">ผู้มีหน้าที่หักภาษี ณ ที่จ่าย</span>
                 </div>
-                <div class="sig-name" style="margin-top: 5px; font-size: 13px; min-height: 18px;"></div>
+                <div class="sig-name" style="margin-top: 5px; font-size: 14px; min-height: 18px; text-align: center;"></div>
                 
-                <div style="margin-top: 5px;">
+                <div style="margin-top: 5px; text-align: center; font-size: 14px;">
                     วันที่ <?= $model->trans_date ? $formatter->asDate($model->trans_date, 'php:d/m/Y') : '......./......./.......' ?>
                 </div>
             </div>

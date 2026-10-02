@@ -747,10 +747,48 @@ window.addEventListener('afterprint', function() {
         </div>
     </div>
 </div>
-
+    <?php
+    $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
+    $maxWithFooter = 12;
+    $maxWithoutFooter = 28; // Fits whole page
+    
+    $chunks = [];
+    $remaining = $model_line;
+    
+    if (empty($remaining)) {
+        $chunks[] = [];
+    } else {
+        while (count($remaining) > 0) {
+            if (count($remaining) <= $maxWithFooter) {
+                // Fits in one page with footer
+                $chunks[] = array_splice($remaining, 0, count($remaining));
+            } else {
+                // Does not fit with footer. Take up to maxWithoutFooter.
+                $take = min(count($remaining), $maxWithoutFooter);
+                $chunks[] = array_splice($remaining, 0, $take);
+                
+                // If we took everything but it exceeded maxWithFooter, append an empty chunk for the footer
+                if (count($remaining) == 0) {
+                    $chunks[] = []; 
+                }
+            }
+        }
+    }
+    $totalPages = count($chunks);
+    
+    foreach ($chunks as $pageIndex => $chunk):
+        $pageNumber = $pageIndex + 1;
+        $isLastPage = ($pageNumber == $totalPages);
+        $itemsPerPage = $isLastPage ? $maxWithFooter : $maxWithoutFooter;
+    ?>
 <div class="print-container original">
     <!-- Header -->
-    <div class="header" style="display: flex; align-items: center; justify-content: space-between; min-height: 100px;">
+    <div class="header" style="display: flex; align-items: center; justify-content: space-between; min-height: 100px; position: relative;">
+        <?php if ($totalPages > 1): ?>
+            <div style="position: absolute; top: 0; right: 0; font-size: 16px; font-weight: bold; color: #00A859;">
+                Page <?= $pageNumber ?> / <?= $totalPages ?>
+            </div>
+        <?php endif; ?>
         <div class="logox" style="min-width: 180px;">
             <img id="companyLogo" src="<?= $isAricatDefault ? '../../backend/web/uploads/logo/aricat.png' : '../../backend/web/uploads/logo/mco_logo_2.png' ?>" style="max-width: 180px;" alt="">
         </div>
@@ -855,13 +893,12 @@ window.addEventListener('afterprint', function() {
                 </tr>
             </thead>
             <tbody>
-                <?php
-                $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
-                ?>
-                <?php if (!empty($model_line)): ?>
-                    <?php foreach ($model_line as $index => $item): ?>
+                <?php if (!empty($chunk)): ?>
+                    <?php foreach ($chunk as $idx => $item): 
+                        $globalIndex = ($pageIndex * $itemsPerPage) + $idx + 1;
+                    ?>
                         <tr>
-                            <td style="padding:5px;text-align: center"><?= $index + 1 ?></td>
+                            <td style="padding:5px;text-align: center"><?= $globalIndex ?></td>
                             <td class="text-left" style="padding:5px;"><?= nl2br(Html::encode(\backend\helpers\ProductHelper::cleanDescription($item->item_description))) ?></td>
                             <td style="padding:5px;text-align: center"><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
                             <td class="text-right" style="padding:5px;"><?= number_format($item->unit_price, 2) ?></td>
@@ -869,18 +906,10 @@ window.addEventListener('afterprint', function() {
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <!-- Default sample data -->
-                    <tr>
-                        <td style="padding:5px;"></td>
-                        <td class="text-left" style="padding:5px;"></td>
-                        <td style="padding:5px;"></td>
-                        <td class="text-right" style="padding:5px;"></td>
-                        <td class="text-right" style="padding:5px;"></td>
-                    </tr>
                 <?php endif; ?>
 
                 <!-- Empty rows for spacing -->
-                <?php for ($i = count($model_line); $i < 10; $i++): ?>
+                <?php for ($i = count($chunk); $i < $itemsPerPage; $i++): ?>
                     <tr>
                         <td style="padding:5px;">&nbsp;</td>
                         <td style="padding:5px;">&nbsp;</td>
@@ -890,7 +919,7 @@ window.addEventListener('afterprint', function() {
                     </tr>
                 <?php endfor; ?>
             </tbody>
-            <tfoot>
+            <tfoot style="<?= !$isLastPage ? 'display: none;' : '' ?>">
                 <tr>
                     <td colspan="3" rowspan="3" style="padding: 8px;text-align: left;">
                         <div class="summary-left">
@@ -936,7 +965,7 @@ window.addEventListener('afterprint', function() {
 
 
     <!-- Notes Section -->
-    <div class="notes-section">
+    <div class="notes-section" style="<?= !$isLastPage ? 'display: none;' : '' ?>">
         <div class="notes-title">หมายเหตุ :
             <span style="line-height: 2;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. ตามรายการข้างต้น แม้จะได้ส่งมอบสินค้าแก่ผู้ซื้อแล้วก็ยังเป็นทรัพย์สินของผู้ขายจนกว่าผู้ซื้อจะได้รับชำระเงิน</span><br>
             <span style="line-height: 2;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. สินค้าที่ซื้อไปเกินกว่า 7 วัน ทางบริษัทฯใคร่ขอสงวนสิทธิ์ไม่รับคืนสินค้าและคิดดอกเบี้ยร้อยละ1.5 ต่อเดือน</span><br>

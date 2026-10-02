@@ -702,17 +702,37 @@ window.addEventListener('afterprint', function() {
 
     <?php
     $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
-    $itemsPerPage = 12;
-    $chunks = array_chunk($model_line, $itemsPerPage);
-    $totalPages = count($chunks);
-    if ($totalPages == 0) {
-        $totalPages = 1;
-        $chunks = [[]];
+    $maxWithFooter = 12;
+    $maxWithoutFooter = 28; // Fits whole page
+    
+    $chunks = [];
+    $remaining = $model_line;
+    
+    if (empty($remaining)) {
+        $chunks[] = [];
+    } else {
+        while (count($remaining) > 0) {
+            if (count($remaining) <= $maxWithFooter) {
+                // Fits in one page with footer
+                $chunks[] = array_splice($remaining, 0, count($remaining));
+            } else {
+                // Does not fit with footer. Take up to maxWithoutFooter.
+                $take = min(count($remaining), $maxWithoutFooter);
+                $chunks[] = array_splice($remaining, 0, $take);
+                
+                // If we took everything but it exceeded maxWithFooter, append an empty chunk for the footer
+                if (count($remaining) == 0) {
+                    $chunks[] = []; 
+                }
+            }
+        }
     }
+    $totalPages = count($chunks);
     
     foreach ($chunks as $pageIndex => $chunk):
         $pageNumber = $pageIndex + 1;
         $isLastPage = ($pageNumber == $totalPages);
+        $itemsPerPage = $isLastPage ? $maxWithFooter : $maxWithoutFooter;
     ?>
 <div class="print-container original">
     <!-- Header -->
@@ -864,7 +884,7 @@ window.addEventListener('afterprint', function() {
     </div>
 
     <!-- Summary Section (Only show on last page) -->
-    <div class="summary-section" style="<?= !$isLastPage ? 'visibility: hidden;' : '' ?>">
+    <div class="summary-section" style="<?= !$isLastPage ? 'display: none;' : '' ?>">
         <div class="summary-left" style="border: 1px solid #000; padding: 10px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                 <span style="font-weight: 800;">ส่วนลด / Discount</span>
@@ -900,7 +920,7 @@ window.addEventListener('afterprint', function() {
     </div>
 
     <!-- Notes Section (Only show on last page) -->
-    <div class="notes-section" style="<?= !$isLastPage ? 'visibility: hidden;' : '' ?>">
+    <div class="notes-section" style="<?= !$isLastPage ? 'display: none;' : '' ?>">
         <div class="notes-title">หมายเหตุ :</div>
         <div class="note-item">1. ตามรายการข้างต้น แม้จะได้ส่งมอบสินค้าแก่ผู้ซื้อแล้วก็ยังเป็นทรัพย์สินของบริษัทฯ จนกว่าจะได้รับชำระเงินครบถ้วน</div>
         <div class="note-item">2. สินค้าที่ซื้อไปเกินกว่า 7 วัน ทางบริษัทฯ ใคร่ขอสงวนสิทธิ์ไม่รับคืนสินค้า และคิดดอกเบี้ยร้อยละ 1.5 ต่อเดือน</div>
@@ -908,7 +928,7 @@ window.addEventListener('afterprint', function() {
     </div>
 
     <!-- Signature Section (Only show on last page) -->
-    <div class="signature-section" style="<?= !$isLastPage ? 'visibility: hidden;' : '' ?>">
+    <div class="signature-section" style="<?= !$isLastPage ? 'display: none;' : '' ?>">
         <div class="signature-box">
             <div class="signature-title">ได้ตรวจรับสินค้าตามรายการข้างต้นถูกต้อง</div>
             <div class="signature-line"></div>
