@@ -285,7 +285,6 @@ body {
     background-color: #f8f9fa;
     font-weight: 800;
     padding: 4px 4px;
-    -webkit-text-stroke: 0.25px black;
 }
 
 
@@ -327,7 +326,6 @@ body {
     // border-bottom: 1px solid #000;
     font-size: 18px;
     font-weight: 800;
-    -webkit-text-stroke: 0.25px black;
 }
 
 .summary-row:last-child {
@@ -343,7 +341,6 @@ body {
     margin-top: 5px;
     font-size: 18px;
     font-weight: 800;
-    -webkit-text-stroke: 0.25px black;
 }
 
 /* Notes Section */
@@ -352,13 +349,11 @@ body {
     font-size: 16px;
     line-height: 1.3;
     font-weight: 800;
-    -webkit-text-stroke: 0.2px black;
 }
 
 .notes-title {
     font-weight: 800;
     margin-bottom: 5px;
-    -webkit-text-stroke: 0.3px black;
 }
 
 .note-item {
@@ -387,7 +382,6 @@ body {
     font-weight: 800;
     margin-bottom: 10px;
     font-size: 14px;
-    -webkit-text-stroke: 0.25px black;
 }
 
 .signature-line {
@@ -876,7 +870,7 @@ window.addEventListener('afterprint', function() {
                 <span style="font-weight: 800;">ส่วนลด / Discount</span>
                 <span style="font-weight: 800;"><?= number_format($model->discount_amount, 2) ?></span>
             </div>
-            <div style="font-weight: 800; margin-bottom: 8px; -webkit-text-stroke: 0.25px black;">
+            <div style="font-weight: 800; margin-bottom: 8px;">
                 <span id="labelAmountText">ตัวอักษร</span>
             </div>
             <div class="amount-text" style="text-align: left; margin-top: 10px;">
