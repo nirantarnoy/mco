@@ -166,6 +166,11 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                     'label' => 'วันที่',
                                     'format' => ['date', 'php:m/d/Y'],
                                 ],
+                                [
+                                    'attribute' => 'target_shipment_date',
+                                    'label' => 'วันที่คาดว่าจะได้รับสินค้า',
+                                    'format' => ['date', 'php:m/d/Y'],
+                                ],
                                 'vendor_name:text:ชื่อผู้ขาย',
                                 [
                                     'attribute' => 'status',

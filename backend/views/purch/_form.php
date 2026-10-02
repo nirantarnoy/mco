@@ -390,6 +390,11 @@ $this->registerJs($autocompleteJs);
                                 'todayHighlight' => true,
                             ]
                         ]) ?>
+                        <?php 
+                        if ($model->isNewRecord && empty($model->target_shipment_date)) {
+                            $model->target_shipment_date = date('Y-m-d');
+                        }
+                        ?>
                         <?= $form->field($model, 'target_shipment_date')->widget(DatePicker::class, [
                             'options' => ['placeholder' => 'เลือกวันที่คาดว่าจะได้รับสินค้า'],
                             'pluginOptions' => [
