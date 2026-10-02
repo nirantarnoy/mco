@@ -677,8 +677,8 @@ function getEmpRequestor($purch_id) {
 <?php if (isset($showButtons) && $showButtons): ?>
     <div class="no-print" style="text-align: center; margin: 20px;">
         <div style="margin-bottom: 15px; display: flex; justify-content: center; align-items: center; gap: 10px;">
-            <label for="emailSelect" style="font-weight: bold; font-size: 16px;">เลือก E-mail / Select Email:</label>
-            <select id="emailSelect" onchange="changeEmail()" style="padding: 5px; font-size: 16px; border-radius: 4px;">
+            <label for="emailSelect" style="font-weight: bold; font-size: 20px;">เลือก E-mail / Select Email:</label>
+            <select id="emailSelect" onchange="changeEmail()" style="padding: 8px 15px; font-size: 20px; border-radius: 4px; min-width: 300px;">
                 <option value="info@thai-mco.com">info@thai-mco.com</option>
                 <option value="napaphat@thai-mco.com">napaphat@thai-mco.com</option>
                 <option value="sorkit@thai-mco.com">sorkit@thai-mco.com</option>

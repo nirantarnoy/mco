@@ -66,10 +66,12 @@ class Wht extends ActiveRecord
 
     public function generateDocNo()
     {
-        $prefix = 'WHT' . date('ym');
+        $datePrefix = !empty($this->trans_date) ? date('ym', strtotime($this->trans_date)) : date('ym');
+        $prefix = 'WHT' . $datePrefix;
+        
         $lastRecord = self::find()
-            ->where(['like', 'wht_no', $prefix])
-            ->orderBy(['id' => SORT_DESC])
+            ->where(['like', 'wht_no', $prefix . '%', false])
+            ->orderBy(['wht_no' => SORT_DESC])
             ->one();
 
         if ($lastRecord) {
