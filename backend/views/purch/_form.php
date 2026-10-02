@@ -390,6 +390,14 @@ $this->registerJs($autocompleteJs);
                                 'todayHighlight' => true,
                             ]
                         ]) ?>
+                        <?= $form->field($model, 'target_shipment_date')->widget(DatePicker::class, [
+                            'options' => ['placeholder' => 'เลือกวันที่คาดว่าจะได้รับสินค้า'],
+                            'pluginOptions' => [
+                                'autoclose' => true,
+                                'format' => 'yyyy-mm-dd',
+                                'todayHighlight' => true,
+                            ]
+                        ]) ?>
                         <?= $form->field($model, 'ref_no')->textInput([
                             'maxlength' => true,
                             'placeholder' => 'REF NO'

@@ -109,7 +109,7 @@ class Purch extends ActiveRecord
             [['purch_no', 'vendor_name', 'footer_delivery','footer_payment','ref_no'], 'string', 'max' => 255],
             [['note','delivery_note','payment_note', 'special_note'], 'string'],
             [['purch_no'], 'unique', 'filter' => ['status' => self::STATUS_ACTIVE]],
-            [['approve_date','discount_amount','fee_amount','exchange_rate'], 'safe'],
+            [['approve_date','discount_amount','fee_amount','exchange_rate', 'target_shipment_date'], 'safe'],
             [['is_vat','is_deposit','rev'],'integer'],
         ];
     }
@@ -153,6 +153,7 @@ class Purch extends ActiveRecord
             'special_note' => 'บันทึกอื่นๆ',
             'is_deposit' => 'มีค่ามัดจำ',
             'value_amount' => 'มูลค่าแปลงตามเรท',
+            'target_shipment_date' => 'วันที่คาดว่าจะได้รับสินค้า',
             'rev' => 'ครั้งที่แก้ไข',
 
         ];
