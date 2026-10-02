@@ -77,18 +77,18 @@ $desc_text = $model->wht_desc == 'อื่นๆ' || $model->wht_desc == 'อ�
         .pull-right { float: right; }
         .pull-left { float: left; }
         .clearfix::after { content: ""; clear: both; display: table; }
-        .title { font-size: 18px; font-weight: bold; margin-bottom: 10px; }
-        .wht-form { border: 1px solid #000; padding: 10px; position: relative; }
-        .doc-no { position: absolute; top: 10px; left: 10px; font-size: 12px; }
-        .doc-ref { position: absolute; top: 10px; right: 10px; font-size: 12px; }
+        .title { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+        .wht-form { border: 1px solid #000; padding: 5px; position: relative; page-break-inside: avoid; }
+        .doc-no { position: absolute; top: 5px; left: 5px; font-size: 12px; }
+        .doc-ref { position: absolute; top: 5px; right: 5px; font-size: 12px; }
         
-        .section-box { border: 1px solid #000; padding: 10px; margin-bottom: 5px; }
+        .section-box { border: 1px solid #000; padding: 5px; margin-bottom: 2px; }
         .grid-container { display: flex; }
         .col-left { width: 150px; font-weight: bold; }
         .col-right { flex-grow: 1; border-bottom: 1px dotted #000; }
         
-        table.wht-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        table.wht-table th, table.wht-table td { border: 1px solid #000; padding: 5px; font-size: 12px; }
+        table.wht-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        table.wht-table th, table.wht-table td { border: 1px solid #000; padding: 2px 4px; font-size: 11px; }
         table.wht-table th { text-align: center; }
         .valign-bottom { vertical-align: bottom; }
         
@@ -98,6 +98,7 @@ $desc_text = $model->wht_desc == 'อื่นๆ' || $model->wht_desc == 'อ�
         @media print {
             body { padding: 0; margin: 0; }
             .no-print { display: none !important; }
+            .page-break { page-break-after: always; }
         }
     </style>
 </head>
@@ -138,19 +139,27 @@ $desc_text = $model->wht_desc == 'อื่นๆ' || $model->wht_desc == 'อ�
         <button onclick="window.print();" style="padding: 8px 20px; font-size: 14px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 4px;">Print</button>
     </div>
 
-    <div style="font-size: 12px; margin-bottom: 5px;">
-        ฉบับที่ 1 (สำหรับผู้ถูกหักภาษี ณ ที่จ่าย ใช้แนบพร้อมกับแสดงรายการภาษี)<br>
-        ฉบับที่ 2 (สำหรับผู้ถูกหักภาษี ณ ที่จ่าย เก็บไว้เป็นหลักฐาน)
+    <?php
+    $copies = [
+        'ฉบับที่ 1 (ต้นฉบับ) สำหรับผู้ถูกหักภาษี ณ ที่จ่าย ใช้แนบพร้อมกับแสดงรายการภาษี',
+        'ฉบับที่ 2 (สำเนา) สำหรับผู้ถูกหักภาษี ณ ที่จ่าย เก็บไว้เป็นหลักฐาน',
+        'ฉบับที่ 3 (สำเนา) สำหรับผู้มีหน้าที่หักภาษี ณ ที่จ่าย เก็บไว้เป็นหลักฐาน'
+    ];
+    for ($i = 0; $i < count($copies); $i++):
+    ?>
+    
+    <div style="font-size: 12px; margin-bottom: 3px; font-weight: bold;">
+        <?= $copies[$i] ?>
     </div>
     <div class="wht-form">
         <div class="doc-no">เล่มที่ / เลขที่ <b><?= Html::encode($model->wht_no) ?></b></div>
         
-        <div class="text-center title" style="margin-top: 30px;">
+        <div class="text-center title" style="margin-top: 20px;">
             หนังสือรับรองการหักภาษี ณ ที่จ่าย<br>
             <span style="font-size: 14px; font-weight: normal;">ตามมาตรา 50 ทวิ แห่งประมวลรัษฎากร</span>
         </div>
 
-        <div class="section-box" style="margin-top: 15px;">
+        <div class="section-box" style="margin-top: 5px;">
             <b>ผู้มีหน้าที่หักภาษี ณ ที่จ่าย:</b><br>
             ชื่อ: <b>บริษัท เอ็ม.ซี.โอ. จำกัด (สำนักงานใหญ่)</b><br>
             ที่อยู่: 8/18 ถ.เกาะกลอย ต.เชิงเนิน อ.เมือง จ.ระยอง 21000<br>
@@ -284,59 +293,64 @@ $desc_text = $model->wht_desc == 'อื่นๆ' || $model->wht_desc == 'อ�
             <p><b>ขอรับรองว่าข้อความและตัวเลขดังกล่าวข้างต้นถูกต้องตรงกับความจริงทุกประการ</b></p>
             <br>
             <div style="position: relative; display: inline-block; width: 300px; height: 30px;">
-                <div id="sig-container" style="position: absolute; bottom: 5px; left: 0; width: 100%; text-align: center; z-index: 2;">
+                <div class="sig-container" style="position: absolute; bottom: 5px; left: 0; width: 100%; text-align: center; z-index: 2;">
                     <span style="font-size: 16px;"><?= $model->payer_name ? Html::encode($model->payer_name) : '' ?></span>
                 </div>
                 <div style="position: absolute; bottom: 0; left: 0; width: 100%;">ลงชื่อ ............................................................................</div>
             </div> ผู้มีหน้าที่หักภาษี ณ ที่จ่าย<br>
-            <div id="sig-name" style="margin-top: 5px; font-size: 13px;"></div>
+            <div class="sig-name" style="margin-top: 5px; font-size: 13px;"></div>
             
             <span style="display: inline-block; margin-top: 10px;">
                 วันที่ <?= $model->trans_date ? $formatter->asDate($model->trans_date, 'php:d/m/Y') : '......./......./.......' ?>
             </span>
             
             <!-- ตรายางบริษัท (จำลองตำแหน่งตามรูปภาพ) -->
-            <div id="stamp-container" style="position: absolute; right: 80px; top: 10px; width: 100px; height: 100px; border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0.8; z-index: 1;">
-                <span id="stamp-text" style="font-size: 10px; transform: rotate(-15deg); display: none;">ประทับตรา<br>นิติบุคคล</span>
-                <img id="stamp-img" src="<?= Yii::$app->request->baseUrl ?>/uploads/logo/mco_stamp.png" style="display: block; max-width: 100px; max-height: 100px; border-radius: 50%; mix-blend-mode: multiply;">
+            <div class="stamp-container" style="position: absolute; right: 80px; top: 10px; width: 100px; height: 100px; border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0.8; z-index: 1;">
+                <span class="stamp-text" style="font-size: 10px; transform: rotate(-15deg); display: none;">ประทับตรา<br>นิติบุคคล</span>
+                <img class="stamp-img" src="<?= Yii::$app->request->baseUrl ?>/uploads/logo/mco_stamp.png" style="display: block; max-width: 100px; max-height: 100px; border-radius: 50%; mix-blend-mode: multiply;">
             </div>
         </div>
 
         <script>
         function updateStamp(url) {
-            var img = document.getElementById('stamp-img');
-            var text = document.getElementById('stamp-text');
-            var container = document.getElementById('stamp-container');
-            if (url) {
-                img.src = url;
-                img.style.display = 'block';
-                text.style.display = 'none';
-                container.style.border = 'none';
-                container.style.opacity = '0.8';
-            } else {
-                img.src = '';
-                img.style.display = 'none';
-                text.style.display = 'block';
-                container.style.border = '1px dashed #ccc';
-                container.style.opacity = '0.3';
+            var imgs = document.querySelectorAll('.stamp-img');
+            var texts = document.querySelectorAll('.stamp-text');
+            var containers = document.querySelectorAll('.stamp-container');
+            
+            for (var i = 0; i < imgs.length; i++) {
+                if (url) {
+                    imgs[i].src = url;
+                    imgs[i].style.display = 'block';
+                    texts[i].style.display = 'none';
+                    containers[i].style.border = 'none';
+                    containers[i].style.opacity = '0.8';
+                } else {
+                    imgs[i].src = '';
+                    imgs[i].style.display = 'none';
+                    texts[i].style.display = 'block';
+                    containers[i].style.border = '1px dashed #ccc';
+                    containers[i].style.opacity = '0.3';
+                }
             }
         }
         function updateSig(option) {
             var url = option.value;
             var name = option.getAttribute('data-name');
-            var sigContainer = document.getElementById('sig-container');
-            var nameContainer = document.getElementById('sig-name');
+            var sigContainers = document.querySelectorAll('.sig-container');
+            var nameContainers = document.querySelectorAll('.sig-name');
             
-            if (url) {
-                sigContainer.innerHTML = '<img src="' + url + '" style="height: 45px;">';
-            } else {
-                sigContainer.innerHTML = '';
-            }
-            
-            if (name) {
-                nameContainer.innerHTML = '(' + name + ')';
-            } else {
-                nameContainer.innerHTML = '';
+            for (var i = 0; i < sigContainers.length; i++) {
+                if (url) {
+                    sigContainers[i].innerHTML = '<img src="' + url + '" style="height: 45px;">';
+                } else {
+                    sigContainers[i].innerHTML = '';
+                }
+                
+                if (name) {
+                    nameContainers[i].innerHTML = '(' + name + ')';
+                } else {
+                    nameContainers[i].innerHTML = '';
+                }
             }
         }
 
@@ -348,15 +362,15 @@ $desc_text = $model->wht_desc == 'อื่นๆ' || $model->wht_desc == 'อ�
         })();
         </script>
 
-        <div style="margin-top: 30px; font-size: 11px; border-top: 1px solid #000; padding-top: 10px;">
+        <div style="margin-top: 5px; font-size: 10px; border-top: 1px solid #000; padding-top: 5px;">
             <table width="100%" cellpadding="0" cellspacing="0" style="border: none; border-collapse: collapse; margin-top: 0;">
                 <tr>
-                    <td width="70" valign="top" style="border: none; padding: 2px;"><b>หมายเหตุ *</b></td>
-                    <td valign="top" style="border: none; padding: 2px;">ให้สามารถอ้างอิงหรือสอบยันกันได้ระหว่างลำดับที่ตามหนังสือรับรองฯ กับแบบยื่นรายการภาษีหัก ณ ที่จ่าย</td>
+                    <td width="70" valign="top" style="border: none; padding: 1px;"><b>หมายเหตุ *</b></td>
+                    <td valign="top" style="border: none; padding: 1px;">ให้สามารถอ้างอิงหรือสอบยันกันได้ระหว่างลำดับที่ตามหนังสือรับรองฯ กับแบบยื่นรายการภาษีหัก ณ ที่จ่าย</td>
                 </tr>
                 <tr>
-                    <td valign="top" style="border: none; padding: 2px;"><b>คำเตือน</b></td>
-                    <td valign="top" style="border: none; padding: 2px;">ผู้มีหน้าที่ออกหนังสือรับรองการหักภาษี ณ ที่จ่าย ฝ่าฝืนไม่ปฏิบัติตามมาตรา 50 ทวิ แห่งประมวลรัษฎากร ต้องรับโทษทาง<br>อาญา ตามมาตรา 35 แห่งประมวลรัษฎากร</td>
+                    <td valign="top" style="border: none; padding: 1px;"><b>คำเตือน</b></td>
+                    <td valign="top" style="border: none; padding: 1px;">ผู้มีหน้าที่ออกหนังสือรับรองการหักภาษี ณ ที่จ่าย ฝ่าฝืนไม่ปฏิบัติตามมาตรา 50 ทวิ แห่งประมวลรัษฎากร ต้องรับโทษทางอาญา ตามมาตรา 35 แห่งประมวลรัษฎากร</td>
                 </tr>
             </table>
         </div>
@@ -365,6 +379,12 @@ $desc_text = $model->wht_desc == 'อื่นๆ' || $model->wht_desc == 'อ�
     <div style="text-align: right; font-size: 11px; font-weight: bold; margin-top: 5px; margin-right: 5px;">
         F-WP-FMA-005-006 REV.N
     </div>
+    
+    <?php if ($i < count($copies) - 1): ?>
+        <div class="page-break"></div>
+    <?php endif; ?>
+    
+    <?php endfor; ?>
 </body>
 </html>
 
