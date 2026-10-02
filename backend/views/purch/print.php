@@ -422,7 +422,7 @@ $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
     <div class="header">
         <div class="logo-section">
             <div class="logo">
-                <img src="../../backend/web/uploads/logo/mco_logo_2.png" class="logo-img" alt="">
+                <img src="<?= Yii::getAlias('@web') ?>/uploads/logo/mco_logo_2.png" class="logo-img" alt="">
             </div>
         </div>
         <div style="text-align: right;">
@@ -630,7 +630,7 @@ $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
                 <?php
                 $requestor_signature = \backend\models\User::findEmployeeSignature($purchase->created_by);
                 if(!empty($requestor_signature)): ?>
-                    <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" alt="Purchasing Signature">
+                    <img src="<?= Yii::getAlias('@web') ?>/uploads/employee_signature/<?=$requestor_signature?>" alt="Purchasing Signature">
                 <?php endif; ?>
             </div>
             <div>PURCHASING</div>
@@ -641,7 +641,7 @@ $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
                 $emp_id = getEmpRequestor($purchase->id);
                 $requestor_signature = \backend\models\User::findEmployeeSignature($emp_id);
                 if(!empty($requestor_signature)): ?>
-                    <img src="../../backend/web/uploads/employee_signature/<?=$requestor_signature?>" alt="Request By Signature">
+                    <img src="<?= Yii::getAlias('@web') ?>/uploads/employee_signature/<?=$requestor_signature?>" alt="Request By Signature">
                 <?php endif; ?>
             </div>
             <div>REQUEST BY</div>
@@ -651,7 +651,7 @@ $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
                 <?php
                 $approve_signature = \backend\models\User::findEmployeeSignature($purchase->approve_by);
                 if(!empty($approve_signature)): ?>
-                    <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" alt="Authorized Signature">
+                    <img src="<?= Yii::getAlias('@web') ?>/uploads/employee_signature/<?=$approve_signature?>" alt="Authorized Signature">
                 <?php endif; ?>
             </div>
             <div>AUTHORIZED SIGNATURE</div>
