@@ -416,6 +416,12 @@
                         </a>
                         <ul class="nav nav-treeview">
                             <li class="nav-item">
+                                <a href="index.php?r=accounting-dashboard/index" class="nav-link accounting-dashboard">
+                                    <i class="far fa-circlez nav-icon text-info"></i>
+                                    <p>Dashboard บัญชี</p>
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a href="index.php?r=account-payable/worklist" class="nav-link account-payable">
                                     <i class="far fa-circlez nav-icon text-danger"></i>
                                     <p>รายการรอตั้งหนี้ (AP)</p>
