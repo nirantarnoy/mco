@@ -25,7 +25,7 @@ class AccountingDashboardController extends Controller
         ];
     }
 
-    public function actionIndex()
+    public function actionIndex($filter = 'all')
     {
         // ดึง PO ที่อนุมัติแล้ว และยังไม่ยกเลิก
         // เรียงตามวันที่คาดว่าจะได้รับสินค้า เพื่อให้เห็นอันที่ใกล้ถึงกำหนดก่อน
@@ -42,17 +42,49 @@ class AccountingDashboardController extends Controller
         $totalApproved = count($allPosList);
         $totalReceived = 0;
         $totalPending = 0;
+        $totalOverdue = 0;
+        $today = date('Y-m-d');
         
         foreach ($allPosList as $po) {
+            $isReceived = false;
             if ($po->status == Purch::STATUS_COMPLETED) {
-                $totalReceived++;
+                $isReceived = true;
             } else {
                 $remain = Purch::checkPoremain($po->id);
                 if (empty($remain)) {
-                    $totalReceived++;
-                } else {
-                    $totalPending++;
+                    $isReceived = true;
                 }
+            }
+            
+            if ($isReceived) {
+                $totalReceived++;
+            } else {
+                $totalPending++;
+                if (!empty($po->target_shipment_date)) {
+                    if (strtotime($po->target_shipment_date) < strtotime($today)) {
+                        $totalOverdue++;
+                    }
+                }
+            }
+        }
+
+        // Apply filters to DataProvider only (Charts use all data)
+        if ($filter !== 'all') {
+            // สำหรับฟิลเตอร์เรื่องเวลา จะแสดงเฉพาะใบที่ยังรับไม่ครบ
+            // เพื่อหลีกเลี่ยงใบที่รับของครบแล้วแต่ยังแสดงอยู่
+            $query->andWhere(['!=', 'purch.status', Purch::STATUS_COMPLETED]);
+            
+            if ($filter === 'overdue') {
+                $query->andWhere(['<', 'purch.target_shipment_date', $today]);
+            } elseif ($filter === '3days') {
+                $query->andWhere(['>=', 'purch.target_shipment_date', $today])
+                      ->andWhere(['<=', 'purch.target_shipment_date', date('Y-m-d', strtotime('+3 days'))]);
+            } elseif ($filter === '5days') {
+                $query->andWhere(['>=', 'purch.target_shipment_date', $today])
+                      ->andWhere(['<=', 'purch.target_shipment_date', date('Y-m-d', strtotime('+5 days'))]);
+            } elseif ($filter === '7days') {
+                $query->andWhere(['>=', 'purch.target_shipment_date', $today])
+                      ->andWhere(['<=', 'purch.target_shipment_date', date('Y-m-d', strtotime('+7 days'))]);
             }
         }
 
@@ -74,6 +106,8 @@ class AccountingDashboardController extends Controller
             'totalApproved' => $totalApproved,
             'totalReceived' => $totalReceived,
             'totalPending' => $totalPending,
+            'totalOverdue' => $totalOverdue,
+            'filter' => $filter,
         ]);
     }
 }

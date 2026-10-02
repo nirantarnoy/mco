@@ -17,6 +17,45 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/chart.js', ['position' => \y
 ?>
 
 <div class="accounting-dashboard-index">
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-2">
+            <div class="info-box shadow-sm h-100">
+                <span class="info-box-icon bg-info"><i class="fas fa-file-invoice"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text text-muted font-weight-bold">PO อนุมัติแล้ว</span>
+                    <span class="info-box-number" style="font-size: 1.5rem;"><?= $totalApproved ?> <small class="font-weight-normal">ใบ</small></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-2">
+            <div class="info-box shadow-sm h-100">
+                <span class="info-box-icon bg-success"><i class="fas fa-check-circle"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text text-muted font-weight-bold">รับเข้าครบแล้ว</span>
+                    <span class="info-box-number" style="font-size: 1.5rem;"><?= $totalReceived ?> <small class="font-weight-normal">ใบ</small></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-2">
+            <div class="info-box shadow-sm h-100">
+                <span class="info-box-icon bg-warning"><i class="fas fa-clock"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text text-muted font-weight-bold">รอรับสินค้า (ค้างรับ)</span>
+                    <span class="info-box-number" style="font-size: 1.5rem;"><?= $totalPending ?> <small class="font-weight-normal">ใบ</small></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-2">
+            <div class="info-box shadow-sm h-100">
+                <span class="info-box-icon bg-danger"><i class="fas fa-exclamation-triangle"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text text-danger font-weight-bold">เกินกำหนดรับ</span>
+                    <span class="info-box-number text-danger" style="font-size: 1.5rem;"><?= $totalOverdue ?> <small class="font-weight-normal">ใบ</small></span>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Charts Row -->
     <div class="row mb-4">
         <!-- Bar Chart for Comparison -->
@@ -60,11 +99,40 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/chart.js', ['position' => \y
             <div class="alert alert-info">
                 <i class="fas fa-info-circle me-2"></i> หน้านี้แสดงภาพรวมของ PO ที่ผ่านการอนุมัติแล้ว เพื่อติดตามวันที่รับสินค้าและเอกสารที่เกี่ยวข้อง
             </div>
+            
+            <div class="mb-4 d-flex flex-wrap gap-2">
+                <a href="<?= Url::to(['index', 'filter' => 'all']) ?>" class="btn <?= $filter === 'all' ? 'btn-primary' : 'btn-outline-primary' ?> shadow-sm">
+                    ทั้งหมด
+                </a>
+                <a href="<?= Url::to(['index', 'filter' => '3days']) ?>" class="btn <?= $filter === '3days' ? 'btn-warning text-dark font-weight-bold' : 'btn-outline-warning text-dark' ?> shadow-sm">
+                    จะรับสินค้าใน 3 วัน
+                </a>
+                <a href="<?= Url::to(['index', 'filter' => '5days']) ?>" class="btn <?= $filter === '5days' ? 'btn-warning text-dark font-weight-bold' : 'btn-outline-warning text-dark' ?> shadow-sm">
+                    จะรับสินค้าใน 5 วัน
+                </a>
+                <a href="<?= Url::to(['index', 'filter' => '7days']) ?>" class="btn <?= $filter === '7days' ? 'btn-warning text-dark font-weight-bold' : 'btn-outline-warning text-dark' ?> shadow-sm">
+                    จะรับสินค้าใน 7 วัน
+                </a>
+                <a href="<?= Url::to(['index', 'filter' => 'overdue']) ?>" class="btn <?= $filter === 'overdue' ? 'btn-danger font-weight-bold' : 'btn-outline-danger' ?> shadow-sm">
+                    เกินกำหนด
+                </a>
+            </div>
 
+            <div class="table-responsive">
             <?= GridView::widget([
                 'dataProvider' => $dataProvider,
-                'tableOptions' => ['class' => 'table table-hover table-bordered table-striped'],
+                'tableOptions' => ['class' => 'table table-hover table-bordered table-striped mb-0'],
                 'layout' => "{summary}\n{items}\n{pager}",
+                'pager' => [
+                    'options' => ['class' => 'pagination justify-content-center mt-4 mb-2'],
+                    'linkContainerOptions' => ['class' => 'page-item'],
+                    'linkOptions' => ['class' => 'page-link'],
+                    'disabledListItemSubTagOptions' => ['class' => 'page-link text-muted'],
+                    'prevPageCssClass' => 'page-item',
+                    'nextPageCssClass' => 'page-item',
+                    'disabledPageCssClass' => 'disabled',
+                    'activePageCssClass' => 'active',
+                ],
                 'columns' => [
                     ['class' => 'yii\grid\SerialColumn'],
                     
@@ -174,6 +242,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/chart.js', ['position' => \y
                     ],
                 ],
             ]); ?>
+            </div>
         </div>
     </div>
     
