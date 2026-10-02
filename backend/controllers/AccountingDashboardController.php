@@ -25,53 +25,57 @@ class AccountingDashboardController extends Controller
         ];
     }
 
-    public function actionIndex($filter = 'all')
+    public function actionIndex($filter = 'all', $startDate = null, $endDate = null)
     {
-        // ดึง PO ที่อนุมัติแล้ว และยังไม่ยกเลิก
-        // เรียงตามวันที่คาดว่าจะได้รับสินค้า เพื่อให้เห็นอันที่ใกล้ถึงกำหนดก่อน
-        $query = Purch::find()
-            ->where(['approve_status' => Purch::APPROVE_STATUS_APPROVED])
-            ->andWhere(['!=', 'status', Purch::STATUS_CANCELLED]);
-            
-        // กรองเฉพาะ PO ที่อยู่ในปีปัจจุบันหรือย้อนหลังนิดหน่อย เพื่อไม่ให้ข้อมูลเยอะเกินไป
-        // $query->andWhere(['>=', 'purch_date', date('Y-01-01')]);
+        // Helper function for date filtering
+        $applyDateFilter = function($q) use ($startDate, $endDate) {
+            if ($startDate && $endDate) {
+                $q->andWhere(['>=', 'purch.purch_date', $startDate])
+                  ->andWhere(['<=', 'purch.purch_date', $endDate]);
+            }
+        };
 
         // Fix N+1: ใช้ Count SQL ตรงๆ แทนการดึง Model มา loop และเช็ค checkPoremain ทีละใบ
-        $totalApproved = (int)Purch::find()
-            ->where(['approve_status' => Purch::APPROVE_STATUS_APPROVED])
-            ->andWhere(['!=', 'status', Purch::STATUS_CANCELLED])
-            ->count();
+        $qApproved = Purch::find()
+            ->where(['purch.approve_status' => Purch::APPROVE_STATUS_APPROVED])
+            ->andWhere(['!=', 'purch.status', Purch::STATUS_CANCELLED]);
+        $applyDateFilter($qApproved);
+        $totalApproved = (int)$qApproved->count();
             
         // ให้ถือว่าสถานะ STATUS_COMPLETED (2) คือรับของครบแล้ว สำหรับการแสดงผลบนกราฟ
-        $totalReceived = (int)Purch::find()
-            ->where(['approve_status' => Purch::APPROVE_STATUS_APPROVED])
-            ->andWhere(['status' => Purch::STATUS_COMPLETED])
-            ->count();
+        $qReceived = Purch::find()
+            ->where(['purch.approve_status' => Purch::APPROVE_STATUS_APPROVED])
+            ->andWhere(['purch.status' => Purch::STATUS_COMPLETED]);
+        $applyDateFilter($qReceived);
+        $totalReceived = (int)$qReceived->count();
             
         $totalPending = $totalApproved - $totalReceived;
         $today = date('Y-m-d');
         
-        $totalOverdue = (int)Purch::find()
-            ->where(['approve_status' => Purch::APPROVE_STATUS_APPROVED])
-            ->andWhere(['!=', 'status', Purch::STATUS_CANCELLED])
-            ->andWhere(['!=', 'status', Purch::STATUS_COMPLETED])
-            ->andWhere(['<', 'target_shipment_date', $today])
-            ->count();
+        $qOverdue = Purch::find()
+            ->where(['purch.approve_status' => Purch::APPROVE_STATUS_APPROVED])
+            ->andWhere(['!=', 'purch.status', Purch::STATUS_CANCELLED])
+            ->andWhere(['!=', 'purch.status', Purch::STATUS_COMPLETED])
+            ->andWhere(['<', 'purch.target_shipment_date', $today]);
+        $applyDateFilter($qOverdue);
+        $totalOverdue = (int)$qOverdue->count();
             
         // จำนวน PO ที่ดำเนินการทางบัญชีแล้ว (สร้าง PV แล้ว)
-        $totalAccounted = (int)Purch::find()
+        $qAccounted = Purch::find()
             ->innerJoin('payment_voucher_ref pvr', 'pvr.ref_id = purch.id')
             ->innerJoin('payment_voucher pv', 'pv.id = pvr.payment_voucher_id')
             ->where(['purch.approve_status' => Purch::APPROVE_STATUS_APPROVED])
             ->andWhere(['!=', 'purch.status', Purch::STATUS_CANCELLED])
             ->andWhere(['pvr.ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PO])
-            ->andWhere(['!=', 'pv.status', \backend\models\PaymentVoucher::STATUS_CANCELLED])
-            ->count('DISTINCT purch.id');
+            ->andWhere(['!=', 'pv.status', \backend\models\PaymentVoucher::STATUS_CANCELLED]);
+        $applyDateFilter($qAccounted);
+        $totalAccounted = (int)$qAccounted->count('DISTINCT purch.id');
 
         // รีเซ็ต Query สำหรับ GridView เพื่อกรองตามปุ่ม
         $query = Purch::find()
-            ->where(['approve_status' => Purch::APPROVE_STATUS_APPROVED])
-            ->andWhere(['!=', 'status', Purch::STATUS_CANCELLED]);
+            ->where(['purch.approve_status' => Purch::APPROVE_STATUS_APPROVED])
+            ->andWhere(['!=', 'purch.status', Purch::STATUS_CANCELLED]);
+        $applyDateFilter($query);
             
         // แก้ไข N+1 สำหรับข้อมูลในตาราง
         // (ยังอาจมีส่วนที่เรียก getAttachedDocuments(), getPvStatusText() แต่ลดการ query หนักๆ ไปได้เยอะ)
@@ -117,6 +121,8 @@ class AccountingDashboardController extends Controller
             'totalOverdue' => $totalOverdue,
             'totalAccounted' => $totalAccounted,
             'filter' => $filter,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
         ]);
     }
 }

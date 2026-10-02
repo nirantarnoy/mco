@@ -18,6 +18,33 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/chart.js', ['position' => \y
 ?>
 
 <div class="accounting-dashboard-index">
+    <!-- Date Filter Form -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body py-3">
+            <form method="get" action="<?= Url::to(['index']) ?>" class="form-inline m-0 w-100">
+                <input type="hidden" name="filter" value="<?= Html::encode($filter) ?>">
+                <div class="row align-items-center w-100 m-0">
+                    <div class="col-12 col-md-auto mb-2 mb-md-0 px-1">
+                        <strong><i class="fas fa-calendar-alt"></i> เลือกช่วงเวลา (วันที่สั่งซื้อ):</strong>
+                    </div>
+                    <div class="col-12 col-md-auto mb-2 mb-md-0 px-1">
+                        <input type="date" name="startDate" class="form-control form-control-sm" value="<?= Html::encode($startDate) ?>" required>
+                    </div>
+                    <div class="col-12 col-md-auto mb-2 mb-md-0 px-1 text-center">
+                        <span> ถึง </span>
+                    </div>
+                    <div class="col-12 col-md-auto mb-2 mb-md-0 px-1">
+                        <input type="date" name="endDate" class="form-control form-control-sm" value="<?= Html::encode($endDate) ?>" required>
+                    </div>
+                    <div class="col-12 col-md-auto px-1">
+                        <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search"></i> ค้นหา</button>
+                        <a href="<?= Url::to(['index', 'filter' => $filter]) ?>" class="btn btn-sm btn-outline-secondary">ล้างค่า</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Summary Cards -->
     <div class="row mb-4">
         <div class="col-lg col-md-4 col-sm-6 mb-2">
@@ -113,19 +140,19 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/chart.js', ['position' => \y
             <?php Pjax::begin(['id' => 'accounting-dashboard-pjax', 'timeout' => 5000]); ?>
             
             <div class="mb-4 d-flex flex-wrap gap-2">
-                <a href="<?= Url::to(['index', 'filter' => 'all']) ?>" class="btn <?= $filter === 'all' ? 'btn-primary' : 'btn-outline-primary' ?> shadow-sm" data-pjax="1">
+                <a href="<?= Url::to(['index', 'filter' => 'all', 'startDate' => $startDate, 'endDate' => $endDate]) ?>" class="btn <?= $filter === 'all' ? 'btn-primary' : 'btn-outline-primary' ?> shadow-sm" data-pjax="1">
                     ทั้งหมด
                 </a>
-                <a href="<?= Url::to(['index', 'filter' => '3days']) ?>" class="btn <?= $filter === '3days' ? 'btn-warning text-dark font-weight-bold' : 'btn-outline-warning text-dark' ?> shadow-sm" data-pjax="1">
+                <a href="<?= Url::to(['index', 'filter' => '3days', 'startDate' => $startDate, 'endDate' => $endDate]) ?>" class="btn <?= $filter === '3days' ? 'btn-warning text-dark font-weight-bold' : 'btn-outline-warning text-dark' ?> shadow-sm" data-pjax="1">
                     จะรับสินค้าใน 3 วัน
                 </a>
-                <a href="<?= Url::to(['index', 'filter' => '5days']) ?>" class="btn <?= $filter === '5days' ? 'btn-warning text-dark font-weight-bold' : 'btn-outline-warning text-dark' ?> shadow-sm" data-pjax="1">
+                <a href="<?= Url::to(['index', 'filter' => '5days', 'startDate' => $startDate, 'endDate' => $endDate]) ?>" class="btn <?= $filter === '5days' ? 'btn-warning text-dark font-weight-bold' : 'btn-outline-warning text-dark' ?> shadow-sm" data-pjax="1">
                     จะรับสินค้าใน 5 วัน
                 </a>
-                <a href="<?= Url::to(['index', 'filter' => '7days']) ?>" class="btn <?= $filter === '7days' ? 'btn-warning text-dark font-weight-bold' : 'btn-outline-warning text-dark' ?> shadow-sm" data-pjax="1">
+                <a href="<?= Url::to(['index', 'filter' => '7days', 'startDate' => $startDate, 'endDate' => $endDate]) ?>" class="btn <?= $filter === '7days' ? 'btn-warning text-dark font-weight-bold' : 'btn-outline-warning text-dark' ?> shadow-sm" data-pjax="1">
                     จะรับสินค้าใน 7 วัน
                 </a>
-                <a href="<?= Url::to(['index', 'filter' => 'overdue']) ?>" class="btn <?= $filter === 'overdue' ? 'btn-danger font-weight-bold' : 'btn-outline-danger' ?> shadow-sm" data-pjax="1">
+                <a href="<?= Url::to(['index', 'filter' => 'overdue', 'startDate' => $startDate, 'endDate' => $endDate]) ?>" class="btn <?= $filter === 'overdue' ? 'btn-danger font-weight-bold' : 'btn-outline-danger' ?> shadow-sm" data-pjax="1">
                     เกินกำหนด
                 </a>
             </div>
