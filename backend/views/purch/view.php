@@ -150,7 +150,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
         </div>
 
         <div class="row">
-            <div class="col-md-8">
+            <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
                         <h5 class="card-title mb-0">ข้อมูลใบสั่งซื้อ</h5>
@@ -273,7 +273,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
                         <h5 class="card-title mb-0">ข้อมูลการสร้าง</h5>
@@ -305,6 +305,20 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                     'value' => function ($model) {
                                         return \backend\models\User::findEmployeeNameByUserId($model->updated_by);
                                     }
+                                ],
+                                [
+                                    'attribute' => 'approve_date',
+                                    'label' => 'วันที่อนุมัติ',
+                                    'format' => ['datetime', 'php:m/d/Y H:i'],
+                                    'visible' => $model->approve_status == \backend\models\Purch::APPROVE_STATUS_APPROVED,
+                                ],
+                                [
+                                    'attribute' => 'approve_by',
+                                    'label' => 'ผู้อนุมัติ',
+                                    'value' => function ($model) {
+                                        return \backend\models\User::findEmployeeNameByUserId($model->approve_by);
+                                    },
+                                    'visible' => $model->approve_status == \backend\models\Purch::APPROVE_STATUS_APPROVED,
                                 ],
                                 'note:ntext:หมายเหตุ',
                                 'ref_text:text:อ้างอิง',
@@ -763,7 +777,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
 
         .detail-view th {
             background-color: #f8f9fa;
-            width: 30%;
+            width: 50%;
         }
 
         .badge {
