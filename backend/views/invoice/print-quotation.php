@@ -995,6 +995,7 @@ window.addEventListener('afterprint', function() {
         </div>
     </div>
 </div>
+<?php endforeach; ?>
 
 <script>
     function changeHeader() {
