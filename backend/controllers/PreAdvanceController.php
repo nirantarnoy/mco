@@ -141,7 +141,7 @@ class PreAdvanceController extends BaseController
 
         if (!empty($changedMessages)) {
             $alertMsg = 'ระบบดึงยอดเงินล่าสุดจากบิลต้นฉบับ: ' . implode(', ', $changedMessages) . ' **กรุณากดปุ่มอัพเดทรายการด้านล่างเพื่อบันทึก**';
-            Yii::$app->session->setFlash('warning', $alertMsg);
+            Yii::$app->session->setFlash('msg', $alertMsg);
         }
 
         return $this->render('update', [
