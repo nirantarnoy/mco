@@ -258,6 +258,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         ]);
                     },
                     'update' => function ($url, $model, $key) {
+                        if ($model->approve_status == \backend\models\PurchReq::APPROVE_STATUS_APPROVED) {
+                            return null;
+                        }
                         return Html::a('<i class="fas fa-edit"></i>', $url, [
                             'title' => 'แก้ไข',
                             'class' => 'btn btn-sm btn-outline-primary me-1',

@@ -409,6 +409,11 @@ class PurchController extends BaseController
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        
+        if ($model->approve_status == \backend\models\Purch::APPROVE_STATUS_APPROVED) {
+            Yii::$app->session->setFlash('error', 'ไม่อนุญาตให้แก้ไขใบสั่งซื้อที่ได้รับการอนุมัติแล้ว');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
 
         // Load existing purch lines
         $model->purchLines = $model->getPurchLines()->all();

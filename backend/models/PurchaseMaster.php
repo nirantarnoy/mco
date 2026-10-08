@@ -226,15 +226,12 @@ class PurchaseMaster extends \yii\db\ActiveRecord
         
         $this->vatpr0 = $calc_vatpr0;
 
-        // If amount is not set or 0, calculate it. Otherwise respect the loaded value.
-        // We can add a flag or check if it was loaded from post, but it's simpler to just trust the value if it's there.
-        // However, if the user changes the percent but not the amount, we might want to recalculate.
-        // For now, let's just make sure it calculates if it's 0.
-        if ($this->vat_amount == 0 || $this->vat_amount == null) {
+        // Force recalculation based on percent
+        if (isset($this->vat_percent)) {
             $this->vat_amount = ($this->vatpr0 * $this->vat_percent) / 100;
         }
 
-        if ($this->tax_amount == 0 || $this->tax_amount == null) {
+        if (isset($this->tax_percent)) {
             $this->tax_amount = ($this->vatpr0 * $this->tax_percent) / 100;
         }
 

@@ -194,6 +194,11 @@ class PurchreqController extends BaseController
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        
+        if ($model->approve_status == \backend\models\PurchReq::APPROVE_STATUS_APPROVED) {
+            Yii::$app->session->setFlash('error', 'ไม่อนุญาตให้แก้ไขใบขอซื้อที่ได้รับการอนุมัติแล้ว');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
 
         // Load existing purch req lines
         $model->purchReqLines = $model->getPurchReqLines()->all();

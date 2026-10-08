@@ -75,7 +75,9 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
                     ]) ?>
                 <?php endif; ?>
 
-                <?= Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+                <?php if ($model->approve_status != PurchReq::APPROVE_STATUS_APPROVED): ?>
+                    <?= Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+                <?php endif; ?>
                 <?php if ($model->approve_status == PurchReq::APPROVE_STATUS_PENDING): ?>
                     <?php if (\Yii::$app->user->can('purchreq/reject')): ?>
                         <?= Html::a('ไม่อนุมัติ', ['reject', 'id' => $model->id], [
