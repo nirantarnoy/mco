@@ -46,6 +46,7 @@ $this->params['breadcrumbs'][] = $this->title;
         'condensed' => false,
         'responsive' => false,
         'responsiveWrap' => false,
+        'tableOptions' => ['style' => 'white-space: nowrap;'],
         'containerOptions' => ['style' => 'overflow-x: auto; max-width: 100%;'],
         'hover' => true,
         'floatHeader' => false,
