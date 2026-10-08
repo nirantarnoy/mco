@@ -108,6 +108,42 @@ class PreAdvanceController extends BaseController
             }
         }
 
+        // Auto-sync lines with actual PO/NPR values before rendering
+        $autoUpdatedAmount = 0;
+        $changedMessages = [];
+        foreach ($model->preAdvanceLines as $line) {
+            $oldAmount = $line->amount;
+            if (preg_match('/เลขที่:\s*(NPR\d+)/', $line->description, $m)) {
+                $npr = \backend\models\PurchaseMaster::findOne(['docnum' => $m[1]]);
+                if ($npr) {
+                    $line->amount = $npr->total_amount;
+                    $jobRef = !empty($npr->job_no) ? $npr->job_no : $npr->refnum;
+                    $line->description = 'เลขที่: ' . $npr->docnum . (!empty($jobRef) ? ' (อ้างอิง QT: ' . $jobRef . ')' : '');
+                    
+                    if (abs($oldAmount - $line->amount) > 0.001) {
+                        $changedMessages[] = $npr->docnum . ' (จาก ' . number_format($oldAmount, 2) . ' เป็น ' . number_format($line->amount, 2) . ')';
+                    }
+                }
+            } elseif (preg_match('/เลขที่:\s*(PO-[^\s\(]+)/', $line->description, $m)) {
+                $po = \backend\models\Purch::findOne(['purch_no' => $m[1]]);
+                if ($po) {
+                    $line->amount = $po->net_amount;
+                    $line->description = 'เลขที่: ' . $po->purch_no . (!empty($po->ref_no) ? ' (อ้างอิง QT: ' . $po->ref_no . ')' : '');
+                    
+                    if (abs($oldAmount - $line->amount) > 0.001) {
+                        $changedMessages[] = $po->purch_no . ' (จาก ' . number_format($oldAmount, 2) . ' เป็น ' . number_format($line->amount, 2) . ')';
+                    }
+                }
+            }
+            $autoUpdatedAmount += $line->amount;
+        }
+        $model->amount = $autoUpdatedAmount;
+
+        if (!empty($changedMessages)) {
+            $alertMsg = 'ระบบดึงยอดเงินล่าสุดจากบิลต้นฉบับ: ' . implode(', ', $changedMessages) . ' **กรุณากดปุ่มอัพเดทรายการด้านล่างเพื่อบันทึก**';
+            Yii::$app->session->setFlash('warning', $alertMsg);
+        }
+
         return $this->render('update', [
             'model' => $model,
         ]);

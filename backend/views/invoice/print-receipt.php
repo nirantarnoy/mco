@@ -666,6 +666,7 @@ foreach ($chunks as $pageIndex => $chunk):
         F-WP-FMA-006-002Rev.N
     </div>
 </div>
+<?php endforeach; ?>
 
 <script>
     // Function to change company header
