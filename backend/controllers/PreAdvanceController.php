@@ -31,6 +31,17 @@ class PreAdvanceController extends BaseController
         ];
     }
 
+    public function actionAddDbColumn()
+    {
+        $db = Yii::$app->db;
+        $table = $db->getTableSchema('purchase_master');
+        if ($table && !isset($table->columns['approve_by'])) {
+            $db->createCommand()->addColumn('purchase_master', 'approve_by', $db->getSchema()->createColumnSchemaBuilder('int')->defaultValue(null))->execute();
+            return "Added approve_by to purchase_master";
+        }
+        return "approve_by already exists in purchase_master or table not found";
+    }
+
     public function actionIndex()
     {
         $globalSearch = Yii::$app->request->get('globalSearch');

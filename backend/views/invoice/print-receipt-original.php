@@ -438,7 +438,23 @@ use yii\helpers\Html; ?>
         </tr>
         <tr>
             <td class="receipt-label-cell" rowspan="2" style="border-right: none;">ขายให้<br>SALE TO</td>
-            <td class="receipt-data-cell" style="border-bottom: none;"><?= Html::encode($model->customer_name ?: '') ?></td>
+            <td class="receipt-data-cell" style="border-bottom: none;">
+                <?php
+                $customerBranchText = '';
+                if ($model->customer_id) {
+                    $customerObj = \backend\models\Customer::findOne($model->customer_id);
+                    if ($customerObj) {
+                        if ($customerObj->is_head == 1) {
+                            $customerBranchText = ' (สำนักงานใหญ่)';
+                        } elseif (!empty($customerObj->branch_name)) {
+                            $customerBranchText = ' (สาขาที่ ' . $customerObj->branch_name . ')';
+                        }
+                    }
+                }
+                $fullCustomerName = Html::encode($model->customer_name ?: '') . $customerBranchText;
+                echo $fullCustomerName;
+                ?>
+            </td>
             <td class="receipt-label-cell" style="border-right: none;">ใบสั่งซื้อเลขที่<br>PO NO</td>
             <td class="receipt-data-cell"><?= Html::encode($model->po_number ?: '') ?></td>
             <td class="receipt-label-cell" style="border-right: none;">วันที่สั่งซื้อ<br>PO DATE</td>

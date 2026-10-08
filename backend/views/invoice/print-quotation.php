@@ -842,7 +842,21 @@ window.addEventListener('afterprint', function() {
                 </div>
 
                 <span class="field-value">
-                    <?= Html::encode($model->quotation->customer->name ?: '') ?> <br>
+                    <?php
+                    $customerBranchText = '';
+                    if ($model->customer_id) {
+                        $customerObj = \backend\models\Customer::findOne($model->customer_id);
+                        if ($customerObj) {
+                            if ($customerObj->is_head == 1) {
+                                $customerBranchText = ' (สำนักงานใหญ่)';
+                            } elseif (!empty($customerObj->branch_name)) {
+                                $customerBranchText = ' (สาขาที่ ' . $customerObj->branch_name . ')';
+                            }
+                        }
+                    }
+                    $fullCustomerName = Html::encode($model->quotation->customer->name ?: '') . $customerBranchText;
+                    echo $fullCustomerName;
+                    ?> <br>
                     <?php
                     // Clean up address by removing empty fields like "ซอย -", "ถนน -", etc.
                     $address = $model->customer_address ?: '';

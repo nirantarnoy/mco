@@ -357,7 +357,23 @@ window.onload = function() {
             <div class="customer-left">
                 <div class="customer-field">
                     <strong>ชื่อลูกค้า:</strong>
-                    <span><?= Html::encode($model->customer_name ?: '') ?></span>
+                    <span>
+                        <?php
+                        $customerBranchText = '';
+                        if ($model->customer_id) {
+                            $customerObj = \backend\models\Customer::findOne($model->customer_id);
+                            if ($customerObj) {
+                                if ($customerObj->is_head == 1) {
+                                    $customerBranchText = ' (สำนักงานใหญ่)';
+                                } elseif (!empty($customerObj->branch_name)) {
+                                    $customerBranchText = ' (สาขาที่ ' . $customerObj->branch_name . ')';
+                                }
+                            }
+                        }
+                        $fullCustomerName = Html::encode($model->customer_name ?: '') . $customerBranchText;
+                        echo $fullCustomerName;
+                        ?>
+                    </span>
                 </div>
                 <div class="customer-field">
                     <strong>ที่อยู่:</strong>

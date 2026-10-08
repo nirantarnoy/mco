@@ -383,7 +383,23 @@ window.onload = function() {
             </div>
             <div class="field-group">
                 <span class="field-label">ขายให้ / Sold To:</span>
-                <span class="field-value"><?= Html::encode($model->customer_name ?: '') ?></span>
+                <span class="field-value">
+                    <?php
+                    $customerBranchText = '';
+                    if ($model->customer_id) {
+                        $customerObj = \backend\models\Customer::findOne($model->customer_id);
+                        if ($customerObj) {
+                            if ($customerObj->is_head == 1) {
+                                $customerBranchText = ' (สำนักงานใหญ่)';
+                            } elseif (!empty($customerObj->branch_name)) {
+                                $customerBranchText = ' (สาขาที่ ' . $customerObj->branch_name . ')';
+                            }
+                        }
+                    }
+                    $fullCustomerName = Html::encode($model->customer_name ?: '') . $customerBranchText;
+                    echo $fullCustomerName;
+                    ?>
+                </span>
             </div>
             <div class="field-group">
                 <span class="field-label"></span>

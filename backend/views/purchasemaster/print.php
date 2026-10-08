@@ -373,7 +373,8 @@ $fmt = Yii::$app->formatter;
     $approver_name = '';
     $approve_date_val = '';
     if ($model->approve_status == \backend\models\PurchaseMaster::APPROVE_STATUS_APPROVED) {
-        $approver_id = $model->updated_by ?: $model->created_by;
+        // Use approve_by if it exists, otherwise empty
+        $approver_id = isset($model->approve_by) && $model->approve_by ? $model->approve_by : null;
         if ($approver_id) {
             $approve_sig = \backend\models\User::findEmployeeSignature($approver_id);
             $approver_name = \backend\models\User::findEmployeeNameByUserId($approver_id);

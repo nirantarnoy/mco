@@ -795,7 +795,21 @@ window.addEventListener('afterprint', function() {
                         <tr>
                             <td class="field-label" style="vertical-align: top; padding: 2px 0;">ขายให้ : Sold To</td>
                             <td class="field-value" style="padding: 2px 0;">
-                                <div style="font-weight: bold; font-size: 20px;"><?= Html::encode($model->customer_name ?: '') ?></div>
+                                <?php
+                                $customerBranchText = '';
+                                if ($model->customer_id) {
+                                    $customerObj = \backend\models\Customer::findOne($model->customer_id);
+                                    if ($customerObj) {
+                                        if ($customerObj->is_head == 1) {
+                                            $customerBranchText = ' (สำนักงานใหญ่)';
+                                        } elseif (!empty($customerObj->branch_name)) {
+                                            $customerBranchText = ' (สาขาที่ ' . $customerObj->branch_name . ')';
+                                        }
+                                    }
+                                }
+                                $fullCustomerName = Html::encode($model->customer_name ?: '') . $customerBranchText;
+                                ?>
+                                <div style="font-weight: bold; font-size: 20px;"><?= $fullCustomerName ?></div>
                                 <div style="margin-top: 4px;">
                                     <?php
                                     // Clean up address by removing empty fields like "ซอย -", "ถนน -", etc.

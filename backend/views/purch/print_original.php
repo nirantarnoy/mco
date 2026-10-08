@@ -426,7 +426,8 @@ $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
             <div class="signature-box">
                 <div class="signature-line">
                     <?php
-                    $approve_signature = \backend\models\User::findEmployeeSignature($purchase->approve_by);
+                    $approver_id = $purchase->approve_by ?: null;
+                    $approve_signature = \backend\models\User::findEmployeeSignature($approver_id);
                     ?>
                     <img src="../../backend/web/uploads/employee_signature/<?=$approve_signature?>" width="80%" alt="">
                 </div>

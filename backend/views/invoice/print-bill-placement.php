@@ -555,7 +555,21 @@ foreach ($chunks as $pageIndex => $chunk):
                         <strong id="labelCustomerName" style="border-bottom: 1px solid #000;">ชื่อลูกค้า</strong>
                     </td>
                     <td>
-                        <strong><?= Html::encode($model->customer_name ?? '') ?></strong>
+                        <?php
+                        $customerBranchText = '';
+                        if ($model->customer_id) {
+                            $customerObj = \backend\models\Customer::findOne($model->customer_id);
+                            if ($customerObj) {
+                                if ($customerObj->is_head == 1) {
+                                    $customerBranchText = ' (สำนักงานใหญ่)';
+                                } elseif (!empty($customerObj->branch_name)) {
+                                    $customerBranchText = ' (สาขาที่ ' . $customerObj->branch_name . ')';
+                                }
+                            }
+                        }
+                        $fullCustomerName = Html::encode($model->customer_name ?: '') . $customerBranchText;
+                        ?>
+                        <strong><?= $fullCustomerName ?></strong>
                     </td>
                 </tr>
                 <tr>
