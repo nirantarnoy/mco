@@ -33,8 +33,17 @@ class PreAdvanceController extends BaseController
 
     public function actionIndex()
     {
-        // For simplicity, we can use an ActiveDataProvider here or create a Search model
+        $globalSearch = Yii::$app->request->get('globalSearch');
         $query = PreAdvance::find()->orderBy(['id' => SORT_DESC]);
+        
+        if ($globalSearch) {
+            $query->joinWith('vendor');
+            $query->andFilterWhere([
+                'or',
+                ['like', 'pre_advance.pre_advance_no', $globalSearch],
+                ['like', 'vendor.name', $globalSearch],
+            ]);
+        }
         
         $dataProvider = new \yii\data\ActiveDataProvider([
             'query' => $query,
@@ -42,6 +51,7 @@ class PreAdvanceController extends BaseController
 
         return $this->render('index', [
             'dataProvider' => $dataProvider,
+            'globalSearch' => $globalSearch,
         ]);
     }
 
@@ -141,7 +151,7 @@ class PreAdvanceController extends BaseController
 
         if (!empty($changedMessages)) {
             $alertMsg = 'ระบบดึงยอดเงินล่าสุดจากบิลต้นฉบับ: ' . implode(', ', $changedMessages) . ' **กรุณากดปุ่มอัพเดทรายการด้านล่างเพื่อบันทึก**';
-            Yii::$app->session->setFlash('msg', $alertMsg);
+            Yii::$app->session->setFlash('update-sync-msg', $alertMsg);
         }
 
         return $this->render('update', [

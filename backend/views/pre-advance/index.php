@@ -6,9 +6,20 @@ $this->title = 'Pre-Advances';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="pre-advance-index">
-    <p>
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <?= Html::a('Create Pre-Advance', ['create'], ['class' => 'btn btn-success']) ?>
-    </p>
+        <form action="<?= \yii\helpers\Url::to(['index']) ?>" method="get" class="form-inline">
+            <div class="input-group">
+                <input type="text" name="globalSearch" class="form-control" placeholder="ค้นหา เลขที่ / ชื่อ Vendor..." value="<?= Html::encode($globalSearch ?? '') ?>" style="width: 250px;">
+                <div class="input-group-append">
+                    <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> ค้นหา</button>
+                    <?php if(!empty($globalSearch)): ?>
+                        <a href="<?= \yii\helpers\Url::to(['index']) ?>" class="btn btn-outline-secondary">ล้าง</a>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </form>
+    </div>
 
     <div class="table-responsive">
     <?= GridView::widget([
