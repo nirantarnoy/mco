@@ -8,7 +8,7 @@ use yii\grid\ActionColumn;
 //use yii\grid\GridView;
 use kartik\grid\GridView;
 use yii\widgets\Pjax;
-use yii\widgets\LinkPager;
+use yii\bootstrap4\LinkPager;
 
 /** @var yii\web\View $this */
 /** @var backend\models\StocktransSearch $searchModel */

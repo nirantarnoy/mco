@@ -119,7 +119,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 ]
             ],
         ],
-        'pager' => ['class' => \yii\widgets\LinkPager::className()],
+        'pager' => ['class' => \yii\bootstrap4\LinkPager::className()],
     ]); ?>
 
 
