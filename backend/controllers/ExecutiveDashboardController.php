@@ -204,25 +204,39 @@ class ExecutiveDashboardController extends BaseController
             }
 
             $pendingRec = 0;
-            foreach ($receiptQuery->all() as $receipt) {
+            $receipts = $receiptQuery->all();
+            $receiptIds = array_column($receipts, 'id');
+            $paymentsByInvoice = [];
+            $paymentIds = [];
+            if (!empty($receiptIds)) {
+                $payments = \backend\models\InvoicePaymentReceipt::find()
+                    ->where(['invoice_id' => $receiptIds])
+                    ->all();
+                foreach ($payments as $p) {
+                    $paymentsByInvoice[$p->invoice_id] = ($paymentsByInvoice[$p->invoice_id] ?? 0) + $p->amount;
+                    $paymentIds[] = $p->id;
+                }
+            }
+            $extrasByInvoice = [];
+            if (!empty($paymentIds)) {
+                $extras = \backend\models\InvoicePaymentExtra::find()
+                    ->alias('e')
+                    ->innerJoin('invoice_payment_receipt pr', 'pr.id = e.payment_receipt_id')
+                    ->select(['pr.invoice_id', 'amount' => 'SUM(e.amount)'])
+                    ->where(['e.payment_receipt_id' => $paymentIds])
+                    ->groupBy('pr.invoice_id')
+                    ->asArray()
+                    ->all();
+                foreach ($extras as $e) {
+                    $extrasByInvoice[$e['invoice_id']] = $e['amount'];
+                }
+            }
+            foreach ($receipts as $receipt) {
                 $receiptNoVat = $receipt->subtotal - $receipt->discount_amount;
                 $receiptTotal = $receipt->total_amount;
                 
-                $totalPaid = \backend\models\InvoicePaymentReceipt::find()
-                    ->where(['invoice_id' => $receipt->id])
-                    ->sum('amount') ?: 0;
-                
-                $receipt_ids = \backend\models\InvoicePaymentReceipt::find()
-                    ->select('id')
-                    ->where(['invoice_id' => $receipt->id])
-                    ->column();
-
-                if (!empty($receipt_ids)) {
-                    $total_extras = \backend\models\InvoicePaymentExtra::find()
-                        ->where(['payment_receipt_id' => $receipt_ids])
-                        ->sum('amount') ?: 0;
-                    $totalPaid += $total_extras;
-                }
+                $totalPaid = $paymentsByInvoice[$receipt->id] ?? 0;
+                $totalPaid += $extrasByInvoice[$receipt->id] ?? 0;
 
                 $ratio = ($receiptTotal > 0) ? ($receiptNoVat / $receiptTotal) : 1;
                 $paidNoVat = $totalPaid * $ratio;
@@ -317,7 +331,8 @@ class ExecutiveDashboardController extends BaseController
                     ['and', ['job.job_date' => null], ['between', 'job.created_at', $fromTs, $toTs]]
                 ]);
             }
-            foreach ($query->all() as $j) {
+            $jobs = $query->with('quotation')->all();
+            foreach ($jobs as $j) {
                 $baseAmt = (float)($j->job_amount ?: ($j->quotation ? $j->quotation->total_amount : 0));
                 $currencyRef = $j->quotation ? $j->quotation->currency_id : null;
                 $rate = $this->getExchangeRate($currencyRef);
@@ -513,26 +528,41 @@ class ExecutiveDashboardController extends BaseController
         }
 
         $pendingReceivables = 0;
+        
+        $receipts = (clone $receiptQuery)->all();
+        $receiptIds = array_column($receipts, 'id');
+        $paymentsByInvoice = [];
+        $paymentIds = [];
+        if (!empty($receiptIds)) {
+            $payments = \backend\models\InvoicePaymentReceipt::find()
+                ->where(['invoice_id' => $receiptIds])
+                ->all();
+            foreach ($payments as $p) {
+                $paymentsByInvoice[$p->invoice_id] = ($paymentsByInvoice[$p->invoice_id] ?? 0) + $p->amount;
+                $paymentIds[] = $p->id;
+            }
+        }
+        $extrasByInvoice = [];
+        if (!empty($paymentIds)) {
+            $extras = \backend\models\InvoicePaymentExtra::find()
+                ->alias('e')
+                ->innerJoin('invoice_payment_receipt pr', 'pr.id = e.payment_receipt_id')
+                ->select(['pr.invoice_id', 'amount' => 'SUM(e.amount)'])
+                ->where(['e.payment_receipt_id' => $paymentIds])
+                ->groupBy('pr.invoice_id')
+                ->asArray()
+                ->all();
+            foreach ($extras as $e) {
+                $extrasByInvoice[$e['invoice_id']] = $e['amount'];
+            }
+        }
 
-        foreach ((clone $receiptQuery)->all() as $receipt) {
+        foreach ($receipts as $receipt) {
             $receiptNoVat = $receipt->subtotal - $receipt->discount_amount;
             $receiptTotal = $receipt->total_amount;
             
-            $totalPaid = \backend\models\InvoicePaymentReceipt::find()
-                ->where(['invoice_id' => $receipt->id])
-                ->sum('amount') ?: 0;
-            
-            $receipt_ids = \backend\models\InvoicePaymentReceipt::find()
-                ->select('id')
-                ->where(['invoice_id' => $receipt->id])
-                ->column();
-
-            if (!empty($receipt_ids)) {
-                $total_extras = \backend\models\InvoicePaymentExtra::find()
-                    ->where(['payment_receipt_id' => $receipt_ids])
-                    ->sum('amount') ?: 0;
-                $totalPaid += $total_extras;
-            }
+            $totalPaid = $paymentsByInvoice[$receipt->id] ?? 0;
+            $totalPaid += $extrasByInvoice[$receipt->id] ?? 0;
 
             $ratio = ($receiptTotal > 0) ? ($receiptNoVat / $receiptTotal) : 1;
             $paidNoVat = $totalPaid * $ratio;
@@ -554,17 +584,30 @@ class ExecutiveDashboardController extends BaseController
             $paymentQuery->andWhere(['between', 'invoice_payment_receipt.payment_date', $fromDate, $toDate]);
         }
 
-        foreach ($paymentQuery->all() as $payment) {
+        $payments = $paymentQuery->with('invoice')->all();
+        $paymentIds = array_column($payments, 'id');
+        
+        $extrasByPayment = [];
+        if (!empty($paymentIds)) {
+            $extras = \backend\models\InvoicePaymentExtra::find()
+                ->select(['payment_receipt_id', 'amount' => 'SUM(amount)'])
+                ->where(['payment_receipt_id' => $paymentIds])
+                ->groupBy('payment_receipt_id')
+                ->asArray()
+                ->all();
+            foreach ($extras as $e) {
+                $extrasByPayment[$e['payment_receipt_id']] = $e['amount'];
+            }
+        }
+
+        foreach ($payments as $payment) {
             $receipt = $payment->invoice;
+            if (!$receipt) continue;
             $receiptNoVat = $receipt->subtotal - $receipt->discount_amount;
             $receiptTotal = $receipt->total_amount;
             $ratio = ($receiptTotal > 0) ? ($receiptNoVat / $receiptTotal) : 1;
             
-            $amt = $payment->amount;
-            $extras = \backend\models\InvoicePaymentExtra::find()
-                ->where(['payment_receipt_id' => $payment->id])
-                ->sum('amount') ?: 0;
-            $amt += $extras;
+            $amt = $payment->amount + ($extrasByPayment[$payment->id] ?? 0);
             
             $totalReceivedAmount += $amt * $ratio;
         }
