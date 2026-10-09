@@ -417,10 +417,13 @@ class PurchController extends BaseController
     {
         $model = $this->findModel($id);
         
+        // Allow entering update page for approved PO to attach files
+        /*
         if ($model->approve_status == \backend\models\Purch::APPROVE_STATUS_APPROVED) {
             Yii::$app->session->setFlash('error', 'ไม่อนุญาตให้แก้ไขใบสั่งซื้อที่ได้รับการอนุมัติแล้ว');
             return $this->redirect(['view', 'id' => $model->id]);
         }
+        */
 
         // Load existing purch lines
         $model->purchLines = $model->getPurchLines()->all();

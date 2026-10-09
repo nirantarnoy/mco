@@ -1283,3 +1283,44 @@ function addServiceRemark() {
     }
 }
 </script>
+
+<?php
+$isApproved = ($model->approve_status == \backend\models\Purch::APPROVE_STATUS_APPROVED && !$model->isNewRecord) ? 'true' : 'false';
+$script_disable = <<< JS
+$(document).ready(function() {
+    var isApproved = {$isApproved};
+    if (isApproved) {
+        // Make inputs readonly (not disabled, so they still POST)
+        $('#purch-form input:not([type="file"]):not([type="hidden"]), #purch-form textarea').prop('readonly', true).css('background-color', '#e9ecef');
+        
+        // Prevent interacting with selects
+        $('#purch-form select').css({
+            'pointer-events': 'none',
+            'background-color': '#e9ecef',
+            'touch-action': 'none'
+        }).attr('tabindex', '-1').on('mousedown', function(e) { e.preventDefault(); });
+        
+        $('.select2-container').css('pointer-events', 'none');
+        
+        // Prevent clicking on checkboxes and radio buttons
+        $('#purch-form input[type="checkbox"], #purch-form input[type="radio"]').on('click', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        
+        // Hide UI elements that modify the rows
+        $('.add-item, .remove-item').hide();
+        $('button[onclick="addServiceRemark()"]').hide();
+        
+        // Hide save revise option
+        $('input[name="save_revise"]').closest('label').hide();
+        
+        // Dim switchery if exists
+        setTimeout(function(){
+            $('.switchery').css({'pointer-events': 'none', 'opacity': '0.5'});
+        }, 500);
+    }
+});
+JS;
+$this->registerJs($script_disable, static::POS_END);
+?>
