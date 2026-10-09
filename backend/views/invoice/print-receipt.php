@@ -492,10 +492,11 @@ foreach ($chunks as $pageIndex => $chunk):
                 if ($model->customer_id) {
                     $customerObj = \backend\models\Customer::findOne($model->customer_id);
                     if ($customerObj) {
+                        $isEng = !preg_match('/[ก-๙]/u', $model->customer_name);
                         if ($customerObj->is_head == 1) {
-                            $customerBranchText = ' (สำนักงานใหญ่)';
+                            $customerBranchText = $isEng ? ' (HEAD OFFICE)' : ' (สำนักงานใหญ่)';
                         } elseif (!empty($customerObj->branch_name)) {
-                            $customerBranchText = ' (สาขาที่ ' . $customerObj->branch_name . ')';
+                            $customerBranchText = $isEng ? ' (Branch ' . $customerObj->branch_name . ')' : ' (สาขาที่ ' . $customerObj->branch_name . ')';
                         }
                     }
                 }
