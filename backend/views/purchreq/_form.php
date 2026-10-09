@@ -96,6 +96,43 @@ $autocompleteCSS = <<<CSS
 .table th {
     background-color: #f8f9fa;
     font-weight: 600;
+    white-space: nowrap;
+    padding: 12px 10px !important;
+    vertical-align: middle;
+}
+
+.table td {
+    white-space: nowrap;
+    padding: 0 !important;
+    vertical-align: middle;
+}
+
+.table td .btn {
+    margin: 2px;
+}
+
+.table td input.form-control, .table td select.form-control, .table td textarea.form-control {
+    width: 100%;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    background-color: transparent;
+}
+
+.table td input.form-control, .table td select.form-control {
+    height: 38px;
+}
+
+.table td textarea.form-control {
+    min-height: 38px;
+    height: 100%;
+}
+
+.table td input.form-control:focus, .table td select.form-control:focus, .table td textarea.form-control:focus {
+    outline: none;
+    background-color: #fff;
+    box-shadow: inset 0 0 0 1px #007bff !important;
 }
 
 .item-number {
@@ -362,6 +399,16 @@ $(document).on('change keyup input', '.qty-input, .price-input', function() {
     if (index !== undefined) {
         calculateLineTotal(index);
     }
+});
+
+$(document).on('blur', '.qty-input', function() {
+    var val = parseFloat($(this).val()) || 0;
+    $(this).val(val.toFixed(3));
+});
+
+$(document).on('blur', '.price-input', function() {
+    var val = parseFloat($(this).val()) || 0;
+    $(this).val(val.toFixed(2));
 });
 
 $(document).on('change keyup', '#purch-discount_amount', function() {
@@ -674,11 +721,12 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                 <td>
                                     <?= $form->field($purchReqLine, "[{$index}]qty")->textInput([
                                         'type' => 'number',
-                                        'step' => '0.01',
+                                        'step' => '0.001',
                                         'min' => '0',
                                         'placeholder' => '0',
                                         'class' => 'form-control qty-input',
                                         'data-index' => $index,
+                                        'value' => $purchReqLine->qty !== null ? number_format($purchReqLine->qty, 3, '.', '') : '',
                                     ])->label(false) ?>
                                 </td>
                                 <td>
@@ -692,7 +740,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                         'placeholder' => '0.00',
                                         'class' => 'form-control price-input',
                                         'data-index' => $index,
-                                        'value' => number_format($purchReqLine->line_price, 2, '.', ''),
+                                        'value' => $purchReqLine->line_price !== null ? number_format($purchReqLine->line_price, 2, '.', '') : '',
                                     ])->label(false) ?>
                                 </td>
                                 <td>
@@ -703,7 +751,7 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
                                         'class' => 'form-control line-total',
                                         'style' => 'background-color: #f8f9fa;',
                                         'data-index' => $index,
-                                        'value' => number_format($purchReqLine->line_total, 2, '.', ''),
+                                        'value' => $purchReqLine->line_total !== null ? number_format($purchReqLine->line_total, 2, '.', '') : '',
                                     ])->label(false) ?>
                                 </td>
                                 <td class="text-center align-middle">

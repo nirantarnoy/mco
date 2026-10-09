@@ -35,7 +35,12 @@ $this->registerCss("
 .bg-blue-light {
     background-color: #e3f2fd !important;
 }
-#detail-table th, #detail-table td {
+#detail-table th {
+    white-space: nowrap;
+    padding: 12px 10px !important;
+    vertical-align: middle;
+}
+#detail-table td {
     white-space: nowrap;
     padding: 0 !important;
     vertical-align: middle;
