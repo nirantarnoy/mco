@@ -111,6 +111,13 @@ class PurchController extends BaseController
     {
         $payment_date = '';
         $paymentLines = null;
+        $model = $this->findModel($id);
+        $correct_text = \backend\models\PurchReq::numtothai(number_format($model->net_amount, 2, '.', ''));
+        if ($model->total_text !== $correct_text) {
+            $model->total_text = $correct_text;
+            $model->save(false);
+        }
+        
         $model_pay = \backend\models\PurchPayment::find()->where(['purch_id' => $id])->one();
         if ($model_pay) {
             $payment_date = $model_pay->trans_date;
@@ -120,7 +127,7 @@ class PurchController extends BaseController
                 ->all();
         }
         return $this->render('view', [
-            'model' => $this->findModel($id),
+            'model' => $model,
             'paymentLines' => $paymentLines,
             'payment_date' => $payment_date,
         ]);

@@ -65,8 +65,14 @@ class PurchreqController extends BaseController
      */
     public function actionView($id)
     {
+        $model = $this->findModel($id);
+        $correct_text = \backend\models\PurchReq::numtothai(number_format($model->net_amount, 2, '.', ''));
+        if ($model->total_text !== $correct_text) {
+            $model->total_text = $correct_text;
+            $model->save(false);
+        }
         return $this->render('view', [
-            'model' => $this->findModel($id),
+            'model' => $model,
         ]);
     }
 

@@ -351,9 +351,7 @@ class PurchReq extends ActiveRecord
      */
     private function convertAmountToThaiText($amount)
     {
-        // This is a simplified version - you can implement full Thai number conversion
-        $formatter = new NumberFormatter('th', NumberFormatter::SPELLOUT);
-        return $formatter->format($amount) . ' บาทถ้วน';
+        return self::numtothai(number_format($amount, 2, '.', ''));
     }
 
     public function getPurchReqLines()
