@@ -35,6 +35,28 @@ $this->registerCss("
 .bg-blue-light {
     background-color: #e3f2fd !important;
 }
+#detail-table th, #detail-table td {
+    white-space: nowrap;
+    padding: 0 !important;
+    vertical-align: middle;
+}
+#detail-table td .btn {
+    margin: 2px;
+}
+#detail-table input.form-control {
+    width: 100%;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    height: 38px;
+    box-shadow: none !important;
+    background-color: transparent;
+}
+#detail-table input.form-control:focus {
+    outline: none;
+    background-color: #fff;
+    box-shadow: inset 0 0 0 1px #007bff !important;
+}
 ");
 $model_doc = \common\models\PurchNonePrDoc::find()->where(['purchase_master_id' => $model->id])->all();
 
@@ -70,14 +92,14 @@ function addDetailRow() {
                     placeholder='รายละเอียด'>
             </td>
             <td>
-                <input type='number' step='0.01' class='form-control form-control-sm text-right qty-input' 
+                <input type='number' step='0.001' class='form-control form-control-sm text-right qty-input' 
                     name='PurchaseDetail[` + detailRowIndex + `][uqnty]' 
-                    value='0'>
+                    value='0.000'>
             </td>
             <td>
                 <input type='number' step='0.01' class='form-control form-control-sm text-right price-input' 
                     name='PurchaseDetail[` + detailRowIndex + `][unitpr]' 
-                    value='0'>
+                    value='0.00'>
             </td>
             <td>
                 <input type='text' class='form-control form-control-sm' 
@@ -129,6 +151,16 @@ $(document).on('input', '.qty-input, .price-input', function() {
     
     row.find('.amount-input').val(amount.toFixed(2));
     calculateTotal();
+});
+
+$(document).on('blur', '.qty-input', function() {
+    var val = parseFloat($(this).val()) || 0;
+    $(this).val(val.toFixed(3));
+});
+
+$(document).on('blur', '.price-input', function() {
+    var val = parseFloat($(this).val()) || 0;
+    $(this).val(val.toFixed(2));
 });
 
 // คำนวณยอดรวมทั้งหมด
@@ -546,14 +578,14 @@ JS
                                            placeholder="กรอกข้อมูลเอง">
                                 </td>
                                 <td>
-                                    <input type="number" step="0.01" class="form-control form-control-sm text-right qty-input"
+                                    <input type="number" step="0.001" class="form-control form-control-sm text-right qty-input"
                                            name="PurchaseDetail[<?= $index ?>][uqnty]"
-                                           value="<?= $detail->uqnty ?>" placeholder="กรอกข้อมูลเอง">
+                                           value="<?= number_format($detail->uqnty, 3, '.', '') ?>" placeholder="กรอกข้อมูลเอง">
                                 </td>
                                 <td>
                                     <input type="number" step="0.01" class="form-control form-control-sm text-right price-input"
                                            name="PurchaseDetail[<?= $index ?>][unitpr]"
-                                           value="<?= $detail->unitpr ?>" placeholder="กรอกข้อมูลเอง">
+                                           value="<?= number_format($detail->unitpr, 2, '.', '') ?>" placeholder="กรอกข้อมูลเอง">
                                 </td>
                                 <td>
                                     <input type="text" class="form-control form-control-sm"
