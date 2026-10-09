@@ -13,7 +13,7 @@ $config = yii\helpers\ArrayHelper::merge(
 
 $application = new yii\console\Application($config);
 
-$sql = "SELECT id, purch_no, vendor_name, approve_date, approve_by 
+$sql = "SELECT id, purch_no, vendor_name, created_at, approve_date, approve_by 
         FROM purch 
         WHERE approve_status = 1 
         AND (approve_date IS NULL OR approve_by IS NULL OR approve_date = '' OR approve_by = 0)";
@@ -26,7 +26,23 @@ if (empty($results)) {
     echo "พบข้อมูลทั้งหมด " . count($results) . " รายการ ดังนี้:\n";
     echo str_pad("ID", 10) . " | " . str_pad("PO No", 20) . " | " . "Vendor Name\n";
     echo str_repeat("-", 60) . "\n";
+    
+    $updateCount = 0;
     foreach ($results as $row) {
         echo str_pad($row['id'], 10) . " | " . str_pad($row['purch_no'], 20) . " | " . $row['vendor_name'] . "\n";
+        
+        $approve_date = date('Y-m-d H:i:s', $row['created_at']);
+        
+        $updated = Yii::$app->db->createCommand()
+            ->update('purch', [
+                'approve_by' => 5,
+                'approve_date' => $approve_date
+            ], ['id' => $row['id']])
+            ->execute();
+            
+        if ($updated) {
+            $updateCount++;
+        }
     }
+    echo "\nดำเนินการอัปเดตข้อมูล (approve_by=5 และ approve_date=วันที่สร้าง) เสร็จสิ้น: {$updateCount} รายการ\n";
 }
