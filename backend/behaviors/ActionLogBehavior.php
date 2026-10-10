@@ -99,13 +99,18 @@ class ActionLogBehavior extends Behavior
         $model = $event->sender;
         $changedAttributes = [];
 
-        // ดึงข้อมูลที่เปลี่ยนแปลง
-        foreach ($model->getDirtyAttributes() as $attribute => $newValue) {
-            $oldValue = $model->getOldAttribute($attribute);
-            $changedAttributes[$attribute] = [
-                'old' => $oldValue,
-                'new' => $newValue,
-            ];
+        // ดึงข้อมูลที่เปลี่ยนแปลงจาก event
+        if (isset($event->changedAttributes)) {
+            foreach ($event->changedAttributes as $attribute => $oldValue) {
+                $newValue = $model->getAttribute($attribute);
+                // ข้ามฟิลด์ updated_at หรืออะไรที่ไม่สำคัญ (ถ้าต้องการ)
+                if ($oldValue !== $newValue) {
+                    $changedAttributes[$attribute] = [
+                        'old' => $oldValue,
+                        'new' => $newValue,
+                    ];
+                }
+            }
         }
 
         $data = array_merge([

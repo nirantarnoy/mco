@@ -698,8 +698,8 @@ $this->registerJs($autocompleteJs);
                                         <!--                                        <span id="summary-vat" class="fw-bold">-->
                                         <span>
                                             <input type="number" min="0" step="any" id="summary-vat-amount"
-                                                   style="text-align: right;" class="form-control"
-                                                   name="purch_vat_amount" onchange="calculateGrandTotal3();"
+                                                   style="text-align: right; background-color: #e9ecef;" class="form-control"
+                                                   name="purch_vat_amount" readonly
                                                    value="<?= $model->vat_amount ?>">
                                             </span>
                                         <!--                                        </span> บาท-->
@@ -712,8 +712,8 @@ $this->registerJs($autocompleteJs);
                                         <!--                                        <span id="summary-tax" class="fw-bold">0.00</span> บาท-->
                                         <span>
                                             <input type="number" min="0" step="any" id="summary-tax"
-                                                   style="text-align: right;" class="form-control"
-                                                   name="purch_tax_amount" onchange="calculateGrandTotal3();"
+                                                   style="text-align: right; background-color: #e9ecef;" class="form-control"
+                                                   name="purch_tax_amount" readonly
                                                    value="<?= $model->whd_tax_amount ?>">
                                         </span>
                                     </div>
