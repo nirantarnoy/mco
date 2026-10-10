@@ -153,7 +153,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title mb-0">ข้อมูลใบสั่งซื้อ</h5>
+                        <h5 class="card-title mb-0">ข้อมูลทั่วไป</h5>
                     </div>
                     <div class="card-body">
                         <?= DetailView::widget([
@@ -201,6 +201,61 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                         }
                                     }
                                 ],
+                                'note:ntext:หมายเหตุ',
+                                'ref_text:text:อ้างอิง',
+                                [
+                                    'attribute' => 'created_at',
+                                    'label' => 'วันที่สร้าง',
+                                    'format' => ['datetime', 'php:m/d/Y H:i'],
+                                ],
+                                [
+                                    'attribute' => 'created_by',
+                                    'label' => 'สร้างโดย',
+                                    'value' => function ($model) {
+                                        return \backend\models\User::findEmployeeNameByUserId($model->created_by);
+                                    }
+                                ],
+                                [
+                                    'attribute' => 'updated_at',
+                                    'label' => 'วันที่แก้ไข',
+                                    'format' => ['datetime', 'php:m/d/Y H:i'],
+                                ],
+                                [
+                                    'attribute' => 'updated_by',
+                                    'label' => 'แก้ไขโดย',
+                                    'value' => function ($model) {
+                                        return \backend\models\User::findEmployeeNameByUserId($model->updated_by);
+                                    }
+                                ],
+                                [
+                                    'attribute' => 'approve_date',
+                                    'label' => 'วันที่อนุมัติ',
+                                    'format' => ['datetime', 'php:m/d/Y H:i'],
+                                    'visible' => $model->approve_status == \backend\models\Purch::APPROVE_STATUS_APPROVED,
+                                ],
+                                [
+                                    'attribute' => 'approve_by',
+                                    'label' => 'ผู้อนุมัติ',
+                                    'value' => function ($model) {
+                                        return \backend\models\User::findEmployeeNameByUserId($model->approve_by);
+                                    },
+                                    'visible' => $model->approve_status == \backend\models\Purch::APPROVE_STATUS_APPROVED,
+                                ],
+
+                            ],
+                        ]) ?>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">ข้อมูลจำนวนเงิน</h5>
+                    </div>
+                    <div class="card-body">
+                        <?= DetailView::widget([
+                            'model' => $model,
+                            'attributes' => [
                                 [
                                     'attribute' => 'currency_id',
                                     'label' => 'สกุลเงิน',
@@ -267,61 +322,6 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                     'attribute' => 'total_text',
                                     'label' => 'ยอดรวมตัวอักษร',
                                 ],
-
-                            ],
-                        ]) ?>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">ข้อมูลการสร้าง</h5>
-                    </div>
-                    <div class="card-body">
-                        <?= DetailView::widget([
-                            'model' => $model,
-                            'attributes' => [
-                                [
-                                    'attribute' => 'created_at',
-                                    'label' => 'วันที่สร้าง',
-                                    'format' => ['datetime', 'php:m/d/Y H:i'],
-                                ],
-                                [
-                                    'attribute' => 'created_by',
-                                    'label' => 'สร้างโดย',
-                                    'value' => function ($model) {
-                                        return \backend\models\User::findEmployeeNameByUserId($model->created_by);
-                                    }
-                                ],
-                                [
-                                    'attribute' => 'updated_at',
-                                    'label' => 'วันที่แก้ไข',
-                                    'format' => ['datetime', 'php:m/d/Y H:i'],
-                                ],
-                                [
-                                    'attribute' => 'updated_by',
-                                    'label' => 'แก้ไขโดย',
-                                    'value' => function ($model) {
-                                        return \backend\models\User::findEmployeeNameByUserId($model->updated_by);
-                                    }
-                                ],
-                                [
-                                    'attribute' => 'approve_date',
-                                    'label' => 'วันที่อนุมัติ',
-                                    'format' => ['datetime', 'php:m/d/Y H:i'],
-                                    'visible' => $model->approve_status == \backend\models\Purch::APPROVE_STATUS_APPROVED,
-                                ],
-                                [
-                                    'attribute' => 'approve_by',
-                                    'label' => 'ผู้อนุมัติ',
-                                    'value' => function ($model) {
-                                        return \backend\models\User::findEmployeeNameByUserId($model->approve_by);
-                                    },
-                                    'visible' => $model->approve_status == \backend\models\Purch::APPROVE_STATUS_APPROVED,
-                                ],
-                                'note:ntext:หมายเหตุ',
-                                'ref_text:text:อ้างอิง',
                             ],
                         ]) ?>
                     </div>
@@ -752,6 +752,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
     </div>
     
     <!-- Action Log History Section -->
+    <?php if (\Yii::$app->user->can('admin') || \Yii::$app->user->can('mcoadmin')): ?>
     <div class="card mt-4">
         <div class="card-header bg-secondary text-white">
             <h5 class="card-title mb-0"><i class="fas fa-history"></i> ประวัติการแก้ไขใบสั่งซื้อ</h5>
@@ -809,6 +810,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
             <?php endif; ?>
         </div>
     </div>
+    <?php endif; ?>
 
     <!-- Modal สำหรับแสดง Slip -->
 <?php
