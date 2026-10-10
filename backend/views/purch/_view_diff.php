@@ -19,16 +19,20 @@ $changes = $data['changed_attributes'] ?? [];
         </thead>
         <tbody>
             <?php if (!empty($changes)): ?>
-                <?php foreach ($changes as $attribute => $values): ?>
+                <?php foreach ($changes as $attribute => $values): 
+                    $isAmount = (strpos($attribute, 'amount') !== false || strpos($attribute, 'price') !== false);
+                    $oldVal = is_array($values['old']) ? json_encode($values['old'], JSON_UNESCAPED_UNICODE) : ($isAmount && is_numeric($values['old']) ? number_format((float)$values['old'], 2) : $values['old']);
+                    $newVal = is_array($values['new']) ? json_encode($values['new'], JSON_UNESCAPED_UNICODE) : ($isAmount && is_numeric($values['new']) ? number_format((float)$values['new'], 2) : $values['new']);
+                ?>
                     <tr>
                         <td><strong><?= Html::encode((new \backend\models\Purch())->getAttributeLabel($attribute)) ?></strong> 
                             <br><small class="text-muted">(<?= Html::encode($attribute) ?>)</small>
                         </td>
                         <td class="text-danger">
-                            <del><?= Html::encode(is_array($values['old']) ? json_encode($values['old'], JSON_UNESCAPED_UNICODE) : $values['old']) ?></del>
+                            <del><?= Html::encode($oldVal) ?></del>
                         </td>
                         <td class="text-success">
-                            <?= Html::encode(is_array($values['new']) ? json_encode($values['new'], JSON_UNESCAPED_UNICODE) : $values['new']) ?>
+                            <?= Html::encode($newVal) ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

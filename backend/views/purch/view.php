@@ -825,6 +825,11 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
         'title' => '<h4><i class="fas fa-receipt"></i> รายละเอียด Slip การโอนเงิน</h4>',
         'size' => Modal::SIZE_LARGE,
         'options' => ['tabindex' => false],
+        'closeButton' => [
+            'class' => 'btn-close',
+            'data-bs-dismiss' => 'modal',
+            'aria-label' => 'Close',
+        ],
     ]);
 
     echo '<div id="slip-modal-content"></div>';
@@ -838,6 +843,11 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
         'title' => '<h4><i class="fas fa-exchange-alt"></i> รายละเอียดการเปลี่ยนแปลง</h4>',
         'size' => Modal::SIZE_LARGE,
         'options' => ['tabindex' => false],
+        'closeButton' => [
+            'class' => 'btn-close',
+            'data-bs-dismiss' => 'modal',
+            'aria-label' => 'Close',
+        ],
     ]);
 
     echo '<div id="diff-modal-content"></div>';
