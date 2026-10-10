@@ -772,7 +772,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
             ?>
             <?php if (!empty($logs)): ?>
                 <div class="table-responsive">
-                    <table class="table table-bordered table-striped">
+                    <table class="table table-bordered table-striped table-sm" style="font-size: 13px; white-space: nowrap;">
                         <thead>
                             <tr>
                                 <th>เวลา</th>
