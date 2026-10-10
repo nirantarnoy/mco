@@ -92,7 +92,10 @@ class Purch extends ActiveRecord
                     return Yii::$app->user->id;
                 },
             ],
-
+            'actionLog' => [
+                'class' => \app\behaviors\ActionLogBehavior::class,
+                // logModelOperations is true by default
+            ],
         ];
     }
 

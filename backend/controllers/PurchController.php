@@ -152,6 +152,17 @@ class PurchController extends BaseController
         ]);
     }
 
+    public function actionViewDiff($id)
+    {
+        $log = \backend\models\ActionLogModel::findOne($id);
+        if ($log === null) {
+            throw new \yii\web\NotFoundHttpException('ไม่พบข้อมูล Log');
+        }
+        return $this->renderAjax('_view_diff', [
+            'model' => $log,
+        ]);
+    }
+
     /**
      * Creates a new Purch model.
      * If creation is successful, the browser will be redirected to the 'view' page.

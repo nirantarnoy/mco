@@ -750,6 +750,65 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
             </div>
         <?php endif; ?>
     </div>
+    
+    <!-- Action Log History Section -->
+    <div class="card mt-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="card-title mb-0"><i class="fas fa-history"></i> ประวัติการแก้ไขใบสั่งซื้อ</h5>
+        </div>
+        <div class="card-body">
+            <?php
+            $logs = \backend\models\ActionLogModel::find()
+                ->where(['model_class' => get_class($model), 'model_id' => $model->id])
+                ->orderBy(['created_at' => SORT_DESC])
+                ->all();
+            ?>
+            <?php if (!empty($logs)): ?>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>เวลา</th>
+                                <th>ผู้ใช้งาน</th>
+                                <th>การกระทำ</th>
+                                <th>รายละเอียดเพิ่มเติม</th>
+                                <th>Diff (เปรียบเทียบ)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($logs as $log): ?>
+                                <tr>
+                                    <td><?= date('d/m/Y H:i:s', strtotime($log->created_at)) ?></td>
+                                    <td><?= Html::encode($log->username) ?></td>
+                                    <td>
+                                        <?php
+                                            if ($log->action == 'MODEL_CREATE') echo '<span class="badge bg-success">สร้าง</span>';
+                                            elseif ($log->action == 'MODEL_UPDATE') echo '<span class="badge bg-warning">แก้ไข</span>';
+                                            elseif ($log->action == 'MODEL_DELETE') echo '<span class="badge bg-danger">ลบ</span>';
+                                            else echo '<span class="badge bg-info">'.Html::encode($log->action).'</span>';
+                                        ?>
+                                    </td>
+                                    <td><?= Html::encode($log->message) ?></td>
+                                    <td>
+                                        <?php if ($log->action == 'MODEL_UPDATE'): ?>
+                                            <button type="button" class="btn btn-sm btn-info btn-view-diff" data-id="<?= $log->id ?>">
+                                                <i class="fas fa-exchange-alt"></i> ดูส่วนที่ถูกแก้
+                                            </button>
+                                        <?php endif; ?>
+                                        <a href="<?= \yii\helpers\Url::to(['action-log/view', 'id' => $log->id]) ?>" class="btn btn-sm btn-secondary" target="_blank">
+                                            <i class="fas fa-eye"></i> รายละเอียดแบบเต็ม
+                                        </a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php else: ?>
+                <div class="alert alert-info">ยังไม่มีประวัติการแก้ไขข้อมูล</div>
+            <?php endif; ?>
+        </div>
+    </div>
 
     <!-- Modal สำหรับแสดง Slip -->
 <?php
@@ -761,6 +820,19 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
     ]);
 
     echo '<div id="slip-modal-content"></div>';
+
+    Modal::end();
+?>
+    <!-- Modal สำหรับแสดง Diff -->
+<?php
+    Modal::begin([
+        'id' => 'diff-modal',
+        'title' => '<h4><i class="fas fa-exchange-alt"></i> รายละเอียดการเปลี่ยนแปลง</h4>',
+        'size' => Modal::SIZE_LARGE,
+        'options' => ['tabindex' => false],
+    ]);
+
+    echo '<div id="diff-modal-content"></div>';
 
     Modal::end();
 ?>
@@ -836,6 +908,7 @@ $this->registerJs("
 <?php
 // JavaScript สำหรับจัดการ Modal และ Tooltip
 $url_to_showslip = \yii\helpers\Url::to(['purch/view-slip'], true);
+$url_to_showdiff = \yii\helpers\Url::to(['purch/view-diff'], true);
 $this->registerJs(<<<JS
     // เปิด Modal แสดง Slip
     $(document).on('click', '.btn-view-slip', function() {
@@ -854,6 +927,27 @@ $this->registerJs(<<<JS
             },
             error: function() {
                 modal.find('#slip-modal-content').html('<div class="alert alert-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>');
+            }
+        });
+    });
+    
+    // เปิด Modal แสดง Diff
+    $(document).on('click', '.btn-view-diff', function() {
+        var id = $(this).data('id');
+        var modal = $('#diff-modal');
+        
+        modal.find('#diff-modal-content').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-3x"></i><p class="mt-2">กำลังโหลด...</p></div>');
+        modal.modal('show');
+        
+        $.ajax({
+            url: '$url_to_showdiff',
+            type: 'GET',
+            data: {id: id},
+            success: function(response) {
+                modal.find('#diff-modal-content').html(response);
+            },
+            error: function() {
+                modal.find('#diff-modal-content').html('<div class="alert alert-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>');
             }
         });
     });
