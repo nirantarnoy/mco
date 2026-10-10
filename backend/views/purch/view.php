@@ -752,7 +752,13 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
     </div>
     
     <!-- Action Log History Section -->
-    <?php if (\Yii::$app->user->can('admin') || \Yii::$app->user->can('mcoadmin')): ?>
+    <?php 
+    $userId = \Yii::$app->user->id;
+    $isAdmin = \backend\models\User::isUserAdmin();
+    $isMcoAdmin = \backend\models\User::checkhasrole($userId, 'mcoadmin');
+    $isExactAdmin = \backend\models\User::checkhasrole($userId, 'admin');
+    if ($isAdmin || $isMcoAdmin || $isExactAdmin): 
+    ?>
     <div class="card mt-4">
         <div class="card-header bg-secondary text-white">
             <h5 class="card-title mb-0"><i class="fas fa-history"></i> ประวัติการแก้ไขใบสั่งซื้อ</h5>
