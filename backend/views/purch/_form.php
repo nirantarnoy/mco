@@ -1285,7 +1285,8 @@ function addServiceRemark() {
 </script>
 
 <?php
-$isApproved = ($model->approve_status == \backend\models\Purch::APPROVE_STATUS_APPROVED && !$model->isNewRecord) ? 'true' : 'false';
+$currentUser = !Yii::$app->user->isGuest ? Yii::$app->user->identity->username : '';
+$isApproved = ($model->approve_status == \backend\models\Purch::APPROVE_STATUS_APPROVED && !$model->isNewRecord && $currentUser !== 'mcoadmin') ? 'true' : 'false';
 $script_disable = <<< JS
 $(document).ready(function() {
     var isApproved = {$isApproved};

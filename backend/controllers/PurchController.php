@@ -272,13 +272,17 @@ class PurchController extends BaseController
                         $afterDiscountAmount = $totalAmount - $discountAmount;
 
                         // คำนวณ VAT
-                        $vatPercent = isset($model->vat_percent) ? $model->vat_percent : 7;
+                        $vatPercent = (isset($model->vat_percent) && $model->vat_percent > 0) ? $model->vat_percent : 7;
                         if ($vatPercent > 0 && $model->is_vat == 1) {
+                            $model->vat_percent = $vatPercent;
                             if ($custom_vat_amount != null) {
                                 $vatAmount = $custom_vat_amount;
                             } else {
                                 $vatAmount = ($afterDiscountAmount * $vatPercent) / 100;
                             }
+                        } else {
+                            $model->vat_percent = 0;
+                            $vatAmount = 0;
                         }
 
                         // คำนวน WHT
@@ -552,15 +556,17 @@ class PurchController extends BaseController
                         $afterDiscountAmount = $totalAmount - $discountAmount;
 
                         // คำนวณ VAT (สมมติว่ามีฟิลด์ vat_percent ใน model หรือใช้ VAT 7%)
-
-                        $vatPercent = isset($model->vat_percent) ? $model->vat_percent : 7;
+                        $vatPercent = (isset($model->vat_percent) && $model->vat_percent > 0) ? $model->vat_percent : 7;
                         if ($vatPercent > 0 && $model->is_vat == 1) {
+                            $model->vat_percent = $vatPercent;
                             if ($custom_vat_amount != null) {
                                 $vatAmount = $custom_vat_amount;
                             } else {
                                 $vatAmount = ($afterDiscountAmount * $vatPercent) / 100;
                             }
-
+                        } else {
+                            $model->vat_percent = 0;
+                            $vatAmount = 0;
                         }
 
                         // คำนวน WHT
