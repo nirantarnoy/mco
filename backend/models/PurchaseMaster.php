@@ -86,7 +86,8 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             [['docnum', 'docdat'], 'required'],
             [['docdat', 'duedat', 'vatdat', 'created_at', 'updated_at', 'vat_period'], 'safe'],
             [['status', 'approve_status', 'created_by', 'updated_by', 'department_id', 'company_id', 'currency_id', 'is_deposit'], 'integer'],
-            [['vatpr0', 'amount', 'unitpr', 'vat_percent', 'vat_amount', 'tax_percent', 'tax_amount', 'total_amount', 'exchange_rate'], 'number'],
+            [['vatpr0', 'amount', 'unitpr', 'vat_percent', 'vat_amount', 'tax_percent', 'tax_amount', 'total_amount', 'exchange_rate'], 'number', 'min' => 0],
+            [['tax_amount', 'total_amount'], 'default', 'value' => 0],
             [['remark'], 'string'],
             [['docnum', 'job_no', 'discod', 'orgnum', 'disc'], 'string', 'max' => 50],
             [['supcod', 'taxid'], 'string', 'max' => 20],
@@ -226,17 +227,28 @@ class PurchaseMaster extends \yii\db\ActiveRecord
         
         $this->vatpr0 = $calc_vatpr0;
 
-        // Force recalculation based on percent
-        if (isset($this->vat_percent)) {
-            $this->vat_amount = ($this->vatpr0 * $this->vat_percent) / 100;
+        // Recalculate VAT if not explicitly provided
+        if ($this->vat_amount === null || $this->vat_amount === '') {
+            if (isset($this->vat_percent)) {
+                $this->vat_amount = ($this->vatpr0 * $this->vat_percent) / 100;
+            }
+        }
+        if ($this->vat_amount < 0) {
+            $this->vat_amount = 0;
         }
 
-        if (isset($this->tax_percent)) {
-            $this->tax_amount = ($this->vatpr0 * $this->tax_percent) / 100;
+        // Keep custom tax_amount if explicitly provided, otherwise calculate from percent
+        if ($this->tax_amount === null || $this->tax_amount === '') {
+            if (isset($this->tax_percent)) {
+                $this->tax_amount = ($this->vatpr0 * $this->tax_percent) / 100;
+            }
+        }
+        if ($this->tax_amount < 0) {
+            $this->tax_amount = 0;
         }
 
-        // คำนวณรวมสุทธิ
-        $this->total_amount = $this->vatpr0 + $this->vat_amount - $this->tax_amount;
+        // คำนวณรวมสุทธิ (ห้ามติดลบ)
+        $this->total_amount = max(0, (float)$this->vatpr0 + (float)$this->vat_amount - (float)$this->tax_amount);
     }
 
     /**

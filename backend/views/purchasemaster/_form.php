@@ -65,6 +65,9 @@ $this->registerCss("
 ");
 $model_doc = \common\models\PurchNonePrDoc::find()->where(['purchase_master_id' => $model->id])->all();
 
+$isCancelled = ($model->status == \backend\models\PurchaseMaster::STATUS_CANCELLED);
+$canEditTax = ($model->isNewRecord || !$isCancelled);
+
 $urlSearchProduct = Url::to(['search-product']);
 $urlGetVendor = Url::to(['get-vendor']);
 $urlGetPaymentDays = Url::to(['get-payment-days']);
@@ -169,7 +172,10 @@ $(document).on('blur', '.price-input', function() {
 });
 
 // คำนวณยอดรวมทั้งหมด
-function calculateTotal() {
+function calculateTotal(recalcTax) {
+    if (typeof recalcTax === 'undefined') {
+        recalcTax = false;
+    }
     var subtotal = 0;
     
     $('.amount-input').each(function() {
@@ -184,11 +190,15 @@ function calculateTotal() {
     var taxPercent = parseFloat($('#purchasemaster-tax_percent').val()) || 0;
     
     var vatAmount = (afterDiscount * vatPercent) / 100;
-    var taxAmount = (afterDiscount * taxPercent) / 100;
     
     $('#purchasemaster-vatpr0').val(afterDiscount.toFixed(2));
     $('#purchasemaster-vat_amount').val(vatAmount.toFixed(2));
-    $('#purchasemaster-tax_amount').val(taxAmount.toFixed(2));
+
+    if (recalcTax) {
+        var taxAmount = (afterDiscount * taxPercent) / 100;
+        if (taxAmount < 0) taxAmount = 0;
+        $('#purchasemaster-tax_amount').val(taxAmount.toFixed(2));
+    }
     
     calculateGrandTotal();
     
@@ -203,25 +213,42 @@ function calculateGrandTotal() {
     });
     var discount = parseFloat($('#purchasemaster-disc').val()) || 0;
     var afterDiscount = subtotal - discount;
+    if (afterDiscount < 0) afterDiscount = 0;
     
     var vatAmount = parseFloat($('#purchasemaster-vat_amount').val()) || 0;
+    if (vatAmount < 0) {
+        vatAmount = 0;
+        $('#purchasemaster-vat_amount').val('0.00');
+    }
+
     var taxAmount = parseFloat($('#purchasemaster-tax_amount').val()) || 0;
+    if (taxAmount < 0) {
+        taxAmount = 0;
+        $('#purchasemaster-tax_amount').val('0.00');
+    }
     
     var total = afterDiscount + vatAmount - taxAmount;
+    if (total < 0) {
+        total = 0;
+    }
     
     $('#purchasemaster-total_amount').val(total.toFixed(2));
     $('#display-total').text(total.toFixed(2));
 }
 
-$(document).on('input', '#purchasemaster-disc', function() {
-    calculateTotal();
+$(document).on('input', '#purchasemaster-disc, #purchasemaster-vat_percent', function() {
+    calculateTotal(false);
 });
 
-$(document).on('input', '#purchasemaster-vat_percent, #purchasemaster-tax_percent', function() {
-    calculateTotal();
+$(document).on('input', '#purchasemaster-tax_percent', function() {
+    calculateTotal(true);
 });
 
-$(document).on('input', '#purchasemaster-vat_amount, #purchasemaster-tax_amount', function() {
+$(document).on('input change blur', '#purchasemaster-vat_amount, #purchasemaster-tax_amount', function() {
+    var taxVal = parseFloat($('#purchasemaster-tax_amount').val()) || 0;
+    if (taxVal < 0) {
+        $('#purchasemaster-tax_amount').val('0.00');
+    }
     calculateGrandTotal();
 });
 
@@ -688,12 +715,33 @@ JS
                             <td class="text-right">
                                 <strong>TAX</strong>
                                 <div class="d-inline-block" style="width: 60px;">
-                                    <?= $form->field($model, 'tax_percent')->textInput(['type' => 'number', 'step' => '0.01', 'class' => 'form-control form-control-sm text-right'])->label(false) ?>
+                                    <?php if ($canEditTax): ?>
+                                        <?= $form->field($model, 'tax_percent')->textInput(['type' => 'number', 'step' => '0.01', 'min' => '0', 'class' => 'form-control form-control-sm text-right'])->label(false) ?>
+                                    <?php else: ?>
+                                        <?= $form->field($model, 'tax_percent')->textInput(['readonly' => true, 'class' => 'form-control form-control-sm text-right', 'style' => 'background-color: #e9ecef;'])->label(false) ?>
+                                    <?php endif; ?>
                                 </div>
                                 <strong>%</strong>
                             </td>
                             <td class="text-right">
-                                <?= $form->field($model, 'tax_amount')->textInput(['id' => 'purchasemaster-tax_amount', 'class' => 'form-control form-control-sm text-right bg-blue-light', 'placeholder' => 'TAX'])->label(false) ?>
+                                <?php if ($canEditTax): ?>
+                                    <?= $form->field($model, 'tax_amount')->textInput([
+                                        'id' => 'purchasemaster-tax_amount', 
+                                        'type' => 'number', 
+                                        'step' => '0.01', 
+                                        'min' => '0', 
+                                        'class' => 'form-control form-control-sm text-right bg-blue-light', 
+                                        'placeholder' => 'TAX'
+                                    ])->label(false) ?>
+                                <?php else: ?>
+                                    <?= $form->field($model, 'tax_amount')->textInput([
+                                        'id' => 'purchasemaster-tax_amount', 
+                                        'readonly' => true, 
+                                        'class' => 'form-control form-control-sm text-right', 
+                                        'style' => 'background-color: #e9ecef;',
+                                        'placeholder' => 'TAX'
+                                    ])->label(false) ?>
+                                <?php endif; ?>
                             </td>
                         </tr>
                         <tr class="table-active">
@@ -916,8 +964,8 @@ $(function(){
     if ($('#doc_type_id').length) {
         checkDocType($('#doc_type_id')[0]);
     }
-    // Calculate total on load to show correct summary in update mode
-    calculateTotal();
+    // Calculate total on load to show correct summary in update mode without overwriting tax_amount
+    calculateTotal(false);
 });
 function checkDocType(e) {
     if ($(e).val() == '3') {

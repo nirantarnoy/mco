@@ -157,14 +157,20 @@ class PurchasemasterController extends BaseController
                             }
                         }
 
-                        // คำนวณยอดรวม
-                        $model->calculateTotals();
-                        
-                        // Explicitly capture duedat from post
+                        // Explicitly capture tax_amount, vat_amount, and duedat from post
                         $postData = Yii::$app->request->post('PurchaseMaster');
+                        if (isset($postData['tax_amount']) && $postData['tax_amount'] !== '') {
+                            $model->tax_amount = max(0, (float)$postData['tax_amount']);
+                        }
+                        if (isset($postData['vat_amount']) && $postData['vat_amount'] !== '') {
+                            $model->vat_amount = max(0, (float)$postData['vat_amount']);
+                        }
                         if (isset($postData['duedat'])) {
                             $model->duedat = $postData['duedat'];
                         }
+
+                        // คำนวณยอดรวม
+                        $model->calculateTotals();
 
                         $model->save(false);
 
@@ -353,14 +359,23 @@ class PurchasemasterController extends BaseController
                             }
                         }
 
-                        // คำนวณยอดรวม
-                        $model->calculateTotals();
+                        $isCancelled = ($model->status == \backend\models\PurchaseMaster::STATUS_CANCELLED);
+                        $canEditTax = !$isCancelled;
 
-                        // Explicitly capture duedat from post
+                        // Explicitly capture tax_amount, vat_amount, and duedat from post
                         $postData = Yii::$app->request->post('PurchaseMaster');
+                        if ($canEditTax && isset($postData['tax_amount']) && $postData['tax_amount'] !== '') {
+                            $model->tax_amount = max(0, (float)$postData['tax_amount']);
+                        }
+                        if (isset($postData['vat_amount']) && $postData['vat_amount'] !== '') {
+                            $model->vat_amount = max(0, (float)$postData['vat_amount']);
+                        }
                         if (isset($postData['duedat'])) {
                             $model->duedat = $postData['duedat'];
                         }
+
+                        // คำนวณยอดรวม
+                        $model->calculateTotals();
 
                         $model->save(false);
 
