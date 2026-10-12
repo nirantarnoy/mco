@@ -288,6 +288,14 @@ $fmt = Yii::$app->formatter;
     </table>
 
     <div class="clearfix">
+        <div style="float: left; width: 55%; margin-top: 30px;">
+            <?php if (!empty($model->remark)): ?>
+                <div style="font-weight: bold; margin-bottom: 5px;">หมายเหตุ:</div>
+                <div style="border: 1px solid #ccc; padding: 10px; min-height: 80px; font-size: 13px; white-space: pre-wrap; background-color: #fafafa; border-radius: 4px;">
+                    <?= nl2br(Html::encode($model->remark)) ?>
+                </div>
+            <?php endif; ?>
+        </div>
         <div class="totals-section">
             <?php 
             $discount = floatval($model->disc);
