@@ -35,7 +35,17 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             [
                 'attribute' => 'vendor_id',
-                'value' => $model->vendor ? $model->vendor->name : '-',
+                'value' => function($model) {
+                    if (!$model->vendor) return '-';
+                    $branch = '';
+                    if ($model->vendor->is_head == 1) {
+                        $branch = ' (สำนักงานใหญ่)';
+                    } elseif (!empty(trim($model->vendor->branch_name ?? ''))) {
+                        $b = trim($model->vendor->branch_name);
+                        $branch = ($b === '00000' || $b === 'สำนักงานใหญ่') ? ' (สำนักงานใหญ่)' : ' (สาขา ' . $b . ')';
+                    }
+                    return $model->vendor->name . $branch;
+                },
             ],
             'wht_desc',
             'other_desc',

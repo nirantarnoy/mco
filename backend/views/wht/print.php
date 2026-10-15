@@ -170,9 +170,20 @@ $desc_text = $model->wht_desc == 'อื่นๆ' || $model->wht_desc == 'อ�
             <?php 
             $vendorBranch = '';
             if ($model->vendor) {
-                $vendorBranch = trim($model->vendor->branch_name);
-                if (!empty($vendorBranch)) {
-                    $vendorBranch = ' (' . $vendorBranch . ')';
+                if ($model->vendor->is_head == 1) {
+                    $vendorBranch = ' (สำนักงานใหญ่)';
+                } elseif (!empty(trim($model->vendor->branch_name ?? ''))) {
+                    $branch = trim($model->vendor->branch_name);
+                    if ($branch === '00000' || $branch === '0000' || $branch === 'สำนักงานใหญ่') {
+                        $vendorBranch = ' (สำนักงานใหญ่)';
+                    } else {
+                        // Check if branch name already contains words like สาขา or สำนักงาน
+                        if (mb_strpos($branch, 'สาขา') !== false || mb_strpos($branch, 'สำนักงาน') !== false) {
+                            $vendorBranch = ' (' . $branch . ')';
+                        } else {
+                            $vendorBranch = ' (สาขา ' . $branch . ')';
+                        }
+                    }
                 }
             }
             ?>
