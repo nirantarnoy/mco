@@ -44,7 +44,7 @@ class PurchController extends BaseController
             ],
             'actionLog' => [
                 'class' => ActionLogBehavior::class,
-                'actions' => ['create', 'update', 'delete', 'approve', 'reject', 'receive', 'cancel-receive', 'view', 'print'], // Log เฉพาะ actions เหล่านี้
+                'actions' => ['create', 'update', 'delete', 'approve', 'reject', 'receive', 'cancel-receive', 'view', 'print'], // Log ทุก actions ละเอียดเพื่อตรวจสอบย้อนหลัง
             ],
         ];
     }
