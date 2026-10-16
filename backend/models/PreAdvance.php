@@ -251,7 +251,10 @@ class PreAdvance extends ActiveRecord
                     $db->createCommand()->addColumn(self::tableName(), 'is_recall', 'INT(11) DEFAULT 0')->execute();
                 }
                 if (!isset($table->columns['recall_reason'])) {
-                    $db->createCommand()->addColumn(self::tableName(), 'recall_reason', 'TEXT NULL')->execute();
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_reason', 'TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL')->execute();
+                } else {
+                    // Make sure column supports utf8mb4 Thai text
+                    $db->createCommand("ALTER TABLE " . self::tableName() . " MODIFY `recall_reason` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL")->execute();
                 }
                 if (!isset($table->columns['recall_by'])) {
                     $db->createCommand()->addColumn(self::tableName(), 'recall_by', 'INT(11) NULL')->execute();
