@@ -32,6 +32,9 @@ class PreAdvance extends ActiveRecord
         return [
             TimestampBehavior::class,
             BlameableBehavior::class,
+            'actionLog' => [
+                'class' => \app\behaviors\ActionLogBehavior::class,
+            ],
         ];
     }
 

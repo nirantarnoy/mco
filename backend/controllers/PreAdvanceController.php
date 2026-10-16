@@ -13,6 +13,7 @@ use yii\filters\VerbFilter;
 use yii\web\Response;
 use yii\web\UploadedFile;
 use yii\helpers\FileHelper;
+use app\behaviors\ActionLogBehavior;
 
 /**
  * PreAdvanceController implements the CRUD actions for PreAdvance model.
@@ -28,7 +29,22 @@ class PreAdvanceController extends BaseController
                     'delete' => ['POST'],
                 ],
             ],
+            'actionLog' => [
+                'class' => ActionLogBehavior::class,
+                'actions' => ['create', 'update', 'delete', 'check', 'uncheck', 'approve', 'unapprove', 'view', 'print'],
+            ],
         ];
+    }
+
+    public function actionViewDiff($id)
+    {
+        $log = \backend\models\ActionLogModel::findOne($id);
+        if ($log === null) {
+            throw new \yii\web\NotFoundHttpException('ไม่พบข้อมูล Log');
+        }
+        return $this->renderAjax('_view_diff', [
+            'model' => $log,
+        ]);
     }
 
     public function actionAddDbColumn()

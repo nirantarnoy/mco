@@ -1,5 +1,7 @@
 <?php
+use yii\bootstrap4\Modal;
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\widgets\DetailView;
 
 $this->title = $model->pre_advance_no;
@@ -156,4 +158,221 @@ $this->params['breadcrumbs'][] = $this->title;
         </tfoot>
     </table>
 
+    <!-- Action Log History Section -->
+    <?php 
+    $userId = \Yii::$app->user->id;
+    $isAdmin = \backend\models\User::isUserAdmin();
+    $isMcoAdmin = \backend\models\User::checkhasrole($userId, 'mcoadmin');
+    $isExactAdmin = \backend\models\User::checkhasrole($userId, 'admin');
+    if ($isAdmin || $isMcoAdmin || $isExactAdmin): 
+    ?>
+    <div class="card mt-4">
+        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center flex-wrap">
+            <h5 class="card-title mb-0"><i class="fas fa-history"></i> ประวัติการทำรายการ Payment Advance</h5>
+            <div class="card-tools d-flex align-items-center gap-2">
+                <a href="<?= \yii\helpers\Url::to(['action-log/index', 'ActionLogSearchModel[model_class]' => get_class($model), 'ActionLogSearchModel[model_id]' => $model->id]) ?>" class="btn btn-xs btn-outline-light btn-sm text-white" target="_blank" title="ดูบันทึกเหตุการณ์ทั้งหมดของระบบ">
+                    <i class="fas fa-external-link-alt"></i> เปิดหน้า Action Log กลาง
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <?php
+            $rawLogs = \backend\models\ActionLogModel::find()
+                ->where(['model_class' => get_class($model), 'model_id' => $model->id])
+                ->orderBy(['created_at' => SORT_DESC])
+                ->all();
+
+            // รายการที่มีการเปลี่ยนแปลงข้อมูลเนื้อหาจริงๆ
+            $filteredLogs = array_filter($rawLogs, function($log) {
+                if ($log->action === 'CONTROLLER_ACTION') {
+                    $actionId = $log->action_method ?? '';
+                    if (empty($actionId) && !empty($log->data)) {
+                        $data = $log->getFormattedData();
+                        $actionId = $data['action_id'] ?? '';
+                    }
+                    if (in_array($actionId, ['view', 'print', 'update'])) {
+                        return false;
+                    }
+                }
+
+                if ($log->action === 'MODEL_UPDATE') {
+                    $data = $log->getFormattedData();
+                    $changes = $data['changed_attributes'] ?? [];
+                    $meaningfulChanges = array_filter($changes, function($val, $key) {
+                        return !in_array($key, ['updated_at', 'updated_by']);
+                    }, ARRAY_FILTER_USE_BOTH);
+
+                    if (empty($meaningfulChanges)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+            ?>
+
+            <!-- แท็บสลับการดู: เฉพาะที่มีการเปลี่ยนค่า (Default) vs ดูประวัติทั้งหมดอย่างละเอียด -->
+            <ul class="nav nav-pills mb-3" id="preAdvanceLogTab" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active btn-sm" id="filtered-tab" data-bs-toggle="pill" data-bs-target="#filtered-log-pane" data-toggle="pill" href="#filtered-log-pane" role="tab" type="button">
+                        <i class="fas fa-edit"></i> รายการที่มีการเปลี่ยนแปลงค่า (<?= count($filteredLogs) ?>)
+                    </button>
+                </li>
+                <li class="nav-item ms-1">
+                    <button class="nav-link btn-sm" id="all-tab" data-bs-toggle="pill" data-bs-target="#all-log-pane" data-toggle="pill" href="#all-log-pane" role="tab" type="button">
+                        <i class="fas fa-list-ul"></i> ประวัติทั้งหมดอย่างละเอียดสำหรับ Admin (<?= count($rawLogs) ?>)
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="preAdvanceLogTabContent">
+                <!-- Tab 1: รายการที่มีการเปลี่ยนค่าจริงๆ (Default) -->
+                <div class="tab-pane fade show active" id="filtered-log-pane" role="tabpanel">
+                    <?php if (!empty($filteredLogs)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped table-sm" style="font-size: 13px; white-space: nowrap;">
+                                <thead>
+                                    <tr>
+                                        <th>เวลา</th>
+                                        <th>ผู้ใช้งาน</th>
+                                        <th>การกระทำ</th>
+                                        <th>รายละเอียดเพิ่มเติม</th>
+                                        <th>Diff (เปรียบเทียบ)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($filteredLogs as $log): ?>
+                                        <tr>
+                                            <td><?= date('d/m/Y H:i:s', strtotime($log->created_at)) ?></td>
+                                            <td><?= Html::encode($log->username) ?></td>
+                                            <td>
+                                                <?php
+                                                    if ($log->action == 'MODEL_CREATE') echo '<span class="badge bg-success">สร้าง</span>';
+                                                    elseif ($log->action == 'MODEL_UPDATE') echo '<span class="badge bg-warning">แก้ไข</span>';
+                                                    elseif ($log->action == 'MODEL_DELETE') echo '<span class="badge bg-danger">ลบ</span>';
+                                                    else echo '<span class="badge bg-info">'.Html::encode($log->action).'</span>';
+                                                ?>
+                                            </td>
+                                            <td><?= Html::encode($log->message) ?></td>
+                                            <td>
+                                                <?php if ($log->action == 'MODEL_UPDATE'): ?>
+                                                    <button type="button" class="btn btn-sm btn-info btn-view-diff" data-id="<?= $log->id ?>">
+                                                        <i class="fas fa-exchange-alt"></i> ดูส่วนที่ถูกแก้
+                                                    </button>
+                                                <?php endif; ?>
+                                                <a href="<?= \yii\helpers\Url::to(['action-log/view', 'id' => $log->id]) ?>" class="btn btn-sm btn-secondary" target="_blank">
+                                                    <i class="fas fa-eye"></i> รายละเอียดแบบเต็ม
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <div class="alert alert-info mb-0">ยังไม่มีประวัติการแก้ไขเนื้อหา</div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Tab 2: ประวัติทั้งหมดอย่างละเอียดสำหรับ Admin (รวมเข้าดู, กดพิมพ์, controller action) -->
+                <div class="tab-pane fade" id="all-log-pane" role="tabpanel">
+                    <?php if (!empty($rawLogs)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped table-sm" style="font-size: 13px; white-space: nowrap;">
+                                <thead>
+                                    <tr>
+                                        <th>เวลา</th>
+                                        <th>ผู้ใช้งาน</th>
+                                        <th>Action Type</th>
+                                        <th>รายละเอียด / ข้อความ</th>
+                                        <th>IP Address</th>
+                                        <th>Diff / รายละเอียด</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($rawLogs as $log): ?>
+                                        <tr>
+                                            <td><?= date('d/m/Y H:i:s', strtotime($log->created_at)) ?></td>
+                                            <td><?= Html::encode($log->username) ?></td>
+                                            <td>
+                                                <?php
+                                                    if ($log->action == 'MODEL_CREATE') echo '<span class="badge bg-success">สร้าง (Model)</span>';
+                                                    elseif ($log->action == 'MODEL_UPDATE') echo '<span class="badge bg-warning">แก้ไข (Model)</span>';
+                                                    elseif ($log->action == 'MODEL_DELETE') echo '<span class="badge bg-danger">ลบ (Model)</span>';
+                                                    elseif ($log->action == 'CONTROLLER_ACTION') echo '<span class="badge bg-primary">เข้าใช้งาน (' . Html::encode($log->action_method) . ')</span>';
+                                                    else echo '<span class="badge bg-secondary">'.Html::encode($log->action).'</span>';
+                                                ?>
+                                            </td>
+                                            <td><?= Html::encode($log->message) ?></td>
+                                            <td><code><?= Html::encode($log->ip_address) ?></code></td>
+                                            <td>
+                                                <?php if ($log->action == 'MODEL_UPDATE'): ?>
+                                                    <button type="button" class="btn btn-sm btn-info btn-view-diff" data-id="<?= $log->id ?>">
+                                                        <i class="fas fa-exchange-alt"></i> ดูส่วนที่ถูกแก้
+                                                    </button>
+                                                <?php endif; ?>
+                                                <a href="<?= \yii\helpers\Url::to(['action-log/view', 'id' => $log->id]) ?>" class="btn btn-sm btn-secondary" target="_blank">
+                                                    <i class="fas fa-eye"></i> รายละเอียดแบบเต็ม
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <div class="alert alert-info mb-0">ไม่มีประวัติในระบบ</div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
 </div>
+
+<!-- Modal สำหรับแสดง Diff -->
+<?php
+Modal::begin([
+    'id' => 'diff-modal',
+    'title' => '<h4><i class="fas fa-exchange-alt"></i> รายละเอียดการเปลี่ยนแปลง</h4>',
+    'size' => Modal::SIZE_LARGE,
+    'options' => ['tabindex' => false],
+    'closeButton' => [
+        'class' => 'btn-close',
+        'data-bs-dismiss' => 'modal',
+        'aria-label' => 'Close',
+    ],
+]);
+
+echo '<div id="diff-modal-content"></div>';
+
+Modal::end();
+?>
+
+<?php
+$url_to_showdiff = \yii\helpers\Url::to(['pre-advance/view-diff'], true);
+$this->registerJs(<<<JS
+    // เปิด Modal แสดง Diff
+    $(document).on('click', '.btn-view-diff', function() {
+        var id = $(this).data('id');
+        var modal = $('#diff-modal');
+        
+        modal.find('#diff-modal-content').html('<div class="text-center"><i class="fas fa-spinner fa-spin fa-3x"></i><p class="mt-2">กำลังโหลด...</p></div>');
+        modal.modal('show');
+        
+        $.ajax({
+            url: '$url_to_showdiff',
+            type: 'GET',
+            data: {id: id},
+            success: function(response) {
+                modal.find('#diff-modal-content').html(response);
+            },
+            error: function() {
+                modal.find('#diff-modal-content').html('<div class="alert alert-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>');
+            }
+        });
+    });
+JS
+);
+?>
