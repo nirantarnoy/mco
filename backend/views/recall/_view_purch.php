@@ -84,24 +84,39 @@ use yii\helpers\Url;
                 </tr>
             </thead>
             <tbody>
-                <?php if (!empty($model->purchLines)): ?>
-                    <?php foreach ($model->purchLines as $i => $line): ?>
+                <?php
+                // Use getPurchLines()->all() explicitly because public $purchLines property can override the magic relation getter
+                $lines = $model->getPurchLines()->all();
+                if (!empty($lines)):
+                    foreach ($lines as $i => $line):
+                        $prodCode = method_exists($line, 'getProductCode') ? $line->getProductCode() : '';
+                        $prodName = $line->product_name ?: ($line->product ? $line->product->name : '-');
+                        $unitName = !empty($line->unit_id) ? \backend\models\Unit::findName($line->unit_id) : ($line->unit ?: '-');
+                ?>
                         <tr>
                             <td class="text-center"><?= $i + 1 ?></td>
                             <td>
-                                <div><?= Html::encode($line->product ? $line->product->name : $line->description) ?></div>
-                                <?php if ($line->product_description): ?>
-                                    <small class="text-muted"><?= Html::encode($line->product_description) ?></small>
+                                <div>
+                                    <?php if ($prodCode): ?>
+                                        <span class="badge badge-light border mr-1">[<?= Html::encode($prodCode) ?>]</span>
+                                    <?php endif; ?>
+                                    <strong><?= Html::encode($prodName) ?></strong>
+                                </div>
+                                <?php if (!empty($line->product_description)): ?>
+                                    <div class="text-muted small mt-1"><?= nl2br(Html::encode($line->product_description)) ?></div>
+                                <?php endif; ?>
+                                <?php if (!empty($line->doc_ref_no)): ?>
+                                    <div class="text-secondary small"><i class="fas fa-tag mr-1"></i>อ้างอิง: <?= Html::encode($line->doc_ref_no) ?></div>
                                 <?php endif; ?>
                             </td>
                             <td class="text-right"><?= number_format($line->qty, 2) ?></td>
-                            <td class="text-center"><?= $line->unit ? Html::encode($line->unit->name) : '-' ?></td>
-                            <td class="text-right"><?= number_format($line->price, 2) ?></td>
-                            <td class="text-right"><?= number_format($line->line_total, 2) ?></td>
+                            <td class="text-center"><?= Html::encode($unitName) ?></td>
+                            <td class="text-right"><?= number_format($line->line_price, 2) ?></td>
+                            <td class="text-right font-weight-bold"><?= number_format($line->line_total, 2) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="6" class="text-center text-muted">ไม่มีรายการ</td></tr>
+                    <tr><td colspan="6" class="text-center text-muted py-3">ไม่มีรายการสินค้า</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>
