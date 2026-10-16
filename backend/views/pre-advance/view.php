@@ -65,6 +65,29 @@ $this->params['breadcrumbs'][] = $this->title;
             <?php endif; ?>
         <?php endif; ?>
 
+        <?php if (!empty($model->approved_by) && $model->is_recall != 1): ?>
+            <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#recall-modal" data-bs-toggle="modal" data-bs-target="#recall-modal">
+                <i class="fas fa-undo-alt"></i> ร้องขอแก้ไข (Recall)
+            </button>
+        <?php endif; ?>
+
+        <?php if ($model->is_recall == 1): ?>
+            <?php if ($isApprover): ?>
+                <?= Html::a('<i class="fas fa-check"></i> อนุมัติ Recall (ดึงกลับมาแก้ไข)', ['approve-recall', 'id' => $model->id], [
+                    'class' => 'btn btn-success',
+                    'data' => [
+                        'confirm' => 'ยืนยันการอนุมัติ Recall? เอกสารนี้จะถูกปลดสถานะอนุมัติและสามารถแก้ไขได้',
+                        'method' => 'post',
+                    ],
+                ]) ?>
+                <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#reject-recall-modal" data-bs-toggle="modal" data-bs-target="#reject-recall-modal">
+                    <i class="fas fa-times"></i> ปฏิเสธ Recall
+                </button>
+            <?php else: ?>
+                <span class="badge badge-warning bg-warning text-dark p-2 align-self-center"><i class="fas fa-hourglass-half"></i> อยู่ระหว่างรออนุมัติ Recall จากผู้มีอำนาจ</span>
+            <?php endif; ?>
+        <?php endif; ?>
+
         <?php if (empty($model->approved_by)): ?>
             <?= Html::a('Delete', ['delete', 'id' => $model->id], [
                 'class' => 'btn btn-danger',
@@ -75,6 +98,14 @@ $this->params['breadcrumbs'][] = $this->title;
             ]) ?>
         <?php endif; ?>
     </p>
+
+    <?php if ($model->is_recall == 1): ?>
+        <div class="alert alert-warning border border-warning shadow-sm">
+            <h5><i class="fas fa-exclamation-triangle"></i> เอกสารนี้มีคำร้องขอ Recall เพื่อแก้ไข</h5>
+            <p class="mb-1"><strong>ผู้ร้องขอ:</strong> <?= \backend\models\User::findEmployeeNameByUserId($model->recall_by) ?> (วันที่: <?= $model->recall_at ? date('d/m/Y H:i:s', strtotime($model->recall_at)) : '-' ?>)</p>
+            <p class="mb-0"><strong>เหตุผล:</strong> <?= Html::encode($model->recall_reason) ?></p>
+        </div>
+    <?php endif; ?>
 
     <?= DetailView::widget([
         'model' => $model,
@@ -124,6 +155,26 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             ],
             'approved_at:datetime',
+            [
+                'attribute' => 'recall_reason',
+                'label' => 'เหตุผลการขอ Recall',
+                'format' => 'ntext',
+                'visible' => $model->is_recall == 1 || !empty($model->recall_reason),
+            ],
+            [
+                'attribute' => 'recall_by',
+                'label' => 'ผู้ขอ Recall',
+                'value' => function ($model) {
+                    return \backend\models\User::findEmployeeNameByUserId($model->recall_by);
+                },
+                'visible' => $model->is_recall == 1 || !empty($model->recall_by),
+            ],
+            [
+                'attribute' => 'recall_at',
+                'label' => 'เวลาที่ขอ Recall',
+                'format' => 'datetime',
+                'visible' => $model->is_recall == 1 || !empty($model->recall_at),
+            ],
         ],
     ]) ?>
 
@@ -250,6 +301,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                                     if ($log->action == 'MODEL_CREATE') echo '<span class="badge bg-success">สร้าง</span>';
                                                     elseif ($log->action == 'MODEL_UPDATE') echo '<span class="badge bg-warning">แก้ไข</span>';
                                                     elseif ($log->action == 'MODEL_DELETE') echo '<span class="badge bg-danger">ลบ</span>';
+                                                    elseif ($log->action == 'REQUEST_RECALL') echo '<span class="badge bg-warning text-dark"><i class="fas fa-undo-alt"></i> ร้องขอ Recall</span>';
+                                                    elseif ($log->action == 'APPROVE_RECALL') echo '<span class="badge bg-success"><i class="fas fa-check"></i> อนุมัติ Recall</span>';
+                                                    elseif ($log->action == 'REJECT_RECALL') echo '<span class="badge bg-danger"><i class="fas fa-times"></i> ปฏิเสธ Recall</span>';
                                                     else echo '<span class="badge bg-info">'.Html::encode($log->action).'</span>';
                                                 ?>
                                             </td>
@@ -299,6 +353,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                                     if ($log->action == 'MODEL_CREATE') echo '<span class="badge bg-success">สร้าง (Model)</span>';
                                                     elseif ($log->action == 'MODEL_UPDATE') echo '<span class="badge bg-warning">แก้ไข (Model)</span>';
                                                     elseif ($log->action == 'MODEL_DELETE') echo '<span class="badge bg-danger">ลบ (Model)</span>';
+                                                    elseif ($log->action == 'REQUEST_RECALL') echo '<span class="badge bg-warning text-dark"><i class="fas fa-undo-alt"></i> ร้องขอ Recall</span>';
+                                                    elseif ($log->action == 'APPROVE_RECALL') echo '<span class="badge bg-success"><i class="fas fa-check"></i> อนุมัติ Recall</span>';
+                                                    elseif ($log->action == 'REJECT_RECALL') echo '<span class="badge bg-danger"><i class="fas fa-times"></i> ปฏิเสธ Recall</span>';
                                                     elseif ($log->action == 'CONTROLLER_ACTION') echo '<span class="badge bg-primary">เข้าใช้งาน (' . Html::encode($log->action_method) . ')</span>';
                                                     else echo '<span class="badge bg-secondary">'.Html::encode($log->action).'</span>';
                                                 ?>
@@ -347,6 +404,73 @@ Modal::begin([
 
 echo '<div id="diff-modal-content"></div>';
 
+Modal::end();
+?>
+
+<!-- Modal สำหรับ ร้องขอ Recall -->
+<?php
+Modal::begin([
+    'id' => 'recall-modal',
+    'title' => '<h4><i class="fas fa-undo-alt text-warning"></i> ร้องขอแก้ไขเอกสาร Pre-Advance (Recall)</h4>',
+    'size' => Modal::SIZE_DEFAULT,
+    'options' => ['tabindex' => false],
+    'closeButton' => [
+        'class' => 'btn-close',
+        'data-bs-dismiss' => 'modal',
+        'aria-label' => 'Close',
+    ],
+]);
+?>
+<?php $form = \yii\widgets\ActiveForm::begin([
+    'action' => ['request-recall', 'id' => $model->id],
+    'method' => 'post',
+]); ?>
+<div class="modal-body">
+    <p class="text-muted">เมื่อส่งคำร้องขอ ระบบจะแจ้งเตือนผู้อนุมัติเพื่อพิจารณาปลดล็อคเอกสารกลับมาให้แก้ไข</p>
+    <div class="form-group mb-3">
+        <label for="preadvance-recall-reason" class="form-label fw-bold">ระบุเหตุผลที่ต้องการดึงเอกสารกลับมาแก้ไข <span class="text-danger">*</span></label>
+        <textarea name="recall_reason" id="preadvance-recall-reason" class="form-control" rows="4" required placeholder="ตัวอย่าง: มีการเปลี่ยนแปลงยอดเงิน, แก้ไขรายการขออนุมัติค่าใช้จ่าย"></textarea>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">ยกเลิก</button>
+    <button type="submit" class="btn btn-warning"><i class="fas fa-paper-plane"></i> ยืนยันส่งคำร้องขอ Recall</button>
+</div>
+<?php \yii\widgets\ActiveForm::end(); ?>
+<?php
+Modal::end();
+?>
+
+<!-- Modal สำหรับ ปฏิเสธ Recall -->
+<?php
+Modal::begin([
+    'id' => 'reject-recall-modal',
+    'title' => '<h4><i class="fas fa-times text-danger"></i> ปฏิเสธคำร้องขอ Recall</h4>',
+    'size' => Modal::SIZE_DEFAULT,
+    'options' => ['tabindex' => false],
+    'closeButton' => [
+        'class' => 'btn-close',
+        'data-bs-dismiss' => 'modal',
+        'aria-label' => 'Close',
+    ],
+]);
+?>
+<?php $form = \yii\widgets\ActiveForm::begin([
+    'action' => ['reject-recall', 'id' => $model->id],
+    'method' => 'post',
+]); ?>
+<div class="modal-body">
+    <div class="form-group mb-3">
+        <label for="preadvance-reject-recall-reason" class="form-label fw-bold">ระบุเหตุผลที่ไม่อนุมัติคำร้องขอ Recall</label>
+        <textarea name="reject_reason" id="preadvance-reject-recall-reason" class="form-control" rows="3" placeholder="ระบุเหตุผลที่ไม่อนุมัติ"></textarea>
+    </div>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">ยกเลิก</button>
+    <button type="submit" class="btn btn-danger"><i class="fas fa-times"></i> ยืนยันปฏิเสธ Recall</button>
+</div>
+<?php \yii\widgets\ActiveForm::end(); ?>
+<?php
 Modal::end();
 ?>
 

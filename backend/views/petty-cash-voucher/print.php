@@ -421,24 +421,38 @@ window.onload = function() {
             <div class="signature-label">ISSUED BY</div>
             <div class="signature-name">
                 <?php
-                $approve_signature = \backend\models\User::findEmployeeSignature(trim($model->created_by));
-                if (!empty($approve_signature)): ?>
-                    <img src="../../backend/web/uploads/employee_signature/<?= $approve_signature ?>" alt="Requestor Signature">
+                $issuerUserId = null;
+                if (!empty($model->created_by)) {
+                    $issuerUserId = $model->created_by;
+                } elseif (!empty($model->issued_by)) {
+                    $userObj = \backend\models\User::find()->where(['username' => $model->issued_by])->one();
+                    if ($userObj) {
+                        $issuerUserId = $userObj->id;
+                    } else {
+                        $empObj = \backend\models\Employee::find()->where(['CONCAT(fname, " ", lname)' => trim($model->issued_by)])->one();
+                        if ($empObj) {
+                            $userMatch = \backend\models\User::find()->where(['emp_ref_id' => $empObj->id])->one();
+                            if ($userMatch) $issuerUserId = $userMatch->id;
+                        }
+                    }
+                }
+                $requestor_signature = $issuerUserId ? \backend\models\User::findEmployeeSignature($issuerUserId) : '';
+                if (!empty($requestor_signature)): ?>
+                    <img src="../../backend/web/uploads/employee_signature/<?= $requestor_signature ?>" alt="Requestor Signature">
                 <?php endif; ?>
-                <!--                --><?php //= $model->issued_by ? Html::encode($model->issued_by) : '&nbsp;' 
-                                        ?>
             </div>
             <div class="signature-date">
+                <?php $issuedDateVal = $model->issued_date ?: ($model->date ?: null); ?>
                 <span class="date-field">
-                    <?= $model->issued_date ? date('d', strtotime($model->issued_date)) : '__' ?>
+                    <?= $issuedDateVal ? date('d', strtotime($issuedDateVal)) : '__' ?>
                 </span>
                 <span>/</span>
                 <span class="date-field">
-                    <?= $model->issued_date ? date('m', strtotime($model->issued_date)) : '__' ?>
+                    <?= $issuedDateVal ? date('m', strtotime($issuedDateVal)) : '__' ?>
                 </span>
                 <span>/</span>
                 <span class="date-field" style="min-width: 35px;">
-                    <?= $model->issued_date ? date('Y', strtotime($model->issued_date)) : '____' ?>
+                    <?= $issuedDateVal ? date('Y', strtotime($issuedDateVal)) : '____' ?>
                 </span>
             </div>
         </div>
@@ -447,22 +461,46 @@ window.onload = function() {
             <div class="signature-label">APPROVED BY</div>
             <div class="signature-name">
                 <?php
-                $approve_signature = \backend\models\User::findEmployeeSignature(5); // 5 is super admin
-                if (!empty($approve_signature)): ?>
-                    <img src="../../backend/web/uploads/employee_signature/<?= $approve_signature ?>" alt="Approved Signature">
-                <?php endif; ?>
+                if (!empty($model->approve_status) && $model->approve_status == 1 && !empty($model->approved_by)) {
+                    // Try looking up signature by user_id first if numeric
+                    $approverUserId = is_numeric($model->approved_by) ? (int)$model->approved_by : null;
+                    if (!$approverUserId) {
+                        // If approved_by is employee name or username, find matching employee or user
+                        $userObj = \backend\models\User::find()->where(['username' => $model->approved_by])->one();
+                        if ($userObj) {
+                            $approverUserId = $userObj->id;
+                        } else {
+                            // Find employee by name
+                            $empObj = \backend\models\Employee::find()->where(['CONCAT(fname, " ", lname)' => trim($model->approved_by)])->one();
+                            if (!$empObj) {
+                                $empObj = \backend\models\Employee::find()->where(['fname' => trim($model->approved_by)])->one();
+                            }
+                            if ($empObj) {
+                                $userMatch = \backend\models\User::find()->where(['emp_ref_id' => $empObj->id])->one();
+                                if ($userMatch) {
+                                    $approverUserId = $userMatch->id;
+                                }
+                            }
+                        }
+                    }
+                    $approve_signature = $approverUserId ? \backend\models\User::findEmployeeSignature($approverUserId) : '';
+                    if (!empty($approve_signature)): ?>
+                        <img src="../../backend/web/uploads/employee_signature/<?= $approve_signature ?>" alt="Approved Signature">
+                    <?php endif;
+                }
+                ?>
             </div>
             <div class="signature-date">
                 <span class="date-field">
-                    <?= $model->approved_date ? date('d', strtotime($model->approved_date)) : '__' ?>
+                    <?= (!empty($model->approve_status) && $model->approve_status == 1 && $model->approved_date) ? date('d', strtotime($model->approved_date)) : '__' ?>
                 </span>
                 <span>/</span>
                 <span class="date-field">
-                    <?= $model->approved_date ? date('m', strtotime($model->approved_date)) : '__' ?>
+                    <?= (!empty($model->approve_status) && $model->approve_status == 1 && $model->approved_date) ? date('m', strtotime($model->approved_date)) : '__' ?>
                 </span>
                 <span>/</span>
                 <span class="date-field" style="min-width: 35px;">
-                    <?= $model->approved_date ? date('Y', strtotime($model->approved_date)) : '____' ?>
+                    <?= (!empty($model->approve_status) && $model->approve_status == 1 && $model->approved_date) ? date('Y', strtotime($model->approved_date)) : '____' ?>
                 </span>
             </div>
         </div>

@@ -44,12 +44,12 @@ class PreAdvance extends ActiveRecord
     public function rules()
     {
         return [
-            [['trans_date', 'checked_at', 'approved_at'], 'safe'],
-            [['vendor_id', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'company_id', 'checked_by', 'approved_by'], 'integer'],
+            [['trans_date', 'checked_at', 'approved_at', 'recall_at'], 'safe'],
+            [['vendor_id', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'company_id', 'checked_by', 'approved_by', 'is_recall', 'recall_by'], 'integer'],
             [['amount'], 'number'],
             [['pre_advance_no'], 'string', 'max' => 50],
             [['recipient_name'], 'string', 'max' => 255],
-            [['remark'], 'string'],
+            [['remark', 'recall_reason'], 'string'],
             [['pre_advance_no'], 'unique'],
         ];
     }
@@ -68,6 +68,10 @@ class PreAdvance extends ActiveRecord
             'amount' => 'Amount',
             'remark' => 'หมายเหตุ',
             'status' => 'Status',
+            'is_recall' => 'สถานะร้องขอ Recall',
+            'recall_reason' => 'เหตุผลการขอ Recall',
+            'recall_by' => 'ผู้ขอ Recall',
+            'recall_at' => 'เวลาที่ขอ Recall',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
             'created_by' => 'Created By',
@@ -230,5 +234,35 @@ class PreAdvance extends ActiveRecord
             'latest' => $latest,
             'html' => $html
         ];
+    }
+
+    public function getRecallUser()
+    {
+        return $this->hasOne(\backend\models\User::class, ['id' => 'recall_by']);
+    }
+
+    public static function ensureRecallColumns()
+    {
+        try {
+            $db = Yii::$app->db;
+            $table = $db->getTableSchema(self::tableName(), true);
+            if ($table) {
+                if (!isset($table->columns['is_recall'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'is_recall', 'INT(11) DEFAULT 0')->execute();
+                }
+                if (!isset($table->columns['recall_reason'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_reason', 'TEXT NULL')->execute();
+                }
+                if (!isset($table->columns['recall_by'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_by', 'INT(11) NULL')->execute();
+                }
+                if (!isset($table->columns['recall_at'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_at', 'DATETIME NULL')->execute();
+                }
+                $db->getSchema()->refreshTableSchema(self::tableName());
+            }
+        } catch (\Exception $e) {
+            Yii::error('Failed to ensure recall columns for pre_advance: ' . $e->getMessage());
+        }
     }
 }

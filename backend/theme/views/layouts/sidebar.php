@@ -27,6 +27,24 @@
                 </li>
                 <?php endif;?>
 
+                <?php
+                $pendingRecallCount = \backend\controllers\RecallController::getPendingRecallCount();
+                $canSeeRecall = \backend\models\User::isUserAdmin() || \Yii::$app->user->can('purch/approve') || \Yii::$app->user->can('pre_advance_approver') || \Yii::$app->user->can('approver') || \Yii::$app->user->can('recall/index');
+                ?>
+                <?php if ($canSeeRecall): ?>
+                <li class="nav-item">
+                    <a href="index.php?r=recall/index" class="nav-link recall <?= Yii::$app->controller->id == 'recall' ? 'active' : '' ?>">
+                        <i class="nav-icon fas fa-undo-alt text-warning"></i>
+                        <p>
+                            คำร้องขอ Recall
+                            <?php if ($pendingRecallCount > 0): ?>
+                                <span class="badge badge-warning right font-weight-bold" style="color: #212529; background-color: #ffc107;"><?= $pendingRecallCount ?></span>
+                            <?php endif; ?>
+                        </p>
+                    </a>
+                </li>
+                <?php endif; ?>
+
                 <?php if(\Yii::$app->user->can('paymentterm/index') || \Yii::$app->user->can('paymentmethod/index') || \Yii::$app->user->can('employee/index') || \Yii::$app->user->can('bankaccount/index') || \Yii::$app->user->can('chart-of-account/index')):?>
                 <li class="nav-item has-treeview has-sub">
                     <a href="#" class="nav-link">

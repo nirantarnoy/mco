@@ -55,7 +55,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 'label' => 'สถานะ',
                 'format' => 'raw',
                 'value' => function ($model) {
-                    if (!empty($model->approved_by)) {
+                    if ($model->is_recall == 1) {
+                        return '<span class="badge badge-warning bg-warning text-dark"><i class="fas fa-undo-alt"></i> ขอ Recall</span>';
+                    } elseif (!empty($model->approved_by)) {
                         return '<span class="badge badge-success">อนุมัติแล้ว</span>';
                     } elseif (!empty($model->checked_by)) {
                         return '<span class="badge badge-info">ตรวจสอบแล้ว</span>';

@@ -261,6 +261,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     if ($model->status == Purch::STATUS_COMPLETED) {
                         return '<span class="badge bg-success">สำเร็จ</span>';
                     }
+                    if ($model->is_recall == 1) {
+                        return '<span class="badge bg-warning text-dark"><i class="fas fa-undo-alt"></i> ขอ Recall</span>';
+                    }
                     $po_remain = \backend\models\Purch::checkPoremain($model->id);
                     if ($model->approve_status == Purch::APPROVE_STATUS_APPROVED && !empty($po_remain)) {
                         return '<span class="badge bg-info">อนุมัติ</span>';

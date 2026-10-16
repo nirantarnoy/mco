@@ -38,6 +38,21 @@ $is_admin = ($user_info && $user_info->user_group_id == 1);
 
     <!-- Right navbar links -->
     <ul class="navbar-nav ml-auto align-items-center">
+        <?php
+        $pendingRecallCount = \backend\controllers\RecallController::getPendingRecallCount();
+        $canSeeRecall = \backend\models\User::isUserAdmin() || \Yii::$app->user->can('purch/approve') || \Yii::$app->user->can('pre_advance_approver') || \Yii::$app->user->can('approver') || \Yii::$app->user->can('recall/index');
+        ?>
+        <?php if ($canSeeRecall): ?>
+            <li class="nav-item mr-2">
+                <a class="nav-link position-relative" href="<?= Url::to(['/recall/index']) ?>" title="คำร้องขอ Recall รอการพิจารณา">
+                    <i class="fas fa-undo-alt text-warning"></i>
+                    <?php if ($pendingRecallCount > 0): ?>
+                        <span class="badge badge-warning navbar-badge font-weight-bold" style="position: absolute; top: 6px; right: 0; font-size: 10px;"><?= $pendingRecallCount ?></span>
+                    <?php endif; ?>
+                </a>
+            </li>
+        <?php endif; ?>
+
         <!-- Company Selector Dropdown -->
         <li class="nav-item dropdown mr-3">
             <a class="nav-link dropdown-toggle btn btn-outline-info btn-sm text-dark px-3 py-1" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false" style="border-radius: 20px; font-size: 13px; background-color: #eef2f5;">

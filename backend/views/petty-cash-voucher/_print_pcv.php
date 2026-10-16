@@ -450,9 +450,30 @@ $monthName = $thaiMonths[(int)$dateMonth];
         </div>
         <div class="signature-box">
             <?php
-            $approval_signature = \backend\models\User::findEmployeeSignature($model->approved_by);
+            $approval_signature = '';
+            if (!empty($model->approve_status) && $model->approve_status == 1 && !empty($model->approved_by)) {
+                $approverUserId = is_numeric($model->approved_by) ? (int)$model->approved_by : null;
+                if (!$approverUserId) {
+                    $userObj = \backend\models\User::find()->where(['username' => $model->approved_by])->one();
+                    if ($userObj) {
+                        $approverUserId = $userObj->id;
+                    } else {
+                        $empObj = \backend\models\Employee::find()->where(['CONCAT(fname, " ", lname)' => trim($model->approved_by)])->one();
+                        if (!$empObj) {
+                            $empObj = \backend\models\Employee::find()->where(['fname' => trim($model->approved_by)])->one();
+                        }
+                        if ($empObj) {
+                            $userMatch = \backend\models\User::find()->where(['emp_ref_id' => $empObj->id])->one();
+                            if ($userMatch) {
+                                $approverUserId = $userMatch->id;
+                            }
+                        }
+                    }
+                }
+                $approval_signature = $approverUserId ? \backend\models\User::findEmployeeSignature($approverUserId) : '';
+            }
             if(!empty($approval_signature)): ?>
-                <img src="../../backend/web/uploads/employee_signature/<?=$approval_signature?>" alt="Request By Signature">
+                <img src="../../backend/web/uploads/employee_signature/<?=$approval_signature?>" alt="Approved Signature">
             <?php else: ?>
                 <div style="height: 55px;"></div>
             <?php endif; ?>

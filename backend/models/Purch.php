@@ -27,6 +27,11 @@ use yii\behaviors\TimestampBehavior;
  * @property int|null $updated_at
  * @property int|null $updated_by
  *
+ * @property int|null $is_recall
+ * @property string|null $recall_reason
+ * @property int|null $recall_by
+ * @property string|null $recall_at
+ *
  * @property PurchLine[] $purchLines
  * @property PurchReq[] $purchReqs
  */
@@ -107,12 +112,12 @@ class Purch extends ActiveRecord
         return [
             [['vendor_id'], 'required'],
             [['purch_date'], 'safe'],
-            [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by','discount_percent','vat_percent','approve_by','currency_id', 'company_id', 'job_id'], 'integer'],
+            [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by','discount_percent','vat_percent','approve_by','currency_id', 'company_id', 'job_id', 'is_recall', 'recall_by'], 'integer'],
             [['total_amount', 'vat_amount', 'net_amount','vat_percent','discount_per','whd_tax_per','whd_tax_amount','discount_total_amount','currency_rate', 'value_amount'], 'number'],
             [['purch_no', 'vendor_name', 'footer_delivery','footer_payment','ref_no'], 'string', 'max' => 255],
-            [['note','delivery_note','payment_note', 'special_note'], 'string'],
+            [['note','delivery_note','payment_note', 'special_note', 'recall_reason'], 'string'],
             [['purch_no'], 'unique', 'filter' => ['status' => self::STATUS_ACTIVE]],
-            [['approve_date','discount_amount','fee_amount','exchange_rate', 'target_shipment_date'], 'safe'],
+            [['approve_date','discount_amount','fee_amount','exchange_rate', 'target_shipment_date', 'recall_at'], 'safe'],
             [['is_vat','is_deposit','rev'],'integer'],
         ];
     }
@@ -131,6 +136,10 @@ class Purch extends ActiveRecord
             'status' => 'สถานะ',
             'note' => 'หมายเหตุ',
             'approve_status' => 'สถานะอนุมัติ',
+            'is_recall' => 'สถานะร้องขอ Recall',
+            'recall_reason' => 'เหตุผลการขอ Recall',
+            'recall_by' => 'ผู้ขอ Recall',
+            'recall_at' => 'เวลาที่ขอ Recall',
             'total_amount' => 'ยอดรวม',
             'discount_amount' => 'ส่วนลด',
             'vat_amount' => 'VAT',
@@ -215,13 +224,16 @@ class Purch extends ActiveRecord
      */
     public function getApproveStatusBadge()
     {
+        if ($this->is_recall == 1) {
+            return '<span class="badge badge-warning bg-warning text-dark"><i class="fas fa-undo-alt"></i> รออนุมัติ Recall (ขอแก้ไข)</span>';
+        }
         $badges = [
-            self::APPROVE_STATUS_PENDING => '<span class="badge badge-warning">รอพิจารณา</span>',
-            self::APPROVE_STATUS_APPROVED => '<span class="badge badge-success">อนุมัติ</span>',
-            self::APPROVE_STATUS_REJECTED => '<span class="badge badge-danger">ไม่อนุมัติ</span>',
-            self::STATUS_CANCELLED => '<span class="badge badge-danger">ยกเลิก</span>',
+            self::APPROVE_STATUS_PENDING => '<span class="badge badge-warning bg-warning text-dark">รอพิจารณา</span>',
+            self::APPROVE_STATUS_APPROVED => '<span class="badge badge-success bg-success">อนุมัติ</span>',
+            self::APPROVE_STATUS_REJECTED => '<span class="badge badge-danger bg-danger">ไม่อนุมัติ</span>',
+            self::STATUS_CANCELLED => '<span class="badge badge-danger bg-danger">ยกเลิก</span>',
         ];
-        return $badges[$this->approve_status] ?? '<span class="badge badge-secondary">ไม่ระบุ</span>';
+        return $badges[$this->approve_status] ?? '<span class="badge badge-secondary bg-secondary">ไม่ระบุ</span>';
     }
 
     /**
@@ -668,5 +680,35 @@ class Purch extends ActiveRecord
             'latest' => $latest,
             'html' => $html
         ];
+    }
+
+    public function getRecallUser()
+    {
+        return $this->hasOne(\backend\models\User::class, ['id' => 'recall_by']);
+    }
+
+    public static function ensureRecallColumns()
+    {
+        try {
+            $db = Yii::$app->db;
+            $table = $db->getTableSchema(self::tableName(), true);
+            if ($table) {
+                if (!isset($table->columns['is_recall'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'is_recall', 'INT(11) DEFAULT 0')->execute();
+                }
+                if (!isset($table->columns['recall_reason'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_reason', 'TEXT NULL')->execute();
+                }
+                if (!isset($table->columns['recall_by'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_by', 'INT(11) NULL')->execute();
+                }
+                if (!isset($table->columns['recall_at'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_at', 'DATETIME NULL')->execute();
+                }
+                $db->getSchema()->refreshTableSchema(self::tableName());
+            }
+        } catch (\Exception $e) {
+            Yii::error('Failed to ensure recall columns for purch: ' . $e->getMessage());
+        }
     }
 }

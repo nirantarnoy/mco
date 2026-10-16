@@ -31,9 +31,15 @@ class PreAdvanceController extends BaseController
             ],
             'actionLog' => [
                 'class' => ActionLogBehavior::class,
-                'actions' => ['create', 'update', 'delete', 'check', 'uncheck', 'approve', 'unapprove', 'view', 'print'],
+                'actions' => ['create', 'update', 'delete', 'check', 'uncheck', 'approve', 'unapprove', 'view', 'print', 'request-recall', 'approve-recall', 'reject-recall'],
             ],
         ];
+    }
+
+    public function beforeAction($action)
+    {
+        PreAdvance::ensureRecallColumns();
+        return parent::beforeAction($action);
     }
 
     public function actionViewDiff($id)
@@ -239,6 +245,140 @@ class PreAdvanceController extends BaseController
         if ($model->save(false)) {
             Yii::$app->session->setFlash('success', 'ยกเลิกการอนุมัติแล้ว');
         }
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    /**
+     * Request recall for pre-advance
+     * @param int $id
+     * @return Response
+     */
+    public function actionRequestRecall($id)
+    {
+        $model = $this->findModel($id);
+
+        if (empty($model->approved_by)) {
+            Yii::$app->session->setFlash('error', 'สามารถขอ Recall ได้เฉพาะรายการที่ได้รับการอนุมัติแล้วเท่านั้น');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $reason = Yii::$app->request->post('recall_reason', '');
+        if (empty(trim($reason))) {
+            Yii::$app->session->setFlash('error', 'กรุณาระบุเหตุผลในการร้องขอ Recall เอกสาร');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $model->is_recall = 1;
+        $model->recall_reason = trim($reason);
+        $model->recall_by = Yii::$app->user->id;
+        $model->recall_at = date('Y-m-d H:i:s');
+
+        if ($model->save(false)) {
+            \backend\models\ActionLogModel::logModelAction(
+                'REQUEST_RECALL',
+                $model,
+                [
+                    'recall_reason' => $model->recall_reason,
+                    'recall_by' => $model->recall_by,
+                    'recall_at' => $model->recall_at,
+                ],
+                \backend\models\ActionLogModel::STATUS_SUCCESS,
+                'ส่งคำร้องขอ Recall เอกสาร Pre-Advance: ' . $model->recall_reason
+            );
+            Yii::$app->session->setFlash('success', 'ส่งคำร้องขอ Recall เอกสารเรียบร้อยแล้ว รอผู้อนุมัติตรวจสอบ');
+        } else {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถส่งคำร้องขอ Recall ได้');
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    /**
+     * Approve recall for pre-advance
+     * @param int $id
+     * @return Response
+     */
+    public function actionApproveRecall($id)
+    {
+        $isApprover = \backend\models\User::isUserAdmin() || Yii::$app->user->can('pre_advance_approver') || Yii::$app->user->can('approver');
+        if (!$isApprover) {
+            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ในการอนุมัติ Recall เอกสาร Pre-Advance');
+        }
+
+        $model = $this->findModel($id);
+
+        if ($model->is_recall != 1) {
+            Yii::$app->session->setFlash('warning', 'รายการนี้ไม่ได้อยู่ในสถานะรออนุมัติ Recall');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $oldApproveBy = $model->approved_by;
+        $oldApproveAt = $model->approved_at;
+        $recallReason = $model->recall_reason;
+
+        $model->approved_by = null;
+        $model->approved_at = null;
+        $model->is_recall = 0; // ปลดล็อคกลับมาให้สามารถแก้ไข/อัปเดตได้
+
+        if ($model->save(false)) {
+            \backend\models\ActionLogModel::logModelAction(
+                'APPROVE_RECALL',
+                $model,
+                [
+                    'previous_approved_by' => $oldApproveBy,
+                    'previous_approved_at' => $oldApproveAt,
+                    'recall_reason' => $recallReason,
+                    'approved_recall_by' => Yii::$app->user->id,
+                ],
+                \backend\models\ActionLogModel::STATUS_SUCCESS,
+                'อนุมัติการ Recall เอกสาร Pre-Advance ปลดสถานะอนุมัติเพื่อให้แก้ไขได้'
+            );
+            Yii::$app->session->setFlash('success', 'อนุมัติการ Recall เอกสารเรียบร้อยแล้ว เอกสารถูกดึงกลับมาให้แก้ไขได้');
+        } else {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถอนุมัติการ Recall ได้');
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    /**
+     * Reject recall for pre-advance
+     * @param int $id
+     * @return Response
+     */
+    public function actionRejectRecall($id)
+    {
+        $isApprover = \backend\models\User::isUserAdmin() || Yii::$app->user->can('pre_advance_approver') || Yii::$app->user->can('approver');
+        if (!$isApprover) {
+            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ในการปฏิเสธ Recall เอกสาร Pre-Advance');
+        }
+
+        $model = $this->findModel($id);
+
+        if ($model->is_recall != 1) {
+            Yii::$app->session->setFlash('warning', 'รายการนี้ไม่ได้อยู่ในสถานะรออนุมัติ Recall');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $rejectReason = Yii::$app->request->post('reject_reason', 'ไม่อนุมัติคำร้องขอ Recall');
+        $model->is_recall = 0;
+
+        if ($model->save(false)) {
+            \backend\models\ActionLogModel::logModelAction(
+                'REJECT_RECALL',
+                $model,
+                [
+                    'reject_reason' => $rejectReason,
+                    'rejected_recall_by' => Yii::$app->user->id,
+                ],
+                \backend\models\ActionLogModel::STATUS_SUCCESS,
+                'ปฏิเสธคำร้องขอ Recall เอกสาร Pre-Advance: ' . $rejectReason
+            );
+            Yii::$app->session->setFlash('info', 'ปฏิเสธคำร้องขอ Recall เอกสารเรียบร้อยแล้ว');
+        } else {
+            Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการปฏิเสธ Recall');
+        }
+
         return $this->redirect(['view', 'id' => $model->id]);
     }
 

@@ -44,7 +44,7 @@ class PurchController extends BaseController
             ],
             'actionLog' => [
                 'class' => ActionLogBehavior::class,
-                'actions' => ['create', 'update', 'delete', 'approve', 'reject', 'receive', 'cancel-receive', 'view', 'print'], // Log ทุก actions ละเอียดเพื่อตรวจสอบย้อนหลัง
+                'actions' => ['create', 'update', 'delete', 'approve', 'reject', 'receive', 'cancel-receive', 'view', 'print', 'request-recall', 'approve-recall', 'reject-recall'], // Log ทุก actions ละเอียดเพื่อตรวจสอบย้อนหลัง
             ],
         ];
     }
@@ -83,6 +83,9 @@ class PurchController extends BaseController
                 }
             }
         }
+
+        Purch::ensureRecallColumns();
+
         return parent::beforeAction($action);
     }
 
@@ -1119,6 +1122,139 @@ class PurchController extends BaseController
             Yii::$app->session->setFlash('success', 'ยกเลิกใบสั่งซื้อเรียบร้อยแล้ว');
         } else {
             Yii::$app->session->setFlash('error', 'ไม่สามารถยกเลิกใบสั่งซื้อซื้อได้');
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    /**
+     * Request recall for purchase order
+     * @param int $id
+     * @return Response
+     */
+    public function actionRequestRecall($id)
+    {
+        $model = $this->findModel($id);
+
+        if ($model->approve_status != Purch::APPROVE_STATUS_APPROVED) {
+            Yii::$app->session->setFlash('error', 'สามารถขอ Recall ได้เฉพาะใบสั่งซื้อที่ได้รับการอนุมัติแล้วเท่านั้น');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $reason = Yii::$app->request->post('recall_reason', '');
+        if (empty(trim($reason))) {
+            Yii::$app->session->setFlash('error', 'กรุณาระบุเหตุผลในการร้องขอ Recall เอกสาร');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $model->is_recall = 1;
+        $model->recall_reason = trim($reason);
+        $model->recall_by = Yii::$app->user->id;
+        $model->recall_at = date('Y-m-d H:i:s');
+
+        if ($model->save(false)) {
+            \backend\models\ActionLogModel::logModelAction(
+                'REQUEST_RECALL',
+                $model,
+                [
+                    'recall_reason' => $model->recall_reason,
+                    'recall_by' => $model->recall_by,
+                    'recall_at' => $model->recall_at,
+                ],
+                \backend\models\ActionLogModel::STATUS_SUCCESS,
+                'ส่งคำร้องขอ Recall เอกสารใบสั่งซื้อ: ' . $model->recall_reason
+            );
+            Yii::$app->session->setFlash('success', 'ส่งคำร้องขอ Recall เอกสารเรียบร้อยแล้ว รอผู้อนุมัติตรวจสอบ');
+        } else {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถส่งคำร้องขอ Recall ได้');
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    /**
+     * Approve recall for purchase order
+     * @param int $id
+     * @return Response
+     */
+    public function actionApproveRecall($id)
+    {
+        if (!Yii::$app->user->can('purch/approve') && !\backend\models\User::isUserAdmin()) {
+            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ในการอนุมัติ Recall เอกสารใบสั่งซื้อ');
+        }
+
+        $model = $this->findModel($id);
+
+        if ($model->is_recall != 1) {
+            Yii::$app->session->setFlash('warning', 'รายการนี้ไม่ได้อยู่ในสถานะรออนุมัติ Recall');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $oldApproveBy = $model->approve_by;
+        $oldApproveDate = $model->approve_date;
+        $recallReason = $model->recall_reason;
+
+        $model->approve_status = Purch::APPROVE_STATUS_PENDING;
+        $model->approve_by = null;
+        $model->approve_date = null;
+        $model->is_recall = 0; // ปลดล็อค recall กลับสู่สถานะรออนุมัติและแก้ไขได้
+
+        if ($model->save(false)) {
+            \backend\models\ActionLogModel::logModelAction(
+                'APPROVE_RECALL',
+                $model,
+                [
+                    'previous_approve_by' => $oldApproveBy,
+                    'previous_approve_date' => $oldApproveDate,
+                    'recall_reason' => $recallReason,
+                    'approved_recall_by' => Yii::$app->user->id,
+                ],
+                \backend\models\ActionLogModel::STATUS_SUCCESS,
+                'อนุมัติการ Recall เอกสาร ดึงใบสั่งซื้อกลับมาสถานะรออนุมัติเพื่อให้อัปเดตได้'
+            );
+            Yii::$app->session->setFlash('success', 'อนุมัติการ Recall เอกสารเรียบร้อยแล้ว เอกสารถูกดึงกลับมาให้แก้ไขได้');
+        } else {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถอนุมัติการ Recall ได้');
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    /**
+     * Reject recall for purchase order
+     * @param int $id
+     * @return Response
+     */
+    public function actionRejectRecall($id)
+    {
+        if (!Yii::$app->user->can('purch/approve') && !\backend\models\User::isUserAdmin()) {
+            throw new ForbiddenHttpException('คุณไม่มีสิทธิ์ในการปฏิเสธ Recall เอกสารใบสั่งซื้อ');
+        }
+
+        $model = $this->findModel($id);
+
+        if ($model->is_recall != 1) {
+            Yii::$app->session->setFlash('warning', 'รายการนี้ไม่ได้อยู่ในสถานะรออนุมัติ Recall');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $rejectReason = Yii::$app->request->post('reject_reason', 'ไม่อนุมัติคำร้องขอ Recall');
+        $model->is_recall = 0; // ยกเลิกคำขอ recall
+
+        if ($model->save(false)) {
+            \backend\models\ActionLogModel::logModelAction(
+                'REJECT_RECALL',
+                $model,
+                [
+                    'reject_reason' => $rejectReason,
+                    'rejected_recall_by' => Yii::$app->user->id,
+                ],
+                \backend\models\ActionLogModel::STATUS_SUCCESS,
+                'ปฏิเสธคำร้องขอ Recall เอกสาร: ' . $rejectReason
+            );
+            Yii::$app->session->setFlash('info', 'ปฏิเสธคำร้องขอ Recall เอกสารเรียบร้อยแล้ว');
+        } else {
+            Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการปฏิเสธ Recall');
         }
 
         return $this->redirect(['view', 'id' => $model->id]);
