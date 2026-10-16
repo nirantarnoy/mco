@@ -84,11 +84,11 @@ class PurchaseMaster extends \yii\db\ActiveRecord
     {
         return [
             [['docnum', 'docdat'], 'required'],
-            [['docdat', 'duedat', 'vatdat', 'created_at', 'updated_at', 'vat_period'], 'safe'],
-            [['status', 'approve_status', 'created_by', 'updated_by', 'department_id', 'company_id', 'currency_id', 'is_deposit'], 'integer'],
+            [['docdat', 'duedat', 'vatdat', 'created_at', 'updated_at', 'vat_period', 'recall_at'], 'safe'],
+            [['status', 'approve_status', 'created_by', 'updated_by', 'department_id', 'company_id', 'currency_id', 'is_deposit', 'is_recall', 'recall_by'], 'integer'],
             [['vatpr0', 'amount', 'unitpr', 'vat_percent', 'vat_amount', 'tax_percent', 'tax_amount', 'total_amount', 'exchange_rate'], 'number', 'min' => 0],
             [['tax_amount', 'total_amount'], 'default', 'value' => 0],
-            [['remark'], 'string'],
+            [['remark', 'recall_reason'], 'string'],
             [['docnum', 'job_no', 'discod', 'orgnum', 'disc'], 'string', 'max' => 50],
             [['supcod', 'taxid'], 'string', 'max' => 20],
             [['supnam', 'addr01', 'addr02', 'addr03', 'invoice_no', 'vat_period', 'additional_note', 'refnum'], 'string', 'max' => 255],
@@ -137,6 +137,10 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             'remark' => 'หมายเหตุ',
             'status' => 'สถานะ',
             'approve_status' => 'สถานะอนุมัติ',
+            'is_recall' => 'สถานะขอ Recall',
+            'recall_reason' => 'เหตุผลการขอ Recall',
+            'recall_by' => 'ผู้ขอ Recall',
+            'recall_at' => 'เวลาที่ขอ Recall',
             'created_at' => 'สร้างเมื่อ',
             'updated_at' => 'แก้ไขเมื่อ',
             'created_by' => 'สร้างโดย',
@@ -494,5 +498,37 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             'latest' => $latest,
             'html' => $html
         ];
+    }
+
+    public function getRecallUser()
+    {
+        return $this->hasOne(\backend\models\User::class, ['id' => 'recall_by']);
+    }
+
+    public static function ensureRecallColumns()
+    {
+        try {
+            $db = Yii::$app->db;
+            $table = $db->getTableSchema(self::tableName(), true);
+            if ($table) {
+                if (!isset($table->columns['is_recall'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'is_recall', 'INT(11) DEFAULT 0')->execute();
+                }
+                if (!isset($table->columns['recall_reason'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_reason', 'TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL')->execute();
+                } else {
+                    $db->createCommand("ALTER TABLE " . self::tableName() . " MODIFY `recall_reason` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL")->execute();
+                }
+                if (!isset($table->columns['recall_by'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_by', 'INT(11) NULL')->execute();
+                }
+                if (!isset($table->columns['recall_at'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_at', 'DATETIME NULL')->execute();
+                }
+                $db->getSchema()->refreshTableSchema(self::tableName());
+            }
+        } catch (\Exception $e) {
+            Yii::error('Failed to ensure recall columns for purchase_master: ' . $e->getMessage());
+        }
     }
 }

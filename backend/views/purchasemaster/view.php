@@ -27,6 +27,27 @@ $this->params['breadcrumbs'][] = $this->title;
                             ],
                         ]) ?>
                     <?php endif; ?>
+                    <?php if ($model->approve_status == \backend\models\PurchaseMaster::APPROVE_STATUS_APPROVED): ?>
+                        <?php if ($model->is_recall != 1): ?>
+                            <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#recall-modal" data-bs-toggle="modal" data-bs-target="#recall-modal">
+                                <i class="fas fa-undo-alt"></i> ร้องขอแก้ไข (Recall)
+                            </button>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                    <?php if ($model->is_recall == 1): ?>
+                        <?php if (\Yii::$app->user->can('purchasemaster/approve') || \backend\models\User::isUserAdmin()): ?>
+                            <?= Html::a('<i class="fas fa-check"></i> อนุมัติ Recall', ['approve-recall', 'id' => $model->id], [
+                                'class' => 'btn btn-success btn-sm',
+                                'data' => [
+                                    'confirm' => 'ยืนยันการอนุมัติ Recall? เอกสารนี้จะถูกปลดสถานะอนุมัติและสามารถแก้ไขได้',
+                                    'method' => 'post',
+                                ],
+                            ]) ?>
+                            <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#reject-recall-modal" data-bs-toggle="modal" data-bs-target="#reject-recall-modal">
+                                <i class="fas fa-times"></i> ปฏิเสธ Recall
+                            </button>
+                        <?php endif; ?>
+                    <?php endif; ?>
                     <?= Html::a('<i class="fas fa-box"></i> รับสินค้าเข้าคลัง', ['receive', 'id' => $model->id], ['class' => 'btn btn-success btn-sm']) ?>
                     <?= Html::a('<i class="fas fa-history"></i> ประวัติรับสินค้า', ['receive-history', 'id' => $model->id], ['class' => 'btn btn-outline-info btn-sm']) ?>
                     <?= Html::a('<i class="fas fa-edit"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-warning btn-sm']) ?>
@@ -43,6 +64,13 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
         </div>
         <div class="card-body">
+            <?php if ($model->is_recall == 1): ?>
+                <div class="alert alert-warning border border-warning shadow-sm mb-3">
+                    <h5><i class="fas fa-exclamation-triangle"></i> เอกสารนี้มีคำร้องขอ Recall เพื่อแก้ไข</h5>
+                    <p class="mb-1"><strong>ผู้ร้องขอ:</strong> <?= \backend\models\User::findEmployeeNameByUserId($model->recall_by) ?> (วันที่: <?= $model->recall_at ? date('d/m/Y H:i:s', strtotime($model->recall_at)) : '-' ?>)</p>
+                    <p class="mb-0"><strong>เหตุผล:</strong> <?= Html::encode($model->recall_reason) ?></p>
+                </div>
+            <?php endif; ?>
 
             <div class="row">
                 <div class="col-md-6">
@@ -345,5 +373,68 @@ $this->params['breadcrumbs'][] = $this->title;
 
         </div>
     </div>
+
+    <!-- Modal สำหรับ ร้องขอ Recall -->
+    <?php
+    \yii\bootstrap4\Modal::begin([
+        'id' => 'recall-modal',
+        'title' => '<h4><i class="fas fa-undo-alt text-warning"></i> ร้องขอแก้ไขบันทึกการซื้อ (Recall)</h4>',
+        'size' => \yii\bootstrap4\Modal::SIZE_DEFAULT,
+        'options' => ['tabindex' => false],
+        'closeButton' => [
+            'class' => 'btn-close',
+            'data-bs-dismiss' => 'modal',
+            'aria-label' => 'Close',
+        ],
+    ]);
+    ?>
+    <?php $form = \yii\widgets\ActiveForm::begin([
+        'action' => ['request-recall', 'id' => $model->id],
+        'method' => 'post',
+    ]); ?>
+    <div class="modal-body">
+        <p class="text-muted">เมื่อส่งคำร้องขอ ระบบจะแจ้งเตือนผู้อนุมัติเพื่อพิจารณาปลดล็อคเอกสารกลับมาให้แก้ไข</p>
+        <div class="form-group mb-3">
+            <label for="pm-recall-reason" class="form-label fw-bold">ระบุเหตุผลที่ต้องการดึงเอกสารกลับมาแก้ไข <span class="text-danger">*</span></label>
+            <textarea name="recall_reason" id="pm-recall-reason" class="form-control" rows="4" required placeholder="ตัวอย่าง: แก้ไขยอดเงิน, แก้ไขข้อมูลผู้จำหน่าย, แก้ไขใบกำกับภาษี"></textarea>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="submit" class="btn btn-warning"><i class="fas fa-paper-plane"></i> ยืนยันส่งคำร้องขอ Recall</button>
+    </div>
+    <?php \yii\widgets\ActiveForm::end(); ?>
+    <?php \yii\bootstrap4\Modal::end(); ?>
+
+    <!-- Modal สำหรับ ปฏิเสธ Recall -->
+    <?php
+    \yii\bootstrap4\Modal::begin([
+        'id' => 'reject-recall-modal',
+        'title' => '<h4><i class="fas fa-times text-danger"></i> ปฏิเสธคำร้องขอ Recall</h4>',
+        'size' => \yii\bootstrap4\Modal::SIZE_DEFAULT,
+        'options' => ['tabindex' => false],
+        'closeButton' => [
+            'class' => 'btn-close',
+            'data-bs-dismiss' => 'modal',
+            'aria-label' => 'Close',
+        ],
+    ]);
+    ?>
+    <?php $form = \yii\widgets\ActiveForm::begin([
+        'action' => ['reject-recall', 'id' => $model->id],
+        'method' => 'post',
+    ]); ?>
+    <div class="modal-body">
+        <div class="form-group mb-3">
+            <label for="pm-reject-recall-reason" class="form-label fw-bold">ระบุเหตุผลที่ไม่อนุมัติคำร้องขอ Recall</label>
+            <textarea name="reject_reason" id="pm-reject-recall-reason" class="form-control" rows="3" placeholder="ระบุเหตุผลที่ไม่อนุมัติ"></textarea>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="submit" class="btn btn-danger"><i class="fas fa-check"></i> ยืนยันปฏิเสธ Recall</button>
+    </div>
+    <?php \yii\widgets\ActiveForm::end(); ?>
+    <?php \yii\bootstrap4\Modal::end(); ?>
 
 </div>

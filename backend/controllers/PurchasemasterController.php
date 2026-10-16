@@ -65,6 +65,130 @@ class PurchasemasterController extends BaseController
     }
 
     /**
+     * Request recall for purchase master (none-pr)
+     * @param int $id
+     * @return Response
+     */
+    public function actionRequestRecall($id)
+    {
+        $model = $this->findModel($id);
+        \backend\models\PurchaseMaster::ensureRecallColumns();
+
+        if ($model->approve_status != \backend\models\PurchaseMaster::APPROVE_STATUS_APPROVED) {
+            Yii::$app->session->setFlash('error', 'สามารถขอดึงกลับได้เฉพาะเอกสารที่ผ่านการอนุมัติแล้วเท่านั้น');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $reason = Yii::$app->request->post('recall_reason');
+        if (empty(trim($reason))) {
+            Yii::$app->session->setFlash('error', 'กรุณาระบุเหตุผลในการขอดึงเอกสารกลับ');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $model->is_recall = 1;
+        $model->recall_reason = trim($reason);
+        $model->recall_by = Yii::$app->user->id;
+        $model->recall_at = date('Y-m-d H:i:s');
+
+        if ($model->save(false)) {
+            \backend\models\ActionLogModel::logModelAction(
+                'REQUEST_RECALL',
+                $model,
+                [
+                    'recall_reason' => $model->recall_reason,
+                    'recall_by' => $model->recall_by,
+                    'recall_at' => $model->recall_at,
+                ],
+                \backend\models\ActionLogModel::STATUS_SUCCESS,
+                'ส่งคำร้องขอ Recall บันทึกการซื้อ (None PR): ' . $model->recall_reason
+            );
+            Yii::$app->session->setFlash('success', 'ส่งคำร้องขอ Recall เอกสารเรียบร้อยแล้ว รอผู้อนุมัติตรวจสอบ');
+        } else {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถส่งคำร้องขอ Recall ได้');
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    /**
+     * Approve recall for purchase master
+     * @param int $id
+     * @return Response
+     */
+    public function actionApproveRecall($id)
+    {
+        if (!Yii::$app->user->can('purchasemaster/approve') && !\backend\models\User::isUserAdmin()) {
+            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ในการอนุมัติ Recall บันทึกการซื้อ');
+        }
+
+        $model = $this->findModel($id);
+
+        if ($model->is_recall != 1) {
+            Yii::$app->session->setFlash('warning', 'รายการนี้ไม่ได้อยู่ในสถานะรออนุมัติ Recall');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $recallReason = $model->recall_reason;
+
+        $model->approve_status = \backend\models\PurchaseMaster::APPROVE_STATUS_PENDING;
+        $model->is_recall = 0;
+
+        if ($model->save(false)) {
+            \backend\models\ActionLogModel::logModelAction(
+                'APPROVE_RECALL',
+                $model,
+                [
+                    'recall_reason' => $recallReason,
+                    'approved_recall_by' => Yii::$app->user->id,
+                ],
+                \backend\models\ActionLogModel::STATUS_SUCCESS,
+                'อนุมัติการ Recall เอกสาร ดึงบันทึกการซื้อกลับมาสถานะรออนุมัติเพื่อให้อัปเดตได้'
+            );
+            Yii::$app->session->setFlash('success', 'อนุมัติการ Recall เอกสารเรียบร้อยแล้ว เอกสารถูกดึงกลับมาให้แก้ไขได้');
+        } else {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถอนุมัติการ Recall ได้');
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    /**
+     * Reject recall for purchase master
+     * @param int $id
+     * @return Response
+     */
+    public function actionRejectRecall($id)
+    {
+        if (!Yii::$app->user->can('purchasemaster/approve') && !\backend\models\User::isUserAdmin()) {
+            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ในการจัดการ Recall บันทึกการซื้อ');
+        }
+
+        $model = $this->findModel($id);
+        $rejectReason = Yii::$app->request->post('reject_reason', 'ไม่อนุมัติคำร้องขอ Recall');
+
+        $model->is_recall = 0;
+
+        if ($model->save(false)) {
+            \backend\models\ActionLogModel::logModelAction(
+                'REJECT_RECALL',
+                $model,
+                [
+                    'recall_reason' => $model->recall_reason,
+                    'reject_reason' => $rejectReason,
+                    'rejected_by' => Yii::$app->user->id,
+                ],
+                \backend\models\ActionLogModel::STATUS_SUCCESS,
+                'ปฏิเสธคำร้องขอ Recall บันทึกการซื้อ: ' . $rejectReason
+            );
+            Yii::$app->session->setFlash('info', 'ปฏิเสธคำร้องขอ Recall เรียบร้อยแล้ว เอกสารยังคงสถานะอนุมัติตามเดิม');
+        } else {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถทำรายการได้');
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    /**
      * Lists all PurchaseMaster models.
      *
      * @return string

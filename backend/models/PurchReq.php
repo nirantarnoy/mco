@@ -110,12 +110,12 @@ class PurchReq extends ActiveRecord
         return [
             [['vendor_id', 'job_id'], 'required'],
             [['purch_req_date'], 'safe'],
-            [['vendor_id', 'status', 'approve_status', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by', 'job_id', 'discount_percent', 'vat_percent', 'approve_by', 'reason_title_id', 'req_for_dep_id', 'company_id'], 'integer'],
+            [['vendor_id', 'status', 'approve_status', 'purch_id', 'created_at', 'created_by', 'updated_at', 'updated_by', 'job_id', 'discount_percent', 'vat_percent', 'approve_by', 'reason_title_id', 'req_for_dep_id', 'company_id', 'is_recall', 'recall_by'], 'integer'],
             [['total_amount', 'discount_amount', 'vat_amount', 'net_amount', 'vat_percent', 'discount_total_amount', 'discount_percent'], 'number'],
             [['purch_req_no', 'vendor_name', 'total_text'], 'string', 'max' => 255],
-            [['note', 'reason', 'special_note'], 'string'],
+            [['note', 'reason', 'special_note', 'recall_reason'], 'string'],
             [['purch_req_no'], 'unique', 'filter' => ['status' => self::STATUS_ACTIVE]],
-            [['required_date', 'approve_date'], 'safe'],
+            [['required_date', 'approve_date', 'recall_at'], 'safe'],
             [['is_vat'], 'integer'],
         ];
     }
@@ -135,6 +135,10 @@ class PurchReq extends ActiveRecord
             'note' => 'หมายเหตุ',
             'job_id' => 'ใบงาน',
             'approve_status' => 'สถานะอนุมัติ',
+            'is_recall' => 'สถานะขอ Recall',
+            'recall_reason' => 'เหตุผลการขอ Recall',
+            'recall_by' => 'ผู้ขอ Recall',
+            'recall_at' => 'เวลาที่ขอ Recall',
             'total_amount' => 'ยอดรวม',
             'discount_amount' => 'ส่วนลด',
             'vat_amount' => 'VAT',
@@ -482,7 +486,7 @@ class PurchReq extends ActiveRecord
 
         $has_draft = false;
         foreach ($refs as $ref) {
-            if ($ref->paymentVoucher->status == \backend\models\PaymentVoucher::STATUS_DRAFT) {
+            if ($ref->paymentVoucher && $ref->paymentVoucher->status == \backend\models\PaymentVoucher::STATUS_DRAFT) {
                 $has_draft = true;
                 break;
             }
@@ -493,5 +497,37 @@ class PurchReq extends ActiveRecord
         }
 
         return '<span class="badge bg-success" title="สร้าง PV และชำระเงินแล้ว">สร้าง PV แล้ว (จ่ายแล้ว)</span>';
+    }
+
+    public function getRecallUser()
+    {
+        return $this->hasOne(\backend\models\User::class, ['id' => 'recall_by']);
+    }
+
+    public static function ensureRecallColumns()
+    {
+        try {
+            $db = Yii::$app->db;
+            $table = $db->getTableSchema(self::tableName(), true);
+            if ($table) {
+                if (!isset($table->columns['is_recall'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'is_recall', 'INT(11) DEFAULT 0')->execute();
+                }
+                if (!isset($table->columns['recall_reason'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_reason', 'TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL')->execute();
+                } else {
+                    $db->createCommand("ALTER TABLE " . self::tableName() . " MODIFY `recall_reason` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL")->execute();
+                }
+                if (!isset($table->columns['recall_by'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_by', 'INT(11) NULL')->execute();
+                }
+                if (!isset($table->columns['recall_at'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_at', 'DATETIME NULL')->execute();
+                }
+                $db->getSchema()->refreshTableSchema(self::tableName());
+            }
+        } catch (\Exception $e) {
+            Yii::error('Failed to ensure recall columns for purch_req: ' . $e->getMessage());
+        }
     }
 }

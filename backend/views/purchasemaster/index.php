@@ -260,7 +260,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         'attribute' => 'approve_status',
                         'format' => 'raw',
                         'value' => function($model) {
-                            return $model->getApproveStatusBadge();
+                            $badge = $model->getApproveStatusBadge();
+                            if (!empty($model->is_recall)) {
+                                $badge .= ' <span class="badge badge-danger"><i class="fas fa-undo"></i> ขอ Recall</span>';
+                            }
+                            return $badge;
                         },
                         'filter' => [
                             \backend\models\PurchaseMaster::APPROVE_STATUS_PENDING => 'รอพิจารณา',

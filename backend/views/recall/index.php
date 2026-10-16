@@ -10,7 +10,12 @@ use yii\bootstrap4\Modal;
 /* @var $type string */
 /* @var $countTotal int */
 /* @var $countPurch int */
+/* @var $countPurchReq int */
+/* @var $countPurchaseMaster int */
+/* @var $countQuotation int */
 /* @var $countPreAdvance int */
+/* @var $countPettyCashVoucher int */
+/* @var $countPettyCashAdvance int */
 
 $this->title = 'จัดการคำร้องขอ Recall เอกสาร';
 $this->params['breadcrumbs'][] = $this->title;
@@ -50,20 +55,45 @@ $this->params['breadcrumbs'][] = $this->title;
 
         <div class="card-body">
             <!-- Filter Tabs -->
-            <ul class="nav nav-pills mb-3">
-                <li class="nav-item">
+            <ul class="nav nav-pills mb-3 flex-wrap">
+                <li class="nav-item mb-2 mr-2">
                     <a class="nav-link <?= $type === 'all' ? 'active bg-warning text-dark font-weight-bold' : '' ?>" href="<?= Url::to(['index', 'type' => 'all']) ?>">
                         <i class="fas fa-list-ul mr-1"></i> ทั้งหมด (<?= $countTotal ?>)
                     </a>
                 </li>
-                <li class="nav-item ml-2">
+                <li class="nav-item mb-2 mr-2">
                     <a class="nav-link <?= $type === 'purch' ? 'active bg-primary font-weight-bold' : '' ?>" href="<?= Url::to(['index', 'type' => 'purch']) ?>">
                         <i class="fas fa-shopping-cart mr-1"></i> ใบสั่งซื้อ PO (<?= $countPurch ?>)
                     </a>
                 </li>
-                <li class="nav-item ml-2">
-                    <a class="nav-link <?= $type === 'preadvance' ? 'active bg-info font-weight-bold' : '' ?>" href="<?= Url::to(['index', 'type' => 'preadvance']) ?>">
+                <li class="nav-item mb-2 mr-2">
+                    <a class="nav-link <?= $type === 'purchreq' ? 'active bg-info font-weight-bold' : '' ?>" href="<?= Url::to(['index', 'type' => 'purchreq']) ?>">
+                        <i class="fas fa-file-invoice mr-1"></i> ใบขอซื้อ PR (<?= $countPurchReq ?>)
+                    </a>
+                </li>
+                <li class="nav-item mb-2 mr-2">
+                    <a class="nav-link <?= $type === 'purchasemaster' ? 'active bg-secondary font-weight-bold' : '' ?>" href="<?= Url::to(['index', 'type' => 'purchasemaster']) ?>">
+                        <i class="fas fa-shopping-bag mr-1"></i> ซื้อ None PR (<?= $countPurchaseMaster ?>)
+                    </a>
+                </li>
+                <li class="nav-item mb-2 mr-2">
+                    <a class="nav-link <?= $type === 'quotation' ? 'active bg-success font-weight-bold' : '' ?>" href="<?= Url::to(['index', 'type' => 'quotation']) ?>">
+                        <i class="fas fa-file-contract mr-1"></i> ใบเสนอราคา (<?= $countQuotation ?>)
+                    </a>
+                </li>
+                <li class="nav-item mb-2 mr-2">
+                    <a class="nav-link <?= $type === 'preadvance' ? 'active bg-warning text-dark font-weight-bold' : '' ?>" href="<?= Url::to(['index', 'type' => 'preadvance']) ?>">
                         <i class="fas fa-money-check-alt mr-1"></i> Payment Advance (<?= $countPreAdvance ?>)
+                    </a>
+                </li>
+                <li class="nav-item mb-2 mr-2">
+                    <a class="nav-link <?= $type === 'pettycashvoucher' ? 'active bg-dark font-weight-bold' : '' ?>" href="<?= Url::to(['index', 'type' => 'pettycashvoucher']) ?>">
+                        <i class="fas fa-receipt mr-1"></i> เงินสดย่อย PCV (<?= $countPettyCashVoucher ?>)
+                    </a>
+                </li>
+                <li class="nav-item mb-2 mr-2">
+                    <a class="nav-link <?= $type === 'pettycashadvance' ? 'active bg-info font-weight-bold' : '' ?>" href="<?= Url::to(['index', 'type' => 'pettycashadvance']) ?>">
+                        <i class="fas fa-hand-holding-usd mr-1"></i> เบิกเงินทดแทน (<?= $countPettyCashAdvance ?>)
                     </a>
                 </li>
             </ul>

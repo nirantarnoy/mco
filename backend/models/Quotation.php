@@ -67,10 +67,11 @@ class Quotation extends ActiveRecord
     {
         return [
             [['customer_id'], 'required'],
-            [['quotation_date', 'currency_id', 'customer_tax_id'], 'safe'],
-            [['customer_id', 'status', 'approve_status', 'approve_by', 'created_at', 'created_by', 'updated_at', 'updated_by', 'payment_term_id', 'payment_method_id', 'sale_emp_id'], 'integer'],
+            [['quotation_date', 'currency_id', 'customer_tax_id', 'recall_at'], 'safe'],
+            [['customer_id', 'status', 'approve_status', 'approve_by', 'created_at', 'created_by', 'updated_at', 'updated_by', 'payment_term_id', 'payment_method_id', 'sale_emp_id', 'is_recall', 'recall_by'], 'integer'],
             [['total_amount', 'discount_amount', 'discount_percent', 'total_discount_amount', 'vat_percent', 'vat_total_amount'], 'number'],
             [['quotation_no', 'customer_name', 'total_amount_text', 'note', 'delivery_day_text', 'payment_term_text'], 'string', 'max' => 255],
+            [['recall_reason'], 'string'],
             [['quotation_no'], 'unique', 'filter' => ['status' => self::STATUS_ACTIVE]],
         ];
     }
@@ -88,6 +89,10 @@ class Quotation extends ActiveRecord
             'customer_name' => 'ชื่อลูกค้า',
             'status' => 'สถานะ',
             'approve_status' => 'สถานะอนุมัติ',
+            'is_recall' => 'สถานะขอ Recall',
+            'recall_reason' => 'เหตุผลการขอ Recall',
+            'recall_by' => 'ผู้ขอ Recall',
+            'recall_at' => 'เวลาที่ขอ Recall',
             'approve_by' => 'อนุมัติโดย',
             'total_amount' => 'ยอดรวม',
             'total_amount_text' => 'จำนวนเงิน (ตัวอักษร)',
@@ -407,6 +412,38 @@ class Quotation extends ActiveRecord
             return $quotation->quotation_date;
         } else {
             return '';
+        }
+    }
+
+    public function getRecallUser()
+    {
+        return $this->hasOne(\backend\models\User::class, ['id' => 'recall_by']);
+    }
+
+    public static function ensureRecallColumns()
+    {
+        try {
+            $db = Yii::$app->db;
+            $table = $db->getTableSchema(self::tableName(), true);
+            if ($table) {
+                if (!isset($table->columns['is_recall'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'is_recall', 'INT(11) DEFAULT 0')->execute();
+                }
+                if (!isset($table->columns['recall_reason'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_reason', 'TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL')->execute();
+                } else {
+                    $db->createCommand("ALTER TABLE " . self::tableName() . " MODIFY `recall_reason` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL")->execute();
+                }
+                if (!isset($table->columns['recall_by'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_by', 'INT(11) NULL')->execute();
+                }
+                if (!isset($table->columns['recall_at'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_at', 'DATETIME NULL')->execute();
+                }
+                $db->getSchema()->refreshTableSchema(self::tableName());
+            }
+        } catch (\Exception $e) {
+            Yii::error('Failed to ensure recall columns for quotation: ' . $e->getMessage());
         }
     }
 }

@@ -171,12 +171,16 @@ $this->params['breadcrumbs'][] = $this->title;
                     Quotation::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
                 ],
                 'value' => function ($model) {
+                    $recallBadge = '';
+                    if (!empty($model->is_recall)) {
+                        $recallBadge = ' <span class="badge bg-danger"><i class="fas fa-undo"></i> ขอ Recall</span>';
+                    }
                     if ($model->approve_status == Quotation::APPROVE_STATUS_APPROVED) {
-                        return '<span class="badge bg-success">อนุมัติ</span>';
+                        return '<span class="badge bg-success">อนุมัติ</span>' . $recallBadge;
                     } elseif ($model->approve_status == Quotation::APPROVE_STATUS_REJECTED) {
-                        return '<span class="badge bg-danger">ไม่อนุมัติ</span>';
+                        return '<span class="badge bg-danger">ไม่อนุมัติ</span>' . $recallBadge;
                     } else {
-                        return '<span class="badge bg-warning">รอพิจารณา</span>';
+                        return '<span class="badge bg-warning">รอพิจารณา</span>' . $recallBadge;
                     }
                 },
                 'format' => 'raw',

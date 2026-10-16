@@ -80,6 +80,14 @@ $this->params['breadcrumbs'][] = $this->title;
                     [
                         'attribute' => 'approved_by',
                         'headerOptions' => ['width' => '150px'],
+                        'format' => 'raw',
+                        'value' => function($model) {
+                            $text = $model->approved_by ?: '<span class="text-muted">ยังไม่อนุมัติ</span>';
+                            if (!empty($model->is_recall)) {
+                                $text .= '<br><span class="badge badge-danger"><i class="fas fa-undo"></i> ขอ Recall</span>';
+                            }
+                            return $text;
+                        }
                     ],
 
                     [

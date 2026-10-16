@@ -204,14 +204,18 @@ $this->params['breadcrumbs'][] = $this->title;
                     PurchReq::STATUS_CANCELLED => 'ยกเลิก',
                 ],
                 'value' => function ($model) {
+                    $recallBadge = '';
+                    if (!empty($model->is_recall)) {
+                        $recallBadge = ' <span class="badge bg-danger"><i class="fas fa-undo"></i> ขอ Recall</span>';
+                    }
                     if ($model->approve_status == PurchReq::APPROVE_STATUS_APPROVED) {
-                        return '<span class="badge bg-success">อนุมัติ</span>';
+                        return '<span class="badge bg-success">อนุมัติ</span>' . $recallBadge;
                     } elseif ($model->approve_status == PurchReq::APPROVE_STATUS_REJECTED) {
-                        return '<span class="badge bg-danger">ไม่อนุมัติ</span>';
-                    }elseif ($model->approve_status == PurchReq::STATUS_CANCELLED) {
-                        return '<span class="badge bg-danger">ยกเลิก</span>';
+                        return '<span class="badge bg-danger">ไม่อนุมัติ</span>' . $recallBadge;
+                    } elseif ($model->approve_status == PurchReq::STATUS_CANCELLED) {
+                        return '<span class="badge bg-danger">ยกเลิก</span>' . $recallBadge;
                     } else {
-                        return '<span class="badge bg-warning">รอพิจารณา</span>';
+                        return '<span class="badge bg-warning">รอพิจารณา</span>' . $recallBadge;
                     }
                 },
                 'format' => 'raw',

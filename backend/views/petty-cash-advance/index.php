@@ -191,23 +191,27 @@ $minAmount = \backend\models\PettyCashAdvance::getMinAmount();
                     'headerOptions' => ['style' => 'width: 200px;']
                 ],
 
-//                [
-//                    'attribute' => 'status',
-//                    'label' => 'สถานะ',
-//                    'format' => 'raw',
-//                    'value' => function ($model) {
-//                        $statusLabels = [
-//                            'pending' => ['label' => 'รอดำเนินการ', 'class' => 'warning'],
-//                            'approved' => ['label' => 'อนุมัติแล้ว', 'class' => 'success'],
-//                            'rejected' => ['label' => 'ปฏิเสธ', 'class' => 'danger'],
-//                            'paid' => ['label' => 'จ่ายแล้ว', 'class' => 'info'],
-//                        ];
-//                        $status = $statusLabels[$model->status] ?? ['label' => $model->status, 'class' => 'secondary'];
-//                        return '<span class="badge badge-' . $status['class'] . '">' . $status['label'] . '</span>';
-//                    },
-//                    'headerOptions' => ['style' => 'width: 100px; text-align: center;'],
-//                    'contentOptions' => ['class' => 'text-center']
-//                ],
+                [
+                    'attribute' => 'status',
+                    'label' => 'สถานะ',
+                    'format' => 'raw',
+                    'value' => function ($model) {
+                        $statusLabels = [
+                            'pending' => ['label' => 'รอดำเนินการ', 'class' => 'warning'],
+                            'approved' => ['label' => 'อนุมัติแล้ว', 'class' => 'success'],
+                            'rejected' => ['label' => 'ปฏิเสธ', 'class' => 'danger'],
+                            'paid' => ['label' => 'จ่ายแล้ว', 'class' => 'info'],
+                        ];
+                        $status = $statusLabels[$model->status] ?? ['label' => $model->status, 'class' => 'secondary'];
+                        $html = '<span class="badge badge-' . $status['class'] . '">' . $status['label'] . '</span>';
+                        if (!empty($model->is_recall)) {
+                            $html .= '<br><span class="badge badge-danger"><i class="fas fa-undo"></i> ขอ Recall</span>';
+                        }
+                        return $html;
+                    },
+                    'headerOptions' => ['style' => 'width: 100px; text-align: center;'],
+                    'contentOptions' => ['class' => 'text-center']
+                ],
 
 //                [
 //                    'attribute' => 'created_at',

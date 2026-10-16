@@ -43,9 +43,9 @@ class PettyCashAdvance extends ActiveRecord
         return [
             [['request_date', 'amount', 'purpose'], 'required'],
             [['amount'], 'number', 'min' => 1],
-            [['request_date'], 'safe'],
-            [['purpose', 'remarks'], 'string'],
-            [['employee_id', 'approved_by'], 'integer'],
+            [['request_date', 'recall_at'], 'safe'],
+            [['purpose', 'remarks', 'recall_reason'], 'string'],
+            [['employee_id', 'approved_by', 'is_recall', 'recall_by'], 'integer'],
             [['status'], 'string', 'max' => 20],
             [['advance_no'], 'string', 'max' => 50],
         ];
@@ -61,6 +61,10 @@ class PettyCashAdvance extends ActiveRecord
             'amount' => 'จำนวนเงิน',
             'purpose' => 'วัตถุประสงค์',
             'status' => 'สถานะ',
+            'is_recall' => 'สถานะขอ Recall',
+            'recall_reason' => 'เหตุผลการขอ Recall',
+            'recall_by' => 'ผู้ขอ Recall',
+            'recall_at' => 'เวลาที่ขอ Recall',
             'approved_by' => 'ผู้อนุมัติ',
             'remarks' => 'หมายเหตุ',
         ];
@@ -132,5 +136,37 @@ class PettyCashAdvance extends ActiveRecord
         $this->created_by = Yii::$app->user->id;
         $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
         return true;
+    }
+
+    public function getRecallUser()
+    {
+        return $this->hasOne(\backend\models\User::class, ['id' => 'recall_by']);
+    }
+
+    public static function ensureRecallColumns()
+    {
+        try {
+            $db = Yii::$app->db;
+            $table = $db->getTableSchema(self::tableName(), true);
+            if ($table) {
+                if (!isset($table->columns['is_recall'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'is_recall', 'INT(11) DEFAULT 0')->execute();
+                }
+                if (!isset($table->columns['recall_reason'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_reason', 'TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL')->execute();
+                } else {
+                    $db->createCommand("ALTER TABLE " . self::tableName() . " MODIFY `recall_reason` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL")->execute();
+                }
+                if (!isset($table->columns['recall_by'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_by', 'INT(11) NULL')->execute();
+                }
+                if (!isset($table->columns['recall_at'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_at', 'DATETIME NULL')->execute();
+                }
+                $db->getSchema()->refreshTableSchema(self::tableName());
+            }
+        } catch (\Exception $e) {
+            Yii::error('Failed to ensure recall columns for petty_cash_advance: ' . $e->getMessage());
+        }
     }
 }

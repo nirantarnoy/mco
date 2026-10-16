@@ -58,10 +58,10 @@ class PettyCashVoucher extends ActiveRecord
     {
         return [
             [['date', 'amount'], 'required'],
-            [['pcv_no','date', 'issued_date', 'approved_date','created_by','updated_by'], 'safe'],
+            [['pcv_no','date', 'issued_date', 'approved_date','created_by','updated_by', 'recall_at'], 'safe'],
             [['amount'], 'number', 'min' => 0],
-            [['paid_for'], 'string'],
-            [['status','quotation_id','customer_id','pay_for_emp_id','job_id','vendor_id','approve_status'], 'integer'],
+            [['paid_for', 'recall_reason'], 'string'],
+            [['status','quotation_id','customer_id','pay_for_emp_id','job_id','vendor_id','approve_status', 'is_recall', 'recall_by'], 'integer'],
             [['pcv_no'], 'string', 'max' => 50],
             [['name', 'issued_by', 'approved_by'], 'string', 'max' => 255],
             [['pcv_no'], 'unique'],
@@ -86,6 +86,11 @@ class PettyCashVoucher extends ActiveRecord
             'approved_by' => 'ผู้อนุมัติ',
             'approved_date' => 'วันที่อนุมัติ',
             'status' => 'สถานะ',
+            'approve_status' => 'สถานะการอนุมัติ',
+            'is_recall' => 'สถานะขอ Recall',
+            'recall_reason' => 'เหตุผลการขอ Recall',
+            'recall_by' => 'ผู้ขอ Recall',
+            'recall_at' => 'เวลาที่ขอ Recall',
             'created_at' => 'สร้างเมื่อ',
             'updated_at' => 'แก้ไขล่าสุด',
             'quotation_id' => 'ใบเสนอราคา',
@@ -234,5 +239,37 @@ class PettyCashVoucher extends ActiveRecord
             $total += $detail->other;
         }
         return $total;
+    }
+
+    public function getRecallUser()
+    {
+        return $this->hasOne(\backend\models\User::class, ['id' => 'recall_by']);
+    }
+
+    public static function ensureRecallColumns()
+    {
+        try {
+            $db = Yii::$app->db;
+            $table = $db->getTableSchema(self::tableName(), true);
+            if ($table) {
+                if (!isset($table->columns['is_recall'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'is_recall', 'INT(11) DEFAULT 0')->execute();
+                }
+                if (!isset($table->columns['recall_reason'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_reason', 'TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL')->execute();
+                } else {
+                    $db->createCommand("ALTER TABLE " . self::tableName() . " MODIFY `recall_reason` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL")->execute();
+                }
+                if (!isset($table->columns['recall_by'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_by', 'INT(11) NULL')->execute();
+                }
+                if (!isset($table->columns['recall_at'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'recall_at', 'DATETIME NULL')->execute();
+                }
+                $db->getSchema()->refreshTableSchema(self::tableName());
+            }
+        } catch (\Exception $e) {
+            Yii::error('Failed to ensure recall columns for petty_cash_voucher: ' . $e->getMessage());
+        }
     }
 }
