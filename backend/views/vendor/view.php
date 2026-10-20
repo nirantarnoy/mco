@@ -32,6 +32,21 @@ $this->params['breadcrumbs'][] = $this->title;
             'name',
             'description',
             'taxid',
+            [
+                'label' => 'ที่อยู่',
+                'value' => function ($model) {
+                    $addr = \backend\helpers\AddressHelper::formatFullAddress([
+                        'home_number' => $model->home_number,
+                        'street' => $model->street,
+                        'aisle' => $model->aisle,
+                        'district_name' => $model->district_name,
+                        'city_name' => $model->city_name,
+                        'province_name' => $model->province_name,
+                        'zipcode' => $model->zipcode,
+                    ]);
+                    return !empty($addr) ? $addr : '-';
+                }
+            ],
             'bank_name',
             'account_name',
             'account_num',

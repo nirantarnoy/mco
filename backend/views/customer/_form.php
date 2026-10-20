@@ -6,13 +6,29 @@ use yii\widgets\ActiveForm;
 /** @var yii\web\View $this */
 /** @var backend\models\Customer $model */
 /** @var yii\widgets\ActiveForm $form */
-$district_data = \backend\models\District::find()->all();
-$city_data = \backend\models\Amphur::find()->all();
-$province_data = \backend\models\Province::find()->all();$district_chk = \backend\models\AddressInfo::findDistrictId($model->id,2); // 1 = vendor 2 = customer
-$city_chk = \backend\models\AddressInfo::findAmphurId($model->id,2);
-$province_chk = \backend\models\AddressInfo::findProvinceId($model->id,2);
+$district_chk = \backend\models\AddressInfo::findDistrictId($model->id, 2); // 1 = vendor 2 = customer
+$city_chk = \backend\models\AddressInfo::findAmphurId($model->id, 2);
+$province_chk = \backend\models\AddressInfo::findProvinceId($model->id, 2);
 
-$address_chk = \backend\models\AddressInfo::find()->where(['party_id' => $model->id,'party_type_id'=>2])->one();
+// ถ้าใน AddressInfo ไม่มี ID แต่โมเดลมีชื่อ ให้ค้นหา ID ย้อนกลับ
+if (empty($province_chk) && !empty($model->province_name)) {
+    $p_find = \backend\models\Province::find()->where(['like', 'PROVINCE_NAME', trim($model->province_name)])->one();
+    if ($p_find) $province_chk = $p_find->PROVINCE_ID;
+}
+if (empty($city_chk) && !empty($model->city_name)) {
+    $c_find = \backend\models\Amphur::find()->where(['like', 'AMPHUR_NAME', trim($model->city_name)])->one();
+    if ($c_find) $city_chk = $c_find->AMPHUR_ID;
+}
+if (empty($district_chk) && !empty($model->district_name)) {
+    $d_find = \backend\models\District::find()->where(['like', 'DISTRICT_NAME', trim($model->district_name)])->one();
+    if ($d_find) $district_chk = $d_find->DISTRICT_ID;
+}
+
+$province_data = \backend\models\Province::find()->orderBy(['PROVINCE_NAME' => SORT_ASC])->all();
+$city_data = !empty($province_chk) ? \backend\models\Amphur::find()->where(['PROVINCE_ID' => $province_chk])->orderBy(['AMPHUR_NAME' => SORT_ASC])->all() : [];
+$district_data = !empty($city_chk) ? \backend\models\District::find()->where(['AMPHUR_ID' => $city_chk])->orderBy(['DISTRICT_NAME' => SORT_ASC])->all() : [];
+
+$address_chk = \backend\models\AddressInfo::find()->where(['party_id' => $model->id, 'party_type_id' => 2])->one();
 
 $x_address = $address_chk == null ? '' : $address_chk->address;
 $x_street = $address_chk == null ? '' : $address_chk->street;
@@ -124,118 +140,113 @@ if($model->isNewRecord) {
         <div class="row">
             <div class="col-lg-1"></div>
             <div class="col-lg-10">
-                <div class="row">
-                    <div class="col-lg-3"> <?= $form->field($model, 'district_name')->textInput(['maxlength' => true]) ?></div>
-                    <div class="col-lg-3"><?= $form->field($model, 'city_name')->textInput(['maxlength' => true]) ?></div>
-                    <div class="col-lg-3"><?= $form->field($model, 'province_name')->textInput(['maxlength' => true]) ?></div>
+                <div class="card card-outline card-primary" style="border: 1px solid #007bff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-top: 5px; margin-bottom: 20px;">
+                    <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #eaf4ff; border-bottom: 1px solid #007bff; padding: 12px 20px;">
+                        <h5 class="card-title mb-0" style="color: #0056b3; font-weight: bold;">
+                            <i class="fas fa-map-marker-alt me-2"></i> ข้อมูลที่อยู่ลูกค้า (Address Information)
+                        </h5>
+                        <small class="text-muted"><i class="fas fa-info-circle me-1"></i> กรอกรหัสไปรษณีย์เพื่อค้นหาอัตโนมัติ หรือเลือกจังหวัด/อำเภอ/ตำบล</small>
+                    </div>
+                    <div class="card-body" style="padding: 20px;">
+                        <!-- ช่องค้นหาด่วนด้วยรหัสไปรษณีย์ -->
+                        <div class="row mb-3" style="background-color: #f8f9fa; border: 1px dashed #ced4da; border-radius: 6px; padding: 12px 5px; margin: 0 2px 15px 2px;">
+                            <div class="col-lg-4">
+                                <label class="form-label text-primary" style="font-weight: 600;"><i class="fas fa-bolt text-warning me-1"></i> ค้นหาด่วนด้วยรหัสไปรษณีย์ (Zipcode Quick Search)</label>
+                                <div class="input-group">
+                                    <input type="text" id="zipcode-quick-search" class="form-control" placeholder="พิมพ์รหัสไปรษณีย์ 5 หลัก เช่น 10200, 20150" maxlength="5">
+                                    <button class="btn btn-primary" type="button" id="btn-quick-search-zip">
+                                        <i class="fas fa-search me-1"></i> ค้นหา
+                                    </button>
+                                </div>
+                                <div id="zip-search-loading" style="display: none;" class="small text-primary mt-1">
+                                    <i class="fas fa-spinner fa-spin me-1"></i> กำลังค้นหาข้อมูลตำบล อำเภอ จังหวัด...
+                                </div>
+                            </div>
+                            <div class="col-lg-8 align-self-center">
+                                <div id="zip-search-result-alert" style="display: none; margin-bottom: 0;" class="alert alert-info py-2 px-3">
+                                    <span id="zip-search-result-text"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ซ่อน input เดิมของ Model เพื่อ sync ค่า -->
+                        <input type="hidden" name="district_id" id="district-id-hidden" value="<?= $district_chk ?>">
+                        <input type="hidden" name="city_id" id="city-id-hidden" value="<?= $city_chk ?>">
+                        <input type="hidden" name="province_id" id="province-id-hidden" value="<?= $province_chk ?>">
+                        <input type="hidden" name="cus_address" id="cus-address-hidden" value="<?= Html::encode($model->home_number ?: $x_address) ?>">
+                        <input type="hidden" name="cus_street" id="cus-street-hidden" value="<?= Html::encode($model->street ?: $x_street) ?>">
+
+                        <!-- แถวที่ 1: บ้านเลขที่, ถนน, ซอย -->
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <?= $form->field($model, 'home_number')->textInput(['maxlength' => true, 'id' => 'customer-home_number', 'placeholder' => 'เช่น 123/45']) ?>
+                            </div>
+                            <div class="col-lg-5">
+                                <?= $form->field($model, 'street')->textInput(['maxlength' => true, 'id' => 'customer-street', 'placeholder' => 'เช่น สุขุมวิท']) ?>
+                            </div>
+                            <div class="col-lg-4">
+                                <?= $form->field($model, 'aisle')->textInput(['maxlength' => true, 'id' => 'customer-aisle', 'placeholder' => 'เช่น ซอย 5']) ?>
+                            </div>
+                        </div>
+
+                        <!-- แถวที่ 2: Cascade Dropdown (จังหวัด -> อำเภอ -> ตำบล -> รหัสไปรษณีย์) -->
+                        <div class="row mt-2">
+                            <div class="col-lg-3">
+                                <label class="form-label" style="font-weight: 500;">จังหวัด <span class="text-danger">*</span></label>
+                                <select id="select-province" class="form-control form-select">
+                                    <option value="">-- เลือกจังหวัด --</option>
+                                    <?php foreach ($province_data as $val3): ?>
+                                        <?php
+                                        $selected = ($val3->PROVINCE_ID == $province_chk || trim($val3->PROVINCE_NAME) === trim($model->province_name)) ? 'selected' : '';
+                                        ?>
+                                        <option value="<?= $val3->PROVINCE_ID ?>" <?= $selected ?>><?= trim($val3->PROVINCE_NAME) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?= $form->field($model, 'province_name')->hiddenInput(['id' => 'customer-province_name'])->label(false) ?>
+                            </div>
+
+                            <div class="col-lg-3">
+                                <label class="form-label" style="font-weight: 500;">อำเภอ/เขต <span class="text-danger">*</span></label>
+                                <select id="select-city" class="form-control form-select" <?= empty($city_chk) && empty($model->city_name) ? 'disabled' : '' ?>>
+                                    <option value="">-- เลือกอำเภอ/เขต --</option>
+                                    <?php if (!empty($city_data)): ?>
+                                        <?php foreach ($city_data as $val2): ?>
+                                            <?php
+                                            $selected = ($val2->AMPHUR_ID == $city_chk || trim($val2->AMPHUR_NAME) === trim($model->city_name)) ? 'selected' : '';
+                                            ?>
+                                            <option value="<?= $val2->AMPHUR_ID ?>" data-postcode="<?= trim($val2->POSTCODE) ?>" <?= $selected ?>><?= trim($val2->AMPHUR_NAME) ?></option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                                <?= $form->field($model, 'city_name')->hiddenInput(['id' => 'customer-city_name'])->label(false) ?>
+                            </div>
+
+                            <div class="col-lg-3">
+                                <label class="form-label" style="font-weight: 500;">ตำบล/แขวง <span class="text-danger">*</span></label>
+                                <select id="select-district" class="form-control form-select" <?= empty($district_chk) && empty($model->district_name) ? 'disabled' : '' ?>>
+                                    <option value="">-- เลือกตำบล/แขวง --</option>
+                                    <?php if (!empty($district_data)): ?>
+                                        <?php foreach ($district_data as $val): ?>
+                                            <?php
+                                            $selected = ($val->DISTRICT_ID == $district_chk || trim($val->DISTRICT_NAME) === trim($model->district_name)) ? 'selected' : '';
+                                            ?>
+                                            <option value="<?= $val->DISTRICT_ID ?>" data-zipcode="<?= trim($val->ZIPCODE) ?>" <?= $selected ?>><?= trim($val->DISTRICT_NAME) ?></option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                                <?= $form->field($model, 'district_name')->hiddenInput(['id' => 'customer-district_name'])->label(false) ?>
+                            </div>
+
+                            <div class="col-lg-3">
+                                <label class="form-label" style="font-weight: 500;">รหัสไปรษณีย์ <span class="text-danger">*</span></label>
+                                <?= $form->field($model, 'zipcode')->textInput(['maxlength' => true, 'id' => 'customer-zipcode', 'placeholder' => 'รหัสไปรษณีย์'])->label(false) ?>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-lg-1"></div>
             </div>
-        </div>
-        <div class="row">
             <div class="col-lg-1"></div>
-            <div class="col-lg-10">
-                <div class="row">
-                    <div class="col-lg-3"> <?= $form->field($model, 'zipcode')->textInput(['maxlength' => true]) ?></div>
-                </div>
-                <div class="col-lg-1"></div>
-            </div>
         </div>
-
-
-        <div class="row" style="display: none;">
-        <div class="col-lg-6">
-            <br/>
-            <div class="row">
-                <div class="co-lg-6" style="text-align: center;">
-                    <label for="">ที่อยู่ผู้ขาย</label>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-2"></div>
-                <div class="col-lg-8">
-                    <label for="">ที่อยู่</label>
-                    <input type="text" class="form-control cus-address" id="cus-address"
-                           value="<?= $model->isNewRecord ? '' : $x_address ?>" name="cus_address">
-                </div>
-
-            </div>
-            <div class="row">
-                <div class="col-lg-2"></div>
-                <div class="col-lg-8">
-                    <label for="">ถนน</label>
-                    <input type="text" class="form-control cus-street" id="cus-street"
-                           value="<?= $model->isNewRecord ? '' : $x_street ?>" name="cus_street">
-                </div>
-            </div>
-            <br/>
-            <div class="row">
-                <div class="col-lg-2"></div>
-                <div class="col-lg-8">
-                    <label for="">ตำบล/แขวง</label>
-                    <select name="district_id" class="form-control district-id" id="district"
-                            onchange="">
-                        <option value="0">--ตำบล/แขวง--</option>
-                        <?php foreach ($district_data as $val): ?>
-                            <?php
-                            $selected = '';
-                            if ($val->DISTRICT_ID == $district_chk)
-                                $selected = 'selected';
-//                    ?>
-                            <option value="<?= $val->DISTRICT_ID ?>" <?= $selected ?>><?= $val->DISTRICT_NAME ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-            <br/>
-            <div class="row">
-                <div class="col-lg-2"></div>
-                <div class="col-lg-8">
-                    <label for="">อำเภอ/เขต</label>
-                    <select name="city_id" class="form-control city-id" id="city"
-                            onchange="getDistrict($(this))">
-                        <option value="0">--อำเภอ/เขต--</option>
-                        <?php foreach ($city_data as $val2): ?>
-                            <?php
-                            $selected = '';
-                            if ($val2->AMPHUR_ID == $city_chk)
-                                $selected = 'selected';
-//                    ?>
-                            <option value="<?= $val2->AMPHUR_ID ?>" <?= $selected ?>><?= $val2->AMPHUR_NAME ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-            <br/>
-            <div class="row">
-                <div class="col-lg-2"></div>
-                <div class="col-lg-8">
-                    <label for="">จังหวัด</label>
-                    <select name="province_id" class="form-control province-id" id=""
-                            onchange="getCity($(this))">
-                        <option value="0">--จังหวัด--</option>
-                        <?php foreach ($province_data as $val3): ?>
-                            <?php
-                            $selected = '';
-                            if ($val3->PROVINCE_ID == $province_chk)
-                                $selected = 'selected';
-//                    ?>
-                            <option value="<?= $val3->PROVINCE_ID ?>" <?= $selected ?>><?= $val3->PROVINCE_NAME ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-            <br/>
-            <div class="row">
-                <div class="col-lg-2"></div>
-                <div class="col-lg-8">
-                    <label for="">รหัสไปรษณีย์</label>
-                    <input type="text" class="form-control zipcode" id="zipcode"
-                           value="<?= $model->isNewRecord ? '' : $x_zipcode ?>" name="zipcode" readonly>
-                </div>
-            </div>
-        </div>
-    </div>
     <br />
 
    <div class="row">
@@ -257,38 +268,192 @@ $url_to_getcity = \yii\helpers\Url::to(['vendor/showcity'], true);
 $url_to_getdistrict = \yii\helpers\Url::to(['vendor/showdistrict'], true);
 $url_to_getzipcode = \yii\helpers\Url::to(['vendor/showzipcode'], true);
 $url_to_getAddress = \yii\helpers\Url::to(['vendor/showaddress'], true);
-
+$url_lookup_zipcode = \yii\helpers\Url::to(['vendor/lookup-zipcode'], true);
 
 $js = <<<JS
 $(function () {
-    
+    // 1. จัดการเมื่อเลือกจังหวัด (Cascade Dropdown)
+    $('#select-province').on('change', function() {
+        var provId = $(this).val();
+        var provName = $(this).find('option:selected').text();
+        if (provId) {
+            $('#customer-province_name').val(provName.trim());
+            $('#province-id-hidden').val(provId);
+        } else {
+            $('#customer-province_name').val('');
+            $('#province-id-hidden').val('');
+        }
+
+        // รีเซ็ตอำเภอ ตำบล รหัสไปรษณีย์
+        $('#select-city').html('<option value="">-- กำลังโหลดอำเภอ/เขต... --</option>').prop('disabled', true);
+        $('#select-district').html('<option value="">-- เลือกตำบล/แขวง --</option>').prop('disabled', true);
+        $('#customer-city_name').val('');
+        $('#city-id-hidden').val('');
+        $('#customer-district_name').val('');
+        $('#district-id-hidden').val('');
+        $('#customer-zipcode').val('');
+
+        if (provId) {
+            $.get("{$url_to_getcity}", { id: provId, format: 'json' }, function(data) {
+                var html = '<option value="">-- เลือกอำเภอ/เขต --</option>';
+                if (data && data.length > 0) {
+                    $.each(data, function(i, item) {
+                        html += '<option value="' + item.id + '" data-postcode="' + (item.postcode || '') + '">' + item.name + '</option>';
+                    });
+                    $('#select-city').html(html).prop('disabled', false);
+                } else {
+                    $('#select-city').html('<option value="">- ไม่พบข้อมูลอำเภอ -</option>');
+                }
+            }, 'json');
+        } else {
+            $('#select-city').html('<option value="">-- เลือกอำเภอ/เขต --</option>');
+        }
+    });
+
+    // 2. จัดการเมื่อเลือกอำเภอ (Cascade Dropdown)
+    $('#select-city').on('change', function() {
+        var cityId = $(this).val();
+        var cityName = $(this).find('option:selected').text();
+        var postcode = $(this).find('option:selected').data('postcode') || '';
+
+        if (cityId) {
+            $('#customer-city_name').val(cityName.trim());
+            $('#city-id-hidden').val(cityId);
+        } else {
+            $('#customer-city_name').val('');
+            $('#city-id-hidden').val('');
+        }
+
+        $('#select-district').html('<option value="">-- กำลังโหลดตำบล/แขวง... --</option>').prop('disabled', true);
+        $('#customer-district_name').val('');
+        $('#district-id-hidden').val('');
+        if (postcode) {
+            $('#customer-zipcode').val(postcode);
+        }
+
+        if (cityId) {
+            $.get("{$url_to_getdistrict}", { id: cityId, format: 'json' }, function(data) {
+                var html = '<option value="">-- เลือกตำบล/แขวง --</option>';
+                if (data && data.length > 0) {
+                    $.each(data, function(i, item) {
+                        html += '<option value="' + item.id + '" data-zipcode="' + (item.zipcode || '') + '">' + item.name + '</option>';
+                    });
+                    $('#select-district').html(html).prop('disabled', false);
+                } else {
+                    $('#select-district').html('<option value="">- ไม่พบข้อมูลตำบล -</option>');
+                }
+            }, 'json');
+        } else {
+            $('#select-district').html('<option value="">-- เลือกตำบล/แขวง --</option>');
+        }
+    });
+
+    // 3. จัดการเมื่อเลือกตำบล
+    $('#select-district').on('change', function() {
+        var distId = $(this).val();
+        var distName = $(this).find('option:selected').text();
+        var zipcode = $(this).find('option:selected').data('zipcode') || '';
+
+        if (distId) {
+            $('#customer-district_name').val(distName.trim());
+            $('#district-id-hidden').val(distId);
+            if (zipcode) {
+                $('#customer-zipcode').val(zipcode);
+            }
+        } else {
+            $('#customer-district_name').val('');
+            $('#district-id-hidden').val('');
+        }
+    });
+
+    // 4. ค้นหาด่วนด้วยรหัสไปรษณีย์ (Quick Search by Zipcode)
+    function searchByZipcode(zip) {
+        zip = (zip || '').trim();
+        if (zip.length !== 5) {
+            return;
+        }
+
+        $('#zip-search-loading').show();
+        $('#zip-search-result-alert').hide();
+
+        $.get("{$url_lookup_zipcode}", { zipcode: zip }, function(res) {
+            $('#zip-search-loading').hide();
+            if (res && res.success && res.data && res.data.length > 0) {
+                var first = res.data[0];
+                var count = res.data.length;
+
+                // อัปเดตรหัสไปรษณีย์
+                $('#customer-zipcode').val(zip);
+
+                // ตั้งค่าจังหวัด
+                $('#select-province').val(first.province_id);
+                $('#customer-province_name').val(first.province_name);
+                $('#province-id-hidden').val(first.province_id);
+
+                // โหลดอำเภอของจังหวัดนั้น
+                $.get("{$url_to_getcity}", { id: first.province_id, format: 'json' }, function(cityList) {
+                    var html = '<option value="">-- เลือกอำเภอ/เขต --</option>';
+                    $.each(cityList, function(i, item) {
+                        var sel = (item.id == first.amphur_id) ? 'selected' : '';
+                        html += '<option value="' + item.id + '" data-postcode="' + (item.postcode || '') + '" ' + sel + '>' + item.name + '</option>';
+                    });
+                    $('#select-city').html(html).prop('disabled', false);
+                    $('#customer-city_name').val(first.amphur_name);
+                    $('#city-id-hidden').val(first.amphur_id);
+
+                    // โหลดตำบลของอำเภอนั้น
+                    $.get("{$url_to_getdistrict}", { id: first.amphur_id, format: 'json' }, function(distList) {
+                        var dHtml = '<option value="">-- เลือกตำบล/แขวง --</option>';
+                        $.each(distList, function(i, item) {
+                            var dSel = (item.id == first.district_id) ? 'selected' : '';
+                            dHtml += '<option value="' + item.id + '" data-zipcode="' + (item.zipcode || '') + '" ' + dSel + '>' + item.name + '</option>';
+                        });
+                        $('#select-district').html(dHtml).prop('disabled', false);
+                        $('#customer-district_name').val(first.district_name);
+                        $('#district-id-hidden').val(first.district_id);
+
+                        var msg = '<i class="fas fa-check-circle text-success me-1"></i> พบ ' + count + ' ตำบลในรหัสไปรษณีย์ ' + zip + ' (เลือก: ' + first.district_name + ' / ' + first.amphur_name + ' / ' + first.province_name + ')';
+                        if (count > 1) {
+                            msg += ' <br><small class="text-muted">* มีมากกว่า 1 ตำบล สามารถคลิกเลือกตำบลที่ต้องการได้จากกล่องเลือกตำบล</small>';
+                        }
+                        $('#zip-search-result-text').html(msg);
+                        $('#zip-search-result-alert').removeClass('alert-danger').addClass('alert-success').fadeIn();
+                    }, 'json');
+                }, 'json');
+
+            } else {
+                $('#zip-search-result-text').html('<i class="fas fa-exclamation-triangle text-warning me-1"></i> ไม่พบข้อมูลสำหรับรหัสไปรษณีย์ ' + zip);
+                $('#zip-search-result-alert').removeClass('alert-success').addClass('alert-danger').fadeIn();
+            }
+        }, 'json').fail(function() {
+            $('#zip-search-loading').hide();
+            $('#zip-search-result-text').html('<i class="fas fa-times-circle text-danger me-1"></i> เกิดข้อผิดพลาดในการค้นหา');
+            $('#zip-search-result-alert').removeClass('alert-success').addClass('alert-danger').fadeIn();
+        });
+    }
+
+    $('#btn-quick-search-zip').on('click', function() {
+        searchByZipcode($('#zipcode-quick-search').val());
+    });
+
+    $('#zipcode-quick-search').on('keyup', function(e) {
+        if (e.keyCode === 13) {
+            searchByZipcode($(this).val());
+        } else if ($(this).val().length === 5) {
+            searchByZipcode($(this).val());
+        }
+    });
+
+    // หากพิมพ์รหัสไปรษณีย์ในช่องหลักโดยตรง 5 หลัก ให้ช่วยค้นหาด้วย
+    $('#customer-zipcode').on('blur', function() {
+        var z = $(this).val().trim();
+        if (z.length === 5 && !$('#select-province').val()) {
+            searchByZipcode(z);
+        }
+    });
 });
-function getCity(e){
-    $.post("$url_to_getcity"+"&id="+e.val(),function(data){
-        $("select#city").html(data);
-        $("select#city").prop("disabled","");
-    });
-}
-
-function getDistrict(e){
-    $.post("$url_to_getdistrict"+"&id="+e.val(),function(data){
-                                          $("select#district").html(data);
-                                          $("select#district").prop("disabled","");
-
-                                        });
-                                           $.post("$url_to_getzipcode"+"&id="+e.val(),function(data){
-                                                $("#zipcode").val(data);
-                                              });
-}
-
-function getAddres(e){
-    $.post("$url_to_getAddress"+"&id="+e.val(),function(data){
-        $("#city").html(data);
-        $("select#city").prop("disabled","");
-    });
-}
 JS;
 
-$this->registerJs($js,static::POS_END);
+$this->registerJs($js, static::POS_END);
 ?>
 

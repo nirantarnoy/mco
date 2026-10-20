@@ -115,23 +115,38 @@ class VendorController extends BaseController
                 $province_id = \Yii::$app->request->post('province_id');
                 $zipcode = \Yii::$app->request->post('zipcode');
 
+                // ซิงค์ชื่อตำบล อำเภอ จังหวัด จาก ID หากยังว่าง
+                if (!empty($province_id) && empty($model->province_name)) {
+                    $p = \common\models\Province::findOne($province_id);
+                    if ($p) $model->province_name = trim($p->PROVINCE_NAME);
+                }
+                if (!empty($city_id) && empty($model->city_name)) {
+                    $c = \common\models\Amphur::findOne($city_id);
+                    if ($c) $model->city_name = trim($c->AMPHUR_NAME);
+                }
+                if (!empty($district_id) && empty($model->district_name)) {
+                    $d = \common\models\District::findOne($district_id);
+                    if ($d) $model->district_name = trim($d->DISTRICT_NAME);
+                }
+                if (!empty($zipcode) && empty($model->zipcode)) {
+                    $model->zipcode = trim($zipcode);
+                }
+
                 $party_type_id = 1;
                 $model->code = Vendor::getlastno();
                 $model->vendor_group_id = 0;
                 if($model->save()){
-                    if($address != null || $address != '') {
-
-                            $model_address = new \common\models\AddressInfo();
-                            $model_address->party_id = $model->id;
-                            $model_address->party_type_id = $party_type_id;
-                            $model_address->address = $address;
-                            $model_address->street = $street;
-                            $model_address->district_id = $district_id;
-                            $model_address->city_id = $city_id;
-                            $model_address->province_id = $province_id;
-                            $model_address->zip_code = $zipcode;
-                            $model_address->save(false);
-
+                    if($address != null || $street != null || $district_id != null || $city_id != null || $province_id != null) {
+                        $model_address = new \common\models\AddressInfo();
+                        $model_address->party_id = $model->id;
+                        $model_address->party_type_id = $party_type_id;
+                        $model_address->address = !empty($address) ? $address : $model->home_number;
+                        $model_address->street = !empty($street) ? $street : $model->street;
+                        $model_address->district_id = $district_id;
+                        $model_address->city_id = $city_id;
+                        $model_address->province_id = $province_id;
+                        $model_address->zip_code = !empty($zipcode) ? $zipcode : $model->zipcode;
+                        $model_address->save(false);
                     }
                     return $this->redirect(['view', 'id' => $model->id]);
                 }else{
@@ -186,29 +201,46 @@ class VendorController extends BaseController
             $province_id = \Yii::$app->request->post('province_id');
             $zipcode = \Yii::$app->request->post('zipcode');
 
+            // ซิงค์ชื่อตำบล อำเภอ จังหวัด จาก ID หากยังว่าง
+            if (!empty($province_id) && empty($model->province_name)) {
+                $p = \common\models\Province::findOne($province_id);
+                if ($p) $model->province_name = trim($p->PROVINCE_NAME);
+            }
+            if (!empty($city_id) && empty($model->city_name)) {
+                $c = \common\models\Amphur::findOne($city_id);
+                if ($c) $model->city_name = trim($c->AMPHUR_NAME);
+            }
+            if (!empty($district_id) && empty($model->district_name)) {
+                $d = \common\models\District::findOne($district_id);
+                if ($d) $model->district_name = trim($d->DISTRICT_NAME);
+            }
+            if (!empty($zipcode) && empty($model->zipcode)) {
+                $model->zipcode = trim($zipcode);
+            }
+
             $party_type_id = 1;
 
             if($model->save()){
-                if($address != null || $address != '') {
+                if($address != null || $street != null || $district_id != null || $city_id != null || $province_id != null) {
                   $model_address_check = \common\models\AddressInfo::find()->where(['party_id' => $id,'party_type_id' => $party_type_id])->one();
                   if($model_address_check) {
-                      $model_address_check->address = $address;
-                      $model_address_check->street = $street;
+                      $model_address_check->address = !empty($address) ? $address : $model->home_number;
+                      $model_address_check->street = !empty($street) ? $street : $model->street;
                       $model_address_check->district_id = $district_id;
                       $model_address_check->city_id = $city_id;
                       $model_address_check->province_id = $province_id;
-                      $model_address_check->zip_code = $zipcode;
+                      $model_address_check->zip_code = !empty($zipcode) ? $zipcode : $model->zipcode;
                       $model_address_check->save(false);
                   }else{
                       $model_address = new \common\models\AddressInfo();
                       $model_address->party_id = $id;
                       $model_address->party_type_id = $party_type_id;
-                      $model_address->address = $address;
-                      $model_address->street = $street;
+                      $model_address->address = !empty($address) ? $address : $model->home_number;
+                      $model_address->street = !empty($street) ? $street : $model->street;
                       $model_address->district_id = $district_id;
                       $model_address->city_id = $city_id;
                       $model_address->province_id = $province_id;
-                      $model_address->zip_code = $zipcode;
+                      $model_address->zip_code = !empty($zipcode) ? $zipcode : $model->zipcode;
                       $model_address->save(false);
                   }
                 }
@@ -303,50 +335,130 @@ class VendorController extends BaseController
         throw new NotFoundHttpException('The requested page does not exist.');
     }
 
-    public
-    function actionShowcity($id)
+    public function actionShowcity($id)
     {
-        $model = \common\models\Amphur::find()->where(['PROVINCE_ID' => $id])->all();
+        $id = (int)$id;
+        $models = \common\models\Amphur::find()->where(['PROVINCE_ID' => $id])->orderBy(['AMPHUR_NAME' => SORT_ASC])->all();
 
-        if (count($model) > 0) {
-            echo "<option>--- เลือกอำเภอ ---</option>";
-            foreach ($model as $value) {
+        if (\Yii::$app->request->isAjax && \Yii::$app->request->get('format') === 'json') {
+            \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            $items = [];
+            foreach ($models as $val) {
+                $items[] = [
+                    'id' => $val->AMPHUR_ID,
+                    'name' => trim($val->AMPHUR_NAME),
+                    'postcode' => trim($val->POSTCODE)
+                ];
+            }
+            return $items;
+        }
 
-                echo "<option value='" . $value->AMPHUR_ID . "'>$value->AMPHUR_NAME</option>";
-
+        if (count($models) > 0) {
+            echo "<option value=''>--- เลือกอำเภอ/เขต ---</option>";
+            foreach ($models as $value) {
+                echo "<option value='" . $value->AMPHUR_ID . "'>" . Html::encode(trim($value->AMPHUR_NAME)) . "</option>";
             }
         } else {
-            echo "<option>-</option>";
+            echo "<option value=''>-</option>";
         }
     }
 
-    public
-    function actionShowdistrict($id)
+    public function actionShowdistrict($id)
     {
-        $model = \common\models\District::find()->where(['AMPHUR_ID' => $id])->all();
+        $id = (int)$id;
+        $models = \common\models\District::find()->where(['AMPHUR_ID' => $id])->orderBy(['DISTRICT_NAME' => SORT_ASC])->all();
 
-        if (count($model) > 0) {
-            foreach ($model as $value) {
+        if (\Yii::$app->request->isAjax && \Yii::$app->request->get('format') === 'json') {
+            \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            $items = [];
+            foreach ($models as $val) {
+                $items[] = [
+                    'id' => $val->DISTRICT_ID,
+                    'name' => trim($val->DISTRICT_NAME),
+                    'zipcode' => trim($val->ZIPCODE)
+                ];
+            }
+            return $items;
+        }
 
-                echo "<option value='" . $value->DISTRICT_ID . "'>$value->DISTRICT_NAME</option>";
-
+        if (count($models) > 0) {
+            echo "<option value=''>--- เลือกตำบล/แขวง ---</option>";
+            foreach ($models as $value) {
+                echo "<option value='" . $value->DISTRICT_ID . "' data-zipcode='" . Html::encode(trim($value->ZIPCODE)) . "'>" . Html::encode(trim($value->DISTRICT_NAME)) . "</option>";
             }
         } else {
-            echo "<option>-</option>";
+            echo "<option value=''>-</option>";
         }
     }
 
     public function actionShowzipcode($id)
     {
+        $id = (int)$id;
+        // ค้นหาจาก district ก่อน (ระดับตำบล) หากไม่มีค่อยดูที่ amphur
+        $dist = \common\models\District::find()->where(['DISTRICT_ID' => $id])->one();
+        if ($dist && !empty($dist->ZIPCODE)) {
+            echo trim($dist->ZIPCODE);
+            return;
+        }
+
         $model = \common\models\Amphur::find()->where(['AMPHUR_ID' => $id])->one();
-//        echo $id;
-        if ($model) {
-            echo $model->POSTCODE;
-//            echo '1110';
+        if ($model && !empty($model->POSTCODE)) {
+            echo trim($model->POSTCODE);
         } else {
             echo "";
         }
-//        echo '111';
+    }
+
+    /**
+     * ค้นหาข้อมูล จังหวัด อำเภอ ตำบล จากรหัสไปรษณีย์
+     */
+    public function actionLookupZipcode($zipcode)
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        $zipcode = trim($zipcode);
+        if (empty($zipcode) || strlen($zipcode) < 5) {
+            return ['success' => false, 'data' => []];
+        }
+
+        $districts = \common\models\District::find()
+            ->where(['ZIPCODE' => $zipcode])
+            ->all();
+
+        // กรณีไม่พบใน district ให้ลองค้นหาจาก amphur
+        if (empty($districts)) {
+            $amphurs = \common\models\Amphur::find()->where(['POSTCODE' => $zipcode])->all();
+            if (!empty($amphurs)) {
+                $amphur_ids = \yii\helpers\ArrayHelper::getColumn($amphurs, 'AMPHUR_ID');
+                $districts = \common\models\District::find()->where(['AMPHUR_ID' => $amphur_ids])->all();
+            }
+        }
+
+        $result = [];
+        $seen = [];
+        foreach ($districts as $d) {
+            $amphur = \common\models\Amphur::find()->where(['AMPHUR_ID' => $d->AMPHUR_ID])->one();
+            $province = \common\models\Province::find()->where(['PROVINCE_ID' => $d->PROVINCE_ID])->one();
+
+            $key = $d->DISTRICT_ID;
+            if (!isset($seen[$key])) {
+                $seen[$key] = true;
+                $result[] = [
+                    'district_id' => $d->DISTRICT_ID,
+                    'district_name' => trim($d->DISTRICT_NAME),
+                    'amphur_id' => $amphur ? $amphur->AMPHUR_ID : $d->AMPHUR_ID,
+                    'amphur_name' => $amphur ? trim($amphur->AMPHUR_NAME) : '',
+                    'province_id' => $province ? $province->PROVINCE_ID : $d->PROVINCE_ID,
+                    'province_name' => $province ? trim($province->PROVINCE_NAME) : '',
+                    'zipcode' => !empty($d->ZIPCODE) ? trim($d->ZIPCODE) : ($amphur ? trim($amphur->POSTCODE) : $zipcode),
+                ];
+            }
+        }
+
+        return [
+            'success' => count($result) > 0,
+            'count' => count($result),
+            'data' => $result
+        ];
     }
 
     public function actionImportvendor()

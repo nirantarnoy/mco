@@ -10,6 +10,7 @@ use Yii;
  * @property int $DISTRICT_ID
  * @property string $DISTRICT_CODE
  * @property string $DISTRICT_NAME
+ * @property string|null $ZIPCODE
  * @property int $AMPHUR_ID
  * @property int $PROVINCE_ID
  * @property int $GEO_ID
@@ -34,6 +35,7 @@ class District extends \yii\db\ActiveRecord
             [['AMPHUR_ID', 'PROVINCE_ID', 'GEO_ID'], 'integer'],
             [['DISTRICT_CODE'], 'string', 'max' => 6],
             [['DISTRICT_NAME'], 'string', 'max' => 150],
+            [['ZIPCODE'], 'string', 'max' => 5],
         ];
     }
 
@@ -46,6 +48,7 @@ class District extends \yii\db\ActiveRecord
             'DISTRICT_ID' => 'District ID',
             'DISTRICT_CODE' => 'District Code',
             'DISTRICT_NAME' => 'District Name',
+            'ZIPCODE' => 'Zipcode',
             'AMPHUR_ID' => 'Amphur ID',
             'PROVINCE_ID' => 'Province ID',
             'GEO_ID' => 'Geo ID',

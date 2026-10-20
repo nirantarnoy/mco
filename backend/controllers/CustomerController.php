@@ -91,23 +91,38 @@ class CustomerController extends BaseController
                 $province_id = \Yii::$app->request->post('province_id');
                 $zipcode = \Yii::$app->request->post('zipcode');
 
+                // ซิงค์ชื่อตำบล อำเภอ จังหวัด จาก ID หากยังว่าง
+                if (!empty($province_id) && empty($model->province_name)) {
+                    $p = \common\models\Province::findOne($province_id);
+                    if ($p) $model->province_name = trim($p->PROVINCE_NAME);
+                }
+                if (!empty($city_id) && empty($model->city_name)) {
+                    $c = \common\models\Amphur::findOne($city_id);
+                    if ($c) $model->city_name = trim($c->AMPHUR_NAME);
+                }
+                if (!empty($district_id) && empty($model->district_name)) {
+                    $d = \common\models\District::findOne($district_id);
+                    if ($d) $model->district_name = trim($d->DISTRICT_NAME);
+                }
+                if (!empty($zipcode) && empty($model->zipcode)) {
+                    $model->zipcode = trim($zipcode);
+                }
+
                 $party_type_id = 2;
                 $model->code = Customer::getlastno();
 
                 if($model->save(false)){
-                    if($address != null || $address != '') {
-
-                            $model_address = new \common\models\AddressInfo();
-                            $model_address->party_id = $model->id;
-                            $model_address->party_type_id = $party_type_id;
-                            $model_address->address = $address;
-                            $model_address->street = $street;
-                            $model_address->district_id = $district_id;
-                            $model_address->city_id = $city_id;
-                            $model_address->province_id = $province_id;
-                            $model_address->zip_code = $zipcode;
-                            $model_address->save(false);
-
+                    if($address != null || $street != null || $district_id != null || $city_id != null || $province_id != null) {
+                        $model_address = new \common\models\AddressInfo();
+                        $model_address->party_id = $model->id;
+                        $model_address->party_type_id = $party_type_id;
+                        $model_address->address = !empty($address) ? $address : $model->home_number;
+                        $model_address->street = !empty($street) ? $street : $model->street;
+                        $model_address->district_id = $district_id;
+                        $model_address->city_id = $city_id;
+                        $model_address->province_id = $province_id;
+                        $model_address->zip_code = !empty($zipcode) ? $zipcode : $model->zipcode;
+                        $model_address->save(false);
                     }
                     return $this->redirect(['view', 'id' => $model->id]);
                 }
@@ -141,29 +156,46 @@ class CustomerController extends BaseController
             $province_id = \Yii::$app->request->post('province_id');
             $zipcode = \Yii::$app->request->post('zipcode');
 
+            // ซิงค์ชื่อตำบล อำเภอ จังหวัด จาก ID หากยังว่าง
+            if (!empty($province_id) && empty($model->province_name)) {
+                $p = \common\models\Province::findOne($province_id);
+                if ($p) $model->province_name = trim($p->PROVINCE_NAME);
+            }
+            if (!empty($city_id) && empty($model->city_name)) {
+                $c = \common\models\Amphur::findOne($city_id);
+                if ($c) $model->city_name = trim($c->AMPHUR_NAME);
+            }
+            if (!empty($district_id) && empty($model->district_name)) {
+                $d = \common\models\District::findOne($district_id);
+                if ($d) $model->district_name = trim($d->DISTRICT_NAME);
+            }
+            if (!empty($zipcode) && empty($model->zipcode)) {
+                $model->zipcode = trim($zipcode);
+            }
+
             $party_type_id = 2;
 
             if($model->save(false)){
-                if($address != null || $address != '') {
+                if($address != null || $street != null || $district_id != null || $city_id != null || $province_id != null) {
                     $model_address_check = \common\models\AddressInfo::find()->where(['party_id' => $id,'party_type_id' => $party_type_id])->one();
                     if($model_address_check) {
-                        $model_address_check->address = $address;
-                        $model_address_check->street = $street;
+                        $model_address_check->address = !empty($address) ? $address : $model->home_number;
+                        $model_address_check->street = !empty($street) ? $street : $model->street;
                         $model_address_check->district_id = $district_id;
                         $model_address_check->city_id = $city_id;
                         $model_address_check->province_id = $province_id;
-                        $model_address_check->zip_code = $zipcode;
+                        $model_address_check->zip_code = !empty($zipcode) ? $zipcode : $model->zipcode;
                         $model_address_check->save(false);
                     }else{
                         $model_address = new \common\models\AddressInfo();
                         $model_address->party_id = $id;
                         $model_address->party_type_id = $party_type_id;
-                        $model_address->address = $address;
-                        $model_address->street = $street;
+                        $model_address->address = !empty($address) ? $address : $model->home_number;
+                        $model_address->street = !empty($street) ? $street : $model->street;
                         $model_address->district_id = $district_id;
                         $model_address->city_id = $city_id;
                         $model_address->province_id = $province_id;
-                        $model_address->zip_code = $zipcode;
+                        $model_address->zip_code = !empty($zipcode) ? $zipcode : $model->zipcode;
                         $model_address->save(false);
                     }
                 }

@@ -920,12 +920,20 @@ $this->registerJs($autocompleteJs);
 
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <?php if ($model->status != 3 || $model->isNewRecord || \Yii::$app->user->can('purch/approve')): ?>
+                <?php 
+                $currentUser = !Yii::$app->user->isGuest ? Yii::$app->user->identity->username : '';
+                $isApprovedPO = ($model->approve_status == \backend\models\Purch::APPROVE_STATUS_APPROVED && !$model->isNewRecord && $currentUser !== 'mcoadmin');
+                ?>
+                <?php if ($isApprovedPO): ?>
+                    <div class="alert alert-warning mb-0 py-2 px-3 d-inline-block">
+                        <i class="fas fa-lock me-1"></i> <strong>ใบสั่งซื้อนี้ได้รับการอนุมัติแล้ว:</strong> ไม่สามารถแก้ไขรายละเอียดได้ แต่สามารถแนบไฟล์เอกสารเพิ่มเติมได้ที่ส่วนด้านล่าง
+                    </div>
+                <?php elseif ($model->status != 3 || $model->isNewRecord || \Yii::$app->user->can('purch/approve')): ?>
                     <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
                         'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
                     ]) ?>
                 <?php endif; ?>
-                <?php if (!$model->isNewRecord): ?>
+                <?php if (!$model->isNewRecord && !$isApprovedPO): ?>
                     <label class="ml-3" style="margin-left: 20px; cursor: pointer;">
                         <input type="checkbox" name="save_revise" value="1" style="transform: scale(1.5); margin-right: 5px;">
                         <b>บันทึกเป็น Revise เพื่อเก็บประวัติ (เพิ่มครั้งที่แก้ไข)</b>

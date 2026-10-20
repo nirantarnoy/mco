@@ -58,6 +58,9 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                 <?php if (\Yii::$app->user->can('purch/update') && $model->approve_status != Purch::APPROVE_STATUS_APPROVED): ?>
                     <?= Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
                 <?php endif; ?>
+                <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#upload-doc-modal" data-bs-toggle="modal" data-bs-target="#upload-doc-modal">
+                    <i class="fas fa-paperclip"></i> แนบไฟล์เพิ่มเติม
+                </button>
 
                 <?php if (\Yii::$app->user->can('purch/print')): ?>
                     <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
@@ -549,17 +552,20 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
 
     <div class="row">
         <div class="col-lg-6">
-            <div class="label">
-                <h4>เอกสารแนบ</h4>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h4 class="mb-0">เอกสารแนบ</h4>
+                <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#upload-doc-modal" data-bs-toggle="modal" data-bs-target="#upload-doc-modal">
+                    <i class="fas fa-paperclip"></i> แนบไฟล์เพิ่มเติม
+                </button>
             </div>
             <table class="table table-bordered table-striped" style="width: 100%">
                 <thead>
                 <tr>
                     <th style="width: 5%;text-align: center">#</th>
-                    <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
-                    <th style="width: 20%;text-align: center">ประเภท</th>
-                    <th style="width: 20%;text-align: center">ดูเอกสาร</th>
-                    <th style="width: 5%;text-align: center">-</th>
+                    <th style="width: 45%;text-align: center">ชื่อไฟล์</th>
+                    <th style="width: 25%;text-align: center">ประเภท</th>
+                    <th style="width: 15%;text-align: center">ดูเอกสาร</th>
+                    <th style="width: 10%;text-align: center">ลบ</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -573,22 +579,29 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                             <td style="text-align: center">
                                 <a href="<?= Yii::$app->request->baseUrl . '/uploads/purch_doc/' . $value->doc_name ?>"
                                    target="_blank" class="btn btn-outline-info btn-sm">
-                                    <i class="fas fa-search"></i> ดูเอกสาร
+                                    <i class="fas fa-search"></i> ดู
                                 </a>
                             </td>
                             <td style="text-align: center">
-                                <!--                                <div class="btn btn-danger" data-var="-->
-                                <?php //= trim($value->doc_name) ?><!--" onclick="delete_doc($(this))">ลบ</div>-->
+                                <button type="button" class="btn btn-outline-danger btn-sm" data-value="<?= $model->id ?>"
+                                     data-var="<?= trim($value->doc_name) ?>"
+                                     onclick="delete_doc_view($(this))">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </td>
                         </tr>
                     <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">ไม่มีเอกสารแนบ</td>
+                    </tr>
                 <?php endif; ?>
                 </tbody>
             </table>
         </div>
         <div class="col-lg-6">
-            <div class="label">
-                <h4>เอกสารแนบใบรับสินค้า</h4>
+            <div class="label mb-2">
+                <h4 class="mb-0">เอกสารแนบใบรับสินค้า</h4>
             </div>
             <table class="table table-bordered table-striped" style="width: 100%">
                 <thead>
@@ -619,6 +632,10 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                             </td>
                         </tr>
                     <?php endfor; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">ไม่มีเอกสารแนบใบรับสินค้า</td>
+                    </tr>
                 <?php endif; ?>
                 </tbody>
             </table>
@@ -1081,6 +1098,58 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
 <?php
     Modal::end();
 ?>
+
+    <!-- Modal สำหรับ แนบไฟล์เพิ่มเติม -->
+<?php
+    Modal::begin([
+        'id' => 'upload-doc-modal',
+        'title' => '<h4><i class="fas fa-paperclip text-primary"></i> แนบเอกสารเพิ่มเติม</h4>',
+        'size' => Modal::SIZE_DEFAULT,
+        'options' => ['tabindex' => false],
+        'closeButton' => [
+            'class' => 'btn-close',
+            'data-bs-dismiss' => 'modal',
+            'aria-label' => 'Close',
+        ],
+    ]);
+?>
+    <form action="<?= Url::to(['purch/add-doc-file-new'], true) ?>" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
+        <input type="hidden" name="id" value="<?= $model->id ?>">
+        <input type="hidden" name="redirect_to" value="view">
+        <div class="modal-body">
+            <div class="form-group mb-3">
+                <label class="form-label fw-bold">ประเภทเอกสารแนบ <span class="text-danger">*</span></label>
+                <select name="doc_type_id" class="form-control" required>
+                    <option value="1">Po Acknowledge (ใบตอบรับ)</option>
+                    <option value="4">ใบแจ้งหนี้ / ใบวางบิล</option>
+                    <option value="2">ใบกำกับภาษี</option>
+                    <option value="5">ใบเสร็จรับเงิน</option>
+                    <option value="3">เอกสารจ่ายเงิน</option>
+                </select>
+            </div>
+            <div class="form-group mb-3">
+                <label class="form-label fw-bold">เลือกไฟล์เอกสาร <span class="text-danger">*</span></label>
+                <input type="file" name="file_doc[]" class="form-control" multiple required>
+                <small class="text-muted">สามารถเลือกได้หลายไฟล์พร้อมกัน (PDF, รูปภาพ, เอกสารอื่นๆ)</small>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">ยกเลิก</button>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> อัพโหลดไฟล์</button>
+        </div>
+    </form>
+<?php
+    Modal::end();
+?>
+
+    <form id="form-delete-doc-view" action="<?= Url::to(['purch/delete-doc-file'], true) ?>" method="post">
+        <input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
+        <input type="hidden" name="id" value="<?= $model->id ?>">
+        <input type="hidden" name="redirect_to" value="view">
+        <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
+    </form>
+
     <style>
         .card {
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
@@ -1205,3 +1274,16 @@ $this->registerJs(<<<JS
 JS
 );
 ?>
+
+<script>
+function delete_doc_view(e) {
+    var fileName = e.attr('data-var');
+    var id = e.attr('data-value');
+    if (id > 0 && fileName && confirm('ต้องการลบไฟล์แนบ "' + fileName + '" ใช่หรือไม่?')) {
+        var form = $('#form-delete-doc-view');
+        form.find('.delete-doc-list').val(fileName);
+        form.submit();
+    }
+}
+</script>
+

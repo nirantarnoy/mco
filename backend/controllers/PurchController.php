@@ -469,6 +469,11 @@ class PurchController extends BaseController
 
 
         if ($model->load(Yii::$app->request->post())) {
+            $currentUser = !Yii::$app->user->isGuest ? Yii::$app->user->identity->username : '';
+            if ($model->approve_status == Purch::APPROVE_STATUS_APPROVED && $currentUser !== 'mcoadmin') {
+                Yii::$app->session->setFlash('error', 'ใบสั่งซื้อนี้ได้รับการอนุมัติแล้ว ไม่อนุญาตให้แก้ไขรายละเอียดข้อมูล');
+                return $this->redirect(['view', 'id' => $model->id]);
+            }
 
             $custom_vat_amount = \Yii::$app->request->post('purch_vat_amount');
             $customer_tax_amount = \Yii::$app->request->post('purch_tax_amount');
@@ -1942,6 +1947,7 @@ class PurchController extends BaseController
     public function actionAddDocFile()
     {
         $id = \Yii::$app->request->post('id');
+        $redirect_to = \Yii::$app->request->post('redirect_to', 'update');
         if ($id) {
             $uploaded = UploadedFile::getInstancesByName('file_doc');
             
@@ -1969,6 +1975,9 @@ class PurchController extends BaseController
             }
 
         }
+        if ($redirect_to === 'view') {
+            return $this->redirect(['view', 'id' => $id]);
+        }
         return $this->redirect(['update', 'id' => $id]);
     }
 
@@ -1976,6 +1985,7 @@ class PurchController extends BaseController
     {
         $id = \Yii::$app->request->post('id');
         $doc_delete_list = trim(\Yii::$app->request->post('doc_delete_list'));
+        $redirect_to = \Yii::$app->request->post('redirect_to', 'update');
         if ($id) {
             $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $id, 'doc_name' => trim($doc_delete_list)])->one();
             if ($model_doc) {
@@ -1984,6 +1994,9 @@ class PurchController extends BaseController
                         unlink('uploads/purch_doc/' . $model_doc->doc_name);
                     }
                 }
+            }
+            if ($redirect_to === 'view') {
+                return $this->redirect(['view', 'id' => $id]);
             }
             return $this->redirect(['update', 'id' => $id]);
         }
@@ -1995,6 +2008,7 @@ class PurchController extends BaseController
         // upload
         $id = \Yii::$app->request->post('id');
         $doc_type_id = \Yii::$app->request->post('doc_type_id', 3);
+        $redirect_to = \Yii::$app->request->post('redirect_to', 'update');
         $uploaded = UploadedFile::getInstancesByName('file_doc');
         $uploaded1 = [];
         $uploaded2 = [];
@@ -2057,6 +2071,9 @@ class PurchController extends BaseController
                     $loop++;
                 }
             }
+        }
+        if ($redirect_to === 'view') {
+            return $this->redirect(['view', 'id' => $id]);
         }
         return $this->redirect(['update', 'id' => $id]);
 
