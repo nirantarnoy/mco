@@ -422,12 +422,21 @@ $(function () {
                 }, 'json');
 
             } else {
-                $('#zip-search-result-text').html('<i class="fas fa-exclamation-triangle text-warning me-1"></i> ไม่พบข้อมูลสำหรับรหัสไปรษณีย์ ' + zip);
+                var errTxt = (res && res.message) ? res.message : ('ไม่พบข้อมูลสำหรับรหัสไปรษณีย์ ' + zip);
+                $('#zip-search-result-text').html('<i class="fas fa-exclamation-triangle text-warning me-1"></i> ' + errTxt);
                 $('#zip-search-result-alert').removeClass('alert-success').addClass('alert-danger').fadeIn();
             }
-        }, 'json').fail(function() {
+        }, 'json').fail(function(xhr) {
             $('#zip-search-loading').hide();
-            $('#zip-search-result-text').html('<i class="fas fa-times-circle text-danger me-1"></i> เกิดข้อผิดพลาดในการค้นหา');
+            var errDetail = '';
+            if (xhr.status === 403) {
+                errDetail = ' (ไม่มีสิทธิ์เข้าถึง - 403 Forbidden)';
+            } else if (xhr.status === 404) {
+                errDetail = ' (ไม่พบ URL - 404 Not Found)';
+            } else if (xhr.status === 500) {
+                errDetail = ' (Server Error 500)';
+            }
+            $('#zip-search-result-text').html('<i class="fas fa-times-circle text-danger me-1"></i> เกิดข้อผิดพลาดในการค้นหา' + errDetail);
             $('#zip-search-result-alert').removeClass('alert-success').addClass('alert-danger').fadeIn();
         });
     }

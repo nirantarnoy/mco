@@ -412,53 +412,71 @@ class VendorController extends BaseController
     /**
      * ค้นหาข้อมูล จังหวัด อำเภอ ตำบล จากรหัสไปรษณีย์
      */
-    public function actionLookupZipcode($zipcode)
+    public function actionLookupZipcode($zipcode = null)
     {
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-        $zipcode = trim($zipcode);
-        if (empty($zipcode) || strlen($zipcode) < 5) {
-            return ['success' => false, 'data' => []];
-        }
-
-        $districts = \common\models\District::find()
-            ->where(['ZIPCODE' => $zipcode])
-            ->all();
-
-        // กรณีไม่พบใน district ให้ลองค้นหาจาก amphur
-        if (empty($districts)) {
-            $amphurs = \common\models\Amphur::find()->where(['POSTCODE' => $zipcode])->all();
-            if (!empty($amphurs)) {
-                $amphur_ids = \yii\helpers\ArrayHelper::getColumn($amphurs, 'AMPHUR_ID');
-                $districts = \common\models\District::find()->where(['AMPHUR_ID' => $amphur_ids])->all();
+        try {
+            if ($zipcode === null) {
+                $zipcode = \Yii::$app->request->get('zipcode');
             }
-        }
-
-        $result = [];
-        $seen = [];
-        foreach ($districts as $d) {
-            $amphur = \common\models\Amphur::find()->where(['AMPHUR_ID' => $d->AMPHUR_ID])->one();
-            $province = \common\models\Province::find()->where(['PROVINCE_ID' => $d->PROVINCE_ID])->one();
-
-            $key = $d->DISTRICT_ID;
-            if (!isset($seen[$key])) {
-                $seen[$key] = true;
-                $result[] = [
-                    'district_id' => $d->DISTRICT_ID,
-                    'district_name' => trim($d->DISTRICT_NAME),
-                    'amphur_id' => $amphur ? $amphur->AMPHUR_ID : $d->AMPHUR_ID,
-                    'amphur_name' => $amphur ? trim($amphur->AMPHUR_NAME) : '',
-                    'province_id' => $province ? $province->PROVINCE_ID : $d->PROVINCE_ID,
-                    'province_name' => $province ? trim($province->PROVINCE_NAME) : '',
-                    'zipcode' => !empty($d->ZIPCODE) ? trim($d->ZIPCODE) : ($amphur ? trim($amphur->POSTCODE) : $zipcode),
-                ];
+            $zipcode = trim((string)$zipcode);
+            if (empty($zipcode) || strlen($zipcode) < 5) {
+                return ['success' => false, 'data' => [], 'message' => 'รหัสไปรษณีย์ต้องมีอย่างน้อย 5 หลัก'];
             }
-        }
 
-        return [
-            'success' => count($result) > 0,
-            'count' => count($result),
-            'data' => $result
-        ];
+            // ตรวจสอบว่าตาราง district มีคอลัมน์ ZIPCODE หรือไม่
+            $districts = [];
+            try {
+                $districts = \common\models\District::find()
+                    ->where(['ZIPCODE' => $zipcode])
+                    ->all();
+            } catch (\Exception $e) {
+                // หากยังไม่มีคอลัมน์ ZIPCODE ใน district
+                $districts = [];
+            }
+
+            // กรณีไม่พบใน district ให้ลองค้นหาจาก amphur
+            if (empty($districts)) {
+                $amphurs = \common\models\Amphur::find()->where(['POSTCODE' => $zipcode])->all();
+                if (!empty($amphurs)) {
+                    $amphur_ids = \yii\helpers\ArrayHelper::getColumn($amphurs, 'AMPHUR_ID');
+                    $districts = \common\models\District::find()->where(['AMPHUR_ID' => $amphur_ids])->all();
+                }
+            }
+
+            $result = [];
+            $seen = [];
+            foreach ($districts as $d) {
+                $amphur = \common\models\Amphur::find()->where(['AMPHUR_ID' => $d->AMPHUR_ID])->one();
+                $province = \common\models\Province::find()->where(['PROVINCE_ID' => $d->PROVINCE_ID])->one();
+
+                $key = $d->DISTRICT_ID;
+                if (!isset($seen[$key])) {
+                    $seen[$key] = true;
+                    $result[] = [
+                        'district_id' => $d->DISTRICT_ID,
+                        'district_name' => trim($d->DISTRICT_NAME),
+                        'amphur_id' => $amphur ? $amphur->AMPHUR_ID : $d->AMPHUR_ID,
+                        'amphur_name' => $amphur ? trim($amphur->AMPHUR_NAME) : '',
+                        'province_id' => $province ? $province->PROVINCE_ID : $d->PROVINCE_ID,
+                        'province_name' => $province ? trim($province->PROVINCE_NAME) : '',
+                        'zipcode' => (!empty($d->ZIPCODE) ? trim($d->ZIPCODE) : ($amphur ? trim($amphur->POSTCODE) : $zipcode)),
+                    ];
+                }
+            }
+
+            return [
+                'success' => count($result) > 0,
+                'count' => count($result),
+                'data' => $result
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => []
+            ];
+        }
     }
 
     public function actionImportvendor()

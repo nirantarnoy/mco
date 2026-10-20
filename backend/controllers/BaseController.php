@@ -18,6 +18,11 @@ class BaseController extends Controller
              return parent::beforeAction($action);
         }
 
+        // อนุโลม action ช่วยดึงข้อมูลที่อยู่ / รหัสไปรษณีย์
+        if (in_array($action->id, ['lookup-zipcode', 'lookupzipcode', 'showcity', 'showdistrict', 'showzipcode', 'showaddress'])) {
+            return parent::beforeAction($action);
+        }
+
         // 2. ตรวจสอบ Session และการล็อกอินพื้นฐาน
         if (!$this->isSessionValid()) {
             Yii::$app->user->logout();
