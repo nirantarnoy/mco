@@ -775,10 +775,10 @@ $(document).ready(function() {
     var isApproved = {$isApproved};
     if (isApproved) {
         // Make inputs readonly (except file inputs and hidden inputs)
-        $('#w0 input:not([type="file"]):not([type="hidden"]), #w0 textarea').prop('readonly', true).css('background-color', '#e9ecef');
+        $('#petty-cash-form input:not([type="file"]):not([type="hidden"]), #petty-cash-form textarea').prop('readonly', true).css('background-color', '#e9ecef');
         
         // Prevent interacting with selects
-        $('#w0 select').css({
+        $('#petty-cash-form select').css({
             'pointer-events': 'none',
             'background-color': '#e9ecef',
             'touch-action': 'none'
@@ -787,8 +787,8 @@ $(document).ready(function() {
         $('.select2-container').css('pointer-events', 'none');
         
         // Hide add / remove detail buttons
-        $('#add-row, .btn-remove-row, .btn-danger:contains("ลบ")').filter(function() {
-            return $(this).closest('#w0').length > 0;
+        $('#add-row, .btn-add-row, .btn-remove-row, .btn-danger:contains("ลบ")').filter(function() {
+            return $(this).closest('#petty-cash-form').length > 0;
         }).hide();
     }
 });

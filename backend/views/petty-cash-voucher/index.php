@@ -40,6 +40,13 @@ $this->params['breadcrumbs'][] = $this->title;
                         'attribute' => 'pcv_no',
                         'headerOptions' => ['width' => '150px'],
                         'contentOptions' => ['class' => 'text-center'],
+                        'format' => 'raw',
+                        'value' => function ($model) {
+                            return Html::a($model->pcv_no, ['view', 'id' => $model->id], [
+                                'class' => 'btn-link font-weight-bold',
+                                'data-pjax' => '0',
+                            ]);
+                        }
                     ],
                     [
                         'attribute' => 'date',
