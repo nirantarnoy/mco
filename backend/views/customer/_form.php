@@ -145,29 +145,10 @@ if($model->isNewRecord) {
                         <h5 class="card-title mb-0" style="color: #0056b3; font-weight: bold;">
                             <i class="fas fa-map-marker-alt me-2"></i> ข้อมูลที่อยู่ลูกค้า (Address Information)
                         </h5>
-                        <small class="text-muted"><i class="fas fa-info-circle me-1"></i> กรอกรหัสไปรษณีย์เพื่อค้นหาอัตโนมัติ หรือเลือกจังหวัด/อำเภอ/ตำบล</small>
+                        <small class="text-muted"><i class="fas fa-info-circle me-1"></i> เลือกจังหวัด / อำเภอ / ตำบล</small>
                     </div>
                     <div class="card-body" style="padding: 20px;">
-                        <!-- ช่องค้นหาด่วนด้วยรหัสไปรษณีย์ -->
-                        <div class="row mb-3" style="background-color: #f8f9fa; border: 1px dashed #ced4da; border-radius: 6px; padding: 12px 5px; margin: 0 2px 15px 2px;">
-                            <div class="col-lg-4">
-                                <label class="form-label text-primary" style="font-weight: 600;"><i class="fas fa-bolt text-warning me-1"></i> ค้นหาด่วนด้วยรหัสไปรษณีย์ (Zipcode Quick Search)</label>
-                                <div class="input-group">
-                                    <input type="text" id="zipcode-quick-search" class="form-control" placeholder="พิมพ์รหัสไปรษณีย์ 5 หลัก เช่น 10200, 20150" maxlength="5">
-                                    <button class="btn btn-primary" type="button" id="btn-quick-search-zip">
-                                        <i class="fas fa-search me-1"></i> ค้นหา
-                                    </button>
-                                </div>
-                                <div id="zip-search-loading" style="display: none;" class="small text-primary mt-1">
-                                    <i class="fas fa-spinner fa-spin me-1"></i> กำลังค้นหาข้อมูลตำบล อำเภอ จังหวัด...
-                                </div>
-                            </div>
-                            <div class="col-lg-8 align-self-center">
-                                <div id="zip-search-result-alert" style="display: none; margin-bottom: 0;" class="alert alert-info py-2 px-3">
-                                    <span id="zip-search-result-text"></span>
-                                </div>
-                            </div>
-                        </div>
+
 
                         <!-- ซ่อน input เดิมของ Model เพื่อ sync ค่า -->
                         <input type="hidden" name="district_id" id="district-id-hidden" value="<?= $district_chk ?>">
@@ -363,101 +344,6 @@ $(function () {
         } else {
             $('#customer-district_name').val('');
             $('#district-id-hidden').val('');
-        }
-    });
-
-    // 4. ค้นหาด่วนด้วยรหัสไปรษณีย์ (Quick Search by Zipcode)
-    function searchByZipcode(zip) {
-        zip = (zip || '').trim();
-        if (zip.length !== 5) {
-            return;
-        }
-
-        $('#zip-search-loading').show();
-        $('#zip-search-result-alert').hide();
-
-        $.get("{$url_lookup_zipcode}", { zipcode: zip }, function(res) {
-            $('#zip-search-loading').hide();
-            if (res && res.success && res.data && res.data.length > 0) {
-                var first = res.data[0];
-                var count = res.data.length;
-
-                // อัปเดตรหัสไปรษณีย์
-                $('#customer-zipcode').val(zip);
-
-                // ตั้งค่าจังหวัด
-                $('#select-province').val(first.province_id);
-                $('#customer-province_name').val(first.province_name);
-                $('#province-id-hidden').val(first.province_id);
-
-                // โหลดอำเภอของจังหวัดนั้น
-                $.get("{$url_to_getcity}", { id: first.province_id, format: 'json' }, function(cityList) {
-                    var html = '<option value="">-- เลือกอำเภอ/เขต --</option>';
-                    $.each(cityList, function(i, item) {
-                        var sel = (item.id == first.amphur_id) ? 'selected' : '';
-                        html += '<option value="' + item.id + '" data-postcode="' + (item.postcode || '') + '" ' + sel + '>' + item.name + '</option>';
-                    });
-                    $('#select-city').html(html).prop('disabled', false);
-                    $('#customer-city_name').val(first.amphur_name);
-                    $('#city-id-hidden').val(first.amphur_id);
-
-                    // โหลดตำบลของอำเภอนั้น
-                    $.get("{$url_to_getdistrict}", { id: first.amphur_id, format: 'json' }, function(distList) {
-                        var dHtml = '<option value="">-- เลือกตำบล/แขวง --</option>';
-                        $.each(distList, function(i, item) {
-                            var dSel = (item.id == first.district_id) ? 'selected' : '';
-                            dHtml += '<option value="' + item.id + '" data-zipcode="' + (item.zipcode || '') + '" ' + dSel + '>' + item.name + '</option>';
-                        });
-                        $('#select-district').html(dHtml).prop('disabled', false);
-                        $('#customer-district_name').val(first.district_name);
-                        $('#district-id-hidden').val(first.district_id);
-
-                        var msg = '<i class="fas fa-check-circle text-success me-1"></i> พบ ' + count + ' ตำบลในรหัสไปรษณีย์ ' + zip + ' (เลือก: ' + first.district_name + ' / ' + first.amphur_name + ' / ' + first.province_name + ')';
-                        if (count > 1) {
-                            msg += ' <br><small class="text-muted">* มีมากกว่า 1 ตำบล สามารถคลิกเลือกตำบลที่ต้องการได้จากกล่องเลือกตำบล</small>';
-                        }
-                        $('#zip-search-result-text').html(msg);
-                        $('#zip-search-result-alert').removeClass('alert-danger').addClass('alert-success').fadeIn();
-                    }, 'json');
-                }, 'json');
-
-            } else {
-                var errTxt = (res && res.message) ? res.message : ('ไม่พบข้อมูลสำหรับรหัสไปรษณีย์ ' + zip);
-                $('#zip-search-result-text').html('<i class="fas fa-exclamation-triangle text-warning me-1"></i> ' + errTxt);
-                $('#zip-search-result-alert').removeClass('alert-success').addClass('alert-danger').fadeIn();
-            }
-        }, 'json').fail(function(xhr) {
-            $('#zip-search-loading').hide();
-            var errDetail = '';
-            if (xhr.status === 403) {
-                errDetail = ' (ไม่มีสิทธิ์เข้าถึง - 403 Forbidden)';
-            } else if (xhr.status === 404) {
-                errDetail = ' (ไม่พบ URL - 404 Not Found)';
-            } else if (xhr.status === 500) {
-                errDetail = ' (Server Error 500)';
-            }
-            $('#zip-search-result-text').html('<i class="fas fa-times-circle text-danger me-1"></i> เกิดข้อผิดพลาดในการค้นหา' + errDetail);
-            $('#zip-search-result-alert').removeClass('alert-success').addClass('alert-danger').fadeIn();
-        });
-    }
-
-    $('#btn-quick-search-zip').on('click', function() {
-        searchByZipcode($('#zipcode-quick-search').val());
-    });
-
-    $('#zipcode-quick-search').on('keyup', function(e) {
-        if (e.keyCode === 13) {
-            searchByZipcode($(this).val());
-        } else if ($(this).val().length === 5) {
-            searchByZipcode($(this).val());
-        }
-    });
-
-    // หากพิมพ์รหัสไปรษณีย์ในช่องหลักโดยตรง 5 หลัก ให้ช่วยค้นหาด้วย
-    $('#customer-zipcode').on('blur', function() {
-        var z = $(this).val().trim();
-        if (z.length === 5 && !$('#select-province').val()) {
-            searchByZipcode(z);
         }
     });
 });
