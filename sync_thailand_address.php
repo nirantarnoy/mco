@@ -12,9 +12,24 @@ $user = 'root';
 $pass = '';
 $db   = 'mco_db';
 
-$conn = mysqli_connect($host, $user, $pass, $db);
+// ดึง config ฐานข้อมูลจาก Yii อัตโนมัติ (หากมี) เพื่อไม่ต้องแก้ไข user/password บน server
+$configFile = __DIR__ . '/common/config/main-local.php';
+if (file_exists($configFile)) {
+    $config = require($configFile);
+    if (isset($config['components']['db'])) {
+        $dbConfig = $config['components']['db'];
+        if (isset($dbConfig['username'])) $user = $dbConfig['username'];
+        if (isset($dbConfig['password'])) $pass = $dbConfig['password'];
+        if (isset($dbConfig['dsn'])) {
+            if (preg_match('/host=([^;]+)/', $dbConfig['dsn'], $m)) $host = $m[1];
+            if (preg_match('/dbname=([^;]+)/', $dbConfig['dsn'], $m)) $db = $m[1];
+        }
+    }
+}
+
+$conn = @mysqli_connect($host, $user, $pass, $db);
 if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error() . "\n");
+    die("Connection failed: " . mysqli_connect_error() . " (Host: $host, User: $user, DB: $db)\nกรุณาตรวจสอบการตั้งค่าฐานข้อมูลใน common/config/main-local.php หรือรันผ่านคำสั่ง 'php yii address/sync'\n");
 }
 mysqli_set_charset($conn, "utf8");
 
