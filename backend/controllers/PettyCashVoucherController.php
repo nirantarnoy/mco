@@ -49,7 +49,23 @@ class PettyCashVoucherController extends BaseController
         $searchModel = new PettyCashVoucherSearch();
         $dataProvider = $searchModel->search(\Yii::$app->request->queryParams);
         $dataProvider->query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
-        $dataProvider->setSort(['defaultOrder' => ['approve_status'=>SORT_ASC,'id' => SORT_DESC]]);
+        $dataProvider->query->addSelect([
+            'petty_cash_voucher.*',
+            'is_unapproved' => new \yii\db\Expression("CASE WHEN approved_by IS NULL OR approved_by = '' OR approve_status = 0 OR approve_status IS NULL THEN 0 ELSE 1 END")
+        ]);
+        $dataProvider->setSort([
+            'defaultOrder' => [
+                'is_unapproved' => SORT_ASC,
+                'id' => SORT_DESC
+            ],
+            'attributes' => array_merge($dataProvider->getSort()->attributes, [
+                'is_unapproved' => [
+                    'asc' => ['is_unapproved' => SORT_ASC, 'id' => SORT_DESC],
+                    'desc' => ['is_unapproved' => SORT_DESC, 'id' => SORT_DESC],
+                    'label' => 'สถานะการอนุมัติ',
+                ],
+            ]),
+        ]);
 
         return $this->render('index', [
             'dataProvider' => $dataProvider,
