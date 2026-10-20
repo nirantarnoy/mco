@@ -348,7 +348,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
         <div class="text-center">
             <?php 
             $currentUser = !Yii::$app->user->isGuest ? Yii::$app->user->identity->username : '';
-            $isApprovedPCV = ($model->approve_status == 1 && !$model->isNewRecord && $currentUser !== 'mcoadmin');
+            $isApprovedPCV = (!empty($model->approved_by) && $model->approve_status == 1 && !$model->isNewRecord && $currentUser !== 'mcoadmin');
             ?>
             <?php if ($isApprovedPCV): ?>
                 <div class="alert alert-warning mb-3 py-2 px-3 d-inline-block text-left" style="text-align: left;">
@@ -769,7 +769,7 @@ $(document).ready(function() {
 JS;
 $this->registerJs($script, static::POS_END);
 
-$isApproved = ($model->approve_status == 1 && !$model->isNewRecord && $currentUser !== 'mcoadmin') ? 'true' : 'false';
+$isApproved = (!empty($model->approved_by) && $model->approve_status == 1 && !$model->isNewRecord && $currentUser !== 'mcoadmin') ? 'true' : 'false';
 $script_disable = <<< JS
 $(document).ready(function() {
     var isApproved = {$isApproved};

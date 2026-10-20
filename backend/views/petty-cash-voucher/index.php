@@ -97,6 +97,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         }
                     ],
                     [
+                        'attribute' => 'is_doc_incomplete',
                         'label' => 'สถานะเอกสารแนบ',
                         'headerOptions' => ['style' => 'width: 170px; text-align: center;'],
                         'contentOptions' => ['style' => 'text-align: center; vertical-align: middle;'],

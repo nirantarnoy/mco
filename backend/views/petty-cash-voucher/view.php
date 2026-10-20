@@ -56,7 +56,8 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                 'class' => 'btn btn-info',
                 'target' => '_blank'
             ]) ?>
-            <?php if ($model->approve_status !=1): ?>
+            <?php $isFullyApproved = (!empty($model->approved_by) && $model->approve_status == 1); ?>
+            <?php if (!$isFullyApproved): ?>
                 <?php if (\Yii::$app->user->can('pettycashvoucher/approve')): ?>
                     <?= Html::a('อนุมัติ', ['approve', 'id' => $model->id], [
                         'class' => 'btn btn-success',
@@ -66,7 +67,7 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
 
                 <?php endif; ?>
             <?php endif; ?>
-            <?php if ($model->approve_status == 1): ?>
+            <?php if ($isFullyApproved): ?>
                 <?php if ($model->is_recall != 1): ?>
                     <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#recall-modal" data-bs-toggle="modal" data-bs-target="#recall-modal">
                         <i class="fas fa-undo-alt"></i> ร้องขอแก้ไข (Recall)

@@ -51,18 +51,40 @@ class PettyCashVoucherController extends BaseController
         $dataProvider->query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
         $dataProvider->query->addSelect([
             'petty_cash_voucher.*',
-            'is_unapproved' => new \yii\db\Expression("CASE WHEN approved_by IS NULL OR approved_by = '' OR approve_status = 0 OR approve_status IS NULL THEN 0 ELSE 1 END")
+            'is_unapproved' => new \yii\db\Expression("CASE WHEN approved_by IS NULL OR approved_by = '' OR approve_status = 0 OR approve_status IS NULL THEN 0 ELSE 1 END"),
+            'is_doc_incomplete' => new \yii\db\Expression("CASE WHEN (
+                EXISTS (SELECT 1 FROM petty_cash_voucher_doc_slip s WHERE s.petty_cash_voucher_id = petty_cash_voucher.id)
+                AND EXISTS (SELECT 1 FROM petty_cash_voucher_doc_bill b WHERE b.petty_cash_voucher_id = petty_cash_voucher.id)
+            ) THEN 1 ELSE 0 END"),
+            'priority_order' => new \yii\db\Expression("CASE 
+                WHEN (approved_by IS NULL OR approved_by = '' OR approve_status = 0 OR approve_status IS NULL) THEN 0
+                WHEN NOT (
+                    EXISTS (SELECT 1 FROM petty_cash_voucher_doc_slip s WHERE s.petty_cash_voucher_id = petty_cash_voucher.id)
+                    AND EXISTS (SELECT 1 FROM petty_cash_voucher_doc_bill b WHERE b.petty_cash_voucher_id = petty_cash_voucher.id)
+                ) THEN 1
+                ELSE 2 
+            END")
         ]);
         $dataProvider->setSort([
             'defaultOrder' => [
-                'is_unapproved' => SORT_ASC,
+                'priority_order' => SORT_ASC,
                 'id' => SORT_DESC
             ],
             'attributes' => array_merge($dataProvider->getSort()->attributes, [
+                'priority_order' => [
+                    'asc' => ['priority_order' => SORT_ASC, 'id' => SORT_DESC],
+                    'desc' => ['priority_order' => SORT_DESC, 'id' => SORT_DESC],
+                    'label' => 'ลำดับความสำคัญ',
+                ],
                 'is_unapproved' => [
                     'asc' => ['is_unapproved' => SORT_ASC, 'id' => SORT_DESC],
                     'desc' => ['is_unapproved' => SORT_DESC, 'id' => SORT_DESC],
                     'label' => 'สถานะการอนุมัติ',
+                ],
+                'is_doc_incomplete' => [
+                    'asc' => ['is_doc_incomplete' => SORT_ASC, 'id' => SORT_DESC],
+                    'desc' => ['is_doc_incomplete' => SORT_DESC, 'id' => SORT_DESC],
+                    'label' => 'สถานะเอกสารแนบ',
                 ],
             ]),
         ]);
@@ -184,7 +206,7 @@ class PettyCashVoucherController extends BaseController
 
         if ($model->load(Yii::$app->request->post())) {
             $currentUser = !Yii::$app->user->isGuest ? Yii::$app->user->identity->username : '';
-            if ($model->approve_status == 1 && $currentUser !== 'mcoadmin') {
+            if (!empty($model->approved_by) && $model->approve_status == 1 && $currentUser !== 'mcoadmin') {
                 // อนุมัติแล้ว อนุญาตให้เฉพาะแนบไฟล์เพิ่มเติม ไม่แก้รายละเอียด
                 $this->saveUploadedFiles($model);
                 Yii::$app->session->setFlash('success', 'บันทึกไฟล์แนบเพิ่มเติมเรียบร้อยแล้ว');
