@@ -55,7 +55,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
 
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
             <div class="d-flex flex-wrap gap-2">
-                <?php if (\Yii::$app->user->can('purch/update') && $model->approve_status != Purch::APPROVE_STATUS_APPROVED): ?>
+                <?php if (\Yii::$app->user->can('purch/update')): ?>
                     <?= Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
                 <?php endif; ?>
                 <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#upload-doc-modal" data-bs-toggle="modal" data-bs-target="#upload-doc-modal">
