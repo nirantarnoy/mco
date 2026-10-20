@@ -183,6 +183,14 @@ class PettyCashVoucherController extends BaseController
         }
 
         if ($model->load(Yii::$app->request->post())) {
+            $currentUser = !Yii::$app->user->isGuest ? Yii::$app->user->identity->username : '';
+            if ($model->approve_status == 1 && $currentUser !== 'mcoadmin') {
+                // อนุมัติแล้ว อนุญาตให้เฉพาะแนบไฟล์เพิ่มเติม ไม่แก้รายละเอียด
+                $this->saveUploadedFiles($model);
+                Yii::$app->session->setFlash('success', 'บันทึกไฟล์แนบเพิ่มเติมเรียบร้อยแล้ว');
+                return $this->redirect(['view', 'id' => $model->id]);
+            }
+
             // ตรวจสอบว่าจำนวนเงินที่จ่ายไม่เกินยอดคงเหลือ (แจ้งเตือนเท่านั้น)
             if ($model->amount > $currentBalance) {
                 \Yii::$app->session->setFlash('warning',
@@ -398,6 +406,7 @@ class PettyCashVoucherController extends BaseController
 
     public function actionAddDocFile(){
         $id = \Yii::$app->request->post('id');
+        $redirect_to = \Yii::$app->request->post('redirect_to', 'update');
         if($id){
             $uploaded = UploadedFile::getInstancesByName('file_doc');
             if (!empty($uploaded)) {
@@ -417,11 +426,15 @@ class PettyCashVoucherController extends BaseController
             }
 
         }
+        if ($redirect_to === 'view') {
+            return $this->redirect(['view', 'id' => $id]);
+        }
         return $this->redirect(['update', 'id' => $id]);
     }
 
     public function actionAddDocFileBill(){
         $id = \Yii::$app->request->post('id');
+        $redirect_to = \Yii::$app->request->post('redirect_to', 'update');
         if($id){
             $uploaded = UploadedFile::getInstancesByName('file_doc');
             if (!empty($uploaded)) {
@@ -441,12 +454,16 @@ class PettyCashVoucherController extends BaseController
             }
 
         }
+        if ($redirect_to === 'view') {
+            return $this->redirect(['view', 'id' => $id]);
+        }
         return $this->redirect(['update', 'id' => $id]);
     }
     public function actionDeleteDocFile(){
         $id = \Yii::$app->request->post('id');
         $doc_delete_list = trim(\Yii::$app->request->post('doc_delete_list'));
         $doc_type_id = trim(\Yii::$app->request->post('doc_delete_type'));
+        $redirect_to = \Yii::$app->request->post('redirect_to', 'update');
         if($id){
             if($doc_type_id ==2){
                 $model_doc = \common\models\PettyCashVoucherDocBill::find()->where(['petty_cash_voucher_id' => $id,'doc' => $doc_delete_list])->one();
@@ -468,8 +485,12 @@ class PettyCashVoucherController extends BaseController
                 }
             }
 
+            if ($redirect_to === 'view') {
+                return $this->redirect(['view', 'id' => $id]);
+            }
+            return $this->redirect(['update', 'id' => $id]);
         }
-        return $this->redirect(['update', 'id' => $id]);
+        return $this->redirect(['index']);
     }
 
     public function actionApprove($id){

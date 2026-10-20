@@ -49,6 +49,9 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <?= Html::a('<i class="fas fa-edit"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+            <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#upload-pcv-doc-modal" data-bs-toggle="modal" data-bs-target="#upload-pcv-doc-modal">
+                <i class="fas fa-paperclip"></i> แนบไฟล์เพิ่มเติม
+            </button>
             <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
                 'class' => 'btn btn-info',
                 'target' => '_blank'
@@ -212,6 +215,13 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                                 'attribute' => 'approved_date',
                                 'value' => $model->approved_date ? Yii::$app->formatter->asDate($model->approved_date, 'dd/MM/yyyy') : '-',
                             ],
+                            [
+                                'label' => 'สถานะเอกสารแนบ',
+                                'format' => 'raw',
+                                'value' => function ($data) {
+                                    return $data->getDocStatusHtml();
+                                }
+                            ],
                         ],
                     ]) ?>
                 </div>
@@ -280,18 +290,21 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
         </div>
     </div>
     <br/>
-    <div class="label">
-        <h4>เอกสารแนบสลิป</h4>
-    </div>
     <div class="row">
         <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h4 class="mb-0">เอกสารแนบสลิป</h4>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#upload-pcv-doc-modal" data-bs-toggle="modal" data-bs-target="#upload-pcv-doc-modal" onclick="$('#pcv-doc-type').val('1');">
+                    <i class="fas fa-paperclip"></i> แนบสลิป
+                </button>
+            </div>
             <table class="table table-bordered table-striped" style="width: 100%">
                 <thead>
                 <tr>
                     <th style="width: 5%;text-align: center">#</th>
-                    <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
-                    <th style="width: 10%;text-align: center">ดูเอกสาร</th>
-                    <th style="width: 5%;text-align: center">-</th>
+                    <th style="width: 60%;text-align: center">ชื่อไฟล์</th>
+                    <th style="width: 20%;text-align: center">ดูเอกสาร</th>
+                    <th style="width: 15%;text-align: center">ลบ</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -303,36 +316,45 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                             <td><?= $value->doc ?></td>
                             <td style="text-align: center">
                                 <a href="<?= \yii\helpers\Url::to(['site/view-file', 'folder' => 'pettycash_doc_slip', 'file' => $value->doc]) ?>"
-                                   target="_blank">
-                                    ดูเอกสาร
+                                   target="_blank" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-search"></i> ดูเอกสาร
                                 </a>
                             </td>
                             <td style="text-align: center">
-                                <!--                                <div class="btn btn-danger" data-var="-->
-                                <?php //= trim($value->doc_name) ?><!--" onclick="delete_doc($(this))">ลบ</div>-->
+                                <button type="button" class="btn btn-outline-danger btn-sm" data-value="<?= $model->id ?>"
+                                     data-type="1"
+                                     data-var="<?= trim($value->doc) ?>"
+                                     onclick="delete_doc_view($(this))">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </td>
                         </tr>
                     <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">ไม่มีเอกสารแนบสลิป</td>
+                    </tr>
                 <?php endif; ?>
                 </tbody>
             </table>
         </div>
-        <div class="col-lg-1"></div>
     </div>
     <br/>
-    <br/>
-    <div class="label">
-        <h4>เอกสารแนบใบเสร็จ</h4>
-    </div>
     <div class="row">
         <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h4 class="mb-0">เอกสารแนบใบเสร็จ</h4>
+                <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#upload-pcv-doc-modal" data-bs-toggle="modal" data-bs-target="#upload-pcv-doc-modal" onclick="$('#pcv-doc-type').val('2');">
+                    <i class="fas fa-paperclip"></i> แนบใบเสร็จ
+                </button>
+            </div>
             <table class="table table-bordered table-striped" style="width: 100%">
                 <thead>
                 <tr>
                     <th style="width: 5%;text-align: center">#</th>
-                    <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
-                    <th style="width: 10%;text-align: center">ดูเอกสาร</th>
-                    <th style="width: 5%;text-align: center">-</th>
+                    <th style="width: 60%;text-align: center">ชื่อไฟล์</th>
+                    <th style="width: 20%;text-align: center">ดูเอกสาร</th>
+                    <th style="width: 15%;text-align: center">ลบ</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -344,22 +366,77 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
                             <td><?= $value->doc ?></td>
                             <td style="text-align: center">
                                 <a href="<?= \yii\helpers\Url::to(['site/view-file', 'folder' => 'pettycash_doc_bill', 'file' => $value->doc]) ?>"
-                                   target="_blank">
-                                    ดูเอกสาร
+                                   target="_blank" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-search"></i> ดูเอกสาร
                                 </a>
                             </td>
                             <td style="text-align: center">
-                                <!--                                <div class="btn btn-danger" data-var="-->
-                                <?php //= trim($value->doc_name) ?><!--" onclick="delete_doc($(this))">ลบ</div>-->
+                                <button type="button" class="btn btn-outline-danger btn-sm" data-value="<?= $model->id ?>"
+                                     data-type="2"
+                                     data-var="<?= trim($value->doc) ?>"
+                                     onclick="delete_doc_view($(this))">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </td>
                         </tr>
                     <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">ไม่มีเอกสารแนบใบเสร็จ</td>
+                    </tr>
                 <?php endif; ?>
                 </tbody>
             </table>
         </div>
-        <div class="col-lg-1"></div>
+    </div>
     <br/>
+
+    <!-- Modal สำหรับ แนบไฟล์เพิ่มเติม PCV -->
+    <?php
+    \yii\bootstrap4\Modal::begin([
+        'id' => 'upload-pcv-doc-modal',
+        'title' => '<h4><i class="fas fa-paperclip text-primary"></i> แนบเอกสารเพิ่มเติม</h4>',
+        'size' => \yii\bootstrap4\Modal::SIZE_DEFAULT,
+        'options' => ['tabindex' => false],
+        'closeButton' => [
+            'class' => 'btn-close',
+            'data-bs-dismiss' => 'modal',
+            'aria-label' => 'Close',
+        ],
+    ]);
+    ?>
+    <form id="form-upload-pcv-doc" action="<?= \yii\helpers\Url::to(['petty-cash-voucher/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
+        <input type="hidden" name="id" value="<?= $model->id ?>">
+        <input type="hidden" name="redirect_to" value="view">
+        <div class="modal-body">
+            <div class="form-group mb-3">
+                <label class="form-label fw-bold">ประเภทเอกสารแนบ <span class="text-danger">*</span></label>
+                <select id="pcv-doc-type" class="form-control" onchange="updatePcvUploadAction(this.value)">
+                    <option value="1">เอกสารแนบสลิป</option>
+                    <option value="2">เอกสารแนบใบเสร็จค่าสินค้า</option>
+                </select>
+            </div>
+            <div class="form-group mb-3">
+                <label class="form-label fw-bold">เลือกไฟล์เอกสาร <span class="text-danger">*</span></label>
+                <input type="file" name="file_doc[]" class="form-control" multiple required>
+                <small class="text-muted">สามารถเลือกได้หลายไฟล์พร้อมกัน (PDF, รูปภาพ, เอกสารอื่นๆ)</small>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">ยกเลิก</button>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> อัพโหลดไฟล์</button>
+        </div>
+    </form>
+    <?php \yii\bootstrap4\Modal::end(); ?>
+
+    <form id="form-delete-doc-view" action="<?= \yii\helpers\Url::to(['petty-cash-voucher/delete-doc-file'], true) ?>" method="post">
+        <input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
+        <input type="hidden" name="id" value="<?= $model->id ?>">
+        <input type="hidden" name="redirect_to" value="view">
+        <input type="hidden" class="delete-doc-type" name="doc_delete_type" value="1">
+        <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
+    </form>
 
     <!-- Modal สำหรับ ร้องขอ Recall -->
     <?php
@@ -425,3 +502,25 @@ $model_doc_bill = \common\models\PettyCashVoucherDocBill::find()->where(['petty_
     <?php \yii\bootstrap4\Modal::end(); ?>
 
 </div>
+
+<script>
+function updatePcvUploadAction(val) {
+    var form = $('#form-upload-pcv-doc');
+    if (val == '2') {
+        form.attr('action', '<?= \yii\helpers\Url::to(['petty-cash-voucher/add-doc-file-bill'], true) ?>');
+    } else {
+        form.attr('action', '<?= \yii\helpers\Url::to(['petty-cash-voucher/add-doc-file'], true) ?>');
+    }
+}
+
+function delete_doc_view(e) {
+    var id = e.attr('data-value');
+    var docType = e.attr('data-type');
+    var fileName = e.attr('data-var');
+    if (id > 0 && fileName && confirm('ต้องการลบไฟล์แนบ \"' + fileName + '\" ใช่หรือไม่?')) {
+        $('.delete-doc-type').val(docType);
+        $('.delete-doc-list').val(fileName);
+        $('#form-delete-doc-view').submit();
+    }
+}
+</script>

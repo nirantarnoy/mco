@@ -61,7 +61,7 @@ class PettyCashAdvanceController extends BaseController
     public function actionCreate()
     {
         $model = new PettyCashAdvance();
-        $model->status = PettyCashAdvance::STATUS_PENDING;
+        $model->status = PettyCashAdvance::STATUS_APPROVED;
         $model->employee_id = \Yii::$app->user->identity->employee_id ?? null;
         $model->request_date = date('Y-m-d');
 
@@ -76,9 +76,10 @@ class PettyCashAdvanceController extends BaseController
             }
 
             $model->advance_no = PettyCashAdvance::generateAdvanceNo($model->request_date);
+            $model->status = PettyCashAdvance::STATUS_APPROVED;
 
             if ($model->save()) {
-                \Yii::$app->session->setFlash('success', 'บันทึกใบเบิกเงินทดแทนเรียบร้อยแล้ว');
+                \Yii::$app->session->setFlash('success', 'บันทึกข้อมูลเงินทดแทนเรียบร้อยแล้ว');
                 return $this->redirect(['view', 'id' => $model->id]);
             } else {
                 \Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
@@ -100,8 +101,8 @@ class PettyCashAdvanceController extends BaseController
     {
         $model = $this->findModel($id);
 
-        if ($model->status !== PettyCashAdvance::STATUS_PENDING && !\Yii::$app->user->can('CanEditAccount')) {
-            \Yii::$app->session->setFlash('error', 'ไม่สามารถแก้ไขได้ เนื่องจากสถานะไม่อนุญาต');
+        if ($model->status === 'cancelled') {
+            \Yii::$app->session->setFlash('error', 'ไม่สามารถแก้ไขได้ เนื่องจากรายการถูกยกเลิกแล้ว');
             return $this->redirect(['view', 'id' => $model->id]);
         }
 

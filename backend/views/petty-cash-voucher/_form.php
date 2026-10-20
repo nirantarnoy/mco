@@ -346,15 +346,30 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
 
     <div class="form-group mt-4">
         <div class="text-center">
-            <?= Html::submitButton($model->isNewRecord ? '<i class="fas fa-save"></i> บันทึก' : '<i class="fas fa-save"></i> แก้ไข', [
-                'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
-            ]) ?>
+            <?php 
+            $currentUser = !Yii::$app->user->isGuest ? Yii::$app->user->identity->username : '';
+            $isApprovedPCV = ($model->approve_status == 1 && !$model->isNewRecord && $currentUser !== 'mcoadmin');
+            ?>
+            <?php if ($isApprovedPCV): ?>
+                <div class="alert alert-warning mb-3 py-2 px-3 d-inline-block text-left" style="text-align: left;">
+                    <i class="fas fa-lock me-1"></i> <strong>ใบสำคัญจ่ายเงินสดย่อยนี้ได้รับการอนุมัติแล้ว:</strong> ไม่สามารถแก้ไขรายละเอียดรายการได้ แต่สามารถเลือกไฟล์แนบด้านบนแล้วกดปุ่มบันทึกเพื่อแนบไฟล์เพิ่มเติมได้
+                </div>
+                <br/>
+                <?= Html::submitButton('<i class="fas fa-upload"></i> บันทึกไฟล์แนบเพิ่มเติม', [
+                    'class' => 'btn btn-primary'
+                ]) ?>
+            <?php else: ?>
+                <?= Html::submitButton($model->isNewRecord ? '<i class="fas fa-save"></i> บันทึก' : '<i class="fas fa-save"></i> แก้ไข', [
+                    'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
+                ]) ?>
+            <?php endif; ?>
             <?php if (!$model->isNewRecord): ?>
                 <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
                     'class' => 'btn btn-info',
                     'target' => '_blank'
                 ]) ?>
             <?php endif; ?>
+            <?= Html::a('<i class="fas fa-arrow-left"></i> กลับ', ['index'], ['class' => 'btn btn-secondary']) ?>
         </div>
     </div>
     <?php ActiveForm::end(); ?>
@@ -753,4 +768,30 @@ $(document).ready(function() {
 });
 JS;
 $this->registerJs($script, static::POS_END);
+
+$isApproved = ($model->approve_status == 1 && !$model->isNewRecord && $currentUser !== 'mcoadmin') ? 'true' : 'false';
+$script_disable = <<< JS
+$(document).ready(function() {
+    var isApproved = {$isApproved};
+    if (isApproved) {
+        // Make inputs readonly (except file inputs and hidden inputs)
+        $('#w0 input:not([type="file"]):not([type="hidden"]), #w0 textarea').prop('readonly', true).css('background-color', '#e9ecef');
+        
+        // Prevent interacting with selects
+        $('#w0 select').css({
+            'pointer-events': 'none',
+            'background-color': '#e9ecef',
+            'touch-action': 'none'
+        }).attr('tabindex', '-1').on('mousedown', function(e) { e.preventDefault(); });
+        
+        $('.select2-container').css('pointer-events', 'none');
+        
+        // Hide add / remove detail buttons
+        $('#add-row, .btn-remove-row, .btn-danger:contains("ลบ")').filter(function() {
+            return $(this).closest('#w0').length > 0;
+        }).hide();
+    }
+});
+JS;
+$this->registerJs($script_disable, static::POS_END);
 ?>

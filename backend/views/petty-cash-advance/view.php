@@ -38,14 +38,18 @@ $status = $statusLabels[$model->status] ?? ['label' => $model->status, 'class' =
                     'class' => 'btn btn-outline-secondary'
                 ]) ?>
 
-                <?php if ( $model->status != 'cancelled' && (\Yii::$app->user->can('CanEditAccount') || \Yii::$app->user->can('approve-advance'))): ?>
+                <?php if ($model->status != 'cancelled' && (\Yii::$app->user->can('CanEditAccount') || \Yii::$app->user->can('approve-advance'))): ?>
                     <?= Html::a('<i class="fas fa-edit"></i> แก้ไข', ['update', 'id' => $model->id], [
                         'class' => 'btn btn-outline-primary'
                     ]) ?>
                 <?php endif; ?>
                 <?php if ($model->status != 'cancelled' && (\Yii::$app->user->can('CanEditAccount') || \Yii::$app->user->can('approve-advance'))): ?>
-                    <?= Html::a('<i class="fas fa-edit"></i> ยกเลิก', ['cancel', 'id' => $model->id], [
-                        'class' => 'btn btn-outline-warning'
+                    <?= Html::a('<i class="fas fa-trash"></i> ยกเลิก', ['cancel', 'id' => $model->id], [
+                        'class' => 'btn btn-outline-danger',
+                        'data' => [
+                            'confirm' => 'คุณแน่ใจหรือไม่ที่จะยกเลิกรายการนี้?',
+                            'method' => 'post',
+                        ],
                     ]) ?>
                 <?php endif; ?>
 
@@ -53,41 +57,9 @@ $status = $statusLabels[$model->status] ?? ['label' => $model->status, 'class' =
                     'class' => 'btn btn-outline-info',
                     'target' => '_blank'
                 ]) ?>
-
-                <?php if ($model->status === 'approved'): ?>
-                    <?php if ($model->is_recall != 1): ?>
-                        <button type="button" class="btn btn-outline-warning" data-toggle="modal" data-target="#recall-modal" data-bs-toggle="modal" data-bs-target="#recall-modal">
-                            <i class="fas fa-undo-alt"></i> ร้องขอแก้ไข (Recall)
-                        </button>
-                    <?php endif; ?>
-                <?php endif; ?>
-                <?php if ($model->is_recall == 1): ?>
-                    <?php if (\Yii::$app->user->can('approve-advance') || \backend\models\User::isUserAdmin()): ?>
-                        <?= Html::a('<i class="fas fa-check"></i> อนุมัติ Recall (ดึงกลับมาแก้ไข)', ['approve-recall', 'id' => $model->id], [
-                            'class' => 'btn btn-success',
-                            'data' => [
-                                'confirm' => 'ยืนยันการอนุมัติ Recall? เอกสารนี้จะถูกปลดสถานะอนุมัติและสามารถแก้ไขได้',
-                                'method' => 'post',
-                            ],
-                        ]) ?>
-                        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#reject-recall-modal" data-bs-toggle="modal" data-bs-target="#reject-recall-modal">
-                            <i class="fas fa-times"></i> ปฏิเสธ Recall
-                        </button>
-                    <?php else: ?>
-                        <span class="badge bg-warning text-dark p-2 align-self-center ml-2"><i class="fas fa-hourglass-half"></i> อยู่ระหว่างรออนุมัติ Recall จากผู้มีอำนาจ</span>
-                    <?php endif; ?>
-                <?php endif; ?>
             </div>
         </div>
     </div>
-
-    <?php if ($model->is_recall == 1): ?>
-        <div class="alert alert-warning border border-warning shadow-sm mb-3">
-            <h5><i class="fas fa-exclamation-triangle"></i> เอกสารนี้มีคำร้องขอ Recall เพื่อแก้ไข</h5>
-            <p class="mb-1"><strong>ผู้ร้องขอ:</strong> <?= \backend\models\User::findEmployeeNameByUserId($model->recall_by) ?> (วันที่: <?= $model->recall_at ? date('d/m/Y H:i:s', strtotime($model->recall_at)) : '-' ?>)</p>
-            <p class="mb-0"><strong>เหตุผล:</strong> <?= Html::encode($model->recall_reason) ?></p>
-        </div>
-    <?php endif; ?>
 
 <!--            --><?php //if ($model->status !== 'approved' && \Yii::$app->user->can('approve-advance')): ?>
 <!--                <div class="btn-group" role="group">-->
@@ -357,66 +329,4 @@ $status = $statusLabels[$model->status] ?? ['label' => $model->status, 'class' =
         width: 30%;
     }
 </style>
-
-<!-- Modal สำหรับ ร้องขอ Recall -->
-<?php
-\yii\bootstrap4\Modal::begin([
-    'id' => 'recall-modal',
-    'title' => '<h4><i class="fas fa-undo-alt text-warning"></i> ร้องขอแก้ไขใบเบิกเงินทดแทนสดย่อย (Recall)</h4>',
-    'size' => \yii\bootstrap4\Modal::SIZE_DEFAULT,
-    'options' => ['tabindex' => false],
-    'closeButton' => [
-        'class' => 'btn-close',
-        'data-bs-dismiss' => 'modal',
-        'aria-label' => 'Close',
-    ],
-]);
-?>
-<?php $form = \yii\widgets\ActiveForm::begin([
-    'action' => ['request-recall', 'id' => $model->id],
-    'method' => 'post',
-]); ?>
-<div class="modal-body">
-    <p class="text-muted">เมื่อส่งคำร้องขอ ระบบจะแจ้งเตือนผู้อนุมัติเพื่อพิจารณาปลดล็อคเอกสารกลับมาให้แก้ไข</p>
-    <div class="form-group mb-3">
-        <label for="pca-recall-reason" class="form-label fw-bold">ระบุเหตุผลที่ต้องการดึงเอกสารกลับมาแก้ไข <span class="text-danger">*</span></label>
-        <textarea name="recall_reason" id="pca-recall-reason" class="form-control" rows="4" required placeholder="ตัวอย่าง: แก้ไขยอดเงินเบิกทดแทน, เปลี่ยนแปลงวัตถุประสงค์"></textarea>
-    </div>
-</div>
-<div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">ยกเลิก</button>
-    <button type="submit" class="btn btn-warning"><i class="fas fa-paper-plane"></i> ยืนยันส่งคำร้องขอ Recall</button>
-</div>
-<?php \yii\widgets\ActiveForm::end(); ?>
-<?php \yii\bootstrap4\Modal::end(); ?>
-
-<!-- Modal สำหรับ ปฏิเสธ Recall -->
-<?php
-\yii\bootstrap4\Modal::begin([
-    'id' => 'reject-recall-modal',
-    'title' => '<h4><i class="fas fa-times text-danger"></i> ปฏิเสธคำร้องขอ Recall</h4>',
-    'size' => \yii\bootstrap4\Modal::SIZE_DEFAULT,
-    'options' => ['tabindex' => false],
-    'closeButton' => [
-        'class' => 'btn-close',
-        'data-bs-dismiss' => 'modal',
-        'aria-label' => 'Close',
-    ],
-]);
-?>
-<?php $form = \yii\widgets\ActiveForm::begin([
-    'action' => ['reject-recall', 'id' => $model->id],
-    'method' => 'post',
-]); ?>
-<div class="modal-body">
-    <div class="form-group mb-3">
-        <label for="pca-reject-recall-reason" class="form-label fw-bold">ระบุเหตุผลที่ไม่อนุมัติคำร้องขอ Recall</label>
-        <textarea name="reject_reason" id="pca-reject-recall-reason" class="form-control" rows="3" placeholder="ระบุเหตุผลที่ไม่อนุมัติ"></textarea>
-    </div>
-</div>
-<div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">ยกเลิก</button>
-    <button type="submit" class="btn btn-danger"><i class="fas fa-check"></i> ยืนยันปฏิเสธ Recall</button>
-</div>
-<?php \yii\widgets\ActiveForm::end(); ?>
-<?php \yii\bootstrap4\Modal::end(); ?>
+

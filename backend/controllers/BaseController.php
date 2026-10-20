@@ -19,7 +19,7 @@ class BaseController extends Controller
         }
 
         // อนุโลม action ช่วยดึงข้อมูลที่อยู่ / รหัสไปรษณีย์ และแนบ/ลบไฟล์เอกสาร
-        if (in_array($action->id, ['lookup-zipcode', 'lookupzipcode', 'showcity', 'showdistrict', 'showzipcode', 'showaddress', 'add-doc-file-new', 'adddocfilenew', 'delete-doc-file', 'deletedocfile'])) {
+        if (in_array($action->id, ['lookup-zipcode', 'lookupzipcode', 'showcity', 'showdistrict', 'showzipcode', 'showaddress', 'add-doc-file', 'adddocfile', 'add-doc-file-bill', 'adddocfilebill', 'add-doc-file-new', 'adddocfilenew', 'delete-doc-file', 'deletedocfile'])) {
             return parent::beforeAction($action);
         }
 

@@ -89,6 +89,15 @@ $this->params['breadcrumbs'][] = $this->title;
                             return $text;
                         }
                     ],
+                    [
+                        'label' => 'สถานะเอกสารแนบ',
+                        'headerOptions' => ['style' => 'width: 170px; text-align: center;'],
+                        'contentOptions' => ['style' => 'text-align: center; vertical-align: middle;'],
+                        'format' => 'raw',
+                        'value' => function($model) {
+                            return $model->getDocStatusHtml();
+                        }
+                    ],
 
                     [
                         'class' => 'yii\grid\ActionColumn',

@@ -246,6 +246,64 @@ class PettyCashVoucher extends ActiveRecord
         return $this->hasOne(\backend\models\User::class, ['id' => 'recall_by']);
     }
 
+    public function getDocSlips()
+    {
+        return $this->hasMany(\common\models\PettyCashVoucherDocSlip::class, ['petty_cash_voucher_id' => 'id']);
+    }
+
+    public function getDocBills()
+    {
+        return $this->hasMany(\common\models\PettyCashVoucherDocBill::class, ['petty_cash_voucher_id' => 'id']);
+    }
+
+    /**
+     * Check attached documents for slip and bill
+     * @return array
+     */
+    public function getAttachedDocuments()
+    {
+        $hasSlip = !empty($this->docSlips);
+        $hasBill = !empty($this->docBills);
+
+        return [
+            'has_slip' => $hasSlip,
+            'has_bill' => $hasBill,
+            'is_complete' => ($hasSlip && $hasBill),
+        ];
+    }
+
+    /**
+     * Render HTML badge for attachment status
+     * @return string
+     */
+    public function getDocStatusHtml()
+    {
+        $status = $this->getAttachedDocuments();
+        $html = '';
+
+        if ($status['is_complete']) {
+            $html .= '<span class="badge badge-success bg-success me-1 mb-1" style="font-size: 11px;"><i class="fas fa-check-circle"></i> แนบเอกสารครบ</span>';
+        } else {
+            $html .= '<span class="badge badge-warning bg-warning text-dark me-1 mb-1" style="font-size: 11px;"><i class="fas fa-exclamation-circle"></i> ยังไม่ครบ</span>';
+        }
+
+        $html .= '<div class="mt-1">';
+        if ($status['has_slip']) {
+            $html .= '<span class="badge badge-info bg-info text-white me-1" title="แนบสลิปแล้ว"><i class="fas fa-check"></i> สลิป</span>';
+        } else {
+            $html .= '<span class="badge badge-light bg-light text-muted border me-1" title="ยังไม่แนบสลิป"><i class="fas fa-times text-danger"></i> สลิป</span>';
+        }
+
+        if ($status['has_bill']) {
+            $html .= '<span class="badge badge-primary bg-primary text-white" title="แนบใบเสร็จแล้ว"><i class="fas fa-check"></i> ใบเสร็จ</span>';
+        } else {
+            $html .= '<span class="badge badge-light bg-light text-muted border" title="ยังไม่แนบใบเสร็จ"><i class="fas fa-times text-danger"></i> ใบเสร็จ</span>';
+        }
+        $html .= '</div>';
+
+        return $html;
+    }
+
     public static function ensureRecallColumns()
     {
         try {

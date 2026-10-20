@@ -75,9 +75,12 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
                     ]) ?>
                 <?php endif; ?>
 
-                <?php if ($model->approve_status != PurchReq::APPROVE_STATUS_APPROVED): ?>
+                <?php if (\Yii::$app->user->can('purchreq/update')): ?>
                     <?= Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
                 <?php endif; ?>
+                <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#upload-doc-modal" data-bs-toggle="modal" data-bs-target="#upload-doc-modal">
+                    <i class="fas fa-paperclip"></i> แนบไฟล์เพิ่มเติม
+                </button>
                 <?php if ($model->approve_status == PurchReq::APPROVE_STATUS_PENDING): ?>
                     <?php if (\Yii::$app->user->can('purchreq/reject')): ?>
                         <?= Html::a('ไม่อนุมัติ', ['reject', 'id' => $model->id], [
@@ -492,18 +495,21 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
     </div>
 
     <br/>
-    <div class="label">
-        <h4>เอกสารแนบ</h4>
-    </div>
     <div class="row">
         <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h4 class="mb-0">เอกสารแนบ</h4>
+                <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#upload-doc-modal" data-bs-toggle="modal" data-bs-target="#upload-doc-modal">
+                    <i class="fas fa-paperclip"></i> แนบไฟล์เพิ่มเติม
+                </button>
+            </div>
             <table class="table table-bordered table-striped" style="width: 100%">
                 <thead>
                 <tr>
                     <th style="width: 5%;text-align: center">#</th>
-                    <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
-                    <th style="width: 10%;text-align: center">ดูเอกสาร</th>
-                    <th style="width: 5%;text-align: center">-</th>
+                    <th style="width: 60%;text-align: center">ชื่อไฟล์</th>
+                    <th style="width: 20%;text-align: center">ดูเอกสาร</th>
+                    <th style="width: 15%;text-align: center">ลบ</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -520,19 +526,63 @@ $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $model
                                 </a>
                             </td>
                             <td style="text-align: center">
-                                <!--                                <div class="btn btn-danger" data-var="-->
-                                <?php //= trim($value->doc_name) ?><!--" onclick="delete_doc($(this))">ลบ</div>-->
+                                <button type="button" class="btn btn-outline-danger btn-sm" data-value="<?= $model->id ?>"
+                                     data-var="<?= trim($value->doc_name) ?>"
+                                     onclick="delete_doc_view($(this))">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </td>
                         </tr>
                     <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">ไม่มีเอกสารแนบ</td>
+                    </tr>
                 <?php endif; ?>
                 </tbody>
             </table>
         </div>
-        </div>
-        <div class="col-lg-1"></div>
     </div>
     <br/>
+
+    <!-- Modal สำหรับ แนบไฟล์เพิ่มเติม -->
+    <?php
+    \yii\bootstrap4\Modal::begin([
+        'id' => 'upload-doc-modal',
+        'title' => '<h4><i class="fas fa-paperclip text-primary"></i> แนบเอกสารเพิ่มเติม</h4>',
+        'size' => \yii\bootstrap4\Modal::SIZE_DEFAULT,
+        'options' => ['tabindex' => false],
+        'closeButton' => [
+            'class' => 'btn-close',
+            'data-bs-dismiss' => 'modal',
+            'aria-label' => 'Close',
+        ],
+    ]);
+    ?>
+    <form action="<?= \yii\helpers\Url::to(['purchreq/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
+        <input type="hidden" name="id" value="<?= $model->id ?>">
+        <input type="hidden" name="redirect_to" value="view">
+        <div class="modal-body">
+            <div class="form-group mb-3">
+                <label class="form-label fw-bold">เลือกไฟล์เอกสาร <span class="text-danger">*</span></label>
+                <input type="file" name="file_doc[]" class="form-control" multiple required>
+                <small class="text-muted">สามารถเลือกได้หลายไฟล์พร้อมกัน (PDF, รูปภาพ, เอกสารอื่นๆ)</small>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">ยกเลิก</button>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> อัพโหลดไฟล์</button>
+        </div>
+    </form>
+    <?php \yii\bootstrap4\Modal::end(); ?>
+
+    <form id="form-delete-doc-view" action="<?= \yii\helpers\Url::to(['purchreq/delete-doc-file'], true) ?>" method="post">
+        <input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
+        <input type="hidden" name="id" value="<?= $model->id ?>">
+        <input type="hidden" name="redirect_to" value="view">
+        <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
+    </form>
 
     <!-- Modal สำหรับ ร้องขอ Recall -->
     <?php
@@ -630,3 +680,14 @@ $this->registerJs("
     }, 5000);
 ");
 ?>
+
+<script>
+function delete_doc_view(e) {
+    var id = e.attr('data-value');
+    var fileName = e.attr('data-var');
+    if (id > 0 && fileName && confirm('ต้องการลบไฟล์แนบ \"' + fileName + '\" ใช่หรือไม่?')) {
+        $('.delete-doc-list').val(fileName);
+        $('#form-delete-doc-view').submit();
+    }
+}
+</script>

@@ -201,10 +201,13 @@ class PurchreqController extends BaseController
     {
         $model = $this->findModel($id);
         
+        // Allow entering update page for approved PR to attach files
+        /*
         if ($model->approve_status == \backend\models\PurchReq::APPROVE_STATUS_APPROVED) {
             Yii::$app->session->setFlash('error', 'ไม่อนุญาตให้แก้ไขใบขอซื้อที่ได้รับการอนุมัติแล้ว');
             return $this->redirect(['view', 'id' => $model->id]);
         }
+        */
 
         // Load existing purch req lines
         $model->purchReqLines = $model->getPurchReqLines()->all();
@@ -213,6 +216,12 @@ class PurchreqController extends BaseController
         }
 
         if ($model->load(Yii::$app->request->post())) {
+            $currentUser = !Yii::$app->user->isGuest ? Yii::$app->user->identity->username : '';
+            if ($model->approve_status == PurchReq::APPROVE_STATUS_APPROVED && $currentUser !== 'mcoadmin') {
+                Yii::$app->session->setFlash('error', 'ใบขอซื้อนี้ได้รับการอนุมัติแล้ว ไม่อนุญาตให้แก้ไขรายละเอียดข้อมูล');
+                return $this->redirect(['view', 'id' => $model->id]);
+            }
+
             $purchReqLines = [];
             $valid = $model->validate();
 
@@ -1061,6 +1070,7 @@ class PurchreqController extends BaseController
 
     public function actionAddDocFile(){
         $id = \Yii::$app->request->post('id');
+        $redirect_to = \Yii::$app->request->post('redirect_to', 'update');
         if($id){
             $uploaded = UploadedFile::getInstancesByName('file_doc');
                 if (!empty($uploaded)) {
@@ -1080,12 +1090,16 @@ class PurchreqController extends BaseController
                 }
 
         }
+        if ($redirect_to === 'view') {
+            return $this->redirect(['view', 'id' => $id]);
+        }
         return $this->redirect(['update', 'id' => $id]);
     }
 
     public function actionDeleteDocFile(){
         $id = \Yii::$app->request->post('id');
         $doc_delete_list = trim(\Yii::$app->request->post('doc_delete_list'));
+        $redirect_to = \Yii::$app->request->post('redirect_to', 'update');
         if($id){
             $model_doc = \common\models\PurchReqDoc::find()->where(['purch_req_id' => $id,'doc_name' => $doc_delete_list])->one();
             if($model_doc){
@@ -1094,6 +1108,9 @@ class PurchreqController extends BaseController
                         unlink('uploads/purch_req_doc/'.$model_doc->doc_name);
                     }
                 }
+            }
+            if ($redirect_to === 'view') {
+                return $this->redirect(['view', 'id' => $id]);
             }
             return $this->redirect(['update', 'id' => $id]);
         }

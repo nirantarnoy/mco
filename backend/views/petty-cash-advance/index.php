@@ -230,7 +230,7 @@ $minAmount = \backend\models\PettyCashAdvance::getMinAmount();
                 [
                     'class' => 'yii\grid\ActionColumn',
                     'header' => 'จัดการ',
-                    'template' => '{view} {update} {approve} {reject} {print} {delete}',
+                    'template' => '{view} {update} {print} {delete}',
                     'buttons' => [
                         'view' => function ($url, $model, $key) {
                             return Html::a('<i class="fas fa-eye"></i>', $url, [
@@ -239,36 +239,10 @@ $minAmount = \backend\models\PettyCashAdvance::getMinAmount();
                             ]);
                         },
                         'update' => function ($url, $model, $key) {
-                            if ($model->status === 'pending') {
+                            if ($model->status !== 'cancelled') {
                                 return Html::a('<i class="fas fa-edit"></i>', $url, [
                                     'title' => 'แก้ไข',
                                     'class' => 'btn btn-sm btn-outline-primary'
-                                ]);
-                            }
-                            return '';
-                        },
-                        'approve' => function ($url, $model, $key) {
-                            if ($model->status === 'pending' && \Yii::$app->user->can('approve-advance')) {
-                                return Html::a('<i class="fas fa-check"></i>', ['approve', 'id' => $model->id], [
-                                    'title' => 'อนุมัติ',
-                                    'class' => 'btn btn-sm btn-outline-success',
-                                    'data' => [
-                                        'confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบเบิกนี้?',
-                                        'method' => 'post',
-                                    ],
-                                ]);
-                            }
-                            return '';
-                        },
-                        'reject' => function ($url, $model, $key) {
-                            if ($model->status === 'pending' && \Yii::$app->user->can('approve-advance')) {
-                                return Html::a('<i class="fas fa-times"></i>', ['reject', 'id' => $model->id], [
-                                    'title' => 'ปฏิเสธ',
-                                    'class' => 'btn btn-sm btn-outline-danger',
-                                    'data' => [
-                                        'confirm' => 'คุณแน่ใจหรือไม่ที่จะปฏิเสธใบเบิกนี้?',
-                                        'method' => 'post',
-                                    ],
                                 ]);
                             }
                             return '';
@@ -281,13 +255,13 @@ $minAmount = \backend\models\PettyCashAdvance::getMinAmount();
                             ]);
                         },
                         'delete' => function ($url, $model, $key) {
-                            return $model->status != 'approved' ? Html::a('<i class="fas fa-trash"></i>', $url, [
+                            return Html::a('<i class="fas fa-trash"></i>', $url, [
                                 'title' => 'ลบ',
                                 'class' => 'btn btn-sm btn-outline-danger',
                                 'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะลบรายการนี้?',
                                 'data-method' => 'post',
                                 'data-pjax' => '0'
-                            ]):'';
+                            ]);
                         },
                     ],
                     'headerOptions' => ['style' => 'width: 150px; text-align: center;'],

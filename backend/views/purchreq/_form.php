@@ -834,12 +834,22 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
 
 
         <div class="form-group mt-3">
-            <div class="d-flex justify-content-between">
-                <?php if (($model->approve_status !=1 && $model->status != 3) || $model->isNewRecord || \Yii::$app->user->can('purchreq/approve')): ?>
-                    <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
-                        'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
-                    ]) ?>
-                <?php endif; ?>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <?php 
+                    $currentUser = !Yii::$app->user->isGuest ? Yii::$app->user->identity->username : '';
+                    $isApprovedPR = ($model->approve_status == \backend\models\PurchReq::APPROVE_STATUS_APPROVED && !$model->isNewRecord && $currentUser !== 'mcoadmin');
+                    ?>
+                    <?php if ($isApprovedPR): ?>
+                        <div class="alert alert-warning mb-0 py-2 px-3 d-inline-block">
+                            <i class="fas fa-lock me-1"></i> <strong>ใบขอซื้อนี้ได้รับการอนุมัติแล้ว:</strong> ไม่สามารถแก้ไขรายละเอียดได้ แต่สามารถแนบไฟล์เอกสารเพิ่มเติมได้ที่ส่วนด้านล่าง
+                        </div>
+                    <?php elseif (($model->approve_status != 1 && $model->status != 3) || $model->isNewRecord || \Yii::$app->user->can('purchreq/approve')): ?>
+                        <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
+                            'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
+                        ]) ?>
+                    <?php endif; ?>
+                </div>
                 <?= Html::a('ยกเลิก', ['index'], ['class' => 'btn btn-secondary']) ?>
             </div>
         </div>
@@ -1026,3 +1036,37 @@ function addServiceRemark() {
     }
 }
 </script>
+
+<?php
+$currentUser = !Yii::$app->user->isGuest ? Yii::$app->user->identity->username : '';
+$isApproved = ($model->approve_status == \backend\models\PurchReq::APPROVE_STATUS_APPROVED && !$model->isNewRecord && $currentUser !== 'mcoadmin') ? 'true' : 'false';
+$script_disable = <<< JS
+$(document).ready(function() {
+    var isApproved = {$isApproved};
+    if (isApproved) {
+        // Make inputs readonly (not disabled, so they don't break look)
+        $('#purch-req-form input:not([type="file"]):not([type="hidden"]), #purch-req-form textarea').prop('readonly', true).css('background-color', '#e9ecef');
+        
+        // Prevent interacting with selects
+        $('#purch-req-form select').css({
+            'pointer-events': 'none',
+            'background-color': '#e9ecef',
+            'touch-action': 'none'
+        }).attr('tabindex', '-1').on('mousedown', function(e) { e.preventDefault(); });
+        
+        $('.select2-container').css('pointer-events', 'none');
+        
+        // Prevent clicking on checkboxes and radio buttons
+        $('#purch-req-form input[type="checkbox"], #purch-req-form input[type="radio"]').on('click', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        
+        // Hide UI elements that modify the rows
+        $('.add-item, .remove-item').hide();
+        $('button[onclick="addServiceRemark()"]').hide();
+    }
+});
+JS;
+$this->registerJs($script_disable, static::POS_END);
+?>
