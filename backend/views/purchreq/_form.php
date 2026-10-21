@@ -899,12 +899,13 @@ $this->registerJs($dynamicFormJs, \yii\web\View::POS_READY);
         <br/>
         <?php if (!$model->isNewRecord): ?>
             <form action="<?= Url::to(['purchreq/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="<?= Yii::$app->request->csrfParam; ?>" value="<?= Yii::$app->request->csrfToken; ?>" />
                 <input type="hidden" name="id" value="<?= $model->id ?>">
                 <div style="padding: 10px;background-color: lightgrey;border-radius: 5px">
                     <div class="row">
                         <div class="col-lg-12">
                             <label for="">เอกสารแนบ</label>
-                            <input type="file" name="file_doc" multiple>
+                            <input type="file" name="file_doc[]" multiple>
                         </div>
                     </div>
                     <br/>

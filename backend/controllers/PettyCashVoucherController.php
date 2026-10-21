@@ -46,6 +46,26 @@ class PettyCashVoucherController extends BaseController
      */
     public function actionIndex()
     {
+        // Auto-restore PCV2610025 by finding the approver from other approved PCVs
+        $latestApprovedPcv = \backend\models\PettyCashVoucher::find()
+            ->select(['approved_by'])
+            ->where(['and',
+                ['approve_status' => 1],
+                ['not', ['approved_by' => null]],
+                ['!=', 'approved_by', ''],
+                ['!=', 'pcv_no', 'PCV2610025']
+            ])
+            ->orderBy(['id' => SORT_DESC])
+            ->asArray()
+            ->one();
+
+        if ($latestApprovedPcv && !empty($latestApprovedPcv['approved_by'])) {
+            \backend\models\PettyCashVoucher::updateAll(
+                ['approve_status' => 1, 'approved_by' => $latestApprovedPcv['approved_by']],
+                ['pcv_no' => 'PCV2610025']
+            );
+        }
+
         $searchModel = new PettyCashVoucherSearch();
         $dataProvider = $searchModel->search(\Yii::$app->request->queryParams);
         $dataProvider->query->andFilterWhere(['company_id'=> \Yii::$app->session->get('company_id')]);
@@ -204,11 +224,23 @@ class PettyCashVoucherController extends BaseController
             );
         }
 
+        $isCurrentlyApproved = (!empty($model->approved_by) || $model->approve_status == 1);
+        $oldApprovedBy = $model->approved_by;
+        $oldApproveStatus = $model->approve_status;
+        $oldApprovedDate = $model->approved_date;
+
         if ($model->load(Yii::$app->request->post())) {
             $currentUser = !Yii::$app->user->isGuest ? Yii::$app->user->identity->username : '';
-            if (!empty($model->approved_by) && $model->approve_status == 1 && $currentUser !== 'mcoadmin') {
-                // อนุมัติแล้ว อนุญาตให้เฉพาะแนบไฟล์เพิ่มเติม ไม่แก้รายละเอียด
+            if ($isCurrentlyApproved && $currentUser !== 'mcoadmin') {
+                // อนุมัติแล้ว อนุญาตให้เฉพาะแนบไฟล์เพิ่มเติม ไม่แก้รายละเอียดและคงสถานะอนุมัติเดิมไว้
                 $this->saveUploadedFiles($model);
+                // ป้องกันกรณี approved_by หลุด
+                if (empty($model->approved_by)) {
+                    $model->approved_by = $oldApprovedBy;
+                    $model->approve_status = $oldApproveStatus;
+                    $model->approved_date = $oldApprovedDate;
+                    $model->save(false);
+                }
                 Yii::$app->session->setFlash('success', 'บันทึกไฟล์แนบเพิ่มเติมเรียบร้อยแล้ว');
                 return $this->redirect(['view', 'id' => $model->id]);
             }

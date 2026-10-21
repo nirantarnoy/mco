@@ -227,7 +227,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
 
                     <?= $form->field($model, 'issued_by')->textInput(['maxlength' => true, 'placeholder' => 'ผู้จัดทำ', 'readonly' => 'readonly', 'value' => $model->isNewRecord ? \backend\models\User::findEmployeeNameByUserId(\Yii::$app->user->id) : $model->issued_by]) ?>
 
-                    <?= $form->field($model, 'approved_by')->textInput(['maxlength' => true, 'placeholder' => 'ผู้อนุมัติ', 'readonly' => 'readonly', 'value' => $model->approved_by ? \backend\models\User::findEmployeeNameByUserId($model->approved_by) : '']) ?>
+                    <?= $form->field($model, 'approved_by')->textInput(['maxlength' => true, 'placeholder' => 'ผู้อนุมัติ', 'readonly' => 'readonly', 'value' => $model->approved_by ?: '']) ?>
                 </div>
             </div>
 
