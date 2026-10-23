@@ -54,6 +54,11 @@ foreach ($modules as $modKey => $conf) {
         text-align: left !important;
         padding: 8px 12px !important;
     }
+    .group-header-row.approval-group td {
+        background-color: #fff3cd !important;
+        color: #856404 !important;
+        border-top: 2px solid #ffeeba;
+    }
     .perm-select {
         border-radius: 4px;
         font-weight: bold;
@@ -192,9 +197,15 @@ foreach ($modules as $modKey => $conf) {
                 </thead>
                 <tbody>
                     <?php foreach ($groupedModules as $grpName => $grpMods): ?>
-                        <tr class="group-header-row">
+                        <?php $isApprovalGroup = (strpos($grpName, 'สิทธิ์การอนุมัติ') !== false); ?>
+                        <tr class="group-header-row <?= $isApprovalGroup ? 'approval-group' : '' ?>">
                             <td colspan="<?= count($users) + 2 ?>" class="font-weight-bold">
-                                <i class="fas fa-folder-open mr-1"></i> <?= Html::encode($grpName) ?>
+                                <i class="<?= $isApprovalGroup ? 'fas fa-shield-alt text-warning' : 'fas fa-folder-open' ?> mr-1"></i> <?= Html::encode($grpName) ?>
+                                <?php if ($isApprovalGroup): ?>
+                                    <span class="badge badge-warning ml-2 font-weight-normal" style="font-size: 11px;">
+                                        <i class="fas fa-info-circle"></i> สำหรับกำหนดบทบาทผู้อนุมัติ (เลือก 1 = มีสิทธิ์อนุมัติ/จัดการ Recall, x = ไม่มีสิทธิ์)
+                                    </span>
+                                <?php endif; ?>
                             </td>
                         </tr>
                         <?php foreach ($grpMods as $modKey => $conf): ?>

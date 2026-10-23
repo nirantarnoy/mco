@@ -8,52 +8,103 @@ use common\models\UserModulePermission;
 class ModulePermissionConfig
 {
     /**
-     * นิยามรายการโมดูล / เมนูทั้งหมดของ MCO ตามโครงสร้างในภาพ Matrix และ Sidebar
+     * นิยามรายการโมดูล / เมนูทั้งหมดของ MCO แยกเป็น หมวดทั่วไป, จัดการเอกสาร, และ สิทธิ์การอนุมัติ & Recall
      */
     public static function getModuleList()
     {
         return [
-            // 1. ภาพรวมระบบ
+            // ================= 1. ทั่วไป & ค้นหา =================
             'site' => [
                 'name' => 'ภาพรวมระบบ',
-                'group' => 'ทั่วไป',
+                'group' => '1. ทั่วไป',
                 'description' => 'เข้าหน้าแรกและ Dashboard ภาพรวม',
                 'routes_view' => ['site/index'],
                 'routes_manage' => ['site/index'],
             ],
-
-            // 2. ค้นหาข้อมูลแต่ละ Job และข้อมูลเก่าทั้งหมด
             'search' => [
                 'name' => '1. ค้นหาข้อมูลแต่ละ Job และข้อมูลเก่าทั้งหมด',
-                'group' => 'ทั่วไป',
+                'group' => '1. ทั่วไป',
                 'description' => 'ค้นหาประวัติ Job และข้อมูลเอกสารเก่าในระบบ',
                 'routes_view' => ['search/index', 'search/searchitem'],
                 'routes_manage' => ['search/index', 'search/searchitem'],
             ],
 
-            // 3. ข้อมูล Stock และ เครื่องมือ
+            // ================= 2. คลังสินค้า & สต๊อก =================
             'stock_master' => [
-                'name' => '2. ข้อมูล Stock และ เครื่องมือ',
-                'group' => 'คลังสินค้า & สต๊อก',
-                'description' => 'ดูรายการสินค้าคงเหลือและรายงานเบิก-คืนเครื่องมือ',
+                'name' => '2. ข้อมูล Stock และ เครื่องมือ (สินค้าคงเหลือ & รายงาน)',
+                'group' => '2. คลังสินค้า & สต๊อก',
+                'description' => 'ดูรายการสินค้าคงเหลือ รายงานเบิก-คืน และสต็อกการ์ด',
                 'routes_view' => ['stocksum/index', 'stocksum/stockreport', 'stocksum/borrowreturnreport', 'inventoryreport/stockcard'],
                 'routes_manage' => ['stocksum/index', 'stocksum/stockreport', 'stocksum/borrowreturnreport', 'inventoryreport/stockcard'],
             ],
-
-            // 4. ทำรายการ (บันทึกรายการสต็อก / เบิก-รับเข้า / ปรับปรุง)
+            'stock_manage' => [
+                'name' => 'จัดการสต๊อกสินค้า (กลุ่ม, หน่วยนับ, ยี่ห้อ, สินค้า, คลัง)',
+                'group' => '2. คลังสินค้า & สต๊อก',
+                'description' => 'กำหนดกลุ่มสินค้า หน่วยนับ ยี่ห้อ ข้อมูลสินค้า และคลังสินค้า',
+                'routes_view' => ['productgroup/index', 'unit/index', 'productbrand/index', 'product/index', 'product/view', 'warehouse/index', 'warehouse/view'],
+                'routes_manage' => [
+                    'productgroup/index', 'productgroup/create', 'productgroup/update', 'productgroup/delete',
+                    'unit/index', 'unit/create', 'unit/update', 'unit/delete',
+                    'productbrand/index', 'productbrand/create', 'productbrand/update', 'productbrand/delete',
+                    'product/index', 'product/view', 'product/create', 'product/update', 'product/delete',
+                    'warehouse/index', 'warehouse/view', 'warehouse/create', 'warehouse/update', 'warehouse/delete',
+                ],
+            ],
             'stock_journal' => [
-                'name' => 'ทำรายการ (บันทึกรายการสต๊อก)',
-                'group' => 'คลังสินค้า & สต๊อก',
-                'description' => 'บันทึกรายการต่างๆ และประวัติการทำรายการสต๊อก',
+                'name' => 'ทำรายการสต๊อก (บันทึกรับ-จ่าย-โอน & ประวัติสต๊อก)',
+                'group' => '2. คลังสินค้า & สต๊อก',
+                'description' => 'บันทึกรายการสต๊อกต่างๆ และประวัติการทำรายการสต๊อก',
                 'routes_view' => ['journaltrans/index', 'journaltrans/view', 'stocktrans/index', 'stocktrans/view'],
-                'routes_manage' => ['journaltrans/index', 'journaltrans/view', 'journaltrans/create', 'journaltrans/update', 'journaltrans/delete', 'stocktrans/index', 'stocktrans/view'],
+                'routes_manage' => [
+                    'journaltrans/index', 'journaltrans/view', 'journaltrans/create', 'journaltrans/update', 'journaltrans/delete',
+                    'stocktrans/index', 'stocktrans/view',
+                ],
             ],
 
-            // 5. ตั้งค่าทั่วไป
+            // ================= 3. งานจัดซื้อ (Purchasing) =================
+            'vendor_manage' => [
+                'name' => 'ผู้ขาย (Vendor)',
+                'group' => '3. จัดซื้อ (Purchasing)',
+                'description' => 'ข้อมูลผู้ขายและผู้ให้บริการ',
+                'routes_view' => ['vendor/index', 'vendor/view'],
+                'routes_manage' => ['vendor/index', 'vendor/view', 'vendor/create', 'vendor/update', 'vendor/delete'],
+            ],
+            'purch_req' => [
+                'name' => 'ใบขอซื้อ (PR - Purchase Request)',
+                'group' => '3. จัดซื้อ (Purchasing)',
+                'description' => 'สร้างและจัดการใบขอซื้อ (ผู้ทำรายการส่ง Request Recall ได้)',
+                'routes_view' => ['purchreq/index', 'purchreq/view'],
+                'routes_manage' => [
+                    'purchreq/index', 'purchreq/view', 'purchreq/create', 'purchreq/update', 'purchreq/delete',
+                    'purchreq/requestrecall',
+                ],
+            ],
+            'purch_order' => [
+                'name' => 'ใบสั่งซื้อ (PO - Purchase Order)',
+                'group' => '3. จัดซื้อ (Purchasing)',
+                'description' => 'สร้างและจัดการใบสั่งซื้อ (ผู้ทำรายการส่ง Request Recall ได้)',
+                'routes_view' => ['purch/index', 'purch/view', 'purch/reportvendorsummary'],
+                'routes_manage' => [
+                    'purch/index', 'purch/view', 'purch/create', 'purch/update', 'purch/delete',
+                    'purch/requestrecall', 'purch/reportvendorsummary',
+                ],
+            ],
+            'purch_none_pr' => [
+                'name' => 'บันทึกข้อมูลซื้อ (None PR)',
+                'group' => '3. จัดซื้อ (Purchasing)',
+                'description' => 'บันทึกรายการซื้อที่ไม่มีใบขอซื้อ',
+                'routes_view' => ['purchasemaster/index', 'purchasemaster/view'],
+                'routes_manage' => [
+                    'purchasemaster/index', 'purchasemaster/view', 'purchasemaster/create', 'purchasemaster/update', 'purchasemaster/delete',
+                    'purchasemaster/requestrecall',
+                ],
+            ],
+
+            // ================= 4. การเงิน & บัญชี (A & F Dept) =================
             'general_setting' => [
-                'name' => 'ตั้งค่าทั่วไป (เงื่อนไขชำระ, บัญชี, ผังบัญชี, สกุลเงิน)',
-                'group' => 'การเงิน & บัญชี',
-                'description' => 'จัดการการตั้งค่าระบบ บัญชีธนาคาร ผังบัญชี หมวดบัญชี',
+                'name' => 'ตั้งค่าทั่วไป (เงื่อนไขชำระ, บัญชีธนาคาร, ผังบัญชี, หมวดบัญชี)',
+                'group' => '4. การเงิน & บัญชี',
+                'description' => 'เงื่อนไขชำระเงิน วิธีชำระเงิน บัญชีธนาคาร ผังบัญชี และหมวดบัญชี',
                 'routes_view' => ['paymentterm/index', 'paymentmethod/index', 'bankaccount/index', 'accountcategory/index', 'chartofaccount/index', 'currency/index', 'paymentextraoption/index'],
                 'routes_manage' => [
                     'paymentterm/index', 'paymentterm/create', 'paymentterm/update', 'paymentterm/delete',
@@ -65,11 +116,167 @@ class ModulePermissionConfig
                     'paymentextraoption/index', 'paymentextraoption/create', 'paymentextraoption/update', 'paymentextraoption/delete',
                 ],
             ],
+            'petty_cash' => [
+                'name' => 'เงินสดย่อย (บันทึก, เบิกทดแทน, รายงาน, ตั้งค่าวงเงิน)',
+                'group' => '4. การเงิน & บัญชี',
+                'description' => 'บันทึกใบสำคัญจ่ายเงินสดย่อย เบิกเงินทดแทน รายงาน (ขอ Recall ได้)',
+                'routes_view' => ['pettycashvoucher/index', 'pettycashvoucher/view', 'pettycashadvance/index', 'pettycashreport/index', 'pettycashsetting/index'],
+                'routes_manage' => [
+                    'pettycashvoucher/index', 'pettycashvoucher/view', 'pettycashvoucher/create', 'pettycashvoucher/update', 'pettycashvoucher/delete',
+                    'pettycashvoucher/requestrecall',
+                    'pettycashadvance/index', 'pettycashadvance/view', 'pettycashadvance/create', 'pettycashadvance/update', 'pettycashadvance/delete',
+                    'pettycashadvance/requestrecall',
+                    'pettycashreport/index', 'pettycashsetting/index', 'pettycashsetting/create', 'pettycashsetting/update',
+                ],
+            ],
+            'pre_advance' => [
+                'name' => 'Payment Advance (เบิกเงินทดรองจ่ายล่วงหน้า)',
+                'group' => '4. การเงิน & บัญชี',
+                'description' => 'บันทึกและจัดการเงินทดรองจ่ายล่วงหน้า (ขอ Recall ได้)',
+                'routes_view' => ['preadvance/index', 'preadvance/view'],
+                'routes_manage' => [
+                    'preadvance/index', 'preadvance/view', 'preadvance/create', 'preadvance/update', 'preadvance/delete',
+                    'preadvance/requestrecall',
+                ],
+            ],
+            'payment_voucher' => [
+                'name' => 'Payment Voucher (ใบสำคัญจ่าย)',
+                'group' => '4. การเงิน & บัญชี',
+                'description' => 'จัดการใบสำคัญจ่าย PV',
+                'routes_view' => ['paymentvoucher/index', 'paymentvoucher/view'],
+                'routes_manage' => ['paymentvoucher/index', 'paymentvoucher/view', 'paymentvoucher/create', 'paymentvoucher/update', 'paymentvoucher/delete'],
+            ],
+            'billing_invoice' => [
+                'name' => 'เอกสารวางบิล/ใบเสร็จ (ใบแจ้งหนี้, เพิ่มหนี้, ลดหนี้)',
+                'group' => '4. การเงิน & บัญชี',
+                'description' => 'ใบแจ้งหนี้ วางบิล ใบลดหนี้ ใบเพิ่มหนี้',
+                'routes_view' => ['invoice/index', 'invoice/view', 'debitnote/index', 'debitnote/view', 'creditnote/index', 'creditnote/view'],
+                'routes_manage' => [
+                    'invoice/index', 'invoice/view', 'invoice/create', 'invoice/update', 'invoice/delete',
+                    'debitnote/index', 'debitnote/view', 'debitnote/create', 'debitnote/update', 'debitnote/delete',
+                    'creditnote/index', 'creditnote/view', 'creditnote/create', 'creditnote/update', 'creditnote/delete',
+                ],
+            ],
+            'af_tax_report' => [
+                'name' => 'ภาษี & บัญชี (WHT หัก ณ ที่จ่าย, รายงานภาษีซื้อ, AP Worklist)',
+                'group' => '4. การเงิน & บัญชี',
+                'description' => 'จัดการหัก ณ ที่จ่าย WHT, รายงานภาษีซื้อ, รายการรอตั้งหนี้ AP',
+                'routes_view' => ['accountingdashboard/index', 'accountpayable/worklist', 'wht/index', 'purchasetaxreport/index'],
+                'routes_manage' => [
+                    'accountingdashboard/index', 'accountpayable/worklist',
+                    'wht/index', 'wht/create', 'wht/update', 'wht/delete', 'purchasetaxreport/index',
+                ],
+            ],
 
-            // 6. พนักงาน
+            // ================= 5. งานขาย & บริการ =================
+            'sales_quote' => [
+                'name' => 'รายการเสนอราคา & ลูกค้า (ลูกค้า, QT, ใบงาน Job, ใบตรวจรับงาน, ค่าใช้จ่ายรถ)',
+                'group' => '5. ขาย & บริการ',
+                'description' => 'ลูกค้า ใบเสนอราคา QT ใบงาน Job ใบตรวจรับงาน Delivery Note และค่าใช้จ่ายรถ',
+                'routes_view' => ['customer/index', 'customer/view', 'quotation/index', 'quotation/view', 'job/index', 'job/view', 'deliverynote/index', 'deliverynote/view', 'vehicleexpense/list'],
+                'routes_manage' => [
+                    'customer/index', 'customer/view', 'customer/create', 'customer/update', 'customer/delete',
+                    'quotation/index', 'quotation/view', 'quotation/create', 'quotation/update', 'quotation/delete',
+                    'quotation/requestrecall',
+                    'job/index', 'job/view', 'job/create', 'job/update', 'job/delete',
+                    'deliverynote/index', 'deliverynote/view', 'deliverynote/create', 'deliverynote/update', 'deliverynote/delete',
+                    'vehicleexpense/list', 'vehicleexpense/create', 'vehicleexpense/update', 'vehicleexpense/delete',
+                ],
+            ],
+
+            // ================= 6. สิทธิ์การอนุมัติ & จัดการ Recall (Approver Rights) =================
+            'appr_purch_req' => [
+                'name' => 'ผู้อนุมัติใบขอซื้อ (Approve / Reject PR)',
+                'group' => '6. สิทธิ์การอนุมัติ & Recall (Approver Rights)',
+                'description' => 'สิทธิ์ในการกดอนุมัติ (Approve) หรือไม่อนุมัติ (Reject) ใบขอซื้อ PR',
+                'routes_view' => [],
+                'routes_manage' => [
+                    'purchreq/approve',
+                    'purchreq/reject',
+                ],
+            ],
+            'appr_purch_order' => [
+                'name' => 'ผู้อนุมัติใบสั่งซื้อ (Approve / Reject PO)',
+                'group' => '6. สิทธิ์การอนุมัติ & Recall (Approver Rights)',
+                'description' => 'สิทธิ์ในการกดอนุมัติ (Approve) หรือไม่อนุมัติ (Reject) ใบสั่งซื้อ PO',
+                'routes_view' => [],
+                'routes_manage' => [
+                    'purch/approve',
+                    'purch/reject',
+                ],
+            ],
+            'appr_purch_none_pr' => [
+                'name' => 'ผู้อนุมัติข้อมูลซื้อ None PR (Approve None PR)',
+                'group' => '6. สิทธิ์การอนุมัติ & Recall (Approver Rights)',
+                'description' => 'สิทธิ์ในการกดอนุมัติการซื้อ None PR',
+                'routes_view' => [],
+                'routes_manage' => [
+                    'purchasemaster/approve',
+                ],
+            ],
+            'appr_petty_cash' => [
+                'name' => 'ผู้อนุมัติเงินสดย่อย / ทดแทน (Approve Petty Cash & Advance)',
+                'group' => '6. สิทธิ์การอนุมัติ & Recall (Approver Rights)',
+                'description' => 'สิทธิ์ในการกดอนุมัติเงินสดย่อยและเงินเบิกทดแทน',
+                'routes_view' => [],
+                'routes_manage' => [
+                    'pettycashvoucher/approve',
+                    'pettycashadvance/approve',
+                    'pettycashadvance/reject',
+                ],
+            ],
+            'appr_pre_advance' => [
+                'name' => 'ผู้อนุมัติ Payment Advance (Approve Pre-Advance)',
+                'group' => '6. สิทธิ์การอนุมัติ & Recall (Approver Rights)',
+                'description' => 'สิทธิ์ในการกดอนุมัติเงินทดรองจ่ายล่วงหน้า',
+                'routes_view' => [],
+                'routes_manage' => [
+                    'preadvance/approve',
+                    'preadvance/reject',
+                    'pre_advance_approver',
+                ],
+            ],
+            'appr_quotation' => [
+                'name' => 'ผู้อนุมัติใบเสนอราคา (Approve Quotation)',
+                'group' => '6. สิทธิ์การอนุมัติ & Recall (Approver Rights)',
+                'description' => 'สิทธิ์ในการกดอนุมัติใบเสนอราคา QT',
+                'routes_view' => [],
+                'routes_manage' => [
+                    'quotation/approve',
+                    'quotation/reject',
+                ],
+            ],
+            'appr_recall_hub' => [
+                'name' => 'ศูนย์อนุมัติ Recall เอกสาร (Approve / Reject Recall Hub)',
+                'group' => '6. สิทธิ์การอนุมัติ & Recall (Approver Rights)',
+                'description' => 'เข้าหน้าศูนย์คำร้องขอ Recall และมีสิทธิ์อนุมัติ/ปฏิเสธการดึงเอกสารกลับทุกโมดูล',
+                'routes_view' => ['recall/index'],
+                'routes_manage' => [
+                    'recall/index',
+                    'recall/approve',
+                    'recall/reject',
+                    'purchreq/approverecall',
+                    'purchreq/rejectrecall',
+                    'purch/approverecall',
+                    'purch/rejectrecall',
+                    'purchasemaster/approverecall',
+                    'purchasemaster/rejectrecall',
+                    'pettycashvoucher/approverecall',
+                    'pettycashvoucher/rejectrecall',
+                    'pettycashadvance/approverecall',
+                    'pettycashadvance/rejectrecall',
+                    'preadvance/approverecall',
+                    'preadvance/rejectrecall',
+                    'quotation/approverecall',
+                    'quotation/rejectrecall',
+                    'approver',
+                ],
+            ],
+
+            // ================= 7. บุคลากร & พนักงาน =================
             'employee' => [
                 'name' => 'พนักงาน (แผนก, ตำแหน่ง, รายชื่อ)',
-                'group' => 'บุคคลากร',
+                'group' => '7. บุคลากร & พนักงาน',
                 'description' => 'ข้อมูลพนักงาน แผนก และตำแหน่ง',
                 'routes_view' => ['department/index', 'department/view', 'position/index', 'position/view', 'employee/index', 'employee/view'],
                 'routes_manage' => [
@@ -79,141 +286,43 @@ class ModulePermissionConfig
                 ],
             ],
 
-            // 7. จัดการสต๊อกสินค้า
-            'stock_manage' => [
-                'name' => 'จัดการสต๊อกสินค้า (กลุ่ม, หน่วยนับ, ยี่ห้อ, สินค้า, คลัง)',
-                'group' => 'คลังสินค้า & สต๊อก',
-                'description' => 'กำหนดกลุ่มสินค้า หน่วยนับ ยี่ห้อ สินค้า และคลังสินค้า',
-                'routes_view' => ['productgroup/index', 'unit/index', 'productbrand/index', 'product/index', 'product/view', 'warehouse/index', 'warehouse/view'],
-                'routes_manage' => [
-                    'productgroup/index', 'productgroup/create', 'productgroup/update', 'productgroup/delete',
-                    'unit/index', 'unit/create', 'unit/update', 'unit/delete',
-                    'productbrand/index', 'productbrand/create', 'productbrand/update', 'productbrand/delete',
-                    'product/index', 'product/view', 'product/create', 'product/update', 'product/delete',
-                    'warehouse/index', 'warehouse/view', 'warehouse/create', 'warehouse/update', 'warehouse/delete',
-                ],
-            ],
-
-            // 8. เงินสดย่อย
-            'petty_cash' => [
-                'name' => 'เงินสดย่อย (บันทึก, เบิกทดแทน, รายงาน, ตั้งค่า)',
-                'group' => 'การเงิน & บัญชี',
-                'description' => 'บันทึกเงินสดย่อย เบิกเงินทดแทน รายงาน และตั้งค่าวงเงิน',
-                'routes_view' => ['pettycashvoucher/index', 'pettycashvoucher/view', 'pettycashadvance/index', 'pettycashreport/index', 'pettycashsetting/index'],
-                'routes_manage' => [
-                    'pettycashvoucher/index', 'pettycashvoucher/view', 'pettycashvoucher/create', 'pettycashvoucher/update', 'pettycashvoucher/delete',
-                    'pettycashadvance/index', 'pettycashadvance/view', 'pettycashadvance/create', 'pettycashadvance/update', 'pettycashadvance/delete',
-                    'pettycashreport/index', 'pettycashsetting/index', 'pettycashsetting/create', 'pettycashsetting/update',
-                ],
-            ],
-
-            // 9. เอกสารวางบิล/ใบเสร็จ
-            'billing_invoice' => [
-                'name' => 'เอกสารวางบิล/ใบเสร็จ (แจ้งหนี้, เพิ่มหนี้, ลดหนี้)',
-                'group' => 'การเงิน & บัญชี',
-                'description' => 'ใบแจ้งหนี้ วางบิล ใบลดหนี้ ใบเพิ่มหนี้',
-                'routes_view' => ['invoice/index', 'invoice/view', 'debitnote/index', 'debitnote/view', 'creditnote/index', 'creditnote/view'],
-                'routes_manage' => [
-                    'invoice/index', 'invoice/view', 'invoice/create', 'invoice/update', 'invoice/delete',
-                    'debitnote/index', 'debitnote/view', 'debitnote/create', 'debitnote/update', 'debitnote/delete',
-                    'creditnote/index', 'creditnote/view', 'creditnote/create', 'creditnote/update', 'creditnote/delete',
-                ],
-            ],
-
-            // 10. รายการสั่งซื้อ
-            'purchasing' => [
-                'name' => 'รายการสั่งซื้อ (ผู้ขาย, ใบขอซื้อ, ใบสั่งซื้อ, สรุปยอด, None PR)',
-                'group' => 'จัดซื้อ',
-                'description' => 'ผู้ขาย ใบขอซื้อ PR ใบสั่งซื้อ PO บันทึกซื้อ None PR',
-                'routes_view' => ['vendor/index', 'vendor/view', 'purchreq/index', 'purchreq/view', 'purch/index', 'purch/view', 'purch/reportvendorsummary', 'purchasemaster/index', 'purchasemaster/view'],
-                'routes_manage' => [
-                    'vendor/index', 'vendor/view', 'vendor/create', 'vendor/update', 'vendor/delete',
-                    'purchreq/index', 'purchreq/view', 'purchreq/create', 'purchreq/update', 'purchreq/delete', 'purchreq/approve',
-                    'purch/index', 'purch/view', 'purch/create', 'purch/update', 'purch/delete', 'purch/approve', 'purch/reportvendorsummary',
-                    'purchasemaster/index', 'purchasemaster/view', 'purchasemaster/create', 'purchasemaster/update', 'purchasemaster/delete',
-                    'checkduplicate/index',
-                ],
-            ],
-
-            // 11. A & F Dept
-            'af_dept' => [
-                'name' => 'A & F Dept (Dashboard, AP, Payment Advance, Payment Voucher, WHT, ภาษีซื้อ)',
-                'group' => 'การเงิน & บัญชี',
-                'description' => 'ระบบงานบัญชี-การเงิน รายการรอตั้งหนี้ AP, PV, Advance, WHT',
-                'routes_view' => ['accountingdashboard/index', 'accountpayable/worklist', 'preadvance/index', 'preadvance/view', 'paymentvoucher/index', 'paymentvoucher/view', 'wht/index', 'purchasetaxreport/index'],
-                'routes_manage' => [
-                    'accountingdashboard/index', 'accountpayable/worklist',
-                    'preadvance/index', 'preadvance/view', 'preadvance/create', 'preadvance/update', 'preadvance/delete', 'preadvance/approve',
-                    'paymentvoucher/index', 'paymentvoucher/view', 'paymentvoucher/create', 'paymentvoucher/update', 'paymentvoucher/delete',
-                    'wht/index', 'wht/create', 'wht/update', 'wht/delete', 'purchasetaxreport/index',
-                ],
-            ],
-
-            // 12. รายการเสนอราคา
-            'sales_quote' => [
-                'name' => 'รายการเสนอราคา (ลูกค้า, ใบเสนอราคา, ใบงาน, ใบตรวจรับงาน, ค่าใช้จ่ายรถ)',
-                'group' => 'ขาย & การตลาด',
-                'description' => 'ลูกค้า ใบเสนอราคา QT ใบงาน Job ใบตรวจรับงาน Delivery Note และค่าใช้จ่ายรถ',
-                'routes_view' => ['customer/index', 'customer/view', 'quotation/index', 'quotation/view', 'job/index', 'job/view', 'deliverynote/index', 'deliverynote/view', 'vehicleexpense/list'],
-                'routes_manage' => [
-                    'customer/index', 'customer/view', 'customer/create', 'customer/update', 'customer/delete',
-                    'quotation/index', 'quotation/view', 'quotation/create', 'quotation/update', 'quotation/delete',
-                    'job/index', 'job/view', 'job/create', 'job/update', 'job/delete',
-                    'deliverynote/index', 'deliverynote/view', 'deliverynote/create', 'deliverynote/update', 'deliverynote/delete',
-                    'vehicleexpense/list', 'vehicleexpense/create', 'vehicleexpense/update', 'vehicleexpense/delete',
-                ],
-            ],
-
-            // 13. Executive Dash สำหรับผู้บริหาร
+            // ================= 8. รายงาน & ผู้บริหาร =================
             'executive_dash' => [
                 'name' => 'Executive Dash สำหรับผู้บริหาร',
-                'group' => 'รายงาน & วิเคราะห์',
+                'group' => '8. รายงาน & ผู้บริหาร',
                 'description' => 'Executive Dashboard ภาพรวมผู้บริหาร',
                 'routes_view' => ['executivedashboard/index'],
                 'routes_manage' => ['executivedashboard/index'],
             ],
-
-            // 14. Report Portal
             'report_portal' => [
-                'name' => 'Report Portal (ศูนย์รวมรายงาน, สถานะใบงานรวม, ค่าแรงพนักงานขับรถ)',
-                'group' => 'รายงาน & วิเคราะห์',
+                'name' => 'Report Portal (ศูนย์รวมรายงาน, สถานะใบงานรวม, ค่าแรงคนขับรถ)',
+                'group' => '8. รายงาน & ผู้บริหาร',
                 'description' => 'Portal Hub รวมรายงาน รายงานใบงาน และรายงานค่าแรงพนักงานขับรถ',
                 'routes_view' => ['reportportal/index', 'jobreport/index', 'driverwagereport/index'],
                 'routes_manage' => ['reportportal/index', 'jobreport/index', 'driverwagereport/index'],
             ],
 
-            // 15. สแกนเอกสารใหม่
+            // ================= 9. OCR & สแกนเอกสาร =================
             'ocr_scan' => [
-                'name' => 'สแกนเอกสารใหม่',
-                'group' => 'OCR & AI',
-                'description' => 'อัปโหลดสแกนบิล/เอกสารใหม่เข้าระบบ OCR',
-                'routes_view' => ['ocr/index'],
-                'routes_manage' => ['ocr/index', 'ocr/upload', 'ocr/process'],
+                'name' => 'สแกนเอกสารใหม่ & รายการสแกน OCR (Temp Invoice)',
+                'group' => '9. OCR & AI',
+                'description' => 'อัปโหลดสแกนบิลและตรวจสอบรายการบิลที่ผ่านการสแกน OCR',
+                'routes_view' => ['ocr/index', 'tempinvoice/index', 'tempinvoice/view'],
+                'routes_manage' => ['ocr/index', 'ocr/upload', 'ocr/process', 'tempinvoice/index', 'tempinvoice/view', 'tempinvoice/create', 'tempinvoice/update', 'tempinvoice/delete', 'tempinvoice/approve'],
             ],
-
-            // 16. การสแกน OCR
-            'ocr_list' => [
-                'name' => 'รายการสแกน OCR (Temp Invoice)',
-                'group' => 'OCR & AI',
-                'description' => 'ดูและตรวจสอบรายการบิลที่ผ่านการสแกน OCR',
-                'routes_view' => ['tempinvoice/index', 'tempinvoice/view'],
-                'routes_manage' => ['tempinvoice/index', 'tempinvoice/view', 'tempinvoice/create', 'tempinvoice/update', 'tempinvoice/delete', 'tempinvoice/approve'],
-            ],
-
-            // 17. จัดการ OCR Pattern
             'ocr_pattern' => [
                 'name' => 'จัดการ OCR Pattern',
-                'group' => 'OCR & AI',
+                'group' => '9. OCR & AI',
                 'description' => 'ตั้งค่ารูปแบบการอ่านข้อมูล OCR แยกตาม Vendor',
                 'routes_view' => ['ocrpattern/index', 'ocrpattern/view'],
                 'routes_manage' => ['ocrpattern/index', 'ocrpattern/view', 'ocrpattern/create', 'ocrpattern/update', 'ocrpattern/delete'],
             ],
 
-            // 18. ผู้ใช้งาน
+            // ================= 10. จัดการระบบ =================
             'user_management' => [
-                'name' => 'ผู้ใช้งาน (กลุ่มผู้ใช้, ผู้ใช้งาน, กำหนดสิทธิ์, Action Log)',
-                'group' => 'จัดการระบบ',
-                'description' => 'บริหารจัดการ User, กลุ่มผู้ใช้งาน และสิทธิ์',
+                'name' => 'ผู้ใช้งาน (กลุ่มผู้ใช้, ผู้ใช้งาน, กำหนดสิทธิ์ Matrix, Action Log)',
+                'group' => '10. จัดการระบบ',
+                'description' => 'บริหารจัดการ User, กลุ่มผู้ใช้งาน และกำหนดสิทธิ์',
                 'routes_view' => ['usergroup/index', 'user/index', 'user/view', 'authitem/index', 'authitem/view', 'actionlog/index', 'userpermission/index'],
                 'routes_manage' => [
                     'usergroup/index', 'usergroup/create', 'usergroup/update', 'usergroup/delete',
@@ -222,11 +331,9 @@ class ModulePermissionConfig
                     'actionlog/index', 'userpermission/index', 'userpermission/save',
                 ],
             ],
-
-            // 19. สำรองข้อมูล
             'db_backup' => [
                 'name' => 'สำรองข้อมูล (Backup & Restore)',
-                'group' => 'จัดการระบบ',
+                'group' => '10. จัดการระบบ',
                 'description' => 'สำรองฐานข้อมูลและกู้คืนข้อมูล',
                 'routes_view' => ['dbbackup/backuplist', 'dbrestore/restorepage'],
                 'routes_manage' => ['dbbackup/backuplist', 'dbbackup/create', 'dbbackup/download', 'dbrestore/restorepage', 'dbrestore/restore'],
@@ -256,13 +363,17 @@ class ModulePermissionConfig
 
             if ($pType === UserModulePermission::PERM_VIEW) {
                 // ดูอย่างเดียว (0)
-                foreach ($conf['routes_view'] as $r) {
-                    $routesToAssign[$r] = true;
+                if (!empty($conf['routes_view'])) {
+                    foreach ($conf['routes_view'] as $r) {
+                        $routesToAssign[$r] = true;
+                    }
                 }
             } elseif ($pType === UserModulePermission::PERM_MANAGE) {
-                // ทำรายการ (1)
-                foreach ($conf['routes_manage'] as $r) {
-                    $routesToAssign[$r] = true;
+                // ทำรายการ (1) หรือ อนุมัติ (1)
+                if (!empty($conf['routes_manage'])) {
+                    foreach ($conf['routes_manage'] as $r) {
+                        $routesToAssign[$r] = true;
+                    }
                 }
             }
             // ถ้าเป็น 'x' จะไม่ใส่ route ใดๆ ให้
@@ -278,17 +389,13 @@ class ModulePermissionConfig
         // ดึงสิทธิ์เดิมของ User
         $currentAssignments = $auth->getAssignments($userId);
 
-        // ดึงรายการ Permission routes ทั้งหมดที่มีในระบบเพื่อเปรียบเทียบ
-        $allSystemPermissions = $auth->getPermissions();
-
         // สร้างหรือ Assign permissions ให้ User
         foreach (array_keys($routesToAssign) as $route) {
             $permName = strtolower(str_replace('-', '', $route));
             
-            // ตรวจสอบว่าใน auth_item มี Permission นี้หรือยัง หากยังไม่มีให้สร้าง
+            // ตรวจสอบว่าใน auth_item มี Permission หรือยัง หากยังไม่มีให้สร้าง
             $item = $auth->getPermission($permName);
             if (!$item) {
-                // ลองหาชื่อตรงๆ
                 $item = $auth->getPermission($route);
             }
             if (!$item) {
@@ -302,7 +409,7 @@ class ModulePermissionConfig
                 try {
                     $auth->assign($item, $userId);
                 } catch (\Exception $e) {
-                    // ข้ามกรณี unique constraint หรือ error เล็กน้อย
+                    // ข้ามกรณี duplicate
                 }
             }
         }
