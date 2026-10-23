@@ -206,12 +206,18 @@ class SiteController extends BaseController
         $user_info = \backend\models\User::find()->where(['id' => \Yii::$app->user->id])->one();
 
         if ($id == 100) {
-            if ($user_info && $user_info->user_group_id != 1) {
+            if ($user_info && ($user_info->user_group_id != 1 && !\backend\models\User::isUserAdmin(\Yii::$app->user->id))) {
                 Yii::$app->session->setFlash('msg-error', 'คุณไม่ได้รับอนุญาตให้เข้าถึงทุกบริษัท');
                 return $this->redirect(Yii::$app->request->referrer ?: ['site/index']);
             }
             $com_name = 'ทุกบริษัท';
         } else {
+            // ตรวจสอบสิทธิ์การเข้าถึงบริษัทของ User
+            if (!\backend\models\User::isUserAdmin(\Yii::$app->user->id) && !\common\models\UserCompany::hasAccess(\Yii::$app->user->id, $id)) {
+                Yii::$app->session->setFlash('msg-error', 'คุณไม่ได้รับอนุญาตให้เข้าใช้งานบริษัทนี้');
+                return $this->redirect(Yii::$app->request->referrer ?: ['site/index']);
+            }
+
             $company = \backend\models\Company::findOne($id);
             if ($company) {
                 $com_name = $company->name;
@@ -223,6 +229,11 @@ class SiteController extends BaseController
 
         Yii::$app->session->set('company_id', $id);
         Yii::$app->session->set('company_name', $com_name);
+
+        // นำสิทธิ์ Matrix ของบริษัทนี้มาซิงค์ให้กับ User
+        if ($id != 100) {
+            \backend\models\ModulePermissionConfig::applyCompanyPermissionsToUser(\Yii::$app->user->id, $id);
+        }
 
         return $this->redirect(Yii::$app->request->referrer ?: ['site/index']);
     }

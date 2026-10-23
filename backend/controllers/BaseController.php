@@ -18,6 +18,11 @@ class BaseController extends Controller
              return parent::beforeAction($action);
         }
 
+        // อนุญาตให้ admin หรือ controller userpermission เข้าได้
+        if ($this->id === 'userpermission' && (\backend\models\User::isUserAdmin(\Yii::$app->user->id) || \backend\models\User::findName(\Yii::$app->user->id) == 'mcoadmin' || \backend\models\User::findName(\Yii::$app->user->id) == 'sorakrit')) {
+            return parent::beforeAction($action);
+        }
+
         // อนุโลม action ช่วยดึงข้อมูลที่อยู่ / รหัสไปรษณีย์ และแนบ/ลบไฟล์เอกสาร
         if (in_array($action->id, ['lookup-zipcode', 'lookupzipcode', 'showcity', 'showdistrict', 'showzipcode', 'showaddress', 'add-doc-file', 'adddocfile', 'add-doc-file-bill', 'adddocfilebill', 'add-doc-file-new', 'adddocfilenew', 'delete-doc-file', 'deletedocfile'])) {
             return parent::beforeAction($action);

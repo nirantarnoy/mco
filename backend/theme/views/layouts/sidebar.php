@@ -675,11 +675,17 @@
                                 </li>
                             <?php //endif;?>
 
+                            <li class="nav-item">
+                                <a href="index.php?r=userpermission" class="nav-link userpermission">
+                                    <i class="far fa-circlez nav-icon"></i>
+                                    <p>กำหนดสิทธิ์รายบริษัท (Matrix)</p>
+                                </a>
+                            </li>
                             <?php //if (\Yii::$app->user->can('authitem/index')): ?>
                             <li class="nav-item">
                                 <a href="index.php?r=authitem" class="nav-link authitem">
                                     <i class="far fa-circlez nav-icon"></i>
-                                    <p>สิทธิ์การใช้งาน</p>
+                                    <p>สิทธิ์การใช้งาน (RBAC)</p>
                                 </a>
                             </li>
                             <?php //endif;?>

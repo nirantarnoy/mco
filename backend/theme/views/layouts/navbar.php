@@ -7,16 +7,26 @@ use yii\web\Session;
 $current_company_id = \Yii::$app->session->get('company_id');
 $current_company_name = \Yii::$app->session->get('company_name') ?: 'เลือกบริษัท';
 
-$companies = \backend\models\Company::find()->where(['status' => 1])->all();
-if (empty($companies)) {
-    $companies = \backend\models\Company::find()->all();
-}
-
 $user_info = null;
 if (!Yii::$app->user->isGuest) {
     $user_info = \backend\models\User::find()->where(['id' => Yii::$app->user->id])->one();
 }
-$is_admin = ($user_info && $user_info->user_group_id == 1);
+$is_admin = ($user_info && ($user_info->user_group_id == 1 || \backend\models\User::isUserAdmin(Yii::$app->user->id)));
+
+// ดึงเฉพาะบริษัทที่ User ได้รับสิทธิ์ ยกเว้น Admin ที่เห็นทุกบริษัท
+if (!$is_admin && !Yii::$app->user->isGuest) {
+    $allowedCompanyIds = \common\models\UserCompany::getUserCompanyIds(Yii::$app->user->id);
+    if (!empty($allowedCompanyIds)) {
+        $companies = \backend\models\Company::find()->where(['id' => $allowedCompanyIds, 'status' => 1])->all();
+    } else {
+        $companies = \backend\models\Company::find()->where(['id' => $current_company_id])->all();
+    }
+} else {
+    $companies = \backend\models\Company::find()->where(['status' => 1])->all();
+    if (empty($companies)) {
+        $companies = \backend\models\Company::find()->all();
+    }
+}
 ?>
 <nav class="main-header navbar navbar-expand navbar-white navbar-light">
     <!-- Left navbar links -->
