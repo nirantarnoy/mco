@@ -865,9 +865,9 @@ $this->registerJs($autocompleteJs);
                                 <?php
                                 echo DatePicker::widget([
                                     'name' => 'purch_bill_date',
-                                    'value' => $model_purch_vendor_bill != null ? date('m-d-Y', strtotime($model_purch_vendor_bill->bill_date)) : date('Y-m-d'),
+                                    'value' => ($model_purch_vendor_bill != null && !empty($model_purch_vendor_bill->bill_date)) ? date('Y-m-d', strtotime($model_purch_vendor_bill->bill_date)) : date('Y-m-d'),
                                     'type' => DatePicker::TYPE_COMPONENT_PREPEND,
-                                    'options' => [''],
+                                    'options' => ['class' => 'vendor-bill-allow-edit'],
                                     'pluginOptions' => [
                                         'autoclose' => true,
                                         'format' => 'yyyy-mm-dd',
@@ -880,9 +880,9 @@ $this->registerJs($autocompleteJs);
                                 <?php
                                 echo DatePicker::widget([
                                     'name' => 'purch_vendor_bill_date',
-                                    'value' => $model_purch_vendor_bill != null ? date('m-d-Y', strtotime($model_purch_vendor_bill->appoinment_date)) : date('Y-m-d'),
+                                    'value' => ($model_purch_vendor_bill != null && !empty($model_purch_vendor_bill->appoinment_date)) ? date('Y-m-d', strtotime($model_purch_vendor_bill->appoinment_date)) : date('Y-m-d'),
                                     'type' => DatePicker::TYPE_COMPONENT_PREPEND,
-                                    'options' => [''],
+                                    'options' => ['class' => 'vendor-bill-allow-edit'],
                                     'pluginOptions' => [
                                         'autoclose' => true,
                                         'format' => 'yyyy-mm-dd',
@@ -925,8 +925,13 @@ $this->registerJs($autocompleteJs);
                 $isApprovedPO = ($model->approve_status == \backend\models\Purch::APPROVE_STATUS_APPROVED && !$model->isNewRecord && $currentUser !== 'mcoadmin');
                 ?>
                 <?php if ($isApprovedPO): ?>
-                    <div class="alert alert-warning mb-0 py-2 px-3 d-inline-block">
-                        <i class="fas fa-lock me-1"></i> <strong>ใบสั่งซื้อนี้ได้รับการอนุมัติแล้ว:</strong> ไม่สามารถแก้ไขรายละเอียดได้ แต่สามารถแนบไฟล์เอกสารเพิ่มเติมได้ที่ส่วนด้านล่าง
+                    <div class="alert alert-warning mb-2 py-2 px-3 d-inline-block">
+                        <i class="fas fa-lock me-1"></i> <strong>ใบสั่งซื้อนี้ได้รับการอนุมัติแล้ว:</strong> รายการสินค้าและยอดเงินถูกล็อค แต่สามารถบันทึกข้อมูลวางบิล Vendor และแนบเอกสารเพิ่มเติมได้
+                    </div>
+                    <div class="mt-1">
+                        <?= Html::submitButton('<i class="fas fa-save me-1"></i> บันทึกข้อมูลวางบิล / เอกสาร', [
+                            'class' => 'btn btn-primary'
+                        ]) ?>
                     </div>
                 <?php elseif ($model->status != 3 || $model->isNewRecord || \Yii::$app->user->can('purch/approve')): ?>
                     <?= Html::submitButton($model->isNewRecord ? 'สร้างใบขอซื้อ' : 'บันทึกการแก้ไข', [
@@ -1299,8 +1304,14 @@ $script_disable = <<< JS
 $(document).ready(function() {
     var isApproved = {$isApproved};
     if (isApproved) {
-        // Make inputs readonly (not disabled, so they still POST)
-        $('#purch-form input:not([type="file"]):not([type="hidden"]), #purch-form textarea').prop('readonly', true).css('background-color', '#e9ecef');
+        // Selector for fields allowed to be edited for billing & deposit collection after approval
+        var allowedInputs = 'input[name="purch_bill_date"], input[name="purch_vendor_bill_date"], input[name="purch_vendor_bill_doc"], input[name="deposit_receive_date"], input[name="deposit_receive_amount"], input[name="deposit_receive_doc"]';
+
+        // Make inputs readonly (not disabled, so they still POST), except allowed billing/deposit fields
+        $('#purch-form input:not([type="file"]):not([type="hidden"]), #purch-form textarea')
+            .not(allowedInputs)
+            .prop('readonly', true)
+            .css('background-color', '#e9ecef');
         
         // Prevent interacting with selects
         $('#purch-form select').css({
@@ -1317,7 +1328,7 @@ $(document).ready(function() {
             return false;
         });
         
-        // Hide UI elements that modify the rows
+        // Hide UI elements that modify the rows (items, quantity, price)
         $('.add-item, .remove-item').hide();
         $('button[onclick="addServiceRemark()"]').hide();
         

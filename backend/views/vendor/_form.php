@@ -134,25 +134,9 @@ if($model->isNewRecord) {
                     <?= $form->field($model, 'email')->textInput(['maxlength' => true]) ?>
                 </div>
             </div>
-            <div class="col-lg-1"></div>
         </div>
-        <div class="row">
-            <div class="col-lg-1"></div>
-            <div class="col-lg-10">
-                <div class="row">
-                    <div class="col-lg-2">
-                        <?= $form->field($model, 'home_number')->textInput(['maxlength' => true]) ?>
-                    </div>
-                    <div class="col-lg-6">
-                        <?= $form->field($model, 'street')->textInput(['maxlength' => true]) ?>
-                    </div>
-                    <div class="col-lg-4">
-                        <?= $form->field($model, 'aisle')->textInput(['maxlength' => true]) ?>
-                    </div>
-                </div>
-                <div class="col-lg-1"></div>
-            </div>
-        </div>
+        <div class="col-lg-1"></div>
+    </div>
 
         <div class="row">
             <div class="col-lg-1"></div>

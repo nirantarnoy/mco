@@ -470,10 +470,7 @@ class PurchController extends BaseController
 
         if ($model->load(Yii::$app->request->post())) {
             $currentUser = !Yii::$app->user->isGuest ? Yii::$app->user->identity->username : '';
-            if ($model->approve_status == Purch::APPROVE_STATUS_APPROVED && $currentUser !== 'mcoadmin') {
-                Yii::$app->session->setFlash('error', 'ใบสั่งซื้อนี้ได้รับการอนุมัติแล้ว ไม่อนุญาตให้แก้ไขรายละเอียดข้อมูล');
-                return $this->redirect(['view', 'id' => $model->id]);
-            }
+            $isApprovedPO = ($model->approve_status == Purch::APPROVE_STATUS_APPROVED && $currentUser !== 'mcoadmin');
 
             $custom_vat_amount = \Yii::$app->request->post('purch_vat_amount');
             $customer_tax_amount = \Yii::$app->request->post('purch_tax_amount');
@@ -485,6 +482,77 @@ class PurchController extends BaseController
             $purch_vendor_bill_date = \Yii::$app->request->post('purch_vendor_bill_date');
             $purch_bill_date = \Yii::$app->request->post('purch_bill_date');
             $purch_vendor_bill_doc = UploadedFile::getInstanceByName('purch_vendor_bill_doc');
+
+            // กรณี PO ได้รับการอนุมัติแล้ว: อนุญาตให้อัปเดตเฉพาะส่วนวางบิล Vendor และรับมัดจำคืนได้ โดยไม่แก้ไขรายการสินค้าและยอดเงิน
+            if ($isApprovedPO) {
+                $transaction = Yii::$app->db->beginTransaction();
+                try {
+                    // 1. จัดการรับมัดจำคืน (Deposit receive return)
+                    if ($model->is_deposit == 1) {
+                        $model_purch_deposit = \backend\models\PurchDeposit::find()->where(['purch_id' => $model->id])->one();
+                        if ($model_purch_deposit) {
+                            $model_purch_deposit_line = \backend\models\PurchDepositLine::find()->where(['purch_deposit_id' => $model_purch_deposit->id])->one();
+                            if ($model_purch_deposit_line) {
+                                if ($receive_date) {
+                                    $model_purch_deposit_line->receive_date = date('Y-m-d H:i:s', strtotime($receive_date));
+                                }
+                                $deposit_receive_doc = UploadedFile::getInstanceByName('deposit_receive_doc');
+                                if (!empty($deposit_receive_doc)) {
+                                    $uploadPathPurch = 'uploads/purch_doc/';
+                                    if (!file_exists($uploadPathPurch)) {
+                                        \yii\helpers\FileHelper::createDirectory($uploadPathPurch, 0777, true);
+                                    }
+                                    $file_receive = 'purch_deposit_return_' . time() . '_' . ($deposit_receive_doc->getExtension());
+                                    if ($deposit_receive_doc->saveAs($uploadPathPurch . $file_receive)) {
+                                        $model_purch_deposit_line->receive_doc = $file_receive;
+                                    }
+                                }
+                                $model_purch_deposit_line->save(false);
+                            }
+                        }
+                    }
+
+                    // 2. จัดการข้อมูลวางบิล Vendor (Vendor bill date, appointment date, and attachment)
+                    if ($purch_bill_date != null || $purch_vendor_bill_date != null || !empty($purch_vendor_bill_doc)) {
+                        $uploadPathPurch = 'uploads/purch_doc/';
+                        if (!file_exists($uploadPathPurch)) {
+                            \yii\helpers\FileHelper::createDirectory($uploadPathPurch, 0777, true);
+                        }
+
+                        $model_vendor_bill = \common\models\PurchVendorBill::find()->where(['purch_id' => $id])->one();
+                        if (!$model_vendor_bill) {
+                            $model_vendor_bill = new \common\models\PurchVendorBill();
+                            $model_vendor_bill->purch_id = $id;
+                        }
+
+                        if ($purch_bill_date != null) {
+                            $model_vendor_bill->bill_date = date('Y-m-d', strtotime($purch_bill_date));
+                        }
+                        if ($purch_vendor_bill_date != null) {
+                            $model_vendor_bill->appoinment_date = date('Y-m-d', strtotime($purch_vendor_bill_date));
+                        }
+
+                        if (!empty($purch_vendor_bill_doc)) {
+                            $file = 'purch_vendor_bill_' . time() . '_' . ($purch_vendor_bill_doc->getExtension());
+                            if ($purch_vendor_bill_doc->saveAs($uploadPathPurch . $file)) {
+                                if (!empty($model_vendor_bill->bill_doc) && file_exists($uploadPathPurch . $model_vendor_bill->bill_doc)) {
+                                    unlink($uploadPathPurch . $model_vendor_bill->bill_doc);
+                                }
+                                $model_vendor_bill->bill_doc = $file;
+                            }
+                        }
+                        $model_vendor_bill->save(false);
+                    }
+
+                    $transaction->commit();
+                    Yii::$app->session->setFlash('success', 'บันทึกข้อมูลวางบิลและเอกสารเรียบร้อยแล้ว');
+                    return $this->redirect(['view', 'id' => $model->id]);
+                } catch (\Exception $e) {
+                    $transaction->rollBack();
+                    Yii::$app->session->setFlash('error', 'เกิดข้อผิดพลาดในการบันทึก: ' . $e->getMessage());
+                    return $this->redirect(['update', 'id' => $model->id]);
+                }
+            }
 
             $purchLines = [];
             $valid = $model->validate();
