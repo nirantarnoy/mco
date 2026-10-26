@@ -379,20 +379,56 @@ class ModulePermissionConfig
             // ถ้าเป็น 'x' จะไม่ใส่ route ใดๆ ให้
         }
 
-        // อนุญาต route พื้นฐานที่จำเป็นสำหรับผู้ใช้ทุกคนเสมอ
-        $routesToAssign['site/index'] = true;
+        // รวบรวม routes ที่ครอบคลุมใน matrix เพื่อจัดการ revoke สิทธิ์เดิมออกเมื่อเลือก 'x'
+        $allMatrixPermNames = [];
+        foreach ($modules as $conf) {
+            if (!empty($conf['routes_view'])) {
+                foreach ($conf['routes_view'] as $r) {
+                    $allMatrixPermNames[strtolower(str_replace('-', '', $r))] = true;
+                    $allMatrixPermNames[$r] = true;
+                }
+            }
+            if (!empty($conf['routes_manage'])) {
+                foreach ($conf['routes_manage'] as $r) {
+                    $allMatrixPermNames[strtolower(str_replace('-', '', $r))] = true;
+                    $allMatrixPermNames[$r] = true;
+                }
+            }
+        }
+
+        // อนุญาต route พื้นฐานที่จำเป็นสำหรับผู้ใช้ทุกคนเสมอ (ไม่รวม site/index ซึ่งขึ้นกับสิทธิ์ Matrix)
         $routesToAssign['site/logout'] = true;
         $routesToAssign['site/changepassword'] = true;
         $routesToAssign['site/changecompany'] = true;
         $routesToAssign['site/change-company'] = true;
 
+        // แปลง routesToAssign ให้อยู่ในรูป permission names ที่จะมอบให้
+        $targetPermNames = [];
+        foreach (array_keys($routesToAssign) as $route) {
+            $permName = strtolower(str_replace('-', '', $route));
+            $targetPermNames[$permName] = $route;
+        }
+
         // ดึงสิทธิ์เดิมของ User
         $currentAssignments = $auth->getAssignments($userId);
 
-        // สร้างหรือ Assign permissions ให้ User
-        foreach (array_keys($routesToAssign) as $route) {
-            $permName = strtolower(str_replace('-', '', $route));
-            
+        // 1. Revoke สิทธิ์เดิมของ Matrix ที่ไม่ได้อยู่ใน $targetPermNames ออกไป (เมื่อเลือกเป็น 'x')
+        foreach ($currentAssignments as $permName => $assignment) {
+            // ลบเฉพาะ permission ที่อยู่ในขอบเขตของ Matrix และไม่ได้อยู่ในสิทธิ์ที่เลือกใหม่
+            if (isset($allMatrixPermNames[$permName]) && !isset($targetPermNames[$permName])) {
+                $item = $auth->getPermission($permName);
+                if ($item) {
+                    try {
+                        $auth->revoke($item, $userId);
+                    } catch (\Exception $e) {
+                        // ข้ามกรณีมีข้อผิดพลาด
+                    }
+                }
+            }
+        }
+
+        // 2. สร้างหรือ Assign permissions ใหม่ให้ User
+        foreach ($targetPermNames as $permName => $route) {
             // ตรวจสอบว่าใน auth_item มี Permission หรือยัง หากยังไม่มีให้สร้าง
             $item = $auth->getPermission($permName);
             if (!$item) {

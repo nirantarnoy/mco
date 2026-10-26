@@ -43,10 +43,6 @@ class BaseController extends Controller
         $permissionName = $controllerName . '/' . $actionName;
 
         if (!Yii::$app->user->can($permissionName)) {
-            // อนุโลมให้เข้าหน้า Index ของระบบหลัก (Dashboard) ได้หากล็อกอินแล้ว
-            if ($controllerName == 'site' && $actionName == 'index') {
-                return parent::beforeAction($action);
-            }
             // อนุโลมให้เข้าหน้ารายงานค่าแรงคนขับรถได้หากเข้าสู่ระบบแล้ว
             if ($controllerName == 'driverwagereport') {
                 return parent::beforeAction($action);

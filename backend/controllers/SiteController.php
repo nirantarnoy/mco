@@ -151,6 +151,12 @@ class SiteController extends BaseController
 
             Yii::$app->session->set('company_id', $login_company);
             Yii::$app->session->set('company_name', $com_name);
+
+            // ซิงค์สิทธิ์ Matrix ของบริษัทที่เลือกให้กับ User
+            if ($login_company != 100) {
+                \backend\models\ModulePermissionConfig::applyCompanyPermissionsToUser(\Yii::$app->user->id, $login_company);
+            }
+
             return $this->redirect(['search/index']);
         }
 
