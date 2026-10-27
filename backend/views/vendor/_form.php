@@ -229,6 +229,63 @@ if($model->isNewRecord) {
             </div>
             <div class="col-lg-1"></div>
         </div>
+
+        <div class="row">
+            <div class="col-lg-1"></div>
+            <div class="col-lg-10">
+                <div class="card card-outline card-info" style="border: 1px solid #17a2b8; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-top: 15px; margin-bottom: 20px;">
+                    <div class="card-header" style="background-color: #e9f7f9; border-bottom: 1px solid #17a2b8; padding: 12px 20px;">
+                        <h5 class="card-title" style="margin: 0; color: #117a8b; font-weight: bold;">
+                            <i class="fas fa-university me-2"></i> ข้อมูลบัญชีธนาคาร (Bank Account Information)
+                        </h5>
+                    </div>
+                    <div class="card-body" style="padding: 20px;">
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <?= $form->field($model, 'bank_name')->textInput(['maxlength' => true, 'id' => 'vendor-bank_name', 'placeholder' => 'เช่น กสิกรไทย, ไทยพาณิชย์']) ?>
+                            </div>
+                            <div class="col-lg-4">
+                                <?= $form->field($model, 'bank_branch')->textInput(['maxlength' => true, 'id' => 'vendor-bank_branch', 'placeholder' => 'สาขา']) ?>
+                            </div>
+                            <div class="col-lg-4">
+                                <?= $form->field($model, 'bank_province')->textInput(['maxlength' => true, 'id' => 'vendor-bank_province', 'placeholder' => 'จังหวัด']) ?>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <?= $form->field($model, 'account_name')->textInput(['maxlength' => true, 'id' => 'vendor-account_name', 'placeholder' => 'ชื่อบัญชี']) ?>
+                            </div>
+                            <div class="col-lg-6">
+                                <?= $form->field($model, 'account_num')->textInput(['maxlength' => true, 'id' => 'vendor-account_num', 'placeholder' => 'เลขที่บัญชีธนาคาร']) ?>
+                            </div>
+                        </div>
+
+                        <div class="row" style="margin-top: 10px;">
+                            <div class="col-lg-7">
+                                <?= $form->field($model, 'bank_account_file')->fileInput(['id' => 'bank-account-file-input', 'accept' => 'image/*'])->label('แนบรูปภาพหน้าบัญชีธนาคาร (สมุดบัญชี/Passbook)') ?>
+                                <?php if (!empty($model->bank_account_file)): ?>
+                                    <div class="mt-1">
+                                        <span class="text-muted"><i class="fas fa-paperclip"></i> ไฟล์ปัจจุบัน: </span>
+                                        <a href="<?= Yii::$app->request->baseUrl . '/uploads/vendor_doc/' . $model->bank_account_file ?>" target="_blank" class="btn btn-sm btn-outline-info ms-1">
+                                            <i class="fas fa-eye"></i> ดูหน้าบัญชีที่แนบไว้
+                                        </a>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="col-lg-5 align-self-center text-lg-end mt-2 mt-lg-0">
+                                <button type="button" class="btn btn-info text-white" id="btn-scan-bank-book" style="font-weight: 500;">
+                                    <i class="fas fa-robot me-1"></i> สแกนด้วย Gemini AI
+                                </button>
+                                <div id="scan-loading" style="display: none;" class="mt-2 text-info">
+                                    <i class="fas fa-spinner fa-spin me-1"></i> กำลังอ่านข้อมูลด้วย Gemini AI...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-1"></div>
+        </div>
         <br/>
         <div class="row">
             <div class="col-lg-1"></div>
