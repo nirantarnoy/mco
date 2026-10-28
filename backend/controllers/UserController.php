@@ -140,7 +140,10 @@ class UserController extends BaseController
 
       //  print_r($model);return;
         if ($model->load(Yii::$app->request->post())) {
-            //$model->status = $model->status == 1?10:9;
+            if (!empty($model->pwd)) {
+                $model->setPassword($model->pwd);
+                $model->generateAuthKey();
+            }
             if ($model->save()) {
                 $model->assignment();
                 $session = \Yii::$app->session;

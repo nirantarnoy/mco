@@ -3,7 +3,7 @@ use yii\helpers\Html;
 
 // คำนวณราคารวม
 $subtotal = 0;
-$discount = $purchase->discount_amount ?? 0;
+$discount = ($purchase->discount_total_amount > 0) ? $purchase->discount_total_amount : ($purchase->discount_amount ?? 0);
 $vat = 0;
 $total = 0;
 
@@ -11,6 +11,10 @@ if ($purchaseLines) {
     foreach ($purchaseLines as $line) {
         $subtotal += $line->line_total;
     }
+}
+
+if ($discount == 0 && $purchase->discount_per > 0) {
+    $discount = ($subtotal * $purchase->discount_per) / 100;
 }
 
 // คำนวณ VAT 7%

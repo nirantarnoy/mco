@@ -16,9 +16,7 @@ use yii\widgets\ActiveForm;
         <div class="col-lg-5">
             <?= $form->field($model, 'username')->textInput() ?>
 
-            <?php if ($model->isNewRecord): ?>
-                <?= $form->field($model, 'pwd')->passwordInput()->label('Password') ?>
-            <?php endif; ?>
+            <?= $form->field($model, 'pwd')->passwordInput()->label($model->isNewRecord ? 'Password' : 'Password (กรอกเมื่อต้องการเปลี่ยนรหัสผ่านใหม่)') ?>
             <?= $form->field($model, 'user_group_id')->widget(\kartik\select2\Select2::className(), [
                 'data' => \yii\helpers\ArrayHelper::map(\backend\models\Usergroup::find()->all(), 'id', function ($data) {
                     return $data->name;
