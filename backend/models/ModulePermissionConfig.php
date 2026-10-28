@@ -342,7 +342,78 @@ class ModulePermissionConfig
     }
 
     /**
+     * ดึงรายการ Action ทั้งหมดของ Controller ที่มีอยู่ในระบบ (สแกนจาก Controller จริง และจาก auth_item ใน DB)
+     * @param string $controllerName เช่น 'purch'
+     * @return array รายการ routes ในรูป lowercase เช่น ['purch/index', 'purch/create', ...]
+     */
+    public static function getControllerActionRoutes($controllerName)
+    {
+        static $controllerActionsCache = [];
+        $controllerName = strtolower($controllerName);
+
+        if (isset($controllerActionsCache[$controllerName])) {
+            return $controllerActionsCache[$controllerName];
+        }
+
+        $routes = [];
+
+        // 1. สแกน Actions จาก Reflection ของ Controller Class
+        $className = 'backend\\controllers\\' . ucfirst($controllerName) . 'Controller';
+        if (!class_exists($className)) {
+            // ลองตรวจสอบแบบ camelCase เช่น stockSum -> StocksumController
+            $allCtrlFiles = \yii\helpers\FileHelper::findFiles(Yii::getAlias('@backend/controllers'), [
+                'only' => ['*Controller.php'],
+                'recursive' => false
+            ]);
+            foreach ($allCtrlFiles as $f) {
+                $base = basename($f, 'Controller.php');
+                if (strtolower($base) === $controllerName) {
+                    $className = 'backend\\controllers\\' . basename($f, '.php');
+                    break;
+                }
+            }
+        }
+
+        if (class_exists($className)) {
+            try {
+                $reflection = new \ReflectionClass($className);
+                if (!$reflection->isAbstract()) {
+                    foreach ($reflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+                        $methodName = $method->getName();
+                        if (strpos($methodName, 'action') === 0 && $methodName !== 'actions') {
+                            $actionName = strtolower(str_replace('-', '', lcfirst(substr($methodName, 6))));
+                            $routes[$controllerName . '/' . $actionName] = true;
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Yii::error("Error reflecting controller {$className}: " . $e->getMessage());
+            }
+        }
+
+        // 2. ดึงเพิ่มเติมจากตาราง auth_item ที่มีอยู่แล้ว (จากการ Sync Permissions)
+        try {
+            $auth = Yii::$app->authManager;
+            $allPerms = $auth->getPermissions();
+            $prefix = $controllerName . '/';
+            foreach (array_keys($allPerms) as $permName) {
+                $pLower = strtolower($permName);
+                if (strpos($pLower, $prefix) === 0) {
+                    $routes[$pLower] = true;
+                }
+            }
+        } catch (\Exception $e) {
+            // ข้ามกรณี auth error
+        }
+
+        $result = array_keys($routes);
+        $controllerActionsCache[$controllerName] = $result;
+        return $result;
+    }
+
+    /**
      * ซิงค์สิทธิ์จาก Matrix เข้าสู่ระบบ RBAC ของ Yii2 สำหรับ User ในบริษัทที่กำหนด
+     * รองรับ Wildcard / Controller-Level Auto Coverage ทำให้ Action ใหม่ๆ ที่เพิ่มใน Controller ถูกครอบคลุมทันที
      *
      * @param int $userId
      * @param int $companyId
@@ -357,10 +428,76 @@ class ModulePermissionConfig
         // รวบรวม routes ทั้งหมดที่ต้องมอบให้ User ตามระดับสิทธิ์
         $routesToAssign = [];
 
-        foreach ($modulePermissions as $modKey => $pType) {
-            if (!isset($modules[$modKey])) continue;
-            $conf = $modules[$modKey];
+        // รวบรวม routes ทั้งหมดที่ Matrix ตัวนี้ควบคุม (เพื่อใช้ revoke สิทธิ์เดิมออกเมื่อเลือก 'x')
+        $allMatrixPermNames = [];
 
+        foreach ($modules as $modKey => $conf) {
+            $pType = isset($modulePermissions[$modKey]) ? $modulePermissions[$modKey] : 'x';
+
+            // ดึง controllers ที่โมดูลนี้รับผิดชอบ (ถ้าไม่ได้ระบุ controllers ให้ดึงจาก prefixes ของ routes_manage)
+            $moduleControllers = [];
+            if (!empty($conf['controllers'])) {
+                $moduleControllers = (array)$conf['controllers'];
+            } else {
+                foreach (array_merge($conf['routes_view'] ?? [], $conf['routes_manage'] ?? []) as $r) {
+                    $parts = explode('/', $r);
+                    if (!empty($parts[0])) {
+                        $moduleControllers[strtolower($parts[0])] = true;
+                    }
+                }
+                $moduleControllers = array_keys($moduleControllers);
+            }
+
+            // รวบรวม Action ทั้งหมดของ Controller ในโมดูลนี้
+            $allControllerRoutes = [];
+            foreach ($moduleControllers as $ctrl) {
+                foreach (self::getControllerActionRoutes($ctrl) as $r) {
+                    $allControllerRoutes[$r] = true;
+                }
+            }
+
+            // รวม static routes จาก config เข้าไปด้วย
+            foreach (array_merge($conf['routes_view'] ?? [], $conf['routes_manage'] ?? []) as $r) {
+                $allControllerRoutes[strtolower(str_replace('-', '', $r))] = true;
+            }
+
+            // Excluded actions: สิทธิ์เฉพาะกลุ่มอนุมัติหรือสิทธิ์อ่อนไหว ที่ห้ามให้สิทธิ์ทำรายการทั่วไปหยิบไป
+            $excludedActions = [];
+            if (isset($conf['exclude_actions'])) {
+                foreach ($conf['exclude_actions'] as $ea) {
+                    $excludedActions[strtolower($ea)] = true;
+                }
+            } else {
+                // ค่าเริ่มต้นสำหรับโมดูลทั่วไป: กัน action อนุมัติ / ปฏิเสธ / recall ออก เพื่อให้ไปคุมที่กลุ่มสิทธิ์อนุมัติ
+                $isApproverGroup = (isset($conf['group']) && strpos($conf['group'], 'อนุมัติ') !== false);
+                if (!$isApproverGroup) {
+                    $excludedActions = [
+                        'approve' => true,
+                        'reject' => true,
+                        'approverecall' => true,
+                        'rejectrecall' => true,
+                    ];
+                }
+            }
+
+            // คัดกรอง Action ที่จะครอบคลุมในระดับ Manage (1)
+            $manageRoutes = [];
+            foreach (array_keys($allControllerRoutes) as $route) {
+                $parts = explode('/', $route);
+                $act = $parts[1] ?? '';
+                if (!isset($excludedActions[$act])) {
+                    $manageRoutes[$route] = true;
+                }
+            }
+
+            // เก็บใส่ allMatrixPermNames ไว้สำหรับตรวจ revoke
+            foreach (array_merge(array_keys($manageRoutes), $conf['routes_view'] ?? [], $conf['routes_manage'] ?? []) as $r) {
+                $clean = strtolower(str_replace('-', '', $r));
+                $allMatrixPermNames[$clean] = true;
+                $allMatrixPermNames[$r] = true;
+            }
+
+            // มอบสิทธิ์ตามประเภทที่เลือกใน Matrix
             if ($pType === UserModulePermission::PERM_VIEW) {
                 // ดูอย่างเดียว (0)
                 if (!empty($conf['routes_view'])) {
@@ -370,28 +507,15 @@ class ModulePermissionConfig
                 }
             } elseif ($pType === UserModulePermission::PERM_MANAGE) {
                 // ทำรายการ (1) หรือ อนุมัติ (1)
+                // 1) เพิ่มทุก Action ของ Controller ที่ครอบคลุม (รวม Action ใหม่ๆ ในอนาคตโดยอัตโนมัติ)
+                foreach (array_keys($manageRoutes) as $r) {
+                    $routesToAssign[$r] = true;
+                }
+                // 2) เพิ่ม static routes จาก config (เช่น custom route หรือ permission พิเศษ)
                 if (!empty($conf['routes_manage'])) {
                     foreach ($conf['routes_manage'] as $r) {
                         $routesToAssign[$r] = true;
                     }
-                }
-            }
-            // ถ้าเป็น 'x' จะไม่ใส่ route ใดๆ ให้
-        }
-
-        // รวบรวม routes ที่ครอบคลุมใน matrix เพื่อจัดการ revoke สิทธิ์เดิมออกเมื่อเลือก 'x'
-        $allMatrixPermNames = [];
-        foreach ($modules as $conf) {
-            if (!empty($conf['routes_view'])) {
-                foreach ($conf['routes_view'] as $r) {
-                    $allMatrixPermNames[strtolower(str_replace('-', '', $r))] = true;
-                    $allMatrixPermNames[$r] = true;
-                }
-            }
-            if (!empty($conf['routes_manage'])) {
-                foreach ($conf['routes_manage'] as $r) {
-                    $allMatrixPermNames[strtolower(str_replace('-', '', $r))] = true;
-                    $allMatrixPermNames[$r] = true;
                 }
             }
         }
@@ -414,7 +538,6 @@ class ModulePermissionConfig
 
         // 1. Revoke สิทธิ์เดิมของ Matrix ที่ไม่ได้อยู่ใน $targetPermNames ออกไป (เมื่อเลือกเป็น 'x')
         foreach ($currentAssignments as $permName => $assignment) {
-            // ลบเฉพาะ permission ที่อยู่ในขอบเขตของ Matrix และไม่ได้อยู่ในสิทธิ์ที่เลือกใหม่
             if (isset($allMatrixPermNames[$permName]) && !isset($targetPermNames[$permName])) {
                 $item = $auth->getPermission($permName);
                 if ($item) {
@@ -429,7 +552,7 @@ class ModulePermissionConfig
 
         // 2. สร้างหรือ Assign permissions ใหม่ให้ User
         foreach ($targetPermNames as $permName => $route) {
-            // ตรวจสอบว่าใน auth_item มี Permission หรือยัง หากยังไม่มีให้สร้าง
+            // ตรวจสอบว่าใน auth_item มี Permission หรือยัง หากยังไม่มีให้สร้างอัตโนมัติ
             $item = $auth->getPermission($permName);
             if (!$item) {
                 $item = $auth->getPermission($route);
