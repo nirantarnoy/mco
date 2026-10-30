@@ -12,6 +12,16 @@ foreach ($modules as $modKey => $conf) {
     $grp = isset($conf['group']) ? $conf['group'] : 'ทั่วไป';
     $groupedModules[$grp][$modKey] = $conf;
 }
+
+// กรองเฉพาะผู้ใช้งานที่มีสิทธิ์เข้าใช้งานบริษัทที่เลือก (หรือเป็น Admin)
+$activeCompanyUsers = [];
+foreach ($users as $user) {
+    $assignedComps = isset($userAssignedCompanies[$user->id]) ? $userAssignedCompanies[$user->id] : [];
+    $hasCompAccess = in_array($selectedCompanyId, $assignedComps) || \backend\models\User::isUserAdmin($user->id);
+    if ($hasCompAccess) {
+        $activeCompanyUsers[] = $user;
+    }
+}
 ?>
 
 <style>
@@ -168,29 +178,21 @@ foreach ($modules as $modKey => $conf) {
                                 <button type="button" class="btn btn-xs btn-outline-info bulk-action-btn" onclick="setColumnValue('all', '1')">1</button>
                             </div>
                         </th>
-                        <!-- รายชื่อ User แต่ละคน -->
-                        <?php foreach ($users as $user): ?>
-                            <?php
-                                $assignedComps = isset($userAssignedCompanies[$user->id]) ? $userAssignedCompanies[$user->id] : [];
-                                $hasCompAccess = in_array($selectedCompanyId, $assignedComps) || \backend\models\User::isUserAdmin($user->id);
-                            ?>
-                            <th class="user-col-header <?= !$hasCompAccess ? 'bg-light text-muted' : '' ?>" data-user-id="<?= $user->id ?>">
-                                <div class="font-weight-bold <?= $hasCompAccess ? 'text-primary' : 'text-muted' ?>">
+                        <!-- รายชื่อ User แต่ละคน (เฉพาะที่มีสิทธิ์ในบริษัทนี้) -->
+                        <?php foreach ($activeCompanyUsers as $user): ?>
+                            <th class="user-col-header" data-user-id="<?= $user->id ?>">
+                                <div class="font-weight-bold text-primary">
                                     <?= Html::encode($user->username) ?>
                                 </div>
                                 <div class="small text-muted" style="font-size: 11px;">
                                     <?= \backend\models\User::findEmployeeNameByUserId($user->id) ?>
                                 </div>
-                                <?php if (!$hasCompAccess): ?>
-                                    <span class="badge badge-secondary" style="font-size: 9px;">ไม่มีสิทธิ์บริษัทนี้</span>
-                                <?php else: ?>
-                                    <!-- ปุ่ม Quick Set ทั้งคอลัมน์ -->
-                                    <div class="mt-1">
-                                        <button type="button" class="btn btn-xs btn-outline-danger bulk-action-btn" onclick="setColumnValue(<?= $user->id ?>, 'x')">x</button>
-                                        <button type="button" class="btn btn-xs btn-outline-success bulk-action-btn" onclick="setColumnValue(<?= $user->id ?>, '0')">0</button>
-                                        <button type="button" class="btn btn-xs btn-outline-info bulk-action-btn" onclick="setColumnValue(<?= $user->id ?>, '1')">1</button>
-                                    </div>
-                                <?php endif; ?>
+                                <!-- ปุ่ม Quick Set ทั้งคอลัมน์ -->
+                                <div class="mt-1">
+                                    <button type="button" class="btn btn-xs btn-outline-danger bulk-action-btn" onclick="setColumnValue(<?= $user->id ?>, 'x')">x</button>
+                                    <button type="button" class="btn btn-xs btn-outline-success bulk-action-btn" onclick="setColumnValue(<?= $user->id ?>, '0')">0</button>
+                                    <button type="button" class="btn btn-xs btn-outline-info bulk-action-btn" onclick="setColumnValue(<?= $user->id ?>, '1')">1</button>
+                                </div>
                             </th>
                         <?php endforeach; ?>
                     </tr>
@@ -199,7 +201,7 @@ foreach ($modules as $modKey => $conf) {
                     <?php foreach ($groupedModules as $grpName => $grpMods): ?>
                         <?php $isApprovalGroup = (strpos($grpName, 'สิทธิ์การอนุมัติ') !== false); ?>
                         <tr class="group-header-row <?= $isApprovalGroup ? 'approval-group' : '' ?>">
-                            <td colspan="<?= count($users) + 2 ?>" class="font-weight-bold">
+                            <td colspan="<?= count($activeCompanyUsers) + 2 ?>" class="font-weight-bold">
                                 <i class="<?= $isApprovalGroup ? 'fas fa-shield-alt text-warning' : 'fas fa-folder-open' ?> mr-1"></i> <?= Html::encode($grpName) ?>
                                 <?php if ($isApprovalGroup): ?>
                                     <span class="badge badge-warning ml-2 font-weight-normal" style="font-size: 11px;">
@@ -226,18 +228,15 @@ foreach ($modules as $modKey => $conf) {
                                 </td>
 
                                 <!-- ค่าสิทธิ์ของแต่ละ User -->
-                                <?php foreach ($users as $user): ?>
+                                <?php foreach ($activeCompanyUsers as $user): ?>
                                     <?php
                                         $val = isset($currentPermissions[$user->id][$modKey]) ? $currentPermissions[$user->id][$modKey] : 'x';
-                                        $assignedComps = isset($userAssignedCompanies[$user->id]) ? $userAssignedCompanies[$user->id] : [];
-                                        $hasCompAccess = in_array($selectedCompanyId, $assignedComps) || \backend\models\User::isUserAdmin($user->id);
                                     ?>
-                                    <td class="<?= !$hasCompAccess ? 'bg-light' : '' ?>">
+                                    <td>
                                         <select class="form-control form-control-sm perm-select matrix-cell" 
                                                 data-user-id="<?= $user->id ?>" 
                                                 data-module-key="<?= $modKey ?>"
                                                 data-val="<?= $val ?>"
-                                                <?= !$hasCompAccess ? 'disabled' : '' ?>
                                                 onchange="updateCellColor(this);">
                                             <option value="x" <?= $val === 'x' ? 'selected' : '' ?>>x</option>
                                             <option value="0" <?= $val === '0' ? 'selected' : '' ?>>0</option>
