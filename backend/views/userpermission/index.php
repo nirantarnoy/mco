@@ -13,11 +13,11 @@ foreach ($modules as $modKey => $conf) {
     $groupedModules[$grp][$modKey] = $conf;
 }
 
-// กรองเฉพาะผู้ใช้งานที่มีสิทธิ์เข้าใช้งานบริษัทที่เลือก (หรือเป็น Admin)
+// กรองเฉพาะผู้ใช้งานที่มีสิทธิ์เข้าใช้งานบริษัทที่เลือกเท่านั้น
 $activeCompanyUsers = [];
 foreach ($users as $user) {
     $assignedComps = isset($userAssignedCompanies[$user->id]) ? $userAssignedCompanies[$user->id] : [];
-    $hasCompAccess = in_array($selectedCompanyId, $assignedComps) || \backend\models\User::isUserAdmin($user->id);
+    $hasCompAccess = in_array((int)$selectedCompanyId, $assignedComps);
     if ($hasCompAccess) {
         $activeCompanyUsers[] = $user;
     }
