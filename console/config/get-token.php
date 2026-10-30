@@ -23,10 +23,22 @@ $client->setPrompt('select_account consent');
 $client->setRedirectUri('http://127.0.0.1:8080');
 
 // Request authorization from the user.
+// Check if redirect_uris contains urn:ietf:wg:oauth:2.0:oob or http://localhost
 $authUrl = $client->createAuthUrl();
-printf("Open the following link in your browser:\n%s\n", $authUrl);
-print 'Enter verification code: ';
-$authCode = trim(fgets(STDIN));
+printf("\n=================================================================\n");
+printf("1. เปิดลิงก์นี้ในเบราว์เซอร์เพื่อเข้าสู่ระบบ Google และกดยอมรับสิทธิ์:\n\n%s\n\n", $authUrl);
+printf("2. หลังจากกดยอมรับ ให้คัดลอก 'code' (หรือ URL ทั้งหมดหลังการ redirect) มาวางด้านล่าง\n");
+printf("=================================================================\n");
+print 'วาง code หรือ URL ที่ได้ที่นี่: ';
+$input = trim(fgets(STDIN));
+
+// ถ้าผู้ใช้วางมาเป็น Full URL เช่น http://localhost/?code=4/0A... ให้ตัดเอาเฉพาะ code
+if (strpos($input, 'code=') !== false) {
+    parse_str(parse_url($input, PHP_URL_QUERY), $queryParams);
+    $authCode = $queryParams['code'] ?? $input;
+} else {
+    $authCode = $input;
+}
 
 // Exchange authorization code for an access token.
 $accessToken = $client->fetchAccessTokenWithAuthCode($authCode);

@@ -360,8 +360,14 @@ class BackupController extends Controller
             }
 
             if ($client->isAccessTokenExpired()) {
-                if ($client->getRefreshToken()) {
-                    $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+                $refreshToken = $client->getRefreshToken();
+                if ($refreshToken) {
+                    $newAccessToken = $client->fetchAccessTokenWithRefreshToken($refreshToken);
+                    if (isset($newAccessToken['error'])) {
+                        $this->stderr("Token หมดอายุหรือถูกยกเลิกสิทธิ์ ({$newAccessToken['error']}: {$newAccessToken['error_description']})\n", Console::FG_RED);
+                        $this->stderr("วิธีแก้: ลบไฟล์ console/config/token.json แล้วรัน 'php console/config/get-token.php' เพื่อรับ token ใหม่\n", Console::FG_YELLOW);
+                        return false;
+                    }
                     file_put_contents($tokenPath, json_encode($client->getAccessToken()));
                 } else {
                     $this->stderr("Refresh token missing. Please delete token.json and re-run get-token.php\n", Console::FG_RED);
