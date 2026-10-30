@@ -48,12 +48,12 @@ class BackupController extends Controller
     }
 
     /**
-     * Executes the database backup.
+     * Executes the database backup and uploads to Google Drive.
      * Command: 
-     *   php yii backup/run
-     *   php yii backup/run --upload=1 (หากต้องการอัปโหลดขึ้น Google Drive ด้วย)
+     *   php yii backup/run              (สำรองข้อมูล + บีบอัด zip + ส่ง Google Drive อัตโนมัติ)
+     *   php yii backup/run --upload=0   (สำรองข้อมูลเฉพาะในเครื่องเท่านั้น ไม่ส่ง Google Drive)
      */
-     public $upload = 0;
+     public $upload = 1;
 
      public function options($actionID)
      {
