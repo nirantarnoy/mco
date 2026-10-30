@@ -336,7 +336,10 @@ class ModulePermissionConfig
                 'group' => '10. จัดการระบบ',
                 'description' => 'สำรองฐานข้อมูลและกู้คืนข้อมูล',
                 'routes_view' => ['dbbackup/backuplist', 'dbrestore/restorepage'],
-                'routes_manage' => ['dbbackup/backuplist', 'dbbackup/create', 'dbbackup/download', 'dbrestore/restorepage', 'dbrestore/restore'],
+                'routes_manage' => [
+                    'dbbackup/backuplist', 'dbbackup/exrestore', 'dbbackup/downloadbak', 'dbbackup/deletebak', 'dbbackup/restorefile',
+                    'dbrestore/restorepage', 'dbrestore/restoredb'
+                ],
             ],
         ];
     }

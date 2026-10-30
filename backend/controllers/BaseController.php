@@ -28,6 +28,11 @@ class BaseController extends Controller
             return parent::beforeAction($action);
         }
 
+        // อนุโลม action ของ dbbackup/dbrestore หากมีสิทธิ์หน้า backuplist หรือเป็นแอดมิน
+        if (in_array($this->id, ['dbbackup', 'dbrestore']) && (\backend\models\User::isUserAdmin(\Yii::$app->user->id) || \Yii::$app->user->can('dbbackup/backuplist') || \Yii::$app->user->can('dbrestore/restorepage'))) {
+            return parent::beforeAction($action);
+        }
+
         // 2. ตรวจสอบ Session และการล็อกอินพื้นฐาน
         if (!$this->isSessionValid()) {
             Yii::$app->user->logout();

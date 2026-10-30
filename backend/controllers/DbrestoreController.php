@@ -20,6 +20,19 @@ class DbrestoreController extends BaseController
 {
     public $enableCsrfValidation = false;
 
+    public function beforeAction($action)
+    {
+        // ปรับแต่ง PHP Runtime Settings ป้องกัน Timeout และ Memory Limit
+        @ini_set('max_execution_time', '0'); // ไม่จำกัดเวลาประมวลผล
+        @ini_set('max_input_time', '0');
+        @ini_set('memory_limit', '1024M');
+        @ini_set('upload_max_filesize', '512M');
+        @ini_set('post_max_size', '512M');
+        @set_time_limit(0);
+
+        return parent::beforeAction($action);
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -152,79 +165,85 @@ class DbrestoreController extends BaseController
 
     public function actionRestoredb()
     {
-        //   $conn = mysqli_connect("localhost", "root", "", "coltd");
-        $conn = \Yii::$app->db;
         $uploaded = UploadedFile::getInstanceByName('restore_file');
         if (!empty($uploaded)) {
-            //print_r($uploaded);return;
-            $upfiles = time() . "." . $uploaded->getExtension();
-            if ($uploaded->saveAs('../web/uploads/backup/' . $upfiles)) {
-                //echo "uploaded";return;
-                // Validating SQL file type by extensions
-                if ($uploaded->getExtension() != "sql") {
-                    $response = array(
-                        "type" => "error",
-                        "message" => "Invalid File Type"
-                    );
-                } else {
-                    $response = $this->restoreMysqlDB($conn, $upfiles);
-                    //print_r($response);
-                    \Yii::$app->session->setFlash('msg','Restore ข้อมูลสำเร็จ');
-                    return $this->redirect(['dbrestore/restorepage']);
-
-                }
-
-
-            }else{
-                echo "cannot save file.";
+            $ext = strtolower($uploaded->getExtension());
+            if ($ext !== 'sql') {
+                \Yii::$app->session->setFlash('error', 'รูปแบบไฟล์ไม่ถูกต้อง กรุณาอัปโหลดไฟล์นามสกุล .sql เท่านั้น');
+                return $this->redirect(['dbrestore/restorepage']);
             }
-        }else{
-            echo "empty file.";
-        }
 
+            $backupDir = dirname(__DIR__, 2) . '/backend/web/uploads/backup';
+            if (!is_dir($backupDir)) {
+                @mkdir($backupDir, 0777, true);
+            }
+
+            $upfileName = 'upload_' . time() . '_' . preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $uploaded->name);
+            $filePath = $backupDir . DIRECTORY_SEPARATOR . $upfileName;
+
+            if ($uploaded->saveAs($filePath)) {
+                $response = $this->restoreMysqlDB(null, $upfileName);
+                if ($response['type'] === 'success') {
+                    \Yii::$app->session->setFlash('msg', $response['message']);
+                } else {
+                    \Yii::$app->session->setFlash('error', $response['message']);
+                }
+                return $this->redirect(['dbrestore/restorepage']);
+            } else {
+                \Yii::$app->session->setFlash('error', 'ไม่สามารถบันทึกไฟล์ที่อัปโหลดได้ ตรวจสอบสิทธิ์การเขียนโฟลเดอร์');
+                return $this->redirect(['dbrestore/restorepage']);
+            }
+        } else {
+            \Yii::$app->session->setFlash('error', 'กรุณาเลือกไฟล์ .sql ที่ต้องการนำเข้า (Restore)');
+            return $this->redirect(['dbrestore/restorepage']);
+        }
     }
 
     public function restoreMysqlDB($conn, $filename)
     {
-        $sql = '';
-        $error = '';
-        $filePath = '../web/uploads/backup/' . $filename;
-        if (file_exists($filePath)) {
-            // return 'has';
-            $lines = file($filePath);
+        $filePath = dirname(__DIR__, 2) . '/backend/web/uploads/backup/' . basename($filename);
+        if (!file_exists($filePath)) {
+            return [
+                'type' => 'error',
+                'message' => 'ไม่พบไฟล์: ' . $filename
+            ];
+        }
 
-            foreach ($lines as $line) {
+        list($host, $username, $password, $database_name) = DbbackupController::getDbCredentials();
+        $mysql = DbbackupController::getBinaryPath('mysql');
 
-                // Ignoring comments from the SQL script
-                if (substr($line, 0, 2) == '--' || $line == '') {
-                    continue;
-                }
+        // เตรียมไฟล์และตัด comment MariaDB sandbox mode ที่ทำให้เกิด error '\-'
+        $preparedFilePath = DbbackupController::prepareSqlFileForRestore($filePath);
 
-                $sql .= $line;
+        // รันคำสั่ง mysql command-line ซึ่งเร็วมากสำหรับไฟล์ขนาด 60MB+
+        $cmd = "{$mysql} --default-character-set=utf8mb4 --max_allowed_packet=512M -h {$host} -u {$username}";
+        if (!empty($password)) {
+            $cmd .= " -p" . escapeshellarg($password);
+        }
+        $cmd .= " {$database_name} < " . escapeshellarg($preparedFilePath) . " 2>&1";
 
-                if (substr(trim($line), -1, 1) == ';') {
-                    // $result = mysqli_query($conn, $sql);
-                    $result = \Yii::$app->db->createCommand($sql)->query();
-                    if (!$result) {
-                        $error .= mysqli_error($conn) . "\n";
-                    }
-                    $sql = '';
-                }
-            } // end foreach
+        $startTime = microtime(true);
+        exec($cmd, $output, $returnVar);
+        $duration = microtime(true) - $startTime;
+        $timeText = DbbackupController::formatDuration($duration);
 
-            if ($error) {
-                $response = array(
-                    "type" => "error",
-                    "message" => $error
-                );
-            } else {
-                $response = array(
-                    "type" => "success",
-                    "message" => "Database Restore Completed Successfully."
-                );
-            }
-        } // end if file exists
-        return $response;
+        // ลบไฟล์ชั่วคราวถ้ามีการสร้าง clean file
+        if ($preparedFilePath !== $filePath && file_exists($preparedFilePath)) {
+            @unlink($preparedFilePath);
+        }
+
+        if ($returnVar === 0) {
+            return [
+                'type' => 'success',
+                'message' => "กู้คืนฐานข้อมูล (Restore) สำเร็จเรียบร้อยแล้ว | ใช้เวลาทั้งหมด: <strong>{$timeText}</strong>"
+            ];
+        } else {
+            $errDetail = !empty($output) ? implode("\n", $output) : "Exit code: {$returnVar}";
+            return [
+                'type' => 'error',
+                'message' => "เกิดข้อผิดพลาดในการ Restore ข้อมูล (ใช้เวลา: {$timeText}): {$errDetail}"
+            ];
+        }
     }
 
     public function actionBackuplist()
