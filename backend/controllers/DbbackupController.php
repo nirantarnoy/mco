@@ -646,66 +646,15 @@ class DbbackupController extends BaseController
     }
 
     /**
-     * AJAX สำหรับเปิด Native Folder Picker หรือ ดึงโครงสร้างโฟลเดอร์สำหรับเลือกปลายทาง
+     * AJAX สำหรับเปิดดูโครงสร้างโฟลเดอร์สำหรับเลือกปลายทางบนเครื่อง Server / Local
      */
     public function actionBrowseFolder()
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
         $targetPath = trim(Yii::$app->request->post('targetPath', ''));
-        $mode = trim(Yii::$app->request->post('mode', 'native')); // 'native' หรือ 'list'
 
-        // 1. โหมด Native Folder Dialog (สำหรับเครื่อง Local / Windows)
-        if ($mode === 'native' && strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            try {
-                $initialDir = !empty($targetPath) && is_dir($targetPath) ? $targetPath : dirname(__DIR__, 2);
-                $initialDirEscaped = str_replace("'", "''", $initialDir);
-                
-                // ใช้ PowerShell FolderBrowserDialog เพื่อเปิดหน้าต่างเลือกโฟลเดอร์ของ Windows โดยตรง
-                $psScript = "[System.Reflection.Assembly]::LoadWithPartialName('System.windows.forms') | Out-Null; "
-                    . "\$dialog = New-Object System.Windows.Forms.FolderBrowserDialog; "
-                    . "\$dialog.Description = 'เลือกโฟลเดอร์ปลายทางสำหรับจัดเก็บไฟล์สำรอง'; "
-                    . "\$dialog.ShowNewFolderButton = \$true; "
-                    . "\$dialog.SelectedPath = '{$initialDirEscaped}'; "
-                    . "if(\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK){ Write-Output \$dialog.SelectedPath } else { Write-Output '__CANCELLED__' }";
-
-                $command = 'powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "' . $psScript . '"';
-                
-                $output = [];
-                $returnVar = 0;
-                exec($command, $output, $returnVar);
-
-                $selected = trim(implode('', $output));
-                // ตัด warning PowerShell ถ้ามี
-                if (strpos($selected, '__CANCELLED__') !== false) {
-                    return [
-                        'status' => 'cancelled',
-                        'message' => 'ยกเลิกการเลือกโฟลเดอร์'
-                    ];
-                }
-
-                // กรองเฉพาะ path ที่ถูกต้อง
-                $lines = array_filter(array_map('trim', $output));
-                $validPath = '';
-                foreach ($lines as $line) {
-                    if ($line !== '__CANCELLED__' && is_dir($line)) {
-                        $validPath = $line;
-                        break;
-                    }
-                }
-
-                if (!empty($validPath)) {
-                    return [
-                        'status' => 'success',
-                        'path' => str_replace('\\', '/', $validPath)
-                    ];
-                }
-            } catch (\Exception $e) {
-                // ถ้า native ไม่สำเร็จ จะเข้า fallback ข้างล่าง
-            }
-        }
-
-        // 2. โหมด List Subdirectories (Fallback หรือเรียกดูโฟลเดอร์)
+        // โหมด List Subdirectories สำหรับเรียกดูและเลือกโฟลเดอร์แบบ Interactive ทันใจ
         if (empty($targetPath)) {
             $targetPath = dirname(__DIR__, 2);
         }
@@ -725,7 +674,7 @@ class DbbackupController extends BaseController
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
             foreach (range('A', 'Z') as $letter) {
                 $drive = $letter . ':\\';
-                if (is_dir($drive)) {
+                if (@is_dir($drive)) {
                     $drives[] = [
                         'name' => $letter . ':',
                         'path' => str_replace('\\', '/', $drive)
@@ -760,7 +709,6 @@ class DbbackupController extends BaseController
             'parentPath' => ($parentDir && $parentDir !== $targetPath) ? str_replace('\\', '/', $parentDir) : null,
             'drives' => $drives,
             'folders' => $folders
-        ];
     }
 
     public function actionRestorefile($id)

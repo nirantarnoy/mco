@@ -457,43 +457,14 @@ $js = <<<JS
         });
     }
 
-    // คลิกปุ่ม Browse...
-    $('#btn-browse-dest').on('click', function(){
+    // คลิกปุ่ม Browse... เปิดหน้าต่างเลือกโฟลเดอร์ทันที
+    $('#btn-browse-dest').on('click', function(e){
+        e.preventDefault();
         if (isWorking) return;
 
-        // ขั้นแรก: ลองเรียก Native OS Folder Picker ก่อน
         var curVal = $.trim($('#dest-path-input').val()) || defaultDest;
-        var btn = $(this);
-        var originalBtnHtml = btn.html();
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> เปิด...');
-
-        $.ajax({
-            url: '{$urlBrowseFolder}',
-            type: 'POST',
-            data: {
-                targetPath: curVal,
-                mode: 'native'
-            },
-            dataType: 'json',
-            timeout: 60000
-        }).done(function(res){
-            btn.prop('disabled', false).html(originalBtnHtml);
-            if (res.status === 'success' && res.path) {
-                // เลือกสำเร็จผ่าน Native Dialog
-                $('#dest-path-input').val(res.path);
-            } else if (res.status === 'cancelled') {
-                // ผู้ใช้กดยกเลิก
-            } else {
-                // Fallback: เปิด Interactive Folder Browser Modal
-                $('#modal-folder-picker').modal('show');
-                renderPickerDirectory(curVal);
-            }
-        }).fail(function(){
-            btn.prop('disabled', false).html(originalBtnHtml);
-            // Fallback: เปิด Modal ปกติ
-            $('#modal-folder-picker').modal('show');
-            renderPickerDirectory(curVal);
-        });
+        $('#modal-folder-picker').modal('show');
+        renderPickerDirectory(curVal);
     });
 
     // คลิกเลือก Drive
@@ -636,6 +607,9 @@ $js = <<<JS
                 }
 
                 var batch = batches[currentBatchIdx];
+                var currentBatchNum = currentBatchIdx + 1;
+                addLog('กำลังคัดลอกชุดที่ ' + currentBatchNum + '/' + batches.length + ' (' + batch.length + ' ไฟล์)...', '#6c757d');
+
                 $.ajax({
                     url: '{$urlCopyBatch}',
                     type: 'POST',
@@ -646,8 +620,10 @@ $js = <<<JS
                     dataType: 'json'
                 }).done(function(batchRes){
                     if (batchRes.status === 'success') {
-                        totalCopied += (batchRes.copiedCount || 0);
-                        totalSkipped += (batchRes.skippedCount || 0);
+                        var justCopied = batchRes.copiedCount || 0;
+                        var justSkipped = batchRes.skippedCount || 0;
+                        totalCopied += justCopied;
+                        totalSkipped += justSkipped;
                         $('#stat-copied-files').text(totalCopied.toLocaleString());
                         $('#stat-skipped-files').text(totalSkipped.toLocaleString());
 
@@ -655,7 +631,11 @@ $js = <<<JS
                         if (processedFiles > totalFiles) processedFiles = totalFiles;
 
                         var pct = Math.round((processedFiles / totalFiles) * 100);
-                        setProgress(pct, 'กำลังคัดลอกไฟล์ (' + processedFiles + '/' + totalFiles + ')');
+                        setProgress(pct, 'กำลังคัดลอกไฟล์ (' + processedFiles.toLocaleString() + '/' + totalFiles.toLocaleString() + ' ไฟล์ - ' + pct + '%)');
+
+                        if (justCopied > 0) {
+                            addLog('ชุดที่ ' + currentBatchNum + ': คัดลอกเพิ่ม ' + justCopied + ' ไฟล์' + (justSkipped > 0 ? ' (ข้ามไฟล์เดิม ' + justSkipped + ')' : ''), '#28a745');
+                        }
 
                         if (batchRes.errors && batchRes.errors.length > 0) {
                             for (var e = 0; e < batchRes.errors.length; e++) {
@@ -671,7 +651,7 @@ $js = <<<JS
                         if (onCompleteCallback) onCompleteCallback(false);
                     }
                 }).fail(function(xhr, status, error){
-                    addLog('เชื่อมต่อขัดข้องขณะคัดลอกชุดที่ ' + (currentBatchIdx + 1) + ': ' + error, 'red');
+                    addLog('เชื่อมต่อขัดข้องขณะคัดลอกชุดที่ ' + currentBatchNum + ': ' + error, 'red');
                     alert('เกิดข้อผิดพลาด: ' + error);
                     if (onCompleteCallback) onCompleteCallback(false);
                 });
