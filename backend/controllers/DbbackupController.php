@@ -709,6 +709,7 @@ class DbbackupController extends BaseController
             'parentPath' => ($parentDir && $parentDir !== $targetPath) ? str_replace('\\', '/', $parentDir) : null,
             'drives' => $drives,
             'folders' => $folders
+        ];
     }
 
     public function actionRestorefile($id)
