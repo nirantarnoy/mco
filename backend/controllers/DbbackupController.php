@@ -49,7 +49,7 @@ class DbbackupController extends BaseController
                         'matchCallback'=>function($rule,$action){
                             $currentRoute = Yii::$app->controller->getRoute();
                             // Allow sub-actions of dbbackup if user has access to backuplist
-                            if (in_array($action->id, ['restorefile', 'downloadbak', 'deletebak', 'exrestore', 'copy-uploads', 'copyuploads', 'backup-db-ajax', 'backupdbajax', 'get-files-list', 'getfileslist', 'copy-batch', 'copybatch'])) {
+                            if (in_array($action->id, ['restorefile', 'downloadbak', 'deletebak', 'exrestore', 'copy-uploads', 'copyuploads', 'backup-db-ajax', 'backupdbajax', 'get-files-list', 'getfileslist', 'copy-batch', 'copybatch', 'browse-folder', 'browsefolder'])) {
                                 if (Yii::$app->user->can('dbbackup/backuplist') || \backend\models\User::isUserAdmin(\Yii::$app->user->id)) {
                                     return true;
                                 }
@@ -642,6 +642,124 @@ class DbbackupController extends BaseController
             'skippedCount' => $skippedCount,
             'copiedBytes' => $copiedBytes,
             'errors' => $errors,
+        ];
+    }
+
+    /**
+     * AJAX สำหรับเปิด Native Folder Picker หรือ ดึงโครงสร้างโฟลเดอร์สำหรับเลือกปลายทาง
+     */
+    public function actionBrowseFolder()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $targetPath = trim(Yii::$app->request->post('targetPath', ''));
+        $mode = trim(Yii::$app->request->post('mode', 'native')); // 'native' หรือ 'list'
+
+        // 1. โหมด Native Folder Dialog (สำหรับเครื่อง Local / Windows)
+        if ($mode === 'native' && strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            try {
+                $initialDir = !empty($targetPath) && is_dir($targetPath) ? $targetPath : dirname(__DIR__, 2);
+                $initialDirEscaped = str_replace("'", "''", $initialDir);
+                
+                // ใช้ PowerShell FolderBrowserDialog เพื่อเปิดหน้าต่างเลือกโฟลเดอร์ของ Windows โดยตรง
+                $psScript = "[System.Reflection.Assembly]::LoadWithPartialName('System.windows.forms') | Out-Null; "
+                    . "\$dialog = New-Object System.Windows.Forms.FolderBrowserDialog; "
+                    . "\$dialog.Description = 'เลือกโฟลเดอร์ปลายทางสำหรับจัดเก็บไฟล์สำรอง'; "
+                    . "\$dialog.ShowNewFolderButton = \$true; "
+                    . "\$dialog.SelectedPath = '{$initialDirEscaped}'; "
+                    . "if(\$dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK){ Write-Output \$dialog.SelectedPath } else { Write-Output '__CANCELLED__' }";
+
+                $command = 'powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "' . $psScript . '"';
+                
+                $output = [];
+                $returnVar = 0;
+                exec($command, $output, $returnVar);
+
+                $selected = trim(implode('', $output));
+                // ตัด warning PowerShell ถ้ามี
+                if (strpos($selected, '__CANCELLED__') !== false) {
+                    return [
+                        'status' => 'cancelled',
+                        'message' => 'ยกเลิกการเลือกโฟลเดอร์'
+                    ];
+                }
+
+                // กรองเฉพาะ path ที่ถูกต้อง
+                $lines = array_filter(array_map('trim', $output));
+                $validPath = '';
+                foreach ($lines as $line) {
+                    if ($line !== '__CANCELLED__' && is_dir($line)) {
+                        $validPath = $line;
+                        break;
+                    }
+                }
+
+                if (!empty($validPath)) {
+                    return [
+                        'status' => 'success',
+                        'path' => str_replace('\\', '/', $validPath)
+                    ];
+                }
+            } catch (\Exception $e) {
+                // ถ้า native ไม่สำเร็จ จะเข้า fallback ข้างล่าง
+            }
+        }
+
+        // 2. โหมด List Subdirectories (Fallback หรือเรียกดูโฟลเดอร์)
+        if (empty($targetPath)) {
+            $targetPath = dirname(__DIR__, 2);
+        }
+
+        $targetPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $targetPath);
+        if (!is_dir($targetPath)) {
+            $targetPath = dirname(__DIR__, 2);
+        }
+
+        $targetPath = realpath($targetPath);
+        $parentDir = dirname($targetPath);
+
+        $folders = [];
+        $drives = [];
+
+        // รายการ Drives ใน Windows
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            foreach (range('A', 'Z') as $letter) {
+                $drive = $letter . ':\\';
+                if (is_dir($drive)) {
+                    $drives[] = [
+                        'name' => $letter . ':',
+                        'path' => str_replace('\\', '/', $drive)
+                    ];
+                }
+            }
+        }
+
+        if (is_dir($targetPath)) {
+            try {
+                $items = @scandir($targetPath);
+                if ($items) {
+                    foreach ($items as $item) {
+                        if ($item === '.' || $item === '..') continue;
+                        $full = $targetPath . DIRECTORY_SEPARATOR . $item;
+                        if (@is_dir($full)) {
+                            $folders[] = [
+                                'name' => $item,
+                                'path' => str_replace('\\', '/', $full),
+                            ];
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                // Ignore permission errors
+            }
+        }
+
+        return [
+            'status' => 'success',
+            'currentPath' => str_replace('\\', '/', $targetPath),
+            'parentPath' => ($parentDir && $parentDir !== $targetPath) ? str_replace('\\', '/', $parentDir) : null,
+            'drives' => $drives,
+            'folders' => $folders
         ];
     }
 

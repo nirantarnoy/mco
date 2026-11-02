@@ -50,13 +50,16 @@ $defaultSourceDir = realpath(dirname(__DIR__, 2) . '/web/uploads');
                     </div>
                     <input type="text" id="dest-path-input" class="form-control" value="<?= htmlspecialchars($defaultSourceDir) ?>" placeholder="เช่น E:/xampp/htdocs/mco_local/backend/web/uploads">
                     <div class="input-group-append">
+                        <button class="btn btn-primary" type="button" id="btn-browse-dest" title="เปิดหน้าต่างเลือกโฟลเดอร์">
+                            <i class="fas fa-folder-open mr-1"></i> Browse...
+                        </button>
                         <button class="btn btn-outline-secondary" type="button" id="btn-reset-dest" title="คืนค่าเริ่มต้นโฟลเดอร์ uploads ของโปรเจกต์">
                             <i class="fas fa-undo"></i> คืนค่าเดิม
                         </button>
                     </div>
                 </div>
                 <small class="text-muted d-block mt-1">
-                    <i class="fas fa-info-circle"></i> ค่าเริ่มต้นคือโฟลเดอร์ uploads ของโปรเจกต์นี้ หรือสามารถระบุโฟลเดอร์อื่นบนเครื่อง Local ที่ต้องการคัดลอกไปสำรองไว้ได้
+                    <i class="fas fa-info-circle"></i> กดปุ่ม <strong>Browse...</strong> เพื่อเลือกโฟลเดอร์ปลายทาง หรือพิมพ์ระบุ Path เองได้ตามต้องการ
                 </small>
             </div>
             <div class="col-lg-5 text-lg-right">
@@ -231,6 +234,64 @@ $defaultSourceDir = realpath(dirname(__DIR__, 2) . '/web/uploads');
     </div>
 </div>
 
+<!-- Folder Picker Modal (Tree / Directory Browser) -->
+<div class="modal fade" id="modal-folder-picker" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1055;">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header bg-light border-bottom py-3">
+                <h5 class="modal-title font-weight-bold text-dark mb-0">
+                    <i class="fas fa-folder-open text-warning mr-2"></i> เลือกโฟลเดอร์ปลายทาง (Browse Folder)
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="d-flex align-items-center mb-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm mr-2" id="picker-btn-up" title="ขึ้นไป 1 ระดับ">
+                        <i class="fas fa-arrow-up"></i> ขึ้นบน
+                    </button>
+                    <div class="flex-grow-1">
+                        <div class="input-group input-group-sm">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white"><i class="fas fa-folder text-warning"></i></span>
+                            </div>
+                            <input type="text" id="picker-current-path" class="form-control bg-white" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Drive buttons (Windows) -->
+                <div id="picker-drives-container" class="mb-2 d-none">
+                    <div class="d-flex flex-wrap gap-1 align-items-center" id="picker-drives-list" style="gap: 5px;"></div>
+                </div>
+
+                <!-- Folder list container -->
+                <div class="border rounded bg-white" style="height: 320px; overflow-y: auto;" id="picker-folder-list-wrap">
+                    <ul class="list-group list-group-flush" id="picker-folder-list">
+                        <!-- Loaded dynamically -->
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2 d-flex justify-content-between">
+                <div>
+                    <span class="text-muted small">
+                        <i class="fas fa-mouse-pointer mr-1"></i> ดับเบิ้ลคลิกโฟลเดอร์เพื่อเปิดเข้าไปข้างใน
+                    </span>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-secondary btn-sm px-3 mr-1" data-dismiss="modal">
+                        ยกเลิก
+                    </button>
+                    <button type="button" class="btn btn-success btn-sm px-4 font-weight-bold" id="picker-btn-select-current">
+                        <i class="fas fa-check mr-1"></i> เลือกโฟลเดอร์นี้
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 /* Overlay Backdrop บล็อกการคลิกส่วนอื่น */
 #modal-backup-progress {
@@ -239,12 +300,28 @@ $defaultSourceDir = realpath(dirname(__DIR__, 2) . '/web/uploads');
 .font-monospace {
     font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
+.picker-folder-item {
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s ease;
+}
+.picker-folder-item:hover {
+    background-color: #f1f8ff;
+}
+.picker-folder-item.selected {
+    background-color: #007bff !important;
+    color: #fff !important;
+}
+.picker-folder-item.selected i {
+    color: #fff !important;
+}
 </style>
 
 <?php
 $urlBackupDb = \yii\helpers\Url::to(['dbbackup/backup-db-ajax'], true);
 $urlGetFiles = \yii\helpers\Url::to(['dbbackup/get-files-list'], true);
 $urlCopyBatch = \yii\helpers\Url::to(['dbbackup/copy-batch'], true);
+$urlBrowseFolder = \yii\helpers\Url::to(['dbbackup/browse-folder'], true);
 $defaultSourceEscaped = addslashes($defaultSourceDir);
 
 $js = <<<JS
@@ -302,6 +379,162 @@ $js = <<<JS
     // Reset default destination button
     $('#btn-reset-dest').on('click', function(){
         $('#dest-path-input').val(defaultDest);
+    });
+
+    // ==========================================
+    // Browse Folder Picker Logic
+    // ==========================================
+    var pickerCurrentPath = '';
+    var pickerParentPath = null;
+    var selectedItemPath = '';
+
+    function renderPickerDirectory(targetPath) {
+        var list = $('#picker-folder-list');
+        list.html('<li class="list-group-item text-center text-muted p-4"><i class="fas fa-spinner fa-spin mr-1"></i> กำลังโหลดโฟลเดอร์...</li>');
+
+        $.ajax({
+            url: '{$urlBrowseFolder}',
+            type: 'POST',
+            data: {
+                targetPath: targetPath,
+                mode: 'list'
+            },
+            dataType: 'json'
+        }).done(function(res){
+            if (res.status !== 'success') {
+                list.html('<li class="list-group-item text-center text-danger p-3"><i class="fas fa-exclamation-triangle mr-1"></i> ไม่สามารถเข้าถึงโฟลเดอร์นี้ได้</li>');
+                return;
+            }
+
+            pickerCurrentPath = res.currentPath;
+            pickerParentPath = res.parentPath;
+            selectedItemPath = '';
+            $('#picker-current-path').val(pickerCurrentPath);
+
+            // Up button state
+            if (pickerParentPath) {
+                $('#picker-btn-up').prop('disabled', false).attr('data-path', pickerParentPath);
+            } else {
+                $('#picker-btn-up').prop('disabled', true);
+            }
+
+            // Render Drives (if available)
+            var drivesContainer = $('#picker-drives-container');
+            var drivesList = $('#picker-drives-list');
+            drivesList.empty();
+            if (res.drives && res.drives.length > 0) {
+                drivesContainer.removeClass('d-none');
+                $.each(res.drives, function(idx, drv){
+                    var btn = $('<button type="button" class="btn btn-outline-info btn-xs mr-1"></button>')
+                        .html('<i class="fas fa-hdd mr-1"></i> ' + drv.name)
+                        .attr('data-path', drv.path);
+                    if (pickerCurrentPath.toLowerCase().indexOf(drv.path.toLowerCase().replace('/', '\\')) === 0 || 
+                        pickerCurrentPath.toLowerCase().indexOf(drv.path.toLowerCase()) === 0) {
+                        btn.removeClass('btn-outline-info').addClass('btn-info text-white font-weight-bold');
+                    }
+                    drivesList.append(btn);
+                });
+            } else {
+                drivesContainer.addClass('d-none');
+            }
+
+            // Render Subfolders
+            list.empty();
+            if (!res.folders || res.folders.length === 0) {
+                list.append('<li class="list-group-item text-center text-muted p-3"><i class="far fa-folder-open mr-1"></i> ไม่มีโฟลเดอร์ย่อยข้างในนี้</li>');
+                return;
+            }
+
+            $.each(res.folders, function(idx, item){
+                var li = $('<li class="list-group-item list-group-item-action d-flex justify-content-between align-items-center picker-folder-item py-2 px-3"></li>')
+                    .attr('data-path', item.path)
+                    .html('<span><i class="fas fa-folder text-warning mr-2"></i> ' + $('<div>').text(item.name).html() + '</span>' +
+                          '<button type="button" class="btn btn-outline-primary btn-xs btn-open-sub" title="เปิดโฟลเดอร์นี้"><i class="fas fa-chevron-right"></i></button>');
+                list.append(li);
+            });
+        }).fail(function(){
+            list.html('<li class="list-group-item text-center text-danger p-3"><i class="fas fa-times-circle mr-1"></i> เชื่อมต่อล้มเหลว</li>');
+        });
+    }
+
+    // คลิกปุ่ม Browse...
+    $('#btn-browse-dest').on('click', function(){
+        if (isWorking) return;
+
+        // ขั้นแรก: ลองเรียก Native OS Folder Picker ก่อน
+        var curVal = $.trim($('#dest-path-input').val()) || defaultDest;
+        var btn = $(this);
+        var originalBtnHtml = btn.html();
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> เปิด...');
+
+        $.ajax({
+            url: '{$urlBrowseFolder}',
+            type: 'POST',
+            data: {
+                targetPath: curVal,
+                mode: 'native'
+            },
+            dataType: 'json',
+            timeout: 60000
+        }).done(function(res){
+            btn.prop('disabled', false).html(originalBtnHtml);
+            if (res.status === 'success' && res.path) {
+                // เลือกสำเร็จผ่าน Native Dialog
+                $('#dest-path-input').val(res.path);
+            } else if (res.status === 'cancelled') {
+                // ผู้ใช้กดยกเลิก
+            } else {
+                // Fallback: เปิด Interactive Folder Browser Modal
+                $('#modal-folder-picker').modal('show');
+                renderPickerDirectory(curVal);
+            }
+        }).fail(function(){
+            btn.prop('disabled', false).html(originalBtnHtml);
+            // Fallback: เปิด Modal ปกติ
+            $('#modal-folder-picker').modal('show');
+            renderPickerDirectory(curVal);
+        });
+    });
+
+    // คลิกเลือก Drive
+    $(document).on('click', '#picker-drives-list button', function(){
+        var p = $(this).attr('data-path');
+        if (p) renderPickerDirectory(p);
+    });
+
+    // ปุ่มขึ้นไป 1 ระดับ
+    $('#picker-btn-up').on('click', function(){
+        var p = $(this).attr('data-path');
+        if (p) renderPickerDirectory(p);
+    });
+
+    // คลิกเลือกโฟลเดอร์ (Highlight)
+    $(document).on('click', '.picker-folder-item', function(e){
+        if ($(e.target).closest('.btn-open-sub').length) return;
+        $('.picker-folder-item').removeClass('selected');
+        $(this).addClass('selected');
+        selectedItemPath = $(this).attr('data-path');
+        $('#picker-current-path').val(selectedItemPath);
+    });
+
+    // ดับเบิ้ลคลิกเพื่อเปิดโฟลเดอร์ หรือกดปุ่มลูกศร
+    $(document).on('dblclick', '.picker-folder-item', function(){
+        var p = $(this).attr('data-path');
+        if (p) renderPickerDirectory(p);
+    });
+    $(document).on('click', '.btn-open-sub', function(e){
+        e.stopPropagation();
+        var p = $(this).closest('.picker-folder-item').attr('data-path');
+        if (p) renderPickerDirectory(p);
+    });
+
+    // ยืนยันเลือกโฟลเดอร์นี้
+    $('#picker-btn-select-current').on('click', function(){
+        var chosen = $('#picker-current-path').val() || selectedItemPath || pickerCurrentPath;
+        if (chosen) {
+            $('#dest-path-input').val(chosen);
+        }
+        $('#modal-folder-picker').modal('hide');
     });
 
     // 1. สำรองเฉพาะ MySQL
