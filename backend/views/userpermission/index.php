@@ -22,6 +22,18 @@ foreach ($users as $user) {
         $activeCompanyUsers[] = $user;
     }
 }
+
+// สร้างไฟล์รายการตารางทั้งหมดในฐานข้อมูล
+$dumpPath = Yii::getAlias('@backend/runtime/tables_dump.json');
+if (!file_exists($dumpPath)) {
+    try {
+        $db = Yii::$app->db;
+        $schema = $db->createCommand("SELECT DATABASE()")->queryScalar();
+        $sql = "SELECT TABLE_NAME, TABLE_COMMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA = :s ORDER BY TABLE_NAME ASC";
+        $tbls = $db->createCommand($sql, [':s' => $schema])->queryAll();
+        file_put_contents($dumpPath, json_encode($tbls, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+    } catch (\Exception $e) {}
+}
 ?>
 
 <style>
@@ -147,13 +159,16 @@ foreach ($users as $user) {
                     </span>
                 </div>
 
-                <!-- ปุ่มบันทึก -->
+                <!-- ปุ่มบันทึก และปุ่มเครื่องมือ -->
                 <div class="col-md-3 text-right">
-                    <button type="button" class="btn btn-success btn-sm px-3 shadow" id="btn-save-all">
-                        <i class="fas fa-save mr-1"></i> <strong>บันทึกการกำหนดสิทธิ์</strong>
+                    <button type="button" class="btn btn-success btn-sm px-2 shadow-sm" id="btn-save-all">
+                        <i class="fas fa-save mr-1"></i> บันทึก
                     </button>
                     <button type="button" class="btn btn-outline-info btn-sm ml-1" data-toggle="modal" data-target="#userCompanyModal" title="กำหนดสิทธิ์การเข้าถึงบริษัทของ User">
                         <i class="fas fa-users-cog mr-1"></i> ผูกสิทธิ์บริษัท
+                    </button>
+                    <button type="button" class="btn btn-outline-dark btn-sm ml-1" data-toggle="modal" data-target="#dataDictModal" title="ดู Data Dictionary ตารางในระบบ">
+                        <i class="fas fa-book mr-1"></i> Data Dict
                     </button>
                 </div>
             </div>
@@ -317,12 +332,69 @@ foreach ($users as $user) {
     </div>
 </div>
 
+<!-- Modal Data Dictionary -->
+<div class="modal fade" id="dataDictModal" tabindex="-1" role="dialog" aria-labelledby="dataDictModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document" style="max-width: 90%;">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="dataDictModalLabel"><i class="fas fa-database mr-2 text-warning"></i> Data Dictionary: พจนานุกรมตารางฐานข้อมูลในระบบ (Database Tables)</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="input-group" style="max-width: 380px;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        </div>
+                        <input type="text" id="filter-dict" class="form-control" placeholder="ค้นหาชื่อตาราง หรือคำอธิบาย...">
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-primary" onclick="copyDictTable()">
+                            <i class="fas fa-copy mr-1"></i> Copy ตาราง (ไปวางใน Excel / Word)
+                        </button>
+                        <button type="button" class="btn btn-success ml-1" onclick="exportDictToCSV()">
+                            <i class="fas fa-file-excel mr-1"></i> ดาวน์โหลดเป็น Excel (CSV)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive" style="max-height: 65vh; overflow-y: auto;">
+                    <table class="table table-bordered table-striped table-hover" id="dict-table">
+                        <thead class="thead-dark" style="position: sticky; top: 0; z-index: 5;">
+                            <tr>
+                                <th style="width: 70px; text-align: center;">ลำดับ</th>
+                                <th style="width: 320px;">ชื่อตาราง (Table Name)</th>
+                                <th>คำอธิบาย (Description / รายละเอียดการเก็บข้อมูล)</th>
+                                <th style="width: 180px;">หมวดหมู่งาน</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dict-table-body">
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i> กำลังโหลดข้อมูลตาราง...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">ปิด</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php
 $saveUrl = Url::to(['userpermission/save']);
 $assignUrl = Url::to(['userpermission/assign-companies']);
+$dataDictUrl = Url::to(['userpermission/data-dictionary']);
 $selectedCompIdJson = json_encode($selectedCompanyId);
 
 $js = <<<JS
+
 function updateCellColor(selectEl) {
     var val = $(selectEl).val();
     $(selectEl).attr('data-val', val);
@@ -442,6 +514,321 @@ function saveUserCompany(userId) {
             }
         }
     });
+}
+
+// Data Dictionary Logic
+var dataDictList = [];
+
+// Mapping คำอธิบายตารางในโปรเจ็ค MCO
+var tableDescriptions = {
+    // 1. ทั่วไป, ผู้ใช้งาน และสิทธิ์
+    'user': { desc: 'ข้อมูลบัญชีผู้ใช้งานระบบ (Username, Password, อีเมล, สถานะการใช้งาน)', group: 'ผู้ใช้งาน & สิทธิ์' },
+    'usergroup': { desc: 'กลุ่มผู้ใช้งานระบบ', group: 'ผู้ใช้งาน & สิทธิ์' },
+    'user_company': { desc: 'การผูกสิทธิ์ว่าผู้ใช้งาน (User) แต่ละคนสามารถเข้าใช้งานบริษัทใดได้บ้าง (Multi-Company)', group: 'ผู้ใช้งาน & สิทธิ์' },
+    'user_module_permission': { desc: 'สิทธิ์การเข้าถึงและการทำงานในแต่ละโมดูลของ User แยกตามบริษัท (Matrix Permission: x=เข้าไม่ได้, 0=ดูอย่างเดียว, 1=ทำรายการ)', group: 'ผู้ใช้งาน & สิทธิ์' },
+    'auth_assignment': { desc: 'การกำหนดบทบาท (Role) ของระบบ RBAC ให้กับผู้ใช้งาน', group: 'ผู้ใช้งาน & สิทธิ์' },
+    'auth_item': { desc: 'รายการบทบาท (Role) และสิทธิ์ย่อย (Permission Route) ในระบบ RBAC', group: 'ผู้ใช้งาน & สิทธิ์' },
+    'auth_item_child': { desc: 'ความสัมพันธ์ระหว่างบทบาทหลักและสิทธิ์ย่อยใน RBAC', group: 'ผู้ใช้งาน & สิทธิ์' },
+    'auth_rule': { desc: 'กฎหรือเงื่อนไขพิเศษเพิ่มเติมของ RBAC', group: 'ผู้ใช้งาน & สิทธิ์' },
+    'action_logs': { desc: 'บันทึกประวัติการใช้งานและกิจกรรมต่างๆ ของผู้ใช้ในระบบ (Audit Log / Activity Log)', group: 'ผู้ใช้งาน & สิทธิ์' },
+    'company': { desc: 'ข้อมูลบริษัทในเครือ (เช่น MCO, ARICAT STUDIO, ARICAT LABOR, ARICAT DEVELOP)', group: 'ตั้งค่าระบบ' },
+    'company_salary': { desc: 'ข้อมูลการจ่ายเงินเดือนและค่าตอบแทนแยกตามบริษัท', group: 'บุคคล & เงินเดือน' },
+    'system_setting': { desc: 'การตั้งค่าทั่วไปของระบบ', group: 'ตั้งค่าระบบ' },
+    'document_sequence': { desc: 'การจัดการรันเลขที่เอกสารอัตโนมัติของแต่ละประเภทเอกสารและแต่ละบริษัท', group: 'ตั้งค่าระบบ' },
+    'document_revision': { desc: 'ประวัติการแก้ไขและเวอร์ชัน (Revision) ของเอกสาร เช่น PO, NPR', group: 'จัดการเอกสาร' },
+
+    // 2. ฝ่ายบุคคลและพนักงาน
+    'employee': { desc: 'ข้อมูลประวัติพนักงาน รูปถ่าย วันที่เริ่มงาน ตำแหน่ง และแผนก', group: 'บุคคล & องค์กร' },
+    'department': { desc: 'แผนกงานในองค์กร', group: 'บุคคล & องค์กร' },
+    'position': { desc: 'ตำแหน่งงานของพนักงาน', group: 'บุคคล & องค์กร' },
+    'worker': { desc: 'ข้อมูลแรงงาน / คนงานภายนอกที่ร่วมปฏิบัติงาน', group: 'บุคคล & องค์กร' },
+    'worker_doc': { desc: 'เอกสารแนบที่เกี่ยวข้องกับคนงาน/แรงงาน', group: 'บุคคล & องค์กร' },
+    'employer': { desc: 'ข้อมูลนายจ้าง / ผู้ว่าจ้างแรงงาน', group: 'บุคคล & องค์กร' },
+    'employer_doc': { desc: 'เอกสารแนบเกี่ยวกับนายจ้าง', group: 'บุคคล & องค์กร' },
+    'agency': { desc: 'ข้อมูลตัวแทน / เอเจนซี่จัดหาแรงงาน', group: 'บุคคล & องค์กร' },
+    'agency_doc': { desc: 'เอกสารแนบเกี่ยวกับตัวแทนเอเจนซี่', group: 'บุคคล & องค์กร' },
+
+    // 3. ข้อมูลภูมิศาสตร์ / ที่อยู่
+    'province': { desc: 'ข้อมูลจังหวัดในประเทศไทย', group: 'ที่อยู่ & ภูมิศาสตร์' },
+    'amphur': { desc: 'ข้อมูลอำเภอ / เขตในประเทศไทย', group: 'ที่อยู่ & ภูมิศาสตร์' },
+    'district': { desc: 'ข้อมูลตำบล / แขวง และรหัสไปรษณีย์ในประเทศไทย', group: 'ที่อยู่ & ภูมิศาสตร์' },
+    'address_info': { desc: 'ข้อมูลที่อยู่สำหรับติดต่อของหน่วยงานหรือบุคคล', group: 'ที่อยู่ & ภูมิศาสตร์' },
+
+    // 4. คลังสินค้าและสต๊อก
+    'product': { desc: 'ข้อมูลสินค้าและบริการ (รหัสสินค้า, ชื่อสินค้า, ราคา, สต๊อก)', group: 'สินค้า & คลัง' },
+    'product_group': { desc: 'กลุ่ม / หมวดหมู่สินค้า', group: 'สินค้า & คลัง' },
+    'product_brand': { desc: 'ยี่ห้อ / แบรนด์ของสินค้า', group: 'สินค้า & คลัง' },
+    'unit': { desc: 'หน่วยนับของสินค้า (เช่น ชิ้น, กล่อง, ชุด, อัน)', group: 'สินค้า & คลัง' },
+    'warehouse': { desc: 'คลังสินค้าและสถานที่จัดเก็บ', group: 'สินค้า & คลัง' },
+    'stock_sum': { desc: 'ยอดสินค้าคงเหลือสะสมในแต่ละคลังสินค้า', group: 'สินค้า & คลัง' },
+    'stock_trans': { desc: 'รายการประวัติการเคลื่อนไหวสต๊อก (รับเข้า, เบิกออก, ย้ายคลัง, ปรับยอด)', group: 'สินค้า & คลัง' },
+    'stock_monthly_snapshot': { desc: 'ภาพรวมยอดสต๊อกคงเหลือยกไปรายเดือน (Monthly Snapshot)', group: 'สินค้า & คลัง' },
+    'journal_trans': { desc: 'เอกสารบันทึกการทำรายการสต๊อก (ใบรับสินค้าเข้าคลัง, ใบเบิกสินค้า)', group: 'สินค้า & คลัง' },
+    'journal_trans_line': { desc: 'รายการสินค้าแต่ละบรรทัดในเอกสารบันทึกสต๊อก', group: 'สินค้า & คลัง' },
+    'journal_trans_doc': { desc: 'เอกสารแนบของการทำรายการสต๊อก', group: 'สินค้า & คลัง' },
+    'journal_trans_aricat': { desc: 'เอกสารรายการสต๊อกเฉพาะของกลุ่ม ARICAT', group: 'สินค้า & คลัง' },
+
+    // 5. งานจัดซื้อ (Purchasing)
+    'vendor': { desc: 'ข้อมูลผู้ขาย / ซัพพลายเออร์ / ผู้ให้บริการ (ชื่อ, เลขผู้เสียภาษี, เงื่อนไขเครดิต)', group: 'จัดซื้อ (Purchasing)' },
+    'vendor_doc': { desc: 'เอกสารแนบเกี่ยวกับผู้ขาย (เช่น ภ.พ.20, หนังสือรับรองบริษัท)', group: 'จัดซื้อ (Purchasing)' },
+    'purch_req': { desc: 'ใบขอซื้อสินค้า/บริการ (PR - Purchase Request)', group: 'จัดซื้อ (Purchasing)' },
+    'purch_req_line': { desc: 'รายการสินค้าหรือบริการในใบขอซื้อ PR แต่ละรายการ', group: 'จัดซื้อ (Purchasing)' },
+    'purch_req_doc': { desc: 'เอกสารแนบประกอบใบขอซื้อ PR (ใบเสนอราคา, สเปกสินค้า)', group: 'จัดซื้อ (Purchasing)' },
+    'purch_req_reason': { desc: 'เหตุผลความจำเป็นในการขอซื้อสินค้า', group: 'จัดซื้อ (Purchasing)' },
+    'purch_req_reason_title': { desc: 'หัวข้อเหตุผลการขอซื้อมาตรฐาน', group: 'จัดซื้อ (Purchasing)' },
+    'purch_req_foot': { desc: 'หมายเหตุส่วนท้ายของใบขอซื้อ PR', group: 'จัดซื้อ (Purchasing)' },
+    'purch_req_foot_title': { desc: 'ข้อความเงื่อนไขมาตรฐานท้ายใบขอซื้อ', group: 'จัดซื้อ (Purchasing)' },
+    'purch': { desc: 'ใบสั่งซื้อสินค้า/บริการ (PO - Purchase Order)', group: 'จัดซื้อ (Purchasing)' },
+    'purch_line': { desc: 'รายการสินค้าแต่ละบรรทัดในใบสั่งซื้อ PO', group: 'จัดซื้อ (Purchasing)' },
+    'purch_doc': { desc: 'เอกสารแนบในใบสั่งซื้อ PO', group: 'จัดซื้อ (Purchasing)' },
+    'purch_vendor_bill': { desc: 'ใบกำกับภาษี/บิลจากผู้ขายที่นำมาบันทึกผูกกับใบสั่งซื้อ PO', group: 'จัดซื้อ (Purchasing)' },
+    'purch_receive_doc': { desc: 'เอกสารหลักฐานการรับสินค้าเข้าจากใบสั่งซื้อ', group: 'จัดซื้อ (Purchasing)' },
+    'purch_payment': { desc: 'ข้อมูลการจ่ายชำระเงินค่าสินค้าตามใบสั่งซื้อ PO', group: 'จัดซื้อ (Purchasing)' },
+    'purch_payment_line': { desc: 'รายละเอียดงวดการจ่ายเงินในใบสั่งซื้อ', group: 'จัดซื้อ (Purchasing)' },
+    'purch_deposit': { desc: 'รายการมัดจำค่าสินค้าของใบสั่งซื้อ PO', group: 'จัดซื้อ (Purchasing)' },
+    'purch_deposit_line': { desc: 'รายการสินค้าที่เกี่ยวข้องกับเงินมัดจำใบสั่งซื้อ', group: 'จัดซื้อ (Purchasing)' },
+    'purchasemaster': { desc: 'บันทึกข้อมูลการซื้อสินค้าแบบไม่มีใบขอซื้อ (None PR Purchase Master)', group: 'จัดซื้อ (Purchasing)' },
+    'purch_none_pr_doc': { desc: 'เอกสารแนบของการซื้อแบบไม่มีใบขอซื้อ (None PR)', group: 'จัดซื้อ (Purchasing)' },
+    'purch_none_pr_deposit': { desc: 'เงินมัดจำสำหรับการซื้อแบบ None PR', group: 'จัดซื้อ (Purchasing)' },
+    'purch_none_pr_deposit_line': { desc: 'รายการสินค้ามัดจำแบบ None PR', group: 'จัดซื้อ (Purchasing)' },
+    'receiving_checklist': { desc: 'รายการตรวจสอบการตรวจรับสินค้าจากผู้ขาย', group: 'จัดซื้อ (Purchasing)' },
+
+    // 6. การเงิน & บัญชี
+    'chart_of_account': { desc: 'ผังบัญชี (Chart of Accounts) เลขที่บัญชีและชื่อบัญชี', group: 'การเงิน & บัญชี' },
+    'account_category': { desc: 'หมวดหมู่ผังบัญชี (เช่น สินทรัพย์, หนี้สิน, ส่วนของผู้ถือหุ้น, รายได้, ค่าใช้จ่าย)', group: 'การเงิน & บัญชี' },
+    'bank_account': { desc: 'ข้อมูลสมุดบัญชีเงินฝากธนาคารของบริษัท', group: 'การเงิน & บัญชี' },
+    'payment_term': { desc: 'เงื่อนไขระยะเวลาการชำระเงิน (เช่น เงินสด, เครดิต 30 วัน, เครดิต 60 วัน)', group: 'การเงิน & บัญชี' },
+    'payment_method': { desc: 'วิธีการชำระเงิน (เช่น โอนเงิน, เช็ค, เงินสด)', group: 'การเงิน & บัญชี' },
+    'payment_extra_option': { desc: 'ตัวเลือกเพิ่มเติมในการจ่ายชำระเงิน', group: 'การเงิน & บัญชี' },
+    'petty_cash_voucher': { desc: 'ใบสำคัญจ่ายเงินสดย่อย (Petty Cash Voucher)', group: 'การเงิน & บัญชี' },
+    'petty_cash_voucher_doc': { desc: 'เอกสารแนบประกอบใบสำคัญเงินสดย่อย', group: 'การเงิน & บัญชี' },
+    'petty_cash_voucher_doc_bill': { desc: 'ใบเสร็จรับเงิน/บิลเงินสดที่นำมาเบิกเงินสดย่อย', group: 'การเงิน & บัญชี' },
+    'petty_cash_voucher_doc_slip': { desc: 'สลิปการโอนเงินคืนหรือจ่ายเงินสดย่อย', group: 'การเงิน & บัญชี' },
+    'petty_cash_advance': { desc: 'ใบขอเบิกเงินสดย่อยทดแทน / เบิกเงินสำรองก้อนใหม่', group: 'การเงิน & บัญชี' },
+    'petty_cash_detail': { desc: 'รายละเอียดรายการย่อยของการเบิกเงินสดย่อย', group: 'การเงิน & บัญชี' },
+    'pre_advance': { desc: 'ใบขอเบิกเงินทดรองจ่ายล่วงหน้า (Payment Advance)', group: 'การเงิน & บัญชี' },
+    'pre_advance_line': { desc: 'รายการวัตถุประสงค์ค่าใช้จ่ายที่ขอเบิกเงินทดรองจ่ายล่วงหน้า', group: 'การเงิน & บัญชี' },
+    'pre_advance_doc': { desc: 'เอกสารแนบประกอบการเบิกเงินทดรองจ่าย', group: 'การเงิน & บัญชี' },
+    'pre_advance_ref': { desc: 'เอกสารอ้างอิงของการเบิกเงินทดรองจ่าย', group: 'การเงิน & บัญชี' },
+    'payment_voucher': { desc: 'ใบสำคัญจ่ายเงิน (Payment Voucher - PV)', group: 'การเงิน & บัญชี' },
+    'payment_voucher_line': { desc: 'รายการบรรทัดค่าใช้จ่ายในใบสำคัญจ่าย PV', group: 'การเงิน & บัญชี' },
+    'payment_voucher_doc': { desc: 'เอกสารแนบในใบสำคัญจ่าย PV', group: 'การเงิน & บัญชี' },
+    'payment_voucher_ref': { desc: 'เอกสารที่นำมาอ้างอิงในการตั้งใบสำคัญจ่าย (เช่น PO, ใบแจ้งหนี้)', group: 'การเงิน & บัญชี' },
+    'payment_attachment': { desc: 'ไฟล์แนบหลักฐานการชำระเงินหรือสลิปโอนเงิน', group: 'การเงิน & บัญชี' },
+    'payment_receipt': { desc: 'ใบสำคัญรับเงิน / ใบรับชำระเงิน', group: 'การเงิน & บัญชี' },
+    'payment_receipt_detail': { desc: 'รายละเอียดการรับชำระเงินแต่ละรายการ', group: 'การเงิน & บัญชี' },
+    'billing_invoices': { desc: 'ใบวางบิล / เอกสารแจ้งยอดเรียกเก็บเงินจากลูกค้า', group: 'การเงิน & บัญชี' },
+    'billing_invoice_items': { desc: 'รายการเอกสารหรือใบกำกับภาษีที่รวมอยู่ในใบวางบิล', group: 'การเงิน & บัญชี' },
+    'invoice': { desc: 'ใบแจ้งหนี้ / ใบกำกับภาษี / ใบเสร็จรับเงิน (Invoices)', group: 'การเงิน & บัญชี' },
+    'invoice_item': { desc: 'รายการสินค้าหรือบริการแต่ละรายการในใบแจ้งหนี้/ใบเสร็จ', group: 'การเงิน & บัญชี' },
+    'invoice_doc': { desc: 'เอกสารแนบของใบแจ้งหนี้/ใบเสร็จรับเงิน', group: 'การเงิน & บัญชี' },
+    'invoice_payment_history': { desc: 'ประวัติการรับชำระเงินของแต่ละใบแจ้งหนี้', group: 'การเงิน & บัญชี' },
+    'invoice_payment_receipt': { desc: 'การผูกใบแจ้งหนี้เข้ากับใบรับเงิน', group: 'การเงิน & บัญชี' },
+    'invoice_payment_extra': { desc: 'ค่าใช้จ่ายเพิ่มเติมหรือส่วนลดพิเศษตอนชำระเงิน', group: 'การเงิน & บัญชี' },
+    'invoice_relation': { desc: 'ความสัมพันธ์และการเชื่อมโยงระหว่างเอกสารใบแจ้งหนี้', group: 'การเงิน & บัญชี' },
+    'credit_note': { desc: 'ใบลดหนี้ (Credit Note - CN)', group: 'การเงิน & บัญชี' },
+    'credit_note_item': { desc: 'รายการสินค้าหรือมูลค่าที่ลดหนี้ใน Credit Note', group: 'การเงิน & บัญชี' },
+    'credit_note_doc': { desc: 'เอกสารแนบของใบลดหนี้', group: 'การเงิน & บัญชี' },
+    'debit_note': { desc: 'ใบเพิ่มหนี้ (Debit Note - DN)', group: 'การเงิน & บัญชี' },
+    'debit_note_item': { desc: 'รายการสินค้าหรือมูลค่าที่เพิ่มหนี้ใน Debit Note', group: 'การเงิน & บัญชี' },
+    'debit_note_doc': { desc: 'เอกสารแนบของใบเพิ่มหนี้', group: 'การเงิน & บัญชี' },
+    'wht': { desc: 'ข้อมูลหนังสือรับรองการหักภาษี ณ ที่จ่าย (Withholding Tax - ภ.ง.ด. 3, 53)', group: 'การเงิน & บัญชี' },
+    'monthly_account_closing': { desc: 'บันทึกการปิดงวดบัญชีประจำเดือน', group: 'การเงิน & บัญชี' },
+    'currency': { desc: 'สกุลเงินและอัตราแลกเปลี่ยน (เช่น THB, USD, EUR)', group: 'การเงิน & บัญชี' },
+
+    // 7. งานขายและบริการ (Sales & Jobs)
+    'customer': { desc: 'ข้อมูลลูกค้าและคู่ค้า (ชื่อ, ที่อยู่, เลขผู้เสียภาษี, เครดิตเทอม)', group: 'ขาย & บริการ' },
+    'quotation': { desc: 'ใบเสนอราคา (Quotation - QT)', group: 'ขาย & บริการ' },
+    'quotation_line': { desc: 'รายการสินค้าหรือบริการที่เสนอราคาในแต่ละบรรทัด', group: 'ขาย & บริการ' },
+    'job': { desc: 'ใบสั่งงาน / ใบงานบริการ (Job Order)', group: 'ขาย & บริการ' },
+    'job_line': { desc: 'รายการงานหรือสินค้าแต่ละรายการในใบงาน Job', group: 'ขาย & บริการ' },
+    'job_expense': { desc: 'ค่าใช้จ่ายและต้นทุนที่เกิดขึ้นจริงในแต่ละใบงาน Job', group: 'ขาย & บริการ' },
+    'job_contact_info': { desc: 'ข้อมูลผู้ติดต่อและสถานที่หน้างานของ Job', group: 'ขาย & บริการ' },
+    'job_activity_status': { desc: 'สถานะความคืบหน้าของกิจกรรมในแต่ละใบงาน', group: 'ขาย & บริการ' },
+    'job_doc_complete': { desc: 'เอกสารตรวจรับงานและส่งมอบงานที่เสร็จสิ้น', group: 'ขาย & บริการ' },
+    'job_po_doc': { desc: 'เอกสารใบสั่งซื้อจากลูกค้าที่แนบใน Job', group: 'ขาย & บริการ' },
+    'job_report_doc': { desc: 'รายงานการปฏิบัติงานและเอกสารแนบของ Job', group: 'ขาย & บริการ' },
+    'delivery_note': { desc: 'ใบส่งของ / ใบส่งสินค้า / ใบตรวจรับงาน (Delivery Note)', group: 'ขาย & บริการ' },
+    'delivery_note_line': { desc: 'รายการสินค้าแต่ละรายการในใบส่งของ Delivery Note', group: 'ขาย & บริการ' },
+    'vehicle_expense': { desc: 'บันทึกค่าใช้จ่ายยานพาหนะและการเดินทาง (ค่าน้ำมัน, ค่าทางด่วน, ค่าซ่อมบำรุง)', group: 'ขาย & บริการ' },
+    'driver_wage_report': { desc: 'รายงานคำนวณค่าแรงและค่าเที่ยวของพนักงานขับรถ', group: 'ขาย & บริการ' },
+
+    // 8. OCR & อื่นๆ
+    'ocr_pattern': { desc: 'รูปแบบและคำค้นหาสำหรับระบบรู้จำตัวอักษร OCR อัตโนมัติ', group: 'ระบบ AI & OCR' },
+    'temp_invoice': { desc: 'ข้อมูลใบแจ้งหนี้ชั่วคราวจากการอ่านสแกน OCR', group: 'ระบบ AI & OCR' },
+    'temp_invoice_line': { desc: 'รายการสินค้าชั่วคราวจากการสแกน OCR', group: 'ระบบ AI & OCR' }
+};
+
+// โหลดข้อมูลตารางเมื่อเปิด Modal
+$('#dataDictModal').on('show.bs.modal', function() {
+    loadDataDictionary();
+});
+
+function loadDataDictionary() {
+    var tbody = $('#dict-table-body');
+    if (dataDictList.length > 0) {
+        renderDictTable(dataDictList);
+        return;
+    }
+
+    tbody.html('<tr><td colspan="4" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin mr-2"></i> กำลังโหลดข้อมูลตาราง...</td></tr>');
+
+    $.ajax({
+        url: '{$dataDictUrl}',
+        type: 'GET',
+        dataType: 'json',
+        success: function(res) {
+            dataDictList = [];
+            if (Array.isArray(res) && res.length > 0) {
+                $.each(res, function(i, row) {
+                    var tName = (row.TABLE_NAME || row.table_name || '').toLowerCase();
+                    var dbComment = row.TABLE_COMMENT || row.table_comment || '';
+                    var mapped = tableDescriptions[tName] || {};
+                    var desc = mapped.desc || dbComment || 'ตารางเก็บข้อมูลระบบ ' + tName;
+                    var grp = mapped.group || 'ตารางทั่วไปในระบบ';
+
+                    dataDictList.push({
+                        name: tName,
+                        desc: desc,
+                        group: grp
+                    });
+                });
+            } else {
+                // หากไม่สามารถดึงจาก DB ได้ ให้ใช้รายการจาก mapping มาตรฐาน
+                $.each(tableDescriptions, function(tName, info) {
+                    dataDictList.push({
+                        name: tName,
+                        desc: info.desc,
+                        group: info.group
+                    });
+                });
+            }
+            renderDictTable(dataDictList);
+        },
+        error: function() {
+            // กรณีเกิดข้อผิดพลาด ใช้ mapping เริ่มต้นทันที
+            dataDictList = [];
+            $.each(tableDescriptions, function(tName, info) {
+                dataDictList.push({
+                    name: tName,
+                    desc: info.desc,
+                    group: info.group
+                });
+            });
+            renderDictTable(dataDictList);
+        }
+    });
+}
+
+function renderDictTable(list) {
+    var tbody = $('#dict-table-body');
+    tbody.empty();
+
+    if (!list || list.length === 0) {
+        tbody.append('<tr><td colspan="4" class="text-center py-3 text-muted">ไม่พบข้อมูลตาราง</td></tr>');
+        return;
+    }
+
+    $.each(list, function(idx, item) {
+        var tr = $('<tr></tr>');
+        tr.append('<td class="text-center align-middle">' + (idx + 1) + '</td>');
+        tr.append('<td class="align-middle font-weight-bold text-dark"><code>' + item.name + '</code></td>');
+        tr.append('<td class="align-middle">' + item.desc + '</td>');
+        tr.append('<td class="align-middle"><span class="badge badge-info">' + item.group + '</span></td>');
+        tbody.append(tr);
+    });
+}
+
+// ค้นหาในตาราง Data Dictionary
+$('#filter-dict').on('keyup', function() {
+    var kw = $(this).val().toLowerCase().trim();
+    if (!kw) {
+        renderDictTable(dataDictList);
+        return;
+    }
+    var filtered = dataDictList.filter(function(item) {
+        return item.name.toLowerCase().indexOf(kw) !== -1 || 
+               item.desc.toLowerCase().indexOf(kw) !== -1 || 
+               item.group.toLowerCase().indexOf(kw) !== -1;
+    });
+    renderDictTable(filtered);
+});
+
+// ฟังก์ชันคัดลอกตารางไปยังคลิปบอร์ด เพื่อนำไป Paste ลงใน Excel หรือ Word ได้ทันที
+function copyDictTable() {
+    var table = document.getElementById('dict-table');
+    if (!table) return;
+
+    var range = document.createRange();
+    range.selectNode(table);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+
+    try {
+        var successful = document.execCommand('copy');
+        window.getSelection().removeAllRanges();
+        if (successful) {
+            Swal.fire({
+                icon: 'success',
+                title: 'คัดลอกตารางแล้ว!',
+                text: 'สามารถนำไปกดวาง (Ctrl+V) ลงใน Excel หรือ Word ได้ทันที',
+                timer: 2500,
+                showConfirmButton: false
+            });
+        } else {
+            fallbackCopyText();
+        }
+    } catch (err) {
+        fallbackCopyText();
+    }
+}
+
+function fallbackCopyText() {
+    var text = "ลำดับ\tชื่อตาราง (Table Name)\tคำอธิบาย\tหมวดหมู่งาน\n";
+    $('#dict-table tbody tr').each(function() {
+        var cols = [];
+        $(this).find('td').each(function() {
+            cols.push($(this).text().replace(/\t/g, ' ').trim());
+        });
+        if (cols.length >= 4) {
+            text += cols.join('\t') + "\n";
+        }
+    });
+
+    navigator.clipboard.writeText(text).then(function() {
+        Swal.fire({
+            icon: 'success',
+            title: 'คัดลอกข้อมูลแล้ว!',
+            text: 'สามารถนำไปกดวาง (Ctrl+V) ลงใน Excel หรือ Word ได้ทันที',
+            timer: 2500,
+            showConfirmButton: false
+        });
+    });
+}
+
+// ส่งออกเป็นไฟล์ CSV สำหรับเปิดด้วย Excel
+function exportDictToCSV() {
+    var csv = "\uFEFFลำดับ,ชื่อตาราง,คำอธิบาย,หมวดหมู่งาน\n";
+    var idx = 1;
+    $('#dict-table tbody tr').each(function() {
+        var cols = [];
+        $(this).find('td').each(function() {
+            var val = $(this).text().replace(/"/g, '""').trim();
+            cols.push('"' + val + '"');
+        });
+        if (cols.length >= 4) {
+            csv += cols.join(',') + "\n";
+        }
+    });
+
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    var link = document.createElement("a");
+    var url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "MCO_Data_Dictionary_Tables.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 JS;
 

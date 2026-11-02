@@ -49,7 +49,7 @@ class DbbackupController extends BaseController
                         'matchCallback'=>function($rule,$action){
                             $currentRoute = Yii::$app->controller->getRoute();
                             // Allow sub-actions of dbbackup if user has access to backuplist
-                            if (in_array($action->id, ['restorefile', 'downloadbak', 'deletebak', 'exrestore'])) {
+                            if (in_array($action->id, ['restorefile', 'downloadbak', 'deletebak', 'exrestore', 'copy-uploads', 'copyuploads', 'backup-db-ajax', 'backupdbajax', 'get-files-list', 'getfileslist', 'copy-batch', 'copybatch'])) {
                                 if (Yii::$app->user->can('dbbackup/backuplist') || \backend\models\User::isUserAdmin(\Yii::$app->user->id)) {
                                     return true;
                                 }
@@ -404,8 +404,247 @@ class DbbackupController extends BaseController
     }
 
     /**
-     * Restore database จากไฟล์ที่เลือกในรายการ backup
+     * AJAX Database Backup for Progress Bar & Modal feedback
      */
+    public function actionBackupDbAjax()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        list($host, $username, $password, $database_name) = self::getDbCredentials();
+
+        $backupDir = dirname(__DIR__, 2) . '/backend/web/uploads/backup';
+        if (!is_dir($backupDir)) {
+            @mkdir($backupDir, 0777, true);
+        }
+
+        $date_string = date('Y-m-d_His');
+        $fileName = "backup_{$database_name}_{$date_string}.sql";
+        $targetFile = $backupDir . DIRECTORY_SEPARATOR . $fileName;
+        $tempFile = $targetFile . '.tmp';
+
+        $mysqldump = self::getBinaryPath('mysqldump');
+        $cmd = "{$mysqldump} --default-character-set=utf8mb4 --single-transaction --quick --extended-insert --max_allowed_packet=512M --net_buffer_length=16384 -h {$host} -u {$username}";
+        if (!empty($password)) {
+            $cmd .= " -p" . escapeshellarg($password);
+        }
+        $cmd .= " {$database_name} > " . escapeshellarg($tempFile) . " 2>&1";
+
+        $startTime = microtime(true);
+        exec($cmd, $output, $returnVar);
+        $duration = microtime(true) - $startTime;
+        $timeText = self::formatDuration($duration);
+
+        $isComplete = false;
+        if ($returnVar === 0 && file_exists($tempFile) && filesize($tempFile) > 1024) {
+            $tail = '';
+            $fp = fopen($tempFile, 'rb');
+            if ($fp) {
+                fseek($fp, -200, SEEK_END);
+                $tail = fread($fp, 200);
+                fclose($fp);
+            }
+            if (strpos($tail, 'Dump completed') !== false) {
+                $isComplete = true;
+            }
+        }
+
+        if ($isComplete) {
+            @rename($tempFile, $targetFile);
+            $fileSizeMB = number_format(filesize($targetFile) / (1024 * 1024), 2);
+            return [
+                'status' => 'success',
+                'fileName' => $fileName,
+                'fileSize' => $fileSizeMB . ' MB',
+                'duration' => $timeText,
+                'message' => "สำรองฐานข้อมูลสำเร็จ 100%: {$fileName} ({$fileSizeMB} MB) ใช้เวลา {$timeText}"
+            ];
+        } else {
+            @unlink($tempFile);
+            $errDetail = !empty($output) ? implode(' ', array_slice($output, 0, 3)) : 'Unknown mysqldump error';
+            return [
+                'status' => 'error',
+                'message' => "การสำรองฐานข้อมูลล้มเหลว (Code {$returnVar}): {$errDetail}"
+            ];
+        }
+    }
+
+    /**
+     * ดึงรายการไฟล์ทั้งหมดใน backend/web/uploads (ยกเว้น uploads/backup) เพื่อคำนวณและทำ Progress bar
+     */
+    public function actionGetFilesList()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $sourceDir = dirname(__DIR__, 2) . '/backend/web/uploads';
+        $destPath = trim(Yii::$app->request->post('destPath', ''));
+
+        if (empty($destPath)) {
+            $destPath = $sourceDir;
+        }
+        $destPath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $destPath), DIRECTORY_SEPARATOR);
+
+        if (!is_dir($sourceDir)) {
+            return [
+                'status' => 'error',
+                'message' => 'ไม่พบโฟลเดอร์ต้นทาง: ' . $sourceDir
+            ];
+        }
+
+        $files = [];
+        $totalBytes = 0;
+
+        try {
+            $it = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($sourceDir, \RecursiveDirectoryIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::SELF_FIRST
+            );
+
+            foreach ($it as $item) {
+                $pathname = $item->getPathname();
+                // ข้ามโฟลเดอร์ backup SQL
+                if (strpos($pathname, 'uploads' . DIRECTORY_SEPARATOR . 'backup') !== false ||
+                    strpos($pathname, 'uploads/backup') !== false ||
+                    strpos($pathname, 'uploads\\backup') !== false) {
+                    continue;
+                }
+
+                if ($item->isFile()) {
+                    $rel = substr($pathname, strlen($sourceDir) + 1);
+                    $rel = str_replace('\\', '/', $rel);
+                    $size = $item->getSize();
+                    $files[] = [
+                        'path' => $rel,
+                        'size' => $size,
+                    ];
+                    $totalBytes += $size;
+                }
+            }
+
+            return [
+                'status' => 'success',
+                'totalFiles' => count($files),
+                'totalBytes' => $totalBytes,
+                'totalSizeMB' => number_format($totalBytes / (1024 * 1024), 2),
+                'sourceDir' => $sourceDir,
+                'destDir' => $destPath,
+                'files' => $files,
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => 'error',
+                'message' => 'เกิดข้อผิดพลาดในการสแกนไฟล์: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * ทำการคัดลอกไฟล์แบบทีละชุด (Batch Copy) เพื่อให้หน้าบ้านอัปเดต Progress Bar อย่างต่อเนื่อง
+     */
+    public function actionCopyBatch()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $sourceDir = dirname(__DIR__, 2) . '/backend/web/uploads';
+        $destPath = trim(Yii::$app->request->post('destPath', ''));
+        $batch = Yii::$app->request->post('batch', []);
+
+        if (empty($destPath)) {
+            $destPath = $sourceDir;
+        }
+        $destPath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $destPath), DIRECTORY_SEPARATOR);
+
+        if (!is_dir($destPath)) {
+            if (!@mkdir($destPath, 0777, true)) {
+                return [
+                    'status' => 'error',
+                    'message' => 'ไม่สามารถสร้างโฟลเดอร์ปลายทางได้: ' . $destPath
+                ];
+            }
+        }
+
+        $copiedCount = 0;
+        $skippedCount = 0;
+        $copiedBytes = 0;
+        $errors = [];
+
+        foreach ($batch as $item) {
+            $rel = is_array($item) ? ($item['path'] ?? '') : $item;
+            if (empty($rel)) continue;
+
+            $srcFile = $sourceDir . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $rel);
+            $dstFile = $destPath . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $rel);
+
+            if (!file_exists($srcFile)) {
+                $errors[] = "ไม่พบไฟล์ต้นทาง: {$rel}";
+                continue;
+            }
+
+            // ถ้าปลายทางคือโฟลเดอร์เดียวกัน ให้ถือว่ามีอยู่แล้วและข้ามทันที
+            if (realpath($srcFile) === realpath($dstFile)) {
+                $skippedCount++;
+                continue;
+            }
+
+            // ถ้าไฟล์มีอยู่แล้วที่ปลายทาง:
+            // 1. ตรวจสอบว่ามีอยู่แล้ว (file_exists)
+            // 2. ถ้าขนาดไฟล์เท่ากันและเวลาไฟล์ไม่เก่ากว่าต้นทาง ให้ข้ามทันที (ไม่ต้องอ่านเขียน Disk ซ้ำ เร็วกว่าและปลอดภัยที่สุด)
+            // 3. ถ้าผู้ใช้ต้องการให้ "มีอยู่แล้วให้ข้าม": หากไฟล์ปลายทางมีอยู่จริงและขนาดเท่ากัน ข้ามทันที
+            if (file_exists($dstFile)) {
+                $srcSize = filesize($srcFile);
+                $dstSize = filesize($dstFile);
+
+                // หากปลายทางมีไฟล์อยู่แล้ว และขนาดเท่ากัน ให้ถือว่าสมบูรณ์แล้ว -> ข้ามทันที (ห้ามลบ)
+                if ($srcSize === $dstSize) {
+                    $skippedCount++;
+                    continue;
+                }
+            }
+
+            // กรณีต้องคัดลอกไฟล์ใหม่ (หรือไฟล์เดิมขนาดไม่ตรง):
+            $dstSubDir = dirname($dstFile);
+            if (!is_dir($dstSubDir)) {
+                if (!@mkdir($dstSubDir, 0777, true) && !is_dir($dstSubDir)) {
+                    $errors[] = "ไม่สามารถสร้างโฟลเดอร์ปลายทาง: {$dstSubDir}";
+                    continue;
+                }
+            }
+
+            // เทคนิค Safe Copy (Atomic write): คัดลอกลงไฟล์ชั่วคราว .tmp ก่อน
+            // เพื่อรับประกันว่าหากเกิดไฟดับ/เน็ตหลุด/หยุดกลางคัน ไฟล์ปลายทางเดิมจะไม่เสียหายเด็ดขาด
+            $tmpDstFile = $dstFile . '.tmp_' . uniqid();
+            if (@copy($srcFile, $tmpDstFile)) {
+                // ตรวจสอบความสมบูรณ์ของขนาดไฟล์ชั่วคราวว่าเท่ากับต้นทาง 100%
+                if (file_exists($tmpDstFile) && filesize($tmpDstFile) === filesize($srcFile)) {
+                    @touch($tmpDstFile, filemtime($srcFile));
+                    // ปลอดภัย: สลับชื่อไฟล์ (rename) เข้าแทนที่
+                    if (@rename($tmpDstFile, $dstFile)) {
+                        $copiedCount++;
+                        $copiedBytes += filesize($dstFile);
+                    } else {
+                        // หาก rename ไม่ผ่าน (เช่นติด permission ใน Windows) ให้ fallback copy ตรง
+                        @copy($tmpDstFile, $dstFile);
+                        @unlink($tmpDstFile);
+                        $copiedCount++;
+                        $copiedBytes += filesize($dstFile);
+                    }
+                } else {
+                    @unlink($tmpDstFile);
+                    $errors[] = "คัดลอกไฟล์ {$rel} ไม่สมบูรณ์ (ขนาดไฟล์ไม่ตรงกัน)";
+                }
+            } else {
+                $errors[] = "คัดลอกไม่สำเร็จ: {$rel}";
+            }
+        }
+
+        return [
+            'status' => 'success',
+            'copiedCount' => $copiedCount,
+            'skippedCount' => $skippedCount,
+            'copiedBytes' => $copiedBytes,
+            'errors' => $errors,
+        ];
+    }
+
     public function actionRestorefile($id)
     {
         $filename = basename($id);

@@ -270,4 +270,25 @@ class UserpermissionController extends BaseController
             $db->createCommand($sql)->execute();
         }
     }
+
+    /**
+     * ดึง Data Dictionary รายชื่อตารางทั้งหมดในระบบ
+     */
+    public function actionDataDictionary()
+    {
+        $db = Yii::$app->db;
+        $schema = $db->createCommand("SELECT DATABASE()")->queryScalar();
+        
+        $sql = "SELECT TABLE_NAME, TABLE_COMMENT 
+                FROM information_schema.TABLES 
+                WHERE TABLE_SCHEMA = :schema 
+                ORDER BY TABLE_NAME ASC";
+        
+        $tables = $db->createCommand($sql, [':schema' => $schema])->queryAll();
+        
+        // บันทึกคำอธิบายตารางลงไฟล์ JSON เพื่อให้สามารถนำมาแสดงผล
+        file_put_contents(Yii::getAlias('@backend/runtime/tables_dump.json'), json_encode($tables, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+        
+        return $this->asJson($tables);
+    }
 }
