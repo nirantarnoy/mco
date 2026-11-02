@@ -50,7 +50,10 @@ $defaultSourceDir = realpath(dirname(__DIR__, 2) . '/web/uploads');
                     </div>
                     <input type="text" id="dest-path-input" class="form-control" value="<?= htmlspecialchars($defaultSourceDir) ?>" placeholder="เช่น E:/xampp/htdocs/mco_local/backend/web/uploads">
                     <div class="input-group-append">
-                        <button class="btn btn-primary" type="button" id="btn-browse-dest" title="เปิดหน้าต่างเลือกโฟลเดอร์">
+                        <button class="btn btn-primary" type="button" id="btn-browse-dest" 
+                                data-toggle="modal" data-target="#modal-folder-picker" 
+                                data-bs-toggle="modal" data-bs-target="#modal-folder-picker" 
+                                title="เปิดหน้าต่างเลือกโฟลเดอร์">
                             <i class="fas fa-folder-open mr-1"></i> Browse...
                         </button>
                         <button class="btn btn-outline-secondary" type="button" id="btn-reset-dest" title="คืนค่าเริ่มต้นโฟลเดอร์ uploads ของโปรเจกต์">
@@ -226,7 +229,7 @@ $defaultSourceDir = realpath(dirname(__DIR__, 2) . '/web/uploads');
                 </div>
             </div>
             <div class="modal-footer bg-light py-2" id="progress-modal-footer">
-                <button type="button" class="btn btn-secondary btn-sm px-4 d-none" id="btn-close-progress" data-dismiss="modal">
+                <button type="button" class="btn btn-secondary btn-sm px-4 d-none" id="btn-close-progress" data-dismiss="modal" data-bs-dismiss="modal">
                     <i class="fas fa-check mr-1"></i> ตกลง / ปิดหน้าต่าง
                 </button>
             </div>
@@ -242,7 +245,7 @@ $defaultSourceDir = realpath(dirname(__DIR__, 2) . '/web/uploads');
                 <h5 class="modal-title font-weight-bold text-dark mb-0">
                     <i class="fas fa-folder-open text-warning mr-2"></i> เลือกโฟลเดอร์ปลายทาง (Browse Folder)
                 </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -280,7 +283,7 @@ $defaultSourceDir = realpath(dirname(__DIR__, 2) . '/web/uploads');
                     </span>
                 </div>
                 <div>
-                    <button type="button" class="btn btn-secondary btn-sm px-3 mr-1" data-dismiss="modal">
+                    <button type="button" class="btn btn-secondary btn-sm px-3 mr-1" data-dismiss="modal" data-bs-dismiss="modal">
                         ยกเลิก
                     </button>
                     <button type="button" class="btn btn-success btn-sm px-4 font-weight-bold" id="picker-btn-select-current">
@@ -351,13 +354,36 @@ $js = <<<JS
         $('#btn-close-progress').addClass('d-none');
     }
 
+    function openModal(selector, options) {
+        var el = document.querySelector(selector);
+        if (!el) return;
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            var modalObj = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el, options || {});
+            modalObj.show();
+        } else if (typeof $ !== 'undefined' && $.fn && $.fn.modal) {
+            $(el).modal(options || 'show');
+        }
+    }
+
+    function closeModal(selector) {
+        var el = document.querySelector(selector);
+        if (!el) return;
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            var modalObj = bootstrap.Modal.getInstance(el);
+            if (modalObj) modalObj.hide();
+            else $(el).modal('hide');
+        } else if (typeof $ !== 'undefined' && $.fn && $.fn.modal) {
+            $(el).modal('hide');
+        }
+    }
+
     function lockUI() {
         isWorking = true;
         $('button, input, a').not('#modal-backup-progress button').prop('disabled', true);
         window.onbeforeunload = function() {
             return "กำลังสำรองข้อมูลอยู่ในเบื้องหลัง หากออกจากหน้านี้กระบวนการอาจไม่สมบูรณ์!";
         };
-        $('#modal-backup-progress').modal({backdrop: 'static', keyboard: false});
+        openModal('#modal-backup-progress', {backdrop: 'static', keyboard: false});
     }
 
     function unlockUI() {
@@ -457,13 +483,19 @@ $js = <<<JS
         });
     }
 
-    // คลิกปุ่ม Browse... เปิดหน้าต่างเลือกโฟลเดอร์ทันที
-    $('#btn-browse-dest').on('click', function(e){
+    // เมื่อ Modal เลือกโฟลเดอร์ถูกเปิดขึ้นมา (ไม่ว่าจะคลิกปุ่ม หรือ trigger ผ่าน data-toggle)
+    $('#modal-folder-picker').on('show.bs.modal', function(){
+        var curVal = $.trim($('#dest-path-input').val()) || defaultDest;
+        renderPickerDirectory(curVal);
+    });
+
+    // คลิกปุ่ม Browse... เปิดหน้าต่างเลือกโฟลเดอร์ทันที (Failsafe)
+    $(document).on('click', '#btn-browse-dest', function(e){
         e.preventDefault();
         if (isWorking) return;
 
+        openModal('#modal-folder-picker');
         var curVal = $.trim($('#dest-path-input').val()) || defaultDest;
-        $('#modal-folder-picker').modal('show');
         renderPickerDirectory(curVal);
     });
 
@@ -505,7 +537,7 @@ $js = <<<JS
         if (chosen) {
             $('#dest-path-input').val(chosen);
         }
-        $('#modal-folder-picker').modal('hide');
+        closeModal('#modal-folder-picker');
     });
 
     // 1. สำรองเฉพาะ MySQL
