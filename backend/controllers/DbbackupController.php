@@ -347,7 +347,10 @@ class DbbackupController extends BaseController
     {
         list($host, $username, $password, $database_name) = self::getDbCredentials();
 
-        $backupDir = dirname(__DIR__, 2) . '/backend/web/uploads/backup';
+        $backupDir = realpath(Yii::getAlias('@backend/web/uploads/backup'));
+        if (!$backupDir) {
+            $backupDir = dirname(__DIR__, 2) . '/web/uploads/backup';
+        }
         if (!is_dir($backupDir)) {
             @mkdir($backupDir, 0777, true);
         }
@@ -358,6 +361,7 @@ class DbbackupController extends BaseController
         $tempFile = $targetFile . '.tmp';
 
         $mysqldump = self::getBinaryPath('mysqldump');
+
         // เพิ่ม flag เพื่อความปลอดภัยและความสมบูรณ์:
         // --single-transaction: ทำงานแบบ snapshot ป้องกันข้อมูลเพี้ยนขณะมีผู้ใช้งานบันทึกข้อมูล
         // --quick & --extended-insert: ทำงานเร็วมากและลด Memory
@@ -412,7 +416,10 @@ class DbbackupController extends BaseController
 
         list($host, $username, $password, $database_name) = self::getDbCredentials();
 
-        $backupDir = dirname(__DIR__, 2) . '/backend/web/uploads/backup';
+        $backupDir = realpath(Yii::getAlias('@backend/web/uploads/backup'));
+        if (!$backupDir) {
+            $backupDir = dirname(__DIR__, 2) . '/web/uploads/backup';
+        }
         if (!is_dir($backupDir)) {
             @mkdir($backupDir, 0777, true);
         }
@@ -735,7 +742,11 @@ class DbbackupController extends BaseController
     public function actionRestorefile($id)
     {
         $filename = basename($id);
-        $filePath = dirname(__DIR__, 2) . '/backend/web/uploads/backup/' . $filename;
+        $backupDir = realpath(Yii::getAlias('@backend/web/uploads/backup'));
+        if (!$backupDir) {
+            $backupDir = dirname(__DIR__, 2) . '/web/uploads/backup';
+        }
+        $filePath = $backupDir . DIRECTORY_SEPARATOR . $filename;
 
         if (!file_exists($filePath)) {
             \Yii::$app->session->setFlash('error', 'ไม่พบไฟล์ที่ต้องการกู้คืน: ' . $filename);
@@ -863,7 +874,11 @@ class DbbackupController extends BaseController
     {
         if ($id != '') {
             $filename = basename($id);
-            $filepath = dirname(__DIR__, 2) . '/backend/web/uploads/backup/' . $filename;
+            $backupDir = realpath(Yii::getAlias('@backend/web/uploads/backup'));
+            if (!$backupDir) {
+                $backupDir = dirname(__DIR__, 2) . '/web/uploads/backup';
+            }
+            $filepath = $backupDir . DIRECTORY_SEPARATOR . $filename;
 
             // Process download
             if (file_exists($filepath)) {
@@ -890,7 +905,11 @@ class DbbackupController extends BaseController
     {
         if ($id != '') {
             $filename = basename($id);
-            $filepath = dirname(__DIR__, 2) . '/backend/web/uploads/backup/' . $filename;
+            $backupDir = realpath(Yii::getAlias('@backend/web/uploads/backup'));
+            if (!$backupDir) {
+                $backupDir = dirname(__DIR__, 2) . '/web/uploads/backup';
+            }
+            $filepath = $backupDir . DIRECTORY_SEPARATOR . $filename;
             if (file_exists($filepath)) {
                 unlink($filepath);
                 \Yii::$app->session->setFlash('success', 'ลบไฟล์สำรองข้อมูลเรียบร้อยแล้ว: ' . $filename);

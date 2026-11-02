@@ -51,7 +51,7 @@ if (!$defaultSourceDir) {
                     <div class="input-group-prepend">
                         <span class="input-group-text"><i class="fas fa-hdd text-info"></i></span>
                     </div>
-                    <input type="text" id="dest-path-input" class="form-control" value="" placeholder="เช่น D:\Backup_Uploads หรือ E:\mco_backup\uploads (หรือกด Browse...)">
+                    <input type="text" id="dest-path-input" class="form-control" value="<?= htmlspecialchars($defaultSourceDir) ?>" placeholder="เช่น D:\Backup_Uploads หรือ E:\mco_backup\uploads (หรือกด Browse...)">
                     <div class="input-group-append">
                         <button class="btn btn-primary" type="button" id="btn-browse-dest" 
                                 data-toggle="modal" data-target="#modal-folder-picker" 
@@ -363,31 +363,71 @@ $js = <<<JS
     }
 
     function openModal(selector, options) {
-        var el = document.querySelector(selector);
-        if (!el) return;
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            var modalObj = bootstrap.Modal.getInstance(el) || new bootstrap.Modal(el, options || {});
-            modalObj.show();
-        } else if (typeof $ !== 'undefined' && $.fn && $.fn.modal) {
-            $(el).modal(options || 'show');
+        var $el = $(selector);
+        if (!$el.length) return;
+        
+        // 1. ลองเปิดด้วย Bootstrap 4 (jQuery plugin) ซึ่งเป็นหลักของ AdminLTE 3
+        try {
+            if (typeof $ !== 'undefined' && $.fn && typeof $.fn.modal === 'function') {
+                $el.modal(options || 'show');
+                return;
+            }
+        } catch(e) {
+            console.warn('Bootstrap 4 jQuery modal call failed:', e);
+        }
+
+        // 2. ลองเปิดด้วย Bootstrap 5 (Native JS instance)
+        try {
+            if (typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal) {
+                var modalObj = window.bootstrap.Modal.getInstance($el[0]) || new window.bootstrap.Modal($el[0], options || {});
+                modalObj.show();
+                return;
+            }
+        } catch(e) {
+            console.warn('Bootstrap 5 modal call failed:', e);
+        }
+
+        // 3. Fallback CSS (เปิด Modal ได้เสมอแม้ไม่มี Bootstrap JS หรือ JS ขัดข้อง)
+        $el.addClass('show').css({
+            'display': 'block',
+            'background': 'rgba(0, 0, 0, 0.65)',
+            'z-index': 1050
+        }).removeAttr('aria-hidden');
+        $('body').addClass('modal-open');
+        if (!$('.modal-backdrop.modal-fallback-backdrop').length) {
+            $('body').append('<div class="modal-backdrop fade show modal-fallback-backdrop" style="z-index: 1040;"></div>');
         }
     }
 
     function closeModal(selector) {
-        var el = document.querySelector(selector);
-        if (!el) return;
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            var modalObj = bootstrap.Modal.getInstance(el);
-            if (modalObj) modalObj.hide();
-            else $(el).modal('hide');
-        } else if (typeof $ !== 'undefined' && $.fn && $.fn.modal) {
-            $(el).modal('hide');
+        var $el = $(selector);
+        if (!$el.length) return;
+
+        try {
+            if (typeof $ !== 'undefined' && $.fn && typeof $.fn.modal === 'function') {
+                $el.modal('hide');
+            }
+        } catch(e) {}
+
+        try {
+            if (typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal) {
+                var modalObj = window.bootstrap.Modal.getInstance($el[0]);
+                if (modalObj) modalObj.hide();
+            }
+        } catch(e) {}
+
+        // Fallback cleanup
+        $el.removeClass('show').css('display', 'none').attr('aria-hidden', 'true');
+        $('.modal-fallback-backdrop').remove();
+        if (!$('.modal.show').length) {
+            $('body').removeClass('modal-open').css('padding-right', '');
         }
     }
 
     function lockUI() {
         isWorking = true;
-        $('button, input, a').not('#modal-backup-progress button').prop('disabled', true);
+        // ปิดปุ่มควบคุมภายนอก แต่ไม่ปิดปุ่มใน modal
+        $('#btn-backup-mysql, #btn-sync-uploads, #btn-backup-all, #btn-browse-dest, #btn-reset-dest').prop('disabled', true);
         window.onbeforeunload = function() {
             return "กำลังสำรองข้อมูลอยู่ในเบื้องหลัง หากออกจากหน้านี้กระบวนการอาจไม่สมบูรณ์!";
         };
@@ -396,7 +436,7 @@ $js = <<<JS
 
     function unlockUI() {
         isWorking = false;
-        $('button, input, a').prop('disabled', false);
+        $('#btn-backup-mysql, #btn-sync-uploads, #btn-backup-all, #btn-browse-dest, #btn-reset-dest').prop('disabled', false);
         window.onbeforeunload = null;
         $('#btn-close-progress').removeClass('d-none');
     }
@@ -728,31 +768,43 @@ $js = <<<JS
     // 2. ปุ่ม Copy ไฟล์ Uploads อย่างเดียว
     $(document).on('click', '#btn-sync-uploads', function(e){
         e.preventDefault();
-        if (isWorking) return;
-        var destPath = $.trim($('#dest-path-input').val());
+        console.log('Button 2 (Copy Uploads) clicked');
+        if (isWorking) {
+            console.warn('System is already working, click ignored');
+            return;
+        }
+        var destPath = $.trim($('#dest-path-input').val()) || defaultDest;
         if (!destPath) {
-            alert('กรุณาระบุโฟลเดอร์ปลายทาง');
+            alert('กรุณาระบุหรือเลือกโฟลเดอร์ปลายทาง');
             $('#dest-path-input').focus();
             return;
         }
 
-        if (!confirm('ยืนยันการคัดลอกไฟล์รูปภาพและไฟล์แนบจากระบบไปยัง:\n' + destPath + ' ?')) return;
+        if (!confirm('ยืนยันการคัดลอกไฟล์รูปภาพและไฟล์แนบจากระบบไปยัง:\n' + destPath + ' ?')) {
+            return;
+        }
 
         resetModal();
         lockUI();
         $('#progress-modal-title').html('<i class="fas fa-images mr-2"></i> กำลัง Copy ไฟล์รูปภาพและไฟล์แนบ...');
 
-        executeCopyUploads(destPath, function(success){
-            if (success) {
-                $('#progress-status-icon').html('<i class="fas fa-check-circle fa-3x text-success"></i>');
-                $('#progress-complete-box').removeClass('d-none');
-                $('#progress-summary-text').html('คัดลอกไฟล์แนบและรูปภาพทั้งหมดลงเครื่องปลายทางเรียบร้อยแล้ว');
-            } else {
-                $('#progress-status-icon').html('<i class="fas fa-times-circle fa-3x text-danger"></i>');
-                $('#progress-bar-fill').addClass('bg-danger');
-            }
+        try {
+            executeCopyUploads(destPath, function(success){
+                if (success) {
+                    $('#progress-status-icon').html('<i class="fas fa-check-circle fa-3x text-success"></i>');
+                    $('#progress-complete-box').removeClass('d-none');
+                    $('#progress-summary-text').html('คัดลอกไฟล์แนบและรูปภาพทั้งหมดลงเครื่องปลายทางเรียบร้อยแล้ว');
+                } else {
+                    $('#progress-status-icon').html('<i class="fas fa-times-circle fa-3x text-danger"></i>');
+                    $('#progress-bar-fill').addClass('bg-danger');
+                }
+                unlockUI();
+            });
+        } catch(err) {
+            console.error('executeCopyUploads error:', err);
+            alert('เกิดข้อผิดพลาดในการเริ่มต้นคัดลอก: ' + err.message);
             unlockUI();
-        });
+        }
     });
 
     // 3. ปุ่ม สำรองทั้งหมด (DB + Copy Uploads)
