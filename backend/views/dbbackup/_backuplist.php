@@ -363,13 +363,13 @@ $js = <<<JS
     }
 
     function openModal(selector, options) {
-        var $el = $(selector);
-        if (!$el.length) return;
+        var modalTarget = $(selector);
+        if (!modalTarget.length) return;
         
         // 1. ลองเปิดด้วย Bootstrap 4 (jQuery plugin) ซึ่งเป็นหลักของ AdminLTE 3
         try {
             if (typeof $ !== 'undefined' && $.fn && typeof $.fn.modal === 'function') {
-                $el.modal(options || 'show');
+                modalTarget.modal(options || 'show');
                 return;
             }
         } catch(e) {
@@ -379,7 +379,7 @@ $js = <<<JS
         // 2. ลองเปิดด้วย Bootstrap 5 (Native JS instance)
         try {
             if (typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal) {
-                var modalObj = window.bootstrap.Modal.getInstance($el[0]) || new window.bootstrap.Modal($el[0], options || {});
+                var modalObj = window.bootstrap.Modal.getInstance(modalTarget[0]) || new window.bootstrap.Modal(modalTarget[0], options || {});
                 modalObj.show();
                 return;
             }
@@ -388,7 +388,7 @@ $js = <<<JS
         }
 
         // 3. Fallback CSS (เปิด Modal ได้เสมอแม้ไม่มี Bootstrap JS หรือ JS ขัดข้อง)
-        $el.addClass('show').css({
+        modalTarget.addClass('show').css({
             'display': 'block',
             'background': 'rgba(0, 0, 0, 0.65)',
             'z-index': 1050
@@ -400,24 +400,24 @@ $js = <<<JS
     }
 
     function closeModal(selector) {
-        var $el = $(selector);
-        if (!$el.length) return;
+        var modalTarget = $(selector);
+        if (!modalTarget.length) return;
 
         try {
             if (typeof $ !== 'undefined' && $.fn && typeof $.fn.modal === 'function') {
-                $el.modal('hide');
+                modalTarget.modal('hide');
             }
         } catch(e) {}
 
         try {
             if (typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal) {
-                var modalObj = window.bootstrap.Modal.getInstance($el[0]);
+                var modalObj = window.bootstrap.Modal.getInstance(modalTarget[0]);
                 if (modalObj) modalObj.hide();
             }
         } catch(e) {}
 
         // Fallback cleanup
-        $el.removeClass('show').css('display', 'none').attr('aria-hidden', 'true');
+        modalTarget.removeClass('show').css('display', 'none').attr('aria-hidden', 'true');
         $('.modal-fallback-backdrop').remove();
         if (!$('.modal.show').length) {
             $('body').removeClass('modal-open').css('padding-right', '');
