@@ -475,7 +475,10 @@ class DbbackupController extends BaseController
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-        $sourceDir = dirname(__DIR__, 2) . '/backend/web/uploads';
+        $sourceDir = realpath(Yii::getAlias('@backend/web/uploads'));
+        if (!$sourceDir) {
+            $sourceDir = realpath(dirname(__DIR__, 2) . '/web/uploads');
+        }
         $destPath = trim(Yii::$app->request->post('destPath', ''));
 
         if (empty($destPath)) {
@@ -544,7 +547,10 @@ class DbbackupController extends BaseController
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-        $sourceDir = dirname(__DIR__, 2) . '/backend/web/uploads';
+        $sourceDir = realpath(Yii::getAlias('@backend/web/uploads'));
+        if (!$sourceDir) {
+            $sourceDir = realpath(dirname(__DIR__, 2) . '/web/uploads');
+        }
         $destPath = trim(Yii::$app->request->post('destPath', ''));
         $batch = Yii::$app->request->post('batch', []);
 
@@ -652,20 +658,34 @@ class DbbackupController extends BaseController
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-        $targetPath = trim(Yii::$app->request->post('targetPath', ''));
+        $targetPath = trim((string)Yii::$app->request->post('targetPath', ''));
+        $defaultBase = dirname(__DIR__, 2);
 
-        // โหมด List Subdirectories สำหรับเรียกดูและเลือกโฟลเดอร์แบบ Interactive ทันใจ
         if (empty($targetPath)) {
-            $targetPath = dirname(__DIR__, 2);
+            $targetPath = $defaultBase;
         }
 
+        // แปลง path ให้เป็นรูปแบบระบบ
         $targetPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $targetPath);
-        if (!is_dir($targetPath)) {
-            $targetPath = dirname(__DIR__, 2);
+
+        // จัดการกรณีเป็น Root Drive ใน Windows เช่น "C:" ให้เติม backslash "C:\"
+        if (preg_match('/^[a-zA-Z]:$/', $targetPath)) {
+            $targetPath .= DIRECTORY_SEPARATOR;
         }
 
-        $targetPath = realpath($targetPath);
+        if (!is_dir($targetPath)) {
+            $targetPath = $defaultBase;
+        }
+
+        $real = realpath($targetPath);
+        if ($real !== false) {
+            $targetPath = $real;
+        }
+
         $parentDir = dirname($targetPath);
+        if ($parentDir === $targetPath) {
+            $parentDir = null; // อยู่ที่ root level แล้ว
+        }
 
         $folders = [];
         $drives = [];
@@ -686,10 +706,10 @@ class DbbackupController extends BaseController
         if (is_dir($targetPath)) {
             try {
                 $items = @scandir($targetPath);
-                if ($items) {
+                if ($items !== false) {
                     foreach ($items as $item) {
                         if ($item === '.' || $item === '..') continue;
-                        $full = $targetPath . DIRECTORY_SEPARATOR . $item;
+                        $full = rtrim($targetPath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $item;
                         if (@is_dir($full)) {
                             $folders[] = [
                                 'name' => $item,
@@ -706,7 +726,7 @@ class DbbackupController extends BaseController
         return [
             'status' => 'success',
             'currentPath' => str_replace('\\', '/', $targetPath),
-            'parentPath' => ($parentDir && $parentDir !== $targetPath) ? str_replace('\\', '/', $parentDir) : null,
+            'parentPath' => $parentDir ? str_replace('\\', '/', $parentDir) : null,
             'drives' => $drives,
             'folders' => $folders
         ];

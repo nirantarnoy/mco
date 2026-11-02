@@ -11,7 +11,10 @@ if ($files) {
     });
 }
 
-$defaultSourceDir = realpath(dirname(__DIR__, 2) . '/web/uploads');
+$defaultSourceDir = realpath(Yii::getAlias('@backend/web/uploads'));
+if (!$defaultSourceDir) {
+    $defaultSourceDir = realpath(dirname(__DIR__, 2) . '/web/uploads');
+}
 ?>
 <br>
 <?php if (Yii::$app->session->hasFlash('success')): ?>
@@ -48,7 +51,7 @@ $defaultSourceDir = realpath(dirname(__DIR__, 2) . '/web/uploads');
                     <div class="input-group-prepend">
                         <span class="input-group-text"><i class="fas fa-hdd text-info"></i></span>
                     </div>
-                    <input type="text" id="dest-path-input" class="form-control" value="<?= htmlspecialchars($defaultSourceDir) ?>" placeholder="เช่น E:/xampp/htdocs/mco_local/backend/web/uploads">
+                    <input type="text" id="dest-path-input" class="form-control" value="" placeholder="เช่น D:\Backup_Uploads หรือ E:\mco_backup\uploads (หรือกด Browse...)">
                     <div class="input-group-append">
                         <button class="btn btn-primary" type="button" id="btn-browse-dest" 
                                 data-toggle="modal" data-target="#modal-folder-picker" 
@@ -56,8 +59,8 @@ $defaultSourceDir = realpath(dirname(__DIR__, 2) . '/web/uploads');
                                 title="เปิดหน้าต่างเลือกโฟลเดอร์">
                             <i class="fas fa-folder-open mr-1"></i> Browse...
                         </button>
-                        <button class="btn btn-outline-secondary" type="button" id="btn-reset-dest" title="คืนค่าเริ่มต้นโฟลเดอร์ uploads ของโปรเจกต์">
-                            <i class="fas fa-undo"></i> คืนค่าเดิม
+                        <button class="btn btn-outline-secondary" type="button" id="btn-reset-dest" title="ใส่โฟลเดอร์ uploads ของโปรเจกต์นี้">
+                            <i class="fas fa-folder text-warning mr-1"></i> โฟลเดอร์ระบบเดิม
                         </button>
                     </div>
                 </div>
@@ -259,13 +262,18 @@ $defaultSourceDir = realpath(dirname(__DIR__, 2) . '/web/uploads');
                             <div class="input-group-prepend">
                                 <span class="input-group-text bg-white"><i class="fas fa-folder text-warning"></i></span>
                             </div>
-                            <input type="text" id="picker-current-path" class="form-control bg-white" readonly>
+                            <input type="text" id="picker-current-path" class="form-control" placeholder="พิมพ์ Path หรือไดรฟ์ เช่น C:\ หรือ E:\ แล้วกด ไป">
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-primary" id="picker-btn-go" title="เปิดโฟลเดอร์นี้">
+                                    <i class="fas fa-arrow-right"></i> ไป
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Drive buttons (Windows) -->
-                <div id="picker-drives-container" class="mb-2 d-none">
+                <div id="picker-drives-container" class="mb-2">
                     <div class="d-flex flex-wrap gap-1 align-items-center" id="picker-drives-list" style="gap: 5px;"></div>
                 </div>
 
@@ -478,8 +486,11 @@ $js = <<<JS
                           '<button type="button" class="btn btn-outline-primary btn-xs btn-open-sub" title="เปิดโฟลเดอร์นี้"><i class="fas fa-chevron-right"></i></button>');
                 list.append(li);
             });
-        }).fail(function(){
-            list.html('<li class="list-group-item text-center text-danger p-3"><i class="fas fa-times-circle mr-1"></i> เชื่อมต่อล้มเหลว</li>');
+        }).fail(function(xhr, status, error){
+            var msg = 'เชื่อมต่อล้มเหลว (' + status + (error ? ': ' + error : '') + ')';
+            if (xhr.status === 403) msg = 'ไม่มีสิทธิ์เข้าถึง (403 Forbidden)';
+            if (xhr.status === 404) msg = 'ไม่พบ URL ปลายทาง (404 Not Found)';
+            list.html('<li class="list-group-item text-center text-danger p-3"><i class="fas fa-times-circle mr-1"></i> ' + msg + '</li>');
         });
     }
 
@@ -503,6 +514,19 @@ $js = <<<JS
     $(document).on('click', '#picker-drives-list button', function(){
         var p = $(this).attr('data-path');
         if (p) renderPickerDirectory(p);
+    });
+
+    // ปุ่ม ไป หรือกด Enter ในช่อง Path ใน Modal
+    $('#picker-btn-go').on('click', function(){
+        var p = $.trim($('#picker-current-path').val());
+        if (p) renderPickerDirectory(p);
+    });
+    $('#picker-current-path').on('keypress', function(e){
+        if (e.which === 13) {
+            e.preventDefault();
+            var p = $.trim($(this).val());
+            if (p) renderPickerDirectory(p);
+        }
     });
 
     // ปุ่มขึ้นไป 1 ระดับ
@@ -541,7 +565,8 @@ $js = <<<JS
     });
 
     // 1. สำรองเฉพาะ MySQL
-    $('#btn-backup-mysql').on('click', function(){
+    $(document).on('click', '#btn-backup-mysql', function(e){
+        e.preventDefault();
         if (isWorking) return;
         if (!confirm('ยืนยันการสำรองฐานข้อมูล MySQL เดี๋ยวนี้?')) return;
 
@@ -666,7 +691,9 @@ $js = <<<JS
                         setProgress(pct, 'กำลังคัดลอกไฟล์ (' + processedFiles.toLocaleString() + '/' + totalFiles.toLocaleString() + ' ไฟล์ - ' + pct + '%)');
 
                         if (justCopied > 0) {
-                            addLog('ชุดที่ ' + currentBatchNum + ': คัดลอกเพิ่ม ' + justCopied + ' ไฟล์' + (justSkipped > 0 ? ' (ข้ามไฟล์เดิม ' + justSkipped + ')' : ''), '#28a745');
+                            addLog('ชุดที่ ' + currentBatchNum + ': คัดลอกไฟล์ใหม่ ' + justCopied + ' ไฟล์' + (justSkipped > 0 ? ' (ข้ามไฟล์เดิม ' + justSkipped + ')' : ''), '#28a745');
+                        } else if (justSkipped > 0) {
+                            addLog('ชุดที่ ' + currentBatchNum + ': ปลายทางมีไฟล์เดิมอยู่แล้ว ' + justSkipped + ' ไฟล์ (ข้ามอัตโนมัติ ไม่เขียนทับ)', '#17a2b8');
                         }
 
                         if (batchRes.errors && batchRes.errors.length > 0) {
@@ -699,7 +726,8 @@ $js = <<<JS
     }
 
     // 2. ปุ่ม Copy ไฟล์ Uploads อย่างเดียว
-    $('#btn-sync-uploads').on('click', function(){
+    $(document).on('click', '#btn-sync-uploads', function(e){
+        e.preventDefault();
         if (isWorking) return;
         var destPath = $.trim($('#dest-path-input').val());
         if (!destPath) {
@@ -728,7 +756,8 @@ $js = <<<JS
     });
 
     // 3. ปุ่ม สำรองทั้งหมด (DB + Copy Uploads)
-    $('#btn-backup-all').on('click', function(){
+    $(document).on('click', '#btn-backup-all', function(e){
+        e.preventDefault();
         if (isWorking) return;
         var destPath = $.trim($('#dest-path-input').val());
         if (!destPath) {
