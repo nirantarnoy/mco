@@ -306,7 +306,19 @@ if (!$defaultSourceDir) {
 <style>
 /* Overlay Backdrop บล็อกการคลิกส่วนอื่น */
 #modal-backup-progress {
-    background: rgba(0, 0, 0, 0.65) !important;
+    background: rgba(0, 0, 0, 0.75) !important;
+    z-index: 99999 !important;
+}
+#modal-backup-progress.show,
+#modal-backup-progress[style*="display: block"] {
+    display: block !important;
+    opacity: 1 !important;
+}
+#modal-folder-picker {
+    z-index: 99998 !important;
+}
+.modal-backdrop {
+    z-index: 99990 !important;
 }
 .font-monospace {
     font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -400,18 +412,25 @@ window.startBackupAll = function() {
     function openModal(selector, options) {
         var modalTarget = $(selector);
         if (!modalTarget.length) return;
-        
-        // 1. ลองเปิดด้วย Bootstrap 4 (jQuery plugin) ซึ่งเป็นหลักของ AdminLTE 3
+
+        // บังคับแสดง Modal บนหน้าจอทันทีเพื่อความรวดเร็วและแน่นอน 100%
+        modalTarget.addClass('show').css({
+            'display': 'block',
+            'opacity': '1',
+            'z-index': '99999'
+        }).removeAttr('aria-hidden');
+        $('body').addClass('modal-open');
+
+        // เรียก Bootstrap modal API เพื่อ trigger event backdrop
         try {
             if (typeof $ !== 'undefined' && $.fn && typeof $.fn.modal === 'function') {
-                modalTarget.modal(options || 'show');
+                modalTarget.modal(options || {backdrop: 'static', keyboard: false, show: true});
                 return;
             }
         } catch(e) {
             console.warn('Bootstrap 4 jQuery modal call failed:', e);
         }
 
-        // 2. ลองเปิดด้วย Bootstrap 5 (Native JS instance)
         try {
             if (typeof window.bootstrap !== 'undefined' && window.bootstrap.Modal) {
                 var modalObj = window.bootstrap.Modal.getInstance(modalTarget[0]) || new window.bootstrap.Modal(modalTarget[0], options || {});
@@ -422,15 +441,9 @@ window.startBackupAll = function() {
             console.warn('Bootstrap 5 modal call failed:', e);
         }
 
-        // 3. Fallback CSS (เปิด Modal ได้เสมอแม้ไม่มี Bootstrap JS หรือ JS ขัดข้อง)
-        modalTarget.addClass('show').css({
-            'display': 'block',
-            'background': 'rgba(0, 0, 0, 0.65)',
-            'z-index': 1050
-        }).removeAttr('aria-hidden');
-        $('body').addClass('modal-open');
-        if (!$('.modal-backdrop.modal-fallback-backdrop').length) {
-            $('body').append('<div class="modal-backdrop fade show modal-fallback-backdrop" style="z-index: 1040;"></div>');
+        // Fallback backdrop หาก Bootstrap modal backdrop ไม่ขึ้น
+        if (!$('.modal-backdrop').length) {
+            $('body').append('<div class="modal-backdrop fade show modal-fallback-backdrop" style="z-index: 99990;"></div>');
         }
     }
 
