@@ -72,17 +72,17 @@ if (!$defaultSourceDir) {
                 <div class="btn-group-vertical btn-group-sm d-sm-none w-100"></div>
                 <div class="d-flex flex-wrap justify-content-lg-end gap-2" style="gap: 8px;">
                     <!-- ปุ่ม 1: Backup MySQL อย่างเดียว -->
-                    <button type="button" class="btn btn-primary" id="btn-backup-mysql">
+                    <button type="button" class="btn btn-primary" id="btn-backup-mysql" onclick="startBackupMysql()">
                         <i class="fas fa-database mr-1"></i> 1. สำรองเฉพาะ MySQL
                     </button>
 
                     <!-- ปุ่ม 2: Copy ไฟล์ Uploads อย่างเดียว -->
-                    <button type="button" class="btn btn-info text-white" id="btn-sync-uploads">
+                    <button type="button" class="btn btn-info text-white" id="btn-sync-uploads" onclick="startSyncUploads()">
                         <i class="fas fa-images mr-1"></i> 2. Copy ไฟล์ Uploads
                     </button>
 
                     <!-- ปุ่ม 3: สำรองทั้งสองอย่างพร้อมกัน -->
-                    <button type="button" class="btn btn-success" id="btn-backup-all">
+                    <button type="button" class="btn btn-success" id="btn-backup-all" onclick="startBackupAll()">
                         <i class="fas fa-layer-group mr-1"></i> 3. สำรองทั้งหมด (DB + ไฟล์)
                     </button>
                 </div>
@@ -333,12 +333,16 @@ $urlBackupDb = \yii\helpers\Url::to(['dbbackup/backup-db-ajax'], true);
 $urlGetFiles = \yii\helpers\Url::to(['dbbackup/get-files-list'], true);
 $urlCopyBatch = \yii\helpers\Url::to(['dbbackup/copy-batch'], true);
 $urlBrowseFolder = \yii\helpers\Url::to(['dbbackup/browse-folder'], true);
-$defaultSourceEscaped = addslashes($defaultSourceDir);
+?>
 
-$js = <<<JS
+<script>
 (function($){
     var isWorking = false;
-    var defaultDest = '{$defaultSourceEscaped}';
+    var defaultDest = <?= json_encode($defaultSourceDir) ?>;
+    var urlBackupDb = <?= json_encode($urlBackupDb) ?>;
+    var urlGetFiles = <?= json_encode($urlGetFiles) ?>;
+    var urlCopyBatch = <?= json_encode($urlCopyBatch) ?>;
+    var urlBrowseFolder = <?= json_encode($urlBrowseFolder) ?>;
 
     function addLog(msg, color) {
         var box = $('#progress-log-box');
@@ -467,7 +471,7 @@ $js = <<<JS
         list.html('<li class="list-group-item text-center text-muted p-4"><i class="fas fa-spinner fa-spin mr-1"></i> กำลังโหลดโฟลเดอร์...</li>');
 
         $.ajax({
-            url: '{$urlBrowseFolder}',
+            url: urlBrowseFolder,
             type: 'POST',
             data: {
                 targetPath: targetPath,
@@ -604,50 +608,6 @@ $js = <<<JS
         closeModal('#modal-folder-picker');
     });
 
-    // 1. สำรองเฉพาะ MySQL
-    $(document).on('click', '#btn-backup-mysql', function(e){
-        e.preventDefault();
-        if (isWorking) return;
-        if (!confirm('ยืนยันการสำรองฐานข้อมูล MySQL เดี๋ยวนี้?')) return;
-
-        resetModal();
-        lockUI();
-        $('#progress-modal-title').html('<i class="fas fa-database mr-2"></i> กำลังสำรองฐานข้อมูล MySQL...');
-        addLog('เริ่มต้นการสำรองข้อมูล MySQL Dump...', '#007bff');
-        setProgress(20, 'กำลัง Dump ฐานข้อมูล MySQL...');
-
-        $.ajax({
-            url: '{$urlBackupDb}',
-            type: 'POST',
-            dataType: 'json',
-            timeout: 600000 // 10 minutes timeout
-        }).done(function(res){
-            if (res.status === 'success') {
-                setProgress(100, 'สำรองฐานข้อมูล MySQL สำเร็จ 100%');
-                $('#progress-status-icon').html('<i class="fas fa-check-circle fa-3x text-success"></i>');
-                addLog('ไฟล์ SQL: ' + res.fileName + ' (' + res.fileSize + ')', 'green');
-                addLog('ใช้เวลา: ' + res.duration, 'green');
-                $('#progress-complete-box').removeClass('d-none');
-                $('#progress-summary-text').html(res.message);
-                unlockUI();
-            } else {
-                $('#progress-status-icon').html('<i class="fas fa-times-circle fa-3x text-danger"></i>');
-                $('#progress-step-text').text('การสำรองฐานข้อมูลล้มเหลว');
-                $('#progress-bar-fill').addClass('bg-danger');
-                addLog('ข้อผิดพลาด: ' + res.message, 'red');
-                alert('เกิดข้อผิดพลาด: ' + res.message);
-                unlockUI();
-            }
-        }).fail(function(xhr, status, error){
-            $('#progress-status-icon').html('<i class="fas fa-times-circle fa-3x text-danger"></i>');
-            $('#progress-step-text').text('การเชื่อมต่อขัดข้อง');
-            $('#progress-bar-fill').addClass('bg-danger');
-            addLog('AJAX Error: ' + error, 'red');
-            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error);
-            unlockUI();
-        });
-    });
-
     // ฟังก์ชันย่อยสำหรับ Copy Files
     function executeCopyUploads(destPath, onCompleteCallback) {
         addLog('กำลังสแกนรายการไฟล์และรูปภาพใน uploads...', '#17a2b8');
@@ -655,7 +615,7 @@ $js = <<<JS
         setProgress(5, 'สแกนรายการไฟล์...');
 
         $.ajax({
-            url: '{$urlGetFiles}',
+            url: urlGetFiles,
             type: 'POST',
             data: { destPath: destPath },
             dataType: 'json'
@@ -708,7 +668,7 @@ $js = <<<JS
                 addLog('กำลังคัดลอกชุดที่ ' + currentBatchNum + '/' + batches.length + ' (' + batch.length + ' ไฟล์)...', '#6c757d');
 
                 $.ajax({
-                    url: '{$urlCopyBatch}',
+                    url: urlCopyBatch,
                     type: 'POST',
                     data: {
                         destPath: destPath,
@@ -765,10 +725,52 @@ $js = <<<JS
         });
     }
 
+    // 1. สำรองเฉพาะ MySQL
+    window.startBackupMysql = function() {
+        if (isWorking) return;
+        if (!confirm('ยืนยันการสำรองฐานข้อมูล MySQL เดี๋ยวนี้?')) return;
+
+        resetModal();
+        lockUI();
+        $('#progress-modal-title').html('<i class="fas fa-database mr-2"></i> กำลังสำรองฐานข้อมูล MySQL...');
+        addLog('เริ่มต้นการสำรองข้อมูล MySQL Dump...', '#007bff');
+        setProgress(20, 'กำลัง Dump ฐานข้อมูล MySQL...');
+
+        $.ajax({
+            url: urlBackupDb,
+            type: 'POST',
+            dataType: 'json',
+            timeout: 600000 // 10 minutes timeout
+        }).done(function(res){
+            if (res.status === 'success') {
+                setProgress(100, 'สำรองฐานข้อมูล MySQL สำเร็จ 100%');
+                $('#progress-status-icon').html('<i class="fas fa-check-circle fa-3x text-success"></i>');
+                addLog('ไฟล์ SQL: ' + res.fileName + ' (' + res.fileSize + ')', 'green');
+                addLog('ใช้เวลา: ' + res.duration, 'green');
+                $('#progress-complete-box').removeClass('d-none');
+                $('#progress-summary-text').html(res.message);
+                unlockUI();
+            } else {
+                $('#progress-status-icon').html('<i class="fas fa-times-circle fa-3x text-danger"></i>');
+                $('#progress-step-text').text('การสำรองฐานข้อมูลล้มเหลว');
+                $('#progress-bar-fill').addClass('bg-danger');
+                addLog('ข้อผิดพลาด: ' + res.message, 'red');
+                alert('เกิดข้อผิดพลาด: ' + res.message);
+                unlockUI();
+            }
+        }).fail(function(xhr, status, error){
+            $('#progress-status-icon').html('<i class="fas fa-times-circle fa-3x text-danger"></i>');
+            $('#progress-step-text').text('การเชื่อมต่อขัดข้อง');
+            $('#progress-bar-fill').addClass('bg-danger');
+            addLog('AJAX Error: ' + error, 'red');
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error);
+            unlockUI();
+        });
+    };
+
     // 2. ปุ่ม Copy ไฟล์ Uploads อย่างเดียว
-    $(document).on('click', '#btn-sync-uploads', function(e){
-        e.preventDefault();
-        console.log('Button 2 (Copy Uploads) clicked');
+    window.startSyncUploads = function() {
+        console.log('startSyncUploads triggered');
         if (isWorking) {
             console.warn('System is already working, click ignored');
             return;
@@ -805,13 +807,12 @@ $js = <<<JS
             alert('เกิดข้อผิดพลาดในการเริ่มต้นคัดลอก: ' + err.message);
             unlockUI();
         }
-    });
+    };
 
     // 3. ปุ่ม สำรองทั้งหมด (DB + Copy Uploads)
-    $(document).on('click', '#btn-backup-all', function(e){
-        e.preventDefault();
+    window.startBackupAll = function() {
         if (isWorking) return;
-        var destPath = $.trim($('#dest-path-input').val());
+        var destPath = $.trim($('#dest-path-input').val()) || defaultDest;
         if (!destPath) {
             alert('กรุณาระบุโฟลเดอร์ปลายทาง');
             $('#dest-path-input').focus();
@@ -829,7 +830,7 @@ $js = <<<JS
         setProgress(10, '[1/2] กำลังสำรองฐานข้อมูล MySQL...');
 
         $.ajax({
-            url: '{$urlBackupDb}',
+            url: urlBackupDb,
             type: 'POST',
             dataType: 'json',
             timeout: 600000
@@ -870,6 +871,20 @@ $js = <<<JS
             alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error);
             unlockUI();
         });
+    };
+
+    // Binding ผ่าน jQuery Events ด้วยเช่นกัน
+    $(document).on('click', '#btn-backup-mysql', function(e){
+        e.preventDefault();
+        window.startBackupMysql();
+    });
+    $(document).on('click', '#btn-sync-uploads', function(e){
+        e.preventDefault();
+        window.startSyncUploads();
+    });
+    $(document).on('click', '#btn-backup-all', function(e){
+        e.preventDefault();
+        window.startBackupAll();
     });
 
     // เมื่อปิด Modal ให้โหลดหน้านี้ใหม่เพื่อให้รายการไฟล์ SQL อัปเดตล่าสุด
@@ -878,7 +893,4 @@ $js = <<<JS
     });
 
 })(jQuery);
-JS;
-
-$this->registerJs($js);
-?>
+</script>
