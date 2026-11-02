@@ -336,7 +336,38 @@ $urlBrowseFolder = \yii\helpers\Url::to(['dbbackup/browse-folder'], true);
 ?>
 
 <script>
-(function($){
+// Expose global placeholder/proxy functions so HTML onclick attributes never throw ReferenceError
+window.startBackupMysql = function() {
+    if (typeof window._doBackupMysql === 'function') {
+        window._doBackupMysql();
+    } else {
+        alert('ระบบกำลังโหลด กรุณารอสักครู่แล้วลองอีกครั้ง');
+    }
+};
+
+window.startSyncUploads = function() {
+    if (typeof window._doSyncUploads === 'function') {
+        window._doSyncUploads();
+    } else {
+        alert('ระบบกำลังโหลด กรุณารอสักครู่แล้วลองอีกครั้ง');
+    }
+};
+
+window.startBackupAll = function() {
+    if (typeof window._doBackupAll === 'function') {
+        window._doBackupAll();
+    } else {
+        alert('ระบบกำลังโหลด กรุณารอสักครู่แล้วลองอีกครั้ง');
+    }
+};
+
+(function initBackupSystem(){
+    if (typeof jQuery === 'undefined') {
+        // ถ้า jQuery ยังไม่พร้อม (โหลดอยู่ด้านล่างของหน้า) ให้รอจนกว่าจะพร้อม
+        document.addEventListener('DOMContentLoaded', initBackupSystem);
+        return;
+    }
+    var $ = jQuery;
     var isWorking = false;
     var defaultDest = <?= json_encode($defaultSourceDir) ?>;
     var urlBackupDb = <?= json_encode($urlBackupDb) ?>;
@@ -726,7 +757,7 @@ $urlBrowseFolder = \yii\helpers\Url::to(['dbbackup/browse-folder'], true);
     }
 
     // 1. สำรองเฉพาะ MySQL
-    window.startBackupMysql = function() {
+    window._doBackupMysql = window.startBackupMysql = function() {
         if (isWorking) return;
         if (!confirm('ยืนยันการสำรองฐานข้อมูล MySQL เดี๋ยวนี้?')) return;
 
@@ -769,7 +800,7 @@ $urlBrowseFolder = \yii\helpers\Url::to(['dbbackup/browse-folder'], true);
     };
 
     // 2. ปุ่ม Copy ไฟล์ Uploads อย่างเดียว
-    window.startSyncUploads = function() {
+    window._doSyncUploads = window.startSyncUploads = function() {
         console.log('startSyncUploads triggered');
         if (isWorking) {
             console.warn('System is already working, click ignored');
@@ -810,7 +841,7 @@ $urlBrowseFolder = \yii\helpers\Url::to(['dbbackup/browse-folder'], true);
     };
 
     // 3. ปุ่ม สำรองทั้งหมด (DB + Copy Uploads)
-    window.startBackupAll = function() {
+    window._doBackupAll = window.startBackupAll = function() {
         if (isWorking) return;
         var destPath = $.trim($('#dest-path-input').val()) || defaultDest;
         if (!destPath) {
@@ -892,5 +923,5 @@ $urlBrowseFolder = \yii\helpers\Url::to(['dbbackup/browse-folder'], true);
         window.location.reload();
     });
 
-})(jQuery);
+})();
 </script>
