@@ -491,9 +491,9 @@ function saveUserCompany(userId, btnEl) {
         selectedCompIds.push($(this).val());
     });
 
-    var $btn = btnEl ? $(btnEl) : $('.btn-save-user-company[data-user-id="' + userId + '"]');
-    var originalHtml = $btn.html();
-    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...');
+    var btnTarget = btnEl ? $(btnEl) : $('.btn-save-user-company[data-user-id="' + userId + '"]');
+    var originalHtml = btnTarget.html();
+    btnTarget.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...');
 
     $.ajax({
         url: '{$assignUrl}',
@@ -501,11 +501,11 @@ function saveUserCompany(userId, btnEl) {
         data: {
             user_id: userId,
             company_ids: selectedCompIds,
-            _csrf: yii.getCsrfToken ? yii.getCsrfToken() : ''
+            _csrf: (typeof yii !== 'undefined' && yii.getCsrfToken) ? yii.getCsrfToken() : ''
         },
         dataType: 'json',
         success: function(res) {
-            $btn.prop('disabled', false).html(originalHtml);
+            btnTarget.prop('disabled', false).html(originalHtml);
             if (res && res.status === 'success') {
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({
@@ -535,7 +535,7 @@ function saveUserCompany(userId, btnEl) {
             }
         },
         error: function(xhr, status, error) {
-            $btn.prop('disabled', false).html(originalHtml);
+            btnTarget.prop('disabled', false).html(originalHtml);
             var errText = 'การเชื่อมต่อผิดพลาด (' + (error || status) + ')';
             if (xhr.status === 403) errText = 'ไม่มีสิทธิ์เข้าถึง (403 Forbidden)';
             if (xhr.status === 404) errText = 'ไม่พบ URL บันทึก (404 Not Found)';
