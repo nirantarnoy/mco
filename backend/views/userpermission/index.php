@@ -564,10 +564,12 @@ jQuery(function($) {
 </script>
 
 <?php
+$dataDictUrlJson = json_encode($dataDictUrl);
 $js = <<<JS
 
 // Data Dictionary Logic
 var dataDictList = [];
+var dataDictUrl = {$dataDictUrlJson};
 
 // Mapping คำอธิบายตารางในโปรเจ็ค MCO
 var tableDescriptions = {
@@ -724,7 +726,7 @@ function loadDataDictionary() {
     tbody.html('<tr><td colspan="4" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin mr-2"></i> กำลังโหลดข้อมูลตาราง...</td></tr>');
 
     $.ajax({
-        url: '{$dataDictUrl}',
+        url: dataDictUrl,
         type: 'GET',
         dataType: 'json',
         success: function(res) {
