@@ -315,7 +315,7 @@ if (!file_exists($dumpPath)) {
                                         </div>
                                     </td>
                                     <td class="text-center align-middle">
-                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="saveUserCompany(<?= $u->id ?>)">
+                                        <button type="button" class="btn btn-sm btn-outline-primary btn-save-user-company" data-user-id="<?= $u->id ?>">
                                             บันทึก
                                         </button>
                                     </td>
@@ -520,6 +520,15 @@ function saveUserCompany(userId) {
         }
     });
 }
+
+// Event Delegation สำหรับปุ่มบันทึกบริษัท
+$(document).on('click', '.btn-save-user-company', function(e) {
+    e.preventDefault();
+    var uId = $(this).data('user-id');
+    if (uId) {
+        saveUserCompany(uId);
+    }
+});
 
 // Data Dictionary Logic
 var dataDictList = [];
