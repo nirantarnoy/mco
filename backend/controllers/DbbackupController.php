@@ -36,19 +36,34 @@ class DbbackupController extends BaseController
      */
     public static function isLocalEnvironment()
     {
-        if (defined('YII_ENV_DEV') && YII_ENV_DEV) {
+        // 1. ถ้ามี config params ระบุชัดเจน (เช่น 'is_backup_receiver' => true ใน params-local.php ของเครื่อง local)
+        if (isset(Yii::$app->params['is_backup_receiver'])) {
+            return (bool)Yii::$app->params['is_backup_receiver'];
+        }
+
+        // 2. ถ้ามีกำหนด live_server_url ไว้ใน params-local.php ถือว่าเป็นเครื่อง Receiver/Local
+        if (!empty(Yii::$app->params['live_server_url'])) {
             return true;
         }
 
-        $serverName = $_SERVER['SERVER_NAME'] ?? '';
-        $httpHost = $_SERVER['HTTP_HOST'] ?? '';
+        // 3. ตรวจสอบจาก IP / Hostname ของเครื่อง
+        $serverName = strtolower($_SERVER['SERVER_NAME'] ?? '');
+        $httpHost = strtolower($_SERVER['HTTP_HOST'] ?? '');
         $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
 
+        // ถ้าเชื่อมต่อผ่าน loopback
         if (in_array($remoteAddr, ['127.0.0.1', '::1'])) {
             return true;
         }
 
+        // ถ้าชื่อ Host มีคำว่า localhost หรือ 127.0.0.1
         if (strpos($serverName, 'localhost') !== false || strpos($httpHost, 'localhost') !== false || strpos($serverName, '127.0.0.1') !== false) {
+            return true;
+        }
+
+        // 4. ตรวจสอบจาก Path ของระบบ ถ้าเป็น Windows XAMPP เช่น E:\xampp หรือ C:\xampp
+        $baseDir = dirname(__DIR__, 2);
+        if (strpos($baseDir, 'xampp') !== false || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
             return true;
         }
 
