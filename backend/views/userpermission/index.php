@@ -392,24 +392,28 @@ $saveUrl = Url::to(['userpermission/save']);
 $assignUrl = Url::to(['userpermission/assign-companies']);
 $dataDictUrl = Url::to(['userpermission/data-dictionary']);
 $selectedCompIdJson = json_encode($selectedCompanyId);
-?>
 
-<script>
+$saveUrlJson = json_encode($saveUrl);
+$assignUrlJson = json_encode($assignUrl);
+$dataDictUrlJson = json_encode($dataDictUrl);
+
+$js = <<<JS
+
 function updateCellColor(selectEl) {
-    var val = jQuery(selectEl).val();
-    jQuery(selectEl).attr('data-val', val);
+    var val = $(selectEl).val();
+    $(selectEl).attr('data-val', val);
 }
 
 // Quick set ทั้งคอลัมน์ของ User
 function setColumnValue(userId, value) {
     if (userId === 'all') {
-        jQuery('.matrix-cell:not([disabled])').each(function() {
-            jQuery(this).val(value);
+        $('.matrix-cell:not([disabled])').each(function() {
+            $(this).val(value);
             updateCellColor(this);
         });
     } else {
-        jQuery('.matrix-cell[data-user-id="' + userId + '"]:not([disabled])').each(function() {
-            jQuery(this).val(value);
+        $('.matrix-cell[data-user-id="' + userId + '"]:not([disabled])').each(function() {
+            $(this).val(value);
             updateCellColor(this);
         });
     }
@@ -418,8 +422,8 @@ function setColumnValue(userId, value) {
 // Quick set ทั้งแถวของโมดูล
 window.setRowValue = function(modKey, value) {
     if (!value) return;
-    jQuery('.matrix-cell[data-module-key="' + modKey + '"]:not([disabled])').each(function() {
-        jQuery(this).val(value);
+    $('.matrix-cell[data-module-key="' + modKey + '"]:not([disabled])').each(function() {
+        $(this).val(value);
         updateCellColor(this);
     });
 };
@@ -429,16 +433,16 @@ window.setColumnValue = setColumnValue;
 // บันทึกการผูกบริษัท
 function saveUserCompany(userId, btnEl) {
     var selectedCompIds = [];
-    jQuery('.user-comp-check-' + userId + ':checked').each(function() {
-        selectedCompIds.push(jQuery(this).val());
+    $('.user-comp-check-' + userId + ':checked').each(function() {
+        selectedCompIds.push($(this).val());
     });
 
-    var btnTarget = btnEl ? jQuery(btnEl) : jQuery('.btn-save-user-company[data-user-id="' + userId + '"]');
+    var btnTarget = btnEl ? $(btnEl) : $('.btn-save-user-company[data-user-id="' + userId + '"]');
     var originalHtml = btnTarget.html();
     btnTarget.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...');
 
-    jQuery.ajax({
-        url: <?= json_encode($assignUrl) ?>,
+    $.ajax({
+        url: {$assignUrlJson},
         type: 'POST',
         data: {
             user_id: userId,
@@ -497,79 +501,71 @@ function saveUserCompany(userId, btnEl) {
 window.saveUserCompany = saveUserCompany;
 
 // Event Delegation สำหรับปุ่มบันทึกบริษัท
-jQuery(document).on('click', '.btn-save-user-company', function(e) {
+$(document).on('click', '.btn-save-user-company', function(e) {
     e.preventDefault();
-    var uId = jQuery(this).attr('data-user-id') || jQuery(this).data('user-id');
+    var uId = $(this).attr('data-user-id') || $(this).data('user-id');
     if (uId) {
         saveUserCompany(uId, this);
     }
 });
 
-jQuery(function($) {
-    // บันทึกค่า Matrix
-    $('#btn-save-all').on('click', function() {
-        var btn = $(this);
-        var matrixData = {};
+// บันทึกค่า Matrix
+$('#btn-save-all').on('click', function() {
+    var btn = $(this);
+    var matrixData = {};
 
-        $('.matrix-cell:not([disabled])').each(function() {
-            var uId = $(this).attr('data-user-id');
-            var mKey = $(this).attr('data-module-key');
-            var val = $(this).val();
+    $('.matrix-cell:not([disabled])').each(function() {
+        var uId = $(this).attr('data-user-id');
+        var mKey = $(this).attr('data-module-key');
+        var val = $(this).val();
 
-            if (!matrixData[uId]) {
-                matrixData[uId] = {};
-            }
-            matrixData[uId][mKey] = val;
-        });
+        if (!matrixData[uId]) {
+            matrixData[uId] = {};
+        }
+        matrixData[uId][mKey] = val;
+    });
 
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> กำลังบันทึก...');
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> กำลังบันทึก...');
 
-        $.ajax({
-            url: <?= json_encode($saveUrl) ?>,
-            type: 'POST',
-            data: {
-                company_id: <?= $selectedCompIdJson ?>,
-                matrix: matrixData
-            },
-            dataType: 'json',
-            success: function(res) {
-                btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> <strong>บันทึกการกำหนดสิทธิ์</strong>');
-                if (res.status === 'success') {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'สำเร็จ!',
-                        text: res.message,
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'เกิดข้อผิดพลาด',
-                        text: res.message
-                    });
-                }
-            },
-            error: function(err) {
-                btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> <strong>บันทึกการกำหนดสิทธิ์</strong>');
+    $.ajax({
+        url: {$saveUrlJson},
+        type: 'POST',
+        data: {
+            company_id: {$selectedCompIdJson},
+            matrix: matrixData
+        },
+        dataType: 'json',
+        success: function(res) {
+            btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> <strong>บันทึกการกำหนดสิทธิ์</strong>');
+            if (res.status === 'success') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ!',
+                    text: res.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else {
                 Swal.fire({
                     icon: 'error',
-                    title: 'การเชื่อมต่อผิดพลาด',
-                    text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง'
+                    title: 'เกิดข้อผิดพลาด',
+                    text: res.message
                 });
             }
-        });
+        },
+        error: function(err) {
+            btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> <strong>บันทึกการกำหนดสิทธิ์</strong>');
+            Swal.fire({
+                icon: 'error',
+                title: 'การเชื่อมต่อผิดพลาด',
+                text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง'
+            });
+        }
     });
 });
-</script>
-
-<?php
-$dataDictUrlJson = json_encode($dataDictUrl);
-$js = <<<JS
 
 // Data Dictionary Logic
 var dataDictList = [];
-var dataDictUrl = {$dataDictUrlJson};
 
 // Mapping คำอธิบายตารางในโปรเจ็ค MCO
 var tableDescriptions = {
@@ -726,7 +722,7 @@ function loadDataDictionary() {
     tbody.html('<tr><td colspan="4" class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin mr-2"></i> กำลังโหลดข้อมูลตาราง...</td></tr>');
 
     $.ajax({
-        url: dataDictUrl,
+        url: {$dataDictUrlJson},
         type: 'GET',
         dataType: 'json',
         success: function(res) {
@@ -834,6 +830,7 @@ function copyDictTable() {
         fallbackCopyText();
     }
 }
+window.copyDictTable = copyDictTable;
 
 function fallbackCopyText() {
     var text = "ลำดับ\tชื่อตาราง (Table Name)\tคำอธิบาย\tหมวดหมู่งาน\n";
@@ -882,6 +879,7 @@ function exportDictToCSV() {
     link.click();
     document.body.removeChild(link);
 }
+window.exportDictToCSV = exportDictToCSV;
 JS;
 
 $this->registerJs($js, \yii\web\View::POS_END);
