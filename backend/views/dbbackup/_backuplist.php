@@ -15,6 +15,10 @@ $defaultSourceDir = realpath(Yii::getAlias('@backend/web/uploads'));
 if (!$defaultSourceDir) {
     $defaultSourceDir = realpath(dirname(__DIR__, 2) . '/web/uploads');
 }
+
+$isLocal = \backend\controllers\DbbackupController::isLocalEnvironment();
+$liveServerUrl = \backend\controllers\DbbackupController::getLiveServerUrl();
+$syncSecretKey = \backend\controllers\DbbackupController::getSyncSecretKey();
 ?>
 <br>
 <?php if (Yii::$app->session->hasFlash('success')): ?>
@@ -90,6 +94,57 @@ if (!$defaultSourceDir) {
         </div>
     </div>
 </div>
+
+<?php if ($isLocal): ?>
+<!-- Live Server Sync Card (แสดงเฉพาะเครื่อง Localhost เพื่อความปลอดภัย 100%) -->
+<div class="card card-outline card-warning shadow-sm mb-4 border-warning">
+    <div class="card-header bg-warning py-2 text-dark d-flex justify-content-between align-items-center">
+        <h3 class="card-title font-weight-bold mb-0">
+            <i class="fas fa-cloud-download-alt mr-1"></i> ดึงข้อมูลสำรองจาก Live Server ลงเครื่องนี้ (Pull & Sync from Live Server)
+        </h3>
+        <span class="badge badge-dark">โหมด Local PC / Disaster Recovery</span>
+    </div>
+    <div class="card-body bg-light">
+        <div class="row align-items-center">
+            <div class="col-lg-7 mb-3 mb-lg-0">
+                <div class="form-row">
+                    <div class="col-md-7 mb-2 mb-md-0">
+                        <label class="form-label font-weight-bold text-dark small mb-1">
+                            <i class="fas fa-globe text-primary mr-1"></i> Live Server URL (โดเมนของ Server จริง):
+                        </label>
+                        <input type="text" id="sync-server-url" class="form-control form-control-sm" value="<?= htmlspecialchars($liveServerUrl) ?>" placeholder="https://your-domain.com">
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label font-weight-bold text-dark small mb-1">
+                            <i class="fas fa-key text-warning mr-1"></i> Sync Secret Key (รหัสกุญแจความปลอดภัย):
+                        </label>
+                        <input type="password" id="sync-secret-key" class="form-control form-control-sm" value="<?= htmlspecialchars($syncSecretKey) ?>" placeholder="กุญแจความปลอดภัย">
+                    </div>
+                </div>
+                <small class="text-muted d-block mt-1">
+                    <i class="fas fa-shield-alt text-success"></i> ระบบจะสตรีมฐานข้อมูลจาก Server มา Restore เข้า MySQL Local และดาวน์โหลดเฉพาะไฟล์รูปภาพ/ไฟล์แนบใหม่ที่ยังไม่มีในเครื่องลงโฟลเดอร์ <code>backend/web/uploads</code> อัตโนมัติ
+                </small>
+            </div>
+            <div class="col-lg-5 text-lg-right">
+                <div class="d-flex flex-wrap justify-content-lg-end gap-2" style="gap: 8px;">
+                    <!-- ดึงเฉพาะฐานข้อมูล DB -->
+                    <button type="button" class="btn btn-outline-dark btn-sm font-weight-bold" id="btn-pull-db" onclick="startPullRemoteDb()">
+                        <i class="fas fa-database text-warning mr-1"></i> ดึงเฉพาะ DB จาก Server
+                    </button>
+                    <!-- ดึงเฉพาะไฟล์ Uploads -->
+                    <button type="button" class="btn btn-outline-info btn-sm font-weight-bold" id="btn-pull-files" onclick="startPullRemoteFiles()">
+                        <i class="fas fa-images text-info mr-1"></i> ดึงเฉพาะไฟล์แนบใหม่
+                    </button>
+                    <!-- ดึงทั้งหมด DB + ไฟล์แนบ -->
+                    <button type="button" class="btn btn-warning btn-sm font-weight-bold shadow-sm" id="btn-pull-all" onclick="startPullRemoteAll()">
+                        <i class="fas fa-sync-alt mr-1"></i> ดึงทั้งหมด (DB + ไฟล์แนบ)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- SQL Backup List Card -->
 <div class="card card-outline card-secondary shadow-sm">
@@ -345,6 +400,9 @@ $urlBackupDb = \yii\helpers\Url::to(['dbbackup/backup-db-ajax'], true);
 $urlGetFiles = \yii\helpers\Url::to(['dbbackup/get-files-list'], true);
 $urlCopyBatch = \yii\helpers\Url::to(['dbbackup/copy-batch'], true);
 $urlBrowseFolder = \yii\helpers\Url::to(['dbbackup/browse-folder'], true);
+$urlPullRemoteDb = \yii\helpers\Url::to(['dbbackup/pull-remote-db'], true);
+$urlPullRemoteFilesList = \yii\helpers\Url::to(['dbbackup/pull-remote-files-list'], true);
+$urlPullRemoteFileBatch = \yii\helpers\Url::to(['dbbackup/pull-remote-file-batch'], true);
 ?>
 
 <script>
@@ -373,6 +431,30 @@ window.startBackupAll = function() {
     }
 };
 
+window.startPullRemoteDb = function() {
+    if (typeof window._doPullRemoteDb === 'function') {
+        window._doPullRemoteDb();
+    } else {
+        alert('ระบบกำลังโหลด กรุณารอสักครู่แล้วลองอีกครั้ง');
+    }
+};
+
+window.startPullRemoteFiles = function() {
+    if (typeof window._doPullRemoteFiles === 'function') {
+        window._doPullRemoteFiles();
+    } else {
+        alert('ระบบกำลังโหลด กรุณารอสักครู่แล้วลองอีกครั้ง');
+    }
+};
+
+window.startPullRemoteAll = function() {
+    if (typeof window._doPullRemoteAll === 'function') {
+        window._doPullRemoteAll();
+    } else {
+        alert('ระบบกำลังโหลด กรุณารอสักครู่แล้วลองอีกครั้ง');
+    }
+};
+
 (function initBackupSystem(){
     if (typeof jQuery === 'undefined') {
         // ถ้า jQuery ยังไม่พร้อม (โหลดอยู่ด้านล่างของหน้า) ให้รอจนกว่าจะพร้อม
@@ -386,6 +468,9 @@ window.startBackupAll = function() {
     var urlGetFiles = <?= json_encode($urlGetFiles) ?>;
     var urlCopyBatch = <?= json_encode($urlCopyBatch) ?>;
     var urlBrowseFolder = <?= json_encode($urlBrowseFolder) ?>;
+    var urlPullRemoteDb = <?= json_encode($urlPullRemoteDb) ?>;
+    var urlPullRemoteFilesList = <?= json_encode($urlPullRemoteFilesList) ?>;
+    var urlPullRemoteFileBatch = <?= json_encode($urlPullRemoteFileBatch) ?>;
 
     function addLog(msg, color) {
         var box = $('#progress-log-box');
@@ -475,7 +560,7 @@ window.startBackupAll = function() {
     function lockUI() {
         isWorking = true;
         // ปิดปุ่มควบคุมภายนอก แต่ไม่ปิดปุ่มใน modal
-        $('#btn-backup-mysql, #btn-sync-uploads, #btn-backup-all, #btn-browse-dest, #btn-reset-dest').prop('disabled', true);
+        $('#btn-backup-mysql, #btn-sync-uploads, #btn-backup-all, #btn-browse-dest, #btn-reset-dest, #btn-pull-db, #btn-pull-files, #btn-pull-all').prop('disabled', true);
         window.onbeforeunload = function() {
             return "กำลังสำรองข้อมูลอยู่ในเบื้องหลัง หากออกจากหน้านี้กระบวนการอาจไม่สมบูรณ์!";
         };
@@ -484,7 +569,7 @@ window.startBackupAll = function() {
 
     function unlockUI() {
         isWorking = false;
-        $('#btn-backup-mysql, #btn-sync-uploads, #btn-backup-all, #btn-browse-dest, #btn-reset-dest').prop('disabled', false);
+        $('#btn-backup-mysql, #btn-sync-uploads, #btn-backup-all, #btn-browse-dest, #btn-reset-dest, #btn-pull-db, #btn-pull-files, #btn-pull-all').prop('disabled', false);
         window.onbeforeunload = null;
         $('#btn-close-progress').removeClass('d-none');
     }
@@ -917,6 +1002,266 @@ window.startBackupAll = function() {
         });
     };
 
+    // ==========================================
+    // REMOTE SYNC / PULL FROM LIVE SERVER LOGIC
+    // ==========================================
+
+    function executePullRemoteFiles(onCompleteCallback) {
+        addLog('กำลังเชื่อมต่อ Live Server เพื่อตรวจสอบรายการไฟล์แนบ...', '#17a2b8');
+        $('#progress-step-text').text('กำลังตรวจสอบรายการไฟล์จาก Server...');
+        setProgress(5, 'ติดต่อ Live Server...');
+
+        $.ajax({
+            url: urlPullRemoteFilesList,
+            type: 'POST',
+            dataType: 'json',
+            timeout: 180000
+        }).done(function(res){
+            if (res.status !== 'success') {
+                $('#progress-status-icon').html('<i class="fas fa-times-circle fa-3x text-danger"></i>');
+                $('#progress-step-text').text('ไม่สามารถดึงรายการไฟล์จาก Server ได้');
+                addLog('Error: ' + res.message, 'red');
+                alert(res.message);
+                if (onCompleteCallback) onCompleteCallback(false);
+                return;
+            }
+
+            var serverTotal = res.serverTotalFiles || 0;
+            var alreadyExist = res.alreadyExistCount || 0;
+            var needSync = res.needSyncCount || 0;
+            var needSyncSizeMB = res.needSyncSizeMB || '0';
+
+            $('#stat-total-files').text(serverTotal.toLocaleString());
+            $('#stat-skipped-files').text(alreadyExist.toLocaleString());
+            $('#stat-speed-mb').text(needSyncSizeMB + ' MB');
+
+            addLog('พบไฟล์บน Server: ' + serverTotal.toLocaleString() + ' ไฟล์', '#007bff');
+            addLog('ไฟล์ที่ในเครื่อง Local มีอยู่แล้ว: ' + alreadyExist.toLocaleString() + ' ไฟล์ (ข้ามการดาวน์โหลด)', '#28a745');
+            addLog('ไฟล์ใหม่/ต้องดาวน์โหลด: ' + needSync.toLocaleString() + ' ไฟล์ (' + needSyncSizeMB + ' MB)', '#fd7e14');
+
+            if (needSync === 0) {
+                setProgress(100, 'ไฟล์แนบและรูปภาพในเครื่อง Local เป็นปัจจุบันเท่ากับ Server 100% แล้ว');
+                addLog('ไม่มีไฟล์ใหม่ที่ต้องดาวน์โหลด ข้อมูลไฟล์แนบสมบูรณ์แล้ว', 'green');
+                if (onCompleteCallback) onCompleteCallback(true);
+                return;
+            }
+
+            var files = res.files || [];
+            var batchSize = 25; // ดาวน์โหลดทีละ 25 ไฟล์เพื่อความเสถียรของ network
+            var batches = [];
+            for (var i = 0; i < files.length; i += batchSize) {
+                batches.push(files.slice(i, i + batchSize));
+            }
+
+            var currentBatchIdx = 0;
+            var totalDownloaded = 0;
+
+            function processNextRemoteBatch() {
+                if (currentBatchIdx >= batches.length) {
+                    setProgress(100, 'ดาวน์โหลดไฟล์แนบและรูปภาพจาก Server ครบถ้วนแล้ว!');
+                    addLog('เสร็จสิ้นการดาวน์โหลด: ดาวน์โหลดไฟล์ใหม่ทั้งหมด ' + totalDownloaded + ' ไฟล์', 'green');
+                    if (onCompleteCallback) onCompleteCallback(true);
+                    return;
+                }
+
+                var batch = batches[currentBatchIdx];
+                var currentBatchNum = currentBatchIdx + 1;
+                addLog('กำลังดาวน์โหลดชุดที่ ' + currentBatchNum + '/' + batches.length + ' (' + batch.length + ' ไฟล์)...', '#6c757d');
+
+                $.ajax({
+                    url: urlPullRemoteFileBatch,
+                    type: 'POST',
+                    data: { batch: batch },
+                    dataType: 'json',
+                    timeout: 180000
+                }).done(function(batchRes){
+                    if (batchRes.status === 'success') {
+                        var justDownloaded = batchRes.downloadedCount || 0;
+                        totalDownloaded += justDownloaded;
+                        $('#stat-copied-files').text(totalDownloaded.toLocaleString());
+
+                        var processedFiles = (currentBatchIdx + 1) * batchSize;
+                        if (processedFiles > files.length) processedFiles = files.length;
+
+                        var pct = Math.round((processedFiles / files.length) * 100);
+                        setProgress(pct, 'กำลังดาวน์โหลดไฟล์ (' + processedFiles.toLocaleString() + '/' + files.length.toLocaleString() + ' ไฟล์ใหม่ - ' + pct + '%)');
+
+                        addLog('ชุดที่ ' + currentBatchNum + ': ดาวน์โหลดสำเร็จ ' + justDownloaded + ' ไฟล์', '#28a745');
+
+                        if (batchRes.errors && batchRes.errors.length > 0) {
+                            for (var e = 0; e < batchRes.errors.length; e++) {
+                                addLog('คำเตือน: ' + batchRes.errors[e], '#e0a800');
+                            }
+                        }
+
+                        currentBatchIdx++;
+                        processNextRemoteBatch();
+                    } else {
+                        addLog('ข้อผิดพลาด: ' + batchRes.message, 'red');
+                        alert(batchRes.message);
+                        if (onCompleteCallback) onCompleteCallback(false);
+                    }
+                }).fail(function(xhr, status, error){
+                    addLog('เชื่อมต่อขัดข้องขณะดาวน์โหลดชุดที่ ' + currentBatchNum + ': ' + error, 'red');
+                    alert('เกิดข้อผิดพลาดในการดาวน์โหลดชุดที่ ' + currentBatchNum + ': ' + error);
+                    if (onCompleteCallback) onCompleteCallback(false);
+                });
+            }
+
+            processNextRemoteBatch();
+
+        }).fail(function(xhr, status, error){
+            addLog('การเชื่อมต่อกับ Live Server ขัดข้อง: ' + error, 'red');
+            alert('ไม่สามารถเชื่อมต่อ Server ได้: ' + error);
+            if (onCompleteCallback) onCompleteCallback(false);
+        });
+    }
+
+    // ฟังก์ชัน 1: ดึงเฉพาะ Database
+    window._doPullRemoteDb = window.startPullRemoteDb = function() {
+        if (isWorking) return;
+        var sUrl = $.trim($('#sync-server-url').val());
+        if (!sUrl) {
+            alert('กรุณาระบุ Live Server URL');
+            $('#sync-server-url').focus();
+            return;
+        }
+
+        if (!confirm('ยืนยันการดึงฐานข้อมูลล่าสุดจาก Live Server มาทับ (Restore) เข้า MySQL Local เครื่องนี้?\n(ข้อมูลใน Local จะถูกอัปเดตให้เท่ากับ Server ทันที)')) {
+            return;
+        }
+
+        resetModal();
+        lockUI();
+        $('#progress-modal-title').html('<i class="fas fa-cloud-download-alt mr-2"></i> กำลังดึงฐานข้อมูลจาก Live Server...');
+        addLog('กำลังสั่งให้ Live Server ทำการ Dump Database...', '#007bff');
+        setProgress(15, 'Live Server กำลังส่งฐานข้อมูลมายัง Local...');
+
+        $.ajax({
+            url: urlPullRemoteDb,
+            type: 'POST',
+            dataType: 'json',
+            timeout: 600000
+        }).done(function(res){
+            if (res.status === 'success') {
+                setProgress(100, 'ดึงและ Restore ฐานข้อมูลสำเร็จ 100%');
+                $('#progress-status-icon').html('<i class="fas fa-check-circle fa-3x text-success"></i>');
+                addLog(res.message, 'green');
+                $('#progress-complete-box').removeClass('d-none');
+                $('#progress-summary-text').html(res.message);
+                unlockUI();
+            } else {
+                $('#progress-status-icon').html('<i class="fas fa-times-circle fa-3x text-danger"></i>');
+                $('#progress-step-text').text('การดึงฐานข้อมูลล้มเหลว');
+                $('#progress-bar-fill').addClass('bg-danger');
+                addLog('Error: ' + res.message, 'red');
+                alert(res.message);
+                unlockUI();
+            }
+        }).fail(function(xhr, status, error){
+            $('#progress-status-icon').html('<i class="fas fa-times-circle fa-3x text-danger"></i>');
+            $('#progress-step-text').text('การเชื่อมต่อขัดข้อง');
+            $('#progress-bar-fill').addClass('bg-danger');
+            addLog('AJAX Error: ' + error, 'red');
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error);
+            unlockUI();
+        });
+    };
+
+    // ฟังก์ชัน 2: ดึงเฉพาะไฟล์ Uploads
+    window._doPullRemoteFiles = window.startPullRemoteFiles = function() {
+        if (isWorking) return;
+        var sUrl = $.trim($('#sync-server-url').val());
+        if (!sUrl) {
+            alert('กรุณาระบุ Live Server URL');
+            $('#sync-server-url').focus();
+            return;
+        }
+
+        if (!confirm('ยืนยันการดึงไฟล์แนบและรูปภาพใหม่จาก Live Server ลงเครื่องนี้?')) {
+            return;
+        }
+
+        resetModal();
+        lockUI();
+        $('#progress-modal-title').html('<i class="fas fa-cloud-download-alt mr-2"></i> กำลังดึงไฟล์แนบและรูปภาพจาก Live Server...');
+
+        executePullRemoteFiles(function(success){
+            if (success) {
+                $('#progress-status-icon').html('<i class="fas fa-check-circle fa-3x text-success"></i>');
+                $('#progress-complete-box').removeClass('d-none');
+                $('#progress-summary-text').html('ดึงไฟล์แนบและรูปภาพทั้งหมดลงเครื่อง Local เรียบร้อยแล้ว');
+            } else {
+                $('#progress-status-icon').html('<i class="fas fa-times-circle fa-3x text-danger"></i>');
+                $('#progress-bar-fill').addClass('bg-danger');
+            }
+            unlockUI();
+        });
+    };
+
+    // ฟังก์ชัน 3: ดึงทั้งหมด (DB + Files)
+    window._doPullRemoteAll = window.startPullRemoteAll = function() {
+        if (isWorking) return;
+        var sUrl = $.trim($('#sync-server-url').val());
+        if (!sUrl) {
+            alert('กรุณาระบุ Live Server URL');
+            $('#sync-server-url').focus();
+            return;
+        }
+
+        if (!confirm('ยืนยันการดึงข้อมูลทั้งหมด (ฐานข้อมูล + ไฟล์แนบ) จาก Live Server?\nเครื่อง Local จะถูกอัปเดตทั้ง DB และไฟล์แนบให้เท่ากับ Server จริง 100%')) {
+            return;
+        }
+
+        resetModal();
+        lockUI();
+        $('#progress-modal-title').html('<i class="fas fa-sync-alt fa-spin mr-2"></i> กำลังดึงข้อมูลทั้งหมดจาก Live Server...');
+
+        addLog('[ขั้นตอนที่ 1/2] กำลังดึงฐานข้อมูลจาก Live Server...', '#007bff');
+        setProgress(10, '[1/2] ดึงและ Restore ฐานข้อมูล...');
+
+        $.ajax({
+            url: urlPullRemoteDb,
+            type: 'POST',
+            dataType: 'json',
+            timeout: 600000
+        }).done(function(res){
+            if (res.status === 'success') {
+                addLog('ฐานข้อมูล: ' + res.message, 'green');
+                setProgress(35, '[1/2] สำรองฐานข้อมูลสำเร็จ -> เริ่มดึงไฟล์แนบ');
+
+                addLog('[ขั้นตอนที่ 2/2] เริ่มต้นดาวน์โหลดไฟล์แนบและรูปภาพใหม่...', '#17a2b8');
+                executePullRemoteFiles(function(filesSuccess){
+                    if (filesSuccess) {
+                        $('#progress-status-icon').html('<i class="fas fa-check-circle fa-3x text-success"></i>');
+                        $('#progress-step-text').text('อัปเดตข้อมูลทั้งระบบจาก Live Server เสร็จสิ้น 100%');
+                        $('#progress-complete-box').removeClass('d-none');
+                        $('#progress-summary-text').html('ดึงฐานข้อมูลและไฟล์แนบทั้งหมดจาก Live Server มายัง Local สมบูรณ์ครบถ้วน 100%');
+                    } else {
+                        $('#progress-status-icon').html('<i class="fas fa-exclamation-triangle fa-3x text-warning"></i>');
+                        $('#progress-step-text').text('ฐานข้อมูลสำเร็จ แต่การดาวน์โหลดไฟล์แนบไม่สมบูรณ์');
+                        $('#progress-bar-fill').addClass('bg-warning');
+                    }
+                    unlockUI();
+                });
+            } else {
+                $('#progress-status-icon').html('<i class="fas fa-times-circle fa-3x text-danger"></i>');
+                $('#progress-step-text').text('การดึงฐานข้อมูลล้มเหลว');
+                $('#progress-bar-fill').addClass('bg-danger');
+                addLog('DB Error: ' + res.message, 'red');
+                alert(res.message);
+                unlockUI();
+            }
+        }).fail(function(xhr, status, error){
+            $('#progress-status-icon').html('<i class="fas fa-times-circle fa-3x text-danger"></i>');
+            $('#progress-step-text').text('การเชื่อมต่อขัดข้อง');
+            $('#progress-bar-fill').addClass('bg-danger');
+            addLog('AJAX Error: ' + error, 'red');
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error);
+            unlockUI();
+        });
+    };
+
     // Binding ผ่าน jQuery Events ด้วยเช่นกัน
     $(document).on('click', '#btn-backup-mysql', function(e){
         e.preventDefault();
@@ -929,6 +1274,18 @@ window.startBackupAll = function() {
     $(document).on('click', '#btn-backup-all', function(e){
         e.preventDefault();
         window.startBackupAll();
+    });
+    $(document).on('click', '#btn-pull-db', function(e){
+        e.preventDefault();
+        window.startPullRemoteDb();
+    });
+    $(document).on('click', '#btn-pull-files', function(e){
+        e.preventDefault();
+        window.startPullRemoteFiles();
+    });
+    $(document).on('click', '#btn-pull-all', function(e){
+        e.preventDefault();
+        window.startPullRemoteAll();
     });
 
     // เมื่อปิด Modal ให้โหลดหน้านี้ใหม่เพื่อให้รายการไฟล์ SQL อัปเดตล่าสุด

@@ -32,6 +32,70 @@ class DbbackupController extends BaseController
     }
 
     /**
+     * ตรวจสอบว่าระบบกำลังรันอยู่บน Localhost / Dev Environment หรือไม่
+     */
+    public static function isLocalEnvironment()
+    {
+        if (defined('YII_ENV_DEV') && YII_ENV_DEV) {
+            return true;
+        }
+
+        $serverName = $_SERVER['SERVER_NAME'] ?? '';
+        $httpHost = $_SERVER['HTTP_HOST'] ?? '';
+        $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? '';
+
+        if (in_array($remoteAddr, ['127.0.0.1', '::1'])) {
+            return true;
+        }
+
+        if (strpos($serverName, 'localhost') !== false || strpos($httpHost, 'localhost') !== false || strpos($serverName, '127.0.0.1') !== false) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * ดึงค่ากุญแจความปลอดภัยสำหรับ Sync (ตั้งค่าได้ที่ common/config/params-local.php)
+     */
+    public static function getSyncSecretKey()
+    {
+        $key = Yii::$app->params['sync_secret_key'] ?? null;
+        if (empty($key)) {
+            $key = 'MCO_SECURE_SYNC_KEY_2026_DEFAULT';
+        }
+        return $key;
+    }
+
+    /**
+     * ดึงค่า URL ของ Live Server (ตั้งค่าได้ที่ common/config/params-local.php)
+     */
+    public static function getLiveServerUrl()
+    {
+        $url = Yii::$app->params['live_server_url'] ?? null;
+        if (empty($url)) {
+            $url = 'https://mco.local'; // หรือ URL โดเมนจริงของ Server
+        }
+        return rtrim($url, '/');
+    }
+
+    /**
+     * ตรวจสอบความถูกต้องของ Token สำหรับ Endpoint ที่ถูกเรียกจากภายนอก
+     */
+    protected function validateApiAuth()
+    {
+        $reqKey = Yii::$app->request->headers->get('X-Sync-Key');
+        if (empty($reqKey)) {
+            $reqKey = Yii::$app->request->post('sync_key') ?: Yii::$app->request->get('sync_key');
+        }
+
+        $validKey = self::getSyncSecretKey();
+        if (empty($reqKey) || !hash_equals($validKey, (string)$reqKey)) {
+            throw new ForbiddenHttpException('Access denied: Invalid or missing sync secret key.');
+        }
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function behaviors()
@@ -43,13 +107,25 @@ class DbbackupController extends BaseController
                     throw new ForbiddenHttpException('คุณไม่ได้รับอนุญาติให้เข้าใช้งาน!');
                 },
                 'rules'=>[
+                    // Endpoint สำหรับให้ Local ดึงข้อมูล (ยืนยันสิทธิ์ด้วย Secret Key)
+                    [
+                        'allow' => true,
+                        'actions' => ['api-backup-db', 'api-get-files-list', 'api-download-file'],
+                        'roles' => ['?', '@'],
+                    ],
                     [
                         'allow'=>true,
                         'roles'=>['@'],
                         'matchCallback'=>function($rule,$action){
                             $currentRoute = Yii::$app->controller->getRoute();
                             // Allow sub-actions of dbbackup if user has access to backuplist
-                            if (in_array($action->id, ['restorefile', 'downloadbak', 'deletebak', 'exrestore', 'copy-uploads', 'copyuploads', 'backup-db-ajax', 'backupdbajax', 'get-files-list', 'getfileslist', 'copy-batch', 'copybatch', 'browse-folder', 'browsefolder'])) {
+                            if (in_array($action->id, [
+                                'restorefile', 'downloadbak', 'deletebak', 'exrestore',
+                                'copy-uploads', 'copyuploads', 'backup-db-ajax', 'backupdbajax',
+                                'get-files-list', 'getfileslist', 'copy-batch', 'copybatch',
+                                'browse-folder', 'browsefolder',
+                                'pull-remote-db', 'pull-remote-files-list', 'pull-remote-file-batch'
+                            ])) {
                                 if (Yii::$app->user->can('dbbackup/backuplist') || \backend\models\User::isUserAdmin(\Yii::$app->user->id)) {
                                     return true;
                                 }
@@ -916,6 +992,465 @@ class DbbackupController extends BaseController
             }
         }
         return $this->redirect(['dbbackup/backuplist']);
+    }
+
+    // =========================================================================
+    // PROVIDER ENDPOINTS (ทำงานบน Live Server เพื่อส่งข้อมูลให้ Local)
+    // มีการตรวจสอบ validateApiAuth() ป้องกันคนภายนอกเข้าถึง 100%
+    // =========================================================================
+
+    /**
+     * API: ให้ Live Server สั่ง Dump Database และส่งกลับไฟล์ SQL ให้ Local ดาวน์โหลด
+     */
+    public function actionApiBackupDb()
+    {
+        $this->validateApiAuth();
+
+        list($host, $username, $password, $database_name) = self::getDbCredentials();
+
+        $backupDir = realpath(Yii::getAlias('@backend/web/uploads/backup'));
+        if (!$backupDir) {
+            $backupDir = dirname(__DIR__, 2) . '/web/uploads/backup';
+        }
+        if (!is_dir($backupDir)) {
+            @mkdir($backupDir, 0777, true);
+        }
+
+        $date_string = date('Y-m-d_His');
+        $fileName = "backup_{$database_name}_{$date_string}.sql";
+        $targetFile = $backupDir . DIRECTORY_SEPARATOR . $fileName;
+        $tempFile = $targetFile . '.tmp';
+
+        $mysqldump = self::getBinaryPath('mysqldump');
+        $cmd = "{$mysqldump} --default-character-set=utf8mb4 --single-transaction --quick --extended-insert --max_allowed_packet=512M --net_buffer_length=16384 -h {$host} -u {$username}";
+        if (!empty($password)) {
+            $cmd .= " -p" . escapeshellarg($password);
+        }
+        $cmd .= " {$database_name} > " . escapeshellarg($tempFile) . " 2>&1";
+
+        exec($cmd, $output, $returnVar);
+
+        $isComplete = false;
+        if ($returnVar === 0 && file_exists($tempFile) && filesize($tempFile) > 1024) {
+            $tail = '';
+            $fp = fopen($tempFile, 'rb');
+            if ($fp) {
+                fseek($fp, -200, SEEK_END);
+                $tail = fread($fp, 200);
+                fclose($fp);
+            }
+            if (strpos($tail, 'Dump completed') !== false) {
+                $isComplete = true;
+            }
+        }
+
+        if ($isComplete) {
+            @rename($tempFile, $targetFile);
+
+            // ส่งไฟล์ SQL กลับทันที
+            header('Content-Description: File Transfer');
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename="' . $fileName . '"');
+            header('Expires: 0');
+            header('Cache-Control: must-revalidate');
+            header('Pragma: public');
+            header('Content-Length: ' . filesize($targetFile));
+            readfile($targetFile);
+            exit;
+        } else {
+            @unlink($tempFile);
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'status' => 'error',
+                'message' => 'mysqldump failed on remote server: ' . implode(' ', array_slice($output, 0, 3))
+            ];
+        }
+    }
+
+    /**
+     * API: ส่งรายการไฟล์และขนาดไฟล์ทั้งหมดในโฟลเดอร์ uploads ของ Live Server
+     */
+    public function actionApiGetFilesList()
+    {
+        $this->validateApiAuth();
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $sourceDir = realpath(Yii::getAlias('@backend/web/uploads'));
+        if (!$sourceDir) {
+            $sourceDir = realpath(dirname(__DIR__, 2) . '/web/uploads');
+        }
+
+        if (!is_dir($sourceDir)) {
+            return [
+                'status' => 'error',
+                'message' => 'Uploads folder not found on server.'
+            ];
+        }
+
+        $files = [];
+        $totalBytes = 0;
+
+        try {
+            $it = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($sourceDir, \RecursiveDirectoryIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::SELF_FIRST
+            );
+
+            foreach ($it as $item) {
+                $pathname = $item->getPathname();
+                if (strpos($pathname, 'uploads' . DIRECTORY_SEPARATOR . 'backup') !== false ||
+                    strpos($pathname, 'uploads/backup') !== false ||
+                    strpos($pathname, 'uploads\\backup') !== false) {
+                    continue;
+                }
+
+                if ($item->isFile()) {
+                    $rel = substr($pathname, strlen($sourceDir) + 1);
+                    $rel = str_replace('\\', '/', $rel);
+                    $size = $item->getSize();
+                    $mtime = $item->getMTime();
+                    $files[] = [
+                        'path' => $rel,
+                        'size' => $size,
+                        'mtime' => $mtime
+                    ];
+                    $totalBytes += $size;
+                }
+            }
+
+            return [
+                'status' => 'success',
+                'totalFiles' => count($files),
+                'totalBytes' => $totalBytes,
+                'totalSizeMB' => number_format($totalBytes / (1024 * 1024), 2),
+                'files' => $files
+            ];
+        } catch (\Exception $e) {
+            return [
+                'status' => 'error',
+                'message' => 'Error scanning server uploads: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * API: ดาวน์โหลดไฟล์ทีละไฟล์จาก Live Server
+     */
+    public function actionApiDownloadFile()
+    {
+        $this->validateApiAuth();
+
+        $relPath = trim((string)(Yii::$app->request->get('file') ?: Yii::$app->request->post('file')));
+        $relPath = str_replace(['..', "\0"], '', $relPath); // Path traversal protection
+
+        $sourceDir = realpath(Yii::getAlias('@backend/web/uploads'));
+        if (!$sourceDir) {
+            $sourceDir = realpath(dirname(__DIR__, 2) . '/web/uploads');
+        }
+
+        $fullPath = $sourceDir . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $relPath);
+
+        if (!file_exists($fullPath) || !is_file($fullPath)) {
+            http_response_code(404);
+            die('File not found: ' . htmlspecialchars($relPath));
+        }
+
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . basename($fullPath) . '"');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: ' . filesize($fullPath));
+        readfile($fullPath);
+        exit;
+    }
+
+    // =========================================================================
+    // CONSUMER / CLIENT ENDPOINTS (ทำงานบน Local เพื่อดึงข้อมูลจาก Server)
+    // บล็อกไม่ให้ทำงานบน Live Server (isLocalEnvironment check)
+    // =========================================================================
+
+    /**
+     * Helper ส่ง HTTP Request ไปยัง Live Server
+     */
+    protected function callRemoteServer($endpoint, $postData = [], $timeout = 600)
+    {
+        $baseUrl = self::getLiveServerUrl();
+        $secretKey = self::getSyncSecretKey();
+        $url = $baseUrl . '/index.php?r=dbbackup/' . $endpoint;
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'X-Sync-Key: ' . $secretKey,
+            'User-Agent: MCO-Local-Sync-Agent/1.0'
+        ]);
+
+        if (!empty($postData)) {
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+        }
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        return [
+            'code' => $httpCode,
+            'data' => $response,
+            'error' => $curlError
+        ];
+    }
+
+    /**
+     * ดึง Dump Database จาก Live Server ลงเครื่อง Local และทำการ Restore ให้ทันที
+     */
+    public function actionPullRemoteDb()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if (!self::isLocalEnvironment()) {
+            return [
+                'status' => 'error',
+                'message' => 'คำสั่งนี้อนุญาตให้รันบนเครื่อง Localhost / เครื่องสำรอง เท่านั้น'
+            ];
+        }
+
+        $serverUrl = self::getLiveServerUrl();
+        $backupDir = realpath(Yii::getAlias('@backend/web/uploads/backup'));
+        if (!$backupDir) {
+            $backupDir = dirname(__DIR__, 2) . '/web/uploads/backup';
+        }
+        if (!is_dir($backupDir)) {
+            @mkdir($backupDir, 0777, true);
+        }
+
+        $localFilename = 'live_synced_' . date('Y-m-d_His') . '.sql';
+        $savePath = $backupDir . DIRECTORY_SEPARATOR . $localFilename;
+
+        // สตรีมไฟล์ SQL จาก Live Server ลง Disk Local
+        $secretKey = self::getSyncSecretKey();
+        $url = $serverUrl . '/index.php?r=dbbackup/api-backup-db';
+
+        $fp = fopen($savePath, 'wb');
+        if (!$fp) {
+            return [
+                'status' => 'error',
+                'message' => 'ไม่สามารถสร้างไฟล์ในเครื่อง Local ได้: ' . $savePath
+            ];
+        }
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_FILE, $fp);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 600);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'X-Sync-Key: ' . $secretKey,
+            'User-Agent: MCO-Local-Sync-Agent/1.0'
+        ]);
+
+        $success = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr = curl_error($ch);
+        curl_close($ch);
+        fclose($fp);
+
+        if (!$success || $httpCode !== 200 || filesize($savePath) < 100) {
+            @unlink($savePath);
+            return [
+                'status' => 'error',
+                'message' => "ดาวน์โหลดฐานข้อมูลจาก Server ล้มเหลว (HTTP {$httpCode}): " . ($curlErr ?: 'Server response error')
+            ];
+        }
+
+        // Restore เข้า MySQL ของ Localhost ทันที
+        list($host, $username, $password, $database_name) = self::getDbCredentials();
+        $mysql = self::getBinaryPath('mysql');
+
+        $preparedFilePath = self::prepareSqlFileForRestore($savePath);
+        $cmd = "{$mysql} --default-character-set=utf8mb4 --max_allowed_packet=512M -h {$host} -u {$username}";
+        if (!empty($password)) {
+            $cmd .= " -p" . escapeshellarg($password);
+        }
+        $cmd .= " {$database_name} < " . escapeshellarg($preparedFilePath) . " 2>&1";
+
+        $startTime = microtime(true);
+        exec($cmd, $output, $returnVar);
+        $duration = microtime(true) - $startTime;
+        $timeText = self::formatDuration($duration);
+
+        if ($preparedFilePath !== $savePath && file_exists($preparedFilePath)) {
+            @unlink($preparedFilePath);
+        }
+
+        if ($returnVar === 0) {
+            $fileSizeMB = number_format(filesize($savePath) / (1024 * 1024), 2);
+            return [
+                'status' => 'success',
+                'fileName' => $localFilename,
+                'fileSize' => $fileSizeMB . ' MB',
+                'duration' => $timeText,
+                'message' => "ดึงฐานข้อมูลจาก Server สำเร็จ และ Restore เข้า MySQL Local เรียบร้อย 100% ({$fileSizeMB} MB ใช้เวลา {$timeText})"
+            ];
+        } else {
+            $errDetail = !empty($output) ? implode(' ', array_slice($output, 0, 3)) : 'Restore error';
+            return [
+                'status' => 'error',
+                'message' => "ดาวน์โหลด DB มาแล้ว แต่ Restore เข้า Local ไม่สำเร็จ (Code {$returnVar}): {$errDetail}"
+            ];
+        }
+    }
+
+    /**
+     * ดึงรายการไฟล์จาก Live Server แล้วเปรียบเทียบกับ Local เพื่อส่งเฉพาะไฟล์ที่ขาดหายไปกลับมา
+     */
+    public function actionPullRemoteFilesList()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if (!self::isLocalEnvironment()) {
+            return [
+                'status' => 'error',
+                'message' => 'คำสั่งนี้อนุญาตให้รันบนเครื่อง Localhost / เครื่องสำรอง เท่านั้น'
+            ];
+        }
+
+        $res = $this->callRemoteServer('api-get-files-list', [], 120);
+        if ($res['code'] !== 200 || empty($res['data'])) {
+            return [
+                'status' => 'error',
+                'message' => 'ไม่สามารถเชื่อมต่อ Server เพื่อดึงรายการไฟล์ได้ (HTTP ' . $res['code'] . '): ' . $res['error']
+            ];
+        }
+
+        $json = json_decode($res['data'], true);
+        if (!$json || $json['status'] !== 'success') {
+            return [
+                'status' => 'error',
+                'message' => $json['message'] ?? 'Invalid response from server'
+            ];
+        }
+
+        $remoteFiles = $json['files'] ?? [];
+        $localUploadDir = realpath(Yii::getAlias('@backend/web/uploads'));
+        if (!$localUploadDir) {
+            $localUploadDir = dirname(__DIR__, 2) . '/web/uploads';
+        }
+
+        // คัดกรองเฉพาะไฟล์ที่ใน Local ยังไม่มี หรือขนาดไม่เท่ากัน
+        $needSyncFiles = [];
+        $totalBytesNeed = 0;
+        $alreadyExistCount = 0;
+
+        foreach ($remoteFiles as $rf) {
+            $rel = $rf['path'];
+            $fullLocal = $localUploadDir . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $rel);
+
+            if (file_exists($fullLocal) && filesize($fullLocal) === (int)$rf['size']) {
+                $alreadyExistCount++;
+            } else {
+                $needSyncFiles[] = $rf;
+                $totalBytesNeed += (int)$rf['size'];
+            }
+        }
+
+        return [
+            'status' => 'success',
+            'serverTotalFiles' => count($remoteFiles),
+            'alreadyExistCount' => $alreadyExistCount,
+            'needSyncCount' => count($needSyncFiles),
+            'needSyncSizeMB' => number_format($totalBytesNeed / (1024 * 1024), 2),
+            'files' => $needSyncFiles
+        ];
+    }
+
+    /**
+     * ดาวน์โหลดไฟล์จาก Live Server เป็นชุด (Batch) ลงโฟลเดอร์ uploads ของ Local
+     */
+    public function actionPullRemoteFileBatch()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        if (!self::isLocalEnvironment()) {
+            return [
+                'status' => 'error',
+                'message' => 'คำสั่งนี้อนุญาตให้รันบนเครื่อง Localhost / เครื่องสำรอง เท่านั้น'
+            ];
+        }
+
+        $batch = Yii::$app->request->post('batch', []);
+        $localUploadDir = realpath(Yii::getAlias('@backend/web/uploads'));
+        if (!$localUploadDir) {
+            $localUploadDir = dirname(__DIR__, 2) . '/web/uploads';
+        }
+
+        $serverUrl = self::getLiveServerUrl();
+        $secretKey = self::getSyncSecretKey();
+
+        $downloadedCount = 0;
+        $downloadedBytes = 0;
+        $errors = [];
+
+        foreach ($batch as $item) {
+            $rel = is_array($item) ? ($item['path'] ?? '') : $item;
+            if (empty($rel)) continue;
+
+            $localFile = $localUploadDir . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $rel);
+            $localSubDir = dirname($localFile);
+            if (!is_dir($localSubDir)) {
+                @mkdir($localSubDir, 0777, true);
+            }
+
+            $url = $serverUrl . '/index.php?r=dbbackup/api-download-file&file=' . urlencode($rel);
+            $tmpFile = $localFile . '.tmp_' . uniqid();
+
+            $fp = fopen($tmpFile, 'wb');
+            if (!$fp) {
+                $errors[] = "สร้างไฟล์ชั่วคราวไม่สำเร็จ: {$rel}";
+                continue;
+            }
+
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_FILE, $fp);
+            curl_setopt($ch, CURLOPT_HEADER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'X-Sync-Key: ' . $secretKey,
+                'User-Agent: MCO-Local-Sync-Agent/1.0'
+            ]);
+
+            $success = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlErr = curl_error($ch);
+            curl_close($ch);
+            fclose($fp);
+
+            if ($success && $httpCode === 200 && file_exists($tmpFile) && filesize($tmpFile) > 0) {
+                @rename($tmpFile, $localFile);
+                $downloadedCount++;
+                $downloadedBytes += filesize($localFile);
+            } else {
+                @unlink($tmpFile);
+                $errors[] = "ดาวน์โหลด {$rel} ไม่สำเร็จ (HTTP {$httpCode}: {$curlErr})";
+            }
+        }
+
+        return [
+            'status' => 'success',
+            'downloadedCount' => $downloadedCount,
+            'downloadedBytes' => $downloadedBytes,
+            'errors' => $errors
+        ];
     }
 
 }
