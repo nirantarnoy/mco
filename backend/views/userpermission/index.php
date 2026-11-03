@@ -416,13 +416,18 @@ function setColumnValue(userId, value) {
 }
 
 // Quick set ทั้งแถวของโมดูล
-function setRowValue(modKey, value) {
+window.setRowValue = function(modKey, value) {
     if (!value) return;
     $('.matrix-cell[data-module-key="' + modKey + '"]:not([disabled])').each(function() {
         $(this).val(value);
         updateCellColor(this);
     });
-}
+};
+
+window.setColumnValue = setColumnValue;
+window.saveUserCompany = saveUserCompany;
+window.copyDictTable = copyDictTable;
+window.exportDictToCSV = exportDictToCSV;
 
 // บันทึกค่า Matrix
 $('#btn-save-all').on('click', function() {
