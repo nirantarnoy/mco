@@ -315,7 +315,7 @@ if (!file_exists($dumpPath)) {
                                         </div>
                                     </td>
                                     <td class="text-center align-middle">
-                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="if(window.saveUserCompany){window.saveUserCompany(<?= $u->id ?>, this);}else{alert('ระบบกำลังโหลด กรุณารอสักครู่');}">
+                                        <button type="button" class="btn btn-sm btn-outline-primary btn-save-user-company" data-user-id="<?= $u->id ?>" onclick="doSaveUserCompany(<?= $u->id ?>, this)">
                                             บันทึก
                                         </button>
                                     </td>
@@ -396,7 +396,69 @@ $selectedCompIdJson = json_encode($selectedCompanyId);
 $saveUrlJson = json_encode($saveUrl);
 $assignUrlJson = json_encode($assignUrl);
 $dataDictUrlJson = json_encode($dataDictUrl);
+?>
 
+<script>
+window.doSaveUserCompany = function(userId, btnEl) {
+    if (typeof window.saveUserCompany === 'function') {
+        window.saveUserCompany(userId, btnEl);
+    } else {
+        // Fallback ทำงานทันทีโดยตรง ไม่ต้องรอ
+        var $ = window.jQuery;
+        if (!$) {
+            alert('ระบบยังโหลด jQuery ไม่เสร็จสมบูรณ์');
+            return;
+        }
+        var selectedCompIds = [];
+        $('.user-comp-check-' + userId + ':checked').each(function() {
+            selectedCompIds.push($(this).val());
+        });
+
+        var btnTarget = $(btnEl);
+        var originalHtml = btnTarget.html();
+        btnTarget.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...');
+
+        $.ajax({
+            url: <?= $assignUrlJson ?>,
+            type: 'POST',
+            data: {
+                user_id: userId,
+                company_ids: selectedCompIds,
+                _csrf: (typeof yii !== 'undefined' && yii.getCsrfToken) ? yii.getCsrfToken() : ''
+            },
+            dataType: 'json',
+            success: function(res) {
+                btnTarget.prop('disabled', false).html(originalHtml);
+                if (res && res.status === 'success') {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ',
+                            text: res.message || 'บันทึกข้อมูลเรียบร้อย',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(function() {
+                            location.reload();
+                        });
+                    } else {
+                        alert(res.message || 'บันทึกข้อมูลเรียบร้อย');
+                        location.reload();
+                    }
+                } else {
+                    var errMsg = (res && res.message) ? res.message : 'เกิดข้อผิดพลาดในการบันทึก';
+                    alert(errMsg);
+                }
+            },
+            error: function(xhr, status, error) {
+                btnTarget.prop('disabled', false).html(originalHtml);
+                alert('การเชื่อมต่อผิดพลาด (' + (error || status) + ')');
+            }
+        });
+    }
+};
+</script>
+
+<?php
 $js = <<<JS
 
 function updateCellColor(selectEl) {
