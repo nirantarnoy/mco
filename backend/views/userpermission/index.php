@@ -485,37 +485,69 @@ $('#btn-save-all').on('click', function() {
 });
 
 // บันทึกการผูกบริษัท
-function saveUserCompany(userId) {
+function saveUserCompany(userId, btnEl) {
     var selectedCompIds = [];
     $('.user-comp-check-' + userId + ':checked').each(function() {
         selectedCompIds.push($(this).val());
     });
+
+    var $btn = btnEl ? $(btnEl) : $('.btn-save-user-company[data-user-id="' + userId + '"]');
+    var originalHtml = $btn.html();
+    $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...');
 
     $.ajax({
         url: '{$assignUrl}',
         type: 'POST',
         data: {
             user_id: userId,
-            company_ids: selectedCompIds
+            company_ids: selectedCompIds,
+            _csrf: yii.getCsrfToken ? yii.getCsrfToken() : ''
         },
         dataType: 'json',
         success: function(res) {
-            if (res.status === 'success') {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'สำเร็จ',
-                    text: res.message,
-                    timer: 1500,
-                    showConfirmButton: false
-                }).then(function() {
+            $btn.prop('disabled', false).html(originalHtml);
+            if (res && res.status === 'success') {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สำเร็จ',
+                        text: res.message || 'บันทึกข้อมูลเรียบร้อย',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(function() {
+                        location.reload();
+                    });
+                } else {
+                    alert(res.message || 'บันทึกข้อมูลเรียบร้อย');
                     location.reload();
-                });
+                }
             } else {
+                var errMsg = (res && res.message) ? res.message : 'เกิดข้อผิดพลาดในการบันทึก';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: errMsg
+                    });
+                } else {
+                    alert(errMsg);
+                }
+            }
+        },
+        error: function(xhr, status, error) {
+            $btn.prop('disabled', false).html(originalHtml);
+            var errText = 'การเชื่อมต่อผิดพลาด (' + (error || status) + ')';
+            if (xhr.status === 403) errText = 'ไม่มีสิทธิ์เข้าถึง (403 Forbidden)';
+            if (xhr.status === 404) errText = 'ไม่พบ URL บันทึก (404 Not Found)';
+            
+            if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     icon: 'error',
-                    title: 'เกิดข้อผิดพลาด',
-                    text: res.message
+                    title: 'ข้อผิดพลาด',
+                    text: errText
                 });
+            } else {
+                alert(errText);
             }
         }
     });
@@ -524,9 +556,9 @@ function saveUserCompany(userId) {
 // Event Delegation สำหรับปุ่มบันทึกบริษัท
 $(document).on('click', '.btn-save-user-company', function(e) {
     e.preventDefault();
-    var uId = $(this).data('user-id');
+    var uId = $(this).attr('data-user-id') || $(this).data('user-id');
     if (uId) {
-        saveUserCompany(uId);
+        saveUserCompany(uId, this);
     }
 });
 
