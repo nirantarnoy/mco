@@ -45,9 +45,60 @@ class PaymentvoucherController extends BaseController
         $searchModel = new PaymentVoucherSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
+        // ดึงรายการ Advance ที่ถึงกำหนดจ่าย (PO และ None PR)
+        $today = date('Y-m-d');
+        
+        // 1. PO ที่เป็น Advance และยังไม่ปิดยอดชำระ
+        $pendingAdvancePos = Purch::find()
+            ->where(['is_advance' => 1])
+            ->andWhere(['approve_status' => Purch::APPROVE_STATUS_APPROVED])
+            ->andWhere(['status' => Purch::STATUS_ACTIVE])
+            ->andWhere(['>', 'net_amount', 0])
+            ->orderBy(['payment_due_date' => SORT_ASC, 'id' => SORT_DESC])
+            ->all();
+
+        $advancePos = [];
+        foreach ($pendingAdvancePos as $po) {
+            $paid = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_PO, $po->id);
+            $rem = $po->net_amount - $paid;
+            if ($rem > 0) {
+                $advancePos[] = [
+                    'model' => $po,
+                    'remaining' => $rem,
+                    'paid' => $paid,
+                    'is_due' => (!empty($po->payment_due_date) && $po->payment_due_date <= $today)
+                ];
+            }
+        }
+
+        // 2. None PR ที่เป็น Advance และยังไม่ปิดยอดชำระ
+        $pendingAdvanceNprs = \backend\models\PurchaseMaster::find()
+            ->where(['is_advance' => 1])
+            ->andWhere(['approve_status' => \backend\models\PurchaseMaster::APPROVE_STATUS_APPROVED])
+            ->andWhere(['status' => \backend\models\PurchaseMaster::STATUS_ACTIVE])
+            ->andWhere(['>', 'total_amount', 0])
+            ->orderBy(['payment_due_date' => SORT_ASC, 'id' => SORT_DESC])
+            ->all();
+
+        $advanceNprs = [];
+        foreach ($pendingAdvanceNprs as $npr) {
+            $paid = $this->getPaidAmount(\backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, $npr->id);
+            $rem = $npr->total_amount - $paid;
+            if ($rem > 0) {
+                $advanceNprs[] = [
+                    'model' => $npr,
+                    'remaining' => $rem,
+                    'paid' => $paid,
+                    'is_due' => (!empty($npr->payment_due_date) && $npr->payment_due_date <= $today)
+                ];
+            }
+        }
+
         return $this->render('index', [
             'searchModel' => $searchModel,
             'dataProvider' => $dataProvider,
+            'advancePos' => $advancePos,
+            'advanceNprs' => $advanceNprs,
         ]);
     }
 
@@ -69,11 +120,33 @@ class PaymentvoucherController extends BaseController
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
-    public function actionCreate()
+    public function actionCreate($ref_type = null, $ref_id = null)
     {
         $model = new PaymentVoucher();
         $model->trans_date = date('Y-m-d');
         $model->status = PaymentVoucher::STATUS_ACTIVE;
+
+        // Auto-fill ข้อมูลกรณีส่ง ref_type และ ref_id มาจากหน้าแจ้งเตือน Advance
+        if ($ref_type !== null && $ref_id !== null) {
+            if ($ref_type == \backend\models\PaymentVoucherRef::REF_TYPE_PO) {
+                $po = Purch::findOne($ref_id);
+                if ($po) {
+                    $model->vendor_id = $po->vendor_id;
+                    $model->recipient_name = $po->vendor_name;
+                    $model->remark = 'จ่ายเงินมัดจำล่วงหน้า PO: ' . $po->purch_no . (!empty($po->invoice_no) ? ' (บิล/ใบแจ้งหนี้: ' . $po->invoice_no . ')' : '');
+                }
+            } elseif ($ref_type == \backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR) {
+                $npr = \backend\models\PurchaseMaster::findOne($ref_id);
+                if ($npr) {
+                    $vendorModel = \backend\models\Vendor::find()->where(['code' => $npr->supcod])->one();
+                    if ($vendorModel) {
+                        $model->vendor_id = $vendorModel->id;
+                    }
+                    $model->recipient_name = $npr->supnam;
+                    $model->remark = 'จ่ายเงินมัดจำล่วงหน้า None PR: ' . $npr->docnum . (!empty($npr->invoice_no) ? ' (บิล/ใบแจ้งหนี้: ' . $npr->invoice_no . ')' : '');
+                }
+            }
+        }
 
         if ($model->load(Yii::$app->request->post())) {
             $transaction = Yii::$app->db->beginTransaction();

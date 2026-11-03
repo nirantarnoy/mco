@@ -8,10 +8,94 @@ use yii\helpers\Url;
 /* @var $searchModel backend\models\PaymentVoucherSearch */
 /* @var $dataProvider yii\data\ActiveDataProvider */
 
-$this->title = 'Payment Voucher';
+$this->title = 'Payment Voucher (ใบสำคัญจ่าย)';
 $this->params['breadcrumbs'][] = $this->title;
+
+$totalAdvanceCount = (count($advancePos ?? [])) + (count($advanceNprs ?? []));
+$dueAdvanceCount = 0;
+foreach (($advancePos ?? []) as $ap) { if ($ap['is_due']) $dueAdvanceCount++; }
+foreach (($advanceNprs ?? []) as $an) { if ($an['is_due']) $dueAdvanceCount++; }
 ?>
 <div class="payment-voucher-index">
+
+    <?php if ($totalAdvanceCount > 0): ?>
+    <!-- แจ้งเตือนและตารางงานรอโอนเงินล่วงหน้า (Advance Alert Center) -->
+    <div class="card card-outline card-warning shadow-sm mb-4 border-warning">
+        <div class="card-header bg-warning py-2 text-dark d-flex justify-content-between align-items-center">
+            <h5 class="card-title font-weight-bold mb-0">
+                <i class="fas fa-bell text-danger mr-1"></i> รายการสั่งซื้อรอโอนเงินล่วงหน้า/มัดจำ (Pending Advance Payment)
+                <?php if ($dueAdvanceCount > 0): ?>
+                    <span class="badge badge-danger ml-2 animate__animated animate__flash">ถึงกำหนดจ่ายวันนี้/เกินกำหนด <?= $dueAdvanceCount ?> รายการ</span>
+                <?php endif; ?>
+            </h5>
+            <span class="badge badge-dark"><?= $totalAdvanceCount ?> รายการรอดำเนินการ</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm table-hover mb-0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th style="width: 120px;">ประเภท</th>
+                            <th>เลขที่เอกสาร</th>
+                            <th>ผู้ขาย / คู่ค้า</th>
+                            <th>เลขที่ใบแจ้งหนี้/วางบิล</th>
+                            <th>วันที่นัดโอน</th>
+                            <th class="text-right">ยอดเงินมัดจำคงเหลือ</th>
+                            <th class="text-center" style="width: 150px;">การจัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach (($advancePos ?? []) as $item): ?>
+                            <?php $po = $item['model']; ?>
+                            <tr class="<?= $item['is_due'] ? 'table-danger font-weight-bold' : '' ?>">
+                                <td><span class="badge badge-primary">PO (สั่งซื้อ)</span></td>
+                                <td><?= Html::encode($po->purch_no) ?></td>
+                                <td><?= Html::encode($po->vendor_name) ?></td>
+                                <td><?= Html::encode($po->invoice_no ?: '-') ?></td>
+                                <td>
+                                    <?= !empty($po->payment_due_date) ? date('d/m/Y', strtotime($po->payment_due_date)) : '-' ?>
+                                    <?php if ($item['is_due']): ?>
+                                        <span class="badge badge-danger">ถึงกำหนด</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-right text-success font-weight-bold"><?= number_format($item['remaining'], 2) ?></td>
+                                <td class="text-center">
+                                    <?= Html::a('<i class="fas fa-plus-circle"></i> ออก PV ทันที', ['create', 'ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_PO, 'ref_id' => $po->id], [
+                                        'class' => 'btn btn-xs btn-success font-weight-bold shadow-sm',
+                                        'title' => 'ดึงไปทำใบสำคัญจ่าย PV พร้อมออกใบหัก ณ ที่จ่าย'
+                                    ]) ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+
+                        <?php foreach (($advanceNprs ?? []) as $item): ?>
+                            <?php $npr = $item['model']; ?>
+                            <tr class="<?= $item['is_due'] ? 'table-danger font-weight-bold' : '' ?>">
+                                <td><span class="badge badge-info">None PR</span></td>
+                                <td><?= Html::encode($npr->docnum) ?></td>
+                                <td><?= Html::encode($npr->supnam) ?></td>
+                                <td><?= Html::encode($npr->invoice_no ?: '-') ?></td>
+                                <td>
+                                    <?= !empty($npr->payment_due_date) ? date('d/m/Y', strtotime($npr->payment_due_date)) : '-' ?>
+                                    <?php if ($item['is_due']): ?>
+                                        <span class="badge badge-danger">ถึงกำหนด</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-right text-success font-weight-bold"><?= number_format($item['remaining'], 2) ?></td>
+                                <td class="text-center">
+                                    <?= Html::a('<i class="fas fa-plus-circle"></i> ออก PV ทันที', ['create', 'ref_type' => \backend\models\PaymentVoucherRef::REF_TYPE_NONE_PR, 'ref_id' => $npr->id], [
+                                        'class' => 'btn btn-xs btn-success font-weight-bold shadow-sm',
+                                        'title' => 'ดึงไปทำใบสำคัญจ่าย PV พร้อมออกใบหัก ณ ที่จ่าย'
+                                    ]) ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <div class="card shadow-sm">
         <div class="card-header bg-white">
