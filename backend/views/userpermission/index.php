@@ -315,7 +315,7 @@ if (!file_exists($dumpPath)) {
                                         </div>
                                     </td>
                                     <td class="text-center align-middle">
-                                        <button type="button" class="btn btn-sm btn-outline-primary btn-save-user-company" data-user-id="<?= $u->id ?>">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="if(window.saveUserCompany){window.saveUserCompany(<?= $u->id ?>, this);}else{alert('ระบบกำลังโหลด กรุณารอสักครู่');}">
                                             บันทึก
                                         </button>
                                     </td>
