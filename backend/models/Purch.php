@@ -112,12 +112,12 @@ class Purch extends ActiveRecord
         return [
             [['vendor_id'], 'required'],
             [['purch_date'], 'safe'],
-            [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by','discount_percent','vat_percent','approve_by','currency_id', 'company_id', 'job_id', 'is_recall', 'recall_by'], 'integer'],
+            [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by','discount_percent','vat_percent','approve_by','currency_id', 'company_id', 'job_id', 'is_recall', 'recall_by', 'is_advance'], 'integer'],
             [['total_amount', 'vat_amount', 'net_amount','vat_percent','discount_per','whd_tax_per','whd_tax_amount','discount_total_amount','currency_rate', 'value_amount'], 'number'],
-            [['purch_no', 'vendor_name', 'footer_delivery','footer_payment','ref_no'], 'string', 'max' => 255],
+            [['purch_no', 'vendor_name', 'footer_delivery','footer_payment','ref_no', 'invoice_no'], 'string', 'max' => 255],
             [['note','delivery_note','payment_note', 'special_note', 'recall_reason'], 'string'],
             [['purch_no'], 'unique', 'filter' => ['status' => self::STATUS_ACTIVE]],
-            [['approve_date','discount_amount','fee_amount','exchange_rate', 'target_shipment_date', 'recall_at'], 'safe'],
+            [['approve_date','discount_amount','fee_amount','exchange_rate', 'target_shipment_date', 'recall_at', 'payment_due_date'], 'safe'],
             [['is_vat','is_deposit','rev'],'integer'],
         ];
     }
@@ -134,6 +134,9 @@ class Purch extends ActiveRecord
             'vendor_id' => 'รหัสผู้ขาย',
             'vendor_name' => 'ชื่อผู้ขาย',
             'status' => 'สถานะ',
+            'is_advance' => 'จ่ายเงินล่วงหน้า/มัดจำ (Advance)',
+            'payment_due_date' => 'วันที่นัดจ่ายเงิน/โอนมัดจำ',
+            'invoice_no' => 'เลขที่ใบแจ้งหนี้/ใบวางบิล',
             'note' => 'หมายเหตุ',
             'approve_status' => 'สถานะอนุมัติ',
             'is_recall' => 'สถานะร้องขอ Recall',

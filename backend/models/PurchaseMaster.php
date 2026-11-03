@@ -84,8 +84,8 @@ class PurchaseMaster extends \yii\db\ActiveRecord
     {
         return [
             [['docnum', 'docdat'], 'required'],
-            [['docdat', 'duedat', 'vatdat', 'created_at', 'updated_at', 'vat_period', 'recall_at'], 'safe'],
-            [['status', 'approve_status', 'created_by', 'updated_by', 'department_id', 'company_id', 'currency_id', 'is_deposit', 'is_recall', 'recall_by'], 'integer'],
+            [['docdat', 'duedat', 'vatdat', 'created_at', 'updated_at', 'vat_period', 'recall_at', 'payment_due_date'], 'safe'],
+            [['status', 'approve_status', 'created_by', 'updated_by', 'department_id', 'company_id', 'currency_id', 'is_deposit', 'is_recall', 'recall_by', 'is_advance'], 'integer'],
             [['vatpr0', 'amount', 'unitpr', 'vat_percent', 'vat_amount', 'tax_percent', 'tax_amount', 'total_amount', 'exchange_rate'], 'number', 'min' => 0],
             [['tax_amount', 'total_amount'], 'default', 'value' => 0],
             [['remark', 'recall_reason'], 'string'],
@@ -136,6 +136,8 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             'total_amount' => 'รวมสุทธิ',
             'remark' => 'หมายเหตุ',
             'status' => 'สถานะ',
+            'is_advance' => 'จ่ายเงินล่วงหน้า/มัดจำ (Advance)',
+            'payment_due_date' => 'วันที่นัดจ่ายเงิน/โอนมัดจำ',
             'approve_status' => 'สถานะอนุมัติ',
             'is_recall' => 'สถานะขอ Recall',
             'recall_reason' => 'เหตุผลการขอ Recall',
