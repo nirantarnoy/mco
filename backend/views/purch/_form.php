@@ -454,6 +454,36 @@ $this->registerJs($autocompleteJs);
                             'maxlength' => true,
                             'placeholder' => 'REF NO'
                         ]) ?>
+
+                        <!-- ส่วนจัดการชำระเงินมัดจำล่วงหน้า (Advance Payment) -->
+                        <div class="card card-outline card-warning p-2 mb-3 bg-light border-warning">
+                            <div class="mb-1">
+                                <?= $form->field($model, 'is_advance')->checkbox([
+                                    'id' => 'purch-is_advance',
+                                    'onchange' => 'jQuery("#advance-fields-wrapper").toggle(this.checked);'
+                                ])->label('โอนเงินมัดจำ/จ่ายล่วงหน้าก่อนรับสินค้า (Advance Payment)', ['class' => 'font-weight-bold text-dark']) ?>
+                            </div>
+                            <div id="advance-fields-wrapper" style="<?= $model->is_advance ? '' : 'display: none;' ?>">
+                                <?= $form->field($model, 'invoice_no')->textInput([
+                                    'placeholder' => 'ระบุเลขที่ใบแจ้งหนี้ / ใบวางบิล / Quotation',
+                                    'id' => 'purch-invoice_no'
+                                ])->label('เลขที่ใบแจ้งหนี้/ใบวางบิล') ?>
+                                <?= $form->field($model, 'payment_due_date')->widget(DatePicker::class, [
+                                    'options' => [
+                                        'placeholder' => 'เลือกวันที่นัดโอนเงินมัดจำ',
+                                        'id' => 'purch-payment_due_date'
+                                    ],
+                                    'pluginOptions' => [
+                                        'autoclose' => true,
+                                        'format' => 'yyyy-mm-dd',
+                                        'todayHighlight' => true,
+                                    ]
+                                ])->label('วันที่นัดจ่ายเงิน/โอนมัดจำ') ?>
+                                <small class="text-muted d-block mt-n2 mb-2">
+                                    <i class="fas fa-info-circle text-warning"></i> ระบบจะแจ้งเตือนไปยังหน้า <strong>ใบสำคัญจ่าย (PV)</strong> เมื่อถึงกำหนดวันนัดโอน
+                                </small>
+                            </div>
+                        </div>
                         <?= $form->field($model, 'exchange_rate')->textInput([
                             'maxlength' => true,
                             'type' => 'number',

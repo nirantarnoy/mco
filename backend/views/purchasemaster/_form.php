@@ -538,6 +538,26 @@ JS
                                     <?= $form->field($model, 'duedat')->textInput(['readonly' => true, 'placeholder'=>'คำนวณจากเครดิต'])->label(false) ?>
                                 </div>
                             </div>
+                            
+                            <!-- ตัวเลือก Advance สำหรับ None PR -->
+                            <div class="card card-outline card-warning p-2 mb-2 bg-light border-warning">
+                                <div class="custom-control custom-checkbox mb-1">
+                                    <?= $form->field($model, 'is_advance')->checkbox([
+                                        'id' => 'npr-is_advance',
+                                        'onchange' => '$("#npr-advance-due-wrap").toggle(this.checked);'
+                                    ])->label('จ่ายเงินล่วงหน้า/ยังไม่ได้รับสินค้า (Advance)', ['class' => 'font-weight-bold text-dark']) ?>
+                                </div>
+                                <div id="npr-advance-due-wrap" style="<?= $model->is_advance ? '' : 'display: none;' ?>">
+                                    <label class="small text-danger font-weight-bold mb-1">วันที่นัดจ่ายเงิน/โอนมัดจำ:</label>
+                                    <?= $form->field($model, 'payment_due_date')->input('date', [
+                                        'class' => 'form-control form-control-sm',
+                                        'id' => 'npr-payment_due_date'
+                                    ])->label(false) ?>
+                                    <small class="text-muted d-block mt-n1">
+                                        <i class="fas fa-info-circle text-warning"></i> ระบบจะแจ้งเตือนไปยังหน้า <strong>ใบสำคัญจ่าย (PV)</strong> เมื่อถึงกำหนด
+                                    </small>
+                                </div>
+                            </div>
                             <div class="form-group row mb-2">
                                 <label class="col-sm-4 col-form-label">หมายเหตุ</label>
                                 <div class="col-sm-8">
