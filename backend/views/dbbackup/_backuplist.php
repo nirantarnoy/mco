@@ -40,57 +40,15 @@ $syncSecretKey = \backend\controllers\DbbackupController::getSyncSecretKey();
 
 <!-- Control Panel Card -->
 <div class="card card-outline card-primary shadow-sm mb-4">
-    <div class="card-header bg-light">
-        <h3 class="card-title text-primary font-weight-bold">
-            <i class="fas fa-cogs mr-1"></i> แผงควบคุมการสำรองข้อมูล (Backup Control Center)
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h3 class="card-title text-primary font-weight-bold mb-0">
+            <i class="fas fa-database mr-1"></i> แผงควบคุมการสำรองข้อมูล (Database Backup)
         </h3>
-    </div>
-    <div class="card-body">
-        <div class="row align-items-center">
-            <div class="col-lg-7 mb-3 mb-lg-0">
-                <label class="form-label font-weight-bold text-secondary mb-1">
-                    <i class="fas fa-folder-open text-warning mr-1"></i> โฟลเดอร์ปลายทางสำหรับจัดเก็บ / Copy ไฟล์รูปภาพและไฟล์แนบ (Local Destination Path):
-                </label>
-                <div class="input-group">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text"><i class="fas fa-hdd text-info"></i></span>
-                    </div>
-                    <input type="text" id="dest-path-input" class="form-control" value="<?= htmlspecialchars($defaultSourceDir) ?>" placeholder="เช่น D:\Backup_Uploads หรือ E:\mco_backup\uploads (หรือกด Browse...)">
-                    <div class="input-group-append">
-                        <button class="btn btn-primary" type="button" id="btn-browse-dest" 
-                                data-toggle="modal" data-target="#modal-folder-picker" 
-                                data-bs-toggle="modal" data-bs-target="#modal-folder-picker" 
-                                title="เปิดหน้าต่างเลือกโฟลเดอร์">
-                            <i class="fas fa-folder-open mr-1"></i> Browse...
-                        </button>
-                        <button class="btn btn-outline-secondary" type="button" id="btn-reset-dest" title="ใส่โฟลเดอร์ uploads ของโปรเจกต์นี้">
-                            <i class="fas fa-folder text-warning mr-1"></i> โฟลเดอร์ระบบเดิม
-                        </button>
-                    </div>
-                </div>
-                <small class="text-muted d-block mt-1">
-                    <i class="fas fa-info-circle"></i> กดปุ่ม <strong>Browse...</strong> เพื่อเลือกโฟลเดอร์ปลายทาง หรือพิมพ์ระบุ Path เองได้ตามต้องการ
-                </small>
-            </div>
-            <div class="col-lg-5 text-lg-right">
-                <div class="btn-group-vertical btn-group-sm d-sm-none w-100"></div>
-                <div class="d-flex flex-wrap justify-content-lg-end gap-2" style="gap: 8px;">
-                    <!-- ปุ่ม 1: Backup MySQL อย่างเดียว -->
-                    <button type="button" class="btn btn-primary" id="btn-backup-mysql" onclick="startBackupMysql()">
-                        <i class="fas fa-database mr-1"></i> 1. สำรองเฉพาะ MySQL
-                    </button>
-
-                    <!-- ปุ่ม 2: Copy ไฟล์ Uploads อย่างเดียว -->
-                    <button type="button" class="btn btn-info text-white" id="btn-sync-uploads" onclick="startSyncUploads()">
-                        <i class="fas fa-images mr-1"></i> 2. Copy ไฟล์ Uploads
-                    </button>
-
-                    <!-- ปุ่ม 3: สำรองทั้งสองอย่างพร้อมกัน -->
-                    <button type="button" class="btn btn-success" id="btn-backup-all" onclick="startBackupAll()">
-                        <i class="fas fa-layer-group mr-1"></i> 3. สำรองทั้งหมด (DB + ไฟล์)
-                    </button>
-                </div>
-            </div>
+        <div>
+            <!-- ปุ่ม Backup MySQL แบบ Manual พร้อม Progress Bar & Modal -->
+            <button type="button" class="btn btn-primary btn-sm font-weight-bold shadow-sm" id="btn-backup-mysql" onclick="startBackupMysql()">
+                <i class="fas fa-database mr-1"></i> สำรองฐานข้อมูล MySQL เดี๋ยวนี้ (Manual Backup)
+            </button>
         </div>
     </div>
 </div>
