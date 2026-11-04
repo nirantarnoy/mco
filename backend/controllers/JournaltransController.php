@@ -673,13 +673,19 @@ class JournaltransController extends BaseController
     public function actionAddDocFile()
     {
         $id = \Yii::$app->request->post('id');
+        $redirect_to = \Yii::$app->request->post('redirect_to', 'update');
         if ($id) {
             $uploaded = UploadedFile::getInstancesByName('file_doc');
             if (!empty($uploaded)) {
+                $uploadDir = \Yii::getAlias('@backend/web/uploads/journal_trans_doc');
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
                 $loop = 0;
                 foreach ($uploaded as $file) {
                     $upfiles = "worker_" . time() . "_" . $loop . "." . $file->getExtension();
-                    if ($file->saveAs('uploads/journal_trans_doc/' . $upfiles)) {
+                    $destination = $uploadDir . '/' . $upfiles;
+                    if ($file->saveAs($destination) || $file->saveAs('uploads/journal_trans_doc/' . $upfiles)) {
                         $model_doc = new \common\models\JournalTransDoc();
                         $model_doc->journal_trans_id = $id;
                         $model_doc->doc_name = $upfiles;
@@ -689,27 +695,34 @@ class JournaltransController extends BaseController
                     }
                     $loop++;
                 }
+                \Yii::$app->session->setFlash('success', 'อัพโหลดเอกสารแนบเรียบร้อยแล้ว');
             }
-
         }
-        return $this->redirect(['update', 'id' => $id]);
+        return $this->redirect([$redirect_to == 'view' ? 'view' : 'update', 'id' => $id]);
     }
 
     public function actionDeleteDocFile()
     {
         $id = \Yii::$app->request->post('id');
+        $redirect_to = \Yii::$app->request->post('redirect_to', 'update');
         $doc_delete_list = trim(\Yii::$app->request->post('doc_delete_list'));
         if ($id) {
             $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' => $id, 'doc_name' => $doc_delete_list])->one();
             if ($model_doc) {
+                $docName = $model_doc->doc_name;
                 if ($model_doc->delete()) {
-                    if (file_exists('uploads/journal_trans_doc/' . $model_doc->doc_name)) {
-                        unlink('uploads/journal_trans_doc/' . $model_doc->doc_name);
+                    $uploadDir = \Yii::getAlias('@backend/web/uploads/journal_trans_doc');
+                    if (file_exists($uploadDir . '/' . $docName)) {
+                        @unlink($uploadDir . '/' . $docName);
                     }
+                    if (file_exists('uploads/journal_trans_doc/' . $docName)) {
+                        @unlink('uploads/journal_trans_doc/' . $docName);
+                    }
+                    \Yii::$app->session->setFlash('success', 'ลบเอกสารแนบเรียบร้อยแล้ว');
                 }
             }
         }
-        return $this->redirect(['update', 'id' => $id]);
+        return $this->redirect([$redirect_to == 'view' ? 'view' : 'update', 'id' => $id]);
     }
 
     /**

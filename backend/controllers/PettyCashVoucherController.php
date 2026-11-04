@@ -228,25 +228,20 @@ class PettyCashVoucherController extends BaseController
         $oldApprovedBy = $model->approved_by;
         $oldApproveStatus = $model->approve_status;
         $oldApprovedDate = $model->approved_date;
+        $oldAmount = $model->amount;
 
         if ($model->load(Yii::$app->request->post())) {
-            $currentUser = !Yii::$app->user->isGuest ? Yii::$app->user->identity->username : '';
-            if ($isCurrentlyApproved && $currentUser !== 'mcoadmin') {
-                // อนุมัติแล้ว อนุญาตให้เฉพาะแนบไฟล์เพิ่มเติม ไม่แก้รายละเอียดและคงสถานะอนุมัติเดิมไว้
-                $this->saveUploadedFiles($model);
-                // ป้องกันกรณี approved_by หลุด
-                if (empty($model->approved_by)) {
-                    $model->approved_by = $oldApprovedBy;
-                    $model->approve_status = $oldApproveStatus;
-                    $model->approved_date = $oldApprovedDate;
-                    $model->save(false);
-                }
-                Yii::$app->session->setFlash('success', 'บันทึกไฟล์แนบเพิ่มเติมเรียบร้อยแล้ว');
-                return $this->redirect(['view', 'id' => $model->id]);
+            // หากเอกสารได้รับการอนุมัติแล้ว และมีการแก้ไข ให้คงข้อมูลการอนุมัติเดิมไว้ (ไม่ต้องรีคอล)
+            if ($isCurrentlyApproved) {
+                $model->approved_by = $oldApprovedBy;
+                $model->approve_status = $oldApproveStatus;
+                $model->approved_date = $oldApprovedDate;
+                // รักษายอดเงินรวมเดิม ป้องกันการแก้ยอดที่กระทบกับวงเงินที่อนุมัติไปแล้ว
+                $model->amount = $oldAmount;
             }
 
             // ตรวจสอบว่าจำนวนเงินที่จ่ายไม่เกินยอดคงเหลือ (แจ้งเตือนเท่านั้น)
-            if ($model->amount > $currentBalance) {
+            if (!$isCurrentlyApproved && $model->amount > $currentBalance) {
                 \Yii::$app->session->setFlash('warning',
                     'ยอดเงินคงเหลือติดลบ
                 <br>ยอดคงเหลือปัจจุบัน: ' . number_format($currentBalance, 2) . ' บาท
@@ -257,18 +252,23 @@ class PettyCashVoucherController extends BaseController
             $transaction = Yii::$app->db->beginTransaction();
             try {
                 $model->updated_by = \Yii::$app->user->id;
-                    if ($model->save()) {
-                        // Delete existing details
-                        PettyCashDetail::deleteAll(['voucher_id' => $model->id]);
+                if ($model->save()) {
+                    // Delete existing details
+                    PettyCashDetail::deleteAll(['voucher_id' => $model->id]);
 
-                        // Handle new details
-                        $detailsData = Yii::$app->request->post('PettyCashDetail', []);
-                        // print_r($detailsData);return;
-                        $this->saveDetails($model, $detailsData);
+                    // Handle new details
+                    $detailsData = Yii::$app->request->post('PettyCashDetail', []);
+                    $this->saveDetails($model, $detailsData);
 
-                        $this->saveUploadedFiles($model);
+                    // หากได้รับการอนุมัติแล้ว ให้รักษายอด amount ของ voucher เดิมไว้เสมอ
+                    if ($isCurrentlyApproved) {
+                        $model->amount = $oldAmount;
+                        $model->save(false);
+                    }
 
-                        $transaction->commit();
+                    $this->saveUploadedFiles($model);
+
+                    $transaction->commit();
                     Yii::$app->session->setFlash('success', 'แก้ไขข้อมูลเรียบร้อยแล้ว');
                     return $this->redirect(['view', 'id' => $model->id]);
                 }

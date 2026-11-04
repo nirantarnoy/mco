@@ -1,6 +1,7 @@
 <?php
 
 use yii\helpers\Html;
+use yii\helpers\Url;
 use yii\widgets\DetailView;
 use yii\grid\GridView;
 use yii\data\ArrayDataProvider;
@@ -558,44 +559,92 @@ $model_doc = \common\models\JournalTransDoc::find()->where(['journal_trans_id' =
         </div>
 
         <br/>
-        <div class="label">
-            <h4>เอกสารแนบ</h4>
-        </div>
-        <div class="row">
-            <div class="col-lg-8">
-                <table class="table table-bordered table-striped" style="width: 100%">
-                    <thead>
-                    <tr>
-                        <th style="width: 5%;text-align: center">#</th>
-                        <th style="width: 50%;text-align: center">ชื่อไฟล์</th>
-                        <th style="width: 10%;text-align: center">ดูเอกสาร</th>
-                        <th style="width: 5%;text-align: center">-</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <?php if ($model_doc != null): ?>
-
-                        <?php foreach ($model_doc as $key => $value): ?>
-                            <tr>
-                                <td style="width: 10px;text-align: center"><?= $key + 1 ?></td>
-                                <td><?= $value->doc_name ?></td>
-                                <td style="text-align: center">
-                                    <a href="<?= Yii::$app->request->BaseUrl . '/uploads/journal_trans_doc/' . $value->doc_name ?>"
-                                       target="_blank">
-                                        ดูเอกสาร
-                                    </a>
-                                </td>
-                                <td style="text-align: center">
-                                    <!--                                <div class="btn btn-danger" data-var="-->
-                                    <?php //= trim($value->doc_name) ?><!--" onclick="delete_doc($(this))">ลบ</div>-->
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                    </tbody>
-                </table>
+        <div class="panel panel-default">
+            <div class="panel-heading" style="background-color: #f8f9fa; display: flex; justify-content: space-between; align-items: center;">
+                <h4 class="panel-title" style="margin: 0; font-weight: bold;">
+                    <i class="fas fa-paperclip me-2 text-primary"></i> เอกสารแนบ (Attachments)
+                </h4>
+                <span class="badge bg-secondary"><?= count($model_doc) ?> ไฟล์</span>
             </div>
-            <div class="col-lg-1"></div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <table class="table table-bordered table-hover" style="width: 100%; margin-bottom: 15px;">
+                            <thead class="thead-light">
+                            <tr>
+                                <th style="width: 5%; text-align: center">#</th>
+                                <th style="width: 55%; text-align: left">ชื่อไฟล์</th>
+                                <th style="width: 20%; text-align: center">ดูเอกสาร</th>
+                                <th style="width: 20%; text-align: center">จัดการ</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <?php if (!empty($model_doc)): ?>
+                                <?php foreach ($model_doc as $key => $value): ?>
+                                    <tr>
+                                        <td style="text-align: center; vertical-align: middle;"><?= $key + 1 ?></td>
+                                        <td style="vertical-align: middle; word-break: break-all;">
+                                            <i class="far fa-file-alt me-1 text-muted"></i> <?= Html::encode($value->doc_name) ?>
+                                        </td>
+                                        <td style="text-align: center; vertical-align: middle;">
+                                            <a class="btn btn-sm btn-outline-primary"
+                                               href="<?= Yii::$app->request->baseUrl . '/uploads/journal_trans_doc/' . $value->doc_name ?>"
+                                               target="_blank">
+                                                <i class="fas fa-external-link-alt"></i> เปิดดูเอกสาร
+                                            </a>
+                                        </td>
+                                        <td style="text-align: center; vertical-align: middle;">
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    data-var="<?= Html::encode(trim($value->doc_name)) ?>"
+                                                    onclick="delete_journal_doc($(this))">
+                                                <i class="fas fa-trash-alt"></i> ลบ
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted" style="padding: 15px;">
+                                        <em>ยังไม่มีเอกสารแนบ</em>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- กล่องอัพโหลดเอกสารแนบ (สามารถอัพโหลดได้แม้สถานะจะเป็น Approved) -->
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card bg-light p-3" style="border: 1px dashed #007bff; border-radius: 6px; background-color: #f8fbff;">
+                            <form id="form-add-doc-file" action="<?= Url::to(['journaltrans/add-doc-file'], true) ?>" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="id" value="<?= $model->id ?>">
+                                <input type="hidden" name="redirect_to" value="view">
+                                <div class="form-group mb-2">
+                                    <label class="form-label" style="font-weight: 600;">
+                                        <i class="fas fa-upload me-1 text-primary"></i> เพิ่มไฟล์เอกสารแนบใหม่ (เลือกได้หลายไฟล์)
+                                    </label>
+                                    <input type="file" class="form-control" name="file_doc[]" multiple required>
+                                </div>
+                                <div class="mt-2">
+                                    <button type="submit" class="btn btn-info text-white">
+                                        <i class="fas fa-cloud-upload-alt"></i> อัพโหลดเอกสารแนบ
+                                    </button>
+                                    <small class="text-muted ms-2">รองรับไฟล์เอกสาร เช่น PDF, JPG, PNG เป็นต้น</small>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form ซ่อนสำหรับส่งคำขอลบไฟล์ -->
+                <form id="form-delete-doc-file" action="<?= Url::to(['journaltrans/delete-doc-file'], true) ?>" method="post">
+                    <input type="hidden" name="id" value="<?= $model->id ?>">
+                    <input type="hidden" name="redirect_to" value="view">
+                    <input type="hidden" class="delete-doc-list" name="doc_delete_list" value="">
+                </form>
+            </div>
         </div>
         <br/>
 
@@ -722,4 +771,15 @@ $this->registerJs("
         $('.alert').fadeOut('slow');
     }, 5000);
 ");
+
+$script = <<< JS
+function delete_journal_doc(e) {
+    var fileName = e.attr('data-var');
+    if (fileName && confirm('คุณต้องการลบไฟล์แนบนี้ใช่หรือไม่?')) {
+        $('.delete-doc-list').val(fileName);
+        $('#form-delete-doc-file').submit();
+    }
+}
+JS;
+$this->registerJs($script, \yii\web\View::POS_END);
 ?>

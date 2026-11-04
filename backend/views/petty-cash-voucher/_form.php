@@ -348,21 +348,17 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
         <div class="text-center">
             <?php 
             $currentUser = !Yii::$app->user->isGuest ? Yii::$app->user->identity->username : '';
-            $isApprovedPCV = (!empty($model->approved_by) && $model->approve_status == 1 && !$model->isNewRecord && $currentUser !== 'mcoadmin');
+            $isApprovedPCV = (!empty($model->approved_by) && $model->approve_status == 1 && !$model->isNewRecord);
             ?>
             <?php if ($isApprovedPCV): ?>
-                <div class="alert alert-warning mb-3 py-2 px-3 d-inline-block text-left" style="text-align: left;">
-                    <i class="fas fa-lock me-1"></i> <strong>ใบสำคัญจ่ายเงินสดย่อยนี้ได้รับการอนุมัติแล้ว:</strong> ไม่สามารถแก้ไขรายละเอียดรายการได้ แต่สามารถเลือกไฟล์แนบด้านบนแล้วกดปุ่มบันทึกเพื่อแนบไฟล์เพิ่มเติมได้
+                <div class="alert alert-info mb-3 py-2 px-3 d-inline-block text-left" style="text-align: left;">
+                    <i class="fas fa-info-circle me-1"></i> <strong>ใบสำคัญจ่ายนี้ได้รับการอนุมัติแล้ว:</strong> สามารถแก้ไขวันที่, รายละเอียด, ใบงาน และเอกสารแนบได้โดยไม่ต้องทำการ Recall
                 </div>
                 <br/>
-                <?= Html::submitButton('<i class="fas fa-upload"></i> บันทึกไฟล์แนบเพิ่มเติม', [
-                    'class' => 'btn btn-primary'
-                ]) ?>
-            <?php else: ?>
-                <?= Html::submitButton($model->isNewRecord ? '<i class="fas fa-save"></i> บันทึก' : '<i class="fas fa-save"></i> แก้ไข', [
+            <?php endif; ?>
+            <?= Html::submitButton($model->isNewRecord ? '<i class="fas fa-save"></i> บันทึก' : '<i class="fas fa-save"></i> แก้ไข', [
                     'class' => $model->isNewRecord ? 'btn btn-success' : 'btn btn-primary'
                 ]) ?>
-            <?php endif; ?>
             <?php if (!$model->isNewRecord): ?>
                 <?= Html::a('<i class="fas fa-print"></i> พิมพ์', ['print', 'id' => $model->id], [
                     'class' => 'btn btn-info',
@@ -774,22 +770,18 @@ $script_disable = <<< JS
 $(document).ready(function() {
     var isApproved = {$isApproved};
     if (isApproved) {
-        // Make inputs readonly (except file inputs and hidden inputs)
-        $('#petty-cash-form input:not([type="file"]):not([type="hidden"]), #petty-cash-form textarea').prop('readonly', true).css('background-color', '#e9ecef');
+        // เมื่ออนุมัติแล้ว ล็อกเฉพาะช่องที่ไม่ควรเปลี่ยน (ยอดเงินผู้จำหน่าย/ผู้จัดทำ/ผู้อนุมัติ)
+        // ช่องวันที่ ($model->date), วันที่รายการ (detail_date), รายละเอียด (detail), ใบงาน (job_ref_detail) อนุญาตให้แก้ไขได้
+        $('#petty-cash-voucher-pcv_no, #petty-cash-voucher-amount, #petty-cash-voucher-issued_by, #petty-cash-voucher-approved_by').prop('readonly', true).css('background-color', '#e9ecef');
         
-        // Prevent interacting with selects
-        $('#petty-cash-form select').css({
-            'pointer-events': 'none',
-            'background-color': '#e9ecef',
-            'touch-action': 'none'
-        }).attr('tabindex', '-1').on('mousedown', function(e) { e.preventDefault(); });
+        // ล็อกเฉพาะช่องตัวเลขการเงินในรายการเพื่อไม่ให้กระทบยอดรวมที่อนุมัติไปแล้ว
+        $('#petty-cash-form .amount-input, #petty-cash-form .vat-input, #petty-cash-form .vat-prohibit-input, #petty-cash-form .wht-input, #petty-cash-form .other-input, #petty-cash-form .total-input').prop('readonly', true).css('background-color', '#e9ecef');
         
-        $('.select2-container').css('pointer-events', 'none');
+        // ล็อกผู้จำหน่าย (vendor select2)
+        $('#petty-cash-voucher-vendor_id').closest('.form-group').find('.select2-container').css('pointer-events', 'none');
         
-        // Hide add / remove detail buttons
-        $('#add-row, .btn-add-row, .btn-remove-row, .btn-danger:contains("ลบ")').filter(function() {
-            return $(this).closest('#petty-cash-form').length > 0;
-        }).hide();
+        // ซ่อนปุ่มเพิ่ม/ลบแถวรายการเมื่ออนุมัติแล้ว
+        $('#add-row, .btn-add-row, .btn-remove-row').hide();
     }
 });
 JS;
