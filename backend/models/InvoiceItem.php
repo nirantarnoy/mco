@@ -37,7 +37,8 @@ class InvoiceItem extends ActiveRecord
     {
         return [
             [['invoice_id', 'item_description'], 'required'],
-            [['invoice_id', 'item_seq', 'sort_order','product_id','unit_id'], 'integer'],
+            [['invoice_id', 'item_seq', 'sort_order','product_id','unit_id', 'has_vat'], 'integer'],
+            [['has_vat'], 'default', 'value' => 1],
             [['item_description'], 'string'],
             [['quantity', 'unit_price', 'amount'], 'number', 'min' => 0],
             [['quantity'], 'default', 'value' => 1.000],

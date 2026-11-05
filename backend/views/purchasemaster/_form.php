@@ -119,6 +119,10 @@ function addDetailRow() {
                     name='PurchaseDetail[` + detailRowIndex + `][amount]' 
                     value='0' readonly>
             </td>
+            <td class='text-center align-middle'>
+                <input type='hidden' name='PurchaseDetail[` + detailRowIndex + `][has_vat]' value='0'>
+                <input type='checkbox' class='has-vat-checkbox' name='PurchaseDetail[` + detailRowIndex + `][has_vat]' value='1' checked title='คิด VAT'>
+            </td>
             <td class='text-center'>
                 <button type='button' class='btn btn-danger btn-sm btn-remove-row'>
                     <i class='fas fa-trash'></i>
@@ -177,21 +181,35 @@ function calculateTotal(recalcTax) {
         recalcTax = false;
     }
     var subtotal = 0;
+    var vatableSubtotal = 0;
     
-    $('.amount-input').each(function() {
-        subtotal += parseFloat($(this).val()) || 0;
+    $('.detail-row').each(function() {
+        var rowAmount = parseFloat($(this).find('.amount-input').val()) || 0;
+        subtotal += rowAmount;
+        var hasVat = $(this).find('.has-vat-checkbox').is(':checked');
+        if (hasVat) {
+            vatableSubtotal += rowAmount;
+        }
     });
     
     var discount = parseFloat($('#purchasemaster-disc').val()) || 0;
     var afterDiscount = subtotal - discount;
     if (afterDiscount < 0) afterDiscount = 0;
 
+    // คำนวณสัดส่วนส่วนลดสำหรับยอดที่มี VAT (ถ้ามีส่วนลดท้ายบิล)
+    var vatableAfterDiscount = vatableSubtotal;
+    if (subtotal > 0 && discount > 0) {
+        var discountRatio = (subtotal - discount) / subtotal;
+        vatableAfterDiscount = vatableSubtotal * discountRatio;
+    }
+    if (vatableAfterDiscount < 0) vatableAfterDiscount = 0;
+
     var vatPercent = parseFloat($('#purchasemaster-vat_percent').val()) || 0;
     var taxPercent = parseFloat($('#purchasemaster-tax_percent').val()) || 0;
     
-    var vatAmount = (afterDiscount * vatPercent) / 100;
+    var vatAmount = (vatableAfterDiscount * vatPercent) / 100;
     
-    $('#purchasemaster-vatpr0').val(afterDiscount.toFixed(2));
+    $('#purchasemaster-vatpr0').val(vatableAfterDiscount.toFixed(2));
     $('#purchasemaster-vat_amount').val(vatAmount.toFixed(2));
 
     if (recalcTax) {
@@ -235,6 +253,10 @@ function calculateGrandTotal() {
     $('#purchasemaster-total_amount').val(total.toFixed(2));
     $('#display-total').text(total.toFixed(2));
 }
+
+$(document).on('change', '.has-vat-checkbox', function() {
+    calculateTotal(false);
+});
 
 $(document).on('input', '#purchasemaster-disc, #purchasemaster-vat_percent', function() {
     calculateTotal(false);
@@ -608,6 +630,7 @@ JS
                         <th width="120" class="text-center">ราคาต่อหน่วย</th>
                         <th width="150" class="text-center">ส่วนลดแต่ละรายการ</th>
                         <th width="150" class="text-center">จำนวนเงิน</th>
+                        <th width="60" class="text-center">คิด VAT</th>
                         <th width="50" class="text-center">ลบ</th>
                     </tr>
                     </thead>
@@ -649,6 +672,10 @@ JS
                                     <input type="number" step="0.01" class="form-control form-control-sm text-right amount-input"
                                            name="PurchaseDetail[<?= $index ?>][amount]"
                                            value="<?= $detail->amount ?>" readonly placeholder="คำนวณจาก (จำนวน x ราคาต่อหน่วย)">
+                                </td>
+                                <td class="text-center align-middle">
+                                    <input type="hidden" name="PurchaseDetail[<?= $index ?>][has_vat]" value="0">
+                                    <input type="checkbox" class="has-vat-checkbox" name="PurchaseDetail[<?= $index ?>][has_vat]" value="1" <?= ($detail->has_vat !== 0 && $detail->has_vat !== '0') ? 'checked' : '' ?> title="คิด VAT">
                                 </td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-danger btn-sm btn-remove-row">

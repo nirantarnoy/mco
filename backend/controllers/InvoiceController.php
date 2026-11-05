@@ -511,6 +511,7 @@ class InvoiceController extends BaseController
                 'unit_id' => isset($itemData['unit_id']) && !empty($itemData['unit_id']) ? (int)$itemData['unit_id'] : 0,
                 'unit' => $unitName,
                 'unit_price' => !empty($itemData['unit_price']) ? (float)$itemData['unit_price'] : 0.00,
+                'has_vat' => isset($itemData['has_vat']) ? (int)$itemData['has_vat'] : 1,
             ];
 
             $item->attributes = $cleanData;
@@ -710,6 +711,7 @@ class InvoiceController extends BaseController
                     'amount' => ($jobItem->qty * $jobItem->line_price),
                     'product_id' => $jobItem->product_id,
                     'notes' => $jobItem->note,
+                    'has_vat' => 1,
                 ];
             }
 

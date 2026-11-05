@@ -203,10 +203,16 @@ function formatNumber(num, decimals) {
 // ฟังก์ชันคำนวณยอดรวมทั้งใบ
 function calculateTotal(source) {
     var subtotal = 0;
+    var vatableSubtotal = 0;
     
-    // รวมยอดรายการ
-    $('.amount-input').each(function() {
-        subtotal += parseFloat($(this).val()) || 0;
+    // รวมยอดรายการ และยอดเฉพาะรายการที่คิด VAT
+    $('#items-table tbody tr').each(function() {
+        var rowAmount = parseFloat($(this).find('.amount-input').val()) || 0;
+        subtotal += rowAmount;
+        var hasVat = $(this).find('.has-vat-checkbox').is(':checked');
+        if (hasVat) {
+            vatableSubtotal += rowAmount;
+        }
     });
     
     // แสดงยอดรวม
@@ -247,10 +253,19 @@ function calculateTotal(source) {
     
     // ยอดหลังหักส่วนลด
     var afterDiscount = subtotal - discountAmount;
+    if (afterDiscount < 0) afterDiscount = 0;
+
+    // คำนวณสัดส่วนส่วนลดสำหรับยอดที่คิด VAT (กรณีมีส่วนลดท้ายบิล)
+    var vatableAfterDiscount = vatableSubtotal;
+    if (subtotal > 0 && discountAmount > 0) {
+        var discountRatio = (subtotal - discountAmount) / subtotal;
+        vatableAfterDiscount = vatableSubtotal * discountRatio;
+    }
+    if (vatableAfterDiscount < 0) vatableAfterDiscount = 0;
     
-    // คำนวณ VAT
+    // คำนวณ VAT เฉพาะรายการที่เลือกคำนวณ VAT
     var vatPercent = parseFloat($('#invoice-vat_percent').val()) || 0;
-    var vatAmount = afterDiscount * (vatPercent / 100);
+    var vatAmount = vatableAfterDiscount * (vatPercent / 100);
     $('#invoice-vat_amount').val(formatNumber(vatAmount, 2));
     $('#invoice-vat_amount-hidden').val(vatAmount.toFixed(4));
     
@@ -299,6 +314,10 @@ function addItemRow() {
         '</td>' +
         '<td>' +
             '<input type="text" name="InvoiceItem[' + rowCount + '][amount]" class="form-control form-control-sm amount-input text-right" readonly style="background-color: #f8f9fa;" value="0.00">' +
+        '</td>' +
+        '<td class="text-center align-middle">' +
+            '<input type="hidden" name="InvoiceItem[' + rowCount + '][has_vat]" value="0">' +
+            '<input type="checkbox" class="has-vat-checkbox" name="InvoiceItem[' + rowCount + '][has_vat]" value="1" checked title="คิด VAT">' +
         '</td>' +
         '<td class="text-center">' +
             '<button type="button" class="btn btn-sm btn-danger btn-remove-item" title="ลบรายการ"><i class="fas fa-trash"></i></button>' +
@@ -382,6 +401,10 @@ function loadJobItems(jobId) {
                         '</td>' +
                         '<td>' +
                             '<input type="text" name="InvoiceItem[' + rowCount + '][amount]" class="form-control form-control-sm amount-input text-right" readonly style="background-color: #f8f9fa;" value="' + (item.amount || 0) + '">' +
+                        '</td>' +
+                        '<td class="text-center align-middle">' +
+                            '<input type="hidden" name="InvoiceItem[' + rowCount + '][has_vat]" value="0">' +
+                            '<input type="checkbox" class="has-vat-checkbox" name="InvoiceItem[' + rowCount + '][has_vat]" value="1" ' + (item.has_vat === 0 || item.has_vat === '0' ? '' : 'checked') + ' title="คิด VAT">' +
                         '</td>' +
                         '<td class="text-center">' +
                             '<button type="button" class="btn btn-sm btn-danger btn-remove-item" title="ลบรายการ"><i class="fas fa-trash"></i></button>' +
@@ -522,6 +545,10 @@ function showMessage(type, message) {
 
 $(document).on('input', '.quantity-input, .unit-price-input', function() {
     calculateItemAmount($(this).closest('tr'));
+});
+
+$(document).on('change', '.has-vat-checkbox', function() {
+    calculateTotal();
 });
 
 $(document).on('input', '#invoice-discount_percent, #invoice-vat_percent', function() {
@@ -784,8 +811,9 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                             <th width="10%">จำนวน</th>
                             <th width="10%">หน่วย</th>
                             <th width="15%">ราคาต่อหน่วย</th>
-                            <th width="15%">จำนวนเงิน</th>
-                            <th width="10%"></th>
+                            <th width="12%">จำนวนเงิน</th>
+                            <th width="8%" class="text-center">คิด VAT</th>
+                            <th width="5%"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -842,6 +870,13 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                         'readonly' => true,
                                         'style' => 'background-color: #f8f9fa;'
                                     ]) ?>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <input type="hidden" name="InvoiceItem[<?= $index ?>][has_vat]" value="0">
+                                    <input type="checkbox" class="has-vat-checkbox" name="InvoiceItem[<?= $index ?>][has_vat]" value="1" <?= ($item->has_vat !== 0 && $item->has_vat !== '0') ? 'checked' : '' ?> <?= $isCopyReceipt ? 'disabled' : '' ?> title="คิด VAT">
+                                    <?php if ($isCopyReceipt): ?>
+                                        <input type="hidden" name="InvoiceItem[<?= $index ?>][has_vat]" value="<?= ($item->has_vat !== 0 && $item->has_vat !== '0') ? 1 : 0 ?>">
+                                    <?php endif; ?>
                                 </td>
                                 <td class="text-center">
                                     <?php if (!$isCopyReceipt): ?>

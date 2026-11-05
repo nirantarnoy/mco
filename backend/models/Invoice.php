@@ -499,9 +499,13 @@ class Invoice extends ActiveRecord
     public function calculateAmounts()
     {
         $subtotal = 0;
+        $vatableSubtotal = 0;
         $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $this->id])->all();
         foreach ($model_line as $item) {
-            $subtotal += $item->amount;
+            $subtotal += (float)$item->amount;
+            if ($item->has_vat !== 0 && $item->has_vat !== '0') {
+                $vatableSubtotal += (float)$item->amount;
+            }
         }
 
         $this->subtotal = $subtotal;
@@ -511,14 +515,25 @@ class Invoice extends ActiveRecord
             $this->discount_amount = $subtotal * ($this->discount_percent / 100);
         }
 
-        $afterDiscount = $subtotal - $this->discount_amount;
+        $afterDiscount = $subtotal - (float)$this->discount_amount;
+        if ($afterDiscount < 0) $afterDiscount = 0;
 
-        // Calculate VAT
+        // Calculate vatable portion after discount (if discount applied)
+        $vatableAfterDiscount = $vatableSubtotal;
+        if ($subtotal > 0 && (float)$this->discount_amount > 0) {
+            $discountRatio = ($subtotal - (float)$this->discount_amount) / $subtotal;
+            $vatableAfterDiscount = $vatableSubtotal * $discountRatio;
+        }
+        if ($vatableAfterDiscount < 0) $vatableAfterDiscount = 0;
+
+        // Calculate VAT from vatable items only
         if ($this->vat_percent > 0) {
-            $this->vat_amount = $afterDiscount * ($this->vat_percent / 100);
+            $this->vat_amount = $vatableAfterDiscount * ($this->vat_percent / 100);
+        } else {
+            $this->vat_amount = 0;
         }
 
-        $this->total_amount = $afterDiscount + $this->vat_amount;
+        $this->total_amount = $afterDiscount + (float)$this->vat_amount;
 
         // Generate amount text
         $this->total_amount_text = \backend\models\PurchReq::numtothai($this->total_amount); // $this->numberToThaiText($this->total_amount);

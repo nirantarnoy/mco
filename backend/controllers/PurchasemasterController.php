@@ -270,6 +270,7 @@ class PurchasemasterController extends BaseController
                                     $detail->unitpr = $detailData['unitpr'] ?? 0;
                                     $detail->disc = $detailData['disc'] ?? null;
                                     $detail->remark = $detailData['remark'] ?? null;
+                                    $detail->has_vat = isset($detailData['has_vat']) ? (int)$detailData['has_vat'] : 1;
 
                                     // คำนวณยอดเงิน
                                     $detail->calculateAmount();
@@ -472,6 +473,7 @@ class PurchasemasterController extends BaseController
                                     $detail->unitpr = $detailData['unitpr'] ?? 0;
                                     $detail->disc = $detailData['disc'] ?? null;
                                     $detail->remark = $detailData['remark'] ?? null;
+                                    $detail->has_vat = isset($detailData['has_vat']) ? (int)$detailData['has_vat'] : 1;
 
                                     // คำนวณยอดเงิน
                                     $detail->calculateAmount();

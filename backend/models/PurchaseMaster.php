@@ -224,8 +224,12 @@ class PurchaseMaster extends \yii\db\ActiveRecord
     public function calculateTotals()
     {
         $sum_amount = 0;
+        $vatable_amount = 0;
         foreach ($this->purchaseDetails as $detail) {
-            $sum_amount += $detail->amount;
+            $sum_amount += (float)$detail->amount;
+            if ($detail->has_vat !== 0 && $detail->has_vat !== '0') {
+                $vatable_amount += (float)$detail->amount;
+            }
         }
 
         $calc_vatpr0 = $sum_amount - (float)$this->disc;
@@ -233,10 +237,20 @@ class PurchaseMaster extends \yii\db\ActiveRecord
         
         $this->vatpr0 = $calc_vatpr0;
 
+        // คำนวณสัดส่วนมูลค่าสินค้าที่มี VAT หลังจากหักส่วนลด (ถ้ามี)
+        $vatableAfterDiscount = $vatable_amount;
+        if ($sum_amount > 0 && (float)$this->disc > 0) {
+            $discountRatio = ($sum_amount - (float)$this->disc) / $sum_amount;
+            $vatableAfterDiscount = $vatable_amount * $discountRatio;
+        }
+        if ($vatableAfterDiscount < 0) {
+            $vatableAfterDiscount = 0;
+        }
+
         // Recalculate VAT if not explicitly provided
         if ($this->vat_amount === null || $this->vat_amount === '') {
             if (isset($this->vat_percent)) {
-                $this->vat_amount = ($this->vatpr0 * $this->vat_percent) / 100;
+                $this->vat_amount = ($vatableAfterDiscount * $this->vat_percent) / 100;
             }
         }
         if ($this->vat_amount < 0) {

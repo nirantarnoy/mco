@@ -50,7 +50,8 @@ class PurchaseDetail extends \yii\db\ActiveRecord
     {
         return [
             [['purchase_master_id', 'line_no'], 'required'],
-            [['purchase_master_id', 'line_no', 'created_at', 'updated_at'], 'integer'],
+            [['purchase_master_id', 'line_no', 'created_at', 'updated_at', 'has_vat'], 'integer'],
+            [['has_vat'], 'default', 'value' => 1],
             [['uqnty', 'unitpr', 'amount'], 'number'],
             [['remark'], 'string'],
             [['stkcod'], 'string', 'max' => 50],
