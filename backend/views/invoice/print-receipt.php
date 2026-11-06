@@ -41,6 +41,9 @@ use yii\helpers\Html; ?>
         body {
             margin: 0 !important;
             padding: 0 !important;
+            font-family: 'THSarabunPSK' !important;
+            font-size: 15px !important;
+            color: #000 !important;
         }
 
         .receipt-container {
@@ -66,8 +69,8 @@ use yii\helpers\Html; ?>
         padding: 5px;
         box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
         font-family: 'THSarabunPSK', Arial, sans-serif;
-        font-size: 10px;
-        line-height: 1.05;
+        font-size: 15px;
+        line-height: 1.15;
     }
 
     @media screen {
@@ -96,7 +99,7 @@ use yii\helpers\Html; ?>
         border: none;
         border-radius: 4px;
         cursor: pointer;
-        font-size: 11px;
+        font-size: 14px;
         text-decoration: none;
         display: inline-block;
     }
@@ -166,8 +169,8 @@ use yii\helpers\Html; ?>
     }
 
     .receipt-company-address {
-        font-size: 10px;
-        line-height: 1.1;
+        font-size: 14px;
+        line-height: 1.15;
         color: #333;
         font-weight: 700;
         word-break: normal;
@@ -186,7 +189,7 @@ use yii\helpers\Html; ?>
     }
 
     .receipt-title {
-        font-size: 20px;
+        font-size: 24px;
         font-weight: 800;
         text-align: center;
         color: #0066CC;
@@ -203,7 +206,7 @@ use yii\helpers\Html; ?>
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 2px;
-        font-size: 13px;
+        font-size: 15px;
         border: 1px solid #000;
     }
 
@@ -232,14 +235,14 @@ use yii\helpers\Html; ?>
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 2px;
-        font-size: 13px;
+        font-size: 15px;
         border: 1px solid #000;
     }
 
     .receipt-items-table th,
     .receipt-items-table td {
         border: 1px solid #000;
-        padding: 4px 6px;
+        padding: 3px 5px;
         text-align: center;
         vertical-align: middle;
     }
@@ -248,8 +251,8 @@ use yii\helpers\Html; ?>
         background: white;
         color: black;
         font-weight: 800;
-        height: 22px;
-        font-size: 11px;
+        height: 24px;
+        font-size: 14px;
         text-transform: uppercase;
         letter-spacing: 0.3px;
     }
@@ -279,10 +282,10 @@ use yii\helpers\Html; ?>
 
     /* Footer Note */
     .receipt-footer-note {
-        font-size: 12px;
+        font-size: 13px;
         text-align: left;
-        margin: 3px 0;
-        line-height: 1.3;
+        margin: 2px 0;
+        line-height: 1.25;
         color: #555;
     }
 
@@ -290,7 +293,7 @@ use yii\helpers\Html; ?>
     .receipt-payment-signature-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 9px;
+        font-size: 13px;
         border: 1px solid #000;
     }
 
@@ -312,15 +315,15 @@ use yii\helpers\Html; ?>
 
     .receipt-signature-line {
         border-bottom: 1.5px solid #333;
-        height: 50px;
-        margin-bottom: 5px;
+        height: 40px;
+        margin-bottom: 4px;
     }
 
     /* Form Code */
     .receipt-form-code {
         text-align: right;
-        font-size: 11px;
-        margin-top: 3px;
+        font-size: 12px;
+        margin-top: 2px;
         color: #666;
         font-style: italic;
     }
@@ -334,7 +337,7 @@ use yii\helpers\Html; ?>
     .receipt-summary-highlight {
         background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
         font-weight: 800;
-        font-size: 13px;
+        font-size: 15px;
     }
 </style>
 
@@ -395,31 +398,71 @@ $refNo = '';
 $refDate = '';
 
 if ($model->invoice_type == 'receipt' || $model->invoice_type == 'bill_placement') {
-     $refInvoice = \backend\models\Invoice::findOne($model->quotation_id);
-     if($refInvoice){
-         $refNo = $refInvoice->invoice_number;
-         $refDate = $refInvoice->invoice_date;
-     } else {
-         $refQuotation = \backend\models\Quotation::findOne($model->quotation_id);
-         if($refQuotation){
-             $refNo = $refQuotation->quotation_no;
-             $refDate = $refQuotation->quotation_date;
-         }
-     }
-
-     if (empty($refNo)) {
-        $relation = \backend\models\InvoiceRelation::find()->where(['child_invoice_id' => $model->id])->one();
-        if ($relation && $relation->parentInvoice) {
-            $refNo = $relation->parentInvoice->invoice_number;
-            $refDate = $relation->parentInvoice->invoice_date;
+    // 1. First priority: look for direct parent relation
+    $relation = \backend\models\InvoiceRelation::find()->where(['child_invoice_id' => $model->id])->one();
+    if ($relation && $relation->parentInvoice) {
+        $parent = $relation->parentInvoice;
+        // If parent is a Bill Placement, trace back to the Tax Invoice
+        if ($parent->invoice_type == \backend\models\Invoice::TYPE_BILL_PLACEMENT) {
+            $grandRelation = \backend\models\InvoiceRelation::find()->where(['child_invoice_id' => $parent->id])->one();
+            if ($grandRelation && $grandRelation->parentInvoice) {
+                $refNo = $grandRelation->parentInvoice->invoice_number;
+                $refDate = $grandRelation->parentInvoice->invoice_date;
+            } else {
+                $refNo = $parent->invoice_number;
+                $refDate = $parent->invoice_date;
+            }
+        } else {
+            $refNo = $parent->invoice_number;
+            $refDate = $parent->invoice_date;
         }
-     }
+    }
+
+    // 2. Second priority: if not resolved from relation, check quotation_id
+    if (empty($refNo) && !empty($model->quotation_id)) {
+        $refInvoice = \backend\models\Invoice::findOne($model->quotation_id);
+        if ($refInvoice) {
+            if ($refInvoice->invoice_type == \backend\models\Invoice::TYPE_BILL_PLACEMENT) {
+                $grandRelation = \backend\models\InvoiceRelation::find()->where(['child_invoice_id' => $refInvoice->id])->one();
+                if ($grandRelation && $grandRelation->parentInvoice) {
+                    $refNo = $grandRelation->parentInvoice->invoice_number;
+                    $refDate = $grandRelation->parentInvoice->invoice_date;
+                } else {
+                    $refNo = $refInvoice->invoice_number;
+                    $refDate = $refInvoice->invoice_date;
+                }
+            } else {
+                $refNo = $refInvoice->invoice_number;
+                $refDate = $refInvoice->invoice_date;
+            }
+        } else {
+            $refQuotation = \backend\models\Quotation::findOne($model->quotation_id);
+            if ($refQuotation) {
+                $refNo = $refQuotation->quotation_no;
+                $refDate = $refQuotation->quotation_date;
+            }
+        }
+    }
+
+    // 3. Third priority: Sibling lookup by shared quotation_id or parent
+    if (empty($refNo)) {
+        if (!empty($model->po_number)) {
+            $taxInvoice = \backend\models\Invoice::find()
+                ->where(['po_number' => $model->po_number, 'invoice_type' => \backend\models\Invoice::TYPE_TAX_INVOICE, 'status' => \backend\models\Invoice::STATUS_ACTIVE])
+                ->andFilterWhere(['total_amount' => $model->total_amount])
+                ->one();
+            if ($taxInvoice) {
+                $refNo = $taxInvoice->invoice_number;
+                $refDate = $taxInvoice->invoice_date;
+            }
+        }
+    }
 } else {
-     $refQuotation = \backend\models\Quotation::findOne($model->quotation_id);
-     if($refQuotation){
-         $refNo = $refQuotation->quotation_no;
-         $refDate = $refQuotation->quotation_date;
-     }
+    $refQuotation = \backend\models\Quotation::findOne($model->quotation_id);
+    if ($refQuotation) {
+        $refNo = $refQuotation->quotation_no;
+        $refDate = $refQuotation->quotation_date;
+    }
 }
 
 $isRefDocument = ($model->invoice_type == 'receipt' || $model->invoice_type == 'bill_placement') && !empty($refNo);

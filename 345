@@ -1,0 +1,1 @@
+select id, invoice_number, invoice_type from invoices where id ; 

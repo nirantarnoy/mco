@@ -310,12 +310,12 @@ $model_doc = \common\models\InvoiceDoc::find()->where(['invoice_id' => $model->i
             <div class="row">
                 <div class="col-md-6">
                     <strong>สร้างเมื่อ:</strong><br>
-                    <?= Yii::$app->formatter->asDatetime($model->created_at, 'dd/MM/yyyy HH:mm') ?><br>
+                    <?= ($model->created_at && !($model->created_at instanceof \yii\db\Expression) && $model->created_at !== 'NOW()') ? Yii::$app->formatter->asDatetime($model->created_at, 'dd/MM/yyyy HH:mm') : '-' ?><br>
                     <small class="text-muted">โดย: <?= $model->created_by ? 'User #' . $model->created_by : 'ระบบ' ?></small>
                 </div>
                 <div class="col-md-6">
                     <strong>แก้ไขล่าสุด:</strong><br>
-                    <?= Yii::$app->formatter->asDatetime($model->updated_at, 'dd/MM/yyyy HH:mm') ?><br>
+                    <?= ($model->updated_at && !($model->updated_at instanceof \yii\db\Expression) && $model->updated_at !== 'NOW()') ? Yii::$app->formatter->asDatetime($model->updated_at, 'dd/MM/yyyy HH:mm') : '-' ?><br>
                     <small class="text-muted">โดย: <?= $model->updated_by ? 'User #' . $model->updated_by : 'ระบบ' ?></small>
                 </div>
             </div>

@@ -74,7 +74,7 @@ class Invoice extends ActiveRecord
                 'class' => TimestampBehavior::class,
                 'createdAtAttribute' => 'created_at',
                 'updatedAtAttribute' => 'updated_at',
-                'value' => new Expression('NOW()'),
+                'value' => date('Y-m-d H:i:s'),
             ],
             [
                 'class' => BlameableBehavior::class,
