@@ -503,7 +503,7 @@ class Invoice extends ActiveRecord
         $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $this->id])->all();
         foreach ($model_line as $item) {
             $subtotal += (float)$item->amount;
-            if ($item->has_vat !== 0 && $item->has_vat !== '0') {
+            if ((int)$item->has_vat === 1) {
                 $vatableSubtotal += (float)$item->amount;
             }
         }

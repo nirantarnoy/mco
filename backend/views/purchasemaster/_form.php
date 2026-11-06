@@ -675,7 +675,7 @@ JS
                                 </td>
                                 <td class="text-center align-middle">
                                     <input type="hidden" name="PurchaseDetail[<?= $index ?>][has_vat]" value="0">
-                                    <input type="checkbox" class="has-vat-checkbox" name="PurchaseDetail[<?= $index ?>][has_vat]" value="1" <?= ($detail->has_vat !== 0 && $detail->has_vat !== '0') ? 'checked' : '' ?> title="คิด VAT">
+                                    <input type="checkbox" class="has-vat-checkbox" name="PurchaseDetail[<?= $index ?>][has_vat]" value="1" <?= ((int)$detail->has_vat === 1) ? 'checked' : '' ?> title="คิด VAT">
                                 </td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-danger btn-sm btn-remove-row">

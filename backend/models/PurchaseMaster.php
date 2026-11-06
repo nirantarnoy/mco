@@ -227,7 +227,7 @@ class PurchaseMaster extends \yii\db\ActiveRecord
         $vatable_amount = 0;
         foreach ($this->purchaseDetails as $detail) {
             $sum_amount += (float)$detail->amount;
-            if ($detail->has_vat !== 0 && $detail->has_vat !== '0') {
+            if ((int)$detail->has_vat === 1) {
                 $vatable_amount += (float)$detail->amount;
             }
         }

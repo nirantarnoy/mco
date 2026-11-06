@@ -404,7 +404,7 @@ function loadJobItems(jobId) {
                         '</td>' +
                         '<td class="text-center align-middle">' +
                             '<input type="hidden" name="InvoiceItem[' + rowCount + '][has_vat]" value="0">' +
-                            '<input type="checkbox" class="has-vat-checkbox" name="InvoiceItem[' + rowCount + '][has_vat]" value="1" ' + (item.has_vat === 0 || item.has_vat === '0' ? '' : 'checked') + ' title="คิด VAT">' +
+                            '<input type="checkbox" class="has-vat-checkbox" name="InvoiceItem[' + rowCount + '][has_vat]" value="1" ' + (parseInt(item.has_vat) === 1 ? 'checked' : '') + ' title="คิด VAT">' +
                         '</td>' +
                         '<td class="text-center">' +
                             '<button type="button" class="btn btn-sm btn-danger btn-remove-item" title="ลบรายการ"><i class="fas fa-trash"></i></button>' +
@@ -873,9 +873,9 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                 </td>
                                 <td class="text-center align-middle">
                                     <input type="hidden" name="InvoiceItem[<?= $index ?>][has_vat]" value="0">
-                                    <input type="checkbox" class="has-vat-checkbox" name="InvoiceItem[<?= $index ?>][has_vat]" value="1" <?= ($item->has_vat !== 0 && $item->has_vat !== '0') ? 'checked' : '' ?> <?= $isCopyReceipt ? 'disabled' : '' ?> title="คิด VAT">
+                                    <input type="checkbox" class="has-vat-checkbox" name="InvoiceItem[<?= $index ?>][has_vat]" value="1" <?= ((int)$item->has_vat === 1) ? 'checked' : '' ?> <?= $isCopyReceipt ? 'disabled' : '' ?> title="คิด VAT">
                                     <?php if ($isCopyReceipt): ?>
-                                        <input type="hidden" name="InvoiceItem[<?= $index ?>][has_vat]" value="<?= ($item->has_vat !== 0 && $item->has_vat !== '0') ? 1 : 0 ?>">
+                                        <input type="hidden" name="InvoiceItem[<?= $index ?>][has_vat]" value="<?= ((int)$item->has_vat === 1) ? 1 : 0 ?>">
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-center">
