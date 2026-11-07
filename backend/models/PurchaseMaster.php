@@ -84,8 +84,8 @@ class PurchaseMaster extends \yii\db\ActiveRecord
     {
         return [
             [['docnum', 'docdat'], 'required'],
-            [['docdat', 'duedat', 'vatdat', 'created_at', 'updated_at', 'vat_period', 'recall_at', 'payment_due_date'], 'safe'],
-            [['status', 'approve_status', 'created_by', 'updated_by', 'department_id', 'company_id', 'currency_id', 'is_deposit', 'is_recall', 'recall_by', 'is_advance'], 'integer'],
+            [['docdat', 'duedat', 'vatdat', 'created_at', 'updated_at', 'vat_period', 'recall_at', 'payment_due_date', 'approve_date'], 'safe'],
+            [['status', 'approve_status', 'approve_by', 'created_by', 'updated_by', 'department_id', 'company_id', 'currency_id', 'is_deposit', 'is_recall', 'recall_by', 'is_advance'], 'integer'],
             [['vatpr0', 'amount', 'unitpr', 'vat_percent', 'vat_amount', 'tax_percent', 'tax_amount', 'total_amount', 'exchange_rate'], 'number', 'min' => 0],
             [['tax_amount', 'total_amount'], 'default', 'value' => 0],
             [['remark', 'recall_reason'], 'string'],
@@ -540,6 +540,12 @@ class PurchaseMaster extends \yii\db\ActiveRecord
                 }
                 if (!isset($table->columns['recall_at'])) {
                     $db->createCommand()->addColumn(self::tableName(), 'recall_at', 'DATETIME NULL')->execute();
+                }
+                if (!isset($table->columns['approve_by'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'approve_by', 'INT(11) NULL AFTER approve_status')->execute();
+                }
+                if (!isset($table->columns['approve_date'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'approve_date', 'DATETIME NULL AFTER approve_by')->execute();
                 }
                 $db->getSchema()->refreshTableSchema(self::tableName());
             }

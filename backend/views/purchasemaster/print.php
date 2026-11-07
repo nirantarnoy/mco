@@ -4,11 +4,37 @@ use yii\helpers\Html;
 $this->title = 'None PR - ' . $model->docnum;
 
 // Fetch vendor for additional info if needed
-$vendor = \backend\models\Vendor::findOne(['code' => $model->supcod]);
+$vendor = null;
+if (!empty($model->supcod)) {
+    // Check if supcod is numeric (Vendor ID) or code
+    if (is_numeric($model->supcod)) {
+        $vendor = \backend\models\Vendor::findOne($model->supcod);
+    }
+    if (!$vendor) {
+        $vendor = \backend\models\Vendor::findOne(['code' => $model->supcod]);
+    }
+}
 $vendor_email = $vendor ? $vendor->email : '';
 $is_head = $vendor ? $vendor->is_head : 0;
 $branch_name = $vendor ? $vendor->branch_name : '';
 $is_head_office = ($is_head == 1 || empty(trim($branch_name)) || trim($branch_name) === '00000' || trim($branch_name) === '0000');
+
+// Bank Information
+$vendor_account_name = $vendor ? $vendor->account_name : '';
+$vendor_account_no = $vendor ? $vendor->account_num : '';
+$vendor_bank_name = $vendor ? $vendor->bank_name : '';
+$vendor_bank_branch = $vendor ? $vendor->bank_branch : '';
+
+// Payment Term Information
+$payment_term_name = '';
+if (!empty($model->paytrm)) {
+    $term = \backend\models\Paymentterm::findOne($model->paytrm);
+    $payment_term_name = $term ? $term->name : $model->paytrm;
+}
+$is_advance = ($model->paytrm == 'Advance Payment' || (isset($term) && (stripos($term->name, 'advance') !== false || stripos($term->description, 'advance') !== false)));
+$is_immediately = ($model->paytrm == 'Immediately' || (isset($term) && (stripos($term->name, 'เงินสด') !== false || stripos($term->name, 'immediately') !== false || stripos($term->description, 'cash') !== false)));
+$is_30days = ($model->paytrm == '30 Days' || (isset($term) && ($term->day_count == 30 || stripos($term->name, '30') !== false)));
+$is_other = (!$is_advance && !$is_immediately && !$is_30days && !empty($model->paytrm));
 
 $fmt = Yii::$app->formatter;
 ?>
@@ -332,34 +358,34 @@ $fmt = Yii::$app->formatter;
     <div class="row-group" style="margin-top: 20px;">
         <div class="field-label">Term Payment :</div>
         <div style="margin-right: 15px;">
-            <div class="radio-box <?= $model->paytrm == 'Advance Payment' ? 'checked' : '' ?>"></div> Advance Payment
+            <div class="radio-box <?= $is_advance ? 'checked' : '' ?>"></div> Advance Payment
         </div>
         <div style="margin-right: 15px;">
-            <div class="radio-box <?= $model->paytrm == 'Immediately' ? 'checked' : '' ?>"></div> Immediately
+            <div class="radio-box <?= $is_immediately ? 'checked' : '' ?>"></div> Immediately
         </div>
         <div style="margin-right: 15px;">
-            <div class="radio-box <?= $model->paytrm == '30 Days' ? 'checked' : '' ?>"></div> 30 Days
+            <div class="radio-box <?= $is_30days ? 'checked' : '' ?>"></div> 30 Days
         </div>
         <div>
-            <div class="radio-box <?= !in_array($model->paytrm, ['Advance Payment', 'Immediately', '30 Days']) && !empty($model->paytrm) ? 'checked' : '' ?>"></div> Other
+            <div class="radio-box <?= $is_other ? 'checked' : '' ?>"></div> Other
             <div class="field-value-inline" style="min-width: 80px;">
-                
+                <?= Html::encode($is_other ? $payment_term_name : '') ?>
             </div>
         </div>
     </div>
 
     <div class="row-group">
         <div class="field-label">Account Name :</div>
-        <div class="field-value" style="margin-right: 10px;"></div>
+        <div class="field-value" style="margin-right: 10px;"><?= Html::encode($vendor_account_name) ?></div>
         
         <div class="field-label">Account No.</div>
-        <div class="field-value" style="margin-right: 10px;"></div>
+        <div class="field-value" style="margin-right: 10px;"><?= Html::encode($vendor_account_no) ?></div>
         
         <div class="field-label">Bank Name :</div>
-        <div class="field-value" style="margin-right: 10px;"></div>
+        <div class="field-value" style="margin-right: 10px;"><?= Html::encode($vendor_bank_name) ?></div>
         
         <div class="field-label">Branch :</div>
-        <div class="field-value"></div>
+        <div class="field-value"><?= Html::encode($vendor_bank_branch) ?></div>
     </div>
 
     <!-- Signatures -->
@@ -381,8 +407,8 @@ $fmt = Yii::$app->formatter;
     $approver_name = '';
     $approve_date_val = '';
     if ($model->approve_status == \backend\models\PurchaseMaster::APPROVE_STATUS_APPROVED) {
-        // Use approve_by if it exists, otherwise empty
-        $approver_id = isset($model->approve_by) && $model->approve_by ? $model->approve_by : null;
+        // Use approve_by if it exists, otherwise fall back to updated_by
+        $approver_id = !empty($model->approve_by) ? $model->approve_by : ($model->updated_by ?: null);
         if ($approver_id) {
             $approve_sig = \backend\models\User::findEmployeeSignature($approver_id);
             $approver_name = \backend\models\User::findEmployeeNameByUserId($approver_id);
@@ -391,7 +417,7 @@ $fmt = Yii::$app->formatter;
                 $approver_name = $u ? $u->username : '';
             }
         }
-        $approve_date_val = $model->updated_at ? $fmt->asDate($model->updated_at, 'php:d/m/Y') : ($model->docdat ? $fmt->asDate($model->docdat, 'php:d/m/Y') : '');
+        $approve_date_val = !empty($model->approve_date) ? $fmt->asDate($model->approve_date, 'php:d/m/Y') : ($model->updated_at ? $fmt->asDate($model->updated_at, 'php:d/m/Y') : ($model->docdat ? $fmt->asDate($model->docdat, 'php:d/m/Y') : ''));
     }
     ?>
     <div class="sign-section">

@@ -54,8 +54,11 @@ class PurchasemasterController extends BaseController
 
     public function actionApprove($id)
     {
+        \backend\models\PurchaseMaster::ensureRecallColumns();
         $model = $this->findModel($id);
         $model->approve_status = \backend\models\PurchaseMaster::APPROVE_STATUS_APPROVED;
+        $model->approve_by = Yii::$app->user->id;
+        $model->approve_date = date('Y-m-d H:i:s');
         if ($model->save(false)) {
             Yii::$app->session->setFlash('success', 'อนุมัติใบซื้อเรียบร้อยแล้ว');
         } else {
