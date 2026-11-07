@@ -42,3 +42,4 @@ class m261107_104717_add_approve_columns_to_purchase_master_table extends Migrat
         }
     }
 }
+
