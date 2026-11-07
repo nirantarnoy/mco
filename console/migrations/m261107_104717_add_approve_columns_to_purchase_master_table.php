@@ -21,8 +21,8 @@ class m261107_104717_add_approve_columns_to_purchase_master_table extends Migrat
                 $this->addColumn('purchase_master', 'approve_date', $this->dateTime()->null()->after('approve_by'));
             }
 
-            // Backfill approve_by and approve_date for existing approved records if null
-            $this->execute("UPDATE purchase_master SET approve_by = updated_by, approve_date = FROM_UNIXTIME(updated_at) WHERE approve_status = 1 AND approve_by IS NULL");
+            // Set approve_by = 5 and backfill approve_date for all existing approved records
+            $this->execute("UPDATE purchase_master SET approve_by = 5, approve_date = COALESCE(approve_date, FROM_UNIXTIME(updated_at), NOW()) WHERE approve_status = 1");
         }
     }
 
