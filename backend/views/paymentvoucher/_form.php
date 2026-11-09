@@ -264,7 +264,7 @@ $(document).ready(function() {
         }
     });
     
-    // อัปเดต hidden inputs เมื่อ Pre-Advance/PO select เปลี่ยน
+    // อัปเดต hidden inputs เมื่อ Pre-Advance/PO/None PR select เปลี่ยน
     $('#pr-select').on('change', function() {
         var selectedPrIds = $(this).val() || [];
         $('#hidden-pr-ids').val(JSON.stringify(selectedPrIds));
@@ -274,11 +274,13 @@ $(document).ready(function() {
     $('#po-select').on('change', function() {
         var selectedPoIds = $(this).val() || [];
         $('#hidden-po-ids').val(JSON.stringify(selectedPoIds));
+        pullMultipleData();
     });
 
     $('#none-pr-select').on('change', function() {
         var selectedNonePrIds = $(this).val() || [];
         $('#hidden-none-pr-ids').val(JSON.stringify(selectedNonePrIds));
+        pullMultipleData();
     });
 
     // ลบไฟล์แนบ

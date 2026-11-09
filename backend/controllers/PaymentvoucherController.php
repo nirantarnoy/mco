@@ -576,6 +576,11 @@ class PaymentvoucherController extends BaseController
         foreach ($po_ids as $po_id) {
             $po = Purch::findOne($po_id);
             if ($po) {
+                $paid_for_items[] = 'PO: ' . $po->purch_no;
+                if (!$vendor_id) {
+                    $vendor_id = $po->vendor_id;
+                    $vendor_name = $po->vendor_name;
+                }
                 $vat_percent = 0;
                 $wht_percent = 0;
                 if ($po->is_vat == 1) {
@@ -615,6 +620,11 @@ class PaymentvoucherController extends BaseController
         foreach ($none_pr_ids as $none_pr_id) {
             $none_pr = \backend\models\PurchaseMaster::findOne($none_pr_id);
             if ($none_pr) {
+                $paid_for_items[] = 'None PR: ' . $none_pr->docnum;
+                if (!$vendor_id) {
+                    $vendor_id = $none_pr->supcod;
+                    $vendor_name = $none_pr->supnam;
+                }
                 $vat_percent = 0;
                 $wht_percent = 0;
                 if ($none_pr->vat_percent > 0) {
