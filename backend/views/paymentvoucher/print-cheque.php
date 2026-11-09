@@ -88,54 +88,70 @@ if ($model->cheque_date) {
             color: #000;
         }
         .cheque-container {
-            width: 17cm;
-            height: 8cm;
+            width: 8.87in;
+            height: 3.87in;
             position: relative;
             margin: 0 auto;
             /* Border for preview only, hidden in print */
-            border: 1px solid #ccc;
+            border: 1px dashed #999;
+            box-sizing: border-box;
+            background: #fff;
         }
         .ac-payee {
             position: absolute;
-            top: 1cm;
-            left: 2cm;
+            top: 0.4in;
+            left: 2.8in;
             font-weight: bold;
+            font-size: 14px;
+            letter-spacing: 1px;
         }
         .cheque-date {
             position: absolute;
-            top: 1cm;
-            right: 1cm;
-            letter-spacing: 2px;
+            top: 0.45in;
+            right: 0.55in;
+            letter-spacing: 5px;
+            font-size: 16px;
+            font-weight: bold;
         }
         .payee-name {
             position: absolute;
-            top: 2.5cm;
-            left: 2cm;
+            top: 1.15in;
+            left: 1.4in;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 17px;
         }
         .amount-text {
             position: absolute;
-            top: 3.5cm;
-            left: 2.5cm;
+            top: 1.65in;
+            left: 1.8in;
+            font-size: 15px;
+            font-weight: bold;
         }
         .amount-num {
             position: absolute;
-            top: 3.5cm;
-            right: 2cm;
+            top: 1.95in;
+            right: 0.6in;
             font-weight: bold;
             font-size: 18px;
+            letter-spacing: 1px;
         }
 
         @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
             .cheque-container {
                 border: none;
+                margin: 0;
+                width: 8.87in;
+                height: 3.87in;
             }
             .no-print {
-                display: none;
+                display: none !important;
             }
             @page {
-                size: 17.5cm 8.5cm; /* Standard Cheque size */
+                size: 8.87in 3.87in landscape;
                 margin: 0;
             }
         }
