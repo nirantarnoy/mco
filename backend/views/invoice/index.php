@@ -26,6 +26,10 @@ $this->params['breadcrumbs'][] = $this->title;
                         <?= Html::a('ใบกำกับภาษี', ['index', 'InvoiceSearch[invoice_type]' => Invoice::TYPE_TAX_INVOICE], ['class' => 'btn btn-outline-success ' . ($searchModel->invoice_type == Invoice::TYPE_TAX_INVOICE ? 'active' : '')]) ?>
                         <?= Html::a('ใบเสร็จ', ['index', 'InvoiceSearch[invoice_type]' => Invoice::TYPE_RECEIPT], ['class' => 'btn btn-outline-warning ' . ($searchModel->invoice_type == Invoice::TYPE_RECEIPT ? 'active' : '')]) ?>
                     </div>
+                    <?= Html::a('<i class="fas fa-chart-line"></i> สถานะลูกหนี้ / Excel', ['debtor-report'], [
+                        'class' => 'btn btn-outline-danger ml-2 font-weight-bold',
+                        'title' => 'รายงานสถานะลูกหนี้และส่งออก Excel'
+                    ]) ?>
                 </div>
                 <div class="col-md-4 text-right">
                     <?= Html::a('<i class="fas fa-sync"></i> ย้ายข้อมูลใบวางบิลเดิม', ['migrate-billing'], [

@@ -18,6 +18,11 @@ use yii\web\Response;
 use yii\helpers\Json;
 use yii\helpers\ArrayHelper;
 use yii\web\UploadedFile;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 /**
  * InvoiceController implements the CRUD actions for Invoice model.
@@ -1085,5 +1090,440 @@ class InvoiceController extends BaseController
             Yii::$app->session->setFlash('error', "เกิดข้อผิดพลาด: " . $e->getMessage());
         }
         return $this->redirect(['index']);
+    }
+
+    /**
+     * ดึงข้อมูลสถานะลูกหนี้ตาม 3 กลุ่มเงื่อนไข
+     * 1. ใบแจ้งหนี้ ที่ยังไม่ออกใบกำกับ
+     * 2. ใบกำกับที่ออกใบวางบิลแล้ว แต่ยังไม่ออกใบเสร็จ
+     * 3. ใบเสร็จที่ออกแล้ว แต่ยังไม่บันทึกรับเงิน
+     *
+     * @param int|null $category 1, 2, 3 หรือ null (ทั้งหมด)
+     * @param string|null $startDate
+     * @param string|null $endDate
+     * @param string|null $searchKeyword
+     * @return array
+     */
+    protected function getDebtorReportData($category = null, $startDate = null, $endDate = null, $searchKeyword = null)
+    {
+        $companyId = Yii::$app->session->get('company_id');
+
+        $baseSelect = "
+            i.id,
+            i.invoice_number,
+            i.invoice_date,
+            i.due_date,
+            i.payment_due_date,
+            i.payment_term_id,
+            pt.day_count as term_days,
+            i.customer_name,
+            COALESCE(j.job_no, j2.job_no, q.quotation_no, i.po_number, '-') as job_no,
+            i.total_amount,
+            COALESCE(cn.total_cn, 0) as total_cn,
+            COALESCE(dn.total_dn, 0) as total_dn,
+            COALESCE(paid.total_paid, 0) as total_paid
+        ";
+
+        $baseJoins = "
+            LEFT JOIN payment_term pt ON i.payment_term_id = pt.id
+            LEFT JOIN job j ON i.job_id = j.id
+            LEFT JOIN quotation q ON i.quotation_id = q.id
+            LEFT JOIN job j2 ON q.id = j2.quotation_id
+            LEFT JOIN (
+                SELECT invoice_id, SUM(total_amount) as total_cn 
+                FROM credit_note 
+                WHERE status = 1 
+                GROUP BY invoice_id
+            ) cn ON cn.invoice_id = i.id
+            LEFT JOIN (
+                SELECT invoice_id, SUM(total_amount) as total_dn 
+                FROM debit_note 
+                WHERE status = 1 
+                GROUP BY invoice_id
+            ) dn ON dn.invoice_id = i.id
+            LEFT JOIN (
+                SELECT 
+                    pr.invoice_id,
+                    SUM(COALESCE(pr.amount, 0) + COALESCE(ext.extra_amount, 0)) as total_paid
+                FROM invoice_payment_receipt pr
+                LEFT JOIN (
+                    SELECT payment_receipt_id, SUM(amount) as extra_amount 
+                    FROM invoice_payment_extra 
+                    GROUP BY payment_receipt_id
+                ) ext ON ext.payment_receipt_id = pr.id
+                GROUP BY pr.invoice_id
+            ) paid ON paid.invoice_id = i.id
+        ";
+
+        $companyCondition = $companyId ? " AND (i.company_id = " . intval($companyId) . " OR i.company_id IS NULL)" : "";
+        $dateCondition = "";
+        if (!empty($startDate) && !empty($endDate)) {
+            $dateCondition = " AND (i.invoice_date BETWEEN '" . addslashes($startDate) . "' AND '" . addslashes($endDate) . "')";
+        } elseif (!empty($startDate)) {
+            $dateCondition = " AND (i.invoice_date >= '" . addslashes($startDate) . "')";
+        } elseif (!empty($endDate)) {
+            $dateCondition = " AND (i.invoice_date <= '" . addslashes($endDate) . "')";
+        }
+
+        $searchCondition = "";
+        if (!empty($searchKeyword)) {
+            $kw = addslashes($searchKeyword);
+            $searchCondition = " AND (i.invoice_number LIKE '%$kw%' OR i.customer_name LIKE '%$kw%' OR j.job_no LIKE '%$kw%' OR j2.job_no LIKE '%$kw%' OR q.quotation_no LIKE '%$kw%' OR i.po_number LIKE '%$kw%')";
+        }
+
+        $results = [
+            1 => [],
+            2 => [],
+            3 => [],
+        ];
+
+        // 1. ใบแจ้งหนี้ ที่ยังไม่ออกใบกำกับ
+        if (empty($category) || $category == 1) {
+            $sql1 = "
+                SELECT $baseSelect
+                FROM invoices i
+                $baseJoins
+                LEFT JOIN invoice_relations ir ON ir.parent_invoice_id = i.id AND ir.relation_type = 'quotation_to_tax_invoice'
+                WHERE i.invoice_type = 'quotation'
+                  AND (i.status IS NULL OR i.status != 0)
+                  AND ir.id IS NULL
+                  $companyCondition
+                  $dateCondition
+                  $searchCondition
+                ORDER BY i.invoice_date DESC, i.id DESC
+            ";
+            $results[1] = Yii::$app->db->createCommand($sql1)->queryAll();
+        }
+
+        // 2. ใบกำกับที่ออกใบวางบิลแล้ว แต่ยังไม่ออกใบเสร็จ
+        if (empty($category) || $category == 2) {
+            $sql2 = "
+                SELECT $baseSelect
+                FROM invoices i
+                $baseJoins
+                INNER JOIN invoice_relations ir_bill ON ir_bill.parent_invoice_id = i.id AND ir_bill.relation_type = 'tax_invoice_to_bill_placement'
+                LEFT JOIN invoice_relations ir_rcpt ON ir_rcpt.parent_invoice_id = i.id AND ir_rcpt.relation_type = 'tax_invoice_to_receipt'
+                LEFT JOIN invoice_relations ir_bill_rcpt ON ir_bill_rcpt.parent_invoice_id = ir_bill.child_invoice_id AND ir_bill_rcpt.relation_type = 'bill_placement_to_receipt'
+                WHERE i.invoice_type = 'tax_invoice'
+                  AND (i.status IS NULL OR i.status != 0)
+                  AND ir_rcpt.id IS NULL
+                  AND ir_bill_rcpt.id IS NULL
+                  $companyCondition
+                  $dateCondition
+                  $searchCondition
+                ORDER BY i.invoice_date DESC, i.id DESC
+            ";
+            $results[2] = Yii::$app->db->createCommand($sql2)->queryAll();
+        }
+
+        // 3. ใบเสร็จที่ออกแล้ว แต่ยังไม่บันทึกรับเงิน
+        if (empty($category) || $category == 3) {
+            $sql3 = "
+                SELECT $baseSelect
+                FROM invoices i
+                $baseJoins
+                WHERE i.invoice_type = 'receipt'
+                  AND (i.status IS NULL OR i.status != 0)
+                  AND ((i.total_amount + COALESCE(dn.total_dn, 0) - COALESCE(cn.total_cn, 0)) - COALESCE(paid.total_paid, 0)) > 0.01
+                  $companyCondition
+                  $dateCondition
+                  $searchCondition
+                ORDER BY i.invoice_date DESC, i.id DESC
+            ";
+            $results[3] = Yii::$app->db->createCommand($sql3)->queryAll();
+        }
+
+        // ประมวลผลคำนวณ Due Date, Remaining, Overdue Days ให้พร้อมใช้งาน
+        $processRows = function(&$rows, $catName) {
+            $today = new \DateTime(date('Y-m-d'));
+            foreach ($rows as &$row) {
+                $row['category_name'] = $catName;
+
+                // คำนวณวันครบกำหนดชำระ
+                $dueDateStr = null;
+                if (!empty($row['due_date']) && $row['due_date'] != '0000-00-00') {
+                    $dueDateStr = $row['due_date'];
+                } elseif (!empty($row['payment_due_date']) && $row['payment_due_date'] != '0000-00-00') {
+                    $dueDateStr = $row['payment_due_date'];
+                } elseif (!empty($row['term_days']) && intval($row['term_days']) > 0 && !empty($row['invoice_date'])) {
+                    $dueDateStr = date('Y-m-d', strtotime($row['invoice_date'] . ' +' . intval($row['term_days']) . ' days'));
+                } elseif (!empty($row['invoice_date'])) {
+                    $dueDateStr = $row['invoice_date'];
+                }
+                $row['computed_due_date'] = $dueDateStr;
+
+                // คำนวณวันที่เกินกำหนดชำระ
+                $overdueDays = 0;
+                if (!empty($dueDateStr)) {
+                    $dueDateObj = new \DateTime($dueDateStr);
+                    if ($today > $dueDateObj) {
+                        $interval = $today->diff($dueDateObj);
+                        $overdueDays = (int)$interval->format('%a');
+                    }
+                }
+                $row['overdue_days'] = $overdueDays;
+
+                // ยอดลดหนี้/เพิ่มหนี้สุทธิ
+                $cn = floatval($row['total_cn'] ?? 0);
+                $dn = floatval($row['total_dn'] ?? 0);
+                $row['net_cn_dn'] = $dn - $cn; // ถ้าเพิ่มหนี้เป็นบวก ถ้าลดหนี้เป็นลบ
+                $row['cn_amount'] = $cn;
+                $row['dn_amount'] = $dn;
+
+                // ยอดค้างชำระ
+                $total = floatval($row['total_amount'] ?? 0);
+                $paid = floatval($row['total_paid'] ?? 0);
+                $remaining = ($total + $dn - $cn) - $paid;
+                if ($remaining < 0) {
+                    $remaining = 0;
+                }
+                $row['remaining_amount'] = $remaining;
+            }
+        };
+
+        $processRows($results[1], '1. ใบแจ้งหนี้ ที่ยังไม่ออกใบกำกับ');
+        $processRows($results[2], '2. ใบกำกับที่ออกใบวางบิลแล้ว แต่ยังไม่ออกใบเสร็จ');
+        $processRows($results[3], '3. ใบเสร็จที่ออกแล้ว แต่ยังไม่บันทึกรับเงิน');
+
+        return $results;
+    }
+
+    /**
+     * หน้ารายงานสถานะลูกหนี้
+     * @return mixed
+     */
+    public function actionDebtorReport()
+    {
+        $category = Yii::$app->request->get('category');
+        $startDate = Yii::$app->request->get('start_date');
+        $endDate = Yii::$app->request->get('end_date');
+        $searchKeyword = Yii::$app->request->get('search');
+
+        $reportData = $this->getDebtorReportData($category, $startDate, $endDate, $searchKeyword);
+
+        return $this->render('debtor_report', [
+            'reportData' => $reportData,
+            'category' => $category,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'searchKeyword' => $searchKeyword,
+        ]);
+    }
+
+    /**
+     * Export รายงานสถานะลูกหนี้เป็น Excel (.xlsx)
+     */
+    public function actionExportDebtor()
+    {
+        $category = Yii::$app->request->get('category');
+        $startDate = Yii::$app->request->get('start_date');
+        $endDate = Yii::$app->request->get('end_date');
+        $searchKeyword = Yii::$app->request->get('search');
+
+        $reportData = $this->getDebtorReportData($category, $startDate, $endDate, $searchKeyword);
+
+        $spreadsheet = new Spreadsheet();
+        $spreadsheet->getProperties()
+            ->setCreator('MCO System')
+            ->setLastModifiedBy('MCO System')
+            ->setTitle('รายงานสถานะลูกหนี้')
+            ->setSubject('รายงานสถานะลูกหนี้');
+
+        $categoryTitles = [
+            1 => '1. ใบแจ้งหนี้ ที่ยังไม่ออกใบกำกับ',
+            2 => '2. ใบกำกับที่ออกใบวางบิลแล้ว แต่ยังไม่ออกใบเสร็จ',
+            3 => '3. ใบเสร็จที่ออกแล้ว แต่ยังไม่บันทึกรับเงิน',
+        ];
+
+        // 9 ข้อคอลัมน์ตามที่ผู้ใช้กำหนด:
+        // 1. ใบงาน 2. วันที่ออกเอกสาร 3. เลขที่ใบแจ้งหรือใบกำกับภาษี 4. วันครบกำหนดชำระ 5. ยอดจำนวนเต็ม 6. ยอดใบลดหนี้หรือเพิ่มหนี้ 7. ยอดที่ชำระแล้ว 8. ยอดค้างชำระ 9. วันที่เกินกำหนดชำระ
+        $headers = [
+            'A' => 'ลำดับ',
+            'B' => 'ใบงาน',
+            'C' => 'วันที่ออกเอกสาร',
+            'D' => 'เลขที่เอกสาร',
+            'E' => 'ชื่อลูกค้า',
+            'F' => 'วันครบกำหนดชำระ',
+            'G' => 'ยอดจำนวนเต็ม',
+            'H' => 'ยอดใบลดหนี้/เพิ่มหนี้',
+            'I' => 'ยอดที่ชำระแล้ว',
+            'J' => 'ยอดค้างชำระ',
+            'K' => 'วันที่เกินกำหนดชำระ',
+        ];
+
+        // สร้าง Sheet รวมทุกสถานะเป็น Sheet แรก
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('สรุปทุกสถานะ');
+
+        $currentRow = 1;
+
+        // Title
+        $sheet->setCellValue('A' . $currentRow, 'รายงานสถานะลูกหนี้ (Account Receivable Report)');
+        $sheet->mergeCells('A' . $currentRow . ':K' . $currentRow);
+        $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true)->setSize(16);
+        $sheet->getStyle('A' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+        $currentRow++;
+
+        $filterText = 'ข้อมูล ณ วันที่ ' . date('d/m/Y H:i');
+        if (!empty($startDate) || !empty($endDate)) {
+            $filterText .= ' (ช่วงวันที่เอกสาร: ' . ($startDate ?: '-') . ' ถึง ' . ($endDate ?: '-') . ')';
+        }
+        $sheet->setCellValue('A' . $currentRow, $filterText);
+        $sheet->mergeCells('A' . $currentRow . ':K' . $currentRow);
+        $sheet->getStyle('A' . $currentRow)->getFont()->setItalic(true)->setSize(11);
+        $currentRow += 2;
+
+        $grandTotalAmount = 0;
+        $grandTotalCnDn = 0;
+        $grandTotalPaid = 0;
+        $grandTotalRemaining = 0;
+
+        foreach ([1, 2, 3] as $catKey) {
+            if (!empty($category) && $category != $catKey) {
+                continue;
+            }
+
+            $rows = $reportData[$catKey] ?? [];
+
+            // Category Header Banner
+            $sheet->setCellValue('A' . $currentRow, 'หมวด: ' . $categoryTitles[$catKey] . ' (' . count($rows) . ' รายการ)');
+            $sheet->mergeCells('A' . $currentRow . ':K' . $currentRow);
+            $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true)->setSize(12)->getColor()->setRGB('FFFFFF');
+            $headerColor = ($catKey == 1) ? '007BFF' : (($catKey == 2) ? '17A2B8' : '28A745');
+            $sheet->getStyle('A' . $currentRow)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB($headerColor);
+            $currentRow++;
+
+            // Column Headers
+            foreach ($headers as $col => $title) {
+                $sheet->setCellValue($col . $currentRow, $title);
+                $sheet->getStyle($col . $currentRow)->getFont()->setBold(true);
+                $sheet->getStyle($col . $currentRow)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('E9ECEF');
+                $sheet->getStyle($col . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            }
+            $currentRow++;
+
+            $startDataRow = $currentRow;
+            $seq = 1;
+            $catTotalAmount = 0;
+            $catTotalCnDn = 0;
+            $catTotalPaid = 0;
+            $catTotalRemaining = 0;
+
+            if (empty($rows)) {
+                $sheet->setCellValue('A' . $currentRow, 'ไม่พบรายการค้างชำระในกลุ่มนี้');
+                $sheet->mergeCells('A' . $currentRow . ':K' . $currentRow);
+                $sheet->getStyle('A' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle('A' . $currentRow)->getFont()->setItalic(true);
+                $currentRow++;
+            } else {
+                foreach ($rows as $item) {
+                    $docDate = !empty($item['invoice_date']) ? date('d/m/Y', strtotime($item['invoice_date'])) : '-';
+                    $dueDate = !empty($item['computed_due_date']) ? date('d/m/Y', strtotime($item['computed_due_date'])) : '-';
+
+                    $sheet->setCellValue('A' . $currentRow, $seq++);
+                    $sheet->setCellValueExplicit('B' . $currentRow, (string)$item['job_no'], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                    $sheet->setCellValue('C' . $currentRow, $docDate);
+                    $sheet->setCellValueExplicit('D' . $currentRow, (string)$item['invoice_number'], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                    $sheet->setCellValue('E' . $currentRow, $item['customer_name'] ?? '-');
+                    $sheet->setCellValue('F' . $currentRow, $dueDate);
+                    $sheet->setCellValue('G' . $currentRow, (float)$item['total_amount']);
+                    $sheet->setCellValue('H' . $currentRow, (float)$item['net_cn_dn']);
+                    $sheet->setCellValue('I' . $currentRow, (float)$item['total_paid']);
+                    $sheet->setCellValue('J' . $currentRow, (float)$item['remaining_amount']);
+                    
+                    // วันที่เกินกำหนดชำระ
+                    if ($item['overdue_days'] > 0) {
+                        $sheet->setCellValue('K' . $currentRow, $item['overdue_days'] . ' วัน');
+                        $sheet->getStyle('K' . $currentRow)->getFont()->getColor()->setRGB('DC3545')->setBold(true);
+                    } else {
+                        $sheet->setCellValue('K' . $currentRow, '0 วัน (ยังไม่เกินกำหนด)');
+                        $sheet->getStyle('K' . $currentRow)->getFont()->getColor()->setRGB('28A745');
+                    }
+
+                    // จัดชิดคอลัมน์
+                    $sheet->getStyle('A' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $sheet->getStyle('B' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $sheet->getStyle('C' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $sheet->getStyle('D' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $sheet->getStyle('F' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $sheet->getStyle('K' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                    // รูปแบบตัวเลขทศนิยม 2 ตำแหน่ง
+                    $sheet->getStyle('G' . $currentRow . ':J' . $currentRow)->getNumberFormat()->setFormatCode('#,##0.00');
+
+                    $catTotalAmount += (float)$item['total_amount'];
+                    $catTotalCnDn += (float)$item['net_cn_dn'];
+                    $catTotalPaid += (float)$item['total_paid'];
+                    $catTotalRemaining += (float)$item['remaining_amount'];
+
+                    $currentRow++;
+                }
+
+                // สรุปยอดรวมประจำกลุ่ม
+                $sheet->setCellValue('A' . $currentRow, 'รวมยอด (' . $categoryTitles[$catKey] . ')');
+                $sheet->mergeCells('A' . $currentRow . ':F' . $currentRow);
+                $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true);
+                $sheet->getStyle('A' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
+                $sheet->setCellValue('G' . $currentRow, $catTotalAmount);
+                $sheet->setCellValue('H' . $currentRow, $catTotalCnDn);
+                $sheet->setCellValue('I' . $currentRow, $catTotalPaid);
+                $sheet->setCellValue('J' . $currentRow, $catTotalRemaining);
+                $sheet->setCellValue('K' . $currentRow, '');
+
+                $sheet->getStyle('A' . $currentRow . ':K' . $currentRow)->getFont()->setBold(true);
+                $sheet->getStyle('A' . $currentRow . ':K' . $currentRow)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F8F9FA');
+                $sheet->getStyle('G' . $currentRow . ':J' . $currentRow)->getNumberFormat()->setFormatCode('#,##0.00');
+
+                // ขีดเส้นใต้
+                $sheet->getStyle('A' . $currentRow . ':K' . $currentRow)->getBorders()->getTop()->setBorderStyle(Border::BORDER_THIN);
+                $sheet->getStyle('A' . $currentRow . ':K' . $currentRow)->getBorders()->getBottom()->setBorderStyle(Border::BORDER_DOUBLE);
+
+                $currentRow++;
+            }
+
+            $grandTotalAmount += $catTotalAmount;
+            $grandTotalCnDn += $catTotalCnDn;
+            $grandTotalPaid += $catTotalPaid;
+            $grandTotalRemaining += $catTotalRemaining;
+
+            $currentRow++; // เว้นบรรทัดระหว่างหมวด
+        }
+
+        // ยอดรวมทั้งหมด (Grand Total)
+        if (empty($category)) {
+            $sheet->setCellValue('A' . $currentRow, 'รวมยอดทั้งสิ้นทุกหมวดสถานะ');
+            $sheet->mergeCells('A' . $currentRow . ':F' . $currentRow);
+            $sheet->getStyle('A' . $currentRow)->getFont()->setBold(true)->setSize(12);
+            $sheet->getStyle('A' . $currentRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+
+            $sheet->setCellValue('G' . $currentRow, $grandTotalAmount);
+            $sheet->setCellValue('H' . $currentRow, $grandTotalCnDn);
+            $sheet->setCellValue('I' . $currentRow, $grandTotalPaid);
+            $sheet->setCellValue('J' . $currentRow, $grandTotalRemaining);
+            $sheet->setCellValue('K' . $currentRow, '');
+
+            $sheet->getStyle('A' . $currentRow . ':K' . $currentRow)->getFont()->setBold(true)->setSize(12);
+            $sheet->getStyle('A' . $currentRow . ':K' . $currentRow)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('D4EDDA');
+            $sheet->getStyle('G' . $currentRow . ':J' . $currentRow)->getNumberFormat()->setFormatCode('#,##0.00');
+
+            $sheet->getStyle('A' . $currentRow . ':K' . $currentRow)->getBorders()->getTop()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle('A' . $currentRow . ':K' . $currentRow)->getBorders()->getBottom()->setBorderStyle(Border::BORDER_DOUBLE);
+        }
+
+        // Auto width คอลัมน์ A ถึง K
+        foreach (range('A', 'K') as $colId) {
+            $sheet->getColumnDimension($colId)->setAutoSize(true);
+        }
+
+        $filename = 'debtor_report_' . date('Ymd_His') . '.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
     }
 }

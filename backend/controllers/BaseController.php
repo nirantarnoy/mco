@@ -23,8 +23,8 @@ class BaseController extends Controller
             return parent::beforeAction($action);
         }
 
-        // อนุโลม action ช่วยดึงข้อมูลที่อยู่ / รหัสไปรษณีย์ และแนบ/ลบไฟล์เอกสาร
-        if (in_array($action->id, ['lookup-zipcode', 'lookupzipcode', 'showcity', 'showdistrict', 'showzipcode', 'showaddress', 'add-doc-file', 'adddocfile', 'add-doc-file-bill', 'adddocfilebill', 'add-doc-file-new', 'adddocfilenew', 'delete-doc-file', 'deletedocfile'])) {
+        // อนุโลม action ช่วยดึงข้อมูลที่อยู่ / รหัสไปรษณีย์ และแนบ/ลบไฟล์เอกสาร รวมถึงรายงานสถานะลูกหนี้
+        if (in_array($action->id, ['lookup-zipcode', 'lookupzipcode', 'showcity', 'showdistrict', 'showzipcode', 'showaddress', 'add-doc-file', 'adddocfile', 'add-doc-file-bill', 'adddocfilebill', 'add-doc-file-new', 'adddocfilenew', 'delete-doc-file', 'deletedocfile', 'export-debtor', 'exportdebtor', 'debtor-report', 'debtorreport'])) {
             return parent::beforeAction($action);
         }
 

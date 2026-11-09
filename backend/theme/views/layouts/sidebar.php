@@ -316,6 +316,12 @@
                                         <p>ใบแจ้งหนี้และอื่นๆ</p>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a href="index.php?r=invoice/debtor-report" class="nav-link debtor-report">
+                                        <i class="far fa-circlez nav-icon"></i>
+                                        <p>รายงานสถานะลูกหนี้</p>
+                                    </a>
+                                </li>
                             <?php endif; ?>
                             <?php //if (\Yii::$app->user->can('billing-invoice/index')): ?>
                                 <!-- <li class="nav-item">
