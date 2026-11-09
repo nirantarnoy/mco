@@ -547,10 +547,20 @@ JS
                             <div class="form-group row mb-2">
                                 <label class="col-sm-4 col-form-label">เครดิต</label>
                                 <div class="col-sm-8">
+                                    <?php
+                                    $paymentTermsData = \yii\helpers\ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name');
+                                    // If model has a custom text paytrm that is not in the terms list, include it in data options
+                                    if (!empty($model->paytrm) && !isset($paymentTermsData[$model->paytrm])) {
+                                        $paymentTermsData[$model->paytrm] = $model->paytrm;
+                                    }
+                                    ?>
                                     <?= $form->field($model, 'paytrm')->widget(\kartik\select2\Select2::className(),[
-                                        'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Paymentterm::find()->all(),'id','name'),
-                                        'options'=>['placeholder'=>'กรอกข้อมูลเอง'],
-                                        'pluginOptions' => ['allowClear' => true]
+                                        'data' => $paymentTermsData,
+                                        'options' => ['placeholder' => 'เลือก หรือพิมพ์ระบุเอง (Other)'],
+                                        'pluginOptions' => [
+                                            'allowClear' => true,
+                                            'tags' => true
+                                        ]
                                     ])->label(false) ?>
                                 </div>
                             </div>
