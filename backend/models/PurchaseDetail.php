@@ -20,6 +20,8 @@ use yii\behaviors\TimestampBehavior;
  * @property string|null $remark
  * @property int $created_at
  * @property int $updated_at
+ * @property int $has_vat
+ * @property float|null $tax_percent
  *
  * @property PurchaseMaster $purchaseMaster
  */
@@ -52,7 +54,8 @@ class PurchaseDetail extends \yii\db\ActiveRecord
             [['purchase_master_id', 'line_no'], 'required'],
             [['purchase_master_id', 'line_no', 'created_at', 'updated_at', 'has_vat'], 'integer'],
             [['has_vat'], 'default', 'value' => 1],
-            [['uqnty', 'unitpr', 'amount'], 'number'],
+            [['tax_percent'], 'default', 'value' => 0],
+            [['uqnty', 'unitpr', 'amount', 'tax_percent'], 'number'],
             [['remark'], 'string'],
             [['stkcod'], 'string', 'max' => 50],
             [['stkdes'], 'string', 'max' => 255],

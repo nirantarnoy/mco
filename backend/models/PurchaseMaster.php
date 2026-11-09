@@ -225,10 +225,19 @@ class PurchaseMaster extends \yii\db\ActiveRecord
     {
         $sum_amount = 0;
         $vatable_amount = 0;
+        $total_item_tax = 0;
+        $has_line_tax = false;
+
         foreach ($this->purchaseDetails as $detail) {
-            $sum_amount += (float)$detail->amount;
+            $rowAmount = (float)$detail->amount;
+            $sum_amount += $rowAmount;
             if ((int)$detail->has_vat === 1) {
-                $vatable_amount += (float)$detail->amount;
+                $vatable_amount += $rowAmount;
+            }
+            $lineTaxPer = (float)($detail->tax_percent ?? 0);
+            if ($lineTaxPer > 0) {
+                $has_line_tax = true;
+                $total_item_tax += ($rowAmount * $lineTaxPer) / 100;
             }
         }
 
@@ -239,6 +248,7 @@ class PurchaseMaster extends \yii\db\ActiveRecord
 
         // คำนวณสัดส่วนมูลค่าสินค้าที่มี VAT หลังจากหักส่วนลด (ถ้ามี)
         $vatableAfterDiscount = $vatable_amount;
+        $discountRatio = 1;
         if ($sum_amount > 0 && (float)$this->disc > 0) {
             $discountRatio = ($sum_amount - (float)$this->disc) / $sum_amount;
             $vatableAfterDiscount = $vatable_amount * $discountRatio;
@@ -257,9 +267,11 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             $this->vat_amount = 0;
         }
 
-        // Keep custom tax_amount if explicitly provided, otherwise calculate from percent
+        // Keep custom tax_amount if explicitly provided, otherwise calculate from percent or line taxes
         if ($this->tax_amount === null || $this->tax_amount === '') {
-            if (isset($this->tax_percent)) {
+            if ($has_line_tax) {
+                $this->tax_amount = $total_item_tax * $discountRatio;
+            } elseif (isset($this->tax_percent)) {
                 $this->tax_amount = ($this->vatpr0 * $this->tax_percent) / 100;
             }
         }
@@ -546,6 +558,11 @@ class PurchaseMaster extends \yii\db\ActiveRecord
                 }
                 if (!isset($table->columns['approve_date'])) {
                     $db->createCommand()->addColumn(self::tableName(), 'approve_date', 'DATETIME NULL AFTER approve_by')->execute();
+                }
+                $detailTable = $db->getTableSchema(\backend\models\PurchaseDetail::tableName());
+                if ($detailTable && !isset($detailTable->columns['tax_percent'])) {
+                    $db->createCommand()->addColumn(\backend\models\PurchaseDetail::tableName(), 'tax_percent', 'DECIMAL(5,2) DEFAULT 0')->execute();
+                    $db->getSchema()->refreshTableSchema(\backend\models\PurchaseDetail::tableName());
                 }
                 $db->getSchema()->refreshTableSchema(self::tableName());
             }

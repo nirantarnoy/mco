@@ -123,6 +123,15 @@ function addDetailRow() {
                 <input type='hidden' name='PurchaseDetail[` + detailRowIndex + `][has_vat]' value='0'>
                 <input type='checkbox' class='has-vat-checkbox' name='PurchaseDetail[` + detailRowIndex + `][has_vat]' value='1' checked title='คิด VAT'>
             </td>
+            <td class='text-center align-middle'>
+                <select class='form-control form-control-sm text-center line-tax-percent' name='PurchaseDetail[` + detailRowIndex + `][tax_percent]' style='min-width: 75px;'>
+                    <option value='0'>ไม่มี</option>
+                    <option value='1'>1%</option>
+                    <option value='2'>2%</option>
+                    <option value='3'>3%</option>
+                    <option value='5'>5%</option>
+                </select>
+            </td>
             <td class='text-center'>
                 <button type='button' class='btn btn-danger btn-sm btn-remove-row'>
                     <i class='fas fa-trash'></i>
@@ -182,6 +191,8 @@ function calculateTotal(recalcTax) {
     }
     var subtotal = 0;
     var vatableSubtotal = 0;
+    var totalItemTax = 0;
+    var hasLineTax = false;
     
     $('.detail-row').each(function() {
         var rowAmount = parseFloat($(this).find('.amount-input').val()) || 0;
@@ -189,6 +200,11 @@ function calculateTotal(recalcTax) {
         var hasVat = $(this).find('.has-vat-checkbox').is(':checked');
         if (hasVat) {
             vatableSubtotal += rowAmount;
+        }
+        var lineTaxPer = parseFloat($(this).find('.line-tax-percent').val()) || 0;
+        if (lineTaxPer > 0) {
+            hasLineTax = true;
+            totalItemTax += (rowAmount * lineTaxPer) / 100;
         }
     });
     
@@ -198,8 +214,9 @@ function calculateTotal(recalcTax) {
 
     // คำนวณสัดส่วนส่วนลดสำหรับยอดที่มี VAT (ถ้ามีส่วนลดท้ายบิล)
     var vatableAfterDiscount = vatableSubtotal;
+    var discountRatio = 1;
     if (subtotal > 0 && discount > 0) {
-        var discountRatio = (subtotal - discount) / subtotal;
+        discountRatio = (subtotal - discount) / subtotal;
         vatableAfterDiscount = vatableSubtotal * discountRatio;
     }
     if (vatableAfterDiscount < 0) vatableAfterDiscount = 0;
@@ -212,7 +229,12 @@ function calculateTotal(recalcTax) {
     $('#purchasemaster-vatpr0').val(vatableAfterDiscount.toFixed(2));
     $('#purchasemaster-vat_amount').val(vatAmount.toFixed(2));
 
-    if (recalcTax) {
+    // หากมีการเลือกหัก ณ ที่จ่ายในระดับรายการสินค้า ให้คำนวณยอด TAX รวมจากแต่ละรายการ
+    if (hasLineTax) {
+        var calculatedLineTax = totalItemTax * discountRatio;
+        if (calculatedLineTax < 0) calculatedLineTax = 0;
+        $('#purchasemaster-tax_amount').val(calculatedLineTax.toFixed(2));
+    } else if (recalcTax) {
         var taxAmount = (afterDiscount * taxPercent) / 100;
         if (taxAmount < 0) taxAmount = 0;
         $('#purchasemaster-tax_amount').val(taxAmount.toFixed(2));
@@ -254,7 +276,7 @@ function calculateGrandTotal() {
     $('#display-total').text(total.toFixed(2));
 }
 
-$(document).on('change', '.has-vat-checkbox', function() {
+$(document).on('change', '.has-vat-checkbox, .line-tax-percent', function() {
     calculateTotal(false);
 });
 
@@ -641,6 +663,7 @@ JS
                         <th width="150" class="text-center">ส่วนลดแต่ละรายการ</th>
                         <th width="150" class="text-center">จำนวนเงิน</th>
                         <th width="60" class="text-center">คิด VAT</th>
+                        <th width="85" class="text-center">หัก ณ ที่จ่าย</th>
                         <th width="50" class="text-center">ลบ</th>
                     </tr>
                     </thead>
@@ -686,6 +709,16 @@ JS
                                 <td class="text-center align-middle">
                                     <input type="hidden" name="PurchaseDetail[<?= $index ?>][has_vat]" value="0">
                                     <input type="checkbox" class="has-vat-checkbox" name="PurchaseDetail[<?= $index ?>][has_vat]" value="1" <?= ((int)$detail->has_vat === 1) ? 'checked' : '' ?> title="คิด VAT">
+                                </td>
+                                <td class="text-center align-middle">
+                                    <?php $curTax = (float)($detail->tax_percent ?? 0); ?>
+                                    <select class="form-control form-control-sm text-center line-tax-percent" name="PurchaseDetail[<?= $index ?>][tax_percent]" style="min-width: 75px;">
+                                        <option value="0" <?= $curTax == 0 ? 'selected' : '' ?>>ไม่มี</option>
+                                        <option value="1" <?= $curTax == 1 ? 'selected' : '' ?>>1%</option>
+                                        <option value="2" <?= $curTax == 2 ? 'selected' : '' ?>>2%</option>
+                                        <option value="3" <?= $curTax == 3 ? 'selected' : '' ?>>3%</option>
+                                        <option value="5" <?= $curTax == 5 ? 'selected' : '' ?>>5%</option>
+                                    </select>
                                 </td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-danger btn-sm btn-remove-row">
