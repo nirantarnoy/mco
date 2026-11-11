@@ -19,6 +19,7 @@ if (!$defaultSourceDir) {
 $isLocal = \backend\controllers\DbbackupController::isLocalEnvironment();
 $liveServerUrl = \backend\controllers\DbbackupController::getLiveServerUrl();
 $syncSecretKey = \backend\controllers\DbbackupController::getSyncSecretKey();
+$currentCommit = isset($currentCommit) ? $currentCommit : '';
 ?>
 <br>
 <?php if (Yii::$app->session->hasFlash('success')): ?>
@@ -40,17 +41,31 @@ $syncSecretKey = \backend\controllers\DbbackupController::getSyncSecretKey();
 
 <!-- Control Panel Card -->
 <div class="card card-outline card-primary shadow-sm mb-4">
-    <div class="card-header bg-light d-flex justify-content-between align-items-center">
-        <h3 class="card-title text-primary font-weight-bold mb-0">
-            <i class="fas fa-database mr-1"></i> แผงควบคุมการสำรองข้อมูล (Database Backup)
+    <div class="card-header bg-light d-flex flex-wrap justify-content-between align-items-center">
+        <h3 class="card-title text-primary font-weight-bold mb-2 mb-md-0">
+            <i class="fas fa-database mr-1"></i> แผงควบคุมระบบ (System Control & Backup)
         </h3>
-        <div>
+        <div class="d-flex flex-wrap align-items-center" style="gap: 8px;">
+            <!-- ปุ่ม อัพเดทโปรแกรม (Git Pull) -->
+            <button type="button" class="btn btn-success btn-sm font-weight-bold shadow-sm" id="btn-git-pull-trigger" onclick="openGitPullModal()">
+                <i class="fab fa-github mr-1"></i> อัพเดทโปรแกรม (Git Pull)
+            </button>
             <!-- ปุ่ม Backup MySQL แบบ Manual พร้อม Progress Bar & Modal -->
             <button type="button" class="btn btn-primary btn-sm font-weight-bold shadow-sm" id="btn-backup-mysql" onclick="startBackupMysql()">
                 <i class="fas fa-database mr-1"></i> สำรองฐานข้อมูล MySQL เดี๋ยวนี้ (Manual Backup)
             </button>
         </div>
     </div>
+    <?php if (!empty($currentCommit)): ?>
+        <div class="card-footer bg-white py-2 small text-muted d-flex flex-wrap justify-content-between align-items-center">
+            <div>
+                <i class="fab fa-git-alt text-danger mr-1"></i> <strong>เวอร์ชันล่าสุดในเครื่อง (Git Commit):</strong> <code><?= htmlspecialchars($currentCommit) ?></code>
+            </div>
+            <div>
+                <span class="badge badge-light border"><i class="fas fa-code-branch text-primary mr-1"></i> branch: main</span>
+            </div>
+        </div>
+    <?php endif; ?>
 </div>
 
 <?php if ($isLocal): ?>
@@ -247,6 +262,64 @@ $syncSecretKey = \backend\controllers\DbbackupController::getSyncSecretKey();
             <div class="modal-footer bg-light py-2" id="progress-modal-footer">
                 <button type="button" class="btn btn-secondary btn-sm px-4 d-none" id="btn-close-progress" data-dismiss="modal" data-bs-dismiss="modal">
                     <i class="fas fa-check mr-1"></i> ตกลง / ปิดหน้าต่าง
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Git Pull อัพเดทโปรแกรม -->
+<div class="modal fade" id="modal-git-pull" tabindex="-1" role="dialog" aria-labelledby="modalGitPullLabel" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-header bg-success text-white py-3">
+                <h5 class="modal-title font-weight-bold mb-0" id="modalGitPullLabel">
+                    <i class="fab fa-github mr-2"></i> อัพเดทโปรแกรมจาก GitHub (Git Pull)
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close" id="btn-close-git-pull-x">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-light border shadow-sm mb-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fab fa-github fa-2x mr-3 text-dark"></i>
+                        <div>
+                            <div><strong>Repository:</strong> <a href="https://github.com/nirantarnoy/mco" target="_blank" class="font-weight-bold text-primary">https://github.com/nirantarnoy/mco</a> (Branch: <code>main</code>)</div>
+                            <div class="small text-muted mt-1"><i class="fas fa-terminal mr-1"></i> รันคำสั่งอัตโนมัติ: <code>git pull origin main</code> แทนการเปิด CMD แล้วพิมพ์คำสั่ง</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card bg-light border mb-3">
+                    <div class="card-body py-2 px-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-7 mb-2 mb-md-0">
+                                <small class="text-muted d-block">เวอร์ชันปัจจุบันในเครื่อง (Commit):</small>
+                                <span class="font-weight-bold text-dark small font-monospace" id="git-pull-current-commit"><?= htmlspecialchars($currentCommit ?: 'กำลังตรวจสอบ...') ?></span>
+                            </div>
+                            <div class="col-md-5 text-md-right">
+                                <small class="text-muted d-block">สถานะการทำงาน:</small>
+                                <span class="badge badge-secondary p-2" id="git-pull-badge-status"><i class="fas fa-clock mr-1"></i> พร้อมอัพเดท</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mb-0">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="font-weight-bold small text-muted mb-0"><i class="fas fa-terminal mr-1"></i> ผลการทำงานจาก Git (Console Output):</label>
+                        <small id="git-pull-timer" class="text-muted font-monospace"></small>
+                    </div>
+                    <pre id="git-pull-output" class="p-3 rounded text-light font-monospace small mb-0" style="background-color: #1e1e1e; min-height: 140px; max-height: 280px; overflow-y: auto; border: 1px solid #333; line-height: 1.5;">กดปุ่ม "เริ่มอัพเดทเดี๋ยวนี้" เพื่อดึงโค้ดล่าสุดจาก GitHub...</pre>
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal" data-bs-dismiss="modal" id="btn-close-git-pull">
+                    <i class="fas fa-times mr-1"></i> ปิด
+                </button>
+                <button type="button" class="btn btn-success font-weight-bold shadow-sm" id="btn-run-git-pull" onclick="executeGitPull()">
+                    <i class="fas fa-cloud-download-alt mr-1"></i> เริ่มอัพเดทเดี๋ยวนี้ (Git Pull)
                 </button>
             </div>
         </div>
@@ -1245,6 +1318,106 @@ window.startPullRemoteAll = function() {
         e.preventDefault();
         window.startPullRemoteAll();
     });
+
+    // Git Pull Modal & Execution
+    window.openGitPullModal = function() {
+        $('#modal-git-pull').modal('show');
+    };
+
+    window.executeGitPull = function() {
+        var btn = $('#btn-run-git-pull');
+        var btnClose = $('#btn-close-git-pull');
+        var btnCloseX = $('#btn-close-git-pull-x');
+        var statusBadge = $('#git-pull-badge-status');
+        var outputPre = $('#git-pull-output');
+        var timerEl = $('#git-pull-timer');
+
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> กำลังอัพเดท (Pulling)...');
+        btnClose.prop('disabled', true);
+        btnCloseX.prop('disabled', true);
+        statusBadge.removeClass('badge-secondary badge-success badge-danger badge-info')
+            .addClass('badge-warning text-dark')
+            .html('<i class="fas fa-spinner fa-spin mr-1"></i> กำลังดึงโค้ดจาก GitHub...');
+        outputPre.text('กำลังรันคำสั่ง: git pull origin main\nกรุณารอสักครู่...\n');
+        timerEl.text('กำลังประมวลผล...');
+
+        var startTime = new Date();
+        var timerInterval = setInterval(function() {
+            var elapsed = Math.floor((new Date() - startTime) / 1000);
+            timerEl.text('เวลาที่ใช้: ' + elapsed + ' วินาที');
+        }, 1000);
+
+        $.ajax({
+            url: '<?= \yii\helpers\Url::to(['dbbackup/git-pull']) ?>',
+            type: 'POST',
+            dataType: 'json',
+            timeout: 300000
+        }).done(function(res) {
+            clearInterval(timerInterval);
+            btn.prop('disabled', false).html('<i class="fas fa-redo mr-1"></i> อัพเดทอีกครั้ง');
+            btnClose.prop('disabled', false);
+            btnCloseX.prop('disabled', false);
+
+            if (res.duration) {
+                timerEl.text('เสร็จสิ้นใน ' + res.duration);
+            }
+
+            if (res.output) {
+                outputPre.text(res.output);
+            } else {
+                outputPre.text(res.message || 'ไม่มีข้อความตอบกลับ');
+            }
+
+            if (res.after_commit) {
+                $('#git-pull-current-commit').text(res.after_commit);
+            }
+
+            if (res.success) {
+                if (res.is_up_to_date) {
+                    statusBadge.removeClass('badge-warning text-dark').addClass('badge-info')
+                        .html('<i class="fas fa-check-double mr-1"></i> เวอร์ชันล่าสุดแล้ว');
+                } else {
+                    statusBadge.removeClass('badge-warning text-dark').addClass('badge-success')
+                        .html('<i class="fas fa-check-circle mr-1"></i> อัพเดทสำเร็จ');
+                }
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: res.is_up_to_date ? 'เวอร์ชันล่าสุดแล้ว' : 'อัพเดทโปรแกรมสำเร็จ',
+                        text: res.message,
+                        confirmButtonText: 'ตกลง'
+                    });
+                }
+            } else {
+                statusBadge.removeClass('badge-warning text-dark').addClass('badge-danger')
+                    .html('<i class="fas fa-exclamation-triangle mr-1"></i> เกิดข้อผิดพลาด');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'อัพเดทไม่สำเร็จ',
+                        text: res.message,
+                        confirmButtonText: 'ตกลง'
+                    });
+                }
+            }
+        }).fail(function(xhr, status, error) {
+            clearInterval(timerInterval);
+            btn.prop('disabled', false).html('<i class="fas fa-cloud-download-alt mr-1"></i> เริ่มอัพเดทเดี๋ยวนี้ (Git Pull)');
+            btnClose.prop('disabled', false);
+            btnCloseX.prop('disabled', false);
+            statusBadge.removeClass('badge-warning text-dark').addClass('badge-danger')
+                .html('<i class="fas fa-exclamation-triangle mr-1"></i> ล้มเหลว');
+            outputPre.text('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์:\n' + (xhr.responseText || error || status));
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้: ' + error,
+                    confirmButtonText: 'ตกลง'
+                });
+            }
+        });
+    };
 
     // เมื่อปิด Modal ให้โหลดหน้านี้ใหม่เพื่อให้รายการไฟล์ SQL อัปเดตล่าสุด
     $('#btn-close-progress').on('click', function(){

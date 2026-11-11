@@ -139,7 +139,8 @@ class DbbackupController extends BaseController
                                 'copy-uploads', 'copyuploads', 'backup-db-ajax', 'backupdbajax',
                                 'get-files-list', 'getfileslist', 'copy-batch', 'copybatch',
                                 'browse-folder', 'browsefolder',
-                                'pull-remote-db', 'pull-remote-files-list', 'pull-remote-file-batch'
+                                'pull-remote-db', 'pull-remote-files-list', 'pull-remote-file-batch',
+                                'git-pull', 'gitpull'
                             ])) {
                                 if (Yii::$app->user->can('dbbackup/backuplist') || \backend\models\User::isUserAdmin(\Yii::$app->user->id)) {
                                     return true;
@@ -362,6 +363,34 @@ class DbbackupController extends BaseController
     }
 
     /**
+     * ค้นหาตำแหน่งไฟล์ Binary ของ Git ในเครื่อง
+     */
+    public static function getGitBinaryPath()
+    {
+        $os = php_uname();
+        $isWin = (strpos($os, 'ndow') > 0 || strtoupper(substr(PHP_OS, 0, 3)) === 'WIN');
+
+        if ($isWin) {
+            $possiblePaths = [
+                'C:/Program Files/Git/cmd/git.exe',
+                'C:/Program Files/Git/bin/git.exe',
+                'C:/Program Files (x86)/Git/cmd/git.exe',
+                'C:/Program Files (x86)/Git/bin/git.exe',
+                'D:/Program Files/Git/cmd/git.exe',
+                'E:/Program Files/Git/cmd/git.exe',
+                'E:/xampp/git/bin/git.exe',
+            ];
+            foreach ($possiblePaths as $p) {
+                if (file_exists($p)) {
+                    return '"' . str_replace('/', DIRECTORY_SEPARATOR, $p) . '"';
+                }
+            }
+        }
+
+        return 'git';
+    }
+
+    /**
      * ตรวจสอบและแก้ไข comment header ของ MariaDB (เช่น /*M!999999\- enable the sandbox mode * /) 
      * เพื่อให้ MySQL CLI ทั่วไปสามารถ restore ได้โดยไม่เจอ error: Unknown command '\-'
      */
@@ -418,7 +447,100 @@ class DbbackupController extends BaseController
 
     public function actionBackuplist()
     {
-        return $this->render('_backuplist');
+        $repoDir = realpath(dirname(Yii::getAlias('@backend')));
+        $currentCommit = '';
+        if ($repoDir && is_dir($repoDir . DIRECTORY_SEPARATOR . '.git')) {
+            $git = self::getGitBinaryPath();
+            $cmd = "{$git} -c safe.directory=* -C " . escapeshellarg($repoDir) . " log -1 --pretty=format:\"%h - %s (%cd)\" --date=format:\"%Y-%m-%d %H:%M\" 2>&1";
+            @exec($cmd, $out);
+            if (!empty($out)) {
+                $currentCommit = implode("\n", $out);
+            }
+        }
+
+        return $this->render('_backuplist', [
+            'currentCommit' => $currentCommit,
+        ]);
+    }
+
+    /**
+     * ดึงโค้ดล่าสุดจาก GitHub ผ่าน Git Pull (git pull origin main)
+     */
+    public function actionGitPull()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        @ini_set('max_execution_time', '300');
+        @set_time_limit(300);
+
+        $repoDir = realpath(dirname(Yii::getAlias('@backend')));
+        if (!$repoDir || !is_dir($repoDir . DIRECTORY_SEPARATOR . '.git')) {
+            return [
+                'success' => false,
+                'message' => 'ไม่พบโฟลเดอร์ Git repository ในระบบ (' . ($repoDir ?: 'unknown') . ')',
+                'output' => '',
+            ];
+        }
+
+        $git = self::getGitBinaryPath();
+
+        // 1. ดึง commit ก่อน pull
+        $beforeCommit = '';
+        $cmdBefore = "{$git} -c safe.directory=* -C " . escapeshellarg($repoDir) . " log -1 --pretty=format:\"%h - %s (%cd)\" --date=format:\"%Y-%m-%d %H:%M\" 2>&1";
+        @exec($cmdBefore, $outBefore);
+        if (!empty($outBefore)) {
+            $beforeCommit = implode("\n", $outBefore);
+        }
+
+        // 2. ดึง branch ปัจจุบัน
+        $branch = 'main';
+        $cmdBranch = "{$git} -c safe.directory=* -C " . escapeshellarg($repoDir) . " rev-parse --abbrev-ref HEAD 2>&1";
+        @exec($cmdBranch, $outBranch);
+        if (!empty($outBranch) && !empty($outBranch[0])) {
+            $branch = trim($outBranch[0]);
+        }
+
+        // 3. รัน git pull origin main
+        $cmd = "{$git} -c safe.directory=* -C " . escapeshellarg($repoDir) . " pull origin " . escapeshellarg($branch) . " 2>&1";
+        $startTime = microtime(true);
+        $output = [];
+        $returnVar = 0;
+        exec($cmd, $output, $returnVar);
+        $duration = microtime(true) - $startTime;
+        $outputText = implode("\n", $output);
+
+        // 4. ดึง commit หลัง pull
+        $afterCommit = '';
+        $cmdAfter = "{$git} -c safe.directory=* -C " . escapeshellarg($repoDir) . " log -1 --pretty=format:\"%h - %s (%cd)\" --date=format:\"%Y-%m-%d %H:%M\" 2>&1";
+        @exec($cmdAfter, $outAfter);
+        if (!empty($outAfter)) {
+            $afterCommit = implode("\n", $outAfter);
+        }
+
+        $isSuccess = ($returnVar === 0);
+        $isAlreadyUpToDate = (strpos($outputText, 'Already up to date') !== false);
+
+        if ($isSuccess) {
+            if ($isAlreadyUpToDate) {
+                $message = 'ระบบเป็นเวอร์ชันล่าสุดแล้ว ไม่มีการเปลี่ยนแปลงใหม่ (Already up to date)';
+            } else {
+                $message = 'อัพเดทโปรแกรมสำเร็จเรียบร้อยแล้ว (ใช้เวลา ' . self::formatDuration($duration) . ')';
+            }
+        } else {
+            $message = 'เกิดข้อผิดพลาดในการดึงข้อมูลจาก GitHub (รหัสผลลัพธ์: ' . $returnVar . ')';
+        }
+
+        return [
+            'success' => $isSuccess,
+            'is_up_to_date' => $isAlreadyUpToDate,
+            'message' => $message,
+            'output' => $outputText,
+            'command' => "git pull origin {$branch}",
+            'branch' => $branch,
+            'duration' => self::formatDuration($duration),
+            'before_commit' => $beforeCommit,
+            'after_commit' => $afterCommit,
+        ];
     }
 
     /**
