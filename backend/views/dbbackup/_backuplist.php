@@ -268,19 +268,19 @@ $currentCommit = isset($currentCommit) ? $currentCommit : '';
     </div>
 </div>
 
-<!-- Modal: Git Pull อัพเดทโปรแกรม -->
-<div class="modal fade" id="modal-git-pull" tabindex="-1" role="dialog" aria-labelledby="modalGitPullLabel" aria-hidden="true" data-backdrop="static" style="z-index: 105000;">
-    <div class="modal-dialog modal-lg" role="document" style="z-index: 105001; position: relative;">
-        <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden; pointer-events: auto;">
-            <div class="modal-header bg-success text-white py-3">
-                <h5 class="modal-title font-weight-bold mb-0" id="modalGitPullLabel">
+<!-- Modal: Git Pull อัพเดทโปรแกรม (Standalone Overlay Modal ปลอดภัย 100% ไม่มี Backdrop บล็อกการคลิก) -->
+<div id="modal-git-pull" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.65); z-index: 999999; overflow-y: auto;">
+    <div style="max-width: 800px; margin: 50px auto; padding: 15px;">
+        <div class="card shadow-lg border-0" style="border-radius: 12px; overflow: hidden; background: #fff;">
+            <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="card-title font-weight-bold mb-0 text-white" style="font-size: 1.15rem;">
                     <i class="fab fa-github mr-2"></i> อัพเดทโปรแกรมจาก GitHub (Git Pull)
                 </h5>
-                <button type="button" class="close text-white" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close" id="btn-close-git-pull-x">
+                <button type="button" class="close text-white" onclick="closeGitPullModal()" style="font-size: 1.6rem; opacity: 0.9; cursor: pointer; border: none; background: transparent;">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body p-4" style="pointer-events: auto;">
+            <div class="card-body p-4">
                 <div class="alert alert-light border shadow-sm mb-3">
                     <div class="d-flex align-items-center">
                         <i class="fab fa-github fa-2x mr-3 text-dark"></i>
@@ -314,11 +314,11 @@ $currentCommit = isset($currentCommit) ? $currentCommit : '';
                     <pre id="git-pull-output" class="p-3 rounded text-light font-monospace small mb-0" style="background-color: #1e1e1e; min-height: 140px; max-height: 280px; overflow-y: auto; border: 1px solid #333; line-height: 1.5;">กดปุ่ม "เริ่มอัพเดทเดี๋ยวนี้" เพื่อดึงโค้ดล่าสุดจาก GitHub...</pre>
                 </div>
             </div>
-            <div class="modal-footer bg-light py-2" style="pointer-events: auto;">
-                <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal" data-bs-dismiss="modal" id="btn-close-git-pull">
+            <div class="card-footer bg-light py-2 d-flex justify-content-end align-items-center" style="gap: 10px;">
+                <button type="button" class="btn btn-secondary font-weight-bold btn-close-git" onclick="closeGitPullModal()">
                     <i class="fas fa-times mr-1"></i> ปิด
                 </button>
-                <button type="button" class="btn btn-success font-weight-bold shadow-sm" id="btn-run-git-pull" onclick="executeGitPull()" style="cursor: pointer; position: relative; z-index: 105002; pointer-events: auto;">
+                <button type="button" class="btn btn-success font-weight-bold shadow-sm" id="btn-run-git-pull" onclick="executeGitPull()" style="cursor: pointer;">
                     <i class="fas fa-cloud-download-alt mr-1"></i> เริ่มอัพเดทเดี๋ยวนี้ (Git Pull)
                 </button>
             </div>
@@ -434,6 +434,7 @@ $urlBrowseFolder = \yii\helpers\Url::to(['dbbackup/browse-folder'], true);
 $urlPullRemoteDb = \yii\helpers\Url::to(['dbbackup/pull-remote-db'], true);
 $urlPullRemoteFilesList = \yii\helpers\Url::to(['dbbackup/pull-remote-files-list'], true);
 $urlPullRemoteFileBatch = \yii\helpers\Url::to(['dbbackup/pull-remote-file-batch'], true);
+$urlGitPull = \yii\helpers\Url::to(['dbbackup/git-pull'], true);
 ?>
 
 <script>
@@ -490,7 +491,15 @@ window.openGitPullModal = function() {
     if (typeof window._doOpenGitPullModal === 'function') {
         window._doOpenGitPullModal();
     } else {
-        alert('ระบบกำลังโหลด กรุณารอสักครู่แล้วลองอีกครั้ง');
+        $('#modal-git-pull').fadeIn(150);
+    }
+};
+
+window.closeGitPullModal = function() {
+    if (typeof window._doCloseGitPullModal === 'function') {
+        window._doCloseGitPullModal();
+    } else {
+        $('#modal-git-pull').fadeOut(150);
     }
 };
 
@@ -518,6 +527,7 @@ window.executeGitPull = function() {
     var urlPullRemoteDb = <?= json_encode($urlPullRemoteDb) ?>;
     var urlPullRemoteFilesList = <?= json_encode($urlPullRemoteFilesList) ?>;
     var urlPullRemoteFileBatch = <?= json_encode($urlPullRemoteFileBatch) ?>;
+    var urlGitPull = <?= json_encode($urlGitPull) ?>;
 
     function addLog(msg, color) {
         var box = $('#progress-log-box');
@@ -1335,49 +1345,30 @@ window.executeGitPull = function() {
         window.startPullRemoteAll();
     });
 
-    // Git Pull Modal & Execution
+    // Git Pull Modal & Execution (Standalone Overlay Modal ปลอดภัย 100%)
     window._doOpenGitPullModal = function() {
-        var modal = $('#modal-git-pull');
-        if (!modal.parent().is('body')) {
-            modal.appendTo('body');
-        }
-        modal.css({
-            'z-index': 105000,
-            'display': 'block'
-        });
-        modal.modal({backdrop: 'static', keyboard: false, show: true});
-        setTimeout(function() {
-            $('.modal-backdrop').last().css('z-index', 104990);
-            modal.css('z-index', 105000);
-        }, 50);
+        $('#modal-git-pull').fadeIn(200);
     };
     window.openGitPullModal = window._doOpenGitPullModal;
 
     window._doCloseGitPullModal = function() {
-        var modal = $('#modal-git-pull');
-        modal.modal('hide');
-        setTimeout(function() {
-            modal.removeClass('show').hide();
-            $('.modal-backdrop').remove();
-            $('body').removeClass('modal-open');
-        }, 150);
+        $('#modal-git-pull').fadeOut(200);
     };
+    window.closeGitPullModal = window._doCloseGitPullModal;
 
     window._doExecuteGitPull = function() {
         var btn = $('#btn-run-git-pull');
-        var btnClose = $('#btn-close-git-pull');
-        var btnCloseX = $('#btn-close-git-pull-x');
+        var btnClose = $('#modal-git-pull .btn-close-git, #modal-git-pull .close');
         var statusBadge = $('#git-pull-badge-status');
         var outputPre = $('#git-pull-output');
         var timerEl = $('#git-pull-timer');
 
         btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> กำลังอัพเดท (Pulling)...');
         btnClose.prop('disabled', true);
-        btnCloseX.prop('disabled', true);
         statusBadge.removeClass('badge-secondary badge-success badge-danger badge-info')
             .addClass('badge-warning text-dark')
             .html('<i class="fas fa-spinner fa-spin mr-1"></i> กำลังดึงโค้ดจาก GitHub...');
-        outputPre.text('กำลังรันคำสั่ง: git pull origin main\nกรุณารอสักครู่...\n');
+        outputPre.text('กำลังรันคำสั่ง: git pull origin main\nกรุณารอสักครู่ ห้ามปิดหน้าต่างนี้...\n');
         timerEl.text('กำลังประมวลผล...');
 
         var startTime = new Date();
@@ -1387,7 +1378,7 @@ window.executeGitPull = function() {
         }, 1000);
 
         $.ajax({
-            url: '<?= \yii\helpers\Url::to(['dbbackup/git-pull']) ?>',
+            url: urlGitPull,
             type: 'POST',
             dataType: 'json',
             timeout: 300000
@@ -1395,7 +1386,6 @@ window.executeGitPull = function() {
             clearInterval(timerInterval);
             btn.prop('disabled', false).html('<i class="fas fa-redo mr-1"></i> อัพเดทอีกครั้ง');
             btnClose.prop('disabled', false);
-            btnCloseX.prop('disabled', false);
 
             if (res.duration) {
                 timerEl.text('เสร็จสิ้นใน ' + res.duration);
@@ -1419,41 +1409,47 @@ window.executeGitPull = function() {
                     statusBadge.removeClass('badge-warning text-dark').addClass('badge-success')
                         .html('<i class="fas fa-check-circle mr-1"></i> อัพเดทสำเร็จ');
                 }
-                if (typeof Swal !== 'undefined') {
+                if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
                     Swal.fire({
                         icon: 'success',
                         title: res.is_up_to_date ? 'เวอร์ชันล่าสุดแล้ว' : 'อัพเดทโปรแกรมสำเร็จ',
                         text: res.message,
                         confirmButtonText: 'ตกลง'
                     });
+                } else {
+                    alert(res.message);
                 }
             } else {
                 statusBadge.removeClass('badge-warning text-dark').addClass('badge-danger')
                     .html('<i class="fas fa-exclamation-triangle mr-1"></i> เกิดข้อผิดพลาด');
-                if (typeof Swal !== 'undefined') {
+                if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
                     Swal.fire({
                         icon: 'error',
                         title: 'อัพเดทไม่สำเร็จ',
                         text: res.message,
                         confirmButtonText: 'ตกลง'
                     });
+                } else {
+                    alert(res.message || 'เกิดข้อผิดพลาดในการอัพเดท');
                 }
             }
         }).fail(function(xhr, status, error) {
             clearInterval(timerInterval);
             btn.prop('disabled', false).html('<i class="fas fa-cloud-download-alt mr-1"></i> เริ่มอัพเดทเดี๋ยวนี้ (Git Pull)');
             btnClose.prop('disabled', false);
-            btnCloseX.prop('disabled', false);
             statusBadge.removeClass('badge-warning text-dark').addClass('badge-danger')
                 .html('<i class="fas fa-exclamation-triangle mr-1"></i> ล้มเหลว');
-            outputPre.text('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์:\n' + (xhr.responseText || error || status));
-            if (typeof Swal !== 'undefined') {
+            var errDetail = (xhr.responseText ? xhr.responseText.substring(0, 500) : error || status);
+            outputPre.text('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์:\n' + errDetail);
+            if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
                 Swal.fire({
                     icon: 'error',
                     title: 'เกิดข้อผิดพลาด',
-                    text: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้: ' + error,
+                    text: 'ไม่สามารถติดต่อเซิร์ฟเวอร์ได้: ' + (error || status),
                     confirmButtonText: 'ตกลง'
                 });
+            } else {
+                alert('ไม่สามารถติดต่อเซิร์ฟเวอร์ได้: ' + (error || status));
             }
         });
     };
@@ -1468,9 +1464,10 @@ window.executeGitPull = function() {
         e.preventDefault();
         window.executeGitPull();
     });
-    $(document).on('click', '#btn-close-git-pull, #btn-close-git-pull-x', function(e){
-        e.preventDefault();
-        window._doCloseGitPullModal();
+    $(document).on('click', '#modal-git-pull', function(e){
+        if (e.target === this) {
+            window.closeGitPullModal();
+        }
     });
 
     // เมื่อปิด Modal ให้โหลดหน้านี้ใหม่เพื่อให้รายการไฟล์ SQL อัปเดตล่าสุด
