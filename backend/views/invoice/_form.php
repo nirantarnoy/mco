@@ -955,8 +955,10 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                         ]
                     ]) ?>
 
-                    <?= $form->field($model, 'quotation_id')->widget(Select2::class, [
+                    <?= $form->field($model, 'quotation_id')->widget(Select2::className(), [
                         'data' => $quotationData,
+                        'language' => 'th',
+                        'pluginLoading' => false,
                         'options' => [
                             'placeholder' => '...เลือกใบเสนอราคา...',
                             'id' => 'invoice-job-id',
@@ -964,7 +966,6 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                         ],
                         'pluginOptions' => [
                             'allowClear' => true,
-                            'escapeMarkup' => new \yii\web\JsExpression('function (markup) { return markup; }'),
                         ],
                     ]) ?>
                     <?php if ($isCopyReceipt): ?>
