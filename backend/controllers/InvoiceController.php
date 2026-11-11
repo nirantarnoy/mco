@@ -265,6 +265,34 @@ class InvoiceController extends BaseController
                     //  print_r($itemsData);return;
                     $this->saveItems($model, $itemsData);
 
+                    // Save selected document relationships if provided (e.g. from receipt create)
+                    $selectedDocs = Yii::$app->request->post('selected_related_docs', []);
+                    if (!empty($selectedDocs) && is_array($selectedDocs)) {
+                        foreach ($selectedDocs as $docInfo) {
+                            $parts = explode(':', $docInfo);
+                            if (count($parts) === 2) {
+                                $dType = $parts[0];
+                                $dId = (int)$parts[1];
+                                $relType = ($dType === 'credit_note') ? 'credit_note_to_receipt' : (($dType === 'debit_note') ? 'debit_note_to_receipt' : 'tax_invoice_to_receipt');
+                                
+                                $existingRel = \backend\models\InvoiceRelation::find()
+                                    ->where([
+                                        'parent_invoice_id' => $dId,
+                                        'child_invoice_id' => $model->id,
+                                        'relation_type' => $relType
+                                    ])->one();
+                                
+                                if (!$existingRel) {
+                                    $rel = new \backend\models\InvoiceRelation();
+                                    $rel->parent_invoice_id = $dId;
+                                    $rel->child_invoice_id = $model->id;
+                                    $rel->relation_type = $relType;
+                                    $rel->save(false);
+                                }
+                            }
+                        }
+                    }
+
                     // Save invoice relationship if this is a copy
                     if ($copy_from) {
                         $sourceInvoice = $this->findModel($copy_from); // Need to re-fetch source invoice to get type
@@ -354,6 +382,34 @@ class InvoiceController extends BaseController
                     // Handle new items
                     $itemsData = Yii::$app->request->post('InvoiceItem', []);
                     $this->saveItems($model, $itemsData);
+
+                    // Save selected document relationships if provided
+                    $selectedDocs = Yii::$app->request->post('selected_related_docs', []);
+                    if (!empty($selectedDocs) && is_array($selectedDocs)) {
+                        foreach ($selectedDocs as $docInfo) {
+                            $parts = explode(':', $docInfo);
+                            if (count($parts) === 2) {
+                                $dType = $parts[0];
+                                $dId = (int)$parts[1];
+                                $relType = ($dType === 'credit_note') ? 'credit_note_to_receipt' : (($dType === 'debit_note') ? 'debit_note_to_receipt' : 'tax_invoice_to_receipt');
+                                
+                                $existingRel = \backend\models\InvoiceRelation::find()
+                                    ->where([
+                                        'parent_invoice_id' => $dId,
+                                        'child_invoice_id' => $model->id,
+                                        'relation_type' => $relType
+                                    ])->one();
+                                
+                                if (!$existingRel) {
+                                    $rel = new \backend\models\InvoiceRelation();
+                                    $rel->parent_invoice_id = $dId;
+                                    $rel->child_invoice_id = $model->id;
+                                    $rel->relation_type = $relType;
+                                    $rel->save(false);
+                                }
+                            }
+                        }
+                    }
 
                     // Update Payment History if exists
                     $history = \backend\models\InvoicePaymentHistory::findOne(['receipt_id' => $model->id]);
@@ -601,6 +657,231 @@ class InvoiceController extends BaseController
             }
         }
         return json_encode($customer_data);
+    }
+
+    /**
+     * ดึงเอกสารใบแจ้งหนี้/ใบกำกับภาษี และใบลดหนี้/ใบเพิ่มหนี้ ที่ผูกกับ Quotation
+     * สำหรับนำมาเลือกทำใบเสร็จรับเงิน (receipt)
+     */
+    public function actionGetRelatedDocs()
+    {
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $quotationId = \Yii::$app->request->post('quotation_id') ?: \Yii::$app->request->get('quotation_id');
+        $currentInvoiceId = \Yii::$app->request->post('current_invoice_id') ?: \Yii::$app->request->get('current_invoice_id');
+
+        if (!$quotationId) {
+            return ['success' => false, 'message' => 'ไม่พบรหัสใบเสนอราคา'];
+        }
+
+        try {
+            // 1. ดึงใบแจ้งหนี้ / ใบกำกับภาษี / ใบวางบิล ที่ผูกกับ quotation_id
+            $invoices = Invoice::find()
+                ->where(['quotation_id' => $quotationId])
+                ->andWhere(['!=', 'invoice_type', Invoice::TYPE_RECEIPT])
+                ->andWhere(['status' => Invoice::STATUS_ACTIVE])
+                ->orderBy(['invoice_date' => SORT_ASC, 'id' => SORT_ASC])
+                ->all();
+
+            $invIds = [];
+            $invoiceList = [];
+            foreach ($invoices as $inv) {
+                $invIds[] = $inv->id;
+
+                // ตรวจสอบว่าใบแจ้งหนี้/ใบกำกับนี้เคยถูกนำไปทำใบเสร็จแล้วหรือไม่
+                $receiptRelQuery = \backend\models\InvoiceRelation::find()
+                    ->alias('ir')
+                    ->innerJoin('invoices r', 'ir.child_invoice_id = r.id')
+                    ->where([
+                        'ir.parent_invoice_id' => $inv->id,
+                        'r.invoice_type' => Invoice::TYPE_RECEIPT,
+                        'r.status' => Invoice::STATUS_ACTIVE,
+                    ]);
+                if ($currentInvoiceId) {
+                    $receiptRelQuery->andWhere(['!=', 'r.id', $currentInvoiceId]);
+                }
+                $existingReceiptRel = $receiptRelQuery->one();
+
+                // ตรวจสอบกรณีที่สร้างใบเสร็จโดยมี quotation_id ชี้ไปที่ ID ของใบแจ้งหนี้โดยตรง
+                $directReceiptQuery = Invoice::find()
+                    ->where([
+                        'quotation_id' => $inv->id,
+                        'invoice_type' => Invoice::TYPE_RECEIPT,
+                        'status' => Invoice::STATUS_ACTIVE,
+                    ]);
+                if ($currentInvoiceId) {
+                    $directReceiptQuery->andWhere(['!=', 'id', $currentInvoiceId]);
+                }
+                $existingDirectReceipt = $directReceiptQuery->one();
+
+                $usedReceipt = null;
+                if ($existingReceiptRel) {
+                    $usedReceipt = Invoice::findOne($existingReceiptRel->child_invoice_id);
+                } elseif ($existingDirectReceipt) {
+                    $usedReceipt = $existingDirectReceipt;
+                }
+
+                $typeLabel = $inv->getTypeLabel();
+
+                $invoiceList[] = [
+                    'id' => $inv->id,
+                    'doc_type' => 'invoice',
+                    'invoice_type' => $inv->invoice_type,
+                    'type_label' => $typeLabel,
+                    'doc_no' => $inv->invoice_number,
+                    'doc_date' => $inv->invoice_date,
+                    'amount' => (float)$inv->total_amount,
+                    'vat_amount' => (float)$inv->vat_amount,
+                    'is_used' => $usedReceipt ? true : false,
+                    'used_by_receipt' => $usedReceipt ? $usedReceipt->invoice_number : null,
+                    'used_receipt_id' => $usedReceipt ? $usedReceipt->id : null,
+                ];
+            }
+
+            // 2. ดึงใบลดหนี้ (Credit Note) ที่ผูกกับ quotation_id หรือ invoice_id ของใบแจ้งหนี้เหล่านี้
+            $cnQuery = \backend\models\CreditNote::find()
+                ->where(['!=', 'status', 'canceled']);
+
+            $cnConditions = [['quotation_id' => $quotationId]];
+            if (!empty($invIds)) {
+                $cnConditions[] = ['in', 'invoice_id', $invIds];
+            }
+            $cnQuery->andWhere(array_merge(['or'], $cnConditions));
+            $creditNotes = $cnQuery->orderBy(['document_date' => SORT_ASC, 'id' => SORT_ASC])->all();
+
+            $cnList = [];
+            foreach ($creditNotes as $cn) {
+                // ตรวจสอบว่าใบลดหนี้นี้เคยถูกนำไปทำใบเสร็จแล้วหรือไม่ (ดูจาก invoice_relations หรือ invoice_items)
+                $cnRelQuery = \backend\models\InvoiceRelation::find()
+                    ->alias('ir')
+                    ->innerJoin('invoices r', 'ir.child_invoice_id = r.id')
+                    ->where([
+                        'ir.parent_invoice_id' => $cn->id,
+                        'ir.relation_type' => 'credit_note_to_receipt',
+                        'r.invoice_type' => Invoice::TYPE_RECEIPT,
+                        'r.status' => Invoice::STATUS_ACTIVE,
+                    ]);
+                if ($currentInvoiceId) {
+                    $cnRelQuery->andWhere(['!=', 'r.id', $currentInvoiceId]);
+                }
+                $existingCnRel = $cnRelQuery->one();
+
+                $usedReceipt = null;
+                if ($existingCnRel) {
+                    $usedReceipt = Invoice::findOne($existingCnRel->child_invoice_id);
+                } else {
+                    // ตรวจสอบว่ามี item ในใบเสร็จอื่นที่มีการอ้างอิงเลขที่ใบลดหนี้นี้หรือไม่
+                    $itemQuery = \backend\models\InvoiceItem::find()
+                        ->alias('ii')
+                        ->innerJoin('invoices r', 'ii.invoice_id = r.id')
+                        ->where([
+                            'r.invoice_type' => Invoice::TYPE_RECEIPT,
+                            'r.status' => Invoice::STATUS_ACTIVE,
+                        ])
+                        ->andWhere(['like', 'ii.item_description', $cn->document_no]);
+                    if ($currentInvoiceId) {
+                        $itemQuery->andWhere(['!=', 'r.id', $currentInvoiceId]);
+                    }
+                    $existingItem = $itemQuery->one();
+                    if ($existingItem) {
+                        $usedReceipt = Invoice::findOne($existingItem->invoice_id);
+                    }
+                }
+
+                $cnList[] = [
+                    'id' => $cn->id,
+                    'doc_type' => 'credit_note',
+                    'type_label' => 'ใบลดหนี้ (Credit Note)',
+                    'doc_no' => $cn->document_no,
+                    'doc_date' => $cn->document_date,
+                    'amount' => (float)$cn->total_amount,
+                    'adjust_amount' => (float)$cn->adjust_amount,
+                    'vat_amount' => (float)$cn->vat_amount,
+                    'reason' => $cn->reason,
+                    'is_used' => $usedReceipt ? true : false,
+                    'used_by_receipt' => $usedReceipt ? $usedReceipt->invoice_number : null,
+                    'used_receipt_id' => $usedReceipt ? $usedReceipt->id : null,
+                ];
+            }
+
+            // 3. ดึงใบเพิ่มหนี้ (Debit Note) ที่ผูกกับ quotation_id หรือ invoice_id ของใบแจ้งหนี้เหล่านี้
+            $dnQuery = \backend\models\DebitNote::find()
+                ->where(['!=', 'status', 'canceled']);
+
+            $dnConditions = [['quotation_id' => $quotationId]];
+            if (!empty($invIds)) {
+                $dnConditions[] = ['in', 'invoice_id', $invIds];
+            }
+            $dnQuery->andWhere(array_merge(['or'], $dnConditions));
+            $debitNotes = $dnQuery->orderBy(['document_date' => SORT_ASC, 'id' => SORT_ASC])->all();
+
+            $dnList = [];
+            foreach ($debitNotes as $dn) {
+                // ตรวจสอบว่าใบเพิ่มหนี้นี้เคยถูกนำไปทำใบเสร็จแล้วหรือไม่
+                $dnRelQuery = \backend\models\InvoiceRelation::find()
+                    ->alias('ir')
+                    ->innerJoin('invoices r', 'ir.child_invoice_id = r.id')
+                    ->where([
+                        'ir.parent_invoice_id' => $dn->id,
+                        'ir.relation_type' => 'debit_note_to_receipt',
+                        'r.invoice_type' => Invoice::TYPE_RECEIPT,
+                        'r.status' => Invoice::STATUS_ACTIVE,
+                    ]);
+                if ($currentInvoiceId) {
+                    $dnRelQuery->andWhere(['!=', 'r.id', $currentInvoiceId]);
+                }
+                $existingDnRel = $dnRelQuery->one();
+
+                $usedReceipt = null;
+                if ($existingDnRel) {
+                    $usedReceipt = Invoice::findOne($existingDnRel->child_invoice_id);
+                } else {
+                    $itemQuery = \backend\models\InvoiceItem::find()
+                        ->alias('ii')
+                        ->innerJoin('invoices r', 'ii.invoice_id = r.id')
+                        ->where([
+                            'r.invoice_type' => Invoice::TYPE_RECEIPT,
+                            'r.status' => Invoice::STATUS_ACTIVE,
+                        ])
+                        ->andWhere(['like', 'ii.item_description', $dn->document_no]);
+                    if ($currentInvoiceId) {
+                        $itemQuery->andWhere(['!=', 'r.id', $currentInvoiceId]);
+                    }
+                    $existingItem = $itemQuery->one();
+                    if ($existingItem) {
+                        $usedReceipt = Invoice::findOne($existingItem->invoice_id);
+                    }
+                }
+
+                $dnList[] = [
+                    'id' => $dn->id,
+                    'doc_type' => 'debit_note',
+                    'type_label' => 'ใบเพิ่มหนี้ (Debit Note)',
+                    'doc_no' => $dn->document_no,
+                    'doc_date' => $dn->document_date,
+                    'amount' => (float)$dn->total_amount,
+                    'adjust_amount' => (float)$dn->adjust_amount,
+                    'vat_amount' => (float)$dn->vat_amount,
+                    'reason' => $dn->reason,
+                    'is_used' => $usedReceipt ? true : false,
+                    'used_by_receipt' => $usedReceipt ? $usedReceipt->invoice_number : null,
+                    'used_receipt_id' => $usedReceipt ? $usedReceipt->id : null,
+                ];
+            }
+
+            return [
+                'success' => true,
+                'invoices' => $invoiceList,
+                'credit_notes' => $cnList,
+                'debit_notes' => $dnList,
+            ];
+        } catch (\Exception $e) {
+            \Yii::error("Error in actionGetRelatedDocs: " . $e->getMessage(), __METHOD__);
+            return [
+                'success' => false,
+                'message' => 'เกิดข้อผิดพลาดในการดึงเอกสารที่เกี่ยวข้อง: ' . $e->getMessage()
+            ];
+        }
     }
     //    public function actionGetJob()
     //    {

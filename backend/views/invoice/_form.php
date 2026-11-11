@@ -23,6 +23,7 @@ $getProductInfoUrl = Url::to(['get-product-info']);
 $getJobItemsUrl = Url::to(['get-job-items']);
 $getCustomerUrl = Url::to(['get-customer']);
 $getJobUrl = Url::to(['get-job']);
+$getRelatedDocsUrl = Url::to(['get-related-docs']);
 
 // เรียง units ตามตัวอักษร
 $units = Unit::find()->where(['status' => 1])->all();
@@ -619,12 +620,270 @@ $(document).on('change', '#invoice-job-id', function() {
                 }
             }
         });
+
+        // ถ้าเป็นใบเสร็จรับเงิน (receipt) ให้ดึงเอกสารใบแจ้งหนี้ / ใบกำกับ / ใบลดหนี้ ที่ผูกกับ QT มาแสดง
+        if ('{$model->invoice_type}' === 'receipt') {
+            loadRelatedDocs(jobId);
+        }
     } else {
         $('#invoice-customer-name').val('');
         $('#invoice-customer-address').val('');
         $('#invoice-customer-tax-id').val('');
         $('#invoice-due-date').val('');
+        if ('{$model->invoice_type}' === 'receipt') {
+            $('#related-docs-container').hide();
+            $('#related-docs-table tbody').empty();
+        }
     }
+});
+
+// เก็บ cache ข้อมูลเอกสารที่โหลดมา
+var cachedRelatedDocs = {
+    invoices: [],
+    credit_notes: [],
+    debit_notes: []
+};
+
+function loadRelatedDocs(quotationId) {
+    if (!quotationId) return;
+
+    var container = $('#related-docs-container');
+    var tbody = $('#related-docs-table tbody');
+    tbody.html('<tr><td colspan="7" class="text-center py-3 text-muted"><i class="fas fa-spinner fa-spin mr-1"></i> กำลังโหลดเอกสารที่เกี่ยวข้อง...</td></tr>');
+    container.show();
+
+    $.ajax({
+        url: '{$getRelatedDocsUrl}',
+        type: 'POST',
+        data: {
+            quotation_id: quotationId,
+            current_invoice_id: '{$model->id}'
+        },
+        dataType: 'json',
+        success: function(res) {
+            if (res.success) {
+                cachedRelatedDocs = res;
+                renderRelatedDocsTable(res);
+            } else {
+                tbody.html('<tr><td colspan="7" class="text-center py-3 text-danger">' + (res.message || 'ไม่สามารถโหลดข้อมูลได้') + '</td></tr>');
+            }
+        },
+        error: function() {
+            tbody.html('<tr><td colspan="7" class="text-center py-3 text-danger">เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</td></tr>');
+        }
+    });
+}
+
+function renderRelatedDocsTable(data) {
+    var tbody = $('#related-docs-table tbody');
+    tbody.empty();
+
+    var allDocs = [];
+    if (data.invoices && data.invoices.length > 0) {
+        data.invoices.forEach(function(item) {
+            allDocs.push(item);
+        });
+    }
+    if (data.credit_notes && data.credit_notes.length > 0) {
+        data.credit_notes.forEach(function(item) {
+            allDocs.push(item);
+        });
+    }
+    if (data.debit_notes && data.debit_notes.length > 0) {
+        data.debit_notes.forEach(function(item) {
+            allDocs.push(item);
+        });
+    }
+
+    if (allDocs.length === 0) {
+        tbody.html('<tr><td colspan="7" class="text-center py-3 text-muted">ไม่พบใบแจ้งหนี้ ใบกำกับภาษี หรือใบลดหนี้/เพิ่มหนี้ ที่ผูกกับใบเสนอราคานี้</td></tr>');
+        $('.btn-apply-selected-docs').prop('disabled', true);
+        return;
+    }
+
+    allDocs.forEach(function(doc, idx) {
+        var isUsed = doc.is_used;
+        var docKey = doc.doc_type + ':' + doc.id;
+        var badgeClass = (doc.doc_type === 'credit_note') ? 'badge-danger' : ((doc.doc_type === 'debit_note') ? 'badge-info' : 'badge-primary');
+        var amountDisplay = (doc.doc_type === 'credit_note' ? '-' : '') + formatNumber(doc.amount) + ' บาท';
+        var amountClass = (doc.doc_type === 'credit_note') ? 'text-danger font-weight-bold' : 'font-weight-bold';
+
+        var statusHtml = '';
+        if (isUsed) {
+            statusHtml = '<span class="badge badge-warning text-dark p-1">' +
+                '<i class="fas fa-exclamation-circle mr-1"></i> ดำเนินการทำใบเสร็จไปแล้ว' +
+                (doc.used_by_receipt ? ' (' + doc.used_by_receipt + ')' : '') +
+                '</span>';
+        } else {
+            statusHtml = '<span class="badge badge-success p-1"><i class="fas fa-check mr-1"></i> ยังไม่ได้ทำใบเสร็จ</span>';
+        }
+
+        var tr = $('<tr>').addClass(isUsed ? 'table-warning' : '');
+        var chkBox = $('<input type="checkbox" class="related-doc-chk">')
+            .val(docKey)
+            .data('doc', doc);
+
+        var tdChk = $('<td>').addClass('text-center').append(chkBox);
+        var tdType = $('<td>').html('<span class="badge ' + badgeClass + '">' + doc.type_label + '</span>');
+        var tdNo = $('<td>').addClass('font-weight-bold').text(doc.doc_no);
+        var tdDate = $('<td>').addClass('text-center text-nowrap').text(doc.doc_date || '-');
+        var tdAmount = $('<td>').addClass('text-right ' + amountClass).text(amountDisplay);
+        var tdVat = $('<td>').addClass('text-right').text(doc.vat_amount ? formatNumber(doc.vat_amount) : '0.00');
+        var tdStatus = $('<td>').addClass('text-center').html(statusHtml);
+
+        tr.append(tdChk, tdType, tdNo, tdDate, tdAmount, tdVat, tdStatus);
+        tbody.append(tr);
+    });
+
+    updateApplyButtonState();
+}
+
+function updateApplyButtonState() {
+    var count = $('.related-doc-chk:checked').length;
+    $('.btn-apply-selected-docs').prop('disabled', count === 0);
+}
+
+$(document).on('change', '#check-all-related-docs', function() {
+    var isChecked = $(this).is(':checked');
+    $('.related-doc-chk').prop('checked', isChecked);
+    updateApplyButtonState();
+});
+
+$(document).on('change', '.related-doc-chk', function() {
+    var total = $('.related-doc-chk').length;
+    var checked = $('.related-doc-chk:checked').length;
+    $('#check-all-related-docs').prop('checked', total > 0 && total === checked);
+    updateApplyButtonState();
+
+    // หากคลิกเลือกรายการที่ดำเนินการไปแล้ว ให้แจ้งเตือนผู้ใช้ทันที
+    if ($(this).is(':checked')) {
+        var doc = $(this).data('doc');
+        if (doc && doc.is_used) {
+            var msg = 'คำเตือน: เอกสาร ' + doc.doc_no + ' (' + doc.type_label + ') ได้ดำเนินการทำใบเสร็จไปแล้ว' +
+                (doc.used_by_receipt ? ' ในใบเสร็จเลขที่ ' + doc.used_by_receipt : '') +
+                '\nหากนำมาทำรายการซ้ำ อาจทำให้ยอดรับเงินซ้ำซ้อนได้';
+            alert(msg);
+        }
+    }
+});
+
+$(document).on('click', '.btn-refresh-related-docs', function() {
+    var jobId = $('#invoice-job-id').val();
+    if (jobId) {
+        loadRelatedDocs(jobId);
+    } else {
+        showMessage('warning', 'กรุณาเลือกใบเสนอราคาก่อน');
+    }
+});
+
+$(document).on('click', '.btn-apply-selected-docs', function() {
+    var selected = [];
+    var usedCount = 0;
+    var usedDocNames = [];
+
+    $('.related-doc-chk:checked').each(function() {
+        var doc = $(this).data('doc');
+        if (doc) {
+            selected.push(doc);
+            if (doc.is_used) {
+                usedCount++;
+                usedDocNames.push(doc.doc_no + (doc.used_by_receipt ? ' (' + doc.used_by_receipt + ')' : ''));
+            }
+        }
+    });
+
+    if (selected.length === 0) {
+        showMessage('warning', 'กรุณาเลือกเอกสารที่ต้องการนำมาทำใบเสร็จ');
+        return;
+    }
+
+    if (usedCount > 0) {
+        var confirmMsg = 'พบรายการที่ดำเนินการทำใบเสร็จไปแล้ว ' + usedCount + ' รายการ:\n- ' +
+            usedDocNames.join('\n- ') +
+            '\n\nคุณแน่ใจหรือไม่ว่าต้องการนำมาทำรายการในใบเสร็จนี้อีกครั้ง?';
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+    } else {
+        if (!confirm('ต้องการนำรายการเอกสารที่เลือก ' + selected.length + ' รายการ มาเพิ่มลงในตารางสินค้า/บริการของใบเสร็จหรือไม่?')) {
+            return;
+        }
+    }
+
+    // ล้างรายการเริ่มต้นถ้ามีแถวว่างแถวเดียว
+    var table = $('#items-table tbody');
+    var existingRows = table.find('tr');
+    if (existingRows.length === 1) {
+        var firstDesc = existingRows.first().find('.item-description-input').val();
+        var firstAmt = parseFloat(existingRows.first().find('.amount-input').val()) || 0;
+        if (!firstDesc && firstAmt === 0) {
+            table.empty();
+        }
+    }
+
+    selected.forEach(function(doc) {
+        var rowCount = table.find('tr').length;
+        var description = '';
+        var qty = 1;
+        var unitPrice = 0;
+        var hasVat = (doc.vat_amount > 0) ? 1 : 0;
+
+        if (doc.doc_type === 'credit_note') {
+            description = 'ใบลดหนี้ เลขที่ ' + doc.doc_no + (doc.reason ? ' (' + doc.reason + ')' : '');
+            // ใบลดหนี้ถ้าเป็นราคาก่อน VAT หรือยอดรวม ให้ใส่มูลค่าที่ลด
+            unitPrice = (doc.adjust_amount > 0) ? doc.adjust_amount : doc.amount;
+        } else if (doc.doc_type === 'debit_note') {
+            description = 'ใบเพิ่มหนี้ เลขที่ ' + doc.doc_no + (doc.reason ? ' (' + doc.reason + ')' : '');
+            unitPrice = (doc.adjust_amount > 0) ? doc.adjust_amount : doc.amount;
+        } else {
+            description = doc.type_label + ' เลขที่ ' + doc.doc_no;
+            // ถ้ายอดรวมมี VAT ให้เอา subtotal ก่อน vat หรือยอดรวม
+            if (doc.vat_amount > 0 && doc.amount > doc.vat_amount) {
+                unitPrice = doc.amount - doc.vat_amount;
+            } else {
+                unitPrice = doc.amount;
+            }
+        }
+
+        var amount = (qty * unitPrice).toFixed(2);
+
+        var newRow = '<tr>' +
+            '<td class="text-center">' + (rowCount + 1) + '</td>' +
+            '<td>' +
+                '<input type="hidden" name="InvoiceItem[' + rowCount + '][product_id]" class="product-id-input" value="">' +
+                '<input type="text" name="InvoiceItem[' + rowCount + '][item_description]" class="form-control form-control-sm item-description-input" value="' + description + '" autocomplete="off">' +
+                '<input type="hidden" name="selected_related_docs[]" value="' + doc.doc_type + ':' + doc.id + '">' +
+                '<div class="autocomplete-dropdown"></div>' +
+            '</td>' +
+            '<td>' +
+                '<input type="number" name="InvoiceItem[' + rowCount + '][quantity]" class="form-control form-control-sm quantity-input text-right" value="' + qty + '" step="0.001" min="0">' +
+            '</td>' +
+            '<td>' +
+                '<select name="InvoiceItem[' + rowCount + '][unit_id]" class="form-control form-control-sm text-center">' +
+                    createUnitOptions('') +
+                '</select>' +
+            '</td>' +
+            '<td>' +
+                '<input type="number" name="InvoiceItem[' + rowCount + '][unit_price]" class="form-control form-control-sm unit-price-input text-right" value="' + unitPrice + '" step="0.01" min="0">' +
+            '</td>' +
+            '<td>' +
+                '<input type="text" name="InvoiceItem[' + rowCount + '][amount]" class="form-control form-control-sm amount-input text-right" readonly style="background-color: #f8f9fa;" value="' + amount + '">' +
+            '</td>' +
+            '<td class="text-center align-middle">' +
+                '<input type="hidden" name="InvoiceItem[' + rowCount + '][has_vat]" value="0">' +
+                '<input type="checkbox" class="has-vat-checkbox" name="InvoiceItem[' + rowCount + '][has_vat]" value="1" ' + (hasVat ? 'checked' : '') + ' title="คิด VAT">' +
+            '</td>' +
+            '<td class="text-center">' +
+                '<button type="button" class="btn btn-sm btn-danger btn-remove-item" title="ลบรายการ"><i class="fas fa-trash"></i></button>' +
+            '</td>' +
+        '</tr>';
+
+        table.append(newRow);
+        initializeAutocomplete(table.find('tr:last .item-description-input'));
+    });
+
+    calculateTotal();
+    showMessage('success', 'เพิ่มรายการจากเอกสารที่เลือกเรียบร้อยแล้ว');
 });
 
 $(document).ready(function() {
@@ -633,6 +892,14 @@ $(document).ready(function() {
     $('.item-description-input').each(function() {
         initializeAutocomplete($(this));
     });
+
+    // หากเปิดฟอร์มใบเสร็จมาแล้วมีเลือก quotation_id อยู่แล้ว (เช่น กรณี update หรือ copy) ให้โหลด related docs
+    if ('{$model->invoice_type}' === 'receipt') {
+        var currentJobId = $('#invoice-job-id').val();
+        if (currentJobId) {
+            loadRelatedDocs(currentJobId);
+        }
+    }
 });
 JS;
 
@@ -793,6 +1060,11 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                 </div>
             </div>
             <?php if (!$isCopyReceipt): ?>
+                <?php if ($model->invoice_type == Invoice::TYPE_RECEIPT): ?>
+                    <button type="button" class="btn btn-sm btn-warning btn-refresh-related-docs me-2">
+                        <i class="fas fa-file-invoice-dollar"></i> โหลดเอกสารแจ้งหนี้/ลดหนี้ที่ผูกกับ QT
+                    </button>
+                <?php endif; ?>
                 <button type="button" class="btn btn-sm btn-info btn-load-job-items me-2">
                     <i class="fas fa-download"></i> โหลดจากใบงาน
                 </button>
@@ -801,6 +1073,40 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                 </button>
             <?php endif; ?>
         </div>
+        <?php if ($model->invoice_type == Invoice::TYPE_RECEIPT): ?>
+            <!-- Card Section สำหรับเลือกใบแจ้งหนี้ / ใบกำกับ / ใบลดหนี้ ที่ผูกกับใบเสนอราคา -->
+            <div id="related-docs-container" class="border-bottom p-3" style="background-color: #fcfcfc; display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0 text-primary font-weight-bold">
+                        <i class="fas fa-link mr-1"></i> รายการใบแจ้งหนี้ / ใบกำกับภาษี และใบลดหนี้/ใบเพิ่มหนี้ ที่ผูกกับใบเสนอราคานี้
+                    </h6>
+                    <button type="button" class="btn btn-sm btn-success btn-apply-selected-docs" disabled>
+                        <i class="fas fa-plus-circle mr-1"></i> นำรายการที่เลือกไปทำใบเสร็จ
+                    </button>
+                </div>
+                <div class="alert alert-info py-2 px-3 mb-2 small">
+                    <i class="fas fa-info-circle mr-1"></i> ท่านสามารถเลือกใบแจ้งหนี้/ใบกำกับภาษี และใบลดหนี้/ใบเพิ่มหนี้ เพื่อดึงรายการมาบันทึกในใบเสร็จรับเงินนี้ได้ (รายการที่เคยออกใบเสร็จไปแล้วจะมีการแจ้งเตือน)
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered table-hover mb-0" id="related-docs-table">
+                        <thead class="thead-light">
+                            <tr class="text-center small">
+                                <th width="4%"><input type="checkbox" id="check-all-related-docs"></th>
+                                <th width="15%">ประเภทเอกสาร</th>
+                                <th width="18%">เลขที่เอกสาร</th>
+                                <th width="12%">วันที่เอกสาร</th>
+                                <th width="15%" class="text-right">มูลค่า/ยอดสุทธิ</th>
+                                <th width="12%" class="text-right">VAT</th>
+                                <th width="24%">สถานะการทำใบเสร็จ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <?php endif; ?>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table id="items-table" class="table table-bordered table-sm mb-0">

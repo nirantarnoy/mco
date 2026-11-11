@@ -243,6 +243,143 @@ $model_doc = \common\models\InvoiceDoc::find()->where(['invoice_id' => $model->i
         </div>
     </div>
 
+    <?php
+    // ดึงเอกสารใบแจ้งหนี้/ใบกำกับภาษี และใบลดหนี้/ใบเพิ่มหนี้ ที่ผูกกับเอกสารนี้
+    // 1. จากความสัมพันธ์ invoice_relations
+    $relatedRelations = \backend\models\InvoiceRelation::find()
+        ->where(['child_invoice_id' => $model->id])
+        ->orWhere(['parent_invoice_id' => $model->id])
+        ->all();
+
+    $relatedInvIds = [];
+    $relatedCnIds = [];
+    $relatedDnIds = [];
+
+    foreach ($relatedRelations as $rel) {
+        $otherId = ($rel->child_invoice_id == $model->id) ? $rel->parent_invoice_id : $rel->child_invoice_id;
+        if ($rel->relation_type === 'credit_note_to_receipt') {
+            $relatedCnIds[] = $rel->parent_invoice_id;
+        } elseif ($rel->relation_type === 'debit_note_to_receipt') {
+            $relatedDnIds[] = $rel->parent_invoice_id;
+        } else {
+            $relatedInvIds[] = $otherId;
+        }
+    }
+
+    // 2. ถ้าเป็น Receipt หรือมี quotation_id ให้ดึงใบแจ้งหนี้/ใบลดหนี้/ใบเพิ่มหนี้ ที่อยู่ใน quotation_id เดียวกันมาแสดงด้วย
+    if ($model->quotation_id) {
+        $sameQtInvoices = Invoice::find()
+            ->where(['quotation_id' => $model->quotation_id])
+            ->andWhere(['!=', 'id', $model->id])
+            ->andWhere(['status' => Invoice::STATUS_ACTIVE])
+            ->all();
+        foreach ($sameQtInvoices as $sqInv) {
+            $relatedInvIds[] = $sqInv->id;
+        }
+
+        $sameQtCns = \backend\models\CreditNote::find()
+            ->where(['or', ['quotation_id' => $model->quotation_id], ['in', 'invoice_id', array_merge([0], $relatedInvIds)]])
+            ->andWhere(['!=', 'status', 'canceled'])
+            ->all();
+        foreach ($sameQtCns as $sqCn) {
+            $relatedCnIds[] = $sqCn->id;
+        }
+
+        $sameQtDns = \backend\models\DebitNote::find()
+            ->where(['or', ['quotation_id' => $model->quotation_id], ['in', 'invoice_id', array_merge([0], $relatedInvIds)]])
+            ->andWhere(['!=', 'status', 'canceled'])
+            ->all();
+        foreach ($sameQtDns as $sqDn) {
+            $relatedDnIds[] = $sqDn->id;
+        }
+    }
+
+    $relatedInvIds = array_unique(array_filter($relatedInvIds));
+    $relatedCnIds = array_unique(array_filter($relatedCnIds));
+    $relatedDnIds = array_unique(array_filter($relatedDnIds));
+
+    $displayInvoices = !empty($relatedInvIds) ? Invoice::find()->where(['in', 'id', $relatedInvIds])->all() : [];
+    $displayCns = !empty($relatedCnIds) ? \backend\models\CreditNote::find()->where(['in', 'id', $relatedCnIds])->all() : [];
+    $displayDns = !empty($relatedDnIds) ? \backend\models\DebitNote::find()->where(['in', 'id', $relatedDnIds])->all() : [];
+    ?>
+
+    <?php if (!empty($displayInvoices) || !empty($displayCns) || !empty($displayDns)): ?>
+        <div class="card mt-4 border-info">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0 text-info font-weight-bold">
+                    <i class="fas fa-file-invoice mr-1"></i> เอกสารใบแจ้งหนี้/ใบกำกับภาษี และใบลดหนี้/ใบเพิ่มหนี้ ที่เกี่ยวข้อง
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm mb-0">
+                        <thead class="table-light">
+                        <tr class="text-center small">
+                            <th width="5%">#</th>
+                            <th width="15%">ประเภทเอกสาร</th>
+                            <th width="20%">เลขที่เอกสาร</th>
+                            <th width="15%">วันที่เอกสาร</th>
+                            <th width="20%" class="text-right">ยอดเงิน/มูลค่า</th>
+                            <th width="12%" class="text-right">VAT</th>
+                            <th width="13%">การเชื่อมโยง</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php $rowNum = 1; ?>
+                        <?php foreach ($displayInvoices as $dInv): ?>
+                            <tr>
+                                <td class="text-center"><?= $rowNum++ ?></td>
+                                <td class="text-center"><span class="badge badge-primary"><?= $dInv->getTypeLabel() ?></span></td>
+                                <td class="font-weight-bold text-center">
+                                    <?= Html::a(Html::encode($dInv->invoice_number), ['view', 'id' => $dInv->id], ['target' => '_blank', 'class' => 'text-primary']) ?>
+                                </td>
+                                <td class="text-center"><?= $dInv->invoice_date ? Yii::$app->formatter->asDate($dInv->invoice_date, 'php:d/m/Y') : '-' ?></td>
+                                <td class="text-right font-weight-bold"><?= number_format($dInv->total_amount, 2) ?> บาท</td>
+                                <td class="text-right"><?= number_format($dInv->vat_amount, 2) ?></td>
+                                <td class="text-center">
+                                    <span class="badge badge-info">QT เดียวกัน</span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+
+                        <?php foreach ($displayCns as $dCn): ?>
+                            <tr class="table-danger">
+                                <td class="text-center"><?= $rowNum++ ?></td>
+                                <td class="text-center"><span class="badge badge-danger">ใบลดหนี้ (Credit Note)</span></td>
+                                <td class="font-weight-bold text-center">
+                                    <?= Html::a(Html::encode($dCn->document_no), ['credit-note/view', 'id' => $dCn->id], ['target' => '_blank', 'class' => 'text-danger font-weight-bold']) ?>
+                                </td>
+                                <td class="text-center"><?= $dCn->document_date ? Yii::$app->formatter->asDate($dCn->document_date, 'php:d/m/Y') : '-' ?></td>
+                                <td class="text-right font-weight-bold text-danger">-<?= number_format($dCn->total_amount, 2) ?> บาท</td>
+                                <td class="text-right text-danger"><?= number_format($dCn->vat_amount, 2) ?></td>
+                                <td class="text-center">
+                                    <span class="badge badge-danger">ลดหนี้</span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+
+                        <?php foreach ($displayDns as $dDn): ?>
+                            <tr class="table-warning">
+                                <td class="text-center"><?= $rowNum++ ?></td>
+                                <td class="text-center"><span class="badge badge-warning text-dark">ใบเพิ่มหนี้ (Debit Note)</span></td>
+                                <td class="font-weight-bold text-center">
+                                    <?= Html::a(Html::encode($dDn->document_no), ['debit-note/view', 'id' => $dDn->id], ['target' => '_blank', 'class' => 'text-warning font-weight-bold text-dark']) ?>
+                                </td>
+                                <td class="text-center"><?= $dDn->document_date ? Yii::$app->formatter->asDate($dDn->document_date, 'php:d/m/Y') : '-' ?></td>
+                                <td class="text-right font-weight-bold text-success">+<?= number_format($dDn->total_amount, 2) ?> บาท</td>
+                                <td class="text-right"><?= number_format($dDn->vat_amount, 2) ?></td>
+                                <td class="text-center">
+                                    <span class="badge badge-warning text-dark">เพิ่มหนี้</span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <!-- Notes Section -->
     <?php if ($model->notes): ?>
         <div class="card mt-4">
