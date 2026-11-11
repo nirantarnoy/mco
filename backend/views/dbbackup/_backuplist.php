@@ -269,9 +269,9 @@ $currentCommit = isset($currentCommit) ? $currentCommit : '';
 </div>
 
 <!-- Modal: Git Pull อัพเดทโปรแกรม -->
-<div class="modal fade" id="modal-git-pull" tabindex="-1" role="dialog" aria-labelledby="modalGitPullLabel" aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+<div class="modal fade" id="modal-git-pull" tabindex="-1" role="dialog" aria-labelledby="modalGitPullLabel" aria-hidden="true" data-backdrop="static" style="z-index: 105000;">
+    <div class="modal-dialog modal-lg" role="document" style="z-index: 105001; position: relative;">
+        <div class="modal-content shadow-lg border-0" style="border-radius: 12px; overflow: hidden; pointer-events: auto;">
             <div class="modal-header bg-success text-white py-3">
                 <h5 class="modal-title font-weight-bold mb-0" id="modalGitPullLabel">
                     <i class="fab fa-github mr-2"></i> อัพเดทโปรแกรมจาก GitHub (Git Pull)
@@ -280,7 +280,7 @@ $currentCommit = isset($currentCommit) ? $currentCommit : '';
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body p-4">
+            <div class="modal-body p-4" style="pointer-events: auto;">
                 <div class="alert alert-light border shadow-sm mb-3">
                     <div class="d-flex align-items-center">
                         <i class="fab fa-github fa-2x mr-3 text-dark"></i>
@@ -314,11 +314,11 @@ $currentCommit = isset($currentCommit) ? $currentCommit : '';
                     <pre id="git-pull-output" class="p-3 rounded text-light font-monospace small mb-0" style="background-color: #1e1e1e; min-height: 140px; max-height: 280px; overflow-y: auto; border: 1px solid #333; line-height: 1.5;">กดปุ่ม "เริ่มอัพเดทเดี๋ยวนี้" เพื่อดึงโค้ดล่าสุดจาก GitHub...</pre>
                 </div>
             </div>
-            <div class="modal-footer bg-light py-2">
+            <div class="modal-footer bg-light py-2" style="pointer-events: auto;">
                 <button type="button" class="btn btn-secondary font-weight-bold" data-dismiss="modal" data-bs-dismiss="modal" id="btn-close-git-pull">
                     <i class="fas fa-times mr-1"></i> ปิด
                 </button>
-                <button type="button" class="btn btn-success font-weight-bold shadow-sm" id="btn-run-git-pull" onclick="executeGitPull()">
+                <button type="button" class="btn btn-success font-weight-bold shadow-sm" id="btn-run-git-pull" onclick="executeGitPull()" style="cursor: pointer; position: relative; z-index: 105002; pointer-events: auto;">
                     <i class="fas fa-cloud-download-alt mr-1"></i> เริ่มอัพเดทเดี๋ยวนี้ (Git Pull)
                 </button>
             </div>
@@ -481,6 +481,22 @@ window.startPullRemoteFiles = function() {
 window.startPullRemoteAll = function() {
     if (typeof window._doPullRemoteAll === 'function') {
         window._doPullRemoteAll();
+    } else {
+        alert('ระบบกำลังโหลด กรุณารอสักครู่แล้วลองอีกครั้ง');
+    }
+};
+
+window.openGitPullModal = function() {
+    if (typeof window._doOpenGitPullModal === 'function') {
+        window._doOpenGitPullModal();
+    } else {
+        alert('ระบบกำลังโหลด กรุณารอสักครู่แล้วลองอีกครั้ง');
+    }
+};
+
+window.executeGitPull = function() {
+    if (typeof window._doExecuteGitPull === 'function') {
+        window._doExecuteGitPull();
     } else {
         alert('ระบบกำลังโหลด กรุณารอสักครู่แล้วลองอีกครั้ง');
     }
@@ -1320,11 +1336,34 @@ window.startPullRemoteAll = function() {
     });
 
     // Git Pull Modal & Execution
-    window.openGitPullModal = function() {
-        $('#modal-git-pull').modal('show');
+    window._doOpenGitPullModal = function() {
+        var modal = $('#modal-git-pull');
+        if (!modal.parent().is('body')) {
+            modal.appendTo('body');
+        }
+        modal.css({
+            'z-index': 105000,
+            'display': 'block'
+        });
+        modal.modal({backdrop: 'static', keyboard: false, show: true});
+        setTimeout(function() {
+            $('.modal-backdrop').last().css('z-index', 104990);
+            modal.css('z-index', 105000);
+        }, 50);
+    };
+    window.openGitPullModal = window._doOpenGitPullModal;
+
+    window._doCloseGitPullModal = function() {
+        var modal = $('#modal-git-pull');
+        modal.modal('hide');
+        setTimeout(function() {
+            modal.removeClass('show').hide();
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+        }, 150);
     };
 
-    window.executeGitPull = function() {
+    window._doExecuteGitPull = function() {
         var btn = $('#btn-run-git-pull');
         var btnClose = $('#btn-close-git-pull');
         var btnCloseX = $('#btn-close-git-pull-x');
@@ -1418,6 +1457,21 @@ window.startPullRemoteAll = function() {
             }
         });
     };
+    window.executeGitPull = window._doExecuteGitPull;
+
+    // Binding jQuery Events ให้ปุ่ม Git Pull ทำงานได้ 100%
+    $(document).on('click', '#btn-git-pull-trigger', function(e){
+        e.preventDefault();
+        window.openGitPullModal();
+    });
+    $(document).on('click', '#btn-run-git-pull', function(e){
+        e.preventDefault();
+        window.executeGitPull();
+    });
+    $(document).on('click', '#btn-close-git-pull, #btn-close-git-pull-x', function(e){
+        e.preventDefault();
+        window._doCloseGitPullModal();
+    });
 
     // เมื่อปิด Modal ให้โหลดหน้านี้ใหม่เพื่อให้รายการไฟล์ SQL อัปเดตล่าสุด
     $('#btn-close-progress').on('click', function(){

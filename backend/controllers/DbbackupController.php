@@ -472,6 +472,7 @@ class DbbackupController extends BaseController
 
         @ini_set('max_execution_time', '300');
         @set_time_limit(300);
+        @putenv('GIT_TERMINAL_PROMPT=0');
 
         $repoDir = realpath(dirname(Yii::getAlias('@backend')));
         if (!$repoDir || !is_dir($repoDir . DIRECTORY_SEPARATOR . '.git')) {
