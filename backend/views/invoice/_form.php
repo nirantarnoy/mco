@@ -957,8 +957,6 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
 
                     <?= $form->field($model, 'quotation_id')->widget(Select2::className(), [
                         'data' => $quotationData,
-                        'language' => 'th',
-                        'pluginLoading' => false,
                         'options' => [
                             'placeholder' => '...เลือกใบเสนอราคา...',
                             'id' => 'invoice-job-id',
@@ -995,7 +993,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                     ]) ?>
 
                     <?= $form->field($model, 'payment_term_id')->widget(
-                        Select2::class,
+                        Select2::className(),
                         [
                             'data' => \yii\helpers\ArrayHelper::map(\backend\models\Paymentterm::find()->all(), 'id', 'name'),
                             'options' => [
