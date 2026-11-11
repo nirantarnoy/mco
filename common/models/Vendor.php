@@ -41,7 +41,7 @@ class Vendor extends \yii\db\ActiveRecord
             [['code', 'name', 'description', 'status', 'created_at', 'created_by', 'updated_at', 'updated_by'], 'default', 'value' => null],
             [['vendor_group_id', 'status', 'created_at', 'created_by', 'updated_at', 'updated_by','is_head', 'is_vat'], 'integer'],
             [['code', 'name', 'description','home_number', 'street', 'aisle', 'district_name', 'city_name', 'province_name', 'zipcode','contact_name','phone','branch_name', 'email', 'full_address', 'account_num', 'bank_name', 'bank_branch', 'bank_province', 'account_name', 'bank_account_file'], 'string', 'max' => 255],
-            [['taxid'],'string','max'=>13],
+            [['taxid'],'string','max'=>20],
             [['full_address'], 'string'],
         ];
     }

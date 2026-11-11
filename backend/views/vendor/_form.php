@@ -88,7 +88,7 @@ if($model->isNewRecord) {
     <div class="row">
         <div class="col-lg-1"></div>
         <div class="col-lg-4">
-            <?= $form->field($model, 'taxid')->textInput(['maxlength' => true]) ?>
+            <?= $form->field($model, 'taxid')->textInput(['maxlength' => 20]) ?>
         </div>
         <div class="col-lg-3">
             <?= $form->field($model, 'is_vat')->dropDownList([
