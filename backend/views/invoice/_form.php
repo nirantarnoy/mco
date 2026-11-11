@@ -964,6 +964,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                         ],
                         'pluginOptions' => [
                             'allowClear' => true,
+                            'escapeMarkup' => new \yii\web\JsExpression('function (markup) { return markup; }'),
                         ],
                     ]) ?>
                     <?php if ($isCopyReceipt): ?>
