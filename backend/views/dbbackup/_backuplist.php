@@ -1005,7 +1005,7 @@ window.startPullRemoteAll = function() {
             }
 
             var files = res.files || [];
-            var batchSize = 25; // ดาวน์โหลดทีละ 25 ไฟล์เพื่อความเสถียรของ network
+            var batchSize = 10; // ปรับเหลือ 10 ไฟล์ต่อชุดเพื่อป้องกัน timeout และความเสถียรของ network
             var batches = [];
             for (var i = 0; i < files.length; i += batchSize) {
                 batches.push(files.slice(i, i + batchSize));

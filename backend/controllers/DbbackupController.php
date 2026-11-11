@@ -721,15 +721,16 @@ class DbbackupController extends BaseController
                 if (file_exists($tmpDstFile) && filesize($tmpDstFile) === filesize($srcFile)) {
                     @touch($tmpDstFile, filemtime($srcFile));
                     // ปลอดภัย: สลับชื่อไฟล์ (rename) เข้าแทนที่
+                    $dstSize = @filesize($dstFile) ?: filesize($tmpDstFile);
                     if (@rename($tmpDstFile, $dstFile)) {
                         $copiedCount++;
-                        $copiedBytes += filesize($dstFile);
+                        $copiedBytes += $dstSize;
                     } else {
                         // หาก rename ไม่ผ่าน (เช่นติด permission ใน Windows) ให้ fallback copy ตรง
                         @copy($tmpDstFile, $dstFile);
                         @unlink($tmpDstFile);
                         $copiedCount++;
-                        $copiedBytes += filesize($dstFile);
+                        $copiedBytes += $dstSize;
                     }
                 } else {
                     @unlink($tmpDstFile);
@@ -1436,7 +1437,7 @@ class DbbackupController extends BaseController
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_FILE, $fp);
             curl_setopt($ch, CURLOPT_HEADER, false);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 120);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
@@ -1451,9 +1452,18 @@ class DbbackupController extends BaseController
             fclose($fp);
 
             if ($success && $httpCode === 200 && file_exists($tmpFile) && filesize($tmpFile) > 0) {
-                @rename($tmpFile, $localFile);
-                $downloadedCount++;
-                $downloadedBytes += filesize($localFile);
+                $fileSize = filesize($tmpFile);
+                if (@rename($tmpFile, $localFile)) {
+                    $downloadedCount++;
+                    $downloadedBytes += $fileSize;
+                } elseif (@copy($tmpFile, $localFile)) {
+                    @unlink($tmpFile);
+                    $downloadedCount++;
+                    $downloadedBytes += $fileSize;
+                } else {
+                    @unlink($tmpFile);
+                    $errors[] = "ไม่สามารถย้ายไฟล์ไปยังปลายทาง: {$rel}";
+                }
             } else {
                 @unlink($tmpFile);
                 $errors[] = "ดาวน์โหลด {$rel} ไม่สำเร็จ (HTTP {$httpCode}: {$curlErr})";
