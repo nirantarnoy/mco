@@ -412,12 +412,24 @@ class PaymentvoucherController extends BaseController
                     ->exists();
                 $pv_suffix = $has_draft_pv ? ' [สร้าง PV แล้ว - ยังไม่จ่าย]' : '';
                 
+                $curr_code = 'THB';
+                if ($po->currency_id) {
+                    $curr = \backend\models\Currency::findOne($po->currency_id);
+                    if ($curr && !empty($curr->code)) {
+                        $curr_code = strtoupper(trim($curr->code));
+                    }
+                }
+                $is_foreign = ($curr_code !== 'THB');
+                $curr_suffix = $is_foreign ? ' ' . $curr_code : '';
+
                 $result[] = [
                     'id' => $po->id,
-                    'text' => $po->purch_no . ' (คงเหลือ: ' . number_format($remaining, 2) . ( !empty($po->vendor_name) ? ' - ' . $po->vendor_name : '' ) . ')' . $pv_suffix,
+                    'text' => $po->purch_no . ' (คงเหลือ: ' . number_format($remaining, 2) . $curr_suffix . ( !empty($po->vendor_name) ? ' - ' . $po->vendor_name : '' ) . ')' . $pv_suffix,
                     'total_amount' => $po->net_amount,
                     'paid_amount' => $paidAmount,
                     'remaining' => $remaining,
+                    'currency_code' => $curr_code,
+                    'is_foreign' => $is_foreign,
                 ];
             }
         }
@@ -539,8 +551,10 @@ class PaymentvoucherController extends BaseController
         $total_amount = 0;
         $total_before_vat = 0;
         $total_vat = 0;
+        $total_wht = 0;
         $paid_for_items = [];
         $vendor_id = null;
+        $foreign_pos = [];
         
         // ดึงข้อมูลจาก Pre-Advance
         foreach ($pr_ids as $pr_id) {
@@ -597,6 +611,22 @@ class PaymentvoucherController extends BaseController
                 $remaining = $po_target_payment - $paidAmount;
                 
                 if ($remaining > 0) {
+                    $curr_code = 'THB';
+                    if ($po->currency_id) {
+                        $curr = \backend\models\Currency::findOne($po->currency_id);
+                        if ($curr && !empty($curr->code)) {
+                            $curr_code = strtoupper(trim($curr->code));
+                        }
+                    }
+                    if ($curr_code !== 'THB') {
+                        $foreign_pos[] = [
+                            'id' => $po->id,
+                            'purch_no' => $po->purch_no,
+                            'currency_code' => $curr_code,
+                            'remaining' => $remaining,
+                        ];
+                    }
+
                     $total_amount += $remaining;
                     
                     // คำนวณแยกกลับเป็นก่อนภาษี จากยอดที่ต้องจ่าย
@@ -706,6 +736,16 @@ class PaymentvoucherController extends BaseController
             }
         }
         
+        $has_foreign = count($foreign_pos) > 0;
+        $foreign_total = 0;
+        $foreign_currency = '';
+        if ($has_foreign) {
+            foreach ($foreign_pos as $fp) {
+                $foreign_total += $fp['remaining'];
+            }
+            $foreign_currency = $foreign_pos[0]['currency_code'];
+        }
+
         return [
             'success' => true,
             'amount' => $total_amount,
@@ -716,6 +756,10 @@ class PaymentvoucherController extends BaseController
             'none_pr_ids' => $none_pr_ids,
             'vendor_id' => $vendor_id ?? null,
             'vendor_name' => $vendor_name ?? null,
+            'has_foreign' => $has_foreign,
+            'foreign_total' => round($foreign_total, 2),
+            'foreign_currency' => $foreign_currency,
+            'foreign_pos' => $foreign_pos,
         ];
     }
 
@@ -918,11 +962,12 @@ class PaymentvoucherController extends BaseController
             }
         }
         
-        // ตรวจสอบว่าใส่ยอดเงินเกินกว่ายอดคงเหลือของ PR/PO ที่เลือกหรือไม่
-        $has_refs = (count($pr_ids) + count($po_ids) + count($none_pr_ids)) > 0;
-        if ($has_refs && round($available_amount, 2) > 0) {
-            throw new \Exception('ยอดรวมใน Voucher มากกว่ายอดคงเหลือรวมของ PR/PO ที่เลือก (เกินมา ' . number_format($available_amount, 2) . ' บาท)');
-        }
+        // ปลดล็อคไม่ throw exception เมื่อยอดรวมใน Voucher มากกว่า PO
+        // เพื่อรองรับกรณีมีค่าธรรมเนียมธนาคาร หรือแปลงสกุลเงินต่างประเทศเป็นเงินบาท
+        // $has_refs = (count($pr_ids) + count($po_ids) + count($none_pr_ids)) > 0;
+        // if ($has_refs && round($available_amount, 2) > 0) {
+        //     throw new \Exception('ยอดรวมใน Voucher มากกว่ายอดคงเหลือรวมของ PR/PO ที่เลือก (เกินมา ' . number_format($available_amount, 2) . ' บาท)');
+        // }
     }
 
     /**

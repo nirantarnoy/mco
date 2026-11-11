@@ -51,7 +51,14 @@ $selectedPoIds = \backend\models\PaymentVoucherRef::find()
 $selectedPoList = [];
 if (!empty($selectedPoIds)) {
     $selectedPoList = ArrayHelper::map(\backend\models\Purch::find()->where(['id' => $selectedPoIds])->all(), 'id', function($m) {
-        return $m->purch_no;
+        $curr = '';
+        if ($m->currency_id) {
+            $c = \backend\models\Currency::findOne($m->currency_id);
+            if ($c && strtoupper(trim($c->code)) !== 'THB') {
+                $curr = ' (' . strtoupper(trim($c->code)) . ')';
+            }
+        }
+        return $m->purch_no . $curr;
     });
 }
 
@@ -176,28 +183,64 @@ function pullMultipleData() {
                     addLine(line);
                 });
                 calculateTotal();
+
+                // ตรวจจับกรณีเป็น PO สกุลเงินต่างประเทศ
+                if (res.has_foreign) {
+                    $('#fx-foreign-amount').val(res.foreign_total);
+                    var currCode = res.foreign_currency || 'USD';
+                    $('#fx-currency-code').text(currCode);
+                    $('.fx-curr-label').text(currCode);
+                    $('#fx-rate').val('');
+                    $('#fx-thb-amount').val('');
+                    $('#fx-bank-fee').val('0.00');
+                    $('#fx-net-payment').val('0.00');
+                    $('#foreign-currency-section').slideDown();
+                } else {
+                    $('#foreign-currency-section').slideUp();
+                }
             }
         }
     });
 }
 
-// แสดงปุ่มดึงข้อมูลเมื่อมีการเลือก PR/PO/None PR และดึงข้อมูลอัตโนมัติเมื่อเลือก PO/None PR
-$('#pr-select, #po-select, #none-pr-select').on('change', function() {
+function updateFxCalculation(triggerSource) {
+    var foreignAmt = parseFloat($('#fx-foreign-amount').val()) || 0;
+    var rate = parseFloat($('#fx-rate').val()) || 0;
+    var thbAmt = parseFloat($('#fx-thb-amount').val()) || 0;
+    var bankFee = parseFloat($('#fx-bank-fee').val()) || 0;
+
+    if (triggerSource === 'foreign' || triggerSource === 'rate') {
+        if (foreignAmt > 0 && rate > 0) {
+            thbAmt = Math.round(foreignAmt * rate * 100) / 100;
+            $('#fx-thb-amount').val(thbAmt.toFixed(2));
+        }
+    } else if (triggerSource === 'thb') {
+        if (foreignAmt > 0 && thbAmt > 0) {
+            rate = Math.round((thbAmt / foreignAmt) * 10000) / 10000;
+            $('#fx-rate').val(rate);
+        }
+    }
+
+    var netPayment = thbAmt + bankFee;
+    $('#fx-net-payment').val(netPayment.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+}
+
+// อัปเดต hidden inputs และดึงข้อมูลเมื่อเลือก PR/PO/None PR
+function onRefSelectionChange() {
     var pr_ids = $('#pr-select').val() || [];
     var po_ids = $('#po-select').val() || [];
     var none_pr_ids = $('#none-pr-select').val() || [];
-    
+
+    $('#hidden-pr-ids').val(JSON.stringify(pr_ids));
+    $('#hidden-po-ids').val(JSON.stringify(po_ids));
+    $('#hidden-none-pr-ids').val(JSON.stringify(none_pr_ids));
+
     if (pr_ids.length > 0 || po_ids.length > 0 || none_pr_ids.length > 0) {
-        $('#pull-data-section').show();
-        
-        // ดึงข้อมูลอัตโนมัติเมื่อมีการเลือก PO หรือ None PR
-        if (po_ids.length > 0 || none_pr_ids.length > 0) {
-            pullMultipleData();
-        }
+        pullMultipleData();
     } else {
-        $('#pull-data-section').hide();
+        $('#foreign-currency-section').slideUp();
     }
-});
+}
 
 $(document).ready(function() {
     calculateTotal();
@@ -264,23 +307,113 @@ $(document).ready(function() {
         }
     });
     
-    // อัปเดต hidden inputs เมื่อ Pre-Advance/PO/None PR select เปลี่ยน
-    $('#pr-select').on('change', function() {
-        var selectedPrIds = $(this).val() || [];
-        $('#hidden-pr-ids').val(JSON.stringify(selectedPrIds));
-        pullMultipleData();
-    });
-    
-    $('#po-select').on('change', function() {
-        var selectedPoIds = $(this).val() || [];
-        $('#hidden-po-ids').val(JSON.stringify(selectedPoIds));
-        pullMultipleData();
+    // อัปเดต hidden inputs และดึงข้อมูลเมื่อ Pre-Advance/PO/None PR select เปลี่ยน
+    $('#pr-select, #po-select, #none-pr-select').on('change', function() {
+        onRefSelectionChange();
     });
 
-    $('#none-pr-select').on('change', function() {
-        var selectedNonePrIds = $(this).val() || [];
-        $('#hidden-none-pr-ids').val(JSON.stringify(selectedNonePrIds));
-        pullMultipleData();
+    // การคำนวณแปลงค่าเงินและค่าธรรมเนียม
+    $('#fx-foreign-amount, #fx-rate').on('input change', function() {
+        updateFxCalculation('rate');
+    });
+
+    $('#fx-thb-amount').on('input change', function() {
+        updateFxCalculation('thb');
+    });
+
+    $('#fx-bank-fee').on('input change', function() {
+        updateFxCalculation('fee');
+    });
+
+    $('#btn-toggle-fx').on('click', function(e) {
+        e.preventDefault();
+        $('#foreign-currency-section').slideToggle();
+    });
+
+    $('#btn-close-fx').on('click', function() {
+        $('#foreign-currency-section').slideUp();
+    });
+
+    $('#btn-apply-fx').on('click', function() {
+        var foreignAmt = parseFloat($('#fx-foreign-amount').val()) || 0;
+        var currCode = $('#fx-currency-code').text() || 'USD';
+        var rate = parseFloat($('#fx-rate').val()) || 0;
+        var thbAmt = parseFloat($('#fx-thb-amount').val()) || 0;
+        var bankFee = parseFloat($('#fx-bank-fee').val()) || 0;
+        var netPayment = thbAmt + bankFee;
+
+        if (thbAmt <= 0) {
+            alert('กรุณาระบุอัตราแลกเปลี่ยน หรือยอดเงินบาท (THB)');
+            $('#fx-rate').focus();
+            return;
+        }
+
+        // 1. ตั้ง Amount ใน Voucher
+        $('#paymentvoucher-amount').val(netPayment.toFixed(2));
+
+        // 2. ปรับ Paid For
+        var poNumbers = [];
+        $('#po-select option:selected').each(function() {
+            var txt = $(this).text().split('(')[0].trim();
+            if (txt) poNumbers.push(txt);
+        });
+        var poText = poNumbers.length > 0 ? ('PO: ' + poNumbers.join(', ')) : 'จ่ายชำระต่างประเทศ';
+        var note = poText + ' (' + foreignAmt.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' ' + currCode;
+        if (rate > 0) {
+            note += ' @ ' + rate;
+        }
+        note += ' = ' + thbAmt.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' บ.';
+        if (bankFee > 0) {
+            note += ' + ค่าธรรมเนียม ' + bankFee.toFixed(2) + ' บ.';
+        }
+        note += ')';
+        $('#paymentvoucher-paid_for').val(note);
+
+        // 3. ใส่แถวลงตารางบันทึกบัญชี
+        $('#voucher-lines tbody').empty();
+
+        // บรรทัดที่ 1: สินค้า/บริการต่างประเทศ (ยอดเงินบาทที่แปลงแล้ว)
+        addLine({
+            account_code: '',
+            bill_code: poNumbers.join(', '),
+            description1: 'สินค้า/บริการต่างประเทศ (' + foreignAmt.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' ' + currCode + ')',
+            description2: '',
+            debit: thbAmt.toFixed(2),
+            credit: 0
+        });
+
+        // บรรทัดที่ 2: ค่าธรรมเนียมธนาคาร (ถ้ามี)
+        if (bankFee > 0) {
+            var feeAccCode = (account_data && account_data['5360-04']) ? '5360-04' : '';
+            addLine({
+                account_code: feeAccCode,
+                bill_code: '',
+                description1: 'ค่าธรรมเนียมธนาคารในการโอนเงินต่างประเทศ',
+                description2: '',
+                debit: bankFee.toFixed(2),
+                credit: 0
+            });
+        }
+
+        // บรรทัดที่ 3: ธนาคารเงินฝากกระแสรายวัน (ยอดสุทธิที่ตัดธนาคาร)
+        var bankAccCode = '';
+        if (account_data) {
+            if (account_data['1112-00']) bankAccCode = '1112-00';
+            else if (account_data['1112-01']) bankAccCode = '1112-01';
+            else if (account_data['1112-02']) bankAccCode = '1112-02';
+        }
+        addLine({
+            account_code: bankAccCode,
+            bill_code: '',
+            description1: '',
+            description2: 'ธนาคารเงินฝากกระแสรายวัน',
+            debit: 0,
+            credit: netPayment.toFixed(2)
+        });
+
+        calculateTotal();
+
+        alert('แปลงค่าเงินและรวมค่าธรรมเนียมเข้าตารางบัญชีเรียบร้อยแล้ว (ยอดจ่ายสุทธิ ' + netPayment.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' บาท)');
     });
 
     // ลบไฟล์แนบ
@@ -374,7 +507,10 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                     <small class="text-muted">ค้นหาได้ทันที</small>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">เลือกใบสั่งซื้อ (PO) - เลือกได้หลายรายการ</label>
+                    <label class="form-label d-flex justify-content-between align-items-center">
+                        <span>เลือกใบสั่งซื้อ (PO) - เลือกได้หลายรายการ</span>
+                        <a href="javascript:void(0)" id="btn-toggle-fx" class="text-primary small" style="text-decoration:none;"><i class="fa fa-calculator"></i> แปลงค่าเงิน/รวมค่าธรรมเนียม</a>
+                    </label>
                     <?= Select2::widget([
                         'name' => 'po_ids[]',
                         'data' => $selectedPoList,
@@ -427,13 +563,52 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                 </div>
             </div>
 
-            <!-- <div class="row mb-3" id="pull-data-section" style="display:none;">
-                <div class="col-md-12 text-center">
-                    <button type="button" class="btn btn-primary" onclick="pullMultipleData()">
-                        <i class="fa fa-download"></i> ดึงข้อมูลจาก PR/PO ที่เลือก
+            <!-- ส่วนคำนวณแปลงค่าเงินต่างประเทศ & รวมค่าธรรมเนียมโอน -->
+            <div id="foreign-currency-section" class="card mb-3 shadow-sm" style="display:none; border: 1px solid #ffeeba; background-color: #fffdf5;">
+                <div class="card-header bg-warning text-dark py-2 d-flex justify-content-between align-items-center">
+                    <span class="font-weight-bold">
+                        <i class="fa fa-calculator"></i> คำนวณแปลงค่าเงินต่างประเทศ & รวมค่าธรรมเนียมโอน (THB)
+                    </span>
+                    <button type="button" class="btn btn-sm btn-outline-dark" id="btn-close-fx" title="ปิดกล่องนี้">
+                        <i class="fa fa-times"></i>
                     </button>
                 </div>
-            </div> -->
+                <div class="card-body py-3">
+                    <div class="row align-items-end">
+                        <div class="col-md-2">
+                            <label class="form-label font-weight-bold small">ยอดเงินต่างประเทศ</label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" class="form-control" id="fx-foreign-amount" placeholder="0.00">
+                                <span class="input-group-text bg-light font-weight-bold small" id="fx-currency-code">USD</span>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label font-weight-bold small">อัตราแลกเปลี่ยน (บาท/<span class="fx-curr-label">USD</span>)</label>
+                            <input type="number" step="0.0001" class="form-control" id="fx-rate" placeholder="เช่น 35.50">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold small">ยอดเงินบาท (THB) ก่อนค่าธรรมเนียม</label>
+                            <input type="number" step="0.01" class="form-control" id="fx-thb-amount" placeholder="0.00">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label font-weight-bold small">ค่าธรรมเนียมธนาคาร (THB)</label>
+                            <input type="number" step="0.01" class="form-control" id="fx-bank-fee" value="0.00" placeholder="0.00">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label font-weight-bold small text-success">ยอดจ่ายสุทธิที่ตัดธนาคาร (THB)</label>
+                            <input type="text" readonly class="form-control font-weight-bold text-success bg-white border-success" id="fx-net-payment" value="0.00">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12 text-end">
+                            <span class="text-muted small me-3">* กรอกอัตราแลกเปลี่ยน หรือยอดเงินบาท แล้วระบบจะคำนวณและตั้งแถวลงบัญชีให้อัตโนมัติ</span>
+                            <button type="button" class="btn btn-success" id="btn-apply-fx">
+                                <i class="fa fa-check"></i> แปลงค่าเงินและรวมค่าธรรมเนียมลงรายการบัญชี
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="row mb-3">
                 <div class="col-md-4">
