@@ -761,7 +761,7 @@ $(document).on('change', '.related-doc-chk', function() {
         if (doc && doc.is_used) {
             var msg = 'คำเตือน: เอกสาร ' + doc.doc_no + ' (' + doc.type_label + ') ได้ดำเนินการทำใบเสร็จไปแล้ว' +
                 (doc.used_by_receipt ? ' ในใบเสร็จเลขที่ ' + doc.used_by_receipt : '') +
-                '\nหากนำมาทำรายการซ้ำ อาจทำให้ยอดรับเงินซ้ำซ้อนได้';
+                '\\nหากนำมาทำรายการซ้ำ อาจทำให้ยอดรับเงินซ้ำซ้อนได้';
             alert(msg);
         }
     }
@@ -798,9 +798,9 @@ $(document).on('click', '.btn-apply-selected-docs', function() {
     }
 
     if (usedCount > 0) {
-        var confirmMsg = 'พบรายการที่ดำเนินการทำใบเสร็จไปแล้ว ' + usedCount + ' รายการ:\n- ' +
-            usedDocNames.join('\n- ') +
-            '\n\nคุณแน่ใจหรือไม่ว่าต้องการนำมาทำรายการในใบเสร็จนี้อีกครั้ง?';
+        var confirmMsg = 'พบรายการที่ดำเนินการทำใบเสร็จไปแล้ว ' + usedCount + ' รายการ:\\n- ' +
+            usedDocNames.join('\\n- ') +
+            '\\n\\nคุณแน่ใจหรือไม่ว่าต้องการนำมาทำรายการในใบเสร็จนี้อีกครั้ง?';
         if (!confirm(confirmMsg)) {
             return;
         }
@@ -957,6 +957,7 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
 
                     <?= $form->field($model, 'quotation_id')->widget(Select2::className(), [
                         'data' => $quotationData,
+                        'language' => 'th',
                         'options' => [
                             'placeholder' => '...เลือกใบเสนอราคา...',
                             'id' => 'invoice-job-id',
@@ -964,7 +965,6 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                         ],
                         'pluginOptions' => [
                             'allowClear' => true,
-                            'escapeMarkup' => new \yii\web\JsExpression('function (markup) { return markup; }'),
                         ],
                     ]) ?>
                     <?php if ($isCopyReceipt): ?>
