@@ -63,11 +63,16 @@ class WhtController extends BaseController
     {
         $month = Yii::$app->request->get('month', date('m'));
         $year = Yii::$app->request->get('year', date('Y'));
+        $companyId = Yii::$app->session->get('company_id');
 
         $query = \backend\models\Wht::find()
-            ->andWhere(['MONTH(trans_date)' => $month])
-            ->andWhere(['YEAR(trans_date)' => $year])
+            ->andWhere(['MONTH(trans_date)' => (int)$month])
+            ->andWhere(['YEAR(trans_date)' => (int)$year])
             ->orderBy(['trans_date' => SORT_ASC, 'wht_no' => SORT_ASC]);
+
+        if (!empty($companyId) && $companyId != 100) {
+            $query->andWhere(['or', ['company_id' => $companyId], ['company_id' => null]]);
+        }
 
         $dataProvider = new \yii\data\ActiveDataProvider([
             'query' => $query,
@@ -76,7 +81,7 @@ class WhtController extends BaseController
 
         return $this->render('report', [
             'dataProvider' => $dataProvider,
-            'month' => $month,
+            'month' => sprintf('%02d', (int)$month),
             'year' => $year,
         ]);
     }

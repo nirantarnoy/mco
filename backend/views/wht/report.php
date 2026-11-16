@@ -20,6 +20,7 @@ $months = [
             <div class="card">
                 <div class="card-body">
                     <form action="<?= Url::to(['wht/report']) ?>" method="GET" class="form-inline">
+                        <input type="hidden" name="r" value="wht/report">
                         <label class="mr-2">เดือน:</label>
                         <select name="month" class="form-control mr-3">
                             <?php foreach ($months as $k => $v): ?>

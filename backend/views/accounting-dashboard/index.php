@@ -22,6 +22,7 @@ $this->registerJsFile('https://cdn.jsdelivr.net/npm/chart.js', ['position' => \y
     <div class="card shadow-sm mb-4">
         <div class="card-body py-3">
             <form method="get" action="<?= Url::to(['index']) ?>" class="form-inline m-0 w-100">
+                <input type="hidden" name="r" value="accounting-dashboard/index">
                 <input type="hidden" name="filter" value="<?= Html::encode($filter) ?>">
                 <div class="row align-items-center w-100 m-0">
                     <div class="col-12 col-md-auto mb-2 mb-md-0 px-1">

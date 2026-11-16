@@ -12,6 +12,7 @@ $this->title = 'รายงานสรุปเงินสดย่อย';
     <div class="card mb-4">
         <div class="card-body">
             <form method="GET" class="row align-items-end">
+                <input type="hidden" name="r" value="petty-cash-report/summary">
                 <div class="col-md-4">
                     <label>จากวันที่</label>
                     <?= Html::input('date', 'from_date', $from_date, ['class' => 'form-control']) ?>

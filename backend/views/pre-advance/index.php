@@ -9,6 +9,7 @@ $this->params['breadcrumbs'][] = $this->title;
     <div class="d-flex justify-content-between align-items-center mb-3">
         <?= Html::a('Create Pre-Advance', ['create'], ['class' => 'btn btn-success']) ?>
         <form action="<?= \yii\helpers\Url::to(['index']) ?>" method="get" class="form-inline">
+            <input type="hidden" name="r" value="pre-advance/index">
             <div class="input-group">
                 <input type="text" name="globalSearch" class="form-control" placeholder="ค้นหา เลขที่ / ชื่อ Vendor..." value="<?= Html::encode($globalSearch ?? '') ?>" style="width: 250px;">
                 <div class="input-group-append">
