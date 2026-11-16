@@ -644,8 +644,8 @@ var cachedRelatedDocs = {
     debit_notes: []
 };
 
-function loadRelatedDocs(quotationId) {
-    if (!quotationId) return;
+function loadRelatedDocs(quotationId, copyFromId) {
+    if (!quotationId && !copyFromId) return;
 
     var container = $('#related-docs-container');
     var tbody = $('#related-docs-table tbody');
@@ -656,7 +656,8 @@ function loadRelatedDocs(quotationId) {
         url: '{$getRelatedDocsUrl}',
         type: 'POST',
         data: {
-            quotation_id: quotationId,
+            quotation_id: quotationId || '',
+            copy_from: copyFromId || '{$copy_from}' || '',
             current_invoice_id: '{$model->id}'
         },
         dataType: 'json',
@@ -769,8 +770,9 @@ $(document).on('change', '.related-doc-chk', function() {
 
 $(document).on('click', '.btn-refresh-related-docs', function() {
     var jobId = $('#invoice-job-id').val();
-    if (jobId) {
-        loadRelatedDocs(jobId);
+    var copyFromId = '{$copy_from}';
+    if (jobId || copyFromId) {
+        loadRelatedDocs(jobId, copyFromId);
     } else {
         showMessage('warning', 'กรุณาเลือกใบเสนอราคาก่อน');
     }
@@ -830,8 +832,9 @@ $(document).on('click', '.btn-apply-selected-docs', function() {
 
         if (doc.doc_type === 'credit_note') {
             description = 'ใบลดหนี้ เลขที่ ' + doc.doc_no + (doc.reason ? ' (' + doc.reason + ')' : '');
-            // ใบลดหนี้ถ้าเป็นราคาก่อน VAT หรือยอดรวม ให้ใส่มูลค่าที่ลด
-            unitPrice = (doc.adjust_amount > 0) ? doc.adjust_amount : doc.amount;
+            // ใบลดหนี้ให้ใส่มูลค่าที่ลดเป็นยอดลบ
+            var rawPrice = (doc.adjust_amount > 0) ? doc.adjust_amount : doc.amount;
+            unitPrice = -Math.abs(rawPrice);
         } else if (doc.doc_type === 'debit_note') {
             description = 'ใบเพิ่มหนี้ เลขที่ ' + doc.doc_no + (doc.reason ? ' (' + doc.reason + ')' : '');
             unitPrice = (doc.adjust_amount > 0) ? doc.adjust_amount : doc.amount;
@@ -864,7 +867,7 @@ $(document).on('click', '.btn-apply-selected-docs', function() {
                 '</select>' +
             '</td>' +
             '<td>' +
-                '<input type="number" name="InvoiceItem[' + rowCount + '][unit_price]" class="form-control form-control-sm unit-price-input text-right" value="' + unitPrice + '" step="0.01" min="0">' +
+                '<input type="number" name="InvoiceItem[' + rowCount + '][unit_price]" class="form-control form-control-sm unit-price-input text-right" value="' + unitPrice + '" step="0.01">' +
             '</td>' +
             '<td>' +
                 '<input type="text" name="InvoiceItem[' + rowCount + '][amount]" class="form-control form-control-sm amount-input text-right" readonly style="background-color: #f8f9fa;" value="' + amount + '">' +
@@ -893,11 +896,12 @@ $(document).ready(function() {
         initializeAutocomplete($(this));
     });
 
-    // หากเปิดฟอร์มใบเสร็จมาแล้วมีเลือก quotation_id อยู่แล้ว (เช่น กรณี update หรือ copy) ให้โหลด related docs
+    // หากเปิดฟอร์มใบเสร็จมาแล้วมีเลือก quotation_id อยู่แล้ว หรือ copy มา ให้โหลด related docs
     if ('{$model->invoice_type}' === 'receipt') {
         var currentJobId = $('#invoice-job-id').val();
-        if (currentJobId) {
-            loadRelatedDocs(currentJobId);
+        var copyFromId = '{$copy_from}';
+        if (currentJobId || copyFromId) {
+            loadRelatedDocs(currentJobId, copyFromId);
         }
     }
 });
@@ -961,15 +965,11 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                         'options' => [
                             'placeholder' => '...เลือกใบเสนอราคา...',
                             'id' => 'invoice-job-id',
-                            'disabled' => $isCopyReceipt,
                         ],
                         'pluginOptions' => [
                             'allowClear' => true,
                         ],
                     ]) ?>
-                    <?php if ($isCopyReceipt): ?>
-                        <?= Html::activeHiddenInput($model, 'quotation_id') ?>
-                    <?php endif; ?>
 
                     <?= $form->field($model, 'customer_name')->textInput([
                         'maxlength' => true,
@@ -1167,7 +1167,6 @@ $currentTypeLabel = isset($typeLabels[$model->invoice_type]) ? $typeLabels[$mode
                                         'class' => 'form-control form-control-sm unit-price-input text-right',
                                         'type' => 'number',
                                         'step' => '0.001',
-                                        'min' => '0'
                                     ]) ?>
                                 </td>
                                 <td>

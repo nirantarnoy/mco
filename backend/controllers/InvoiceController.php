@@ -132,13 +132,9 @@ class InvoiceController extends BaseController
             }
 
             // If copying to a different type (e.g. Invoice -> Receipt), 
-            // set the quotation_id to the source invoice ID to maintain reference.
+            // maintain the quotation_id reference to the original quotation.
             if ($sourceInvoice->invoice_type != $type) {
-                 if ($type == Invoice::TYPE_RECEIPT && $sourceInvoice->invoice_type !== Invoice::TYPE_RECEIPT) {
-                    $model->quotation_id = $sourceInvoice->id;
-                 } else {
-                    $model->quotation_id = $sourceInvoice->quotation_id;
-                 }
+                $model->quotation_id = $sourceInvoice->quotation_id;
             }
         } elseif ($ocr_id) {
             // Create from OCR TempInvoice
@@ -249,14 +245,10 @@ class InvoiceController extends BaseController
                 // This is crucial because the form might not include quotation_id as a hidden field,
                 // or it might be overwritten during load().
                 if ($copy_from && empty($model->quotation_id)) {
-                     $sourceInvoice = $this->findModel($copy_from);
-                     if ($sourceInvoice->invoice_type != $type) {
-                         if ($type == Invoice::TYPE_RECEIPT && $sourceInvoice->invoice_type !== Invoice::TYPE_RECEIPT) {
-                            $model->quotation_id = $sourceInvoice->id;
-                         } else {
-                            $model->quotation_id = $sourceInvoice->quotation_id;
-                         }
-                     }
+                    $sourceInvoice = $this->findModel($copy_from);
+                    if ($sourceInvoice->invoice_type != $type) {
+                        $model->quotation_id = $sourceInvoice->quotation_id;
+                    }
                 }
 
                 if ($model->save(false)) {
@@ -669,19 +661,33 @@ class InvoiceController extends BaseController
 
         $quotationId = \Yii::$app->request->post('quotation_id') ?: \Yii::$app->request->get('quotation_id');
         $currentInvoiceId = \Yii::$app->request->post('current_invoice_id') ?: \Yii::$app->request->get('current_invoice_id');
+        $copyFrom = \Yii::$app->request->post('copy_from') ?: \Yii::$app->request->get('copy_from');
 
-        if (!$quotationId) {
-            return ['success' => false, 'message' => 'ไม่พบรหัสใบเสนอราคา'];
+        // ถ้าไม่มี quotationId แต่มี copy_from ให้ค้นหา quotationId จากเอกสารต้นทาง
+        if (!$quotationId && $copyFrom) {
+            $src = Invoice::findOne($copyFrom);
+            if ($src && $src->quotation_id) {
+                $quotationId = $src->quotation_id;
+            }
+        }
+
+        if (!$quotationId && !$copyFrom) {
+            return ['success' => false, 'message' => 'ไม่พบรหัสใบเสนอราคาหรือเอกสารอ้างอิง'];
         }
 
         try {
-            // 1. ดึงใบแจ้งหนี้ / ใบกำกับภาษี / ใบวางบิล ที่ผูกกับ quotation_id
-            $invoices = Invoice::find()
-                ->where(['quotation_id' => $quotationId])
+            // 1. ดึงใบแจ้งหนี้ / ใบกำกับภาษี / ใบวางบิล ที่ผูกกับ quotation_id หรือ copy_from
+            $invQuery = Invoice::find()
                 ->andWhere(['!=', 'invoice_type', Invoice::TYPE_RECEIPT])
-                ->andWhere(['status' => Invoice::STATUS_ACTIVE])
-                ->orderBy(['invoice_date' => SORT_ASC, 'id' => SORT_ASC])
-                ->all();
+                ->andWhere(['status' => Invoice::STATUS_ACTIVE]);
+
+            if ($quotationId) {
+                $invQuery->andWhere(['quotation_id' => $quotationId]);
+            } elseif ($copyFrom) {
+                $invQuery->andWhere(['id' => $copyFrom]);
+            }
+
+            $invoices = $invQuery->orderBy(['invoice_date' => SORT_ASC, 'id' => SORT_ASC])->all();
 
             $invIds = [];
             $invoiceList = [];
@@ -742,12 +748,22 @@ class InvoiceController extends BaseController
             $cnQuery = \backend\models\CreditNote::find()
                 ->where(['!=', 'status', 'canceled']);
 
-            $cnConditions = [['quotation_id' => $quotationId]];
+            $cnConditions = [];
+            if ($quotationId) {
+                $cnConditions[] = ['quotation_id' => $quotationId];
+            }
             if (!empty($invIds)) {
                 $cnConditions[] = ['in', 'invoice_id', $invIds];
             }
-            $cnQuery->andWhere(array_merge(['or'], $cnConditions));
-            $creditNotes = $cnQuery->orderBy(['document_date' => SORT_ASC, 'id' => SORT_ASC])->all();
+            if ($copyFrom && !in_array($copyFrom, $invIds)) {
+                $cnConditions[] = ['invoice_id' => $copyFrom];
+            }
+            if (!empty($cnConditions)) {
+                $cnQuery->andWhere(array_merge(['or'], $cnConditions));
+                $creditNotes = $cnQuery->orderBy(['document_date' => SORT_ASC, 'id' => SORT_ASC])->all();
+            } else {
+                $creditNotes = [];
+            }
 
             $cnList = [];
             foreach ($creditNotes as $cn) {
@@ -808,12 +824,22 @@ class InvoiceController extends BaseController
             $dnQuery = \backend\models\DebitNote::find()
                 ->where(['!=', 'status', 'canceled']);
 
-            $dnConditions = [['quotation_id' => $quotationId]];
+            $dnConditions = [];
+            if ($quotationId) {
+                $dnConditions[] = ['quotation_id' => $quotationId];
+            }
             if (!empty($invIds)) {
                 $dnConditions[] = ['in', 'invoice_id', $invIds];
             }
-            $dnQuery->andWhere(array_merge(['or'], $dnConditions));
-            $debitNotes = $dnQuery->orderBy(['document_date' => SORT_ASC, 'id' => SORT_ASC])->all();
+            if ($copyFrom && !in_array($copyFrom, $invIds)) {
+                $dnConditions[] = ['invoice_id' => $copyFrom];
+            }
+            if (!empty($dnConditions)) {
+                $dnQuery->andWhere(array_merge(['or'], $dnConditions));
+                $debitNotes = $dnQuery->orderBy(['document_date' => SORT_ASC, 'id' => SORT_ASC])->all();
+            } else {
+                $debitNotes = [];
+            }
 
             $dnList = [];
             foreach ($debitNotes as $dn) {
