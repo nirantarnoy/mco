@@ -599,7 +599,12 @@ if($today > $end){
                                     <?php
                                     $totalJournalQty = 0;
                                     foreach ($journalTrans as $trans):
-                                        $totalJournalQty += $trans['qty'];
+                                        $isRet = in_array((int)$trans['trans_type_id'], [4, 6]);
+                                        if ($isRet) {
+                                            $totalJournalQty -= $trans['qty'];
+                                        } else {
+                                            $totalJournalQty += $trans['qty'];
+                                        }
                                         ?>
                                         <?php
                                            $line_type_name = '';
@@ -622,7 +627,7 @@ if($today > $end){
                                                 ]) ?>
                                             </td>
                                             <td style="text-align: left;"><?= Html::encode($trans['customer_name']) ?></td>
-                                            <td style="text-align: right;"><?= number_format($trans['qty'], 0) ?></td>
+                                            <td style="text-align: right;"><?= ($isRet ? '-' : '') . number_format($trans['qty'], 0) ?></td>
                                             <td style="text-align: center;">
                                                 <?= Html::tag('span', 'completed', [
                                                     'class' => 'badge badge-' . ($trans['status'] == 0 ? 'success' : 'warning')

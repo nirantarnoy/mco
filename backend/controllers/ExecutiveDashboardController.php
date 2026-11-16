@@ -967,21 +967,28 @@ class ExecutiveDashboardController extends BaseController
                 $mTotalExpenses += $mPetty;
 
                 $mStockIssues = (new \yii\db\Query())
-                    ->select('l.qty, l.line_price, l.sale_price, p.sale_price as p_sale_price, p.cost_price as p_cost_price')
+                    ->select('t.trans_type_id, l.qty, l.line_price, l.sale_price, p.sale_price as p_sale_price, p.cost_price as p_cost_price')
                     ->from('journal_trans_line l')
                     ->innerJoin('journal_trans t', 't.id = l.journal_trans_id')
                     ->leftJoin('product p', 'p.id = l.product_id')
-                    ->where(['t.trans_type_id' => 3, 't.status' => 2, 't.job_id' => $mJobIds])
+                    ->where(['t.trans_type_id' => [3, 4], 't.status' => 2, 't.job_id' => $mJobIds])
                     ->all();
                 
                 foreach ($mStockIssues as $issue) {
+                    $itemAmount = 0;
                     if (!empty($issue['line_price']) && (float)$issue['line_price'] > 0) {
-                        $mTotalExpenses += (float)$issue['line_price'];
+                        $itemAmount = (float)$issue['line_price'];
                     } elseif (!empty($issue['sale_price']) && (float)$issue['sale_price'] > 0) {
-                        $mTotalExpenses += (float)$issue['sale_price'] * (float)$issue['qty'];
+                        $itemAmount = (float)$issue['sale_price'] * (float)$issue['qty'];
                     } else {
                         $unitPrice = (float)$issue['p_sale_price'] > 0 ? (float)$issue['p_sale_price'] : (float)$issue['p_cost_price'];
-                        $mTotalExpenses += $unitPrice * (float)$issue['qty'];
+                        $itemAmount = $unitPrice * (float)$issue['qty'];
+                    }
+
+                    if ($issue['trans_type_id'] == 4) {
+                        $mTotalExpenses -= $itemAmount;
+                    } else {
+                        $mTotalExpenses += $itemAmount;
                     }
                 }
             }
@@ -1091,12 +1098,12 @@ class ExecutiveDashboardController extends BaseController
                 
             // Inventory (รวมทั้งที่ผูก Job และไม่ผูก Job)
             $stockQ = (new \yii\db\Query())
-                ->select('l.qty, l.line_price, l.sale_price, p.sale_price as p_sale_price, p.cost_price as p_cost_price')
+                ->select('t.trans_type_id, l.qty, l.line_price, l.sale_price, p.sale_price as p_sale_price, p.cost_price as p_cost_price')
                 ->from('journal_trans_line l')
                 ->innerJoin('journal_trans t', 't.id = l.journal_trans_id')
                 ->leftJoin('job j', 'j.id = t.job_id')
                 ->leftJoin('product p', 'p.id = l.product_id')
-                ->where(['t.trans_type_id' => 3, 't.status' => 2]);
+                ->where(['t.trans_type_id' => [3, 4], 't.status' => 2]);
             if ($cId == 1) {
                 $stockQ->andWhere(['or', ['j.company_id' => 1], ['j.company_id' => null], ['t.job_id' => null], ['t.job_id' => 0]]);
             } else {
@@ -1109,13 +1116,20 @@ class ExecutiveDashboardController extends BaseController
             
             $cInv = 0;
             foreach ($stockIssues as $issue) {
+                $itemAmount = 0;
                 if (!empty($issue['line_price']) && (float)$issue['line_price'] > 0) {
-                    $cInv += (float)$issue['line_price'];
+                    $itemAmount = (float)$issue['line_price'];
                 } elseif (!empty($issue['sale_price']) && (float)$issue['sale_price'] > 0) {
-                    $cInv += (float)$issue['sale_price'] * (float)$issue['qty'];
+                    $itemAmount = (float)$issue['sale_price'] * (float)$issue['qty'];
                 } else {
                     $unitPrice = (float)$issue['p_sale_price'] > 0 ? (float)$issue['p_sale_price'] : (float)$issue['p_cost_price'];
-                    $cInv += $unitPrice * (float)$issue['qty'];
+                    $itemAmount = $unitPrice * (float)$issue['qty'];
+                }
+
+                if ($issue['trans_type_id'] == 4) {
+                    $cInv -= $itemAmount;
+                } else {
+                    $cInv += $itemAmount;
                 }
             }
 
@@ -1424,10 +1438,10 @@ class ExecutiveDashboardController extends BaseController
         $inventoryTotal = 0;
         $inventoryInterest = 0;
         $stockIssues = (new \yii\db\Query())
-            ->select('l.product_id, l.qty, l.line_price, l.sale_price, t.trans_date')
+            ->select('t.trans_type_id, l.product_id, l.qty, l.line_price, l.sale_price, t.trans_date')
             ->from('journal_trans_line l')
             ->innerJoin('journal_trans t', 't.id = l.journal_trans_id')
-            ->where(['t.trans_type_id' => 3, 't.status' => 2, 't.job_id' => $job->id])
+            ->where(['t.trans_type_id' => [3, 4], 't.status' => 2, 't.job_id' => $job->id])
             ->all();
             
         foreach ($stockIssues as $issue) {
@@ -1443,6 +1457,12 @@ class ExecutiveDashboardController extends BaseController
                     $lineAmount = (float)$unitPrice * (float)$issue['qty'];
                 }
             }
+
+            if ($issue['trans_type_id'] == 4) {
+                $inventoryTotal -= $lineAmount;
+                continue;
+            }
+
             $inventoryTotal += $lineAmount;
             
             // Find purchase date (latest receive trans for this product before issue date)

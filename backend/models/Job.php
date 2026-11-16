@@ -196,14 +196,34 @@ class Job extends \common\models\Job
      */
     public function getTotalWithdrawAmount()
     {
+        // ตรวจสอบและซิงค์ความสัมพันธ์ของรายการคืนที่ยังไม่ผูก job_id อัตโนมัติ
+        JournalTrans::syncReturnTransactionJobIds();
+
         $total = 0;
 
-        foreach ($this->journalTrans as $trans) {
-            // ยกเว้นรายการที่ถูกยกเลิก (STATUS_CANCELLED)
-            if ($trans->status == JournalTrans::STATUS_CANCELLED) {
-                continue;
-            }
+        // ดึง ID ของ transaction ทั้งหมดที่ผูกกับ job นี้
+        $jobTransIds = JournalTrans::find()
+            ->where(['job_id' => $this->id])
+            ->orWhere(['job_id' => (string)$this->job_no])
+            ->select('id')
+            ->column();
 
+        // ดึงรายการเบิกและรายการคืนทั้งหมดที่เกี่ยวข้องกับ job นี้
+        $query = JournalTrans::find()
+            ->where(['!=', 'status', JournalTrans::STATUS_CANCELLED])
+            ->andWhere([
+                'OR',
+                ['job_id' => $this->id],
+                ['job_id' => (string)$this->job_no],
+                ['AND', 
+                    ['trans_type_id' => [JournalTrans::TRANS_TYPE_RETURN_ISSUE, JournalTrans::TRANS_TYPE_RETURN_BORROW]],
+                    ['return_for_trans_id' => $jobTransIds]
+                ]
+            ]);
+
+        $transactions = $query->all();
+
+        foreach ($transactions as $trans) {
             // กรองเฉพาะประเภทรายการเบิก/ยืม/คืนสินค้า
             // Type 3: ISSUE_STOCK (เบิกสินค้า) (+)
             // Type 5: ISSUE_BORROW (ยืมสินค้า) (+)
@@ -224,28 +244,45 @@ class Job extends \common\models\Job
             ]);
 
             foreach ($trans->journalTransLines as $line) {
+                if ($line->status == JournalTransLine::STATUS_CANCELLED) {
+                    continue;
+                }
                 $qty = floatval($line->qty);
                 if ($qty <= 0) {
                     continue;
                 }
 
-                $lineAmount = 0;
                 $unitPrice = 0;
 
                 if (!empty($line->sale_price) && floatval($line->sale_price) > 0) {
                     $unitPrice = floatval($line->sale_price);
-                    $lineAmount = $unitPrice * $qty;
                 } elseif (!empty($line->line_price) && floatval($line->line_price) > 0) {
-                    $lp = floatval($line->line_price);
-                    $lineAmount = $lp;
-                } elseif ($line->product) {
-                    if (!empty($line->product->sale_price) && floatval($line->product->sale_price) > 0) {
-                        $unitPrice = floatval($line->product->sale_price);
-                    } elseif (!empty($line->product->cost_price) && floatval($line->product->cost_price) > 0) {
-                        $unitPrice = floatval($line->product->cost_price);
+                    $unitPrice = floatval($line->line_price) / $qty;
+                } else {
+                    // หากเป็นรายการคืน และไม่มีราคาในแถว ให้ดึงราคาจากรายการเบิกต้นฉบับ
+                    if ($isReturn && !empty($trans->return_for_trans_id)) {
+                        $refLine = JournalTransLine::find()
+                            ->where(['journal_trans_id' => $trans->return_for_trans_id, 'product_id' => $line->product_id])
+                            ->andWhere(['!=', 'status', JournalTransLine::STATUS_CANCELLED])
+                            ->one();
+                        if ($refLine) {
+                            if (!empty($refLine->sale_price) && floatval($refLine->sale_price) > 0) {
+                                $unitPrice = floatval($refLine->sale_price);
+                            } elseif (!empty($refLine->line_price) && floatval($refLine->line_price) > 0 && floatval($refLine->qty) > 0) {
+                                $unitPrice = floatval($refLine->line_price) / floatval($refLine->qty);
+                            }
+                        }
                     }
-                    $lineAmount = $unitPrice * $qty;
+                    if ($unitPrice <= 0 && $line->product) {
+                        if (!empty($line->product->sale_price) && floatval($line->product->sale_price) > 0) {
+                            $unitPrice = floatval($line->product->sale_price);
+                        } elseif (!empty($line->product->cost_price) && floatval($line->product->cost_price) > 0) {
+                            $unitPrice = floatval($line->product->cost_price);
+                        }
+                    }
                 }
+
+                $lineAmount = $unitPrice * $qty;
 
                 if ($isReturn) {
                     $total -= $lineAmount;
@@ -280,10 +317,10 @@ class Job extends \common\models\Job
         ", [':jobId' => $this->id, ':jobNo' => $this->job_no])->queryScalar();
 
         $poNonePrAmount = $db->createCommand("
-            SELECT SUM(COALESCE(p.net_amount, p.total_amount, 0))
+            SELECT SUM((COALESCE(p.total_amount, 0) - COALESCE(p.vat_amount, 0)) * COALESCE(NULLIF(p.exchange_rate, 0), 1))
             FROM purchase_master p
-            WHERE (p.job_no = :jobNo OR p.job_no = :jobIdStr OR p.job_id = :jobId) AND p.status != 0
-        ", [':jobNo' => $this->job_no, ':jobIdStr' => (string)$this->id, ':jobId' => $this->id])->queryScalar();
+            WHERE (p.job_no = :jobNo OR p.job_no = :jobIdStr) AND p.status != 0
+        ", [':jobNo' => $this->job_no, ':jobIdStr' => (string)$this->id])->queryScalar();
 
         return (float)($poAmount ?? 0) + (float)($poNonePrAmount ?? 0);
     }

@@ -116,6 +116,24 @@ class JournaltransController extends BaseController
                         foreach ($journalTransLines as $journalTransLine) {
                             $journalTransLine->journal_trans_id = $model->id;
                             $journalTransLine->status = 0;
+
+                            // หากเป็นรายการคืน และยังไม่มีราคา ให้ดึงราคาจากรายการเบิกต้นฉบับ
+                            if (!empty($model->return_for_trans_id)) {
+                                if (empty($journalTransLine->sale_price) || floatval($journalTransLine->sale_price) <= 0) {
+                                    $refLine = JournalTransLine::find()
+                                        ->where(['journal_trans_id' => $model->return_for_trans_id, 'product_id' => $journalTransLine->product_id])
+                                        ->andWhere(['!=', 'status', JournalTransLine::STATUS_CANCELLED])
+                                        ->one();
+                                    if ($refLine) {
+                                        $journalTransLine->sale_price = $refLine->sale_price;
+                                        if (empty($journalTransLine->line_price) || floatval($journalTransLine->line_price) <= 0) {
+                                            $unitP = floatval($refLine->sale_price) > 0 ? floatval($refLine->sale_price) : (floatval($refLine->line_price) / max(1, floatval($refLine->qty)));
+                                            $journalTransLine->line_price = $unitP * floatval($journalTransLine->qty);
+                                        }
+                                    }
+                                }
+                            }
+
                             if (!$journalTransLine->save(false)) {
                                 throw new \Exception('Failed to save journal trans line');
                             }
@@ -257,6 +275,7 @@ class JournaltransController extends BaseController
                 'available_return_qty' => $availableReturnQty,
                 'unit_id' => $line->product->unit_id ?? '',
                 'unit_name' => $line->product->unit->name ?? '',
+                'sale_price' => $line->sale_price,
                 'line_price' => $line->line_price,
             ];
         }
@@ -269,6 +288,8 @@ class JournaltransController extends BaseController
                 'trans_date' => $transaction->trans_date,
                 'trans_type_name' => JournalTrans::getTransTypeOptions()[$transaction->trans_type_id] ?? '',
                 'customer_name' => $transaction->customer_name,
+                'job_id' => $transaction->job_id,
+                'job_no' => $transaction->job ? $transaction->job->job_no : '',
                 'status' => $transaction->status,
                 'lines' => $lines
             ]
@@ -334,6 +355,24 @@ class JournaltransController extends BaseController
                         foreach ($journalTransLines as $journalTransLine) {
                             $journalTransLine->journal_trans_id = $model->id;
                             $journalTransLine->status = 0;
+
+                            // หากเป็นรายการคืน และยังไม่มีราคา ให้ดึงราคาจากรายการเบิกต้นฉบับ
+                            if (!empty($model->return_for_trans_id)) {
+                                if (empty($journalTransLine->sale_price) || floatval($journalTransLine->sale_price) <= 0) {
+                                    $refLine = JournalTransLine::find()
+                                        ->where(['journal_trans_id' => $model->return_for_trans_id, 'product_id' => $journalTransLine->product_id])
+                                        ->andWhere(['!=', 'status', JournalTransLine::STATUS_CANCELLED])
+                                        ->one();
+                                    if ($refLine) {
+                                        $journalTransLine->sale_price = $refLine->sale_price;
+                                        if (empty($journalTransLine->line_price) || floatval($journalTransLine->line_price) <= 0) {
+                                            $unitP = floatval($refLine->sale_price) > 0 ? floatval($refLine->sale_price) : (floatval($refLine->line_price) / max(1, floatval($refLine->qty)));
+                                            $journalTransLine->line_price = $unitP * floatval($journalTransLine->qty);
+                                        }
+                                    }
+                                }
+                            }
+
                             if (!$journalTransLine->save(false)) {
                                 throw new \Exception('Failed to save journal trans line');
                             }
@@ -405,6 +444,24 @@ class JournaltransController extends BaseController
                         foreach ($journalTransLines as $journalTransLine) {
                             $journalTransLine->journal_trans_id = $model->id;
                             $journalTransLine->status = 0;
+
+                            // หากเป็นรายการคืน และยังไม่มีราคา ให้ดึงราคาจากรายการเบิกต้นฉบับ
+                            if (!empty($model->return_for_trans_id)) {
+                                if (empty($journalTransLine->sale_price) || floatval($journalTransLine->sale_price) <= 0) {
+                                    $refLine = JournalTransLine::find()
+                                        ->where(['journal_trans_id' => $model->return_for_trans_id, 'product_id' => $journalTransLine->product_id])
+                                        ->andWhere(['!=', 'status', JournalTransLine::STATUS_CANCELLED])
+                                        ->one();
+                                    if ($refLine) {
+                                        $journalTransLine->sale_price = $refLine->sale_price;
+                                        if (empty($journalTransLine->line_price) || floatval($journalTransLine->line_price) <= 0) {
+                                            $unitP = floatval($refLine->sale_price) > 0 ? floatval($refLine->sale_price) : (floatval($refLine->line_price) / max(1, floatval($refLine->qty)));
+                                            $journalTransLine->line_price = $unitP * floatval($journalTransLine->qty);
+                                        }
+                                    }
+                                }
+                            }
+
                             if (!$journalTransLine->save(false)) {
                                 throw new \Exception('Failed to save journal trans line');
                             }

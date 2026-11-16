@@ -1333,7 +1333,7 @@ class JobController extends BaseController
         $job = Job::findOne($jobId);
         $jobNo = $job ? $job->job_no : (string)$jobId;
         $query = "
-            SELECT 
+            SELECT DISTINCT
                 jt.id,
                 jt.journal_no,
                 jt.trans_date,
@@ -1347,7 +1347,9 @@ class JobController extends BaseController
                 jt.party_id,
                 jt.warehouse_id
             FROM journal_trans jt
+            LEFT JOIN journal_trans ref ON jt.return_for_trans_id = ref.id
             WHERE jt.job_id = :jobId OR jt.job_id = :jobNo
+               OR (jt.trans_type_id IN (4, 6) AND (ref.job_id = :jobId OR ref.job_id = :jobNo))
             ORDER BY jt.trans_date DESC
         ";
 

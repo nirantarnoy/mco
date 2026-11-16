@@ -198,12 +198,16 @@ function populateReturnTransactionLines(lines) {
 // Add return transaction line
 function addReturnTransactionLine(lineData, index) {
     var availableQty = lineData.available_return_qty || 0;
+    var salePrice = lineData.sale_price || 0;
+    var linePrice = lineData.line_price || 0;
 
     var rowHtml = `
         <tr class="item return-transaction-line">
             <td class="text-center align-middle">
                 <span class="item-number">${index + 1}</span>
                 <input type="hidden" name="JournalTransLine[${index}][product_id]" value="${lineData.product_id}">
+                <input type="hidden" name="JournalTransLine[${index}][sale_price]" value="${salePrice}">
+                <input type="hidden" name="JournalTransLine[${index}][line_price]" value="${linePrice}">
             </td>
             <td>
                 <input type="text" class="form-control readonly-field" 

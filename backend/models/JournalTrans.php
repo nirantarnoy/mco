@@ -385,6 +385,15 @@ class JournalTrans extends ActiveRecord
              //   $this->emp_trans_id = Yii::$app->user->id;
                 $this->status = self::STATUS_DRAFT;
             }
+
+            // ถ้ารายการเป็นรายการคืน (Return Issue / Return Borrow) และ job_id ว่างอยู่ ให้ดึง job_id จากเอกสารอ้างอิงอัตโนมัติ
+            if (empty($this->job_id) && !empty($this->return_for_trans_id)) {
+                $ref = self::findOne($this->return_for_trans_id);
+                if ($ref && !empty($ref->job_id)) {
+                    $this->job_id = $ref->job_id;
+                }
+            }
+
             $this->updated_by = Yii::$app->user->id;
            // $this->emp_trans_id = Yii::$app->user->id;
             $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
@@ -393,6 +402,25 @@ class JournalTrans extends ActiveRecord
 
 
         return false;
+    }
+
+    /**
+     * ซิงค์ job_id ให้กับรายการคืน (Return Issue / Return Borrow) ย้อนหลังที่ยังไม่มี job_id
+     */
+    public static function syncReturnTransactionJobIds()
+    {
+        try {
+            Yii::$app->db->createCommand("
+                UPDATE journal_trans ret
+                JOIN journal_trans ref ON ret.return_for_trans_id = ref.id
+                SET ret.job_id = ref.job_id
+                WHERE ret.trans_type_id IN (4, 6)
+                  AND (ret.job_id IS NULL OR ret.job_id = 0)
+                  AND ref.job_id IS NOT NULL AND ref.job_id > 0
+            ")->execute();
+        } catch (\Exception $e) {
+            // ignore
+        }
     }
 
     /**

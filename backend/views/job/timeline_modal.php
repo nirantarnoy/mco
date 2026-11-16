@@ -587,7 +587,21 @@ $this->registerCss('
                                 $iIdx = 0;
                                 foreach ($issueTrans as $jt):
                                     $iIdx++;
-                                    $sText = mb_strtolower('เบิกสินค้า คืนของ ' . $jt['journal_no'] . ' ' . ($jt['customer_name'] ?? ''));
+                                    $isReturn = in_array($jt['trans_type_id'] ?? 0, [4, 6]);
+                                    $badgeClass = 'bg-dark text-white';
+                                    $badgeLabel = 'เบิกสินค้า';
+                                    if (($jt['trans_type_id'] ?? 0) == 4) {
+                                        $badgeClass = 'bg-success text-white';
+                                        $badgeLabel = 'คืนสินค้าที่เบิก';
+                                    } elseif (($jt['trans_type_id'] ?? 0) == 5) {
+                                        $badgeClass = 'bg-warning text-dark';
+                                        $badgeLabel = 'ยืมสินค้า';
+                                    } elseif (($jt['trans_type_id'] ?? 0) == 6) {
+                                        $badgeClass = 'bg-info text-white';
+                                        $badgeLabel = 'คืนสินค้าที่ยืม';
+                                    }
+
+                                    $sText = mb_strtolower(($isReturn ? 'คืนสินค้า คืนของ ' : 'เบิกสินค้า ') . $jt['journal_no'] . ' ' . ($jt['customer_name'] ?? ''));
                                     if (!empty($jt['lines'])) {
                                         foreach ($jt['lines'] as $l) {
                                             $sText .= ' ' . mb_strtolower($l['product_name'] ?? '');
@@ -597,14 +611,14 @@ $this->registerCss('
                                     <tr class="timeline-item-row" data-search="<?= Html::encode($sText) ?>">
                                         <td class="text-center fw-bold text-muted"><?= $iIdx ?></td>
                                         <td>
-                                            <span class="badge bg-dark text-white me-1">เบิกสินค้า</span>
+                                            <span class="badge <?= $badgeClass ?> me-1"><?= $badgeLabel ?></span>
                                             <strong class="text-indigo-600" style="color: #4f46e5;"><?= Html::encode($jt['journal_no']) ?></strong>
                                         </td>
                                         <td class="text-center text-secondary small">
                                             <?= date('d/m/Y', strtotime($jt['trans_date'])) ?>
                                         </td>
                                         <td>
-                                            <div class="fw-semibold text-slate-800"><?= Html::encode($jt['customer_name'] ?: 'พนักงานเบิก') ?></div>
+                                            <div class="fw-semibold text-slate-800"><?= Html::encode($jt['customer_name'] ?: ($isReturn ? 'พนักงานคืน' : 'พนักงานเบิก')) ?></div>
                                         </td>
                                         <td>
                                             <?php if (!empty($jt['lines'])): ?>
@@ -613,7 +627,7 @@ $this->registerCss('
                                                         <li class="mb-1 pb-1 border-bottom border-light">
                                                             <i class="fas fa-cube text-dark me-1"></i>
                                                             <strong><?= Html::encode($lItem['product_name'] ?? 'สินค้า') ?></strong>
-                                                            <span class="text-muted ms-1">(จำนวนเบิก: <?= number_format($lItem['qty'] ?? 0, 1) ?>)</span>
+                                                            <span class="text-muted ms-1">(จำนวน<?= $isReturn ? 'คืน' : 'เบิก' ?>: <?= ($isReturn ? '-' : '') . number_format($lItem['qty'] ?? 0, 1) ?>)</span>
                                                         </li>
                                                     <?php endforeach; ?>
                                                 </ul>
@@ -621,8 +635,8 @@ $this->registerCss('
                                                 <span class="text-muted small"><?= Html::encode($jt['remark'] ?: '- ไม่มีรายละเอียด -') ?></span>
                                             <?php endif; ?>
                                         </td>
-                                        <td class="text-end fw-bold text-dark">
-                                            <?= number_format($jt['qty'] ?? 0, 1) ?>
+                                        <td class="text-end fw-bold <?= $isReturn ? 'text-success' : 'text-dark' ?>">
+                                            <?= ($isReturn ? '-' : '') . number_format($jt['qty'] ?? 0, 1) ?>
                                         </td>
                                         <td class="text-center">
                                             <div class="d-flex flex-column gap-1 align-items-center">
@@ -637,7 +651,7 @@ $this->registerCss('
                                                     <?php endforeach; ?>
                                                 <?php endif; ?>
                                                 <a href="<?= Url::to(['/journaltrans/view', 'id' => $jt['id']]) ?>" target="_blank" class="btn btn-xs btn-light-modern rounded-pill w-100">
-                                                    <i class="fas fa-external-link-alt me-1"></i> เปิดดูใบเบิก
+                                                    <i class="fas fa-external-link-alt me-1"></i> <?= $isReturn ? 'เปิดดูใบรับคืน' : 'เปิดดูใบเบิก' ?>
                                                 </a>
                                             </div>
                                         </td>
