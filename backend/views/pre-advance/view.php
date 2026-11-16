@@ -21,36 +21,31 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= Html::a('สร้างใบหัก ณ ที่จ่าย (WHT)', ['/wht/create', 'ref_type' => 'PRE-ADVANCE', 'ref_id' => $model->id], ['class' => 'btn btn-warning', 'target' => '_blank']) ?>
         
         <?php 
-        $isChecker = \backend\models\User::isUserAdmin() || Yii::$app->user->can('pre_advance_checker') || Yii::$app->user->can('checker');
-        $isApprover = \backend\models\User::isUserAdmin() || Yii::$app->user->can('pre_advance_approver') || Yii::$app->user->can('approver');
+        $currentCompanyId = Yii::$app->session->get('company_id');
+        $hasMatrixApprove = \common\models\UserModulePermission::find()
+            ->where([
+                'user_id' => Yii::$app->user->id,
+                'module_key' => 'appr_pre_advance',
+                'permission_type' => \common\models\UserModulePermission::PERM_MANAGE,
+            ])
+            ->andFilterWhere(['company_id' => $currentCompanyId])
+            ->exists();
+
+        $isApprover = \backend\models\User::isUserAdmin() 
+            || $hasMatrixApprove
+            || Yii::$app->user->can('appr_pre_advance')
+            || Yii::$app->user->can('preadvance/approve') 
+            || Yii::$app->user->can('pre-advance/approve') 
+            || Yii::$app->user->can('pre_advance_approver') 
+            || Yii::$app->user->can('approver');
         ?>
         
-        <?php if ($isChecker): ?>
-            <?php if (empty($model->checked_by)): ?>
-                <?= Html::a('ตรวจสอบรายการ', ['check', 'id' => $model->id], [
-                    'class' => 'btn btn-success',
-                    'data' => [
-                        'confirm' => 'ยืนยันการตรวจสอบรายการนี้?',
-                        'method' => 'post',
-                    ],
-                ]) ?>
-            <?php else: ?>
-                <?= Html::a('ยกเลิกตรวจสอบ', ['uncheck', 'id' => $model->id], [
-                    'class' => 'btn btn-secondary',
-                    'data' => [
-                        'confirm' => 'ยืนยันการยกเลิกตรวจสอบรายการนี้?',
-                        'method' => 'post',
-                    ],
-                ]) ?>
-            <?php endif; ?>
-        <?php endif; ?>
-
         <?php if ($isApprover): ?>
             <?php if (empty($model->approved_by)): ?>
-                <?= Html::a('อนุมัติรายการ', ['approve', 'id' => $model->id], [
+                <?= Html::a('ตรวจสอบ / อนุมัติ', ['approve', 'id' => $model->id], [
                     'class' => 'btn btn-success',
                     'data' => [
-                        'confirm' => 'ยืนยันการอนุมัติรายการนี้?',
+                        'confirm' => 'ยืนยันการตรวจสอบและอนุมัติรายการนี้?',
                         'method' => 'post',
                     ],
                 ]) ?>

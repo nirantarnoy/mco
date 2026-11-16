@@ -229,10 +229,19 @@ class PreAdvanceController extends BaseController
     public function actionApprove($id)
     {
         $model = $this->findModel($id);
-        $model->approved_by = Yii::$app->user->id;
-        $model->approved_at = date('Y-m-d H:i:s');
+        $userId = Yii::$app->user->id;
+        $now = date('Y-m-d H:i:s');
+
+        // บันทึกทั้งตรวจสอบและอนุมัติพร้อมกันในคลิกเดียว
+        if (empty($model->checked_by)) {
+            $model->checked_by = $userId;
+            $model->checked_at = $now;
+        }
+        $model->approved_by = $userId;
+        $model->approved_at = $now;
+
         if ($model->save(false)) {
-            Yii::$app->session->setFlash('success', 'อนุมัติรายการแล้ว');
+            Yii::$app->session->setFlash('success', 'บันทึกตรวจสอบและอนุมัติรายการเรียบร้อยแล้ว');
         }
         return $this->redirect(['view', 'id' => $model->id]);
     }
@@ -242,8 +251,10 @@ class PreAdvanceController extends BaseController
         $model = $this->findModel($id);
         $model->approved_by = null;
         $model->approved_at = null;
+        $model->checked_by = null;
+        $model->checked_at = null;
         if ($model->save(false)) {
-            Yii::$app->session->setFlash('success', 'ยกเลิกการอนุมัติแล้ว');
+            Yii::$app->session->setFlash('success', 'ยกเลิกการตรวจสอบและอนุมัติแล้ว');
         }
         return $this->redirect(['view', 'id' => $model->id]);
     }

@@ -232,7 +232,11 @@ class ModulePermissionConfig
                 'routes_view' => [],
                 'routes_manage' => [
                     'preadvance/approve',
+                    'preadvance/unapprove',
                     'preadvance/reject',
+                    'pre-advance/approve',
+                    'pre-advance/unapprove',
+                    'pre-advance/reject',
                     'pre_advance_approver',
                 ],
             ],
