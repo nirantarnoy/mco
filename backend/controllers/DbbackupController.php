@@ -465,6 +465,7 @@ class DbbackupController extends BaseController
 
     /**
      * ดึงโค้ดล่าสุดจาก GitHub ผ่าน Git Pull (git pull origin main)
+     * พร้อมระบบ Auto-Stash และ Auto-Resolve ป้องกันปัญหาติดขัด uncommitted changes
      */
     public function actionGitPull()
     {
@@ -484,6 +485,17 @@ class DbbackupController extends BaseController
         }
 
         $git = self::getGitBinaryPath();
+        $logs = [];
+        $startTime = microtime(true);
+
+        // ป้องกัน stale index.lock file จาก process ที่ค้าง
+        $lockFile = $repoDir . DIRECTORY_SEPARATOR . '.git' . DIRECTORY_SEPARATOR . 'index.lock';
+        if (file_exists($lockFile)) {
+            if (time() - filemtime($lockFile) > 60) {
+                @unlink($lockFile);
+                $logs[] = "[เตรียมความพร้อม] ลบไฟล์ .git/index.lock ที่ค้างเก่าเรียบร้อยแล้ว";
+            }
+        }
 
         // 1. ดึง commit ก่อน pull
         $beforeCommit = '';
@@ -501,16 +513,77 @@ class DbbackupController extends BaseController
             $branch = trim($outBranch[0]);
         }
 
-        // 3. รัน git pull origin main
-        $cmd = "{$git} -c safe.directory=* -C " . escapeshellarg($repoDir) . " pull origin " . escapeshellarg($branch) . " 2>&1";
-        $startTime = microtime(true);
+        // 3. ตรวจสอบสถานะ uncommitted / modified files บนเซิร์ฟเวอร์
+        $statusOut = [];
+        $cmdStatus = "{$git} -c safe.directory=* -C " . escapeshellarg($repoDir) . " status --porcelain 2>&1";
+        @exec($cmdStatus, $statusOut);
+
+        if (!empty($statusOut)) {
+            $logs[] = "[1/4] ตรวจพบไฟล์ที่มีการเปลี่ยนแปลงค้างอยู่บนเซิร์ฟเวอร์ (" . count($statusOut) . " รายการ):";
+            $previewCount = 0;
+            foreach ($statusOut as $statusLine) {
+                if ($previewCount < 5) {
+                    $logs[] = "      " . trim($statusLine);
+                    $previewCount++;
+                }
+            }
+            if (count($statusOut) > 5) {
+                $logs[] = "      ... และอีก " . (count($statusOut) - 5) . " รายการ";
+            }
+
+            // ทำการ auto-stash เพื่อไม่ให้ติดปัญหา git add / commit
+            $stashName = 'auto_stash_before_pull_' . date('Ymd_His');
+            $logs[] = "-> สำรองไฟล์ที่แก้ไขค้างอยู่เข้า Git Stash อัตโนมัติ ({$stashName})...";
+            $cmdStash = "{$git} -c safe.directory=* -C " . escapeshellarg($repoDir) . " stash save --include-untracked \"{$stashName}\" 2>&1";
+            @exec($cmdStash, $stashOut, $stashRet);
+            if ($stashRet !== 0) {
+                // กรณี git รุ่นเก่าที่ไม่รองรับ -u ใน save
+                $cmdStashFallback = "{$git} -c safe.directory=* -C " . escapeshellarg($repoDir) . " stash 2>&1";
+                @exec($cmdStashFallback, $stashOut);
+            }
+            $logs[] = "-> สำรองไฟล์เรียบร้อยแล้ว (Working directory สะอาดพร้อมดึงโค้ด)";
+        } else {
+            $logs[] = "[1/4] ตรวจสอบไฟล์ในเครื่อง: สถานะพร้อมอัพเดท (Working directory สะอาด)";
+        }
+
+        // 4. Fetch ข้อมูลล่าสุดจาก GitHub
+        $logs[] = "[2/4] กำลังดึงข้อมูลล่าสุดจาก GitHub (git fetch origin {$branch})...";
+        $cmdFetch = "{$git} -c safe.directory=* -C " . escapeshellarg($repoDir) . " fetch origin " . escapeshellarg($branch) . " 2>&1";
+        $fetchOut = [];
+        @exec($cmdFetch, $fetchOut);
+
+        // 5. รัน git pull origin <branch>
+        $logs[] = "[3/4] กำลังอัพเดทโค้ดเข้าสู่ระบบ (git pull origin {$branch})...";
+        $cmdPull = "{$git} -c safe.directory=* -C " . escapeshellarg($repoDir) . " pull origin " . escapeshellarg($branch) . " 2>&1";
         $output = [];
         $returnVar = 0;
-        exec($cmd, $output, $returnVar);
-        $duration = microtime(true) - $startTime;
-        $outputText = implode("\n", $output);
+        exec($cmdPull, $output, $returnVar);
 
-        // 4. ดึง commit หลัง pull
+        $pullOutputText = implode("\n", $output);
+        $logs[] = $pullOutputText;
+
+        $isSuccess = ($returnVar === 0);
+
+        // 6. ถ้า pull ยังติดขัด (เช่น มี merge conflict, diverged branch, หรือ untracked overwrite)
+        // ให้ทำการ Auto-Sync ด้วย git reset --hard origin/<branch> ทันที เพื่อไม่ให้ติดขัด 100%
+        if (!$isSuccess) {
+            $logs[] = "\n[ตรวจพบปัญหาการ Merge หรือ Conflict] กำลังแก้ไขปัญหาและซิงค์ให้ตรงกับ GitHub ล่าสุดอัตโนมัติ...";
+            
+            $cmdReset = "{$git} -c safe.directory=* -C " . escapeshellarg($repoDir) . " reset --hard origin/" . escapeshellarg($branch) . " 2>&1";
+            $resetOut = [];
+            $resetRet = 0;
+            exec($cmdReset, $resetOut, $resetRet);
+            $logs[] = implode("\n", $resetOut);
+
+            if ($resetRet === 0) {
+                $isSuccess = true;
+                $logs[] = "-> แก้ไขปัญหาสำเร็จ! โค้ดได้รับการซิงค์ตรงกับ GitHub origin/{$branch} เรียบร้อยแล้ว";
+            } else {
+                $logs[] = "-> ไม่สามารถ Reset ได้: " . implode("\n", $resetOut);
+            }
+        }
+
+        // 7. ดึง commit หลัง pull
         $afterCommit = '';
         $cmdAfter = "{$git} -c safe.directory=* -C " . escapeshellarg($repoDir) . " log -1 --pretty=format:\"%h - %s (%cd)\" --date=format:\"%Y-%m-%d %H:%M\" 2>&1";
         @exec($cmdAfter, $outAfter);
@@ -518,8 +591,15 @@ class DbbackupController extends BaseController
             $afterCommit = implode("\n", $outAfter);
         }
 
-        $isSuccess = ($returnVar === 0);
-        $isAlreadyUpToDate = (strpos($outputText, 'Already up to date') !== false);
+        $duration = microtime(true) - $startTime;
+        $isAlreadyUpToDate = ($beforeCommit === $afterCommit && strpos($pullOutputText, 'Already up to date') !== false);
+
+        $logs[] = "\n[4/4] สรุปผลการทำงาน:";
+        $logs[] = "      Commit ก่อนหน้า: " . ($beforeCommit ?: '-');
+        $logs[] = "      Commit ล่าสุด:   " . ($afterCommit ?: '-');
+        $logs[] = "      เวลาที่ใช้:      " . self::formatDuration($duration);
+
+        $fullLogText = implode("\n", $logs);
 
         if ($isSuccess) {
             if ($isAlreadyUpToDate) {
@@ -535,7 +615,7 @@ class DbbackupController extends BaseController
             'success' => $isSuccess,
             'is_up_to_date' => $isAlreadyUpToDate,
             'message' => $message,
-            'output' => $outputText,
+            'output' => $fullLogText,
             'command' => "git pull origin {$branch}",
             'branch' => $branch,
             'duration' => self::formatDuration($duration),

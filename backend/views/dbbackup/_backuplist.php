@@ -286,7 +286,7 @@ $currentCommit = isset($currentCommit) ? $currentCommit : '';
                         <i class="fab fa-github fa-2x mr-3 text-dark"></i>
                         <div>
                             <div><strong>Repository:</strong> <a href="https://github.com/nirantarnoy/mco" target="_blank" class="font-weight-bold text-primary">https://github.com/nirantarnoy/mco</a> (Branch: <code>main</code>)</div>
-                            <div class="small text-muted mt-1"><i class="fas fa-terminal mr-1"></i> รันคำสั่งอัตโนมัติ: <code>git pull origin main</code> แทนการเปิด CMD แล้วพิมพ์คำสั่ง</div>
+                            <div class="small text-muted mt-1"><i class="fas fa-magic text-success mr-1"></i> ระบบอัพเดทอัตโนมัติ: ดึงโค้ดล่าสุดจาก GitHub และจัดการไฟล์ค้างบนเซิร์ฟเวอร์ให้อัตโนมัติ (ไม่ติดขัดเรื่อง git add / commit)</div>
                         </div>
                     </div>
                 </div>
@@ -1368,7 +1368,7 @@ window.executeGitPull = function() {
         statusBadge.removeClass('badge-secondary badge-success badge-danger badge-info')
             .addClass('badge-warning text-dark')
             .html('<i class="fas fa-spinner fa-spin mr-1"></i> กำลังดึงโค้ดจาก GitHub...');
-        outputPre.text('กำลังรันคำสั่ง: git pull origin main\nกรุณารอสักครู่ ห้ามปิดหน้าต่างนี้...\n');
+        outputPre.text('กำลังเริ่มกระบวนการอัพเดทโปรแกรม...\n1. ตรวจสอบไฟล์ค้างบนเซิร์ฟเวอร์ (Auto-Stash)\n2. ดึงโค้ดล่าสุดจาก GitHub (git pull origin main)\nกรุณารอสักครู่ ห้ามปิดหน้าต่างนี้...\n');
         timerEl.text('กำลังประมวลผล...');
 
         var startTime = new Date();
