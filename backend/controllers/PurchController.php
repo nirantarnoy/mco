@@ -1555,7 +1555,7 @@ class PurchController extends BaseController
                 throw new \Exception('ไม่สามารถสร้าง Journal Transaction ได้: ' . implode(', ', $journalTrans->getFirstErrors()));
             }
 
-            // Generate Lot No (1 Lot per receive transaction)
+            // Generate Lot No (Unique Lot per item line)
             $todayPrefix = date('ymd'); // YYMMDD
             $lastLotLine = \backend\models\JournalTransLine::find()
                 ->where(['like', 'lot_no', $todayPrefix . '%', false])
@@ -1569,7 +1569,6 @@ class PurchController extends BaseController
                     $nextSeq = intval($lastSeq) + 1;
                 }
             }
-            $currentLotNo = $todayPrefix . sprintf('%04d', $nextSeq);
 
             $loop_index = 0;
             // Process each item
@@ -1593,6 +1592,8 @@ class PurchController extends BaseController
                     }
                 }
 
+                $currentLotNo = $todayPrefix . sprintf('%04d', $nextSeq++);
+
                 // Create Journal Transaction Line
                 $journalTransLine = new \backend\models\JournalTransLine();
                 $journalTransLine->journal_trans_id = $journalTrans->id;
@@ -1600,7 +1601,8 @@ class PurchController extends BaseController
                 $journalTransLine->warehouse_id = $line_warehouse_id;
                 $journalTransLine->qty = $qty;
                 $journalTransLine->lot_no = $currentLotNo;
-                $journalTransLine->remark = $poLine->product_name . ' (' . $purchModel->purch_no . ')';
+                $descSuffix = !empty($poLine->product_description) ? ' - ' . $poLine->product_description : '';
+                $journalTransLine->remark = $poLine->product_name . $descSuffix . ' (' . $purchModel->purch_no . ')';
                 // Set the purchase price from the PO line
                 $journalTransLine->sale_price = $poLine->line_price;
                 // Save unit_id if available in PO line

@@ -36,10 +36,15 @@ $this->params['breadcrumbs'][] = $this->title;
 
             [
                 'attribute' => 'product_id',
-                'label' => 'ชื่อสินค้า',
-                'format' => 'html',
+                'label' => 'ชื่อสินค้า / รายละเอียด',
+                'format' => 'raw',
                 'value' => function ($data) {
-                    return '<a href="' . Url::to(['product/view', 'id' => $data->product_id]) . '">' . \backend\models\Product::findName($data->product_id) . '</a>';
+                    $html = '<a href="' . Url::to(['product/view', 'id' => $data->product_id]) . '"><strong>' . Html::encode(\backend\models\Product::findName($data->product_id)) . '</strong></a>';
+                    $lotDesc = $data->getLotDescription('html');
+                    if (!empty($lotDesc)) {
+                        $html .= '<div class="mt-1" style="font-size: 0.9em; line-height: 1.4; color: #17a2b8;">' . $lotDesc . '</div>';
+                    }
+                    return $html;
                 }
             ],
             [

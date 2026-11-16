@@ -126,6 +126,9 @@ $this->params['breadcrumbs'][] = 'ประวัติการรับสิ�
                                                 $purchLine = \backend\models\PurchLine::find()->where(['purch_id' => $purchModel->id, 'product_id' => $line->product_id])->one();
                                                 $productName = $purchLine ? $purchLine->product_name : (\backend\models\Product::findName($line->product_id) ?? 'N/A');
                                                 $productDesc = $purchLine ? $purchLine->product_description : '';
+                                                if (empty($productDesc) && !empty($line->remark)) {
+                                                    $productDesc = $line->remark;
+                                                }
                                             }
                                         ?>
                                         <?= Html::encode($productName) ?>

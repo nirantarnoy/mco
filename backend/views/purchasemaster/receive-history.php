@@ -116,7 +116,10 @@ $this->params['breadcrumbs'][] = 'ประวัติการรับสิ�
                                         <td class="text-center"><?= $lineIdx + 1 ?></td>
                                         <td>
                                             <strong><?= Html::encode($line->product ? $line->product->code : '-') ?></strong> 
-                                            - <?= Html::encode($line->product ? $line->product->name : $line->remark) ?>
+                                            - <?= Html::encode($line->product ? $line->product->name : '-') ?>
+                                            <?php if ($line->remark): ?>
+                                                <br><small class="text-primary font-weight-bold"><?= Html::encode(preg_replace('/^NPR Detail #\d+\s*\|\s*/i', '', $line->remark)) ?></small>
+                                            <?php endif; ?>
                                         </td>
                                         <td class="text-center"><span class="badge badge-secondary"><?= Html::encode($line->lot_no) ?></span></td>
                                         <td><?= Html::encode($line->warehouse ? $line->warehouse->name : '-') ?></td>

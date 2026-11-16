@@ -215,4 +215,71 @@ class StockSum extends ActiveRecord
         $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
         return true;
     }
+
+    /**
+     * ดึงรายละเอียดสินค้าจาก JournalTransLine หรือ StockTrans ตาม lot_no
+     * @param string $format 'html' หรือ 'text'
+     * @return string
+     */
+    public function getLotDescription($format = 'html')
+    {
+        if (empty($this->lot_no)) {
+            return '';
+        }
+
+        $lines = JournalTransLine::find()
+            ->where(['product_id' => $this->product_id, 'lot_no' => $this->lot_no])
+            ->all();
+
+        $descriptions = [];
+        if (!empty($lines)) {
+            $isMulti = count($lines) > 1;
+            foreach ($lines as $line) {
+                $remark = trim($line->remark ?? '');
+                if ($remark) {
+                    $clean = preg_replace('/^NPR Detail #\d+\s*\|\s*/i', '', $remark);
+                    $descItem = $clean;
+                    if ($isMulti && $line->qty > 0) {
+                        $descItem .= ' (' . number_format($line->qty, 0) . ')';
+                    }
+                    if (!in_array($descItem, $descriptions)) {
+                        $descriptions[] = $descItem;
+                    }
+                }
+            }
+        }
+
+        if (empty($descriptions)) {
+            $trans = StockTrans::find()
+                ->where(['product_id' => $this->product_id, 'lot_no' => $this->lot_no])
+                ->andWhere(['!=', 'remark', ''])
+                ->andWhere(['not', ['remark' => null]])
+                ->all();
+            foreach ($trans as $t) {
+                $remark = trim($t->remark ?? '');
+                if ($remark) {
+                    $clean = preg_replace('/^NPR Detail #\d+\s*\|\s*/i', '', $remark);
+                    if (!in_array($clean, $descriptions)) {
+                        $descriptions[] = $clean;
+                    }
+                }
+            }
+        }
+
+        if (empty($descriptions)) {
+            return '';
+        }
+
+        if ($format === 'text') {
+            return implode(' | ', $descriptions);
+        }
+
+        if (count($descriptions) > 1) {
+            return implode('<br>', array_map(function($d) {
+                return '<span class="text-secondary">• ' . \yii\helpers\Html::encode($d) . '</span>';
+            }, $descriptions));
+        }
+
+        return \yii\helpers\Html::encode($descriptions[0]);
+    }
 }

@@ -1217,7 +1217,7 @@ class PurchasemasterController extends BaseController
                 throw new \Exception('ไม่สามารถสร้าง Journal Transaction ได้: ' . implode(', ', $journalTrans->getFirstErrors()));
             }
 
-            // Generate Lot No
+            // Generate Lot No (Unique Lot per item line)
             $todayPrefix = date('ymd');
             $lastLotLine = \backend\models\JournalTransLine::find()
                 ->where(['like', 'lot_no', $todayPrefix . '%', false])
@@ -1231,9 +1231,9 @@ class PurchasemasterController extends BaseController
                     $nextSeq = intval($lastSeq) + 1;
                 }
             }
-            $currentLotNo = $todayPrefix . sprintf('%04d', $nextSeq);
 
             $loop_index = 0;
+            $firstLotNo = '';
             foreach ($validItems as $detailId => $qty) {
                 $line_warehouse_id = is_array($warehouseId) ? ($warehouseId[$loop_index] ?? $warehouseId[0]) : $warehouseId;
                 $loop_index++;
@@ -1246,6 +1246,11 @@ class PurchasemasterController extends BaseController
                 $productId = PurchaseMaster::findProductIdByStkcod($detail->stkcod);
                 if (!$productId) {
                     throw new \Exception("ไม่พบรหัสสินค้า '{$detail->stkcod}' ในฐานข้อมูลสินค้า (Product Master) ไม่สามารถรับเข้าคลังได้");
+                }
+
+                $currentLotNo = $todayPrefix . sprintf('%04d', $nextSeq++);
+                if (empty($firstLotNo)) {
+                    $firstLotNo = $currentLotNo;
                 }
 
                 $journalTransLine = new \backend\models\JournalTransLine();
@@ -1267,9 +1272,11 @@ class PurchasemasterController extends BaseController
             }
 
             $transaction->commit();
+            $lastLotNo = $todayPrefix . sprintf('%04d', $nextSeq - 1);
+            $lotDisplay = ($firstLotNo && $firstLotNo !== $lastLotNo) ? ($firstLotNo . ' - ' . $lastLotNo) : ($firstLotNo ?: $currentLotNo);
             return [
                 'success' => true,
-                'message' => 'บันทึกรับสินค้าเข้าคลังเรียบร้อยแล้ว (เลขที่เอกสารรับ: ' . $journalTrans->journal_no . ', Lot No: ' . $currentLotNo . ')'
+                'message' => 'บันทึกรับสินค้าเข้าคลังเรียบร้อยแล้ว (เลขที่เอกสารรับ: ' . $journalTrans->journal_no . ', Lot No: ' . $lotDisplay . ')'
             ];
         } catch (\Exception $e) {
             $transaction->rollBack();

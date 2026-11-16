@@ -453,7 +453,10 @@ class StocksumController extends BaseController
                 ->joinWith('journalTrans')
                 ->where(['journal_trans_line.product_id' => $product->id])
                 ->andWhere(['journal_trans_line.lot_no' => $stockSum->lot_no])
-                ->andWhere(['journal_trans.trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE])
+                ->andWhere(['journal_trans.trans_type_id' => [
+                    \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE,
+                    \backend\models\JournalTrans::TRANS_TYPE_NONE_PR_RECEIVE
+                ]])
                 ->one();
             
             $unit_price = $receiveLine && $receiveLine->sale_price > 0 ? $receiveLine->sale_price : 0;
@@ -462,12 +465,15 @@ class StocksumController extends BaseController
                 $unit_price = $product->cost_price > 0 ? $product->cost_price : ($product->sale_price > 0 ? $product->sale_price : 0);
             }
             
-            // If still 0, try to get the latest PO price for this product as last resort
+            // If still 0, try to get the latest receive price for this product as last resort
             if ($unit_price <= 0) {
                 $latestReceive = \backend\models\JournalTransLine::find()
                     ->joinWith('journalTrans')
                     ->where(['journal_trans_line.product_id' => $product->id])
-                    ->andWhere(['journal_trans.trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE])
+                    ->andWhere(['journal_trans.trans_type_id' => [
+                        \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE,
+                        \backend\models\JournalTrans::TRANS_TYPE_NONE_PR_RECEIVE
+                    ]])
                     ->andWhere(['>', 'journal_trans_line.sale_price', 0])
                     ->orderBy(['journal_trans.id' => SORT_DESC])
                     ->one();
@@ -501,7 +507,9 @@ class StocksumController extends BaseController
 
             $sheet->setCellValueExplicit('A' . $row, $group_name, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValueExplicit('B' . $row, $product->code, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-            $sheet->setCellValue('C' . $row, $product->name);
+            $lotDescText = $stockSum->getLotDescription('text');
+            $fullProductName = $product->name . ($lotDescText ? ' (' . $lotDescText . ')' : '');
+            $sheet->setCellValue('C' . $row, $fullProductName);
             $sheet->setCellValue('D' . $row, $stockSum->lot_no ?: '-');
             $sheet->setCellValue('E' . $row, $product->unit ? $product->unit->name : '');
             $sheet->setCellValue('F' . $row, $stockSum->qty);

@@ -98,27 +98,33 @@ $stockSums = $dataProvider->getModels();
                         
                         $group_name = $product->productGroup ? $product->productGroup->name : 'ไม่ระบุหมวดหมู่';
 
-                        // Find original receiving price for this specific lot
+                        // Find original receiving price for this specific lot (support PO and None PR receive)
                         $receiveLine = \backend\models\JournalTransLine::find()
                             ->joinWith('journalTrans')
                             ->where(['journal_trans_line.product_id' => $product->id])
                             ->andWhere(['journal_trans_line.lot_no' => $stockSum->lot_no])
-                            ->andWhere(['journal_trans.trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE])
+                            ->andWhere(['journal_trans.trans_type_id' => [
+                                \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE,
+                                \backend\models\JournalTrans::TRANS_TYPE_NONE_PR_RECEIVE
+                            ]])
                             ->one();
                         
-                        // If found, use sale_price (which stores the unit price from PO), otherwise fallback to cost_price or sale_price
+                        // If found, use sale_price (which stores the unit price from PO/None PR), otherwise fallback to cost_price or sale_price
                         $unit_price = $receiveLine && $receiveLine->sale_price > 0 ? $receiveLine->sale_price : 0;
                         
                         if ($unit_price <= 0) {
                             $unit_price = $product->cost_price > 0 ? $product->cost_price : ($product->sale_price > 0 ? $product->sale_price : 0);
                         }
                         
-                        // If still 0, try to get the latest PO price for this product as last resort
+                        // If still 0, try to get the latest receive price for this product as last resort
                         if ($unit_price <= 0) {
                             $latestReceive = \backend\models\JournalTransLine::find()
                                 ->joinWith('journalTrans')
                                 ->where(['journal_trans_line.product_id' => $product->id])
-                                ->andWhere(['journal_trans.trans_type_id' => \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE])
+                                ->andWhere(['journal_trans.trans_type_id' => [
+                                    \backend\models\JournalTrans::TRANS_TYPE_PO_RECEIVE,
+                                    \backend\models\JournalTrans::TRANS_TYPE_NONE_PR_RECEIVE
+                                ]])
                                 ->andWhere(['>', 'journal_trans_line.sale_price', 0])
                                 ->orderBy(['journal_trans.id' => SORT_DESC])
                                 ->one();
@@ -151,7 +157,12 @@ $stockSums = $dataProvider->getModels();
                         <tr>
                             <td><?= Html::encode($group_name) ?></td>
                             <td><a href="<?= Url::to(['product/update', 'id' => $product->id]) ?>" target="_blank" title="คลิกเพื่อแก้ไขข้อมูลสินค้า"><?= Html::encode($product->code) ?></a></td>
-                            <td><?= Html::encode($product->name) ?></td>
+                            <td>
+                                <strong><?= Html::encode($product->name) ?></strong>
+                                <?php if ($lotDesc = $stockSum->getLotDescription('html')): ?>
+                                    <div class="mt-1" style="font-size: 0.85em; color: #17a2b8;"><?= $lotDesc ?></div>
+                                <?php endif; ?>
+                            </td>
                             <td><?= Html::encode($stockSum->lot_no ?: '-') ?></td>
                             <td><?= Html::encode($product->unit ? $product->unit->name : '') ?></td>
                             <td class="text-right"><?= number_format($stockSum->qty, 2) ?></td>

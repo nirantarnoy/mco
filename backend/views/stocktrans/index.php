@@ -61,10 +61,18 @@ $this->params['breadcrumbs'][] = $this->title;
             'trans_date',
             [
                 'attribute' => 'product_id',
+                'label' => 'ชื่อสินค้า / รายละเอียด',
                 'format' => 'raw',
                 'value' => function ($data) {
-                  //  return \backend\models\Product::findName($data->product_id);
-                    return '<a href="' . Url::to(['product/view', 'id' => $data->product_id]) . '">' . \backend\models\Product::findName($data->product_id) . '</a>';
+                    $html = '<a href="' . Url::to(['product/view', 'id' => $data->product_id]) . '"><strong>' . Html::encode(\backend\models\Product::findName($data->product_id)) . '</strong></a>';
+                    if (!empty($data->remark)) {
+                        $cleanRemark = preg_replace('/^NPR Detail #\d+\s*\|\s*/i', '', $data->remark);
+                        $html .= '<div class="small text-primary mt-1">' . Html::encode($cleanRemark) . '</div>';
+                    }
+                    if (!empty($data->lot_no)) {
+                        $html .= '<div class="small text-muted"><span class="badge badge-secondary">Lot: ' . Html::encode($data->lot_no) . '</span></div>';
+                    }
+                    return $html;
                 }
             ],
             [
