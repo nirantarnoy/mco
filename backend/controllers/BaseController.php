@@ -40,7 +40,7 @@ class BaseController extends Controller
 
         // 2. ตรวจสอบ Session และการล็อกอินพื้นฐาน
         if (!$this->isSessionValid()) {
-            Yii::$app->user->logout();
+            Yii::$app->user->logout(true);
             Yii::$app->response->redirect(['site/login'])->send();
             exit;
         }

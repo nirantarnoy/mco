@@ -181,19 +181,89 @@ class SiteController extends BaseController
      */
     public function actionLogout()
     {
-        \Yii::$app->user->logout();
+        $this->performFullLogout();
 
-//        if(isset($_SESSION['driver_login'])){
-//            return $this->redirect(['site/logindriver']);
-//        }
-
-        return $this->goHome();
+        return $this->redirect(['site/login']);
     }
+
     public function actionLogoutdriver()
     {
-        \Yii::$app->user->logout();
+        $this->performFullLogout();
 
         return $this->redirect(['site/logindriver']);
+    }
+
+    /**
+     * ทำการเคลียร์ข้อมูลการเข้าสู่ระบบทั้งหมด ทั้ง Identity, Session, AuthKey และ Cookies ใน Browser
+     */
+    protected function performFullLogout()
+    {
+        // 1. สุ่ม auth_key ใหม่ เพื่อให้ token การจำรหัสผ่านเดิม (Remember Me) ทั้งหมดในทุกเครื่อง/ทุก browser สิ้นสุดทันที
+        try {
+            $user = Yii::$app->user->identity;
+            if ($user && $user instanceof \common\models\User) {
+                $user->generateAuthKey();
+                $user->save(false);
+            }
+        } catch (\Exception $e) {
+            // ignore
+        }
+
+        // 2. เรียก Logout ผ่านระบบของ Yii
+        try {
+            Yii::$app->user->logout(true);
+        } catch (\Exception $e) {
+            // ignore
+        }
+
+        // 3. ล้างค่าตัวแปรใน Session ทั้งหมด และทำลาย Session บน Server
+        try {
+            Yii::$app->session->removeAll();
+            Yii::$app->session->destroy();
+        } catch (\Exception $e) {
+            // ignore
+        }
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            @session_unset();
+            @session_destroy();
+        }
+
+        // 4. ล้าง Cookies ใน Browser ให้หมดจด
+        $cookiesToClear = [
+            '_identity-backend',
+            '_identity-frontend',
+            'advanced-backend',
+            'advanced-frontend',
+            '_csrf-backend',
+            '_csrf-frontend',
+            session_name(),
+            'PHPSESSID',
+        ];
+
+        $past = time() - 86400 * 365;
+        $baseUrl = Yii::$app->request->baseUrl ?: '';
+        $paths = ['/', $baseUrl, $baseUrl . '/', ''];
+
+        foreach ($cookiesToClear as $cName) {
+            // ลบผ่าน Yii Response
+            try {
+                Yii::$app->response->cookies->remove($cName);
+            } catch (\Exception $e) {
+                // ignore
+            }
+
+            // ส่ง Header Set-Cookie ของ PHP โดยตรงเพื่อบังคับให้บราวเซอร์ลบทุก Path ที่อาจมีค้างอยู่
+            foreach ($paths as $p) {
+                @setcookie($cName, '', $past, $p);
+                if (!empty($_SERVER['HTTP_HOST'])) {
+                    $host = explode(':', $_SERVER['HTTP_HOST'])[0];
+                    @setcookie($cName, '', $past, $p, $host);
+                    @setcookie($cName, '', $past, $p, '.' . $host);
+                }
+            }
+            unset($_COOKIE[$cName]);
+        }
     }
 
     /**

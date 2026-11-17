@@ -153,7 +153,7 @@ $cururl = Yii::$app->controller->id;
             <!-- Message End -->
           </a>
           <div class="dropdown-divider"></div>
-          <a href="index.php?r=site/logout" class="dropdown-item">
+          <a href="<?= \yii\helpers\Url::to(['/site/logout']) ?>" class="dropdown-item">
             <!-- Message Start -->
             <div class="media">
               <img src="uploads/images/logout.png" alt="User Avatar"
