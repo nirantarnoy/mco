@@ -173,7 +173,15 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr>
                     <td><?= $index + 1 ?></td>
                     <td><?= Html::encode($line->line_date) ?></td>
-                    <td><?= Html::encode($line->displayDescription) ?></td>
+                    <td>
+                        <div><?= Html::encode($line->displayDescription) ?></div>
+                        <?php 
+                        $details = $line->itemDetails;
+                        if (!empty($details) && strpos($line->displayDescription, $details) === false): 
+                        ?>
+                            <div class="text-secondary small mt-1">(<?= Html::encode($details) ?>)</div>
+                        <?php endif; ?>
+                    </td>
                     <td class="text-right"><?= number_format($line->amount, 2) ?></td>
                     <td><?= Html::encode($line->remark) ?></td>
                 </tr>
