@@ -118,7 +118,7 @@ class PurchController extends BaseController
         $correct_text = \backend\models\PurchReq::numtothai(number_format($model->net_amount, 2, '.', ''));
         if ($model->total_text !== $correct_text) {
             $model->total_text = $correct_text;
-            $model->save(false);
+            // ไม่เรียก save() ใน actionView เพื่อไม่ให้เกิดประวัติแก้ไขและไม่เปลี่ยน updated_by
         }
         
         $model_pay = \backend\models\PurchPayment::find()->where(['purch_id' => $id])->one();
