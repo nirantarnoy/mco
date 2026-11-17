@@ -161,8 +161,8 @@ if (!file_exists($dumpPath)) {
 
                 <!-- ปุ่มบันทึก และปุ่มเครื่องมือ -->
                 <div class="col-md-3 text-right">
-                    <button type="button" class="btn btn-success btn-sm px-2 shadow-sm" id="btn-save-all">
-                        <i class="fas fa-save mr-1"></i> บันทึก
+                    <button type="button" class="btn btn-success btn-sm px-2 shadow-sm" id="btn-save-all" onclick="doSaveMatrixPermission(this)">
+                        <i class="fas fa-save mr-1"></i> <strong>บันทึก</strong>
                     </button>
                     <button type="button" class="btn btn-outline-info btn-sm ml-1" data-toggle="modal" data-target="#userCompanyModal" title="กำหนดสิทธิ์การเข้าถึงบริษัทของ User">
                         <i class="fas fa-users-cog mr-1"></i> ผูกสิทธิ์บริษัท
@@ -399,6 +399,89 @@ $dataDictUrlJson = json_encode($dataDictUrl);
 ?>
 
 <script>
+// กำหนดฟังก์ชันอัปเดตสีเซลล์และ data-val ทันที ไม่ต้องรอ jQuery โหลดเสร็จ เพื่อป้องกัน Uncaught ReferenceError
+window.updateCellColor = function(selectEl) {
+    if (!selectEl) return;
+    var val = selectEl.value;
+    selectEl.setAttribute('data-val', val);
+};
+
+window.doSaveMatrixPermission = function(btnEl) {
+    if (typeof window.saveMatrixPermission === 'function') {
+        window.saveMatrixPermission(btnEl);
+    } else {
+        var $ = window.jQuery;
+        if (!$) {
+            alert('ระบบกำลังโหลด กรุณารอสักครู่');
+            return;
+        }
+        var btn = $(btnEl);
+        var matrixData = {};
+
+        $('.matrix-cell:not([disabled])').each(function() {
+            var uId = $(this).attr('data-user-id');
+            var mKey = $(this).attr('data-module-key');
+            var val = $(this).val();
+
+            if (!matrixData[uId]) {
+                matrixData[uId] = {};
+            }
+            matrixData[uId][mKey] = val;
+        });
+
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> กำลังบันทึก...');
+
+        $.ajax({
+            url: <?= $saveUrlJson ?>,
+            type: 'POST',
+            data: {
+                company_id: <?= $selectedCompIdJson ?>,
+                matrix: matrixData
+            },
+            dataType: 'json',
+            success: function(res) {
+                btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> <strong>บันทึก</strong>');
+                var msg = (res && res.message) ? res.message : 'บันทึกข้อมูลเรียบร้อย';
+                if (res && res.status === 'success') {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'สำเร็จ!',
+                            text: msg,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        alert(msg);
+                    }
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: msg
+                        });
+                    } else {
+                        alert(msg);
+                    }
+                }
+            },
+            error: function(err) {
+                btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> <strong>บันทึก</strong>');
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'การเชื่อมต่อผิดพลาด',
+                        text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง'
+                    });
+                } else {
+                    alert('ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
+                }
+            }
+        });
+    }
+};
+
 window.doSaveUserCompany = function(userId, btnEl) {
     if (typeof window.saveUserCompany === 'function') {
         window.saveUserCompany(userId, btnEl);
@@ -465,6 +548,7 @@ function updateCellColor(selectEl) {
     var val = $(selectEl).val();
     $(selectEl).attr('data-val', val);
 }
+window.updateCellColor = updateCellColor;
 
 // Quick set ทั้งคอลัมน์ของ User
 function setColumnValue(userId, value) {
@@ -572,8 +656,8 @@ $(document).on('click', '.btn-save-user-company', function(e) {
 });
 
 // บันทึกค่า Matrix
-$('#btn-save-all').on('click', function() {
-    var btn = $(this);
+function saveMatrixPermission(btnEl) {
+    var btn = btnEl ? $(btnEl) : $('#btn-save-all');
     var matrixData = {};
 
     $('.matrix-cell:not([disabled])').each(function() {
@@ -594,36 +678,56 @@ $('#btn-save-all').on('click', function() {
         type: 'POST',
         data: {
             company_id: {$selectedCompIdJson},
-            matrix: matrixData
+            matrix: matrixData,
+            _csrf: (typeof yii !== 'undefined' && yii.getCsrfToken) ? yii.getCsrfToken() : ''
         },
         dataType: 'json',
         success: function(res) {
-            btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> <strong>บันทึกการกำหนดสิทธิ์</strong>');
-            if (res.status === 'success') {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'สำเร็จ!',
-                    text: res.message,
-                    timer: 2000,
-                    showConfirmButton: false
-                });
+            btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> <strong>บันทึก</strong>');
+            var msg = (res && res.message) ? res.message : 'บันทึกข้อมูลเรียบร้อย';
+            if (res && res.status === 'success') {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สำเร็จ!',
+                        text: msg,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    alert(msg);
+                }
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'เกิดข้อผิดพลาด',
-                    text: res.message
-                });
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: msg
+                    });
+                } else {
+                    alert(msg);
+                }
             }
         },
         error: function(err) {
-            btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> <strong>บันทึกการกำหนดสิทธิ์</strong>');
-            Swal.fire({
-                icon: 'error',
-                title: 'การเชื่อมต่อผิดพลาด',
-                text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง'
-            });
+            btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> <strong>บันทึก</strong>');
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'การเชื่อมต่อผิดพลาด',
+                    text: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง'
+                });
+            } else {
+                alert('ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
+            }
         }
     });
+}
+window.saveMatrixPermission = saveMatrixPermission;
+
+$('#btn-save-all').on('click', function(e) {
+    e.preventDefault();
+    saveMatrixPermission(this);
 });
 
 // Data Dictionary Logic
@@ -895,31 +999,35 @@ function copyDictTable() {
 window.copyDictTable = copyDictTable;
 
 function fallbackCopyText() {
-    var text = "ลำดับ\tชื่อตาราง (Table Name)\tคำอธิบาย\tหมวดหมู่งาน\n";
+    var text = "ลำดับ\\tชื่อตาราง (Table Name)\\tคำอธิบาย\\tหมวดหมู่งาน\\n";
     $('#dict-table tbody tr').each(function() {
         var cols = [];
         $(this).find('td').each(function() {
-            cols.push($(this).text().replace(/\t/g, ' ').trim());
+            cols.push($(this).text().replace(/\\t/g, ' ').trim());
         });
         if (cols.length >= 4) {
-            text += cols.join('\t') + "\n";
+            text += cols.join('\\t') + "\\n";
         }
     });
 
     navigator.clipboard.writeText(text).then(function() {
-        Swal.fire({
-            icon: 'success',
-            title: 'คัดลอกข้อมูลแล้ว!',
-            text: 'สามารถนำไปกดวาง (Ctrl+V) ลงใน Excel หรือ Word ได้ทันที',
-            timer: 2500,
-            showConfirmButton: false
-        });
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: 'คัดลอกข้อมูลแล้ว!',
+                text: 'สามารถนำไปกดวาง (Ctrl+V) ลงใน Excel หรือ Word ได้ทันที',
+                timer: 2500,
+                showConfirmButton: false
+            });
+        } else {
+            alert('คัดลอกข้อมูลแล้ว สามารถนำไปกดวาง (Ctrl+V) ลงใน Excel หรือ Word ได้ทันที');
+        }
     });
 }
 
 // ส่งออกเป็นไฟล์ CSV สำหรับเปิดด้วย Excel
 function exportDictToCSV() {
-    var csv = "\uFEFFลำดับ,ชื่อตาราง,คำอธิบาย,หมวดหมู่งาน\n";
+    var csv = "\\uFEFFลำดับ,ชื่อตาราง,คำอธิบาย,หมวดหมู่งาน\\n";
     var idx = 1;
     $('#dict-table tbody tr').each(function() {
         var cols = [];
@@ -928,7 +1036,7 @@ function exportDictToCSV() {
             cols.push('"' + val + '"');
         });
         if (cols.length >= 4) {
-            csv += cols.join(',') + "\n";
+            csv += cols.join(',') + "\\n";
         }
     });
 
