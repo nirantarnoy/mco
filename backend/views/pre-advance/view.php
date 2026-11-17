@@ -21,23 +21,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= Html::a('สร้างใบหัก ณ ที่จ่าย (WHT)', ['/wht/create', 'ref_type' => 'PRE-ADVANCE', 'ref_id' => $model->id], ['class' => 'btn btn-warning', 'target' => '_blank']) ?>
         
         <?php 
-        $currentCompanyId = Yii::$app->session->get('company_id');
-        $hasMatrixApprove = \common\models\UserModulePermission::find()
-            ->where([
-                'user_id' => Yii::$app->user->id,
-                'module_key' => 'appr_pre_advance',
-                'permission_type' => \common\models\UserModulePermission::PERM_MANAGE,
-            ])
-            ->andFilterWhere(['company_id' => $currentCompanyId])
-            ->exists();
-
-        $isApprover = \backend\models\User::isUserAdmin() 
-            || $hasMatrixApprove
-            || Yii::$app->user->can('appr_pre_advance')
-            || Yii::$app->user->can('preadvance/approve') 
-            || Yii::$app->user->can('pre-advance/approve') 
-            || Yii::$app->user->can('pre_advance_approver') 
-            || Yii::$app->user->can('approver');
+        $isApprover = \backend\controllers\PreAdvanceController::canApprovePreAdvance(Yii::$app->user->id, null, $model);
         ?>
         
         <?php if ($isApprover): ?>

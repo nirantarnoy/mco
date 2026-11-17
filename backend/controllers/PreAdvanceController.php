@@ -244,6 +244,11 @@ class PreAdvanceController extends BaseController
     {
         $model = $this->findModel($id);
         $userId = Yii::$app->user->id;
+
+        if (!self::canApprovePreAdvance($userId, null, $model)) {
+            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ในการตรวจสอบและอนุมัติเอกสาร Payment Advance (อิงตาม Permission Matrix)');
+        }
+
         $now = date('Y-m-d H:i:s');
 
         // บันทึกทั้งตรวจสอบและอนุมัติพร้อมกันในคลิกเดียว
@@ -263,6 +268,12 @@ class PreAdvanceController extends BaseController
     public function actionUnapprove($id)
     {
         $model = $this->findModel($id);
+        $userId = Yii::$app->user->id;
+
+        if (!self::canApprovePreAdvance($userId, null, $model)) {
+            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ในการยกเลิกอนุมัติเอกสาร Payment Advance (อิงตาม Permission Matrix)');
+        }
+
         $model->approved_by = null;
         $model->approved_at = null;
         $model->checked_by = null;
@@ -325,12 +336,11 @@ class PreAdvanceController extends BaseController
      */
     public function actionApproveRecall($id)
     {
-        $isApprover = \backend\models\User::isUserAdmin() || Yii::$app->user->can('pre_advance_approver') || Yii::$app->user->can('approver');
-        if (!$isApprover) {
-            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ในการอนุมัติ Recall เอกสาร Pre-Advance');
-        }
-
         $model = $this->findModel($id);
+
+        if (!self::canApprovePreAdvance(Yii::$app->user->id, null, $model)) {
+            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ในการอนุมัติ Recall เอกสาร Pre-Advance (อิงตาม Permission Matrix)');
+        }
 
         if ($model->is_recall != 1) {
             Yii::$app->session->setFlash('warning', 'รายการนี้ไม่ได้อยู่ในสถานะรออนุมัติ Recall');
@@ -373,12 +383,11 @@ class PreAdvanceController extends BaseController
      */
     public function actionRejectRecall($id)
     {
-        $isApprover = \backend\models\User::isUserAdmin() || Yii::$app->user->can('pre_advance_approver') || Yii::$app->user->can('approver');
-        if (!$isApprover) {
-            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ในการปฏิเสธ Recall เอกสาร Pre-Advance');
-        }
-
         $model = $this->findModel($id);
+
+        if (!self::canApprovePreAdvance(Yii::$app->user->id, null, $model)) {
+            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ในการปฏิเสธ Recall เอกสาร Pre-Advance (อิงตาม Permission Matrix)');
+        }
 
         if ($model->is_recall != 1) {
             Yii::$app->session->setFlash('warning', 'รายการนี้ไม่ได้อยู่ในสถานะรออนุมัติ Recall');
@@ -963,5 +972,46 @@ class PreAdvanceController extends BaseController
         }
 
         return $desc;
+    }
+
+    /**
+     * ตรวจสอบสิทธิ์ว่าผู้ใช้มีสิทธิ์อนุมัติ Payment Advance หรือไม่
+     * โดยอิงจาก Permission Matrix (user_module_permission -> appr_pre_advance = 1) เท่านั้น
+     */
+    public static function canApprovePreAdvance($userId = null, $companyId = null, $model = null)
+    {
+        $userId = $userId ?: (Yii::$app->user ? Yii::$app->user->id : null);
+        if (empty($userId)) {
+            return false;
+        }
+
+        // อนุญาต mcoadmin
+        $username = strtolower(\backend\models\User::findName($userId));
+        if ($username === 'mcoadmin') {
+            return true;
+        }
+
+        // กำหนด company_id
+        if ($companyId === null) {
+            if ($model && !empty($model->company_id)) {
+                $companyId = (int)$model->company_id;
+            } else {
+                $companyId = Yii::$app->session ? Yii::$app->session->get('company_id') : null;
+            }
+        }
+
+        // ตรวจสอบใน Permission Matrix (ตาราง user_module_permission)
+        $query = \common\models\UserModulePermission::find()
+            ->where([
+                'user_id' => $userId,
+                'module_key' => 'appr_pre_advance',
+                'permission_type' => \common\models\UserModulePermission::PERM_MANAGE, // '1'
+            ]);
+
+        if (!empty($companyId) && $companyId != 100) {
+            $query->andWhere(['company_id' => $companyId]);
+        }
+
+        return $query->exists();
     }
 }
