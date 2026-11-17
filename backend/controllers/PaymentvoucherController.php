@@ -576,7 +576,7 @@ class PaymentvoucherController extends BaseController
                         $lines[] = [
                             'account_code' => '',
                             'bill_code' => $pr->pre_advance_no,
-                            'description1' => $paLine->description,
+                            'description1' => $paLine->displayDescription,
                             'description2' => $paLine->remark,
                             'debit' => $paLine->amount,
                             'credit' => 0,

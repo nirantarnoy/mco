@@ -302,7 +302,7 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.
                             <?php foreach ($model->preAdvanceLines as $line): ?>
                                 <tr class="line-item">
                                     <td><input type="date" name="line_date[]" class="form-control" value="<?= Html::encode($line->line_date) ?>"></td>
-                                    <td><input type="text" name="line_description[]" class="form-control" value="<?= Html::encode($line->description) ?>"></td>
+                                    <td><input type="text" name="line_description[]" class="form-control" value="<?= Html::encode($line->displayDescription) ?>"></td>
                                     <td><input type="number" name="line_amount[]" class="form-control line-amount" step="0.01" value="<?= $line->amount ?>"></td>
                                     <td><input type="text" name="line_remark[]" class="form-control" value="<?= (empty($line->remark) || strtolower(trim($line->remark)) === 'null') ? '' : Html::encode($line->remark) ?>"></td>
                                     <td class="text-center">

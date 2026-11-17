@@ -90,8 +90,21 @@ class PreAdvanceController extends BaseController
 
     public function actionView($id)
     {
+        $model = $this->findModel($id);
+
+        // ตรวจสอบและอัปเดตเลขอ้างอิง QT ใน description ให้เป็นเลขที่ใบเสนอราคา/Job ที่แท้จริง (กรณีเดิมบันทึกเป็น id ตัวเลข)
+        if (!empty($model->preAdvanceLines)) {
+            foreach ($model->preAdvanceLines as $line) {
+                $resolved = self::resolveLineDescription($line->description);
+                if (!empty($resolved) && $resolved !== $line->description) {
+                    $line->description = $resolved;
+                    $line->save(false);
+                }
+            }
+        }
+
         return $this->render('view', [
-            'model' => $this->findModel($id),
+            'model' => $model,
         ]);
     }
 
@@ -160,7 +173,7 @@ class PreAdvanceController extends BaseController
                 $npr = \backend\models\PurchaseMaster::findOne(['docnum' => $m[1]]);
                 if ($npr) {
                     $line->amount = $npr->total_amount;
-                    $jobRef = !empty($npr->job_no) ? $npr->job_no : $npr->refnum;
+                    $jobRef = self::resolveNonePrJobRef($npr);
                     $line->description = 'เลขที่: ' . $npr->docnum . (!empty($jobRef) ? ' (อ้างอิง QT: ' . $jobRef . ')' : '');
                     
                     if (abs($oldAmount - $line->amount) > 0.001) {
@@ -171,7 +184,8 @@ class PreAdvanceController extends BaseController
                 $po = \backend\models\Purch::findOne(['purch_no' => $m[1]]);
                 if ($po) {
                     $line->amount = $po->net_amount;
-                    $line->description = 'เลขที่: ' . $po->purch_no . (!empty($po->ref_no) ? ' (อ้างอิง QT: ' . $po->ref_no . ')' : '');
+                    $jobRef = self::resolvePoJobRef($po);
+                    $line->description = 'เลขที่: ' . $po->purch_no . (!empty($jobRef) ? ' (อ้างอิง QT: ' . $jobRef . ')' : '');
                     
                     if (abs($oldAmount - $line->amount) > 0.001) {
                         $changedMessages[] = $po->purch_no . ' (จาก ' . number_format($oldAmount, 2) . ' เป็น ' . number_format($line->amount, 2) . ')';
@@ -546,8 +560,9 @@ class PreAdvanceController extends BaseController
                     }
                     
                     $desc = 'เลขที่: ' . $po->purch_no;
-                    if (!empty($po->ref_no)) {
-                        $desc .= ' (อ้างอิง QT: ' . $po->ref_no . ')';
+                    $jobRef = self::resolvePoJobRef($po);
+                    if (!empty($jobRef)) {
+                        $desc .= ' (อ้างอิง QT: ' . $jobRef . ')';
                     }
                     $lines[] = [
                         'line_date' => date('Y-m-d'),
@@ -568,7 +583,7 @@ class PreAdvanceController extends BaseController
                     }
                     
                     $desc = 'เลขที่: ' . $none_pr->docnum;
-                    $jobRef = !empty($none_pr->job_no) ? $none_pr->job_no : $none_pr->refnum;
+                    $jobRef = self::resolveNonePrJobRef($none_pr);
                     if (!empty($jobRef)) {
                         $desc .= ' (อ้างอิง QT: ' . $jobRef . ')';
                     }
@@ -799,5 +814,154 @@ class PreAdvanceController extends BaseController
             }
         }
         return ['success' => false];
+    }
+
+    /**
+     * ดึงเลขที่ใบเสนอราคาหรือ Job Reference ของ None PR (PurchaseMaster)
+     */
+    public static function resolveNonePrJobRef($none_pr)
+    {
+        if (!$none_pr) return '';
+
+        // 1. ตรวจสอบจาก job_no
+        if (!empty($none_pr->job_no)) {
+            if (is_numeric($none_pr->job_no)) {
+                $job = \backend\models\Job::findOne($none_pr->job_no);
+                if ($job) {
+                    if ($job->quotation && !empty($job->quotation->quotation_no)) {
+                        return $job->quotation->quotation_no;
+                    }
+                    if (!empty($job->job_no)) {
+                        return $job->job_no;
+                    }
+                }
+                $quotation = \backend\models\Quotation::findOne($none_pr->job_no);
+                if ($quotation && !empty($quotation->quotation_no)) {
+                    return $quotation->quotation_no;
+                }
+            } else {
+                return $none_pr->job_no;
+            }
+        }
+
+        // 2. ตรวจสอบจาก refnum
+        if (!empty($none_pr->refnum)) {
+            if (is_numeric($none_pr->refnum)) {
+                $job = \backend\models\Job::findOne($none_pr->refnum);
+                if ($job) {
+                    if ($job->quotation && !empty($job->quotation->quotation_no)) {
+                        return $job->quotation->quotation_no;
+                    }
+                    if (!empty($job->job_no)) {
+                        return $job->job_no;
+                    }
+                }
+                $quotation = \backend\models\Quotation::findOne($none_pr->refnum);
+                if ($quotation && !empty($quotation->quotation_no)) {
+                    return $quotation->quotation_no;
+                }
+            } else {
+                return $none_pr->refnum;
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * ดึงเลขที่ใบเสนอราคาหรือ Job Reference ของ PO (Purch)
+     */
+    public static function resolvePoJobRef($po)
+    {
+        if (!$po) return '';
+
+        // 1. ตรวจสอบจาก ref_no
+        if (!empty($po->ref_no)) {
+            if (is_numeric($po->ref_no)) {
+                $job = \backend\models\Job::findOne($po->ref_no);
+                if ($job) {
+                    if ($job->quotation && !empty($job->quotation->quotation_no)) {
+                        return $job->quotation->quotation_no;
+                    }
+                    if (!empty($job->job_no)) {
+                        return $job->job_no;
+                    }
+                }
+                $quotation = \backend\models\Quotation::findOne($po->ref_no);
+                if ($quotation && !empty($quotation->quotation_no)) {
+                    return $quotation->quotation_no;
+                }
+            } else {
+                return $po->ref_no;
+            }
+        }
+
+        // 2. ตรวจสอบจาก job_id
+        if (!empty($po->job_id)) {
+            if (is_numeric($po->job_id)) {
+                $job = \backend\models\Job::findOne($po->job_id);
+                if ($job) {
+                    if ($job->quotation && !empty($job->quotation->quotation_no)) {
+                        return $job->quotation->quotation_no;
+                    }
+                    if (!empty($job->job_no)) {
+                        return $job->job_no;
+                    }
+                }
+                $quotation = \backend\models\Quotation::findOne($po->job_id);
+                if ($quotation && !empty($quotation->quotation_no)) {
+                    return $quotation->quotation_no;
+                }
+            } else {
+                return $po->job_id;
+            }
+        }
+
+        // 3. ตรวจสอบจาก purch_no เช่น PO-00293-QT26-00084.108
+        if (!empty($po->purch_no) && preg_match('/-(QT[A-Za-z0-9-]+)(?:\.|$)/i', $po->purch_no, $match)) {
+            return $match[1];
+        }
+
+        return '';
+    }
+
+    /**
+     * แปลงคำอธิบายรายการ (description) ให้แสดงเลขอ้างอิง QT ที่ถูกต้อง
+     */
+    public static function resolveLineDescription($desc)
+    {
+        if (empty($desc)) return $desc;
+
+        if (preg_match('/เลขที่:\s*(NPR\d+)/', $desc, $m)) {
+            $npr = \backend\models\PurchaseMaster::findOne(['docnum' => $m[1]]);
+            if ($npr) {
+                $jobRef = self::resolveNonePrJobRef($npr);
+                if (!empty($jobRef)) {
+                    if (preg_match('/(อ้างอิง\s*QT:\s*)([^\)]+)/u', $desc, $qm)) {
+                        if ($qm[2] !== $jobRef) {
+                            $desc = preg_replace('/(อ้างอิง\s*QT:\s*)([^\)]+)/u', '${1}' . $jobRef, $desc);
+                        }
+                    } else {
+                        $desc .= ' (อ้างอิง QT: ' . $jobRef . ')';
+                    }
+                }
+            }
+        } elseif (preg_match('/เลขที่:\s*(PO-[^\s\(]+)/', $desc, $m)) {
+            $po = \backend\models\Purch::findOne(['purch_no' => $m[1]]);
+            if ($po) {
+                $jobRef = self::resolvePoJobRef($po);
+                if (!empty($jobRef)) {
+                    if (preg_match('/(อ้างอิง\s*QT:\s*)([^\)]+)/u', $desc, $qm)) {
+                        if ($qm[2] !== $jobRef) {
+                            $desc = preg_replace('/(อ้างอิง\s*QT:\s*)([^\)]+)/u', '${1}' . $jobRef, $desc);
+                        }
+                    } else {
+                        $desc .= ' (อ้างอิง QT: ' . $jobRef . ')';
+                    }
+                }
+            }
+        }
+
+        return $desc;
     }
 }

@@ -189,7 +189,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 <tr>
                     <td><?= $index + 1 ?></td>
                     <td><?= Html::encode($line->line_date) ?></td>
-                    <td><?= Html::encode($line->description) ?></td>
+                    <td><?= Html::encode($line->displayDescription) ?></td>
                     <td class="text-right"><?= number_format($line->amount, 2) ?></td>
                     <td><?= Html::encode($line->remark) ?></td>
                 </tr>

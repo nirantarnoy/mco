@@ -88,7 +88,7 @@ use yii\helpers\Url;
                         <tr>
                             <td class="text-center"><?= $i + 1 ?></td>
                             <td class="text-center"><?= $line->trans_date ? date('d/m/Y', strtotime($line->trans_date)) : '-' ?></td>
-                            <td><?= Html::encode($line->description) ?></td>
+                            <td><?= Html::encode($line->displayDescription) ?></td>
                             <td class="text-right font-weight-bold"><?= number_format($line->amount, 2) ?></td>
                             <td><?= Html::encode($line->remark) ?></td>
                         </tr>
