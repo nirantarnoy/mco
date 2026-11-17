@@ -1741,7 +1741,8 @@ class InvoiceController extends BaseController
                     // วันที่เกินกำหนดชำระ
                     if ($item['overdue_days'] > 0) {
                         $sheet->setCellValue('K' . $currentRow, $item['overdue_days'] . ' วัน');
-                        $sheet->getStyle('K' . $currentRow)->getFont()->getColor()->setRGB('DC3545')->setBold(true);
+                        $sheet->getStyle('K' . $currentRow)->getFont()->getColor()->setRGB('DC3545');
+                        $sheet->getStyle('K' . $currentRow)->getFont()->setBold(true);
                     } else {
                         $sheet->setCellValue('K' . $currentRow, '0 วัน (ยังไม่เกินกำหนด)');
                         $sheet->getStyle('K' . $currentRow)->getFont()->getColor()->setRGB('28A745');
