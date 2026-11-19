@@ -58,6 +58,7 @@ class PurchaseMaster extends \yii\db\ActiveRecord
     const APPROVE_STATUS_PENDING = 0;
     const APPROVE_STATUS_APPROVED = 1;
     const APPROVE_STATUS_REJECTED = 2;
+    const APPROVE_STATUS_RETURNED = 3;
     /**
      * {@inheritdoc}
      */
@@ -185,6 +186,7 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             self::APPROVE_STATUS_PENDING => 'รอพิจารณา',
             self::APPROVE_STATUS_APPROVED => 'อนุมัติแล้ว',
             self::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
+            self::APPROVE_STATUS_RETURNED => 'ส่งกลับแก้ไข',
             self::STATUS_CANCELLED => 'ยกเลิก',
         ];
         return $statuses[$this->approve_status] ?? 'ไม่ระบุ';
@@ -199,6 +201,7 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             self::APPROVE_STATUS_PENDING => '<span class="badge badge-warning">รอพิจารณา</span>',
             self::APPROVE_STATUS_APPROVED => '<span class="badge badge-success">อนุมัติแล้ว</span>',
             self::APPROVE_STATUS_REJECTED => '<span class="badge badge-danger">ไม่อนุมัติ</span>',
+            self::APPROVE_STATUS_RETURNED => '<span class="badge badge-warning bg-warning text-dark"><i class="fas fa-undo-alt"></i> ส่งกลับแก้ไข</span>',
             self::STATUS_CANCELLED => '<span class="badge badge-danger">ยกเลิก</span>',
         ];
         return $badges[$this->approve_status] ?? '<span class="badge badge-secondary">ไม่ระบุ</span>';
@@ -476,9 +479,11 @@ class PurchaseMaster extends \yii\db\ActiveRecord
         
         // 2. อนุมัติ
         if ($this->approve_status == self::APPROVE_STATUS_APPROVED) {
-            $steps[] = ['name' => 'อนุมัติแล้ว', 'status' => 1, 'date' => ''];
+            $steps[] = ['name' => 'อนุมัติแล้ว', 'status' => 1, 'date' => $this->approve_date ? date('d/m/Y H:i', strtotime($this->approve_date)) : ''];
         } else if ($this->approve_status == self::APPROVE_STATUS_REJECTED) {
-            $steps[] = ['name' => 'ไม่อนุมัติ', 'status' => 2, 'date' => ''];
+            $steps[] = ['name' => 'ไม่อนุมัติ', 'status' => 2, 'date' => $this->rejected_at ? date('d/m/Y H:i', strtotime($this->rejected_at)) : ''];
+        } else if ($this->approve_status == self::APPROVE_STATUS_RETURNED) {
+            $steps[] = ['name' => 'ส่งกลับแก้ไข', 'status' => 2, 'date' => $this->rejected_at ? date('d/m/Y H:i', strtotime($this->rejected_at)) : ''];
         } else {
             $steps[] = ['name' => 'รออนุมัติ', 'status' => 0, 'date' => ''];
         }

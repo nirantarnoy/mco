@@ -18,7 +18,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <h3 class="card-title">ใบซื้อเลขที่: <?= Html::encode($this->title) ?> <?= $model->rev > 0 ? '(ครั้งที่แก้ไข: ' . $model->rev . ')' : '' ?></h3>
             <div class="card-tools">
                 <?php if ($model->status != \backend\models\PurchaseMaster::STATUS_CANCELLED): ?>
-                    <?php if ($model->approve_status == \backend\models\PurchaseMaster::APPROVE_STATUS_PENDING): ?>
+                    <?php if ($model->approve_status == \backend\models\PurchaseMaster::APPROVE_STATUS_PENDING || $model->approve_status == \backend\models\PurchaseMaster::APPROVE_STATUS_RETURNED): ?>
                         <?php if (\Yii::$app->user->can('purchasemaster/approve') || \backend\models\User::isUserAdmin()): ?>
                             <?= Html::a('<i class="fas fa-check"></i> อนุมัติ', ['approve', 'id' => $model->id], [
                                 'class' => 'btn btn-success btn-sm',
@@ -29,8 +29,11 @@ $this->params['breadcrumbs'][] = $this->title;
                             ]) ?>
                         <?php endif; ?>
                         <?php if (\Yii::$app->user->can('purchasemaster/reject') || \Yii::$app->user->can('purchasemaster/approve') || \backend\models\User::isUserAdmin()): ?>
-                            <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#reject-modal" data-bs-toggle="modal" data-bs-target="#reject-modal">
-                                <i class="fas fa-times-circle"></i> ไม่อนุมัติ / ส่งกลับแก้ไข
+                            <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#return-modal" data-bs-toggle="modal" data-bs-target="#return-modal">
+                                <i class="fas fa-undo-alt"></i> ส่งกลับแก้ไข
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#reject-modal" data-bs-toggle="modal" data-bs-target="#reject-modal">
+                                <i class="fas fa-times-circle"></i> ไม่อนุมัติ
                             </button>
                         <?php endif; ?>
                     <?php endif; ?>
@@ -57,7 +60,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php endif; ?>
                     <?= Html::a('<i class="fas fa-box"></i> รับสินค้าเข้าคลัง', ['receive', 'id' => $model->id], ['class' => 'btn btn-success btn-sm']) ?>
                     <?= Html::a('<i class="fas fa-history"></i> ประวัติรับสินค้า', ['receive-history', 'id' => $model->id], ['class' => 'btn btn-outline-info btn-sm']) ?>
-                    <?= Html::a('<i class="fas fa-edit"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-warning btn-sm']) ?>
+                    <?php if ($model->approve_status != \backend\models\PurchaseMaster::APPROVE_STATUS_REJECTED || \backend\models\User::isUserAdmin()): ?>
+                        <?= Html::a('<i class="fas fa-edit"></i> แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-warning btn-sm']) ?>
+                    <?php endif; ?>
                 <?php endif; ?>
                 <?= Html::a('<i class="fas fa-print"></i> พิมพ์เอกสาร (Print)', ['print', 'id' => $model->id], ['class' => 'btn btn-info btn-sm', 'target' => '_blank']) ?>
                 <?= Html::a('<i class="fas fa-trash"></i> ลบ', ['delete', 'id' => $model->id], [
@@ -79,14 +84,26 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
             <?php endif; ?>
 
-            <?php if ($model->approve_status == \backend\models\PurchaseMaster::APPROVE_STATUS_REJECTED): ?>
-                <div class="alert alert-danger border border-danger shadow-sm mb-3">
-                    <h5><i class="fas fa-exclamation-circle"></i> บันทึกซื้อนี้ถูกไม่อนุมัติ / ส่งกลับแก้ไข</h5>
+            <?php if ($model->approve_status == \backend\models\PurchaseMaster::APPROVE_STATUS_RETURNED): ?>
+                <div class="alert alert-warning border border-warning shadow-sm mb-3">
+                    <h5><i class="fas fa-undo-alt"></i> บันทึกซื้อนี้ถูกส่งกลับเพื่อแก้ไข</h5>
                     <?php if (!empty($model->rejected_by)): ?>
-                        <p class="mb-1"><strong>ผู้ดำเนินการ:</strong> <?= \backend\models\User::findEmployeeNameByUserId($model->rejected_by) ?> (วันที่: <?= $model->rejected_at ? date('d/m/Y H:i:s', strtotime($model->rejected_at)) : '-' ?>)</p>
+                        <p class="mb-1"><strong>ผู้ส่งกลับแก้ไข:</strong> <?= \backend\models\User::findEmployeeNameByUserId($model->rejected_by) ?> (วันที่: <?= $model->rejected_at ? date('d/m/Y H:i:s', strtotime($model->rejected_at)) : '-' ?>)</p>
                     <?php endif; ?>
                     <?php if (!empty($model->reject_reason)): ?>
                         <p class="mb-0"><strong>รายละเอียดที่ต้องปรับปรุง/แก้ไข:</strong> <?= nl2br(Html::encode($model->reject_reason)) ?></p>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($model->approve_status == \backend\models\PurchaseMaster::APPROVE_STATUS_REJECTED): ?>
+                <div class="alert alert-danger border border-danger shadow-sm mb-3">
+                    <h5><i class="fas fa-times-circle"></i> บันทึกซื้อนี้ไม่อนุมัติ (ปิดจบรายการ)</h5>
+                    <?php if (!empty($model->rejected_by)): ?>
+                        <p class="mb-1"><strong>ผู้ไม่อนุมัติ:</strong> <?= \backend\models\User::findEmployeeNameByUserId($model->rejected_by) ?> (วันที่: <?= $model->rejected_at ? date('d/m/Y H:i:s', strtotime($model->rejected_at)) : '-' ?>)</p>
+                    <?php endif; ?>
+                    <?php if (!empty($model->reject_reason)): ?>
+                        <p class="mb-0"><strong>เหตุผลที่ไม่อนุมัติ:</strong> <?= nl2br(Html::encode($model->reject_reason)) ?></p>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
@@ -456,11 +473,42 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php \yii\widgets\ActiveForm::end(); ?>
     <?php \yii\bootstrap4\Modal::end(); ?>
 
-    <!-- Modal สำหรับ ไม่อนุมัติ / ส่งกลับแก้ไข -->
+    <!-- Modal สำหรับ ส่งกลับแก้ไข -->
+    <?php
+    \yii\bootstrap4\Modal::begin([
+        'id' => 'return-modal',
+        'title' => '<h4><i class="fas fa-undo text-warning"></i> ส่งกลับเพื่อแก้ไข บันทึกซื้อ (NPR)</h4>',
+        'size' => \yii\bootstrap4\Modal::SIZE_DEFAULT,
+        'options' => ['tabindex' => false],
+        'closeButton' => [
+            'class' => 'btn-close',
+            'data-bs-dismiss' => 'modal',
+            'aria-label' => 'Close',
+        ],
+    ]);
+    ?>
+    <?php $form = \yii\widgets\ActiveForm::begin([
+        'action' => ['return', 'id' => $model->id],
+        'method' => 'post',
+    ]); ?>
+    <div class="modal-body">
+        <div class="form-group mb-3">
+            <label for="pm-return-reason" class="form-label fw-bold">ระบุรายละเอียดที่ต้องการให้ปรับหรือแก้ไข <span class="text-danger">*</span></label>
+            <textarea name="reject_reason" id="pm-return-reason" class="form-control" rows="4" required placeholder="ระบุสิ่งที่ต้องการให้ผู้จัดทำปรับปรุงหรือแก้ไข เพื่อแจ้งให้ทราบ"></textarea>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="submit" class="btn btn-warning"><i class="fas fa-paper-plane"></i> ยืนยันส่งกลับแก้ไข</button>
+    </div>
+    <?php \yii\widgets\ActiveForm::end(); ?>
+    <?php \yii\bootstrap4\Modal::end(); ?>
+
+    <!-- Modal สำหรับ ไม่อนุมัติ -->
     <?php
     \yii\bootstrap4\Modal::begin([
         'id' => 'reject-modal',
-        'title' => '<h4><i class="fas fa-times-circle text-danger"></i> ไม่อนุมัติ / ส่งกลับแก้ไข บันทึกซื้อ (NPR)</h4>',
+        'title' => '<h4><i class="fas fa-times-circle text-danger"></i> ไม่อนุมัติ บันทึกซื้อ (NPR)</h4>',
         'size' => \yii\bootstrap4\Modal::SIZE_DEFAULT,
         'options' => ['tabindex' => false],
         'closeButton' => [
@@ -475,14 +523,17 @@ $this->params['breadcrumbs'][] = $this->title;
         'method' => 'post',
     ]); ?>
     <div class="modal-body">
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i> เมื่อเลือก <strong>ไม่อนุมัติ</strong> เอกสารนี้จะถูกยกเลิกถาวรและไม่สามารถส่งแก้ไขได้อีก
+        </div>
         <div class="form-group mb-3">
-            <label for="pm-reject-reason" class="form-label fw-bold">ระบุรายละเอียดที่ต้องการให้ปรับหรือแก้ไข <span class="text-danger">*</span></label>
-            <textarea name="reject_reason" id="pm-reject-reason" class="form-control" rows="4" required placeholder="ระบุสิ่งที่ต้องการให้ปรับปรุงหรือแก้ไข เพื่อแจ้งให้ผู้จัดทำทราบ"></textarea>
+            <label for="pm-reject-reason" class="form-label fw-bold">ระบุเหตุผลที่ไม่อนุมัติ <span class="text-danger">*</span></label>
+            <textarea name="reject_reason" id="pm-reject-reason" class="form-control" rows="4" required placeholder="ระบุเหตุผลที่ไม่อนุมัติเอกสารนี้"></textarea>
         </div>
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">ยกเลิก</button>
-        <button type="submit" class="btn btn-danger"><i class="fas fa-paper-plane"></i> ยืนยันไม่อนุมัติ / ส่งกลับแก้ไข</button>
+        <button type="submit" class="btn btn-danger"><i class="fas fa-ban"></i> ยืนยันไม่อนุมัติเอกสาร</button>
     </div>
     <?php \yii\widgets\ActiveForm::end(); ?>
     <?php \yii\bootstrap4\Modal::end(); ?>
@@ -596,7 +647,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                                     elseif ($log->action == 'REQUEST_RECALL') echo '<span class="badge bg-warning text-dark"><i class="fas fa-undo-alt"></i> ร้องขอ Recall</span>';
                                                     elseif ($log->action == 'APPROVE_RECALL') echo '<span class="badge bg-success"><i class="fas fa-check"></i> อนุมัติ Recall</span>';
                                                     elseif ($log->action == 'REJECT_RECALL') echo '<span class="badge bg-danger"><i class="fas fa-times"></i> ปฏิเสธ Recall</span>';
-                                                    elseif ($log->action == 'REJECT') echo '<span class="badge bg-danger"><i class="fas fa-ban"></i> ไม่อนุมัติ / ส่งกลับแก้ไข</span>';
+                                                    elseif ($log->action == 'REJECT') echo '<span class="badge bg-danger"><i class="fas fa-ban"></i> ไม่อนุมัติ</span>';
+                                                    elseif ($log->action == 'RETURN_FOR_EDIT') echo '<span class="badge bg-warning text-dark"><i class="fas fa-undo"></i> ส่งกลับแก้ไข</span>';
                                                     elseif ($log->action == 'APPROVE') echo '<span class="badge bg-success"><i class="fas fa-check"></i> อนุมัติ</span>';
                                                     else echo '<span class="badge bg-info">'.Html::encode($log->action).'</span>';
                                                 ?>
@@ -650,7 +702,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                                     elseif ($log->action == 'REQUEST_RECALL') echo '<span class="badge bg-warning text-dark"><i class="fas fa-undo-alt"></i> ร้องขอ Recall</span>';
                                                     elseif ($log->action == 'APPROVE_RECALL') echo '<span class="badge bg-success"><i class="fas fa-check"></i> อนุมัติ Recall</span>';
                                                     elseif ($log->action == 'REJECT_RECALL') echo '<span class="badge bg-danger"><i class="fas fa-times"></i> ปฏิเสธ Recall</span>';
-                                                    elseif ($log->action == 'REJECT') echo '<span class="badge bg-danger"><i class="fas fa-ban"></i> ไม่อนุมัติ / ส่งกลับแก้ไข</span>';
+                                                    elseif ($log->action == 'REJECT') echo '<span class="badge bg-danger"><i class="fas fa-ban"></i> ไม่อนุมัติ</span>';
+                                                    elseif ($log->action == 'RETURN_FOR_EDIT') echo '<span class="badge bg-warning text-dark"><i class="fas fa-undo"></i> ส่งกลับแก้ไข</span>';
                                                     elseif ($log->action == 'APPROVE') echo '<span class="badge bg-success"><i class="fas fa-check"></i> อนุมัติ</span>';
                                                     else echo '<span class="badge bg-secondary">'.Html::encode($log->action).'</span>';
                                                 ?>

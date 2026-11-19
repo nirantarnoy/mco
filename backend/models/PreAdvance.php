@@ -15,6 +15,7 @@ class PreAdvance extends ActiveRecord
     const STATUS_DRAFT = 0;
     const STATUS_ACTIVE = 1;
     const STATUS_REJECTED = 2;
+    const STATUS_RETURNED = 3;
     const STATUS_CANCELLED = 100;
 
     /**
@@ -187,7 +188,9 @@ class PreAdvance extends ActiveRecord
         
         // 2. ตรวจสอบ / อนุมัติ
         if ($this->status == self::STATUS_REJECTED) {
-            $steps[] = ['name' => 'ส่งกลับแก้ไข (ไม่อนุมัติ)', 'status' => 2, 'date' => $this->rejected_at ? date('d/m/Y H:i', strtotime($this->rejected_at)) : ''];
+            $steps[] = ['name' => 'ไม่อนุมัติ', 'status' => 2, 'date' => $this->rejected_at ? date('d/m/Y H:i', strtotime($this->rejected_at)) : ''];
+        } else if ($this->status == self::STATUS_RETURNED) {
+            $steps[] = ['name' => 'ส่งกลับแก้ไข', 'status' => 2, 'date' => $this->rejected_at ? date('d/m/Y H:i', strtotime($this->rejected_at)) : ''];
         } else {
             if ($this->checked_at) {
                 $steps[] = ['name' => 'ตรวจสอบแล้ว', 'status' => 1, 'date' => date('d/m/Y H:i', strtotime($this->checked_at))];
@@ -241,6 +244,42 @@ class PreAdvance extends ActiveRecord
             'latest' => $latest,
             'html' => $html
         ];
+    }
+
+    public function getStatusLabel()
+    {
+        switch ($this->status) {
+            case self::STATUS_DRAFT:
+                return 'ร่าง';
+            case self::STATUS_ACTIVE:
+                return 'ใช้งาน';
+            case self::STATUS_REJECTED:
+                return 'ไม่อนุมัติ';
+            case self::STATUS_RETURNED:
+                return 'ส่งกลับแก้ไข';
+            case self::STATUS_CANCELLED:
+                return 'ยกเลิก';
+            default:
+                return 'ไม่ระบุ';
+        }
+    }
+
+    public function getStatusBadge()
+    {
+        switch ($this->status) {
+            case self::STATUS_DRAFT:
+                return '<span class="badge bg-secondary">ร่าง</span>';
+            case self::STATUS_ACTIVE:
+                return '<span class="badge bg-success">ใช้งาน</span>';
+            case self::STATUS_REJECTED:
+                return '<span class="badge bg-danger"><i class="fas fa-ban"></i> ไม่อนุมัติ</span>';
+            case self::STATUS_RETURNED:
+                return '<span class="badge bg-warning text-dark"><i class="fas fa-undo"></i> ส่งกลับแก้ไข</span>';
+            case self::STATUS_CANCELLED:
+                return '<span class="badge bg-secondary">ยกเลิก</span>';
+            default:
+                return '<span class="badge bg-secondary">ไม่ระบุ</span>';
+        }
     }
 
     public function getRecallUser()

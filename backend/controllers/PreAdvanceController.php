@@ -28,11 +28,12 @@ class PreAdvanceController extends BaseController
                 'actions' => [
                     'delete' => ['POST'],
                     'reject' => ['POST'],
+                    'return' => ['POST'],
                 ],
             ],
             'actionLog' => [
                 'class' => ActionLogBehavior::class,
-                'actions' => ['create', 'update', 'delete', 'check', 'uncheck', 'approve', 'unapprove', 'reject', 'view', 'print', 'request-recall', 'approve-recall', 'reject-recall'],
+                'actions' => ['create', 'update', 'delete', 'check', 'uncheck', 'approve', 'unapprove', 'reject', 'return', 'view', 'print', 'request-recall', 'approve-recall', 'reject-recall'],
             ],
         ];
     }
@@ -151,10 +152,15 @@ class PreAdvanceController extends BaseController
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
+        if ($model->status == PreAdvance::STATUS_REJECTED && !\backend\models\User::isUserAdmin()) {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถแก้ไขเอกสารที่ไม่อนุมัติแล้วได้');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
         if ($model->load(Yii::$app->request->post())) {
             $transaction = Yii::$app->db->beginTransaction();
             try {
-                if ($model->status == PreAdvance::STATUS_REJECTED) {
+                if ($model->status == PreAdvance::STATUS_RETURNED || $model->status == PreAdvance::STATUS_REJECTED) {
                     $model->status = PreAdvance::STATUS_ACTIVE;
                 }
                 if ($model->save()) {
@@ -291,14 +297,14 @@ class PreAdvanceController extends BaseController
         $userId = Yii::$app->user->id;
 
         if (!self::canApprovePreAdvance($userId, null, $model)) {
-            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ในการไม่อนุมัติ/ส่งกลับแก้ไขเอกสาร Payment Advance (อิงตาม Permission Matrix)');
+            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ในการไม่อนุมัติเอกสาร Payment Advance (อิงตาม Permission Matrix)');
         }
 
         PreAdvance::ensureRejectColumns();
 
         $rejectReason = trim(Yii::$app->request->post('reject_reason', ''));
         if (empty($rejectReason)) {
-            Yii::$app->session->setFlash('error', 'กรุณาระบุรายละเอียดที่ต้องการให้ปรับหรือแก้ไข');
+            Yii::$app->session->setFlash('error', 'กรุณาระบุเหตุผลที่ไม่อนุมัติ');
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
@@ -321,7 +327,53 @@ class PreAdvanceController extends BaseController
                     'rejected_at' => $model->rejected_at,
                 ],
                 \backend\models\ActionLogModel::STATUS_SUCCESS,
-                'ไม่อนุมัติ / ส่งกลับแก้ไข Payment Advance: ' . $rejectReason
+                'ไม่อนุมัติ Payment Advance: ' . $rejectReason
+            );
+            Yii::$app->session->setFlash('success', 'บันทึกไม่อนุมัติ Payment Advance เรียบร้อยแล้ว');
+        } else {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถดำเนินการไม่อนุมัติได้');
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    public function actionReturn($id)
+    {
+        $model = $this->findModel($id);
+        $userId = Yii::$app->user->id;
+
+        if (!self::canApprovePreAdvance($userId, null, $model)) {
+            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ในการส่งกลับแก้ไขเอกสาร Payment Advance (อิงตาม Permission Matrix)');
+        }
+
+        PreAdvance::ensureRejectColumns();
+
+        $rejectReason = trim(Yii::$app->request->post('reject_reason', ''));
+        if (empty($rejectReason)) {
+            Yii::$app->session->setFlash('error', 'กรุณาระบุรายละเอียดที่ต้องการให้ปรับหรือแก้ไข');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $model->status = PreAdvance::STATUS_RETURNED;
+        $model->reject_reason = $rejectReason;
+        $model->rejected_by = $userId;
+        $model->rejected_at = date('Y-m-d H:i:s');
+        $model->checked_by = null;
+        $model->checked_at = null;
+        $model->approved_by = null;
+        $model->approved_at = null;
+
+        if ($model->save(false)) {
+            \backend\models\ActionLogModel::logModelAction(
+                'RETURN_FOR_EDIT',
+                $model,
+                [
+                    'reject_reason' => $rejectReason,
+                    'rejected_by' => $userId,
+                    'rejected_at' => $model->rejected_at,
+                ],
+                \backend\models\ActionLogModel::STATUS_SUCCESS,
+                'ส่งกลับแก้ไข Payment Advance: ' . $rejectReason
             );
             Yii::$app->session->setFlash('success', 'ส่งกลับเพื่อแก้ไข Payment Advance เรียบร้อยแล้ว');
         } else {

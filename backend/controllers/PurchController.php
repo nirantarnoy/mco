@@ -40,11 +40,13 @@ class PurchController extends BaseController
                 'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['POST'],
+                    'reject' => ['POST'],
+                    'return' => ['POST'],
                 ],
             ],
             'actionLog' => [
                 'class' => ActionLogBehavior::class,
-                'actions' => ['create', 'update', 'delete', 'approve', 'reject', 'receive', 'cancel-receive', 'view', 'print', 'request-recall', 'approve-recall', 'reject-recall'], // Log ทุก actions ละเอียดเพื่อตรวจสอบย้อนหลัง
+                'actions' => ['create', 'update', 'delete', 'approve', 'reject', 'return', 'receive', 'cancel-receive', 'view', 'print', 'request-recall', 'approve-recall', 'reject-recall'], // Log ทุก actions ละเอียดเพื่อตรวจสอบย้อนหลัง
             ],
         ];
     }
@@ -435,13 +437,10 @@ class PurchController extends BaseController
     {
         $model = $this->findModel($id);
         
-        // Allow entering update page for approved PO to attach files
-        /*
-        if ($model->approve_status == \backend\models\Purch::APPROVE_STATUS_APPROVED) {
-            Yii::$app->session->setFlash('error', 'ไม่อนุญาตให้แก้ไขใบสั่งซื้อที่ได้รับการอนุมัติแล้ว');
+        if ($model->approve_status == \backend\models\Purch::APPROVE_STATUS_REJECTED && !\backend\models\User::isUserAdmin()) {
+            Yii::$app->session->setFlash('error', 'ไม่อนุญาตให้แก้ไขใบสั่งซื้อที่ถูกไม่อนุมัติแล้ว');
             return $this->redirect(['view', 'id' => $model->id]);
         }
-        */
 
         // Load existing purch lines
         $model->purchLines = $model->getPurchLines()->all();
@@ -587,7 +586,7 @@ class PurchController extends BaseController
                         $model->rev = (int)$model->rev + 1;
                     }
 
-                    if ($model->approve_status == Purch::APPROVE_STATUS_REJECTED) {
+                    if ($model->approve_status == Purch::APPROVE_STATUS_RETURNED) {
                         $model->approve_status = Purch::APPROVE_STATUS_PENDING;
                     }
 
@@ -1163,7 +1162,7 @@ class PurchController extends BaseController
     }
 
     /**
-     * Reject purchase order
+     * Reject purchase order (ไม่อนุมัติเลย)
      * @param int $id
      * @return Response
      * @throws NotFoundHttpException
@@ -1178,12 +1177,12 @@ class PurchController extends BaseController
 
         $rejectReason = trim(Yii::$app->request->post('reject_reason', ''));
         if (empty($rejectReason)) {
-            Yii::$app->session->setFlash('error', 'กรุณาระบุรายละเอียดที่ต้องการให้ปรับหรือแก้ไข');
+            Yii::$app->session->setFlash('error', 'กรุณาระบุเหตุผลที่ไม่อนุมัติ');
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
         $model->approve_status = Purch::APPROVE_STATUS_REJECTED;
-        $model->status = Purch::STATUS_ACTIVE;
+        $model->status = Purch::STATUS_CANCELLED;
         $model->reject_reason = $rejectReason;
         $model->rejected_by = Yii::$app->user->id;
         $model->rejected_at = date('Y-m-d H:i:s');
@@ -1198,7 +1197,53 @@ class PurchController extends BaseController
                     'rejected_at' => $model->rejected_at,
                 ],
                 \backend\models\ActionLogModel::STATUS_SUCCESS,
-                'ไม่อนุมัติ / ส่งกลับแก้ไขใบสั่งซื้อ: ' . $rejectReason
+                'ไม่อนุมัติใบสั่งซื้อ: ' . $rejectReason
+            );
+            Yii::$app->session->setFlash('success', 'ไม่อนุมัติใบสั่งซื้อเรียบร้อยแล้ว');
+        } else {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถบันทึกการไม่อนุมัติใบสั่งซื้อได้');
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    /**
+     * Return purchase order for revision (ส่งกลับแก้ไข)
+     * @param int $id
+     * @return Response
+     * @throws NotFoundHttpException
+     */
+    public function actionReturn($id)
+    {
+        if (!\Yii::$app->user->can('purch/reject') && !\backend\models\User::isUserAdmin()) {
+            throw new ForbiddenHttpException('คุณไม่ได้รับอนุญาตให้ใช้ส่วนนี้ (purch/return)');
+        }
+        Purch::ensureRejectColumns();
+        $model = $this->findModel($id);
+
+        $rejectReason = trim(Yii::$app->request->post('reject_reason', ''));
+        if (empty($rejectReason)) {
+            Yii::$app->session->setFlash('error', 'กรุณาระบุรายละเอียดที่ต้องการให้ปรับหรือแก้ไข');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $model->approve_status = Purch::APPROVE_STATUS_RETURNED;
+        $model->status = Purch::STATUS_ACTIVE;
+        $model->reject_reason = $rejectReason;
+        $model->rejected_by = Yii::$app->user->id;
+        $model->rejected_at = date('Y-m-d H:i:s');
+
+        if ($model->save(false)) {
+            \backend\models\ActionLogModel::logModelAction(
+                'RETURN_FOR_EDIT',
+                $model,
+                [
+                    'reject_reason' => $rejectReason,
+                    'rejected_by' => Yii::$app->user->id,
+                    'rejected_at' => $model->rejected_at,
+                ],
+                \backend\models\ActionLogModel::STATUS_SUCCESS,
+                'ส่งกลับแก้ไขใบสั่งซื้อ: ' . $rejectReason
             );
             Yii::$app->session->setFlash('success', 'ส่งกลับเพื่อแก้ไขใบสั่งซื้อเรียบร้อยแล้ว');
         } else {

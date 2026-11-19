@@ -282,7 +282,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'header' => 'ตัวเลือก',
                 'headerOptions' => ['style' => 'width: 120px; text-align: center;'],
                 'contentOptions' => ['style' => 'text-align: center;'],
-                'template' => '{view} {update} {approve} {reject} {delete}',
+                'template' => '{view} {update} {approve} {return} {reject} {delete}',
                 'buttons' => [
                     'view' => function ($url, $model, $key) {
                         return Html::a('<i class="fas fa-eye"></i>', $url, [
@@ -292,6 +292,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         ]);
                     },
                     'update' => function ($url, $model, $key) {
+                        if ($model->approve_status == Purch::APPROVE_STATUS_REJECTED && !\backend\models\User::isUserAdmin()) {
+                            return '';
+                        }
                         return Html::a('<i class="fas fa-edit"></i>', $url, [
                             'title' => 'แก้ไข',
                             'class' => 'btn btn-sm btn-outline-primary me-1 mb-1',
@@ -299,7 +302,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         ]);
                     },
                     'approve' => function ($url, $model, $key) {
-                        if ($model->approve_status == Purch::APPROVE_STATUS_PENDING && \Yii::$app->user->can('purch/approve')) {
+                        if (($model->approve_status == Purch::APPROVE_STATUS_PENDING || $model->approve_status == Purch::APPROVE_STATUS_RETURNED) && \Yii::$app->user->can('purch/approve')) {
                             return Html::a('<i class="fas fa-check"></i>', ['approve', 'id' => $model->id], [
                                 'title' => 'อนุมัติ',
                                 'class' => 'btn btn-sm btn-outline-success me-1 mb-1',
@@ -310,11 +313,24 @@ $this->params['breadcrumbs'][] = $this->title;
                         }
                         return '';
                     },
+                    'return' => function ($url, $model, $key) {
+                        if (($model->approve_status == Purch::APPROVE_STATUS_PENDING || $model->approve_status == Purch::APPROVE_STATUS_RETURNED) && (\Yii::$app->user->can('purch/reject') || \backend\models\User::isUserAdmin())) {
+                            return Html::button('<i class="fas fa-undo-alt"></i>', [
+                                'title' => 'ส่งกลับแก้ไข',
+                                'class' => 'btn btn-sm btn-outline-warning me-1 mb-1 btn-return-index',
+                                'data-id' => $model->id,
+                                'data-no' => $model->purch_no,
+                                'data-url' => Url::to(['return', 'id' => $model->id]),
+                                'data-pjax' => '0'
+                            ]);
+                        }
+                        return '';
+                    },
                     'reject' => function ($url, $model, $key) {
-                        if ($model->approve_status == Purch::APPROVE_STATUS_PENDING && (\Yii::$app->user->can('purch/reject') || \backend\models\User::isUserAdmin())) {
+                        if (($model->approve_status == Purch::APPROVE_STATUS_PENDING || $model->approve_status == Purch::APPROVE_STATUS_RETURNED) && (\Yii::$app->user->can('purch/reject') || \backend\models\User::isUserAdmin())) {
                             return Html::button('<i class="fas fa-times"></i>', [
-                                'title' => 'ไม่อนุมัติ / ส่งกลับแก้ไข',
-                                'class' => 'btn btn-sm btn-outline-warning me-1 mb-1 btn-reject-index',
+                                'title' => 'ไม่อนุมัติ',
+                                'class' => 'btn btn-sm btn-outline-danger me-1 mb-1 btn-reject-index',
                                 'data-id' => $model->id,
                                 'data-no' => $model->purch_no,
                                 'data-url' => Url::to(['reject', 'id' => $model->id]),
@@ -413,18 +429,18 @@ $this->params['breadcrumbs'][] = $this->title;
       <form id="rejectIndexForm" method="post" action="">
         <input type="hidden" name="<?= Yii::$app->request->csrfParam ?>" value="<?= Yii::$app->request->csrfToken ?>" />
         <div class="modal-header">
-          <h5 class="modal-title fs-6 text-danger"><i class="fas fa-times-circle"></i> ไม่อนุมัติ / ส่งกลับแก้ไข (<span id="rejectIndexDocNo"></span>)</h5>
+          <h5 class="modal-title fs-6" id="rejectIndexTitle"></h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
           <div class="form-group mb-3">
-            <label class="form-label fw-bold">ระบุรายละเอียดที่ต้องการให้ปรับหรือแก้ไข <span class="text-danger">*</span></label>
-            <textarea name="reject_reason" id="rejectIndexReason" class="form-control" rows="4" required placeholder="ระบุสิ่งที่ต้องการให้ปรับปรุงหรือแก้ไข เพื่อแจ้งให้ผู้จัดทำทราบ"></textarea>
+            <label class="form-label fw-bold" id="rejectIndexLabel"></label>
+            <textarea name="reject_reason" id="rejectIndexReason" class="form-control" rows="4" required></textarea>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-dismiss="modal">ยกเลิก</button>
-          <button type="submit" class="btn btn-danger"><i class="fas fa-paper-plane"></i> ยืนยันไม่อนุมัติ / ส่งกลับแก้ไข</button>
+          <button type="submit" id="rejectIndexSubmitBtn"></button>
         </div>
       </form>
     </div>
@@ -438,12 +454,25 @@ function showSeqModal(btn) {
     $('#seqModal').modal('show');
 }
 
+$(document).on('click', '.btn-return-index', function() {
+    var url = $(this).data('url');
+    var no = $(this).data('no');
+    $('#rejectIndexForm').attr('action', url);
+    $('#rejectIndexTitle').html('<i class="fas fa-undo-alt text-warning"></i> ส่งกลับแก้ไข ใบสั่งซื้อ (' + no + ')');
+    $('#rejectIndexLabel').html('ระบุรายละเอียดที่ต้องการให้ปรับหรือแก้ไข <span class="text-danger">*</span>');
+    $('#rejectIndexReason').attr('placeholder', 'ระบุสิ่งที่ต้องการให้ปรับปรุงหรือแก้ไข เพื่อแจ้งให้ผู้จัดทำทราบ...').val('');
+    $('#rejectIndexSubmitBtn').attr('class', 'btn btn-warning').html('<i class="fas fa-paper-plane"></i> ยืนยันส่งกลับแก้ไข');
+    $('#rejectIndexModal').modal('show');
+});
+
 $(document).on('click', '.btn-reject-index', function() {
     var url = $(this).data('url');
     var no = $(this).data('no');
     $('#rejectIndexForm').attr('action', url);
-    $('#rejectIndexDocNo').text(no);
-    $('#rejectIndexReason').val('');
+    $('#rejectIndexTitle').html('<i class="fas fa-times-circle text-danger"></i> ไม่อนุมัติ ใบสั่งซื้อ (' + no + ')');
+    $('#rejectIndexLabel').html('ระบุเหตุผลที่ไม่อนุมัติ <span class="text-danger">*</span>');
+    $('#rejectIndexReason').attr('placeholder', 'ระบุเหตุผลที่ไม่อนุมัติใบสั่งซื้อนี้ (รายการจะถูกยกเลิก/ปิดจบ)...').val('');
+    $('#rejectIndexSubmitBtn').attr('class', 'btn btn-danger').html('<i class="fas fa-times-circle"></i> ยืนยันไม่อนุมัติ');
     $('#rejectIndexModal').modal('show');
 });
 </script>

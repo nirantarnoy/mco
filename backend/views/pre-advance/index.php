@@ -59,7 +59,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     if ($model->is_recall == 1) {
                         return '<span class="badge badge-warning bg-warning text-dark"><i class="fas fa-undo-alt"></i> ขอ Recall</span>';
                     } elseif ($model->status == \backend\models\PreAdvance::STATUS_REJECTED) {
-                        return '<span class="badge badge-danger bg-danger">ไม่อนุมัติ / ส่งกลับแก้ไข</span>';
+                        return '<span class="badge badge-danger bg-danger"><i class="fas fa-ban"></i> ไม่อนุมัติ</span>';
+                    } elseif ($model->status == \backend\models\PreAdvance::STATUS_RETURNED) {
+                        return '<span class="badge badge-warning bg-warning text-dark"><i class="fas fa-undo"></i> ส่งกลับแก้ไข</span>';
                     } elseif (!empty($model->approved_by)) {
                         return '<span class="badge badge-success">อนุมัติแล้ว</span>';
                     } elseif (!empty($model->checked_by)) {
@@ -82,6 +84,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         ]);
                     },
                     'update' => function ($url, $model, $key) {
+                        if ($model->status == \backend\models\PreAdvance::STATUS_REJECTED && !\backend\models\User::isUserAdmin()) {
+                            return '';
+                        }
                         if (!empty($model->approved_by)) {
                             return ''; // Hide update if approved (optional but good practice)
                         }

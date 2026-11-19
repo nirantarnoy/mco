@@ -270,6 +270,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             \backend\models\PurchaseMaster::APPROVE_STATUS_PENDING => 'รอพิจารณา',
                             \backend\models\PurchaseMaster::APPROVE_STATUS_APPROVED => 'อนุมัติแล้ว',
                             \backend\models\PurchaseMaster::APPROVE_STATUS_REJECTED => 'ไม่อนุมัติ',
+                            \backend\models\PurchaseMaster::APPROVE_STATUS_RETURNED => 'ส่งกลับแก้ไข',
                         ],
                     ],
                     [
