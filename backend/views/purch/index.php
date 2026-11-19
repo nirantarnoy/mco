@@ -18,6 +18,78 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="purch-index" style="max-width: 100%; overflow-x: hidden;">
 
+    <?php
+    $currentUserId = Yii::$app->user->id;
+    $isAdmin = \backend\models\User::isUserAdmin();
+    $returnedPoQuery = Purch::find()
+        ->where(['approve_status' => Purch::APPROVE_STATUS_RETURNED]);
+    if (!$isAdmin) {
+        $returnedPoQuery->andWhere(['created_by' => $currentUserId]);
+    }
+    $returnedPos = $returnedPoQuery->orderBy(['rejected_at' => SORT_DESC, 'id' => SORT_DESC])->all();
+    ?>
+    <?php if (!empty($returnedPos)): ?>
+    <div class="alert alert-warning border border-warning shadow-sm mb-4" role="alert" style="border-left: 5px solid #ffc107 !important; background-color: #fff9e6;">
+        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+            <div class="d-flex align-items-center mb-1">
+                <span class="badge badge-warning bg-warning text-dark p-2 me-2 mr-2" style="font-size: 0.95rem;">
+                    <i class="fas fa-undo-alt"></i> งานตีกลับแก้ไข
+                </span>
+                <h5 class="alert-heading mb-0 font-weight-bold fw-bold text-dark">
+                    <?= $isAdmin ? 'มีใบสั่งซื้อ (PO) ที่ถูกส่งกลับแก้ไข' : 'คุณมีใบสั่งซื้อ (PO) ที่ถูกส่งกลับแก้ไข' ?> 
+                    <span class="badge badge-danger bg-danger text-white"><?= count($returnedPos) ?> รายการ</span>
+                </h5>
+            </div>
+            <small class="text-muted"><i class="fas fa-info-circle"></i> กดปุ่ม "แก้ไขทันที" เพื่อเปิดฟอร์มแก้ไขและส่งอนุมัติใหม่</small>
+        </div>
+        
+        <div class="table-responsive bg-white rounded shadow-sm border mt-2">
+            <table class="table table-hover table-striped mb-0 align-middle" style="font-size: 13px;">
+                <thead class="thead-dark bg-dark text-white">
+                    <tr>
+                        <th style="width: 160px;">เลขที่ใบสั่งซื้อ</th>
+                        <th style="width: 180px;">ผู้ขาย (Vendor)</th>
+                        <th>รายละเอียดที่ต้องปรับปรุง/แก้ไข</th>
+                        <?php if ($isAdmin): ?>
+                            <th style="width: 140px;">ผู้จัดทำ</th>
+                        <?php endif; ?>
+                        <th style="width: 140px;">ผู้ส่งกลับ</th>
+                        <th style="width: 130px;">เวลาที่ส่งกลับ</th>
+                        <th style="width: 160px; text-align: center;">ดำเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($returnedPos as $rPo): ?>
+                    <tr>
+                        <td class="font-weight-bold fw-bold align-middle">
+                            <span class="badge badge-info bg-info text-white me-1"><i class="fas fa-file-invoice"></i></span>
+                            <?= Html::a(Html::encode($rPo->purch_no), ['view', 'id' => $rPo->id], ['class' => 'font-weight-bold fw-bold text-primary', 'target' => '_blank', 'title' => 'ดูรายละเอียด']) ?>
+                        </td>
+                        <td class="align-middle"><?= Html::encode($rPo->vendor_name ?: ($rPo->vendor ? $rPo->vendor->name : '-')) ?></td>
+                        <td class="align-middle text-danger font-weight-bold" style="white-space: pre-wrap;">
+                            <i class="fas fa-comment-dots text-warning"></i> <?= Html::encode($rPo->reject_reason ?: 'ไม่ระบุรายละเอียด') ?>
+                        </td>
+                        <?php if ($isAdmin): ?>
+                            <td class="align-middle"><i class="fas fa-user-edit text-muted"></i> <?= Html::encode(\backend\models\User::findEmployeeNameByUserId($rPo->created_by) ?: '-') ?></td>
+                        <?php endif; ?>
+                        <td class="align-middle"><i class="fas fa-user-check text-muted"></i> <?= Html::encode(\backend\models\User::findEmployeeNameByUserId($rPo->rejected_by) ?: '-') ?></td>
+                        <td class="align-middle text-muted"><?= $rPo->rejected_at ? date('d/m/Y H:i', strtotime($rPo->rejected_at)) : '-' ?></td>
+                        <td class="align-middle text-center" style="white-space: nowrap;">
+                            <a href="<?= Url::to(['update', 'id' => $rPo->id]) ?>" class="btn btn-sm btn-warning text-dark font-weight-bold shadow-sm">
+                                <i class="fas fa-edit"></i> แก้ไขทันที
+                            </a>
+                            <a href="<?= Url::to(['view', 'id' => $rPo->id]) ?>" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-eye"></i> ดู
+                            </a>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <div class="row m-0 mb-3">
         <div class="col-md-6 d-flex align-items-center px-0">
             <span class="me-2">แสดง</span>

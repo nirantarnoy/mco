@@ -20,6 +20,143 @@ $this->registerJsFile('https://code.highcharts.com/modules/exporting.js', ['depe
 ?>
 
 <div class="dashboard-index">
+
+    <?php
+    $currentUserId = Yii::$app->user->id;
+    $isAdmin = \backend\models\User::isUserAdmin();
+
+    // 1. PO returned
+    $dashPoQuery = \backend\models\Purch::find()
+        ->where(['approve_status' => \backend\models\Purch::APPROVE_STATUS_RETURNED]);
+    if (!$isAdmin) {
+        $dashPoQuery->andWhere(['created_by' => $currentUserId]);
+    }
+    $dashPos = $dashPoQuery->orderBy(['rejected_at' => SORT_DESC, 'id' => SORT_DESC])->all();
+
+    // 2. NPR returned
+    $dashPmQuery = \backend\models\PurchaseMaster::find()
+        ->where(['approve_status' => \backend\models\PurchaseMaster::APPROVE_STATUS_RETURNED]);
+    if (!$isAdmin) {
+        $dashPmQuery->andWhere(['created_by' => $currentUserId]);
+    }
+    $dashPms = $dashPmQuery->orderBy(['rejected_at' => SORT_DESC, 'id' => SORT_DESC])->all();
+
+    // 3. PA returned
+    $dashPaQuery = \backend\models\PreAdvance::find()
+        ->where(['status' => \backend\models\PreAdvance::STATUS_RETURNED]);
+    if (!$isAdmin) {
+        $dashPaQuery->andWhere(['created_by' => $currentUserId]);
+    }
+    $dashPas = $dashPaQuery->orderBy(['rejected_at' => SORT_DESC, 'id' => SORT_DESC])->all();
+
+    $totalReturned = count($dashPos) + count($dashPms) + count($dashPas);
+    ?>
+
+    <?php if ($totalReturned > 0): ?>
+    <div class="alert alert-warning border border-warning shadow-sm mb-4" role="alert" style="border-left: 5px solid #ffc107 !important; background-color: #fff9e6;">
+        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+            <div class="d-flex align-items-center mb-1">
+                <span class="badge badge-warning bg-warning text-dark p-2 me-2 mr-2" style="font-size: 1rem;">
+                    <i class="fas fa-undo-alt"></i> งานตีกลับรอแก้ไข
+                </span>
+                <h5 class="alert-heading mb-0 font-weight-bold fw-bold text-dark">
+                    <?= $isAdmin ? 'มีรายการเอกสารที่ถูกส่งกลับแก้ไข' : 'คุณมีรายการเอกสารที่ถูกส่งกลับแก้ไข' ?> 
+                    <span class="badge badge-danger bg-danger text-white"><?= $totalReturned ?> รายการ</span>
+                </h5>
+            </div>
+            <small class="text-muted"><i class="fas fa-info-circle"></i> กรุณาตรวจสอบรายละเอียดที่ต้องปรับปรุงและกดปุ่มแก้ไขเพื่อส่งอนุมัติใหม่</small>
+        </div>
+
+        <div class="table-responsive bg-white rounded shadow-sm border mt-2">
+            <table class="table table-hover table-striped mb-0 align-middle" style="font-size: 13px;">
+                <thead class="thead-dark bg-dark text-white">
+                    <tr>
+                        <th style="width: 140px;">ประเภท</th>
+                        <th style="width: 160px;">เลขที่เอกสาร</th>
+                        <th style="width: 180px;">ผู้ขาย / คู่ค้า</th>
+                        <th>รายละเอียดที่ต้องปรับปรุง/แก้ไข</th>
+                        <?php if ($isAdmin): ?>
+                            <th style="width: 130px;">ผู้จัดทำ</th>
+                        <?php endif; ?>
+                        <th style="width: 130px;">ผู้ส่งกลับ</th>
+                        <th style="width: 120px;">เวลาที่ส่งกลับ</th>
+                        <th style="width: 150px; text-align: center;">ดำเนินการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($dashPos as $item): ?>
+                    <tr>
+                        <td class="align-middle"><span class="badge badge-info bg-info text-white">ใบสั่งซื้อ (PO)</span></td>
+                        <td class="font-weight-bold fw-bold align-middle">
+                            <?= Html::a(Html::encode($item->purch_no), ['/purch/view', 'id' => $item->id], ['class' => 'font-weight-bold fw-bold text-primary', 'target' => '_blank']) ?>
+                        </td>
+                        <td class="align-middle"><?= Html::encode($item->vendor_name ?: ($item->vendor ? $item->vendor->name : '-')) ?></td>
+                        <td class="align-middle text-danger font-weight-bold" style="white-space: pre-wrap;">
+                            <i class="fas fa-comment-dots text-warning"></i> <?= Html::encode($item->reject_reason ?: '-') ?>
+                        </td>
+                        <?php if ($isAdmin): ?>
+                            <td class="align-middle"><?= Html::encode(\backend\models\User::findEmployeeNameByUserId($item->created_by) ?: '-') ?></td>
+                        <?php endif; ?>
+                        <td class="align-middle"><?= Html::encode(\backend\models\User::findEmployeeNameByUserId($item->rejected_by) ?: '-') ?></td>
+                        <td class="align-middle text-muted"><?= $item->rejected_at ? date('d/m/Y H:i', strtotime($item->rejected_at)) : '-' ?></td>
+                        <td class="align-middle text-center" style="white-space: nowrap;">
+                            <a href="<?= Url::to(['/purch/update', 'id' => $item->id]) ?>" class="btn btn-sm btn-warning text-dark font-weight-bold shadow-sm">
+                                <i class="fas fa-edit"></i> แก้ไขทันที
+                            </a>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+
+                    <?php foreach ($dashPms as $item): ?>
+                    <tr>
+                        <td class="align-middle"><span class="badge badge-warning bg-warning text-dark">บันทึกซื้อ (NPR)</span></td>
+                        <td class="font-weight-bold fw-bold align-middle">
+                            <?= Html::a(Html::encode($item->docnum), ['/purchasemaster/view', 'id' => $item->id], ['class' => 'font-weight-bold fw-bold text-primary', 'target' => '_blank']) ?>
+                        </td>
+                        <td class="align-middle"><?= Html::encode($item->supnam ?: '-') ?></td>
+                        <td class="align-middle text-danger font-weight-bold" style="white-space: pre-wrap;">
+                            <i class="fas fa-comment-dots text-warning"></i> <?= Html::encode($item->reject_reason ?: '-') ?>
+                        </td>
+                        <?php if ($isAdmin): ?>
+                            <td class="align-middle"><?= Html::encode(\backend\models\User::findEmployeeNameByUserId($item->created_by) ?: '-') ?></td>
+                        <?php endif; ?>
+                        <td class="align-middle"><?= Html::encode(\backend\models\User::findEmployeeNameByUserId($item->rejected_by) ?: '-') ?></td>
+                        <td class="align-middle text-muted"><?= $item->rejected_at ? date('d/m/Y H:i', strtotime($item->rejected_at)) : '-' ?></td>
+                        <td class="align-middle text-center" style="white-space: nowrap;">
+                            <a href="<?= Url::to(['/purchasemaster/update', 'id' => $item->id]) ?>" class="btn btn-sm btn-warning text-dark font-weight-bold shadow-sm">
+                                <i class="fas fa-edit"></i> แก้ไขทันที
+                            </a>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+
+                    <?php foreach ($dashPas as $item): ?>
+                    <tr>
+                        <td class="align-middle"><span class="badge badge-primary bg-primary text-white">Pre-Advance (PA)</span></td>
+                        <td class="font-weight-bold fw-bold align-middle">
+                            <?= Html::a(Html::encode($item->pre_advance_no), ['/pre-advance/view', 'id' => $item->id], ['class' => 'font-weight-bold fw-bold text-primary', 'target' => '_blank']) ?>
+                        </td>
+                        <td class="align-middle"><?= Html::encode($item->recipient_name ?: ($item->vendor ? $item->vendor->name : '-')) ?></td>
+                        <td class="align-middle text-danger font-weight-bold" style="white-space: pre-wrap;">
+                            <i class="fas fa-comment-dots text-warning"></i> <?= Html::encode($item->reject_reason ?: '-') ?>
+                        </td>
+                        <?php if ($isAdmin): ?>
+                            <td class="align-middle"><?= Html::encode(\backend\models\User::findEmployeeNameByUserId($item->created_by) ?: '-') ?></td>
+                        <?php endif; ?>
+                        <td class="align-middle"><?= Html::encode(\backend\models\User::findEmployeeNameByUserId($item->rejected_by) ?: '-') ?></td>
+                        <td class="align-middle text-muted"><?= $item->rejected_at ? date('d/m/Y H:i', strtotime($item->rejected_at)) : '-' ?></td>
+                        <td class="align-middle text-center" style="white-space: nowrap;">
+                            <a href="<?= Url::to(['/pre-advance/update', 'id' => $item->id]) ?>" class="btn btn-sm btn-warning text-dark font-weight-bold shadow-sm">
+                                <i class="fas fa-edit"></i> แก้ไขทันที
+                            </a>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
     <!-- Date Range Filter -->
     <div class="row">
         <div class="col-md-12">
