@@ -82,12 +82,10 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                             'data-method' => 'post',
                         ]) ?>
                     <?php endif; ?>
-                    <?php if (\Yii::$app->user->can('purch/reject')): ?>
-                        <?= Html::a('ไม่อนุมัติ', ['reject', 'id' => $model->id], [
-                            'class' => 'btn btn-warning',
-                            'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะไม่อนุมัติใบสั่งซื้อนี้?',
-                            'data-method' => 'post',
-                        ]) ?>
+                    <?php if (\Yii::$app->user->can('purch/reject') || \backend\models\User::isUserAdmin()): ?>
+                        <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#reject-modal" data-bs-toggle="modal" data-bs-target="#reject-modal">
+                            <i class="fas fa-times-circle"></i> ไม่อนุมัติ / ส่งกลับแก้ไข
+                        </button>
                     <?php endif; ?>
                 <?php endif; ?>
                 <?php if ($model->status != Purch::STATUS_CANCELLED): ?>
@@ -180,6 +178,18 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                 <h5><i class="fas fa-exclamation-triangle"></i> เอกสารนี้มีคำร้องขอ Recall เพื่อแก้ไข</h5>
                 <p class="mb-1"><strong>ผู้ร้องขอ:</strong> <?= \backend\models\User::findEmployeeNameByUserId($model->recall_by) ?> (วันที่: <?= $model->recall_at ? date('d/m/Y H:i:s', strtotime($model->recall_at)) : '-' ?>)</p>
                 <p class="mb-0"><strong>เหตุผล:</strong> <?= Html::encode($model->recall_reason) ?></p>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($model->approve_status == Purch::APPROVE_STATUS_REJECTED): ?>
+            <div class="alert alert-danger border border-danger shadow-sm">
+                <h5><i class="fas fa-exclamation-circle"></i> ใบสั่งซื้อนี้ถูกไม่อนุมัติ / ส่งกลับแก้ไข</h5>
+                <?php if (!empty($model->rejected_by)): ?>
+                    <p class="mb-1"><strong>ผู้ดำเนินการ:</strong> <?= \backend\models\User::findEmployeeNameByUserId($model->rejected_by) ?> (วันที่: <?= $model->rejected_at ? date('d/m/Y H:i:s', strtotime($model->rejected_at)) : '-' ?>)</p>
+                <?php endif; ?>
+                <?php if (!empty($model->reject_reason)): ?>
+                    <p class="mb-0"><strong>รายละเอียดที่ต้องปรับปรุง/แก้ไข:</strong> <?= nl2br(Html::encode($model->reject_reason)) ?></p>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
 
@@ -913,6 +923,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                                     elseif ($log->action == 'REQUEST_RECALL') echo '<span class="badge bg-warning text-dark"><i class="fas fa-undo-alt"></i> ร้องขอ Recall</span>';
                                                     elseif ($log->action == 'APPROVE_RECALL') echo '<span class="badge bg-success"><i class="fas fa-check"></i> อนุมัติ Recall</span>';
                                                     elseif ($log->action == 'REJECT_RECALL') echo '<span class="badge bg-danger"><i class="fas fa-times"></i> ปฏิเสธ Recall</span>';
+                                                    elseif ($log->action == 'REJECT') echo '<span class="badge bg-danger"><i class="fas fa-ban"></i> ไม่อนุมัติ / ส่งกลับแก้ไข</span>';
                                                     else echo '<span class="badge bg-info">'.Html::encode($log->action).'</span>';
                                                 ?>
                                             </td>
@@ -1060,6 +1071,39 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">ยกเลิก</button>
         <button type="submit" class="btn btn-warning"><i class="fas fa-paper-plane"></i> ยืนยันส่งคำร้องขอ Recall</button>
+    </div>
+    <?php \yii\widgets\ActiveForm::end(); ?>
+<?php
+    Modal::end();
+?>
+
+    <!-- Modal สำหรับ ไม่อนุมัติ / ส่งกลับแก้ไข -->
+<?php
+    Modal::begin([
+        'id' => 'reject-modal',
+        'title' => '<h4><i class="fas fa-times-circle text-danger"></i> ไม่อนุมัติ / ส่งกลับแก้ไข ใบสั่งซื้อ</h4>',
+        'size' => Modal::SIZE_DEFAULT,
+        'options' => ['tabindex' => false],
+        'closeButton' => [
+            'class' => 'btn-close',
+            'data-bs-dismiss' => 'modal',
+            'aria-label' => 'Close',
+        ],
+    ]);
+?>
+    <?php $form = \yii\widgets\ActiveForm::begin([
+        'action' => ['reject', 'id' => $model->id],
+        'method' => 'post',
+    ]); ?>
+    <div class="modal-body">
+        <div class="form-group mb-3">
+            <label for="purch-reject-reason" class="form-label fw-bold">ระบุรายละเอียดที่ต้องการให้ปรับหรือแก้ไข <span class="text-danger">*</span></label>
+            <textarea name="reject_reason" id="purch-reject-reason" class="form-control" rows="4" required placeholder="ระบุสิ่งที่ต้องการให้ปรับปรุงหรือแก้ไข เพื่อแจ้งให้ผู้จัดทำทราบ"></textarea>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="submit" class="btn btn-danger"><i class="fas fa-paper-plane"></i> ยืนยันไม่อนุมัติ / ส่งกลับแก้ไข</button>
     </div>
     <?php \yii\widgets\ActiveForm::end(); ?>
 <?php

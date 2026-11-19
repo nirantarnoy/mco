@@ -58,6 +58,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 'value' => function ($model) {
                     if ($model->is_recall == 1) {
                         return '<span class="badge badge-warning bg-warning text-dark"><i class="fas fa-undo-alt"></i> ขอ Recall</span>';
+                    } elseif ($model->status == \backend\models\PreAdvance::STATUS_REJECTED) {
+                        return '<span class="badge badge-danger bg-danger">ไม่อนุมัติ / ส่งกลับแก้ไข</span>';
                     } elseif (!empty($model->approved_by)) {
                         return '<span class="badge badge-success">อนุมัติแล้ว</span>';
                     } elseif (!empty($model->checked_by)) {

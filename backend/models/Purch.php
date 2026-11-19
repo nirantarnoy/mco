@@ -112,12 +112,12 @@ class Purch extends ActiveRecord
         return [
             [['vendor_id'], 'required'],
             [['purch_date'], 'safe'],
-            [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by','discount_percent','vat_percent','approve_by','currency_id', 'company_id', 'job_id', 'is_recall', 'recall_by', 'is_advance'], 'integer'],
+            [['vendor_id', 'status', 'approve_status', 'created_at', 'created_by', 'updated_at', 'updated_by','discount_percent','vat_percent','approve_by','currency_id', 'company_id', 'job_id', 'is_recall', 'recall_by', 'is_advance', 'rejected_by'], 'integer'],
             [['total_amount', 'vat_amount', 'net_amount','vat_percent','discount_per','whd_tax_per','whd_tax_amount','discount_total_amount','currency_rate', 'value_amount'], 'number'],
             [['purch_no', 'vendor_name', 'footer_delivery','footer_payment','ref_no', 'invoice_no'], 'string', 'max' => 255],
-            [['note','delivery_note','payment_note', 'special_note', 'recall_reason'], 'string'],
+            [['note','delivery_note','payment_note', 'special_note', 'recall_reason', 'reject_reason'], 'string'],
             [['purch_no'], 'unique', 'filter' => ['status' => self::STATUS_ACTIVE]],
-            [['approve_date','discount_amount','fee_amount','exchange_rate', 'target_shipment_date', 'recall_at', 'payment_due_date'], 'safe'],
+            [['approve_date','discount_amount','fee_amount','exchange_rate', 'target_shipment_date', 'recall_at', 'payment_due_date', 'rejected_at'], 'safe'],
             [['is_vat','is_deposit','rev'],'integer'],
         ];
     }
@@ -143,6 +143,9 @@ class Purch extends ActiveRecord
             'recall_reason' => 'เหตุผลการขอ Recall',
             'recall_by' => 'ผู้ขอ Recall',
             'recall_at' => 'เวลาที่ขอ Recall',
+            'reject_reason' => 'เหตุผล/รายละเอียดการไม่อนุมัติ',
+            'rejected_by' => 'ผู้ไม่อนุมัติ',
+            'rejected_at' => 'เวลาที่ไม่อนุมัติ',
             'total_amount' => 'ยอดรวม',
             'discount_amount' => 'ส่วนลด',
             'vat_amount' => 'VAT',
@@ -690,8 +693,38 @@ class Purch extends ActiveRecord
         return $this->hasOne(\backend\models\User::class, ['id' => 'recall_by']);
     }
 
+    public function getRejectedUser()
+    {
+        return $this->hasOne(\backend\models\User::class, ['id' => 'rejected_by']);
+    }
+
+    public static function ensureRejectColumns()
+    {
+        try {
+            $db = Yii::$app->db;
+            $table = $db->getTableSchema(self::tableName(), true);
+            if ($table) {
+                if (!isset($table->columns['reject_reason'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'reject_reason', 'TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL')->execute();
+                } else {
+                    $db->createCommand("ALTER TABLE " . self::tableName() . " MODIFY `reject_reason` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL")->execute();
+                }
+                if (!isset($table->columns['rejected_by'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'rejected_by', 'INT(11) NULL')->execute();
+                }
+                if (!isset($table->columns['rejected_at'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'rejected_at', 'DATETIME NULL')->execute();
+                }
+                $db->getSchema()->refreshTableSchema(self::tableName());
+            }
+        } catch (\Exception $e) {
+            Yii::error('Failed to ensure reject columns for purch: ' . $e->getMessage());
+        }
+    }
+
     public static function ensureRecallColumns()
     {
+        self::ensureRejectColumns();
         try {
             $db = Yii::$app->db;
             $table = $db->getTableSchema(self::tableName(), true);

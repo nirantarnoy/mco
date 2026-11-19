@@ -27,11 +27,12 @@ class PreAdvanceController extends BaseController
                 'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['POST'],
+                    'reject' => ['POST'],
                 ],
             ],
             'actionLog' => [
                 'class' => ActionLogBehavior::class,
-                'actions' => ['create', 'update', 'delete', 'check', 'uncheck', 'approve', 'unapprove', 'view', 'print', 'request-recall', 'approve-recall', 'reject-recall'],
+                'actions' => ['create', 'update', 'delete', 'check', 'uncheck', 'approve', 'unapprove', 'reject', 'view', 'print', 'request-recall', 'approve-recall', 'reject-recall'],
             ],
         ];
     }
@@ -39,6 +40,7 @@ class PreAdvanceController extends BaseController
     public function beforeAction($action)
     {
         PreAdvance::ensureRecallColumns();
+        PreAdvance::ensureRejectColumns();
         return parent::beforeAction($action);
     }
 
@@ -117,6 +119,9 @@ class PreAdvanceController extends BaseController
         if ($model->load(Yii::$app->request->post())) {
             $transaction = Yii::$app->db->beginTransaction();
             try {
+                if ($model->status == PreAdvance::STATUS_REJECTED) {
+                    $model->status = PreAdvance::STATUS_ACTIVE;
+                }
                 if ($model->save()) {
                     $this->savePreAdvanceLines($model);
                     $this->savePreAdvanceRefs($model);
@@ -149,6 +154,9 @@ class PreAdvanceController extends BaseController
         if ($model->load(Yii::$app->request->post())) {
             $transaction = Yii::$app->db->beginTransaction();
             try {
+                if ($model->status == PreAdvance::STATUS_REJECTED) {
+                    $model->status = PreAdvance::STATUS_ACTIVE;
+                }
                 if ($model->save()) {
                     $this->savePreAdvanceLines($model);
                     $this->savePreAdvanceRefs($model);
@@ -260,8 +268,66 @@ class PreAdvanceController extends BaseController
         $model->approved_at = $now;
 
         if ($model->save(false)) {
+            \backend\models\ActionLogModel::logModelAction(
+                'APPROVE',
+                $model,
+                [
+                    'checked_by' => $model->checked_by,
+                    'checked_at' => $model->checked_at,
+                    'approved_by' => $model->approved_by,
+                    'approved_at' => $model->approved_at,
+                ],
+                \backend\models\ActionLogModel::STATUS_SUCCESS,
+                'ตรวจสอบและอนุมัติรายการ Payment Advance'
+            );
             Yii::$app->session->setFlash('success', 'บันทึกตรวจสอบและอนุมัติรายการเรียบร้อยแล้ว');
         }
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    public function actionReject($id)
+    {
+        $model = $this->findModel($id);
+        $userId = Yii::$app->user->id;
+
+        if (!self::canApprovePreAdvance($userId, null, $model)) {
+            throw new \yii\web\ForbiddenHttpException('คุณไม่มีสิทธิ์ในการไม่อนุมัติ/ส่งกลับแก้ไขเอกสาร Payment Advance (อิงตาม Permission Matrix)');
+        }
+
+        PreAdvance::ensureRejectColumns();
+
+        $rejectReason = trim(Yii::$app->request->post('reject_reason', ''));
+        if (empty($rejectReason)) {
+            Yii::$app->session->setFlash('error', 'กรุณาระบุรายละเอียดที่ต้องการให้ปรับหรือแก้ไข');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $model->status = PreAdvance::STATUS_REJECTED;
+        $model->reject_reason = $rejectReason;
+        $model->rejected_by = $userId;
+        $model->rejected_at = date('Y-m-d H:i:s');
+        $model->checked_by = null;
+        $model->checked_at = null;
+        $model->approved_by = null;
+        $model->approved_at = null;
+
+        if ($model->save(false)) {
+            \backend\models\ActionLogModel::logModelAction(
+                'REJECT',
+                $model,
+                [
+                    'reject_reason' => $rejectReason,
+                    'rejected_by' => $userId,
+                    'rejected_at' => $model->rejected_at,
+                ],
+                \backend\models\ActionLogModel::STATUS_SUCCESS,
+                'ไม่อนุมัติ / ส่งกลับแก้ไข Payment Advance: ' . $rejectReason
+            );
+            Yii::$app->session->setFlash('success', 'ส่งกลับเพื่อแก้ไข Payment Advance เรียบร้อยแล้ว');
+        } else {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถส่งกลับเพื่อแก้ไขได้');
+        }
+
         return $this->redirect(['view', 'id' => $model->id]);
     }
 

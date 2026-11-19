@@ -587,6 +587,10 @@ class PurchController extends BaseController
                         $model->rev = (int)$model->rev + 1;
                     }
 
+                    if ($model->approve_status == Purch::APPROVE_STATUS_REJECTED) {
+                        $model->approve_status = Purch::APPROVE_STATUS_PENDING;
+                    }
+
                     if ($model->save()) {
                         $totalAmount = 0;
                         $discountAmount = 0;
@@ -1166,17 +1170,39 @@ class PurchController extends BaseController
      */
     public function actionReject($id)
     {
-        if (!\Yii::$app->user->can('purch/reject')) {
+        if (!\Yii::$app->user->can('purch/reject') && !\backend\models\User::isUserAdmin()) {
             throw new ForbiddenHttpException('คุณไม่ได้รับอนุญาตให้ใช้ส่วนนี้ (purch/reject)');
         }
+        Purch::ensureRejectColumns();
         $model = $this->findModel($id);
-        $model->approve_status = Purch::APPROVE_STATUS_REJECTED;
-        $model->status = Purch::STATUS_CANCELLED;
 
-        if ($model->save()) {
-            Yii::$app->session->setFlash('success', 'ไม่อนุมัติใบสั่งซื้อเรียบร้อยแล้ว');
+        $rejectReason = trim(Yii::$app->request->post('reject_reason', ''));
+        if (empty($rejectReason)) {
+            Yii::$app->session->setFlash('error', 'กรุณาระบุรายละเอียดที่ต้องการให้ปรับหรือแก้ไข');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $model->approve_status = Purch::APPROVE_STATUS_REJECTED;
+        $model->status = Purch::STATUS_ACTIVE;
+        $model->reject_reason = $rejectReason;
+        $model->rejected_by = Yii::$app->user->id;
+        $model->rejected_at = date('Y-m-d H:i:s');
+
+        if ($model->save(false)) {
+            \backend\models\ActionLogModel::logModelAction(
+                'REJECT',
+                $model,
+                [
+                    'reject_reason' => $rejectReason,
+                    'rejected_by' => Yii::$app->user->id,
+                    'rejected_at' => $model->rejected_at,
+                ],
+                \backend\models\ActionLogModel::STATUS_SUCCESS,
+                'ไม่อนุมัติ / ส่งกลับแก้ไขใบสั่งซื้อ: ' . $rejectReason
+            );
+            Yii::$app->session->setFlash('success', 'ส่งกลับเพื่อแก้ไขใบสั่งซื้อเรียบร้อยแล้ว');
         } else {
-            Yii::$app->session->setFlash('error', 'ไม่สามารถปฏิเสธใบสั่งซื้อได้');
+            Yii::$app->session->setFlash('error', 'ไม่สามารถส่งกลับเพื่อแก้ไขใบสั่งซื้อได้');
         }
 
         return $this->redirect(['view', 'id' => $model->id]);

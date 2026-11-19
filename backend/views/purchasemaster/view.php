@@ -19,13 +19,20 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="card-tools">
                 <?php if ($model->status != \backend\models\PurchaseMaster::STATUS_CANCELLED): ?>
                     <?php if ($model->approve_status == \backend\models\PurchaseMaster::APPROVE_STATUS_PENDING): ?>
-                        <?= Html::a('<i class="fas fa-check"></i> อนุมัติ', ['approve', 'id' => $model->id], [
-                            'class' => 'btn btn-success btn-sm',
-                            'data' => [
-                                'confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบซื้อนี้?',
-                                'method' => 'post',
-                            ],
-                        ]) ?>
+                        <?php if (\Yii::$app->user->can('purchasemaster/approve') || \backend\models\User::isUserAdmin()): ?>
+                            <?= Html::a('<i class="fas fa-check"></i> อนุมัติ', ['approve', 'id' => $model->id], [
+                                'class' => 'btn btn-success btn-sm',
+                                'data' => [
+                                    'confirm' => 'คุณแน่ใจหรือไม่ที่จะอนุมัติใบซื้อนี้?',
+                                    'method' => 'post',
+                                ],
+                            ]) ?>
+                        <?php endif; ?>
+                        <?php if (\Yii::$app->user->can('purchasemaster/reject') || \Yii::$app->user->can('purchasemaster/approve') || \backend\models\User::isUserAdmin()): ?>
+                            <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#reject-modal" data-bs-toggle="modal" data-bs-target="#reject-modal">
+                                <i class="fas fa-times-circle"></i> ไม่อนุมัติ / ส่งกลับแก้ไข
+                            </button>
+                        <?php endif; ?>
                     <?php endif; ?>
                     <?php if ($model->approve_status == \backend\models\PurchaseMaster::APPROVE_STATUS_APPROVED): ?>
                         <?php if ($model->is_recall != 1): ?>
@@ -69,6 +76,18 @@ $this->params['breadcrumbs'][] = $this->title;
                     <h5><i class="fas fa-exclamation-triangle"></i> เอกสารนี้มีคำร้องขอ Recall เพื่อแก้ไข</h5>
                     <p class="mb-1"><strong>ผู้ร้องขอ:</strong> <?= \backend\models\User::findEmployeeNameByUserId($model->recall_by) ?> (วันที่: <?= $model->recall_at ? date('d/m/Y H:i:s', strtotime($model->recall_at)) : '-' ?>)</p>
                     <p class="mb-0"><strong>เหตุผล:</strong> <?= Html::encode($model->recall_reason) ?></p>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($model->approve_status == \backend\models\PurchaseMaster::APPROVE_STATUS_REJECTED): ?>
+                <div class="alert alert-danger border border-danger shadow-sm mb-3">
+                    <h5><i class="fas fa-exclamation-circle"></i> บันทึกซื้อนี้ถูกไม่อนุมัติ / ส่งกลับแก้ไข</h5>
+                    <?php if (!empty($model->rejected_by)): ?>
+                        <p class="mb-1"><strong>ผู้ดำเนินการ:</strong> <?= \backend\models\User::findEmployeeNameByUserId($model->rejected_by) ?> (วันที่: <?= $model->rejected_at ? date('d/m/Y H:i:s', strtotime($model->rejected_at)) : '-' ?>)</p>
+                    <?php endif; ?>
+                    <?php if (!empty($model->reject_reason)): ?>
+                        <p class="mb-0"><strong>รายละเอียดที่ต้องปรับปรุง/แก้ไข:</strong> <?= nl2br(Html::encode($model->reject_reason)) ?></p>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
 
@@ -437,4 +456,243 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php \yii\widgets\ActiveForm::end(); ?>
     <?php \yii\bootstrap4\Modal::end(); ?>
 
+    <!-- Modal สำหรับ ไม่อนุมัติ / ส่งกลับแก้ไข -->
+    <?php
+    \yii\bootstrap4\Modal::begin([
+        'id' => 'reject-modal',
+        'title' => '<h4><i class="fas fa-times-circle text-danger"></i> ไม่อนุมัติ / ส่งกลับแก้ไข บันทึกซื้อ (NPR)</h4>',
+        'size' => \yii\bootstrap4\Modal::SIZE_DEFAULT,
+        'options' => ['tabindex' => false],
+        'closeButton' => [
+            'class' => 'btn-close',
+            'data-bs-dismiss' => 'modal',
+            'aria-label' => 'Close',
+        ],
+    ]);
+    ?>
+    <?php $form = \yii\widgets\ActiveForm::begin([
+        'action' => ['reject', 'id' => $model->id],
+        'method' => 'post',
+    ]); ?>
+    <div class="modal-body">
+        <div class="form-group mb-3">
+            <label for="pm-reject-reason" class="form-label fw-bold">ระบุรายละเอียดที่ต้องการให้ปรับหรือแก้ไข <span class="text-danger">*</span></label>
+            <textarea name="reject_reason" id="pm-reject-reason" class="form-control" rows="4" required placeholder="ระบุสิ่งที่ต้องการให้ปรับปรุงหรือแก้ไข เพื่อแจ้งให้ผู้จัดทำทราบ"></textarea>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">ยกเลิก</button>
+        <button type="submit" class="btn btn-danger"><i class="fas fa-paper-plane"></i> ยืนยันไม่อนุมัติ / ส่งกลับแก้ไข</button>
+    </div>
+    <?php \yii\widgets\ActiveForm::end(); ?>
+    <?php \yii\bootstrap4\Modal::end(); ?>
+
+    <!-- Modal สำหรับแสดง Diff -->
+    <?php
+    \yii\bootstrap4\Modal::begin([
+        'id' => 'diff-modal',
+        'title' => '<h4><i class="fas fa-exchange-alt"></i> รายละเอียดการเปลี่ยนแปลง</h4>',
+        'size' => \yii\bootstrap4\Modal::SIZE_LARGE,
+        'options' => ['tabindex' => false],
+        'closeButton' => [
+            'class' => 'btn-close',
+            'data-bs-dismiss' => 'modal',
+            'aria-label' => 'Close',
+        ],
+    ]);
+    echo '<div id="diff-modal-content"></div>';
+    \yii\bootstrap4\Modal::end();
+    ?>
+
+    <!-- ประวัติการทำรายการ Action Log -->
+    <?php 
+    $userId = \Yii::$app->user->id;
+    $isAdmin = \backend\models\User::isUserAdmin();
+    $isMcoAdmin = \backend\models\User::checkhasrole($userId, 'mcoadmin');
+    $isExactAdmin = \backend\models\User::checkhasrole($userId, 'admin');
+    if ($isAdmin || $isMcoAdmin || $isExactAdmin): 
+    ?>
+    <div class="card mt-4">
+        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center flex-wrap">
+            <h5 class="card-title mb-0"><i class="fas fa-history"></i> ประวัติการทำรายการบันทึกซื้อ (None PR)</h5>
+            <div class="card-tools d-flex align-items-center gap-2">
+                <a href="<?= \yii\helpers\Url::to(['action-log/index', 'ActionLogSearchModel[model_class]' => get_class($model), 'ActionLogSearchModel[model_id]' => $model->id]) ?>" class="btn btn-xs btn-outline-light btn-sm text-white" target="_blank" title="ดูบันทึกเหตุการณ์ทั้งหมดของระบบ">
+                    <i class="fas fa-external-link-alt"></i> เปิดหน้า Action Log กลาง
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <?php
+            $rawLogs = \backend\models\ActionLogModel::find()
+                ->where(['model_class' => get_class($model), 'model_id' => $model->id])
+                ->orderBy(['created_at' => SORT_DESC])
+                ->all();
+
+            $filteredLogs = array_filter($rawLogs, function($log) {
+                if ($log->action === 'CONTROLLER_ACTION') {
+                    $actionId = $log->action_method ?? '';
+                    if (empty($actionId) && !empty($log->data)) {
+                        $data = $log->getFormattedData();
+                        $actionId = $data['action_id'] ?? '';
+                    }
+                    if (in_array($actionId, ['view', 'print', 'update'])) {
+                        return false;
+                    }
+                }
+
+                if ($log->action === 'MODEL_UPDATE') {
+                    $data = $log->getFormattedData();
+                    $changes = $data['changed_attributes'] ?? [];
+                    $meaningfulChanges = array_filter($changes, function($val, $key) {
+                        return !in_array($key, ['updated_at', 'updated_by']);
+                    }, ARRAY_FILTER_USE_BOTH);
+
+                    if (empty($meaningfulChanges)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+            ?>
+
+            <ul class="nav nav-pills mb-3" id="pmLogTab" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active btn-sm" id="pm-filtered-tab" data-bs-toggle="pill" data-bs-target="#pm-filtered-log-pane" data-toggle="pill" href="#pm-filtered-log-pane" role="tab" type="button">
+                        <i class="fas fa-filter"></i> ประวัติสำคัญ/แก้ไขเนื้อหา (<?= count($filteredLogs) ?>)
+                    </button>
+                </li>
+                <li class="nav-item ms-1">
+                    <button class="nav-link btn-sm" id="pm-all-tab" data-bs-toggle="pill" data-bs-target="#pm-all-log-pane" data-toggle="pill" href="#pm-all-log-pane" role="tab" type="button">
+                        <i class="fas fa-list-ul"></i> ประวัติทั้งหมดสำหรับ Admin (<?= count($rawLogs) ?>)
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="pmLogTabContent">
+                <div class="tab-pane fade show active" id="pm-filtered-log-pane" role="tabpanel">
+                    <?php if (!empty($filteredLogs)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped table-sm" style="font-size: 13px; white-space: nowrap;">
+                                <thead>
+                                    <tr>
+                                        <th>เวลา</th>
+                                        <th>ผู้ใช้งาน</th>
+                                        <th>การกระทำ</th>
+                                        <th>รายละเอียดเพิ่มเติม</th>
+                                        <th>Diff (เปรียบเทียบ)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($filteredLogs as $log): ?>
+                                        <tr>
+                                            <td><?= date('d/m/Y H:i:s', strtotime($log->created_at)) ?></td>
+                                            <td><?= Html::encode($log->username) ?></td>
+                                            <td>
+                                                <?php
+                                                    if ($log->action == 'MODEL_CREATE') echo '<span class="badge bg-success">สร้าง</span>';
+                                                    elseif ($log->action == 'MODEL_UPDATE') echo '<span class="badge bg-warning">แก้ไข</span>';
+                                                    elseif ($log->action == 'MODEL_DELETE') echo '<span class="badge bg-danger">ลบ</span>';
+                                                    elseif ($log->action == 'REQUEST_RECALL') echo '<span class="badge bg-warning text-dark"><i class="fas fa-undo-alt"></i> ร้องขอ Recall</span>';
+                                                    elseif ($log->action == 'APPROVE_RECALL') echo '<span class="badge bg-success"><i class="fas fa-check"></i> อนุมัติ Recall</span>';
+                                                    elseif ($log->action == 'REJECT_RECALL') echo '<span class="badge bg-danger"><i class="fas fa-times"></i> ปฏิเสธ Recall</span>';
+                                                    elseif ($log->action == 'REJECT') echo '<span class="badge bg-danger"><i class="fas fa-ban"></i> ไม่อนุมัติ / ส่งกลับแก้ไข</span>';
+                                                    elseif ($log->action == 'APPROVE') echo '<span class="badge bg-success"><i class="fas fa-check"></i> อนุมัติ</span>';
+                                                    else echo '<span class="badge bg-info">'.Html::encode($log->action).'</span>';
+                                                ?>
+                                            </td>
+                                            <td><?= Html::encode($log->message) ?></td>
+                                            <td>
+                                                <?php if ($log->action == 'MODEL_UPDATE'): ?>
+                                                    <button type="button" class="btn btn-sm btn-info btn-view-diff" data-id="<?= $log->id ?>">
+                                                        <i class="fas fa-exchange-alt"></i> ดูส่วนที่ถูกแก้
+                                                    </button>
+                                                <?php endif; ?>
+                                                <a href="<?= \yii\helpers\Url::to(['action-log/view', 'id' => $log->id]) ?>" class="btn btn-sm btn-secondary" target="_blank">
+                                                    <i class="fas fa-eye"></i> รายละเอียดแบบเต็ม
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <div class="alert alert-info mb-0">ยังไม่มีประวัติการแก้ไขเนื้อหา</div>
+                    <?php endif; ?>
+                </div>
+
+                <div class="tab-pane fade" id="pm-all-log-pane" role="tabpanel">
+                    <?php if (!empty($rawLogs)): ?>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped table-sm" style="font-size: 13px; white-space: nowrap;">
+                                <thead>
+                                    <tr>
+                                        <th>เวลา</th>
+                                        <th>ผู้ใช้งาน</th>
+                                        <th>Action Type</th>
+                                        <th>รายละเอียด / ข้อความ</th>
+                                        <th>IP Address</th>
+                                        <th>Diff / รายละเอียด</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($rawLogs as $log): ?>
+                                        <tr>
+                                            <td><?= date('d/m/Y H:i:s', strtotime($log->created_at)) ?></td>
+                                            <td><?= Html::encode($log->username) ?></td>
+                                            <td>
+                                                <?php
+                                                    if ($log->action == 'MODEL_CREATE') echo '<span class="badge bg-success">สร้าง (Model)</span>';
+                                                    elseif ($log->action == 'MODEL_UPDATE') echo '<span class="badge bg-warning">แก้ไข (Model)</span>';
+                                                    elseif ($log->action == 'MODEL_DELETE') echo '<span class="badge bg-danger">ลบ (Model)</span>';
+                                                    elseif ($log->action == 'CONTROLLER_ACTION') echo '<span class="badge bg-info">Action: ' . Html::encode($log->action_method) . '</span>';
+                                                    elseif ($log->action == 'REQUEST_RECALL') echo '<span class="badge bg-warning text-dark"><i class="fas fa-undo-alt"></i> ร้องขอ Recall</span>';
+                                                    elseif ($log->action == 'APPROVE_RECALL') echo '<span class="badge bg-success"><i class="fas fa-check"></i> อนุมัติ Recall</span>';
+                                                    elseif ($log->action == 'REJECT_RECALL') echo '<span class="badge bg-danger"><i class="fas fa-times"></i> ปฏิเสธ Recall</span>';
+                                                    elseif ($log->action == 'REJECT') echo '<span class="badge bg-danger"><i class="fas fa-ban"></i> ไม่อนุมัติ / ส่งกลับแก้ไข</span>';
+                                                    elseif ($log->action == 'APPROVE') echo '<span class="badge bg-success"><i class="fas fa-check"></i> อนุมัติ</span>';
+                                                    else echo '<span class="badge bg-secondary">'.Html::encode($log->action).'</span>';
+                                                ?>
+                                            </td>
+                                            <td><?= Html::encode($log->message) ?></td>
+                                            <td><?= Html::encode($log->ip_address) ?></td>
+                                            <td>
+                                                <?php if ($log->action == 'MODEL_UPDATE'): ?>
+                                                    <button type="button" class="btn btn-sm btn-info btn-view-diff" data-id="<?= $log->id ?>">
+                                                        <i class="fas fa-exchange-alt"></i> ดู Diff
+                                                    </button>
+                                                <?php endif; ?>
+                                                <a href="<?= \yii\helpers\Url::to(['action-log/view', 'id' => $log->id]) ?>" class="btn btn-sm btn-secondary" target="_blank">
+                                                    <i class="fas fa-eye"></i> รายละเอียดแบบเต็ม
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <div class="alert alert-info mb-0">ไม่มีประวัติในระบบ</div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
 </div>
+
+<script>
+$(document).on('click', '.btn-view-diff', function() {
+    var id = $(this).data('id');
+    $('#diff-modal-content').html('<div class="text-center p-3"><i class="fas fa-spinner fa-spin"></i> กำลังโหลดข้อมูล...</div>');
+    $('#diff-modal').modal('show');
+    
+    $.get('<?= \yii\helpers\Url::to(['view-diff']) ?>', {id: id}, function(data) {
+        $('#diff-modal-content').html(data);
+    }).fail(function() {
+        $('#diff-modal-content').html('<div class="alert alert-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>');
+    });
+});
+</script>

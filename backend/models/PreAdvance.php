@@ -14,6 +14,7 @@ class PreAdvance extends ActiveRecord
 {
     const STATUS_DRAFT = 0;
     const STATUS_ACTIVE = 1;
+    const STATUS_REJECTED = 2;
     const STATUS_CANCELLED = 100;
 
     /**
@@ -44,12 +45,12 @@ class PreAdvance extends ActiveRecord
     public function rules()
     {
         return [
-            [['trans_date', 'checked_at', 'approved_at', 'recall_at'], 'safe'],
-            [['vendor_id', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'company_id', 'checked_by', 'approved_by', 'is_recall', 'recall_by'], 'integer'],
+            [['trans_date', 'checked_at', 'approved_at', 'recall_at', 'rejected_at'], 'safe'],
+            [['vendor_id', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by', 'company_id', 'checked_by', 'approved_by', 'is_recall', 'recall_by', 'rejected_by'], 'integer'],
             [['amount'], 'number'],
             [['pre_advance_no'], 'string', 'max' => 50],
             [['recipient_name'], 'string', 'max' => 255],
-            [['remark', 'recall_reason'], 'string'],
+            [['remark', 'recall_reason', 'reject_reason'], 'string'],
             [['pre_advance_no'], 'unique'],
         ];
     }
@@ -72,6 +73,9 @@ class PreAdvance extends ActiveRecord
             'recall_reason' => 'เหตุผลการขอ Recall',
             'recall_by' => 'ผู้ขอ Recall',
             'recall_at' => 'เวลาที่ขอ Recall',
+            'reject_reason' => 'เหตุผล/รายละเอียดการไม่อนุมัติ',
+            'rejected_by' => 'ผู้ไม่อนุมัติ',
+            'rejected_at' => 'เวลาที่ไม่อนุมัติ',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
             'created_by' => 'Created By',
@@ -181,18 +185,21 @@ class PreAdvance extends ActiveRecord
         // 1. สร้างใบเบิก
         $steps[] = ['name' => 'สร้างใบเบิก', 'status' => 1, 'date' => $this->created_at ? date('d/m/Y H:i', $this->created_at) : ''];
         
-        // 2. ตรวจสอบ
-        if ($this->checked_at) {
-            $steps[] = ['name' => 'ตรวจสอบแล้ว', 'status' => 1, 'date' => date('d/m/Y H:i', strtotime($this->checked_at))];
+        // 2. ตรวจสอบ / อนุมัติ
+        if ($this->status == self::STATUS_REJECTED) {
+            $steps[] = ['name' => 'ส่งกลับแก้ไข (ไม่อนุมัติ)', 'status' => 2, 'date' => $this->rejected_at ? date('d/m/Y H:i', strtotime($this->rejected_at)) : ''];
         } else {
-            $steps[] = ['name' => 'รอตรวจสอบ', 'status' => 0, 'date' => ''];
-        }
+            if ($this->checked_at) {
+                $steps[] = ['name' => 'ตรวจสอบแล้ว', 'status' => 1, 'date' => date('d/m/Y H:i', strtotime($this->checked_at))];
+            } else {
+                $steps[] = ['name' => 'รอตรวจสอบ', 'status' => 0, 'date' => ''];
+            }
 
-        // 3. อนุมัติ
-        if ($this->approved_at) {
-            $steps[] = ['name' => 'อนุมัติแล้ว', 'status' => 1, 'date' => date('d/m/Y H:i', strtotime($this->approved_at))];
-        } else {
-            $steps[] = ['name' => 'รออนุมัติ', 'status' => 0, 'date' => ''];
+            if ($this->approved_at) {
+                $steps[] = ['name' => 'อนุมัติแล้ว', 'status' => 1, 'date' => date('d/m/Y H:i', strtotime($this->approved_at))];
+            } else {
+                $steps[] = ['name' => 'รออนุมัติ', 'status' => 0, 'date' => ''];
+            }
         }
 
         // 4. จ่ายเงิน/PV
@@ -241,8 +248,38 @@ class PreAdvance extends ActiveRecord
         return $this->hasOne(\backend\models\User::class, ['id' => 'recall_by']);
     }
 
+    public function getRejectedUser()
+    {
+        return $this->hasOne(\backend\models\User::class, ['id' => 'rejected_by']);
+    }
+
+    public static function ensureRejectColumns()
+    {
+        try {
+            $db = Yii::$app->db;
+            $table = $db->getTableSchema(self::tableName(), true);
+            if ($table) {
+                if (!isset($table->columns['reject_reason'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'reject_reason', 'TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL')->execute();
+                } else {
+                    $db->createCommand("ALTER TABLE " . self::tableName() . " MODIFY `reject_reason` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL")->execute();
+                }
+                if (!isset($table->columns['rejected_by'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'rejected_by', 'INT(11) NULL')->execute();
+                }
+                if (!isset($table->columns['rejected_at'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'rejected_at', 'DATETIME NULL')->execute();
+                }
+                $db->getSchema()->refreshTableSchema(self::tableName());
+            }
+        } catch (\Exception $e) {
+            Yii::error('Failed to ensure reject columns for pre_advance: ' . $e->getMessage());
+        }
+    }
+
     public static function ensureRecallColumns()
     {
+        self::ensureRejectColumns();
         try {
             $db = Yii::$app->db;
             $table = $db->getTableSchema(self::tableName(), true);

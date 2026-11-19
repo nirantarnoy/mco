@@ -311,12 +311,13 @@ $this->params['breadcrumbs'][] = $this->title;
                         return '';
                     },
                     'reject' => function ($url, $model, $key) {
-                        if ($model->approve_status == Purch::APPROVE_STATUS_PENDING && \Yii::$app->user->can('purch/reject')) {
-                            return Html::a('<i class="fas fa-times"></i>', ['reject', 'id' => $model->id], [
-                                'title' => 'ไม่อนุมัติ',
-                                'class' => 'btn btn-sm btn-outline-warning me-1 mb-1',
-                                'data-confirm' => 'คุณแน่ใจหรือไม่ที่จะไม่อนุมัติใบสั่งซื้อนี้?',
-                                'data-method' => 'post',
+                        if ($model->approve_status == Purch::APPROVE_STATUS_PENDING && (\Yii::$app->user->can('purch/reject') || \backend\models\User::isUserAdmin())) {
+                            return Html::button('<i class="fas fa-times"></i>', [
+                                'title' => 'ไม่อนุมัติ / ส่งกลับแก้ไข',
+                                'class' => 'btn btn-sm btn-outline-warning me-1 mb-1 btn-reject-index',
+                                'data-id' => $model->id,
+                                'data-no' => $model->purch_no,
+                                'data-url' => Url::to(['reject', 'id' => $model->id]),
                                 'data-pjax' => '0'
                             ]);
                         }
@@ -405,10 +406,44 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
   </div>
 </div>
+<!-- Modal สำหรับไม่อนุมัติ / ส่งกลับแก้ไข ในหน้า Index -->
+<div class="modal fade" id="rejectIndexModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="rejectIndexForm" method="post" action="">
+        <input type="hidden" name="<?= Yii::$app->request->csrfParam ?>" value="<?= Yii::$app->request->csrfToken ?>" />
+        <div class="modal-header">
+          <h5 class="modal-title fs-6 text-danger"><i class="fas fa-times-circle"></i> ไม่อนุมัติ / ส่งกลับแก้ไข (<span id="rejectIndexDocNo"></span>)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group mb-3">
+            <label class="form-label fw-bold">ระบุรายละเอียดที่ต้องการให้ปรับหรือแก้ไข <span class="text-danger">*</span></label>
+            <textarea name="reject_reason" id="rejectIndexReason" class="form-control" rows="4" required placeholder="ระบุสิ่งที่ต้องการให้ปรับปรุงหรือแก้ไข เพื่อแจ้งให้ผู้จัดทำทราบ"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-dismiss="modal">ยกเลิก</button>
+          <button type="submit" class="btn btn-danger"><i class="fas fa-paper-plane"></i> ยืนยันไม่อนุมัติ / ส่งกลับแก้ไข</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script>
 function showSeqModal(btn) {
     var html = $(btn).data('html');
     $('#seqModalBody').html(html);
     $('#seqModal').modal('show');
 }
+
+$(document).on('click', '.btn-reject-index', function() {
+    var url = $(this).data('url');
+    var no = $(this).data('no');
+    $('#rejectIndexForm').attr('action', url);
+    $('#rejectIndexDocNo').text(no);
+    $('#rejectIndexReason').val('');
+    $('#rejectIndexModal').modal('show');
+});
 </script>

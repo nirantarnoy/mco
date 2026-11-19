@@ -46,6 +46,7 @@ class PurchasemasterController extends BaseController
                     'actions' => [
                         'delete' => ['POST'],
                         'approve' => ['POST'],
+                        'reject' => ['POST'],
                     ],
                 ],
             ]
@@ -60,11 +61,76 @@ class PurchasemasterController extends BaseController
         $model->approve_by = Yii::$app->user->id;
         $model->approve_date = date('Y-m-d H:i:s');
         if ($model->save(false)) {
+            \backend\models\ActionLogModel::logModelAction(
+                'APPROVE',
+                $model,
+                [
+                    'approve_by' => $model->approve_by,
+                    'approve_date' => $model->approve_date,
+                ],
+                \backend\models\ActionLogModel::STATUS_SUCCESS,
+                'อนุมัติบันทึกการซื้อ (None PR)'
+            );
             Yii::$app->session->setFlash('success', 'อนุมัติใบซื้อเรียบร้อยแล้ว');
         } else {
             Yii::$app->session->setFlash('error', 'ไม่สามารถอนุมัติได้');
         }
         return $this->redirect(['view', 'id' => $id]);
+    }
+
+    /**
+     * Reject purchase master (none-pr)
+     * @param int $id
+     * @return Response
+     */
+    public function actionReject($id)
+    {
+        if (!\Yii::$app->user->can('purchasemaster/reject') && !\Yii::$app->user->can('purchasemaster/approve') && !\backend\models\User::isUserAdmin()) {
+            throw new \yii\web\ForbiddenHttpException('คุณไม่ได้รับอนุญาตให้ใช้ส่วนนี้ (purchasemaster/reject)');
+        }
+        \backend\models\PurchaseMaster::ensureRejectColumns();
+        $model = $this->findModel($id);
+
+        $rejectReason = trim(Yii::$app->request->post('reject_reason', ''));
+        if (empty($rejectReason)) {
+            Yii::$app->session->setFlash('error', 'กรุณาระบุรายละเอียดที่ต้องการให้ปรับหรือแก้ไข');
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+
+        $model->approve_status = \backend\models\PurchaseMaster::APPROVE_STATUS_REJECTED;
+        $model->reject_reason = $rejectReason;
+        $model->rejected_by = Yii::$app->user->id;
+        $model->rejected_at = date('Y-m-d H:i:s');
+
+        if ($model->save(false)) {
+            \backend\models\ActionLogModel::logModelAction(
+                'REJECT',
+                $model,
+                [
+                    'reject_reason' => $rejectReason,
+                    'rejected_by' => Yii::$app->user->id,
+                    'rejected_at' => $model->rejected_at,
+                ],
+                \backend\models\ActionLogModel::STATUS_SUCCESS,
+                'ไม่อนุมัติ / ส่งกลับแก้ไขบันทึกซื้อ (NPR): ' . $rejectReason
+            );
+            Yii::$app->session->setFlash('success', 'ส่งกลับเพื่อแก้ไขบันทึกการซื้อเรียบร้อยแล้ว');
+        } else {
+            Yii::$app->session->setFlash('error', 'ไม่สามารถส่งกลับเพื่อแก้ไขบันทึกการซื้อได้');
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
+    }
+
+    public function actionViewDiff($id)
+    {
+        $log = \backend\models\ActionLogModel::findOne($id);
+        if ($log === null) {
+            throw new \yii\web\NotFoundHttpException('ไม่พบข้อมูล Log');
+        }
+        return $this->renderAjax('_view_diff', [
+            'model' => $log,
+        ]);
     }
 
     /**
@@ -454,6 +520,10 @@ class PurchasemasterController extends BaseController
                         $next_rev = $current_rev + 1;
                         \backend\models\DocumentRevision::createNprRevision($oldModel, $current_rev);
                         $model->rev = $next_rev;
+                    }
+
+                    if ($model->approve_status == \backend\models\PurchaseMaster::APPROVE_STATUS_REJECTED) {
+                        $model->approve_status = \backend\models\PurchaseMaster::APPROVE_STATUS_PENDING;
                     }
 
                     // บันทึก Master

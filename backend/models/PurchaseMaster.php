@@ -74,6 +74,9 @@ class PurchaseMaster extends \yii\db\ActiveRecord
         return [
             TimestampBehavior::class,
             BlameableBehavior::class,
+            'actionLog' => [
+                'class' => \app\behaviors\ActionLogBehavior::class,
+            ],
         ];
     }
 
@@ -84,11 +87,11 @@ class PurchaseMaster extends \yii\db\ActiveRecord
     {
         return [
             [['docnum', 'docdat'], 'required'],
-            [['docdat', 'duedat', 'vatdat', 'created_at', 'updated_at', 'vat_period', 'recall_at', 'payment_due_date', 'approve_date'], 'safe'],
-            [['status', 'approve_status', 'approve_by', 'created_by', 'updated_by', 'department_id', 'company_id', 'currency_id', 'is_deposit', 'is_recall', 'recall_by', 'is_advance'], 'integer'],
+            [['docdat', 'duedat', 'vatdat', 'created_at', 'updated_at', 'vat_period', 'recall_at', 'payment_due_date', 'approve_date', 'rejected_at'], 'safe'],
+            [['status', 'approve_status', 'approve_by', 'created_by', 'updated_by', 'department_id', 'company_id', 'currency_id', 'is_deposit', 'is_recall', 'recall_by', 'is_advance', 'rejected_by'], 'integer'],
             [['vatpr0', 'amount', 'unitpr', 'vat_percent', 'vat_amount', 'tax_percent', 'tax_amount', 'total_amount', 'exchange_rate'], 'number', 'min' => 0],
             [['tax_amount', 'total_amount'], 'default', 'value' => 0],
-            [['remark', 'recall_reason'], 'string'],
+            [['remark', 'recall_reason', 'reject_reason'], 'string'],
             [['docnum', 'job_no', 'discod', 'orgnum', 'disc'], 'string', 'max' => 50],
             [['supcod', 'taxid'], 'string', 'max' => 20],
             [['supnam', 'addr01', 'addr02', 'addr03', 'invoice_no', 'vat_period', 'additional_note', 'refnum'], 'string', 'max' => 255],
@@ -143,6 +146,9 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             'recall_reason' => 'เหตุผลการขอ Recall',
             'recall_by' => 'ผู้ขอ Recall',
             'recall_at' => 'เวลาที่ขอ Recall',
+            'reject_reason' => 'เหตุผล/รายละเอียดการไม่อนุมัติ',
+            'rejected_by' => 'ผู้ไม่อนุมัติ',
+            'rejected_at' => 'เวลาที่ไม่อนุมัติ',
             'created_at' => 'สร้างเมื่อ',
             'updated_at' => 'แก้ไขเมื่อ',
             'created_by' => 'สร้างโดย',
@@ -533,8 +539,38 @@ class PurchaseMaster extends \yii\db\ActiveRecord
         return $this->hasOne(\backend\models\User::class, ['id' => 'recall_by']);
     }
 
+    public function getRejectedUser()
+    {
+        return $this->hasOne(\backend\models\User::class, ['id' => 'rejected_by']);
+    }
+
+    public static function ensureRejectColumns()
+    {
+        try {
+            $db = Yii::$app->db;
+            $table = $db->getTableSchema(self::tableName(), true);
+            if ($table) {
+                if (!isset($table->columns['reject_reason'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'reject_reason', 'TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL')->execute();
+                } else {
+                    $db->createCommand("ALTER TABLE " . self::tableName() . " MODIFY `reject_reason` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL")->execute();
+                }
+                if (!isset($table->columns['rejected_by'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'rejected_by', 'INT(11) NULL')->execute();
+                }
+                if (!isset($table->columns['rejected_at'])) {
+                    $db->createCommand()->addColumn(self::tableName(), 'rejected_at', 'DATETIME NULL')->execute();
+                }
+                $db->getSchema()->refreshTableSchema(self::tableName());
+            }
+        } catch (\Exception $e) {
+            Yii::error('Failed to ensure reject columns for purchase_master: ' . $e->getMessage());
+        }
+    }
+
     public static function ensureRecallColumns()
     {
+        self::ensureRejectColumns();
         try {
             $db = Yii::$app->db;
             $table = $db->getTableSchema(self::tableName(), true);
