@@ -57,3 +57,4 @@ class m261119_151800_add_reject_columns_to_approval_tables extends Migration
         }
     }
 }
+
