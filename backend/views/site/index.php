@@ -25,29 +25,48 @@ $this->registerJsFile('https://code.highcharts.com/modules/exporting.js', ['depe
     $currentUserId = Yii::$app->user->id;
     $isAdmin = \backend\models\User::isUserAdmin();
 
+    $dashPos = [];
+    $dashPms = [];
+    $dashPas = [];
+
     // 1. PO returned
-    $dashPoQuery = \backend\models\Purch::find()
-        ->where(['approve_status' => \backend\models\Purch::APPROVE_STATUS_RETURNED]);
-    if (!$isAdmin) {
-        $dashPoQuery->andWhere(['created_by' => $currentUserId]);
+    try {
+        \backend\models\Purch::ensureRejectColumns();
+        $dashPoQuery = \backend\models\Purch::find()
+            ->where(['approve_status' => \backend\models\Purch::APPROVE_STATUS_RETURNED]);
+        if (!$isAdmin) {
+            $dashPoQuery->andWhere(['created_by' => $currentUserId]);
+        }
+        $dashPos = $dashPoQuery->orderBy(['id' => SORT_DESC])->all();
+    } catch (\Exception $e) {
+        \Yii::error('Dashboard PO returned query error: ' . $e->getMessage());
     }
-    $dashPos = $dashPoQuery->orderBy(['rejected_at' => SORT_DESC, 'id' => SORT_DESC])->all();
 
     // 2. NPR returned
-    $dashPmQuery = \backend\models\PurchaseMaster::find()
-        ->where(['approve_status' => \backend\models\PurchaseMaster::APPROVE_STATUS_RETURNED]);
-    if (!$isAdmin) {
-        $dashPmQuery->andWhere(['created_by' => $currentUserId]);
+    try {
+        \backend\models\PurchaseMaster::ensureRejectColumns();
+        $dashPmQuery = \backend\models\PurchaseMaster::find()
+            ->where(['approve_status' => \backend\models\PurchaseMaster::APPROVE_STATUS_RETURNED]);
+        if (!$isAdmin) {
+            $dashPmQuery->andWhere(['created_by' => $currentUserId]);
+        }
+        $dashPms = $dashPmQuery->orderBy(['id' => SORT_DESC])->all();
+    } catch (\Exception $e) {
+        \Yii::error('Dashboard NPR returned query error: ' . $e->getMessage());
     }
-    $dashPms = $dashPmQuery->orderBy(['rejected_at' => SORT_DESC, 'id' => SORT_DESC])->all();
 
     // 3. PA returned
-    $dashPaQuery = \backend\models\PreAdvance::find()
-        ->where(['status' => \backend\models\PreAdvance::STATUS_RETURNED]);
-    if (!$isAdmin) {
-        $dashPaQuery->andWhere(['created_by' => $currentUserId]);
+    try {
+        \backend\models\PreAdvance::ensureRejectColumns();
+        $dashPaQuery = \backend\models\PreAdvance::find()
+            ->where(['status' => \backend\models\PreAdvance::STATUS_RETURNED]);
+        if (!$isAdmin) {
+            $dashPaQuery->andWhere(['created_by' => $currentUserId]);
+        }
+        $dashPas = $dashPaQuery->orderBy(['id' => SORT_DESC])->all();
+    } catch (\Exception $e) {
+        \Yii::error('Dashboard PA returned query error: ' . $e->getMessage());
     }
-    $dashPas = $dashPaQuery->orderBy(['rejected_at' => SORT_DESC, 'id' => SORT_DESC])->all();
 
     $totalReturned = count($dashPos) + count($dashPms) + count($dashPas);
     ?>

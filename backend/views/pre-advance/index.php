@@ -10,12 +10,18 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php
     $currentUserId = Yii::$app->user->id;
     $isAdmin = \backend\models\User::isUserAdmin();
-    $returnedPaQuery = \backend\models\PreAdvance::find()
-        ->where(['status' => \backend\models\PreAdvance::STATUS_RETURNED]);
-    if (!$isAdmin) {
-        $returnedPaQuery->andWhere(['created_by' => $currentUserId]);
+    $returnedPas = [];
+    try {
+        \backend\models\PreAdvance::ensureRejectColumns();
+        $returnedPaQuery = \backend\models\PreAdvance::find()
+            ->where(['status' => \backend\models\PreAdvance::STATUS_RETURNED]);
+        if (!$isAdmin) {
+            $returnedPaQuery->andWhere(['created_by' => $currentUserId]);
+        }
+        $returnedPas = $returnedPaQuery->orderBy(['id' => SORT_DESC])->all();
+    } catch (\Exception $e) {
+        \Yii::error('Error loading returned PAs: ' . $e->getMessage());
     }
-    $returnedPas = $returnedPaQuery->orderBy(['rejected_at' => SORT_DESC, 'id' => SORT_DESC])->all();
     ?>
     <?php if (!empty($returnedPas)): ?>
     <div class="alert alert-warning border border-warning shadow-sm mb-4" role="alert" style="border-left: 5px solid #ffc107 !important; background-color: #fff9e6;">

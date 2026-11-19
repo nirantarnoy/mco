@@ -54,6 +54,13 @@ class PurchasemasterController extends BaseController
         );
     }
 
+    public function beforeAction($action)
+    {
+        \backend\models\PurchaseMaster::ensureRecallColumns();
+        \backend\models\PurchaseMaster::ensureRejectColumns();
+        return parent::beforeAction($action);
+    }
+
     public function actionApprove($id)
     {
         \backend\models\PurchaseMaster::ensureRecallColumns();

@@ -21,12 +21,18 @@ $this->params['breadcrumbs'][] = $this->title;
     <?php
     $currentUserId = Yii::$app->user->id;
     $isAdmin = \backend\models\User::isUserAdmin();
-    $returnedPoQuery = Purch::find()
-        ->where(['approve_status' => Purch::APPROVE_STATUS_RETURNED]);
-    if (!$isAdmin) {
-        $returnedPoQuery->andWhere(['created_by' => $currentUserId]);
+    $returnedPos = [];
+    try {
+        Purch::ensureRejectColumns();
+        $returnedPoQuery = Purch::find()
+            ->where(['approve_status' => Purch::APPROVE_STATUS_RETURNED]);
+        if (!$isAdmin) {
+            $returnedPoQuery->andWhere(['created_by' => $currentUserId]);
+        }
+        $returnedPos = $returnedPoQuery->orderBy(['id' => SORT_DESC])->all();
+    } catch (\Exception $e) {
+        \Yii::error('Error loading returned POs: ' . $e->getMessage());
     }
-    $returnedPos = $returnedPoQuery->orderBy(['rejected_at' => SORT_DESC, 'id' => SORT_DESC])->all();
     ?>
     <?php if (!empty($returnedPos)): ?>
     <div class="alert alert-warning border border-warning shadow-sm mb-4" role="alert" style="border-left: 5px solid #ffc107 !important; background-color: #fff9e6;">
