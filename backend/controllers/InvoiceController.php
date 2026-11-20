@@ -833,8 +833,8 @@ class InvoiceController extends BaseController
                 }
                 $existingItem = $itemQuery->one();
 
-                // 5. ตรวจสอบจาก po_number หรือ remark ของใบเสร็จ
-                $remarkReceiptQuery = Invoice::find()
+                // 5. ตรวจสอบจาก po_number หรือ notes / special_note ของใบเสร็จ
+                $noteReceiptQuery = Invoice::find()
                     ->where([
                         'invoice_type' => Invoice::TYPE_RECEIPT,
                         'status' => Invoice::STATUS_ACTIVE,
@@ -842,12 +842,13 @@ class InvoiceController extends BaseController
                     ->andWhere([
                         'or',
                         ['po_number' => $inv->invoice_number],
-                        ['like', 'remark', $inv->invoice_number],
+                        ['like', 'notes', $inv->invoice_number],
+                        ['like', 'special_note', $inv->invoice_number],
                     ]);
                 if ($currentInvoiceId) {
-                    $remarkReceiptQuery->andWhere(['!=', 'id', $currentInvoiceId]);
+                    $noteReceiptQuery->andWhere(['!=', 'id', $currentInvoiceId]);
                 }
-                $existingRemarkReceipt = $remarkReceiptQuery->one();
+                $existingNoteReceipt = $noteReceiptQuery->one();
 
                 $usedReceipt = null;
                 if ($existingReceiptRel) {
@@ -858,8 +859,8 @@ class InvoiceController extends BaseController
                     $usedReceipt = Invoice::findOne($existingPaymentHistory->receipt_id);
                 } elseif ($existingItem) {
                     $usedReceipt = Invoice::findOne($existingItem->invoice_id);
-                } elseif ($existingRemarkReceipt) {
-                    $usedReceipt = $existingRemarkReceipt;
+                } elseif ($existingNoteReceipt) {
+                    $usedReceipt = $existingNoteReceipt;
                 }
 
                 $typeLabel = $inv->getTypeLabel();
