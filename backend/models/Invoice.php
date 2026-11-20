@@ -629,4 +629,90 @@ class Invoice extends ActiveRecord
         }
         return $no;
     }
+
+    /**
+     * ดึงเลขที่เอกสารอ้างอิง (เช่น ใบแจ้งหนี้/ใบกำกับภาษี ที่ใบเสร็จหรือใบวางบิลนี้อ้างถึง)
+     * @return string
+     */
+    public function getReferenceDocNo()
+    {
+        $refNos = [];
+
+        // 1. จาก InvoiceRelation (child_invoice_id = this->id)
+        $relations = InvoiceRelation::find()
+            ->where(['child_invoice_id' => $this->id])
+            ->all();
+
+        foreach ($relations as $rel) {
+            if ($rel->parentInvoice && !empty($rel->parentInvoice->invoice_number)) {
+                $parent = $rel->parentInvoice;
+                // ถ้า parent เป็นใบวางบิล ให้ลองสืบหาใบแจ้งหนี้/ใบกำกับภาษีต้นทาง
+                if ($parent->invoice_type === self::TYPE_BILL_PLACEMENT) {
+                    $grandRel = InvoiceRelation::find()->where(['child_invoice_id' => $parent->id])->one();
+                    if ($grandRel && $grandRel->parentInvoice && !empty($grandRel->parentInvoice->invoice_number)) {
+                        $refNos[] = $grandRel->parentInvoice->invoice_number;
+                    } else {
+                        $refNos[] = $parent->invoice_number;
+                    }
+                } else {
+                    $refNos[] = $parent->invoice_number;
+                }
+            } elseif ($rel->relation_type === 'credit_note_to_receipt') {
+                $cn = \backend\models\CreditNote::findOne($rel->parent_invoice_id);
+                if ($cn && !empty($cn->document_no)) $refNos[] = $cn->document_no;
+            } elseif ($rel->relation_type === 'debit_note_to_receipt') {
+                $dn = \backend\models\DebitNote::findOne($rel->parent_invoice_id);
+                if ($dn && !empty($dn->document_no)) $refNos[] = $dn->document_no;
+            }
+        }
+
+        // 2. จาก InvoicePaymentHistory (กรณีใบเสร็จ)
+        if (empty($refNos) && $this->invoice_type === self::TYPE_RECEIPT) {
+            $histories = InvoicePaymentHistory::find()
+                ->where(['receipt_id' => $this->id])
+                ->all();
+            foreach ($histories as $h) {
+                if ($h->invoice && !empty($h->invoice->invoice_number)) {
+                    $refNos[] = $h->invoice->invoice_number;
+                }
+            }
+        }
+
+        // 3. จาก quotation_id (ถ้ามี)
+        if (empty($refNos) && !empty($this->quotation_id)) {
+            $refInv = self::findOne($this->quotation_id);
+            if ($refInv && !empty($refInv->invoice_number)) {
+                $refNos[] = $refInv->invoice_number;
+            } else {
+                $refQt = \backend\models\Quotation::findOne($this->quotation_id);
+                if ($refQt && !empty($refQt->quotation_no)) {
+                    $refNos[] = $refQt->quotation_no;
+                }
+            }
+        }
+
+        // 4. จากรายการสินค้าที่มีระบุเลขที่เอกสาร
+        if (empty($refNos)) {
+            foreach ($this->items as $item) {
+                if (!empty($item->item_description) && preg_match('/(INV\d+|QT\d+|RE\d+[\-\d]*|\b\d{9}\b)/i', $item->item_description, $matches)) {
+                    $refNos[] = $matches[1];
+                }
+            }
+        }
+
+        // 5. จาก po_number
+        if (empty($refNos) && !empty($this->po_number)) {
+            $sibling = self::find()
+                ->where(['po_number' => $this->po_number, 'status' => self::STATUS_ACTIVE])
+                ->andWhere(['!=', 'id', $this->id])
+                ->andFilterWhere(['!=', 'invoice_type', self::TYPE_RECEIPT])
+                ->one();
+            if ($sibling && !empty($sibling->invoice_number)) {
+                $refNos[] = $sibling->invoice_number;
+            }
+        }
+
+        $refNos = array_unique(array_filter($refNos));
+        return !empty($refNos) ? implode(', ', $refNos) : '-';
+    }
 }

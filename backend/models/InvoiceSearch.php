@@ -106,11 +106,24 @@ class InvoiceSearch extends Invoice
         }
 
         if ($this->globalSearch) {
-            $query->andFilterWhere(['or',
+            $relChildIds = InvoiceRelation::find()
+                ->alias('ir')
+                ->innerJoin('invoices p', 'ir.parent_invoice_id = p.id')
+                ->where(['like', 'p.invoice_number', $this->globalSearch])
+                ->select('ir.child_invoice_id')
+                ->column();
+
+            $searchConditions = [
+                'or',
                 ['like', 'invoice_number', $this->globalSearch],
                 ['like', 'customer_name', $this->globalSearch],
                 ['like', 'customer_code', $this->globalSearch],
-            ]);
+            ];
+            if (!empty($relChildIds)) {
+                $searchConditions[] = ['in', 'id', $relChildIds];
+            }
+
+            $query->andFilterWhere($searchConditions);
         }
 
         return $dataProvider;

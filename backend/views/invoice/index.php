@@ -78,6 +78,19 @@ $this->params['breadcrumbs'][] = $this->title;
                         'contentOptions' => ['class' => 'text-center font-weight-bold'],
                     ],
                     [
+                        'label' => 'อ้างอิงใบแจ้งหนี้',
+                        'headerOptions' => ['width' => '150px', 'style' => 'text-align: center;'],
+                        'contentOptions' => ['class' => 'text-center text-nowrap'],
+                        'value' => function($model) {
+                            $ref = $model->getReferenceDocNo();
+                            if ($ref !== '-') {
+                                return '<span class="badge badge-light border text-dark font-weight-normal">' . \yii\helpers\Html::encode($ref) . '</span>';
+                            }
+                            return '<span class="text-muted">-</span>';
+                        },
+                        'format' => 'raw',
+                    ],
+                    [
                         'attribute' => 'invoice_date',
                         'headerOptions' => ['width' => '120px'],
                         'contentOptions' => ['class' => 'text-center'],
