@@ -472,16 +472,17 @@ class Invoice extends ActiveRecord
                     }
                 }
 
-                if ($this->invoice_type === self::TYPE_RECEIPT) {
-                    $sourceInvoice = self::findOne($this->quotation_id);
-                    if ($sourceInvoice) {
-                        $this->customer_id = $sourceInvoice->customer_id;
-                    }
-                } else {
-                    $quotation = Quotation::findOne($this->quotation_id);
-                    if ($quotation) {
-                        $this->customer_id = $quotation->customer_id;
-                    }
+                $quotation = Quotation::findOne($this->quotation_id);
+                if ($quotation && !empty($quotation->customer_id)) {
+                    $this->customer_id = $quotation->customer_id;
+                }
+            }
+
+            // For receipts with parent invoice relation, inherit customer_id from parent invoice
+            if ($this->invoice_type === self::TYPE_RECEIPT && !empty($this->id)) {
+                $relation = InvoiceRelation::find()->where(['child_invoice_id' => $this->id])->one();
+                if ($relation && $relation->parentInvoice && !empty($relation->parentInvoice->customer_id)) {
+                    $this->customer_id = $relation->parentInvoice->customer_id;
                 }
             }
 

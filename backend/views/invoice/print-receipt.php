@@ -467,6 +467,25 @@ if ($model->invoice_type == 'receipt' || $model->invoice_type == 'bill_placement
 
 $isRefDocument = ($model->invoice_type == 'receipt' || $model->invoice_type == 'bill_placement') && !empty($refNo);
 
+// Determine actual customer_id:
+// 1. If parent tax invoice exists, it has highest authority
+$actualCustomerId = $model->customer_id;
+$refParentInvoice = !empty($parent) ? $parent : (!empty($taxInvoice) ? $taxInvoice : (!empty($refInvoice) ? $refInvoice : null));
+if ($refParentInvoice && !empty($refParentInvoice->customer_id)) {
+    $actualCustomerId = $refParentInvoice->customer_id;
+} elseif (!empty($model->quotation_id)) {
+    $quotationObj = \backend\models\Quotation::findOne($model->quotation_id);
+    if ($quotationObj && !empty($quotationObj->customer_id)) {
+        $actualCustomerId = $quotationObj->customer_id;
+    }
+}
+
+// Auto-heal if model customer_id was mismatched
+if ($actualCustomerId && $model->customer_id != $actualCustomerId) {
+    $model->customer_id = $actualCustomerId;
+    $model->save(false);
+}
+
 $itemsPerPage = 12;
 
 if ($isRefDocument) {
@@ -521,7 +540,7 @@ foreach ($chunks as $pageIndex => $chunk):
     <table class="receipt-details-table">
         <tr>
             <td class="receipt-label-cell" style="width: 9%; border-right: none;">รหัสลูกค้า<br>CODE</td>
-            <td class="receipt-data-cell" style="width: 22%;"><?= Html::encode(\backend\models\Customer::findCode($model->customer_id) ?: '') ?></td>
+            <td class="receipt-data-cell" style="width: 22%;"><?= Html::encode(\backend\models\Customer::findCode($actualCustomerId) ?: '') ?></td>
             <td class="receipt-label-cell" style="width: 12%; border-right: none;">วันที่<br>DATE</td>
             <td class="receipt-data-cell" style="width: 22%;"><?= date('d/m/Y', strtotime($model->invoice_date)) ?></td>
             <td class="receipt-label-cell" style="width: 10%; border-right: none;">เลขที่<br>NO</td>
@@ -532,8 +551,8 @@ foreach ($chunks as $pageIndex => $chunk):
             <td class="receipt-data-cell" style="border-bottom: none;">
                 <?php
                 $customerBranchText = '';
-                if ($model->customer_id) {
-                    $customerObj = \backend\models\Customer::findOne($model->customer_id);
+                if ($actualCustomerId) {
+                    $customerObj = \backend\models\Customer::findOne($actualCustomerId);
                     if ($customerObj) {
                         $isEng = !preg_match('/[ก-๙]/u', $model->customer_name);
                         if ($customerObj->is_head == 1) {

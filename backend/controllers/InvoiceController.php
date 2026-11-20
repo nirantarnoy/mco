@@ -288,6 +288,9 @@ class InvoiceController extends BaseController
                     // Save invoice relationship if this is a copy
                     if ($copy_from) {
                         $sourceInvoice = $this->findModel($copy_from); // Need to re-fetch source invoice to get type
+                        if (!empty($sourceInvoice->customer_id) && $model->customer_id != $sourceInvoice->customer_id) {
+                            $model->updateAttributes(['customer_id' => $sourceInvoice->customer_id]);
+                        }
                         $relation = new \backend\models\InvoiceRelation();
                         $relation->parent_invoice_id = $copy_from;
                         $relation->child_invoice_id = $model->id;
@@ -366,7 +369,12 @@ class InvoiceController extends BaseController
         if ($model->load(Yii::$app->request->post())) {
             $transaction = Yii::$app->db->beginTransaction();
             try {
-                // $model->total_amount_text = \backend\models\PurchReq::numtothai($model->total_amount);
+                if ($model->invoice_type === Invoice::TYPE_RECEIPT) {
+                    $existingRel = \backend\models\InvoiceRelation::find()->where(['child_invoice_id' => $model->id])->one();
+                    if ($existingRel && $existingRel->parentInvoice && !empty($existingRel->parentInvoice->customer_id)) {
+                        $model->customer_id = $existingRel->parentInvoice->customer_id;
+                    }
+                }
                 if ($model->save()) {
                     // Delete existing items
                     InvoiceItem::deleteAll(['invoice_id' => $model->id]);
