@@ -421,10 +421,18 @@ class InvoiceController extends BaseController
             }
         }
 
+        $existingRelation = \backend\models\InvoiceRelation::find()
+            ->where(['child_invoice_id' => $model->id])
+            ->one();
+        $copy_from = $existingRelation ? $existingRelation->parent_invoice_id : null;
+        $sourceInvoice = $copy_from ? \backend\models\Invoice::findOne($copy_from) : null;
+
         return $this->render('update', [
             'model' => $model,
             'items' => $items,
             'customers' => $this->getCustomersList(),
+            'copy_from' => $copy_from,
+            'sourceInvoice' => $sourceInvoice,
         ]);
     }
 

@@ -26,6 +26,9 @@ $this->params['breadcrumbs'][] = 'แก้ไข';
         'model' => $model,
         'items' => $items,
         'customers' => $customers,
+        'copy_from' => isset($copy_from) ? $copy_from : null,
+        'sourceInvoice' => isset($sourceInvoice) ? $sourceInvoice : null,
+        'totalPaid' => isset($totalPaid) ? $totalPaid : 0,
     ]) ?>
 
 </div>

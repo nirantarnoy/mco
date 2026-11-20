@@ -16,6 +16,8 @@ use backend\models\Invoice;
 /* @var $form yii\widgets\ActiveForm */
 
 // Check if this is a Receipt Copy scenario
+$copy_from = isset($copy_from) && !empty($copy_from) ? $copy_from : null;
+$copyFromStr = $copy_from ? (string)$copy_from : '';
 $isCopyReceipt = ($model->invoice_type == Invoice::TYPE_RECEIPT && !empty($copy_from));
 
 // ตั้งค่าตัวแปร URLs ก่อน
@@ -657,7 +659,7 @@ function loadRelatedDocs(quotationId, copyFromId) {
         type: 'POST',
         data: {
             quotation_id: quotationId || '',
-            copy_from: copyFromId || '{$copy_from}' || '',
+            copy_from: copyFromId || '{$copyFromStr}' || '',
             current_invoice_id: '{$model->id}'
         },
         dataType: 'json',
@@ -770,7 +772,7 @@ $(document).on('change', '.related-doc-chk', function() {
 
 $(document).on('click', '.btn-refresh-related-docs', function() {
     var jobId = $('#invoice-job-id').val();
-    var copyFromId = '{$copy_from}';
+    var copyFromId = '{$copyFromStr}';
     if (jobId || copyFromId) {
         loadRelatedDocs(jobId, copyFromId);
     } else {
@@ -899,7 +901,7 @@ $(document).ready(function() {
     // หากเปิดฟอร์มใบเสร็จมาแล้วมีเลือก quotation_id อยู่แล้ว หรือ copy มา ให้โหลด related docs
     if ('{$model->invoice_type}' === 'receipt') {
         var currentJobId = $('#invoice-job-id').val();
-        var copyFromId = '{$copy_from}';
+        var copyFromId = '{$copyFromStr}';
         if (currentJobId || copyFromId) {
             loadRelatedDocs(currentJobId, copyFromId);
         }
