@@ -82,6 +82,26 @@ class InvoiceRelation extends ActiveRecord
     }
 
     /**
+     * Gets query for [[CreditNote]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getCreditNote()
+    {
+        return $this->hasOne(CreditNote::class, ['id' => 'parent_invoice_id']);
+    }
+
+    /**
+     * Gets query for [[DebitNote]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getDebitNote()
+    {
+        return $this->hasOne(DebitNote::class, ['id' => 'parent_invoice_id']);
+    }
+
+    /**
      * Gets query for [[ChildInvoice]].
      *
      * @return \yii\db\ActiveQuery
@@ -89,5 +109,22 @@ class InvoiceRelation extends ActiveRecord
     public function getChildInvoice()
     {
         return $this->hasOne(Invoice::class, ['id' => 'child_invoice_id']);
+    }
+
+    /**
+     * ตรวจสอบและยกเลิก Foreign Key fk_invoice_relations_parent เพื่อให้สามารถเก็บ ID ของ CreditNote และ DebitNote ได้
+     */
+    public static function ensureNoParentFk()
+    {
+        try {
+            $db = Yii::$app->db;
+            $table = $db->getTableSchema(self::tableName(), true);
+            if ($table && isset($table->foreignKeys['fk_invoice_relations_parent'])) {
+                $db->createCommand("ALTER TABLE `" . self::tableName() . "` DROP FOREIGN KEY `fk_invoice_relations_parent`")->execute();
+                $db->getSchema()->refreshTableSchema(self::tableName());
+            }
+        } catch (\Exception $e) {
+            // Ignored if already dropped
+        }
     }
 }

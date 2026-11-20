@@ -48,6 +48,12 @@ class InvoiceController extends BaseController
         ];
     }
 
+    public function beforeAction($action)
+    {
+        \backend\models\InvoiceRelation::ensureNoParentFk();
+        return parent::beforeAction($action);
+    }
+
     /**
      * Lists all Invoice models.
      * @return mixed
@@ -260,6 +266,7 @@ class InvoiceController extends BaseController
                     // Save selected document relationships if provided (e.g. from receipt create)
                     $selectedDocs = Yii::$app->request->post('selected_related_docs', []);
                     if (!empty($selectedDocs) && is_array($selectedDocs)) {
+                        \backend\models\InvoiceRelation::ensureNoParentFk();
                         foreach ($selectedDocs as $docInfo) {
                             $parts = explode(':', $docInfo);
                             if (count($parts) === 2) {
@@ -267,19 +274,23 @@ class InvoiceController extends BaseController
                                 $dId = (int)$parts[1];
                                 $relType = ($dType === 'credit_note') ? 'credit_note_to_receipt' : (($dType === 'debit_note') ? 'debit_note_to_receipt' : 'tax_invoice_to_receipt');
                                 
-                                $existingRel = \backend\models\InvoiceRelation::find()
-                                    ->where([
-                                        'parent_invoice_id' => $dId,
-                                        'child_invoice_id' => $model->id,
-                                        'relation_type' => $relType
-                                    ])->one();
-                                
-                                if (!$existingRel) {
-                                    $rel = new \backend\models\InvoiceRelation();
-                                    $rel->parent_invoice_id = $dId;
-                                    $rel->child_invoice_id = $model->id;
-                                    $rel->relation_type = $relType;
-                                    $rel->save(false);
+                                try {
+                                    $existingRel = \backend\models\InvoiceRelation::find()
+                                        ->where([
+                                            'parent_invoice_id' => $dId,
+                                            'child_invoice_id' => $model->id,
+                                            'relation_type' => $relType
+                                        ])->one();
+                                    
+                                    if (!$existingRel) {
+                                        $rel = new \backend\models\InvoiceRelation();
+                                        $rel->parent_invoice_id = $dId;
+                                        $rel->child_invoice_id = $model->id;
+                                        $rel->relation_type = $relType;
+                                        $rel->save(false);
+                                    }
+                                } catch (\Exception $e) {
+                                    Yii::error('Failed to save doc relation: ' . $e->getMessage(), __METHOD__);
                                 }
                             }
                         }
@@ -386,6 +397,7 @@ class InvoiceController extends BaseController
                     // Save selected document relationships if provided
                     $selectedDocs = Yii::$app->request->post('selected_related_docs', []);
                     if (!empty($selectedDocs) && is_array($selectedDocs)) {
+                        \backend\models\InvoiceRelation::ensureNoParentFk();
                         foreach ($selectedDocs as $docInfo) {
                             $parts = explode(':', $docInfo);
                             if (count($parts) === 2) {
@@ -393,19 +405,23 @@ class InvoiceController extends BaseController
                                 $dId = (int)$parts[1];
                                 $relType = ($dType === 'credit_note') ? 'credit_note_to_receipt' : (($dType === 'debit_note') ? 'debit_note_to_receipt' : 'tax_invoice_to_receipt');
                                 
-                                $existingRel = \backend\models\InvoiceRelation::find()
-                                    ->where([
-                                        'parent_invoice_id' => $dId,
-                                        'child_invoice_id' => $model->id,
-                                        'relation_type' => $relType
-                                    ])->one();
-                                
-                                if (!$existingRel) {
-                                    $rel = new \backend\models\InvoiceRelation();
-                                    $rel->parent_invoice_id = $dId;
-                                    $rel->child_invoice_id = $model->id;
-                                    $rel->relation_type = $relType;
-                                    $rel->save(false);
+                                try {
+                                    $existingRel = \backend\models\InvoiceRelation::find()
+                                        ->where([
+                                            'parent_invoice_id' => $dId,
+                                            'child_invoice_id' => $model->id,
+                                            'relation_type' => $relType
+                                        ])->one();
+                                    
+                                    if (!$existingRel) {
+                                        $rel = new \backend\models\InvoiceRelation();
+                                        $rel->parent_invoice_id = $dId;
+                                        $rel->child_invoice_id = $model->id;
+                                        $rel->relation_type = $relType;
+                                        $rel->save(false);
+                                    }
+                                } catch (\Exception $e) {
+                                    Yii::error('Failed to save doc relation: ' . $e->getMessage(), __METHOD__);
                                 }
                             }
                         }
