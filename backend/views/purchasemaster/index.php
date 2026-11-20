@@ -202,6 +202,33 @@ $this->params['breadcrumbs'][] = $this->title;
                         }
                     ],
                     [
+                        'label' => 'รหัสลูกค้า',
+                        'headerOptions' => ['style' => 'width: 100px; text-align: center;'],
+                        'contentOptions' => ['style' => 'text-align: center;'],
+                        'value' => function ($model) {
+                            $job = \backend\models\Job::findOne($model->job_no);
+                            if (!$job && !empty($model->job_no)) {
+                                $job = \backend\models\Job::find()->where(['job_no' => $model->job_no])->one();
+                            }
+                            if ($job) {
+                                if ($job->customer && !empty($job->customer->code)) {
+                                    return $job->customer->code;
+                                }
+                                if ($job->quotation && $job->quotation->customer && !empty($job->quotation->customer->code)) {
+                                    return $job->quotation->customer->code;
+                                }
+                            }
+                            $qt = \backend\models\Quotation::findOne($model->job_no);
+                            if (!$qt && !empty($model->job_no)) {
+                                $qt = \backend\models\Quotation::find()->where(['quotation_no' => $model->job_no])->one();
+                            }
+                            if ($qt && $qt->customer && !empty($qt->customer->code)) {
+                                return $qt->customer->code;
+                            }
+                            return '-';
+                        }
+                    ],
+                    [
                         'attribute' => 'supcod',
                         'value' => function ($model) {
                             return \backend\models\Vendor::findCode($model->supcod);

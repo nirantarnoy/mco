@@ -26,3 +26,4 @@ class m261120_154500_drop_parent_fk_from_invoice_relations extends Migration
         // Don't re-add as parent_invoice_id stores credit_note and debit_note IDs as well
     }
 }
+

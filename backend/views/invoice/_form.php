@@ -721,10 +721,13 @@ function renderRelatedDocsTable(data) {
             statusHtml = '<span class="badge badge-success p-1"><i class="fas fa-check mr-1"></i> ยังไม่ได้ทำใบเสร็จ</span>';
         }
 
-        var tr = $('<tr>').addClass(isUsed ? 'table-warning' : '');
+        var tr = $('<tr>').addClass(isUsed ? 'table-secondary text-muted' : '');
         var chkBox = $('<input type="checkbox" class="related-doc-chk">')
             .val(docKey)
             .data('doc', doc);
+        if (isUsed) {
+            chkBox.prop('disabled', true).prop('title', 'เอกสารนี้ได้ดำเนินการทำใบเสร็จไปแล้ว (' + (doc.used_by_receipt || '') + ') ไม่สามารถเลือกซ้ำได้');
+        }
 
         var tdChk = $('<td>').addClass('text-center').append(chkBox);
         var tdType = $('<td>').html('<span class="badge ' + badgeClass + '">' + doc.type_label + '</span>');
@@ -748,12 +751,12 @@ function updateApplyButtonState() {
 
 $(document).on('change', '#check-all-related-docs', function() {
     var isChecked = $(this).is(':checked');
-    $('.related-doc-chk').prop('checked', isChecked);
+    $('.related-doc-chk:not(:disabled)').prop('checked', isChecked);
     updateApplyButtonState();
 });
 
 $(document).on('change', '.related-doc-chk', function() {
-    var total = $('.related-doc-chk').length;
+    var total = $('.related-doc-chk:not(:disabled)').length;
     var checked = $('.related-doc-chk:checked').length;
     $('#check-all-related-docs').prop('checked', total > 0 && total === checked);
     updateApplyButtonState();
@@ -764,8 +767,10 @@ $(document).on('change', '.related-doc-chk', function() {
         if (doc && doc.is_used) {
             var msg = 'คำเตือน: เอกสาร ' + doc.doc_no + ' (' + doc.type_label + ') ได้ดำเนินการทำใบเสร็จไปแล้ว' +
                 (doc.used_by_receipt ? ' ในใบเสร็จเลขที่ ' + doc.used_by_receipt : '') +
-                '\\nหากนำมาทำรายการซ้ำ อาจทำให้ยอดรับเงินซ้ำซ้อนได้';
+                '\\nไม่สามารถนำมาทำใบเสร็จซ้ำได้';
             alert(msg);
+            $(this).prop('checked', false);
+            updateApplyButtonState();
         }
     }
 });
@@ -802,16 +807,14 @@ $(document).on('click', '.btn-apply-selected-docs', function() {
     }
 
     if (usedCount > 0) {
-        var confirmMsg = 'พบรายการที่ดำเนินการทำใบเสร็จไปแล้ว ' + usedCount + ' รายการ:\\n- ' +
+        alert('ไม่สามารถนำมาทำใบเสร็จซ้ำได้:\\nพบเอกสารที่ดำเนินการทำใบเสร็จไปแล้ว ' + usedCount + ' รายการ:\\n- ' +
             usedDocNames.join('\\n- ') +
-            '\\n\\nคุณแน่ใจหรือไม่ว่าต้องการนำมาทำรายการในใบเสร็จนี้อีกครั้ง?';
-        if (!confirm(confirmMsg)) {
-            return;
-        }
-    } else {
-        if (!confirm('ต้องการนำรายการเอกสารที่เลือก ' + selected.length + ' รายการ มาเพิ่มลงในตารางสินค้า/บริการของใบเสร็จหรือไม่?')) {
-            return;
-        }
+            '\\n\\nกรุณายกเลิกการเลือกเอกสารที่ทำไปแล้วก่อนดำเนินการต่อ');
+        return;
+    }
+
+    if (!confirm('ต้องการนำรายการเอกสารที่เลือก ' + selected.length + ' รายการ มาเพิ่มลงในตารางสินค้า/บริการของใบเสร็จหรือไม่?')) {
+        return;
     }
 
     // ล้างรายการเริ่มต้นถ้ามีแถวว่างแถวเดียว

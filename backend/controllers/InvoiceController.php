@@ -257,6 +257,22 @@ class InvoiceController extends BaseController
                     }
                 }
 
+                if ($type == Invoice::TYPE_RECEIPT && $copy_from) {
+                    $hasActiveReceipt = \backend\models\InvoiceRelation::find()
+                        ->alias('ir')
+                        ->innerJoin('invoices r', 'ir.child_invoice_id = r.id')
+                        ->where([
+                            'ir.parent_invoice_id' => $copy_from,
+                            'r.invoice_type' => Invoice::TYPE_RECEIPT,
+                            'r.status' => Invoice::STATUS_ACTIVE,
+                        ])->exists();
+                    if ($hasActiveReceipt) {
+                        $sourceInv = Invoice::findOne($copy_from);
+                        $sourceNo = $sourceInv ? $sourceInv->invoice_number : $copy_from;
+                        throw new \Exception('เอกสาร ' . $sourceNo . ' ได้ถูกนำไปสร้างใบเสร็จรับเงินแล้ว ไม่สามารถสร้างซ้ำได้');
+                    }
+                }
+
                 if ($model->save(false)) {
                     // Handle items
                     $itemsData = Yii::$app->request->post('InvoiceItem', []);
@@ -273,6 +289,24 @@ class InvoiceController extends BaseController
                                 $dType = $parts[0];
                                 $dId = (int)$parts[1];
                                 $relType = ($dType === 'credit_note') ? 'credit_note_to_receipt' : (($dType === 'debit_note') ? 'debit_note_to_receipt' : 'tax_invoice_to_receipt');
+
+                                if ($type == Invoice::TYPE_RECEIPT && $dType === 'invoice') {
+                                    $hasReceipt = \backend\models\InvoiceRelation::find()
+                                        ->alias('ir')
+                                        ->innerJoin('invoices r', 'ir.child_invoice_id = r.id')
+                                        ->where([
+                                            'ir.parent_invoice_id' => $dId,
+                                            'r.invoice_type' => Invoice::TYPE_RECEIPT,
+                                            'r.status' => Invoice::STATUS_ACTIVE,
+                                        ])
+                                        ->andFilterWhere(['!=', 'r.id', $model->id])
+                                        ->exists();
+                                    if ($hasReceipt) {
+                                        $dDoc = Invoice::findOne($dId);
+                                        $dNo = $dDoc ? $dDoc->invoice_number : $dId;
+                                        throw new \Exception('เอกสาร ' . $dNo . ' ได้ถูกนำไปทำใบเสร็จแล้ว ไม่สามารถบันทึกซ้ำได้');
+                                    }
+                                }
                                 
                                 try {
                                     $existingRel = \backend\models\InvoiceRelation::find()
@@ -404,6 +438,24 @@ class InvoiceController extends BaseController
                                 $dType = $parts[0];
                                 $dId = (int)$parts[1];
                                 $relType = ($dType === 'credit_note') ? 'credit_note_to_receipt' : (($dType === 'debit_note') ? 'debit_note_to_receipt' : 'tax_invoice_to_receipt');
+
+                                if ($model->invoice_type == Invoice::TYPE_RECEIPT && $dType === 'invoice') {
+                                    $hasReceipt = \backend\models\InvoiceRelation::find()
+                                        ->alias('ir')
+                                        ->innerJoin('invoices r', 'ir.child_invoice_id = r.id')
+                                        ->where([
+                                            'ir.parent_invoice_id' => $dId,
+                                            'r.invoice_type' => Invoice::TYPE_RECEIPT,
+                                            'r.status' => Invoice::STATUS_ACTIVE,
+                                        ])
+                                        ->andWhere(['!=', 'r.id', $model->id])
+                                        ->exists();
+                                    if ($hasReceipt) {
+                                        $dDoc = Invoice::findOne($dId);
+                                        $dNo = $dDoc ? $dDoc->invoice_number : $dId;
+                                        throw new \Exception('เอกสาร ' . $dNo . ' ได้ถูกนำไปทำใบเสร็จแล้ว ไม่สามารถบันทึกซ้ำได้');
+                                    }
+                                }
                                 
                                 try {
                                     $existingRel = \backend\models\InvoiceRelation::find()
@@ -727,6 +779,7 @@ class InvoiceController extends BaseController
                 $invIds[] = $inv->id;
 
                 // ตรวจสอบว่าใบแจ้งหนี้/ใบกำกับนี้เคยถูกนำไปทำใบเสร็จแล้วหรือไม่
+                // 1. ตรวจสอบจาก InvoiceRelation
                 $receiptRelQuery = \backend\models\InvoiceRelation::find()
                     ->alias('ir')
                     ->innerJoin('invoices r', 'ir.child_invoice_id = r.id')
@@ -740,7 +793,7 @@ class InvoiceController extends BaseController
                 }
                 $existingReceiptRel = $receiptRelQuery->one();
 
-                // ตรวจสอบกรณีที่สร้างใบเสร็จโดยมี quotation_id ชี้ไปที่ ID ของใบแจ้งหนี้โดยตรง
+                // 2. ตรวจสอบกรณีที่สร้างใบเสร็จโดยมี quotation_id ชี้ไปที่ ID ของใบแจ้งหนี้โดยตรง
                 $directReceiptQuery = Invoice::find()
                     ->where([
                         'quotation_id' => $inv->id,
@@ -752,11 +805,61 @@ class InvoiceController extends BaseController
                 }
                 $existingDirectReceipt = $directReceiptQuery->one();
 
+                // 3. ตรวจสอบจาก InvoicePaymentHistory
+                $paymentHistoryQuery = \backend\models\InvoicePaymentHistory::find()
+                    ->alias('ph')
+                    ->innerJoin('invoices r', 'ph.receipt_id = r.id')
+                    ->where([
+                        'ph.invoice_id' => $inv->id,
+                        'r.invoice_type' => Invoice::TYPE_RECEIPT,
+                        'r.status' => Invoice::STATUS_ACTIVE,
+                    ]);
+                if ($currentInvoiceId) {
+                    $paymentHistoryQuery->andWhere(['!=', 'r.id', $currentInvoiceId]);
+                }
+                $existingPaymentHistory = $paymentHistoryQuery->one();
+
+                // 4. ตรวจสอบจาก InvoiceItem ในใบเสร็จที่มีการระบุเลขที่เอกสารนี้ใน item_description
+                $itemQuery = \backend\models\InvoiceItem::find()
+                    ->alias('ii')
+                    ->innerJoin('invoices r', 'ii.invoice_id = r.id')
+                    ->where([
+                        'r.invoice_type' => Invoice::TYPE_RECEIPT,
+                        'r.status' => Invoice::STATUS_ACTIVE,
+                    ])
+                    ->andWhere(['like', 'ii.item_description', $inv->invoice_number]);
+                if ($currentInvoiceId) {
+                    $itemQuery->andWhere(['!=', 'r.id', $currentInvoiceId]);
+                }
+                $existingItem = $itemQuery->one();
+
+                // 5. ตรวจสอบจาก po_number หรือ remark ของใบเสร็จ
+                $remarkReceiptQuery = Invoice::find()
+                    ->where([
+                        'invoice_type' => Invoice::TYPE_RECEIPT,
+                        'status' => Invoice::STATUS_ACTIVE,
+                    ])
+                    ->andWhere([
+                        'or',
+                        ['po_number' => $inv->invoice_number],
+                        ['like', 'remark', $inv->invoice_number],
+                    ]);
+                if ($currentInvoiceId) {
+                    $remarkReceiptQuery->andWhere(['!=', 'id', $currentInvoiceId]);
+                }
+                $existingRemarkReceipt = $remarkReceiptQuery->one();
+
                 $usedReceipt = null;
                 if ($existingReceiptRel) {
                     $usedReceipt = Invoice::findOne($existingReceiptRel->child_invoice_id);
                 } elseif ($existingDirectReceipt) {
                     $usedReceipt = $existingDirectReceipt;
+                } elseif ($existingPaymentHistory) {
+                    $usedReceipt = Invoice::findOne($existingPaymentHistory->receipt_id);
+                } elseif ($existingItem) {
+                    $usedReceipt = Invoice::findOne($existingItem->invoice_id);
+                } elseif ($existingRemarkReceipt) {
+                    $usedReceipt = $existingRemarkReceipt;
                 }
 
                 $typeLabel = $inv->getTypeLabel();
