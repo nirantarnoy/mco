@@ -396,65 +396,92 @@ use yii\helpers\Html; ?>
 $totalModel = $model;
 $refNo = '';
 $refDate = '';
+$taxInvoice = null;
+$relatedCreditNotes = [];
+$relatedDebitNotes = [];
 
 if ($model->invoice_type == 'receipt' || $model->invoice_type == 'bill_placement') {
-    // 1. First priority: look for direct parent relation
-    $relation = \backend\models\InvoiceRelation::find()->where(['child_invoice_id' => $model->id])->one();
-    if ($relation && $relation->parentInvoice) {
-        $parent = $relation->parentInvoice;
-        // If parent is a Bill Placement, trace back to the Tax Invoice
-        if ($parent->invoice_type == \backend\models\Invoice::TYPE_BILL_PLACEMENT) {
-            $grandRelation = \backend\models\InvoiceRelation::find()->where(['child_invoice_id' => $parent->id])->one();
-            if ($grandRelation && $grandRelation->parentInvoice) {
-                $refNo = $grandRelation->parentInvoice->invoice_number;
-                $refDate = $grandRelation->parentInvoice->invoice_date;
-            } else {
-                $refNo = $parent->invoice_number;
-                $refDate = $parent->invoice_date;
-            }
-        } else {
-            $refNo = $parent->invoice_number;
-            $refDate = $parent->invoice_date;
-        }
-    }
+    // 1. Direct relations from InvoiceRelation
+    $relations = \backend\models\InvoiceRelation::find()
+        ->where(['child_invoice_id' => $model->id])
+        ->all();
 
-    // 2. Second priority: if not resolved from relation, check quotation_id
-    if (empty($refNo) && !empty($model->quotation_id)) {
-        $refInvoice = \backend\models\Invoice::findOne($model->quotation_id);
-        if ($refInvoice) {
-            if ($refInvoice->invoice_type == \backend\models\Invoice::TYPE_BILL_PLACEMENT) {
-                $grandRelation = \backend\models\InvoiceRelation::find()->where(['child_invoice_id' => $refInvoice->id])->one();
-                if ($grandRelation && $grandRelation->parentInvoice) {
-                    $refNo = $grandRelation->parentInvoice->invoice_number;
-                    $refDate = $grandRelation->parentInvoice->invoice_date;
-                } else {
-                    $refNo = $refInvoice->invoice_number;
-                    $refDate = $refInvoice->invoice_date;
+    foreach ($relations as $rel) {
+        if ($rel->relation_type == 'credit_note_to_receipt') {
+            $cn = \backend\models\CreditNote::findOne($rel->parent_invoice_id);
+            if ($cn && !in_array($cn->id, array_column($relatedCreditNotes, 'id'))) {
+                $relatedCreditNotes[] = $cn;
+            }
+        } elseif ($rel->relation_type == 'debit_note_to_receipt') {
+            $dn = \backend\models\DebitNote::findOne($rel->parent_invoice_id);
+            if ($dn && !in_array($dn->id, array_column($relatedDebitNotes, 'id'))) {
+                $relatedDebitNotes[] = $dn;
+            }
+        } elseif (in_array($rel->relation_type, ['tax_invoice_to_receipt', 'invoice_to_receipt']) || empty($taxInvoice)) {
+            $parent = \backend\models\Invoice::findOne($rel->parent_invoice_id);
+            if ($parent) {
+                if ($parent->invoice_type == \backend\models\Invoice::TYPE_BILL_PLACEMENT) {
+                    $grandRel = \backend\models\InvoiceRelation::find()->where(['child_invoice_id' => $parent->id])->one();
+                    if ($grandRel && $grandRel->parentInvoice && $grandRel->parentInvoice->invoice_type == \backend\models\Invoice::TYPE_TAX_INVOICE) {
+                        $taxInvoice = $grandRel->parentInvoice;
+                    } else {
+                        $taxInvoice = $parent;
+                    }
+                } elseif ($parent->invoice_type == \backend\models\Invoice::TYPE_TAX_INVOICE) {
+                    $taxInvoice = $parent;
                 }
-            } else {
-                $refNo = $refInvoice->invoice_number;
-                $refDate = $refInvoice->invoice_date;
-            }
-        } else {
-            $refQuotation = \backend\models\Quotation::findOne($model->quotation_id);
-            if ($refQuotation) {
-                $refNo = $refQuotation->quotation_no;
-                $refDate = $refQuotation->quotation_date;
             }
         }
     }
 
-    // 3. Third priority: Sibling lookup by shared quotation_id or parent
-    if (empty($refNo)) {
-        if (!empty($model->po_number)) {
+    // 2. If tax invoice not found via relation, search by po_number
+    if (!$taxInvoice && !empty($model->po_number)) {
+        $taxInvoice = \backend\models\Invoice::find()
+            ->where(['invoice_number' => $model->po_number, 'invoice_type' => \backend\models\Invoice::TYPE_TAX_INVOICE, 'status' => \backend\models\Invoice::STATUS_ACTIVE])
+            ->one();
+        if (!$taxInvoice) {
             $taxInvoice = \backend\models\Invoice::find()
                 ->where(['po_number' => $model->po_number, 'invoice_type' => \backend\models\Invoice::TYPE_TAX_INVOICE, 'status' => \backend\models\Invoice::STATUS_ACTIVE])
-                ->andFilterWhere(['total_amount' => $model->total_amount])
                 ->one();
-            if ($taxInvoice) {
-                $refNo = $taxInvoice->invoice_number;
-                $refDate = $taxInvoice->invoice_date;
+        }
+    }
+
+    // 3. If tax invoice not found, search by quotation_id
+    if (!$taxInvoice && !empty($model->quotation_id)) {
+        $taxInvoice = \backend\models\Invoice::find()
+            ->where(['quotation_id' => $model->quotation_id, 'invoice_type' => \backend\models\Invoice::TYPE_TAX_INVOICE, 'status' => \backend\models\Invoice::STATUS_ACTIVE])
+            ->orderBy(['id' => SORT_DESC])
+            ->one();
+
+        if (!$taxInvoice) {
+            $directInvoice = \backend\models\Invoice::findOne($model->quotation_id);
+            if ($directInvoice && $directInvoice->invoice_type == \backend\models\Invoice::TYPE_TAX_INVOICE) {
+                $taxInvoice = $directInvoice;
             }
+        }
+    }
+
+    // Set $refNo and $refDate from tax invoice
+    if ($taxInvoice) {
+        $refNo = $taxInvoice->invoice_number;
+        $refDate = $taxInvoice->invoice_date;
+
+        if (empty($relatedCreditNotes)) {
+            $cns = \backend\models\CreditNote::find()
+                ->where(['invoice_id' => $taxInvoice->id, 'status' => 1])
+                ->all();
+            foreach ($cns as $cn) {
+                $relatedCreditNotes[] = $cn;
+            }
+        }
+    }
+
+    // Fallback for refNo if still empty
+    if (empty($refNo) && !empty($model->quotation_id)) {
+        $refQuotation = \backend\models\Quotation::findOne($model->quotation_id);
+        if ($refQuotation) {
+            $refNo = $refQuotation->quotation_no;
+            $refDate = $refQuotation->quotation_date;
         }
     }
 } else {
@@ -470,7 +497,7 @@ $isRefDocument = ($model->invoice_type == 'receipt' || $model->invoice_type == '
 // Determine actual customer_id:
 // 1. If parent tax invoice exists, it has highest authority
 $actualCustomerId = $model->customer_id;
-$refParentInvoice = !empty($parent) ? $parent : (!empty($taxInvoice) ? $taxInvoice : (!empty($refInvoice) ? $refInvoice : null));
+$refParentInvoice = !empty($taxInvoice) ? $taxInvoice : (!empty($parent) ? $parent : null);
 if ($refParentInvoice && !empty($refParentInvoice->customer_id)) {
     $actualCustomerId = $refParentInvoice->customer_id;
 } elseif (!empty($model->quotation_id)) {
@@ -486,15 +513,86 @@ if ($actualCustomerId && $model->customer_id != $actualCustomerId) {
     $model->save(false);
 }
 
-$itemsPerPage = 12;
+// Build display items
+$displayItems = [];
+$calcSubtotal = 0;
 
 if ($isRefDocument) {
-    $chunks = [ [ 'parent' => true ] ];
+    $baseSubtotal = $taxInvoice ? (float)$taxInvoice->subtotal : (float)$totalModel->subtotal;
+    
+    // Row 1: Tax Invoice
+    $displayItems[] = [
+        'item_no' => 1,
+        'description' => 'ใบกำกับภาษี เลขที่ ' . $refNo,
+        'quantity' => 1,
+        'unit' => 'Lot',
+        'unit_price' => $baseSubtotal,
+        'amount' => $baseSubtotal,
+    ];
+    $calcSubtotal += $baseSubtotal;
+
+    // Credit Note rows
+    foreach ($relatedCreditNotes as $cn) {
+        $adj = (float)($cn->adjust_amount > 0 ? $cn->adjust_amount : $cn->total_amount);
+        $displayItems[] = [
+            'item_no' => '',
+            'description' => 'ใบลดหนี้ เลขที่ ' . $cn->document_no,
+            'quantity' => 1,
+            'unit' => 'Lot',
+            'unit_price' => -$adj,
+            'amount' => -$adj,
+        ];
+        $calcSubtotal -= $adj;
+    }
+
+    // Debit Note rows
+    foreach ($relatedDebitNotes as $dn) {
+        $adj = (float)($dn->adjust_amount > 0 ? $dn->adjust_amount : $dn->total_amount);
+        $displayItems[] = [
+            'item_no' => '',
+            'description' => 'ใบเพิ่มหนี้ เลขที่ ' . $dn->document_no,
+            'quantity' => 1,
+            'unit' => 'Lot',
+            'unit_price' => $adj,
+            'amount' => $adj,
+        ];
+        $calcSubtotal += $adj;
+    }
 } else {
     $model_line = \backend\models\InvoiceItem::find()->where(['invoice_id' => $model->id])->all();
-    $chunks = array_chunk($model_line, $itemsPerPage);
-    if (empty($chunks)) $chunks = [[]];
+    foreach ($model_line as $idx => $line) {
+        $displayItems[] = [
+            'item_no' => $idx + 1,
+            'description' => \backend\helpers\ProductHelper::cleanDescription($line->item_description),
+            'quantity' => $line->quantity,
+            'unit' => $line->unit,
+            'unit_price' => (float)$line->unit_price,
+            'amount' => (float)$line->amount,
+        ];
+    }
 }
+
+// Totals calculation
+if ($isRefDocument && (!empty($relatedCreditNotes) || !empty($relatedDebitNotes) || $taxInvoice)) {
+    $printSubtotal = $calcSubtotal;
+    $printVat = round($printSubtotal * 0.07, 2);
+    $printTotal = $printSubtotal + $printVat;
+} else {
+    $printSubtotal = (float)$totalModel->subtotal;
+    $printVat = (float)$totalModel->vat_amount;
+    $printTotal = (float)$totalModel->total_amount;
+}
+
+if (isset($totalModel->total_amount_text) && !empty($totalModel->total_amount_text) && empty($relatedCreditNotes) && empty($relatedDebitNotes)) {
+    $textThai = $totalModel->total_amount_text;
+} else {
+    $textThai = (new \backend\models\Quotation())->numtothai($printTotal);
+}
+$textEng = \backend\helpers\NumberToText::convert($printTotal);
+
+$itemsPerPage = 12;
+$chunks = array_chunk($displayItems, $itemsPerPage);
+if (empty($chunks)) $chunks = [[]];
 
 $totalPages = count($chunks);
 
@@ -608,38 +706,26 @@ foreach ($chunks as $pageIndex => $chunk):
         </thead>
         <tbody>
             <?php
-            if ($isRefDocument) {
-                // Display summary row for referenced document
-                ?>
-                <tr>
-                    <td style="text-align: center;"><b>1</b></td>
-                    <td class="receipt-text-left">
-                        <b>ใบกำกับภาษี เลขที่ <?= Html::encode($refNo) ?></b>
-                    </td>
-                    <td>1 <?= Html::encode('job') ?></td>
-                    <td class="receipt-text-right"><?= number_format($totalModel->subtotal, 2) ?></td>
-                    <td class="receipt-text-right"><?= number_format($totalModel->subtotal, 2) ?></td>
-                </tr>
-                <?php
-            } else {
-                // Display detailed items for standard invoice/quotation
-                if (!empty($chunk)): 
-                    foreach ($chunk as $idx => $item): 
-                        $globalIndex = ($pageIndex * $itemsPerPage) + $idx + 1;
-                        ?>
-                        <tr>
-                            <td style="text-align: center;"><b><?= $globalIndex ?></b></td>
-                            <td class="receipt-text-left"><?= nl2br(Html::encode(\backend\helpers\ProductHelper::cleanDescription($item->item_description))) ?></td>
-                            <td><?= number_format($item->quantity, 0) ?> <?= Html::encode($item->unit) ?></td>
-                            <td class="receipt-text-right"><?= number_format($item->unit_price, 2) ?></td>
-                            <td class="receipt-text-right"><?= number_format($item->amount, 2) ?></td>
-                        </tr>
-                    <?php endforeach; 
-                endif; 
-            }
+            if (!empty($chunk)): 
+                foreach ($chunk as $idx => $item): 
+                    $globalIndex = ($pageIndex * $itemsPerPage) + $idx + 1;
+                    $itemNo = isset($item['item_no']) ? $item['item_no'] : $globalIndex;
+                    $isBold = !empty($item['item_no']) || $isRefDocument;
+                    ?>
+                    <tr>
+                        <td style="text-align: center;"><?= !empty($itemNo) ? '<b>' . Html::encode($itemNo) . '</b>' : '&nbsp;' ?></td>
+                        <td class="receipt-text-left">
+                            <?= $isBold ? '<b>' . nl2br(Html::encode($item['description'])) . '</b>' : nl2br(Html::encode($item['description'])) ?>
+                        </td>
+                        <td><?= number_format($item['quantity'], 0) ?> <?= Html::encode($item['unit']) ?></td>
+                        <td class="receipt-text-right"><?= number_format($item['unit_price'], 2) ?></td>
+                        <td class="receipt-text-right"><?= number_format($item['amount'], 2) ?></td>
+                    </tr>
+                <?php endforeach; 
+            endif; 
             ?>
             <?php
-            $displayedRows = $isRefDocument ? 1 : count($chunk);
+            $displayedRows = count($chunk);
             $emptyRows = $itemsPerPage - $displayedRows;
             if ($emptyRows < 0) $emptyRows = 0;
             
@@ -664,29 +750,20 @@ foreach ($chunks as $pageIndex => $chunk):
                     </div>
                 </td>
                 <td class="receipt-text-left" style="border: 1px solid #000; border-top: 1px solid #000;"><strong style="font-weight: 800;">รวมเงิน<br>TOTAL</strong></td>
-                <td class="receipt-text-right" style="border: 1px solid #000; border-top: 1px solid #000;"><strong style="font-weight: 800;"><?= number_format($totalModel->subtotal, 2) ?></strong></td>
+                <td class="receipt-text-right" style="border: 1px solid #000; border-top: 1px solid #000;"><strong style="font-weight: 800;"><?= number_format($printSubtotal, 2) ?></strong></td>
             </tr>
             <tr>
                 <td class="receipt-text-left" style="border: 1px solid #000; border-top: none;"><strong style="font-weight: 800;">ภาษีมูลค่าเพิ่ม<br>VAT 7%</strong></td>
-                <td class="receipt-text-right" style="border: 1px solid #000; border-top: none;"><strong style="font-weight: 800;"><?= number_format($totalModel->vat_amount, 2) ?></strong></td>
+                <td class="receipt-text-right" style="border: 1px solid #000; border-top: none;"><strong style="font-weight: 800;"><?= number_format($printVat, 2) ?></strong></td>
             </tr>
             <tr>
                 <td colspan="3" class="receipt-summary-highlight" style="border: none; padding: 6px;">
-                    <?php
-                    if (isset($totalModel->total_amount_text) && !empty($totalModel->total_amount_text)) {
-                        $textThai = $totalModel->total_amount_text;
-                    } else {
-                        // Use Quotation's numtothai method as a fallback
-                        $textThai = (new \backend\models\Quotation())->numtothai($totalModel->total_amount);
-                    }
-                    $textEng = \backend\helpers\NumberToText::convert($totalModel->total_amount);
-                    ?>
                     <strong id="amountText" data-th="<?= Html::encode($textThai) ?>" data-en="<?= Html::encode($textEng) ?>">
                         <?= Html::encode($textThai) ?>
                     </strong>
                 </td>
                 <td class="receipt-text-left receipt-summary-highlight" style="border: 1px solid #000; border-top: none;"><strong style="font-weight: 800;">รวมเงินทั้งสิ้น<br>TOTAL AMOUNT</strong></td>
-                <td class="receipt-text-right receipt-summary-highlight" style="border: 1px solid #000; border-top: none;"><strong style="font-weight: 800;"><?= number_format($totalModel->total_amount, 2) ?></strong></td>
+                <td class="receipt-text-right receipt-summary-highlight" style="border: 1px solid #000; border-top: none;"><strong style="font-weight: 800;"><?= number_format($printTotal, 2) ?></strong></td>
             </tr>
         </tfoot>
     </table>
@@ -694,14 +771,17 @@ foreach ($chunks as $pageIndex => $chunk):
     <!-- Payment and Signature Section -->
     <table class="receipt-payment-signature-table" style="<?= !$isLastPage ? 'visibility: hidden;' : '' ?>">
         <tr>
-            <td style="width: 35%; padding: 15px 8px; vertical-align: middle;">
-                <div style="display: flex; align-items: center; gap: 12px;">
+            <td style="width: 40%; padding: 15px 8px; vertical-align: middle;">
+                <div style="display: flex; align-items: center; gap: 8px;">
                     <strong style="font-size: 11px; white-space: nowrap;">ชำระโดย PAID BY</strong>
-                    <div style="display: flex; align-items: center; gap: 5px;">
+                    <div style="display: flex; align-items: center; gap: 4px;">
                         <span class="receipt-checkbox"></span> <strong style="font-size: 11px;">เงินสด CASH</strong>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 5px;">
+                    <div style="display: flex; align-items: center; gap: 4px;">
                         <span class="receipt-checkbox"></span> <strong style="font-size: 11px;">เช็ค CHEQUE</strong>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span class="receipt-checkbox"></span> <strong style="font-size: 11px;">เงินโอน TRANSFER</strong>
                     </div>
                 </div>
             </td>
@@ -880,26 +960,28 @@ foreach ($chunks as $pageIndex => $chunk):
             if (paymentLabels[0]) paymentLabels[0].textContent = 'PAID BY';
             if (paymentLabels[1]) paymentLabels[1].textContent = 'CASH';
             if (paymentLabels[2]) paymentLabels[2].textContent = 'CHEQUE';
-            if (paymentLabels[3]) paymentLabels[3].textContent = 'BANK:';
-            if (paymentLabels[4]) paymentLabels[4].textContent = 'CHEQUE NO.:';
-            if (paymentLabels[5]) paymentLabels[5].textContent = 'DATE:';
-            if (paymentLabels[6]) paymentLabels[6].textContent = 'AMOUNT';
-            if (paymentLabels[7]) paymentLabels[7].innerHTML = 'COLLECTOR';
-            if (paymentLabels[8]) paymentLabels[8].textContent = 'DATE';
-            if (paymentLabels[9]) paymentLabels[9].innerHTML = 'MANAGER / AUTHORIZED SIGNATURE';
-            if (paymentLabels[10]) paymentLabels[10].textContent = '';
+            if (paymentLabels[3]) paymentLabels[3].textContent = 'TRANSFER';
+            if (paymentLabels[4]) paymentLabels[4].textContent = 'BANK:';
+            if (paymentLabels[5]) paymentLabels[5].textContent = 'CHEQUE NO.:';
+            if (paymentLabels[6]) paymentLabels[6].textContent = 'DATE:';
+            if (paymentLabels[7]) paymentLabels[7].textContent = 'AMOUNT';
+            if (paymentLabels[8]) paymentLabels[8].innerHTML = 'COLLECTOR';
+            if (paymentLabels[9]) paymentLabels[9].textContent = 'DATE';
+            if (paymentLabels[10]) paymentLabels[10].innerHTML = 'MANAGER / AUTHORIZED SIGNATURE';
+            if (paymentLabels[11]) paymentLabels[11].textContent = '';
         } else {
             if (paymentLabels[0]) paymentLabels[0].textContent = 'ชำระโดย PAID BY';
             if (paymentLabels[1]) paymentLabels[1].textContent = 'เงินสด CASH';
             if (paymentLabels[2]) paymentLabels[2].textContent = 'เช็ค CHEQUE';
-            if (paymentLabels[3]) paymentLabels[3].textContent = 'ธนาคาร BANK:';
-            if (paymentLabels[4]) paymentLabels[4].textContent = 'เลขที่เช็ค CHEQUE NO.:';
-            if (paymentLabels[5]) paymentLabels[5].textContent = 'ลงวันที่ DATE:';
-            if (paymentLabels[6]) paymentLabels[6].textContent = 'จำนวนเงิน / AMOUNT';
-            if (paymentLabels[7]) paymentLabels[7].innerHTML = 'ผู้รับเงิน / COLLECTOR';
-            if (paymentLabels[8]) paymentLabels[8].textContent = 'วันที่ / DATE';
-            if (paymentLabels[9]) paymentLabels[9].innerHTML = 'ผู้จัดการ / ผู้มีอำนาจลงนาม';
-            if (paymentLabels[10]) paymentLabels[10].textContent = 'MANAGER / AUTHORIZED SIGNATURE';
+            if (paymentLabels[3]) paymentLabels[3].textContent = 'เงินโอน TRANSFER';
+            if (paymentLabels[4]) paymentLabels[4].textContent = 'ธนาคาร BANK:';
+            if (paymentLabels[5]) paymentLabels[5].textContent = 'เลขที่เช็ค CHEQUE NO.:';
+            if (paymentLabels[6]) paymentLabels[6].textContent = 'ลงวันที่ DATE:';
+            if (paymentLabels[7]) paymentLabels[7].textContent = 'จำนวนเงิน / AMOUNT';
+            if (paymentLabels[8]) paymentLabels[8].innerHTML = 'ผู้รับเงิน / COLLECTOR';
+            if (paymentLabels[9]) paymentLabels[9].textContent = 'วันที่ / DATE';
+            if (paymentLabels[10]) paymentLabels[10].innerHTML = 'ผู้จัดการ / ผู้มีอำนาจลงนาม';
+            if (paymentLabels[11]) paymentLabels[11].textContent = 'MANAGER / AUTHORIZED SIGNATURE';
         }
     }
 
