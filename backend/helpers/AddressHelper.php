@@ -12,6 +12,8 @@ class AddressHelper
 {
     /**
      * จัดรูปแบบที่อยู่เต็มรูปแบบ
+     * เรียงลำดับ: เลขที่, หมู่(ถ้ามี), ซอย, ถนน, แขวง/ตำบล, เขต/อำเภอ, จังหวัด, รหัสไปรษณีย์
+     * (กรุงเทพฯ: แขวง / เขต / กรุงเทพมหานคร, ต่างจังหวัด: ตำบล / อำเภอ / จังหวัด)
      * @param array $addressData ข้อมูลที่อยู่
      * @return string ที่อยู่ที่จัดรูปแบบแล้ว
      */
@@ -23,54 +25,109 @@ class AddressHelper
 
         $parts = [];
 
-        // บ้านเลขที่
-        if (!empty($addressData['home_number'])) {
-            $parts[] = 'เลขที่ ' . $addressData['home_number'];
+        // 1. บ้านเลขที่ (เลขที่)
+        $homeNumber = trim($addressData['home_number'] ?? '');
+        if (!empty($homeNumber) && $homeNumber !== '-') {
+            $parts[] = $homeNumber;
         }
 
-        // ซอย
-        if (!empty($addressData['aisle'])) {
-            $parts[] = 'ซอย' . $addressData['aisle'];
+        // 2. หมู่ (ถ้ามี และยังไม่มีใน home_number)
+        $moo = trim($addressData['moo'] ?? ($addressData['village_no'] ?? ''));
+        if (!empty($moo) && $moo !== '-') {
+            if (!preg_match('/(หมู่|ม\.)/u', $homeNumber)) {
+                if (preg_match('/^(หมู่|ม\.)/u', $moo)) {
+                    $parts[] = $moo;
+                } else {
+                    $parts[] = 'หมู่ ' . $moo;
+                }
+            }
         }
 
-        // ถนน
-        if (!empty($addressData['street'])) {
-            $parts[] = 'ถนน' . $addressData['street'];
+        // 3. ซอย
+        $aisle = trim($addressData['aisle'] ?? '');
+        if (!empty($aisle) && $aisle !== '-') {
+            $aisle = preg_replace('/\s+/', ' ', $aisle);
+            if (preg_match('/^(ซอย|ซ\.)/u', $aisle) || mb_strpos($aisle, 'ซอย') !== false) {
+                $parts[] = $aisle;
+            } else {
+                $parts[] = 'ซอย' . $aisle;
+            }
+        }
+
+        // 4. ถนน
+        $street = trim($addressData['street'] ?? '');
+        if (!empty($street) && $street !== '-') {
+            $street = preg_replace('/\s+/', ' ', $street);
+            if (preg_match('/^(ถนน|ถ\.)/u', $street)) {
+                $parts[] = $street;
+            } else {
+                $parts[] = 'ถนน' . $street;
+            }
         }
 
         // ตรวจสอบว่าเป็นกรุงเทพฯ หรือไม่
-        $isBangkok = self::isBangkok($addressData['province_name'] ?? '');
+        $province = trim($addressData['province_name'] ?? '');
+        $city = trim($addressData['city_name'] ?? '');
+        $district = trim($addressData['district_name'] ?? '');
+        $isBangkok = self::isBangkok($province) || preg_match('/^เขต/u', $city) || preg_match('/^แขวง/u', $district);
 
-        // ตำบล/แขวง
-        if (!empty($addressData['district_name'])) {
+        // 5. แขวง (กทม.) / ตำบล (ต่างจังหวัด)
+        if (!empty($district) && $district !== '-') {
+            $district = preg_replace('/\s+/', ' ', $district);
             if ($isBangkok) {
-                $parts[] = 'แขวง' . $addressData['district_name'];
+                $cleanDistrict = preg_replace('/^(ตำบล|ต\.)\s*/u', '', $district);
+                if (preg_match('/^แขวง/u', $cleanDistrict)) {
+                    $parts[] = $cleanDistrict;
+                } else {
+                    $parts[] = 'แขวง' . $cleanDistrict;
+                }
             } else {
-                $parts[] = 'ตำบล' . $addressData['district_name'];
+                $cleanDistrict = preg_replace('/^แขวง\s*/u', '', $district);
+                if (preg_match('/^(ตำบล|ต\.)/u', $cleanDistrict)) {
+                    $parts[] = $cleanDistrict;
+                } else {
+                    $parts[] = 'ตำบล' . $cleanDistrict;
+                }
             }
         }
 
-        // อำเภอ/เขต
-        if (!empty($addressData['city_name'])) {
+        // 6. เขต (กทม.) / อำเภอ (ต่างจังหวัด)
+        if (!empty($city) && $city !== '-') {
+            $city = preg_replace('/\s+/', ' ', $city);
             if ($isBangkok) {
-                $parts[] = 'เขต' . $addressData['city_name'];
+                $cleanCity = preg_replace('/^(อำเภอ|อ\.)\s*/u', '', $city);
+                if (preg_match('/^เขต/u', $cleanCity)) {
+                    $parts[] = $cleanCity;
+                } else {
+                    $parts[] = 'เขต' . $cleanCity;
+                }
             } else {
-                $parts[] = 'อำเภอ' . $addressData['city_name'];
+                $cleanCity = preg_replace('/^เขต\s*/u', '', $city);
+                if (preg_match('/^(อำเภอ|อ\.)/u', $cleanCity)) {
+                    $parts[] = $cleanCity;
+                } else {
+                    $parts[] = 'อำเภอ' . $cleanCity;
+                }
             }
         }
 
-        // จังหวัด
-        if (!empty($addressData['province_name'])) {
+        // 7. จังหวัด
+        if (!empty($province) && $province !== '-') {
             if ($isBangkok) {
                 $parts[] = 'กรุงเทพมหานคร';
             } else {
-                $parts[] = 'จังหวัด' . $addressData['province_name'];
+                if (preg_match('/^(จังหวัด|จ\.)/u', $province)) {
+                    $parts[] = $province;
+                } else {
+                    $parts[] = 'จังหวัด' . $province;
+                }
             }
         }
 
-        // รหัสไปรษณีย์
-        if (!empty($addressData['zipcode'])) {
-            $parts[] = $addressData['zipcode'];
+        // 8. รหัสไปรษณีย์
+        $zipcode = trim($addressData['zipcode'] ?? '');
+        if (!empty($zipcode) && $zipcode !== '-') {
+            $parts[] = $zipcode;
         }
 
         return implode(' ', $parts);
@@ -168,13 +225,35 @@ class AddressHelper
         }
 
         return self::formatFullAddress([
-            'home_number' => $customer->home_number,
-            'aisle' => $customer->aisle,
-            'street' => $customer->street,
-            'district_name' => $customer->district_name,
-            'city_name' => $customer->city_name,
-            'province_name' => $customer->province_name,
-            'zipcode' => $customer->zipcode,
+            'home_number' => $customer->home_number ?? '',
+            'aisle' => $customer->aisle ?? '',
+            'street' => $customer->street ?? '',
+            'district_name' => $customer->district_name ?? '',
+            'city_name' => $customer->city_name ?? '',
+            'province_name' => $customer->province_name ?? '',
+            'zipcode' => $customer->zipcode ?? '',
+        ]);
+    }
+
+    /**
+     * จัดรูปแบบที่อยู่จาก Vendor model
+     * @param \backend\models\Vendor|\common\models\Vendor $vendor
+     * @return string
+     */
+    public static function formatVendorAddress($vendor)
+    {
+        if (!$vendor) {
+            return '';
+        }
+
+        return self::formatFullAddress([
+            'home_number' => $vendor->home_number ?? '',
+            'aisle' => $vendor->aisle ?? '',
+            'street' => $vendor->street ?? '',
+            'district_name' => $vendor->district_name ?? '',
+            'city_name' => $vendor->city_name ?? '',
+            'province_name' => $vendor->province_name ?? '',
+            'zipcode' => $vendor->zipcode ?? '',
         ]);
     }
 }

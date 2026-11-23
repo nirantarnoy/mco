@@ -36,7 +36,7 @@ $total = 0;
 //$total = $netAmount + $vat - $tax_amount;
 
 $vendor_info = \backend\models\Vendor::findVendorInfo($purchase->vendor_id);
-$vendor_address = $vendor_info !== null ? $vendor_info['home_number'].' '.$vendor_info['street'].' '.$vendor_info['aisle'].', '.$vendor_info['district_name'].', '.$vendor_info['city_name'].', '.$vendor_info['province_name'].', '.$vendor_info['zipcode'] : '';
+$vendor_address = \backend\models\Vendor::findFullAddress($purchase->vendor_id);
 $phone = $vendor_info !== null ? $vendor_info['phone'] : '';
 $email = $vendor_info !== null ? $vendor_info['email'] : '';
 $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';

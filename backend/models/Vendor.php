@@ -71,7 +71,10 @@ class Vendor extends \common\models\Vendor
 
     public static function findFullAddress($id){
         $model = Vendor::find()->where(['id'=>$id])->one();
-        return $model!= null?$model->home_number.' '.$model->street.' '.$model->aisle.' '.$model->district_name.' '.$model->city_name.' '.$model->province_name.' '.$model->zipcode:'';
+        if ($model != null) {
+            return \backend\helpers\AddressHelper::formatVendorAddress($model);
+        }
+        return '';
     }
 
 
@@ -124,6 +127,15 @@ class Vendor extends \common\models\Vendor
     {
         if (parent::beforeValidate()) {
             $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
+            return true;
+        }
+        return false;
+    }
+
+    public function beforeSave($insert)
+    {
+        if (parent::beforeSave($insert)) {
+            $this->full_address = \backend\helpers\AddressHelper::formatVendorAddress($this);
             return true;
         }
         return false;
