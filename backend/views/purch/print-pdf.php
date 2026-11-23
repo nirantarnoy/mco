@@ -24,6 +24,7 @@ $total = $netAmount + $vat;
 
 $vendor_info = \backend\models\Vendor::findVendorInfo($purchase->vendor_id);
 $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
+$isCancelled = ($purchase->status == \backend\models\Purch::STATUS_CANCELLED || $purchase->approve_status == \backend\models\Purch::STATUS_CANCELLED);
 ?>
 
     <!DOCTYPE html>
@@ -41,6 +42,23 @@ $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
 
             .po-container {
                 padding: 0;
+                position: relative;
+            }
+
+            .cancelled-watermark {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(-30deg);
+                font-size: 60px;
+                font-weight: bold;
+                font-style: italic;
+                color: #d32f2f;
+                opacity: 0.8;
+                letter-spacing: 4px;
+                text-transform: uppercase;
+                z-index: 9999;
+                white-space: nowrap;
             }
 
             .header {
@@ -201,6 +219,9 @@ $contact_name = $vendor_info !== null ? $vendor_info['contact_name'] : '';
 <body>
 
 <div class="po-container">
+    <?php if ($isCancelled): ?>
+        <div class="cancelled-watermark">CANCELLED</div>
+    <?php endif; ?>
     <!-- Header -->
     <div class="header">
         <table>

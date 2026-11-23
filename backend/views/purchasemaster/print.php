@@ -37,6 +37,7 @@ $is_30days = ($model->paytrm == '30 Days' || (isset($term) && ($term->day_count 
 $is_other = (!$is_advance && !$is_immediately && !$is_30days && !empty($model->paytrm));
 
 $fmt = Yii::$app->formatter;
+$isCancelled = ($model->status == \backend\models\PurchaseMaster::STATUS_CANCELLED || $model->approve_status == \backend\models\PurchaseMaster::STATUS_CANCELLED);
 ?>
 
 <!DOCTYPE html>
@@ -183,13 +184,54 @@ $fmt = Yii::$app->formatter;
             margin: 0 10px;
         }
         
+        .cancelled-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 60px;
+            font-weight: bold;
+            font-style: italic;
+            color: #d32f2f;
+            opacity: 0.8;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            z-index: 9999;
+            pointer-events: none;
+            white-space: nowrap;
+            user-select: none;
+            -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
         @media print {
             .no-print { display: none; }
             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .cancelled-watermark {
+                display: block !important;
+                position: absolute !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) rotate(-30deg) !important;
+                font-size: 60px !important;
+                font-weight: bold !important;
+                font-style: italic !important;
+                color: #d32f2f !important;
+                opacity: 0.8 !important;
+                letter-spacing: 4px !important;
+                z-index: 9999 !important;
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
         }
     </style>
 </head>
 <body>
+    <?php if ($isCancelled): ?>
+        <div class="cancelled-watermark">CANCELLED</div>
+    <?php endif; ?>
     <div class="no-print" style="text-align: right; margin-bottom: 20px;">
         <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">Print</button>
     </div>

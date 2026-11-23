@@ -32,6 +32,8 @@ $vendor_address = $vendor_info !== null ? $vendor_info['home_number'].' '.$vendo
 $phone = $vendor_info !== null ? ($vendor_info['phone'] ?? '') : '';
 $email = $vendor_info !== null ? ($vendor_info['email'] ?? '') : '';
 $contact_name = $vendor_info !== null ? ($vendor_info['contact_name'] ?? '') : '';
+
+$isCancelled = ($purchase->status == \backend\models\Purch::STATUS_CANCELLED || $purchase->approve_status == \backend\models\Purch::STATUS_CANCELLED);
 ?>
 
 <style>
@@ -73,6 +75,28 @@ $contact_name = $vendor_info !== null ? ($vendor_info['contact_name'] ?? '') : '
 
         .no-print {
             display: none !important;
+        }
+
+        .cancelled-watermark {
+            display: block !important;
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) rotate(-30deg) !important;
+            font-size: 60px !important;
+            font-weight: bold !important;
+            font-style: italic !important;
+            color: #d32f2f !important;
+            opacity: 0.8 !important;
+            letter-spacing: 4px !important;
+            text-transform: uppercase !important;
+            z-index: 9999 !important;
+            pointer-events: none !important;
+            white-space: nowrap !important;
+            user-select: none !important;
+            -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            print-color-adjust: exact !important;
         }
 
         /* Fix for print layout */
@@ -310,6 +334,28 @@ $contact_name = $vendor_info !== null ? ($vendor_info['contact_name'] ?? '') : '
         font-size: 12px;
         line-height: 1.3;
         color: #000;
+        position: relative;
+    }
+
+    .cancelled-watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-30deg);
+        font-size: 60px;
+        font-weight: bold;
+        font-style: italic;
+        color: #d32f2f;
+        opacity: 0.8;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        z-index: 9999;
+        pointer-events: none;
+        white-space: nowrap;
+        user-select: none;
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
 
     .header {
@@ -540,6 +586,9 @@ $contact_name = $vendor_info !== null ? ($vendor_info['contact_name'] ?? '') : '
 </style>
 
 <div class="po-container">
+    <?php if ($isCancelled): ?>
+        <div class="cancelled-watermark">CANCELLED</div>
+    <?php endif; ?>
     <!-- Header -->
     <div class="header">
         <div class="logo-section">

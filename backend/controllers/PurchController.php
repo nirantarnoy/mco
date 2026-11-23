@@ -1917,6 +1917,11 @@ class PurchController extends BaseController
         ]);
 
         // Write HTML to PDF
+        if ($purchase->status == Purch::STATUS_CANCELLED || $purchase->approve_status == Purch::STATUS_CANCELLED) {
+            $mpdf->SetWatermarkText('CANCELLED');
+            $mpdf->showWatermarkText = true;
+            $mpdf->watermarkTextAlpha = 0.25;
+        }
         $mpdf->WriteHTML($content);
 
         // Output PDF
