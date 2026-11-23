@@ -163,6 +163,16 @@ $step = isset($step) ? (int)$step : 1;
                             $doc_date = $none_pr->docdat ? date('d/m/Y', strtotime($none_pr->docdat)) : '-';
                             $vendor_name = $none_pr->supnam ?: $vendor_name;
                         }
+                    } elseif ($ref->ref_type == \backend\models\PaymentVoucherRef::REF_TYPE_PRE_ADVANCE || $ref->ref_type == 4 || $ref->ref_type == 5 || (isset($ref->ref_no) && strpos($ref->ref_no, 'PA') === 0)) {
+                        $type_label = 'Pre-Advance (PA)';
+                        $pa = \backend\models\PreAdvance::findOne($ref->ref_id);
+                        if (!$pa && !empty($ref->ref_no)) {
+                            $pa = \backend\models\PreAdvance::findOne(['pre_advance_no' => $ref->ref_no]);
+                        }
+                        if ($pa) {
+                            $doc_date = $pa->trans_date ? date('d/m/Y', strtotime($pa->trans_date)) : '-';
+                            $vendor_name = $pa->recipient_name ?: $vendor_name;
+                        }
                     }
             ?>
                 <tr>
@@ -220,6 +230,7 @@ $step = isset($step) ? (int)$step : 1;
 
                     $vat_percent = 0;
                     $wht_percent = 0;
+                    $pa = null;
 
                     if ($ref->ref_type == \backend\models\PaymentVoucherRef::REF_TYPE_PO) {
                         $po = \backend\models\Purch::findOne($ref->ref_id);
@@ -251,24 +262,120 @@ $step = isset($step) ? (int)$step : 1;
                                 $vat_percent = $pr->vat_percent > 0 ? $pr->vat_percent : 7;
                             }
                         }
+                    } elseif ($ref->ref_type == \backend\models\PaymentVoucherRef::REF_TYPE_PRE_ADVANCE || $ref->ref_type == 4 || $ref->ref_type == 5 || (isset($ref->ref_no) && strpos($ref->ref_no, 'PA') === 0)) {
+                        $pa = \backend\models\PreAdvance::findOne($ref->ref_id);
+                        if (!$pa && !empty($ref->ref_no)) {
+                            $pa = \backend\models\PreAdvance::findOne(['pre_advance_no' => $ref->ref_no]);
+                        }
+                        if ($pa) {
+                            $doc_date = $pa->trans_date ? date('d/m/Y', strtotime($pa->trans_date)) : '-';
+                        }
+                    }
+
+                    // ตรวจสอบภาษีซื้อ / หัก ณ ที่จ่าย จากรายการบันทึกบัญชี (paymentVoucherLines)
+                    $line_vat = 0;
+                    $line_wht = 0;
+                    $has_line_vat = false;
+                    $has_line_wht = false;
+
+                    if (!empty($model->paymentVoucherLines)) {
+                        foreach ($model->paymentVoucherLines as $pvLine) {
+                            $isMatch = false;
+                            if (count($refs) === 1) {
+                                $isMatch = true;
+                            } else {
+                                if (!empty($ref->ref_no) && !empty($pvLine->bill_code) && strpos($pvLine->bill_code, $ref->ref_no) !== false) {
+                                    $isMatch = true;
+                                }
+                            }
+
+                            if ($isMatch) {
+                                $isVat = ($pvLine->account_code === '1154-00' || 
+                                          stripos($pvLine->description, 'ภาษีซื้อ') !== false || 
+                                          stripos($pvLine->description, 'vat') !== false || 
+                                          stripos($pvLine->description, 'ภาษีมูลค่าเพิ่ม') !== false);
+                                if ($isVat && $pvLine->debit > 0) {
+                                    $line_vat += (float)$pvLine->debit;
+                                    $has_line_vat = true;
+                                }
+
+                                $isWht = (stripos($pvLine->description, 'ภาษีหัก ณ ที่จ่าย') !== false || 
+                                          stripos($pvLine->description, 'หัก ณ ที่จ่าย') !== false || 
+                                          stripos($pvLine->description, 'wht') !== false);
+                                if ($isWht && $pvLine->credit > 0) {
+                                    $line_wht += (float)$pvLine->credit;
+                                    $has_line_wht = true;
+                                }
+                            }
+                        }
+                    }
+
+                    // หากเป็นเอกสาร PA และยังไม่พบใน lines ให้ตรวจสอบจากเอกสารอ้างอิงใน PreAdvance
+                    if (!$has_line_vat && $pa) {
+                        $paRefs = \backend\models\PreAdvanceRef::find()->where(['pre_advance_id' => $pa->id])->all();
+                        $pa_calc_vat = 0;
+                        $pa_calc_wht = 0;
+                        foreach ($paRefs as $pRef) {
+                            if ($pRef->ref_type == \backend\models\PreAdvanceRef::REF_TYPE_NONE_PR) {
+                                $npr = \backend\models\PurchaseMaster::findOne($pRef->ref_id);
+                                if ($npr) {
+                                    if ($npr->vat_amount > 0) {
+                                        $pa_calc_vat += (float)$npr->vat_amount;
+                                    } elseif ($npr->vat_percent > 0 && $npr->amount > 0) {
+                                        $pa_calc_vat += (float)($npr->amount * $npr->vat_percent / 100);
+                                    }
+                                    if ($npr->tax_amount > 0) {
+                                        $pa_calc_wht += (float)$npr->tax_amount;
+                                    } elseif ($npr->tax_percent > 0 && $npr->amount > 0) {
+                                        $pa_calc_wht += (float)($npr->amount * $npr->tax_percent / 100);
+                                    }
+                                }
+                            } elseif ($pRef->ref_type == \backend\models\PreAdvanceRef::REF_TYPE_PO) {
+                                $po = \backend\models\Purch::findOne($pRef->ref_id);
+                                if ($po) {
+                                    if ($po->is_vat == 1) {
+                                        $poVatPer = $po->vat_percent > 0 ? $po->vat_percent : 7;
+                                        $pa_calc_vat += (float)($po->total_amount * $poVatPer / 100);
+                                    }
+                                    if ($po->whd_tax_per > 0) {
+                                        $pa_calc_wht += (float)($po->total_amount * $po->whd_tax_per / 100);
+                                    }
+                                }
+                            }
+                        }
+                        if ($pa_calc_vat > 0) {
+                            $has_line_vat = true;
+                            $line_vat = $pa_calc_vat;
+                        }
+                        if ($pa_calc_wht > 0) {
+                            $has_line_wht = true;
+                            $line_wht = $pa_calc_wht;
+                        }
                     }
 
                     // คำนวณยอดก่อนภาษีและภาษีจากยอดชำระจริง (Total Payment)
                     $total = $ref->amount;
-                    
-                    // Total = BeforeVAT * (1 + vat_percent/100 - wht_percent/100)
-                    $multiplier = 1 + ($vat_percent / 100) - ($wht_percent / 100);
-                    
-                    if ($multiplier > 0) {
-                        $before_vat = $total / $multiplier;
-                    } else {
-                        $before_vat = $total;
-                    }
-                    
-                    $vat = $before_vat * ($vat_percent / 100);
-                    $wth = $before_vat * ($wht_percent / 100);
 
-                    $total = $before_vat + $vat - $wth;
+                    if ($has_line_vat || $has_line_wht) {
+                        $vat = $has_line_vat ? $line_vat : 0;
+                        $wth = $has_line_wht ? $line_wht : 0;
+                        $before_vat = $total - $vat + $wth;
+                        $total = $before_vat + $vat - $wth;
+                    } else {
+                        // Total = BeforeVAT * (1 + vat_percent/100 - wht_percent/100)
+                        $multiplier = 1 + ($vat_percent / 100) - ($wht_percent / 100);
+                        
+                        if ($multiplier > 0) {
+                            $before_vat = $total / $multiplier;
+                        } else {
+                            $before_vat = $total;
+                        }
+                        
+                        $vat = $before_vat * ($vat_percent / 100);
+                        $wth = $before_vat * ($wht_percent / 100);
+
+                        $total = $before_vat + $vat - $wth;
+                    }
                     
                     $sum_before_vat += $before_vat;
                     $sum_vat += $vat;
@@ -317,7 +424,8 @@ $step = isset($step) ? (int)$step : 1;
             $lines = $model->paymentVoucherLines;
             $total_debit = 0;
             $total_credit = 0;
-            for($i = 0; $i < 10; $i++): 
+            $rowCount = max(!empty($lines) ? count($lines) : 0, 10);
+            for($i = 0; $i < $rowCount; $i++): 
                 $line = $lines[$i] ?? null;
                 if($line) {
                     $total_debit += $line->debit;
