@@ -24,11 +24,27 @@ $this->params['breadcrumbs'][] = $this->title;
     $returnedPos = [];
     try {
         Purch::ensureRejectColumns();
+        $twoDaysAgo = date('Y-m-d 00:00:00', strtotime('-2 days'));
+        $twoDaysAgoTimestamp = strtotime($twoDaysAgo);
         $returnedPoQuery = Purch::find()
             ->where(['approve_status' => Purch::APPROVE_STATUS_RETURNED]);
         if (!$isAdmin) {
             $returnedPoQuery->andWhere(['created_by' => $currentUserId]);
         }
+        $sessionCompanyId = Yii::$app->session->get('company_id');
+        if ($sessionCompanyId && $sessionCompanyId != 100) {
+            $returnedPoQuery->andWhere(['company_id' => $sessionCompanyId]);
+        }
+        // แสดงรายการตีกลับให้แก้ไขเฉพาะ 2 วันล่าสุดเท่านั้น
+        $returnedPoQuery->andWhere([
+            'or',
+            ['>=', 'rejected_at', $twoDaysAgo],
+            [
+                'and',
+                ['or', ['rejected_at' => null], ['rejected_at' => '']],
+                ['>=', 'updated_at', $twoDaysAgoTimestamp]
+            ]
+        ]);
         $returnedPos = $returnedPoQuery->orderBy(['id' => SORT_DESC])->all();
     } catch (\Exception $e) {
         \Yii::error('Error loading returned POs: ' . $e->getMessage());
@@ -42,7 +58,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <i class="fas fa-undo-alt"></i> งานตีกลับแก้ไข
                 </span>
                 <h5 class="alert-heading mb-0 font-weight-bold fw-bold text-dark">
-                    <?= $isAdmin ? 'มีใบสั่งซื้อ (PO) ที่ถูกส่งกลับแก้ไข' : 'คุณมีใบสั่งซื้อ (PO) ที่ถูกส่งกลับแก้ไข' ?> 
+                    <?= $isAdmin ? 'มีใบสั่งซื้อ (PO) ที่ถูกส่งกลับแก้ไข (2 วันล่าสุด)' : 'คุณมีใบสั่งซื้อ (PO) ที่ถูกส่งกลับแก้ไข (2 วันล่าสุด)' ?> 
                     <span class="badge badge-danger bg-danger text-white"><?= count($returnedPos) ?> รายการ</span>
                 </h5>
             </div>
