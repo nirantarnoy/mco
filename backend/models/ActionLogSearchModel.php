@@ -62,12 +62,29 @@ class ActionLogSearchModel extends ActionLogModel
             ->andFilterWhere(['like', 'method', $this->method])
             ->andFilterWhere(['like', 'message', $this->message]);
 
-        // User search
+        // User search (รองรับทั้ง User ID, Username, และชื่อ-นามสกุลพนักงาน)
         if (!empty($this->user_search)) {
-            if (is_numeric($this->user_search)) {
-                $query->andFilterWhere(['user_id' => $this->user_search]);
+            $userTerm = trim($this->user_search);
+            if (is_numeric($userTerm)) {
+                $query->andFilterWhere(['user_id' => (int)$userTerm]);
             } else {
-                $query->andFilterWhere(['like', 'username', $this->user_search]);
+                $matchedUserIds = (new \yii\db\Query())
+                    ->select('u.id')
+                    ->from(['u' => 'user'])
+                    ->leftJoin(['e' => 'employee'], 'e.id = u.emp_ref_id')
+                    ->where(['like', 'u.username', $userTerm])
+                    ->orWhere(['like', 'e.fname', $userTerm])
+                    ->orWhere(['like', 'e.lname', $userTerm])
+                    ->column();
+
+                if (!empty($matchedUserIds)) {
+                    $query->andWhere(['or',
+                        ['like', 'username', $userTerm],
+                        ['in', 'user_id', $matchedUserIds]
+                    ]);
+                } else {
+                    $query->andFilterWhere(['like', 'username', $userTerm]);
+                }
             }
         }
 
@@ -92,6 +109,17 @@ class ActionLogSearchModel extends ActionLogModel
             ->limit($limit)
             ->asArray()
             ->all();
+    }
+
+    public static function getPopularActionsList($limit = 30)
+    {
+        $actions = self::getPopularActions($limit);
+        $list = [];
+        foreach ($actions as $item) {
+            $act = $item['action'];
+            $list[$act] = $act . ' (' . number_format($item['count']) . ')';
+        }
+        return $list;
     }
 
     public static function getStatistics($days = 30)

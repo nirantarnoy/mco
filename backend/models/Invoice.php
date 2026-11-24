@@ -81,6 +81,9 @@ class Invoice extends ActiveRecord
                 'createdByAttribute' => 'created_by',
                 'updatedByAttribute' => 'updated_by',
             ],
+            'actionLog' => [
+                'class' => \app\behaviors\ActionLogBehavior::class,
+            ],
         ];
     }
 

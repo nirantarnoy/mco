@@ -919,7 +919,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                 <thead>
                                     <tr>
                                         <th>เวลา</th>
-                                        <th>ผู้ใช้งาน</th>
+                                        <th>ผู้ดำเนินการ</th>
                                         <th>การกระทำ</th>
                                         <th>รายละเอียดเพิ่มเติม</th>
                                         <th>Diff (เปรียบเทียบ)</th>
@@ -929,7 +929,16 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                     <?php foreach ($filteredLogs as $log): ?>
                                         <tr>
                                             <td><?= date('d/m/Y H:i:s', strtotime($log->created_at)) ?></td>
-                                            <td><?= Html::encode($log->username) ?></td>
+                                            <td>
+                                                <?php 
+                                                $emp = $log->getEmployeeName();
+                                                if ($emp): ?>
+                                                    <strong><?= Html::encode($emp) ?></strong><br>
+                                                    <small class="text-muted"><?= Html::encode($log->username) ?></small>
+                                                <?php else: ?>
+                                                    <?= Html::encode($log->username ?: 'Guest') ?>
+                                                <?php endif; ?>
+                                            </td>
                                             <td>
                                                 <?php
                                                     if ($log->action == 'MODEL_CREATE') echo '<span class="badge bg-success">สร้าง</span>';
@@ -973,7 +982,7 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                 <thead>
                                     <tr>
                                         <th>เวลา</th>
-                                        <th>ผู้ใช้งาน</th>
+                                        <th>ผู้ดำเนินการ</th>
                                         <th>Action Type</th>
                                         <th>รายละเอียด / ข้อความ</th>
                                         <th>IP Address</th>
@@ -984,7 +993,16 @@ $model_doc = \common\models\PurchDoc::find()->where(['purch_id' => $model->id])-
                                     <?php foreach ($rawLogs as $log): ?>
                                         <tr>
                                             <td><?= date('d/m/Y H:i:s', strtotime($log->created_at)) ?></td>
-                                            <td><?= Html::encode($log->username) ?></td>
+                                            <td>
+                                                <?php 
+                                                $emp = $log->getEmployeeName();
+                                                if ($emp): ?>
+                                                    <strong><?= Html::encode($emp) ?></strong><br>
+                                                    <small class="text-muted"><?= Html::encode($log->username) ?></small>
+                                                <?php else: ?>
+                                                    <?= Html::encode($log->username ?: 'Guest') ?>
+                                                <?php endif; ?>
+                                            </td>
                                             <td>
                                                 <?php
                                                     if ($log->action == 'MODEL_CREATE') echo '<span class="badge bg-success">สร้าง (Model)</span>';

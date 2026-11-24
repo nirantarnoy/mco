@@ -104,19 +104,77 @@ $this->params['breadcrumbs'][] = $this->title;
 
             [
                 'attribute' => 'user_search',
-                'label' => 'User',
+                'label' => 'ผู้ดำเนินการ (User)',
+                'format' => 'raw',
                 'value' => function ($model) {
-                    return $model->username . ($model->user_id ? " (ID: {$model->user_id})" : '');
+                    $empName = $model->getEmployeeName();
+                    if (!empty($empName)) {
+                        return '<strong>' . Html::encode($empName) . '</strong><br><small class="text-muted">' . Html::encode($model->username) . ($model->user_id ? ' (ID: ' . $model->user_id . ')' : '') . '</small>';
+                    }
+                    return Html::encode($model->username . ($model->user_id ? " (ID: {$model->user_id})" : ''));
+                },
+                'filter' => Html::activeTextInput($searchModel, 'user_search', [
+                    'class' => 'form-control',
+                    'placeholder' => 'ค้นหาผู้ดำเนินการ / Username...',
+                ]),
+            ],
+
+            [
+                'attribute' => 'action',
+                'label' => 'การกระทำ (Action)',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    if ($model->action == 'MODEL_CREATE') return '<span class="badge badge-success">สร้าง (Model)</span>';
+                    if ($model->action == 'MODEL_UPDATE') return '<span class="badge badge-warning">แก้ไข (Model)</span>';
+                    if ($model->action == 'MODEL_DELETE') return '<span class="badge badge-danger">ลบ (Model)</span>';
+                    if ($model->action == 'REQUEST_RECALL') return '<span class="badge badge-warning text-dark"><i class="fas fa-undo-alt"></i> ร้องขอ Recall</span>';
+                    if ($model->action == 'APPROVE_RECALL') return '<span class="badge badge-success"><i class="fas fa-check"></i> อนุมัติ Recall</span>';
+                    if ($model->action == 'REJECT_RECALL') return '<span class="badge badge-danger"><i class="fas fa-times"></i> ปฏิเสธ Recall</span>';
+                    if ($model->action == 'REJECT') return '<span class="badge badge-danger"><i class="fas fa-ban"></i> ไม่อนุมัติ</span>';
+                    if ($model->action == 'RETURN_FOR_EDIT') return '<span class="badge badge-warning text-dark"><i class="fas fa-undo"></i> ส่งกลับแก้ไข</span>';
+                    if ($model->action == 'APPROVE') return '<span class="badge badge-success"><i class="fas fa-check"></i> อนุมัติ</span>';
+                    if ($model->action == 'CONTROLLER_ACTION') return '<span class="badge badge-primary">เข้าใช้งาน (' . Html::encode($model->action_method) . ')</span>';
+                    return '<span class="badge badge-info">' . Html::encode($model->action) . '</span>';
+                },
+                'filter' => Select2::widget([
+                    'model' => $searchModel,
+                    'attribute' => 'action',
+                    'data' => array_merge(['' => 'ทั้งหมด (All Actions)'], \backend\models\ActionLogSearchModel::getPopularActionsList()),
+                    'options' => ['placeholder' => 'เลือก Action...'],
+                    'pluginOptions' => [
+                        'allowClear' => true
+                    ],
+                ]),
+            ],
+
+            [
+                'attribute' => 'message',
+                'label' => 'รายละเอียด / หมายเหตุ',
+                'value' => function ($model) {
+                    return $model->message ?: '-';
+                },
+                'filter' => Html::activeTextInput($searchModel, 'message', [
+                    'class' => 'form-control',
+                    'placeholder' => 'ค้นหาข้อความ...',
+                ]),
+            ],
+
+            [
+                'attribute' => 'status',
+                'label' => 'สถานะ',
+                'format' => 'raw',
+                'value' => function ($model) {
+                    return $model->getStatusLabel();
                 },
                 'filter' => Select2::widget([
                     'model' => $searchModel,
                     'attribute' => 'status',
-                    'data' => array_merge([''], \backend\models\ActionLogModel::getStatusOptions()),
-                    'options' => ['placeholder' => 'Select Status...'],
+                    'data' => array_merge(['' => 'ทั้งหมด (All Status)'], \backend\models\ActionLogModel::getStatusOptions()),
+                    'options' => ['placeholder' => 'เลือกสถานะ...'],
                     'pluginOptions' => [
                         'allowClear' => true
                     ],
-                ])
+                ]),
             ],
 
             'ip_address',

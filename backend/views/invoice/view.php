@@ -438,24 +438,78 @@ $model_doc = \common\models\InvoiceDoc::find()->where(['invoice_id' => $model->i
 
     <!-- Activity Log Section -->
     <div class="card mt-4">
-        <div class="card-header">
+        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center flex-wrap">
             <h5 class="card-title mb-0">
-                <i class="fas fa-history"></i> ประวัติการทำงาน
+                <i class="fas fa-history"></i> ประวัติการทำงาน / Action Log
             </h5>
+            <div class="card-tools d-flex align-items-center gap-2">
+                <a href="<?= \yii\helpers\Url::to(['action-log/index', 'ActionLogSearchModel[model_class]' => get_class($model), 'ActionLogSearchModel[model_id]' => $model->id]) ?>" class="btn btn-xs btn-outline-light btn-sm text-white" target="_blank" title="ดูบันทึกเหตุการณ์ทั้งหมดของระบบ">
+                    <i class="fas fa-external-link-alt"></i> เปิดหน้า Action Log กลาง
+                </a>
+            </div>
         </div>
         <div class="card-body">
-            <div class="row">
+            <div class="row mb-3">
                 <div class="col-md-6">
                     <strong>สร้างเมื่อ:</strong><br>
                     <?= ($model->created_at && !($model->created_at instanceof \yii\db\Expression) && $model->created_at !== 'NOW()') ? Yii::$app->formatter->asDatetime($model->created_at, 'dd/MM/yyyy HH:mm') : '-' ?><br>
-                    <small class="text-muted">โดย: <?= $model->created_by ? 'User #' . $model->created_by : 'ระบบ' ?></small>
+                    <small class="text-muted">โดย: <?= $model->created_by ? ((\backend\models\User::findEmployeeNameByUserId($model->created_by) ?: '') . ' (' . (\common\models\User::findIdentity($model->created_by)->username ?? 'ID: ' . $model->created_by) . ')') : 'ระบบ' ?></small>
                 </div>
                 <div class="col-md-6">
                     <strong>แก้ไขล่าสุด:</strong><br>
                     <?= ($model->updated_at && !($model->updated_at instanceof \yii\db\Expression) && $model->updated_at !== 'NOW()') ? Yii::$app->formatter->asDatetime($model->updated_at, 'dd/MM/yyyy HH:mm') : '-' ?><br>
-                    <small class="text-muted">โดย: <?= $model->updated_by ? 'User #' . $model->updated_by : 'ระบบ' ?></small>
+                    <small class="text-muted">โดย: <?= $model->updated_by ? ((\backend\models\User::findEmployeeNameByUserId($model->updated_by) ?: '') . ' (' . (\common\models\User::findIdentity($model->updated_by)->username ?? 'ID: ' . $model->updated_by) . ')') : 'ระบบ' ?></small>
                 </div>
             </div>
+
+            <?php
+            $rawLogs = \backend\models\ActionLogModel::find()
+                ->where(['model_class' => get_class($model), 'model_id' => $model->id])
+                ->orderBy(['created_at' => SORT_DESC])
+                ->all();
+            if (!empty($rawLogs)): ?>
+                <div class="table-responsive mt-2">
+                    <table class="table table-bordered table-striped table-sm" style="font-size: 13px;">
+                        <thead>
+                            <tr>
+                                <th>เวลา</th>
+                                <th>ผู้ดำเนินการ</th>
+                                <th>การกระทำ</th>
+                                <th>รายละเอียด / ข้อความ</th>
+                                <th>IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($rawLogs as $log): ?>
+                                <tr>
+                                    <td><?= date('d/m/Y H:i:s', strtotime($log->created_at)) ?></td>
+                                    <td>
+                                        <?php 
+                                        $emp = $log->getEmployeeName();
+                                        if ($emp): ?>
+                                            <strong><?= Html::encode($emp) ?></strong><br>
+                                            <small class="text-muted"><?= Html::encode($log->username) ?></small>
+                                        <?php else: ?>
+                                            <?= Html::encode($log->username ?: 'Guest') ?>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                            if ($log->action == 'MODEL_CREATE') echo '<span class="badge bg-success">สร้าง</span>';
+                                            elseif ($log->action == 'MODEL_UPDATE') echo '<span class="badge bg-warning">แก้ไข</span>';
+                                            elseif ($log->action == 'MODEL_DELETE' || $log->action == 'delete') echo '<span class="badge bg-danger">ลบ</span>';
+                                            elseif ($log->action == 'cancel') echo '<span class="badge bg-danger">ยกเลิก</span>';
+                                            else echo '<span class="badge bg-info">' . Html::encode($log->action) . '</span>';
+                                        ?>
+                                    </td>
+                                    <td><?= Html::encode($log->message) ?></td>
+                                    <td><code><?= Html::encode($log->ip_address) ?></code></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 

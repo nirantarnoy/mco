@@ -42,9 +42,18 @@ $this->params['breadcrumbs'][] = $this->title;
                         'attributes' => [
                             [
                                 'attribute' => 'user_id',
+                                'label' => 'User ID',
                                 'value' => $model->user_id ? $model->user_id : 'Guest',
                             ],
-                            'username',
+                            [
+                                'label' => 'ผู้ดำเนินการ (ชื่อ-นามสกุล)',
+                                'value' => $model->getEmployeeName() ?: '-',
+                            ],
+                            [
+                                'attribute' => 'username',
+                                'label' => 'Username',
+                                'value' => $model->username,
+                            ],
                             [
                                 'attribute' => 'action',
                                 'value' => $model->action,
@@ -119,6 +128,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                     <div class="panel-body">
                         <p><strong>ID:</strong> <?= $model->user_id ?></p>
+                        <p><strong>ผู้ดำเนินการ:</strong> <?= Html::encode($model->getEmployeeName() ?: '-') ?></p>
                         <p><strong>Username:</strong> <?= Html::encode($model->username) ?></p>
                         <p><strong>IP:</strong> <?= Html::encode($model->ip_address) ?></p>
                     </div>

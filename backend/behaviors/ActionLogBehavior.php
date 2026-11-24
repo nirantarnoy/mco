@@ -279,3 +279,7 @@ class ActionLogBehavior extends Behavior
         ], $details), $severity, 'Security event: ' . $event);
     }
 }
+
+if (!class_exists('backend\behaviors\ActionLogBehavior', false)) {
+    class_alias('app\behaviors\ActionLogBehavior', 'backend\behaviors\ActionLogBehavior');
+}

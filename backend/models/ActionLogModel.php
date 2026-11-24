@@ -103,29 +103,105 @@ class ActionLogModel extends ActiveRecord
     }
 
     /**
+     * Gets query for [[User]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getUser()
+    {
+        return $this->hasOne(\common\models\User::class, ['id' => 'user_id']);
+    }
+
+    /**
+     * ดึงชื่อพนักงานจริงจาก employee table ผ่าน user_id
+     */
+    public function getEmployeeName()
+    {
+        if ($this->user_id) {
+            $emp = (new \yii\db\Query())
+                ->select(['e.fname', 'e.lname'])
+                ->from(['u' => 'user'])
+                ->innerJoin(['e' => 'employee'], 'e.id = u.emp_ref_id')
+                ->where(['u.id' => $this->user_id])
+                ->one();
+            if ($emp) {
+                $fullName = trim(($emp['fname'] ?? '') . ' ' . ($emp['lname'] ?? ''));
+                if (!empty($fullName)) {
+                    return $fullName;
+                }
+            }
+        }
+        return '';
+    }
+
+    /**
+     * แสดงชื่อผู้ดำเนินการแบบสมบูรณ์ (ชื่อพนักงาน + Username)
+     */
+    public function getActorName()
+    {
+        $empName = $this->getEmployeeName();
+        if (!empty($empName)) {
+            $username = $this->username ?: ($this->user ? $this->user->username : '');
+            return $empName . (!empty($username) ? ' (' . $username . ')' : '');
+        }
+        if (!empty($this->username) && $this->username !== 'Guest') {
+            return $this->username;
+        }
+        if ($this->user_id) {
+            return 'User #' . $this->user_id;
+        }
+        return 'ระบบ / Guest';
+    }
+
+    /**
      * บันทึก Action Log
      */
     public static function log($action, $data = [], $status = self::STATUS_SUCCESS, $message = null)
     {
-        $request = Yii::$app->request;
-        $user = Yii::$app->user;
+        $request = Yii::$app->has('request') ? Yii::$app->request : null;
+        $user = Yii::$app->has('user') ? Yii::$app->user : null;
 
         // ดึงข้อมูล controller และ action จาก route
-        $route = Yii::$app->controller ? Yii::$app->controller->route : '';
+        $route = (Yii::$app->controller) ? Yii::$app->controller->route : '';
         $routeParts = explode('/', $route);
         $controller = isset($routeParts[0]) ? $routeParts[0] : null;
         $actionMethod = isset($routeParts[1]) ? $routeParts[1] : null;
 
+        // ดึง user_id และ username จาก session หรือจาก $data
+        $userId = null;
+        $username = null;
+
+        if ($user && !$user->isGuest) {
+            $userId = $user->id;
+            $username = $user->identity ? $user->identity->username : null;
+        }
+
+        // Fallback จาก data ถ้าไม่พบใน session (เช่น background, console, webhook หรือส่งมาระบุตัวตนชัดเจน)
+        if (!$userId && is_array($data)) {
+            $userId = $data['user_id'] ?? $data['updated_by'] ?? $data['created_by'] ?? $data['rejected_by'] ?? $data['recall_by'] ?? $data['approved_by'] ?? null;
+        }
+
+        if (empty($username) && $userId) {
+            $u = \common\models\User::findOne($userId);
+            if ($u) {
+                $username = $u->username;
+            }
+        }
+
+        if (empty($username)) {
+            $username = (!empty($data['username'])) ? $data['username'] : (($user && !$user->isGuest) ? 'Unknown' : 'Guest');
+        }
+
         $log = new self([
-            'user_id' => $user->isGuest ? null : $user->id,
-            'username' => $user->isGuest ? 'Guest' : ($user->identity->username ?? 'Unknown'),
+            'user_id' => $userId,
+            'username' => $username,
             'action' => $action,
             'controller' => $controller,
             'action_method' => $actionMethod,
-            'ip_address' => $request->getUserIP(),
-            'user_agent' => $request->getUserAgent(),
-            'url' => $request->getUrl(),
-            'method' => $request->getMethod(),
+            'ip_address' => $request ? $request->getUserIP() : null,
+            'user_agent' => $request ? $request->getUserAgent() : null,
+            'url' => $request ? $request->getUrl() : null,
+            'method' => $request ? $request->getMethod() : 'CLI',
             'data' => !empty($data) ? json_encode($data, JSON_UNESCAPED_UNICODE) : null,
             'status' => $status,
             'message' => $message,
