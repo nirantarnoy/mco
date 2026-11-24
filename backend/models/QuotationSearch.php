@@ -18,7 +18,7 @@ class QuotationSearch extends Quotation
     public function rules()
     {
         return [
-            [['id', 'customer_id', 'status', 'approve_status', 'approve_by', 'created_by', 'updated_by'], 'integer'],
+            [['id', 'customer_id', 'status', 'approve_status', 'approve_by', 'created_by', 'updated_by', 'company_id'], 'integer'],
             [['quotation_no', 'quotation_date', 'customer_name', 'total_amount_text', 'note', 'date_from', 'date_to'], 'safe'],
             [['total_amount'], 'number'],
         ];
@@ -92,7 +92,11 @@ class QuotationSearch extends Quotation
             $query->andWhere(['<=', 'quotation_date', $this->date_to]);
         }
 
-        $query->andFilterWhere(['company_id' => (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'))]);
+        if (\Yii::$app->session->get('company_id') == 100) {
+            $query->andFilterWhere(['company_id' => $this->company_id]);
+        } else {
+            $query->andFilterWhere(['company_id' => \Yii::$app->session->get('company_id')]);
+        }
 
         $query->andFilterWhere(['like', 'quotation_no', $this->quotation_no])
             ->andFilterWhere(['like', 'customer_name', $this->customer_name])

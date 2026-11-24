@@ -157,7 +157,24 @@ $companies = \backend\models\Company::find()->all();
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var msg_error = '<?= \Yii::$app->session->getFlash('msg-error') ?>';
+        var msg_success = '<?= \Yii::$app->session->getFlash('msg_success') ?: \Yii::$app->session->getFlash('msg-success') ?>';
+        if (msg_success != '') {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ',
+                    text: msg_success,
+                    confirmButtonText: 'ตกลง',
+                    customClass: {
+                        confirmButton: 'bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors'
+                    },
+                    buttonsStyling: false
+                });
+            } else {
+                alert(msg_success);
+            }
+        }
+        var msg_error = '<?= \Yii::$app->session->getFlash('msg-error') ?: \Yii::$app->session->getFlash('msg_err') ?>';
         if (msg_error != '') {
             if (typeof Swal !== 'undefined') {
                 Swal.fire({

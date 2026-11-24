@@ -26,6 +26,8 @@ class UserController extends BaseController
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['POST','GET'],
+                    'resetpassword' => ['POST','GET'],
+                    'resetpasswordall' => ['POST','GET'],
                 ],
             ],
 //            'access'=>[
@@ -195,5 +197,63 @@ class UserController extends BaseController
             'find_to_date'=> $to_date,
             'find_customer_id'=>$id,
         ]);
+    }
+
+    /**
+     * รีเซ็ตรหัสผ่านของผู้ใช้งานเป็น Na12345678 (เฉพาะ Admin เท่านั้น และไม่สามารถรีเซ็ต Admin ได้)
+     * @param int $id
+     * @return mixed
+     * @throws ForbiddenHttpException
+     */
+    public function actionResetpassword($id)
+    {
+        if (!User::isUserAdmin()) {
+            throw new ForbiddenHttpException('เฉพาะผู้ดูแลระบบ (Admin) เท่านั้นที่สามารถรีเซ็ตรหัสผ่านได้');
+        }
+
+        $user = $this->findModel($id);
+        if (User::isProtectedAdmin($user->id)) {
+            Yii::$app->session->setFlash('msg_err', 'ไม่สามารถรีเซ็ตรหัสผ่านของผู้ดูแลระบบ (Admin) ได้');
+            return $this->redirect(['index']);
+        }
+
+        $user->setPassword('Na12345678');
+        $user->generateAuthKey();
+        if ($user->save(false)) {
+            Yii::$app->session->setFlash('msg_success', "รีเซ็ตรหัสผ่านของ '{$user->username}' เป็น Na12345678 เรียบร้อยแล้ว");
+        } else {
+            Yii::$app->session->setFlash('msg_err', "เกิดข้อผิดพลาด ไม่สามารถรีเซ็ตรหัสผ่านของ '{$user->username}' ได้");
+        }
+
+        return $this->redirect(['index']);
+    }
+
+    /**
+     * รีเซ็ตรหัสผ่านของผู้ใช้งานทั้งหมด ยกเว้น Admin เป็น Na12345678 (เฉพาะ Admin เท่านั้น)
+     * @return mixed
+     * @throws ForbiddenHttpException
+     */
+    public function actionResetpasswordall()
+    {
+        if (!User::isUserAdmin()) {
+            throw new ForbiddenHttpException('เฉพาะผู้ดูแลระบบ (Admin) เท่านั้นที่สามารถรีเซ็ตรหัสผ่านได้');
+        }
+
+        $users = User::find()->all();
+        $count = 0;
+        foreach ($users as $user) {
+            if (User::isProtectedAdmin($user->id)) {
+                continue;
+            }
+            $user->setPassword('Na12345678');
+            $user->generateAuthKey();
+            if ($user->save(false)) {
+                $count++;
+            }
+        }
+
+        Yii::$app->session->setFlash('msg_success', "รีเซ็ตรหัสผ่านผู้ใช้งานทั้งหมด (ยกเว้น Admin) จำนวน {$count} คน เป็น Na12345678 เรียบร้อยแล้ว");
+
+        return $this->redirect(['index']);
     }
 }

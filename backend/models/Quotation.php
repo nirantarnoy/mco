@@ -68,7 +68,7 @@ class Quotation extends ActiveRecord
         return [
             [['customer_id'], 'required'],
             [['quotation_date', 'currency_id', 'customer_tax_id', 'recall_at'], 'safe'],
-            [['customer_id', 'status', 'approve_status', 'approve_by', 'created_at', 'created_by', 'updated_at', 'updated_by', 'payment_term_id', 'payment_method_id', 'sale_emp_id', 'is_recall', 'recall_by'], 'integer'],
+            [['customer_id', 'status', 'approve_status', 'approve_by', 'created_at', 'created_by', 'updated_at', 'updated_by', 'payment_term_id', 'payment_method_id', 'sale_emp_id', 'is_recall', 'recall_by', 'company_id'], 'integer'],
             [['total_amount', 'discount_amount', 'discount_percent', 'total_discount_amount', 'vat_percent', 'vat_total_amount'], 'number'],
             [['quotation_no', 'customer_name', 'total_amount_text', 'note', 'delivery_day_text', 'payment_term_text'], 'string', 'max' => 255],
             [['recall_reason'], 'string'],
@@ -112,8 +112,14 @@ class Quotation extends ActiveRecord
             'vat_percent' => 'VAT %',
             'vat_total_amount' => 'รวม VAT',
             'currency_id' => 'สกุลเงิน',
-            'customer_tax_id' => 'เลขประจำตัวผู้เสียภาษี'
+            'customer_tax_id' => 'เลขประจำตัวผู้เสียภาษี',
+            'company_id' => 'บริษัท',
         ];
+    }
+
+    public function getCompany()
+    {
+        return $this->hasOne(\backend\models\Company::class, ['id' => 'company_id']);
     }
 
     //    public function getQuotation(){
@@ -204,7 +210,11 @@ class Quotation extends ActiveRecord
             if (!empty($this->total_amount)) {
                 $this->total_amount_text = $this->convertAmountToThaiText($this->total_amount);
             }
-            $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
+            // กำหนด company_id เฉพาะเมื่อยังไม่มีการระบุ (ป้องกันการเขียนทับเมื่อ Admin แก้ไขหรือย้ายบริษัท)
+            if (empty($this->company_id)) {
+                $sessionCompany = \Yii::$app->session->get('company_id');
+                $this->company_id = ($sessionCompany == 100 ? null : $sessionCompany);
+            }
             return true;
         }
 

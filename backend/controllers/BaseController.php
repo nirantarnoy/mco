@@ -38,6 +38,14 @@ class BaseController extends Controller
             }
         }
 
+        // อนุโลม action สำหรับผู้ดูแลระบบ (Admin)
+        $routeCheck = $this->id . '/' . strtolower(str_replace('-', '', $action->id));
+        if (in_array($routeCheck, ['user/resetpassword', 'user/resetpasswordall', 'quotation/changecompany'])) {
+            if (\backend\models\User::isUserAdmin(\Yii::$app->user->id)) {
+                return parent::beforeAction($action);
+            }
+        }
+
         // 2. ตรวจสอบ Session และการล็อกอินพื้นฐาน
         if (!$this->isSessionValid()) {
             Yii::$app->user->logout(true);

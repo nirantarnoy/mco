@@ -387,12 +387,18 @@ class SiteController extends BaseController
                     $session = Yii::$app->session;
                     $session->setFlash('msg_err', 'รหัสยืนยันไม่ตรงกับรหัสใหม่');
                 } else {
-                    if ($model_user->validatePassword($model->oldpw)) {
+                    if ($model_user && $model_user->validatePassword($model->oldpw)) {
                         $model_user->setPassword($model->confirmpw);
-                        if ($model_user->save()) {
+                        $model_user->generateAuthKey();
+                        if ($model_user->save(false)) {
+                            // ทำการ Logout ทันทีและล้าง Token ทั้งหมด เพื่อบังคับให้ผู้ใช้เข้าสู่ระบบใหม่ด้วยรหัสผ่านใหม่
+                            $this->performFullLogout();
+                            Yii::$app->session->open();
+                            Yii::$app->session->setFlash('msg_success', 'ทำการเปลี่ยนรหัสผ่านเรียบร้อยแล้ว กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่');
+                            return $this->redirect(['site/login']);
+                        } else {
                             $session = Yii::$app->session;
-                            $session->setFlash('msg_success', 'ทำการเปลี่ยนรหัสผ่านเรียบร้อยแล้ว');
-                            return $this->redirect(['site/logout']);
+                            $session->setFlash('msg_err', 'เกิดข้อผิดพลาด ไม่สามารถบันทึกรหัสผ่านได้');
                         }
                     } else {
                         $session = Yii::$app->session;

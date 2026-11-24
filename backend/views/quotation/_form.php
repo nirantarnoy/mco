@@ -409,6 +409,16 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
         <div class="card-body">
             <div class="row">
                 <div class="col-md-4">
+                    <?php if (\backend\models\User::isUserAdmin()): ?>
+                        <?= $form->field($model, 'company_id')->widget(Select2::className(), [
+                            'data' => ArrayHelper::map(\backend\models\Company::find()->all(), 'id', 'name'),
+                            'options' => ['placeholder' => 'เลือกบริษัท'],
+                            'pluginOptions' => [
+                                'allowClear' => false
+                            ]
+                        ])->label('สังกัดบริษัท <span class="badge badge-warning text-dark"><i class="fas fa-shield-alt"></i> เฉพาะ Admin</span>') ?>
+                    <?php endif; ?>
+
                     <?= $form->field($model, 'quotation_no')->textInput([
                         'maxlength' => true,
                         'placeholder' => 'ระบบจะสร้างอัตโนมัติหากไม่ระบุ'

@@ -111,6 +111,16 @@ $this->params['breadcrumbs'][] = $this->title;
                 'contentOptions' => ['style' => 'text-align: center;'],
             ],
             [
+                'attribute' => 'company_id',
+                'label' => 'บริษัท',
+                'headerOptions' => ['style' => 'width: 130px; text-align: center;'],
+                'contentOptions' => ['style' => 'text-align: center;'],
+                'value' => function ($model) {
+                    return \backend\models\Company::findName($model->company_id) ?: '-';
+                },
+                'filter' => ArrayHelper::map(\backend\models\Company::find()->all(), 'id', 'name'),
+            ],
+            [
                 'attribute' => 'quotation_no',
                 'label' => 'เลขที่ใบเสนอราคา',
                 'headerOptions' => ['style' => 'width: 150px;'],

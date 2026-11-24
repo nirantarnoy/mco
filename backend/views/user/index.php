@@ -8,13 +8,40 @@ use yii\bootstrap4\LinkPager;
 
 $this->title = 'ผู้ใช้งาน';
 $this->params['breadcrumbs'][] = $this->title;
+
+$isAdmin = \backend\models\User::isUserAdmin();
 ?>
 <div class="user-index">
+    <?php if (Yii::$app->session->hasFlash('msg_success')): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> <?= Yii::$app->session->getFlash('msg_success') ?>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    <?php endif; ?>
+    <?php if (Yii::$app->session->hasFlash('msg_err')): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> <?= Yii::$app->session->getFlash('msg_err') ?>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    <?php endif; ?>
     <?php Pjax::begin(); ?>
     <div class="row">
         <div class="col-lg-10">
             <p>
                 <?= Html::a(Yii::t('app', '<i class="fa fa-plus"></i> สร้างใหม่'), ['create'], ['class' => 'btn btn-success']) ?>
+                <?php if ($isAdmin): ?>
+                    <?= Html::a('<i class="fas fa-key"></i> รีเซ็ตรหัสผ่านทั้งหมด (ยกเว้น Admin)', ['resetpasswordall'], [
+                        'class' => 'btn btn-warning ml-2',
+                        'data' => [
+                            'confirm' => 'คุณต้องการรีเซ็ตรหัสผ่านของผู้ใช้งานทั้งหมด (ยกเว้น Admin) เป็น Na12345678 ใช่หรือไม่?',
+                            'method' => 'post',
+                        ],
+                    ]) ?>
+                <?php endif; ?>
             </p>
         </div>
         <div class="col-lg-2" style="text-align: right">
@@ -98,7 +125,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 'headerOptions' => ['style' => 'text-align:center;', 'class' => 'activity-view-link',],
                 'class' => 'yii\grid\ActionColumn',
                 'contentOptions' => ['style' => 'text-align: center'],
-                'template' => '{updatecustomer} {update} {delete}',
+                'template' => $isAdmin ? '{updatecustomer} {update} {resetpassword} {delete}' : '{updatecustomer} {update} {delete}',
                 'buttons' => [
 //                    'view' => function ($url, $data, $index) {
 //                        $options = [
@@ -134,6 +161,24 @@ $this->params['breadcrumbs'][] = $this->title;
                             'data-pjax' => '0',
                             // 'style'=>['float'=>'rigth'],
                         ]);
+                    },
+                    'resetpassword' => function ($url, $data, $index) use ($isAdmin) {
+                        if (!$isAdmin) {
+                            return '';
+                        }
+                        if (\backend\models\User::isProtectedAdmin($data->id)) {
+                            return '';
+                        }
+                        return Html::a(
+                            '<span class="fas fa-key btn btn-xs btn-outline-warning" style="margin-left: 2px;" title="รีเซ็ตรหัสผ่านเป็น Na12345678"></span>',
+                            ['resetpassword', 'id' => $data->id],
+                            [
+                                'title' => 'รีเซ็ตรหัสผ่าน',
+                                'data-pjax' => '0',
+                                'data-confirm' => "คุณต้องการรีเซ็ตรหัสผ่านของผู้ใช้ '{$data->username}' เป็น Na12345678 ใช่หรือไม่?",
+                                'data-method' => 'post',
+                            ]
+                        );
                     },
                     'delete' => function ($url, $data, $index) {
                         $options = array_merge([

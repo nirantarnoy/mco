@@ -206,27 +206,77 @@ class User extends \common\models\User
 
     public static function isUserAdmin($userId = null)
     {
-        if (\Yii::$app->user->isGuest) {
+        if ($userId === null) {
+            if (!\Yii::$app->has('user') || \Yii::$app->user->isGuest) {
+                return false;
+            }
+            $userId = \Yii::$app->user->id;
+            $identity = \Yii::$app->user->identity;
+        } else {
+            $identity = static::findOne($userId);
+        }
+
+        if (!$userId || !$identity) {
             return false;
         }
-        $userId = $userId ?: \Yii::$app->user->id;
+
+        if ($userId == 1) {
+            return true;
+        }
+
+        $username = strtolower($identity->username ?? '');
+        if ($username === 'admin' || $username === 'mcoadmin') {
+            return true;
+        }
+
+        if (isset($identity->user_group_id) && $identity->user_group_id == 1) {
+            return true;
+        }
 
         if (self::checkhasrole($userId, 'System Administrator') || 
             self::checkhasrole($userId, 'Administrator') || 
-            self::checkhasrole($userId, 'Admin')) {
+            self::checkhasrole($userId, 'Admin') ||
+            self::checkhasrole($userId, 'admin') ||
+            self::checkhasrole($userId, 'mcoadmin')) {
             return true;
         }
 
-        if (\Yii::$app->user->can('System Administrator') || 
-            \Yii::$app->user->can('Administrator') || 
-            \Yii::$app->user->can('executive-dashboard/index')) {
-            return true;
+        if (\Yii::$app->has('user') && \Yii::$app->user->id == $userId) {
+            if (\Yii::$app->user->can('System Administrator') || 
+                \Yii::$app->user->can('Administrator') || 
+                \Yii::$app->user->can('admin') ||
+                \Yii::$app->user->can('executive-dashboard/index')) {
+                return true;
+            }
         }
 
-        if (\Yii::$app->user->identity && strtolower(\Yii::$app->user->identity->username) === 'admin') {
+        return false;
+    }
+
+    /**
+     * ตรวจสอบว่าผู้ใช้งานนี้เป็น Admin หรือไม่ (เพื่อป้องกันไม่ให้ถูกรีเซ็ตรหัสผ่าน)
+     * @param int|null $userId
+     * @return bool
+     */
+    public static function isProtectedAdmin($userId)
+    {
+        if (empty($userId)) {
+            return false;
+        }
+        if ($userId == 1) {
             return true;
         }
-
+        $user = static::findOne($userId);
+        if (!$user) {
+            return false;
+        }
+        $username = strtolower($user->username ?? '');
+        if ($username === 'admin' || $username === 'mcoadmin') {
+            return true;
+        }
+        if (isset($user->user_group_id) && $user->user_group_id == 1) {
+            return true;
+        }
         return false;
     }
 

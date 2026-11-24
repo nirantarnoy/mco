@@ -33,6 +33,7 @@ class QuotationController extends BaseController
                 'class' => VerbFilter::class,
                 'actions' => [
                     'delete' => ['POST'],
+                    'change-company' => ['POST'],
                 ],
             ],
         ];
@@ -267,6 +268,17 @@ class QuotationController extends BaseController
                                 throw new \Exception('Failed to save quotation line');
                             }
                         }
+
+                        // ซิงค์ company_id ไปยัง Job และ Invoice (ถ้ามี)
+                        if ($model->company_id) {
+                            try {
+                                \backend\models\Job::updateAll(['company_id' => $model->company_id], ['quotation_id' => $model->id]);
+                                \backend\models\Invoice::updateAll(['company_id' => $model->company_id], ['quotation_id' => $model->id]);
+                            } catch (\Exception $e) {
+                                // ignore
+                            }
+                        }
+
                         $transaction->commit();
                         Yii::$app->session->setFlash('success', 'แก้ไขข้อมูลเรียบร้อยแล้ว');
                         return $this->redirect(['view', 'id' => $model->id]);
@@ -310,6 +322,44 @@ class QuotationController extends BaseController
         }
 
         return $this->redirect(['index']);
+    }
+
+    /**
+     * ย้ายใบเสนอราคาไปยังบริษัทอื่น (เฉพาะ Admin เท่านั้น)
+     * @param int $id
+     * @return mixed
+     * @throws \yii\web\ForbiddenHttpException
+     */
+    public function actionChangeCompany($id)
+    {
+        if (!\backend\models\User::isUserAdmin()) {
+            throw new \yii\web\ForbiddenHttpException('เฉพาะผู้ดูแลระบบ (Admin) เท่านั้นที่สามารถย้ายบริษัทได้');
+        }
+
+        $model = $this->findModel($id);
+        $newCompanyId = Yii::$app->request->post('target_company_id');
+
+        if ($newCompanyId) {
+            $oldCompanyName = \backend\models\Company::findName($model->company_id) ?: 'ยังไม่ระบุ';
+            $newCompanyName = \backend\models\Company::findName($newCompanyId);
+
+            $model->company_id = $newCompanyId;
+            if ($model->save(false)) {
+                // อัปเดต Job และ Invoice ที่เชื่อมโยงกับใบเสนอราคานี้ให้เปลี่ยนตามด้วย (ถ้ามี)
+                try {
+                    \backend\models\Job::updateAll(['company_id' => $newCompanyId], ['quotation_id' => $model->id]);
+                    \backend\models\Invoice::updateAll(['company_id' => $newCompanyId], ['quotation_id' => $model->id]);
+                } catch (\Exception $e) {
+                    // ignore
+                }
+
+                Yii::$app->session->setFlash('success', "ย้ายใบเสนอราคา {$model->quotation_no} จากบริษัท \"{$oldCompanyName}\" ไปยัง \"{$newCompanyName}\" เรียบร้อยแล้ว");
+            } else {
+                Yii::$app->session->setFlash('error', 'ไม่สามารถบันทึกการเปลี่ยนบริษัทได้');
+            }
+        }
+
+        return $this->redirect(['view', 'id' => $model->id]);
     }
 
     /**

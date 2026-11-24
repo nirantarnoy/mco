@@ -73,6 +73,11 @@ foreach ($modelline as $line) {
             ]) ?>
 
             <?= Html::a('แก้ไข', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+            <?php if (\backend\models\User::isUserAdmin()): ?>
+                <button type="button" class="btn btn-outline-warning" data-toggle="modal" data-target="#change-company-modal" data-bs-toggle="modal" data-bs-target="#change-company-modal">
+                    <i class="fas fa-exchange-alt"></i> ย้ายบริษัท
+                </button>
+            <?php endif; ?>
             <?php if ($model->approve_status == Quotation::APPROVE_STATUS_PENDING): ?>
                 <?= Html::a('อนุมัติ', ['approve', 'id' => $model->id], [
                     'class' => 'btn btn-success',
@@ -140,6 +145,15 @@ foreach ($modelline as $line) {
                         'model' => $model,
                         'attributes' => [
                             'quotation_no:text:เลขที่ใบเสนอราคา',
+                            [
+                                'attribute' => 'company_id',
+                                'label' => 'สังกัดบริษัท',
+                                'format' => 'raw',
+                                'value' => function ($model) {
+                                    $cName = \backend\models\Company::findName($model->company_id);
+                                    return '<span class="badge badge-info bg-info text-white px-2 py-1"><i class="fas fa-building"></i> ' . Html::encode($cName ?: 'ไม่ระบุ') . '</span>';
+                                },
+                            ],
                             [
                                 'attribute' => 'quotation_date',
                                 'label' => 'วันที่',
@@ -359,6 +373,48 @@ foreach ($modelline as $line) {
     </div>
     <?php \yii\widgets\ActiveForm::end(); ?>
     <?php \yii\bootstrap4\Modal::end(); ?>
+
+    <?php if (\backend\models\User::isUserAdmin()): ?>
+        <?php
+        \yii\bootstrap4\Modal::begin([
+            'id' => 'change-company-modal',
+            'title' => '<i class="fas fa-exchange-alt"></i> ย้ายใบเสนอราคาไปยังบริษัทอื่น (เฉพาะ Admin)',
+            'headerOptions' => ['class' => 'bg-warning text-dark'],
+            'closeButton' => [
+                'class' => 'btn-close',
+                'data-bs-dismiss' => 'modal',
+                'aria-label' => 'Close',
+            ],
+        ]);
+        ?>
+        <?php $form = \yii\widgets\ActiveForm::begin([
+            'action' => ['change-company', 'id' => $model->id],
+            'method' => 'post',
+        ]); ?>
+        <div class="modal-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> ปัจจุบันใบเสนอราคานี้สังกัด: <strong><?= Html::encode(\backend\models\Company::findName($model->company_id) ?: 'ยังไม่ระบุ') ?></strong>
+            </div>
+            <div class="form-group mb-3">
+                <label class="form-label font-weight-bold">เลือกบริษัทใหม่ที่ต้องการย้ายไป:</label>
+                <?= Html::dropDownList('target_company_id', $model->company_id,
+                    \yii\helpers\ArrayHelper::map(\backend\models\Company::find()->all(), 'id', 'name'),
+                    ['class' => 'form-control', 'required' => true]
+                ) ?>
+            </div>
+            <p class="text-muted small mb-0">
+                <i class="fas fa-exclamation-triangle text-warning"></i> เมื่อย้ายบริษัทแล้ว ข้อมูลใบงาน (Job) และใบแจ้งหนี้ (ถ้ามี) ที่เชื่อมโยงกับใบเสนอราคานี้จะถูกปรับให้ตรงกับบริษัทใหม่ด้วย
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">ยกเลิก</button>
+            <button type="submit" class="btn btn-primary" onclick="return confirm('ยืนยันการย้ายใบเสนอราคานี้ไปยังบริษัทที่เลือก?');">
+                <i class="fas fa-check"></i> บันทึกการย้ายบริษัท
+            </button>
+        </div>
+        <?php \yii\widgets\ActiveForm::end(); ?>
+        <?php \yii\bootstrap4\Modal::end(); ?>
+    <?php endif; ?>
 
 </div>
 
