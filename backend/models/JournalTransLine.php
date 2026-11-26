@@ -285,4 +285,30 @@ class JournalTransLine extends ActiveRecord
 
         return implode(', ', $summary);
     }
+
+    /**
+     * ตรวจสอบและขยายคอลัมน์ remark ให้เป็น TEXT เพื่อรองรับข้อความรายละเอียดสินค้าขนาดยาว
+     */
+    public static function ensureRemarkColumn()
+    {
+        try {
+            $db = Yii::$app->db;
+            $table = $db->getTableSchema(self::tableName(), true);
+            if ($table && isset($table->columns['remark'])) {
+                if (strtolower($table->columns['remark']->type) !== 'text') {
+                    $db->createCommand("ALTER TABLE " . self::tableName() . " MODIFY `remark` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL")->execute();
+                    $db->getSchema()->refreshTableSchema(self::tableName());
+                }
+            }
+            $stockTransTable = $db->getTableSchema('stock_trans', true);
+            if ($stockTransTable && isset($stockTransTable->columns['remark'])) {
+                if (strtolower($stockTransTable->columns['remark']->type) !== 'text') {
+                    $db->createCommand("ALTER TABLE `stock_trans` MODIFY `remark` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL")->execute();
+                    $db->getSchema()->refreshTableSchema('stock_trans');
+                }
+            }
+        } catch (\Exception $e) {
+            Yii::error('Failed to ensure remark column for journal_trans_line: ' . $e->getMessage());
+        }
+    }
 }

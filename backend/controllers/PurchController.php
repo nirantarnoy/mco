@@ -1591,6 +1591,7 @@ class PurchController extends BaseController
      */
     private function processReceiveWithChecklist($purchModel, $receiveData, $warehouseId, $remark, $checklistData)
     {
+        \backend\models\JournalTransLine::ensureRemarkColumn();
         $transaction = \Yii::$app->db->beginTransaction();
         try {
             // Validate receive data
