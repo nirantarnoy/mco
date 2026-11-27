@@ -82,7 +82,16 @@ $this->params['breadcrumbs'][] = $this->title;
             ],
             'code',
             'name',
-            'full_address',
+            [
+                'attribute' => 'full_address',
+                'value' => function ($model) {
+                    if (!empty($model->full_address)) {
+                        return $model->full_address;
+                    }
+                    $addr = \backend\helpers\AddressHelper::formatVendorAddress($model);
+                    return !empty($addr) ? $addr : '-';
+                },
+            ],
             'contact_name',
             [
                 'label' => 'ข้อมูลบัญชีธนาคาร',

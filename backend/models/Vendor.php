@@ -143,6 +143,12 @@ class Vendor extends \common\models\Vendor
     public function afterFind()
     {
         parent::afterFind();
+        if (empty($this->full_address)) {
+            $formatted = \backend\helpers\AddressHelper::formatVendorAddress($this);
+            if (!empty($formatted)) {
+                $this->full_address = $formatted;
+            }
+        }
         if ($this->is_common != 1) {
             $this->company_list = \common\models\VendorCompany::find()
                 ->select('company_id')

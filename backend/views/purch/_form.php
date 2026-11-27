@@ -1373,4 +1373,4 @@ $(document).ready(function() {
 });
 JS;
 $this->registerJs($script_disable, static::POS_END);
-?>
+?>
