@@ -119,7 +119,7 @@ if($model->isNewRecord) {
         <div class="col-lg-10">
             <label class="control-label">บริษัทที่อนุญาตให้ใช้งาน</label>
             <?= $form->field($model, 'company_list')->widget(\kartik\select2\Select2::className(), [
-                'data' => \yii\helpers\ArrayHelper::map(\backend\models\Company::find()->where(['status' => 1])->all(), 'id', 'name'),
+                'data' => \yii\helpers\ArrayHelper::map(\backend\models\Company::find()->all(), 'id', 'name'),
                 'options' => [
                     'placeholder' => 'เลือกบริษัทที่อนุญาตให้ใช้งาน...',
                     'multiple' => true,
