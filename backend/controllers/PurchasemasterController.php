@@ -1168,10 +1168,14 @@ class PurchasemasterController extends BaseController
 
         // สมมติว่ามีตาราง product อยู่แล้ว
         // ถ้ายังไม่มี ให้แก้ไขตามชื่อตารางที่มีจริง
-        $query = \backend\models\Product::find()
+        $companyId = \Yii::$app->session->get('company_id');
+        $query = \backend\models\Product::getAllowedProducts($companyId)
             ->select(['code as value', 'name as label', 'code', 'name', 'cost_price as price'])
-            ->where(['like', 'code', $q])
-            ->orWhere(['like', 'name', $q])
+            ->andWhere([
+                'or',
+                ['like', 'code', $q],
+                ['like', 'name', $q]
+            ])
             ->limit(20);
 
         $products = $query->asArray()->all();

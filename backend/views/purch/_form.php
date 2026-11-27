@@ -390,7 +390,7 @@ $this->registerJs($autocompleteJs);
 
 
                         <?= $form->field($model, 'vendor_id')->widget(Select2::className(), [
-                            'data' => ArrayHelper::map(\backend\models\Vendor::find()->all(), 'id', 'name'),
+                            'data' => ArrayHelper::map(\backend\models\Vendor::getAllowedVendors($model->company_id)->all(), 'id', 'name'),
                             'options' => ['placeholder' => 'เลือกผู้จําหน่าย', 'id' => 'purch-vendor_id'],
                             'pluginOptions' => [
                                 'allowClear' => true

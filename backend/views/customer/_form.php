@@ -79,7 +79,31 @@ if($model->isNewRecord) {
                 </div>
                 <div class="col-lg-6">
                     <label class="control-label"><?= $model->getAttributeLabel('is_common') ?></label>
-                    <?= $form->field($model, 'is_common')->widget(\toxor88\switchery\Switchery::className())->label(false) ?>
+                    <?= $form->field($model, 'is_common')->widget(\toxor88\switchery\Switchery::className(), [
+                        'clientOptions' => [
+                            'size' => 'small',
+                        ],
+                        'options' => [
+                            'id' => 'customer-is_common',
+                            'onchange' => 'toggleCompanySelect(this.checked);',
+                        ],
+                    ])->label(false) ?>
+                </div>
+            </div>
+            <div class="row" id="company-select-wrapper" style="<?= $model->is_common == 1 ? 'display: none;' : '' ?>">
+                <div class="col-lg-12">
+                    <label class="control-label">บริษัทที่อนุญาตให้ใช้งาน</label>
+                    <?= $form->field($model, 'company_list')->widget(\kartik\select2\Select2::className(), [
+                        'data' => \yii\helpers\ArrayHelper::map(\backend\models\Company::find()->where(['status' => 1])->all(), 'id', 'name'),
+                        'options' => [
+                            'placeholder' => 'เลือกบริษัทที่อนุญาตให้ใช้งาน...',
+                            'multiple' => true,
+                            'id' => 'customer-company_list',
+                        ],
+                        'pluginOptions' => [
+                            'allowClear' => true,
+                        ],
+                    ])->label(false) ?>
                 </div>
             </div>
         </div>
@@ -346,6 +370,14 @@ $(function () {
             $('#district-id-hidden').val('');
         }
     });
+
+    window.toggleCompanySelect = function(isCommon) {
+        if (isCommon) {
+            $('#company-select-wrapper').slideUp();
+        } else {
+            $('#company-select-wrapper').slideDown();
+        }
+    };
 });
 JS;
 

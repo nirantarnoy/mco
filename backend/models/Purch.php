@@ -120,6 +120,14 @@ class Purch extends ActiveRecord
             [['purch_no'], 'unique', 'filter' => ['status' => self::STATUS_ACTIVE]],
             [['approve_date','discount_amount','fee_amount','exchange_rate', 'target_shipment_date', 'recall_at', 'payment_due_date', 'rejected_at'], 'safe'],
             [['is_vat','is_deposit','rev'],'integer'],
+            ['vendor_id', function ($attribute, $params) {
+                if (!empty($this->vendor_id) && !empty($this->company_id)) {
+                    $vendor = \backend\models\Vendor::findOne($this->vendor_id);
+                    if ($vendor && !$vendor->isAllowedForCompany($this->company_id)) {
+                        $this->addError($attribute, 'ผู้ขายที่เลือกไม่มีสิทธิ์ใช้งานในบริษัทนี้');
+                    }
+                }
+            }],
         ];
     }
 

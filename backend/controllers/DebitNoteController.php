@@ -460,7 +460,8 @@ class DebitNoteController extends BaseController
 
         if (\Yii::$app->request->get('action') === 'get-all-products') {
             try {
-                $products = \backend\models\Product::find()
+                $companyId = \Yii::$app->session->get('company_id');
+                $products = \backend\models\Product::getAllowedProducts($companyId)
                     ->all();
 
                 $productsArray = [];

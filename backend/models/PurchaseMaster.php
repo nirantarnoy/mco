@@ -102,6 +102,14 @@ class PurchaseMaster extends \yii\db\ActiveRecord
             [['docnum'], 'unique'],
             [['vat_percent'], 'default', 'value' => 7],
             [['status'], 'default', 'value' => 1],
+            ['supcod', function ($attribute, $params) {
+                if (!empty($this->supcod) && !empty($this->company_id)) {
+                    $vendor = is_numeric($this->supcod) ? \backend\models\Vendor::findOne($this->supcod) : \backend\models\Vendor::findOne(['code' => $this->supcod]);
+                    if ($vendor && !$vendor->isAllowedForCompany($this->company_id)) {
+                        $this->addError($attribute, 'ผู้ขายที่เลือกไม่มีสิทธิ์ใช้งานในบริษัทนี้');
+                    }
+                }
+            }],
         ];
     }
 

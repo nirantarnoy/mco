@@ -72,7 +72,17 @@ class CustomerSearch extends Customer
 
         $company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
         if ($company_id != null) {
-            $query->andWhere(['or', ['company_id' => $company_id], ['is_common' => 1]]);
+            $subQuery = (new \yii\db\Query())
+                ->select('customer_id')
+                ->from('customer_company')
+                ->where(['company_id' => $company_id]);
+
+            $query->andWhere([
+                'or',
+                ['customer.is_common' => 1],
+                ['customer.company_id' => $company_id],
+                ['customer.id' => $subQuery]
+            ]);
         }
 
         if($this->globalSearch != '') {

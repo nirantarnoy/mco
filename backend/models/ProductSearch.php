@@ -70,7 +70,20 @@ class ProductSearch extends Product
             'status' => $this->status,
         ]);
         
-        $query->andFilterWhere(['product.company_id' => (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'))]);
+        $company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
+        if ($company_id != null) {
+            $subQuery = (new \yii\db\Query())
+                ->select('product_id')
+                ->from('product_company')
+                ->where(['company_id' => $company_id]);
+
+            $query->andWhere([
+                'or',
+                ['product.is_common' => 1],
+                ['product.company_id' => $company_id],
+                ['product.id' => $subQuery]
+            ]);
+        }
 
 //        if($this->party_id){
 //            $query->andFilterWhere(['watchmaker.id' => $this->party_id]);

@@ -97,8 +97,38 @@ if($model->isNewRecord) {
             ], ['prompt' => 'เลือกระบบ VAT']) ?>
         </div>
         <div class="col-lg-2">
-            <div style="height: 35px"></div>
+            <label class="control-label"><?= $model->getAttributeLabel('status') ?></label>
             <?= $form->field($model, 'status')->widget(\toxor88\switchery\Switchery::className())->label(false) ?>
+        </div>
+        <div class="col-lg-2">
+            <label class="control-label"><?= $model->getAttributeLabel('is_common') ?></label>
+            <?= $form->field($model, 'is_common')->widget(\toxor88\switchery\Switchery::className(), [
+                'clientOptions' => [
+                    'size' => 'small',
+                ],
+                'options' => [
+                    'id' => 'vendor-is_common',
+                    'onchange' => 'toggleCompanySelect(this.checked);',
+                ],
+            ])->label(false) ?>
+        </div>
+    </div>
+
+    <div class="row" id="company-select-wrapper" style="<?= $model->is_common == 1 ? 'display: none;' : '' ?>">
+        <div class="col-lg-1"></div>
+        <div class="col-lg-10">
+            <label class="control-label">บริษัทที่อนุญาตให้ใช้งาน</label>
+            <?= $form->field($model, 'company_list')->widget(\kartik\select2\Select2::className(), [
+                'data' => \yii\helpers\ArrayHelper::map(\backend\models\Company::find()->where(['status' => 1])->all(), 'id', 'name'),
+                'options' => [
+                    'placeholder' => 'เลือกบริษัทที่อนุญาตให้ใช้งาน...',
+                    'multiple' => true,
+                    'id' => 'vendor-company_list',
+                ],
+                'pluginOptions' => [
+                    'allowClear' => true,
+                ],
+            ])->label(false) ?>
         </div>
         <div class="col-lg-1"></div>
     </div>
@@ -548,6 +578,14 @@ $(function () {
             }
         });
     });
+
+    window.toggleCompanySelect = function(isCommon) {
+        if (isCommon) {
+            $('#company-select-wrapper').slideUp();
+        } else {
+            $('#company-select-wrapper').slideDown();
+        }
+    };
 });
 
 function delete_doc(e){

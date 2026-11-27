@@ -434,7 +434,7 @@ $this->registerJs($autocompleteJs, \yii\web\View::POS_READY);
                     ]) ?>
 
                     <?= $form->field($model, 'customer_id')->widget(Select2::className(), [
-                        'data' => ArrayHelper::map(\backend\models\Customer::find()->all(), 'id', 'name'),
+                        'data' => ArrayHelper::map(\backend\models\Customer::getAllowedCustomers($model->company_id)->all(), 'id', 'name'),
                         'options' => ['placeholder' => 'เลือกลูกค้า'],
                         'pluginOptions' => [
                             'allowClear' => true

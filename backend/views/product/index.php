@@ -179,6 +179,32 @@ $this->params['breadcrumbs'][] = $this->title;
                 //'std_price',
                 //'company_id',
                 [
+                    'attribute' => 'is_common',
+                    'label' => 'สิทธิ์บริษัท',
+                    'format' => 'raw',
+                    'headerOptions' => ['style' => 'text-align: center'],
+                    'contentOptions' => ['style' => 'text-align: center'],
+                    'value' => function ($data) {
+                        if ($data->is_common == 1) {
+                            return '<span class="badge badge-success">ทุกบริษัท</span>';
+                        } else {
+                            $companies = $data->companies;
+                            if (!empty($companies)) {
+                                $badges = [];
+                                foreach ($companies as $comp) {
+                                    $badges[] = '<span class="badge badge-info" style="margin: 2px;">' . Html::encode($comp->name) . '</span>';
+                                }
+                                return implode(' ', $badges);
+                            } elseif (!empty($data->company_id)) {
+                                $compName = \backend\models\Company::findName($data->company_id);
+                                return '<span class="badge badge-secondary">' . Html::encode($compName) . '</span>';
+                            } else {
+                                return '<span class="badge badge-light">-</span>';
+                            }
+                        }
+                    }
+                ],
+                [
                     'attribute' => 'minimum_stock',
                     'label' => 'Min.Stock',
                     'headerOptions' => ['style' => 'text-align: center'],

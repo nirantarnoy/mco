@@ -70,7 +70,20 @@ class VendorSearch extends Vendor
             'updated_by' => $this->updated_by,
         ]);
 
-        $query->andFilterWhere(['company_id' => (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'))]);
+        $company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
+        if ($company_id != null) {
+            $subQuery = (new \yii\db\Query())
+                ->select('vendor_id')
+                ->from('vendor_company')
+                ->where(['company_id' => $company_id]);
+
+            $query->andWhere([
+                'or',
+                ['vendor.is_common' => 1],
+                ['vendor.company_id' => $company_id],
+                ['vendor.id' => $subQuery]
+            ]);
+        }
 
         if ($this->globalSearch != '') {
             $query->andWhere([

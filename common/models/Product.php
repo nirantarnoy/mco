@@ -42,7 +42,7 @@ class Product extends \yii\db\ActiveRecord
         return [
             [['code','name','product_group_id'], 'required'],
             [['code'], 'unique'],
-            [['status', 'product_group_id', 'unit_id', 'created_at', 'created_by', 'updated_at', 'updated_by','type_id','product_type_id','brand_id', 'shelf_life_days'], 'integer'],
+            [['status', 'product_group_id', 'unit_id', 'created_at', 'created_by', 'updated_at', 'updated_by','type_id','product_type_id','brand_id', 'shelf_life_days', 'company_id', 'is_common'], 'integer'],
             [['cost_price', 'sale_price', 'stock_qty','minimum_stock'], 'number'],
             [['code', 'photo','photo2'], 'string', 'max' => 255],
             [['name', 'description', 'remark', 'model_name'], 'string'],
@@ -60,6 +60,7 @@ class Product extends \yii\db\ActiveRecord
             'name' => 'ชื่อสินค้า',
             'description' => 'รายละเอียด',
             'status' => 'สถานะ',
+            'is_common' => 'ใช้ร่วมกันทุกบริษัท',
             'product_group_id' => 'กลุ่มสินค้า',
             'unit_id' => 'หน่วยนับ',
             'cost_price' => 'ต้นทุน',

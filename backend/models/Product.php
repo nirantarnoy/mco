@@ -16,7 +16,7 @@ class Product extends \common\models\Product
     public function rules()
     {
         return array_merge(parent::rules(), [
-            [['is_adjust_stock'], 'safe'],
+            [['is_adjust_stock', 'company_list'], 'safe'],
         ]);
     }
 
@@ -61,10 +61,16 @@ class Product extends \common\models\Product
                     ActiveRecord::EVENT_BEFORE_INSERT => 'company_id',
                     ActiveRecord::EVENT_BEFORE_UPDATE => 'company_id',
                 ],
-                'value' => function () {
+                'value' => function ($event) {
+                    if ($this->is_common == 1) {
+                        return null;
+                    }
+                    if (is_array($this->company_list) && !empty($this->company_list)) {
+                        return (int)reset($this->company_list);
+                    }
                     if (isset(Yii::$app->session) && Yii::$app->session->has('company_id')) {
                         $cId = Yii::$app->session->get('company_id');
-                        return $cId == 100 ? null : $cId;
+                        return $cId == 100 ? null : (int)$cId;
                     }
                     return null;
                 },
@@ -186,6 +192,99 @@ class Product extends \common\models\Product
             return $model->code.' - '.$model->name;
         }else{
             return '';
+        }
+    }
+
+    public $company_list = [];
+
+    public function getProductCompanies()
+    {
+        return $this->hasMany(\common\models\ProductCompany::class, ['product_id' => 'id']);
+    }
+
+    public function getCompanies()
+    {
+        return $this->hasMany(\backend\models\Company::class, ['id' => 'company_id'])->via('productCompanies');
+    }
+
+    public function afterFind()
+    {
+        parent::afterFind();
+        if ($this->is_common != 1) {
+            $this->company_list = \common\models\ProductCompany::find()
+                ->select('company_id')
+                ->where(['product_id' => $this->id])
+                ->column();
+            if (empty($this->company_list) && !empty($this->company_id)) {
+                $this->company_list = [(int)$this->company_id];
+            }
+        }
+    }
+
+    /**
+     * ตรวจสอบว่าสินค้ารายการนี้อนุญาตให้ใช้งานในบริษัทที่ระบุหรือไม่
+     * @param int|null $company_id
+     * @return bool
+     */
+    public function isAllowedForCompany($company_id = null)
+    {
+        if ($this->is_common == 1) {
+            return true;
+        }
+        if ($company_id === null) {
+            $company_id = (Yii::$app->has('session') && Yii::$app->session) ? Yii::$app->session->get('company_id') : null;
+        }
+        if (!$company_id || $company_id == 100) {
+            return true;
+        }
+        $allowed = \common\models\ProductCompany::find()
+            ->where(['product_id' => $this->id, 'company_id' => $company_id])
+            ->exists();
+        if ($allowed) {
+            return true;
+        }
+        return (int)$this->company_id === (int)$company_id;
+    }
+
+    public static function getAllowedProducts($company_id = null)
+    {
+        if ($company_id === null) {
+            $sess = (Yii::$app->has('session') && Yii::$app->session) ? Yii::$app->session->get('company_id') : null;
+            $company_id = ($sess == 100 ? null : $sess);
+        }
+        $query = Product::find();
+        if ($company_id != null) {
+            $subQuery = (new \yii\db\Query())
+                ->select('product_id')
+                ->from('product_company')
+                ->where(['company_id' => $company_id]);
+
+            $query->andWhere([
+                'or',
+                ['product.is_common' => 1],
+                ['product.company_id' => $company_id],
+                ['product.id' => $subQuery]
+            ]);
+        }
+        return $query;
+    }
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+
+        \common\models\ProductCompany::deleteAll(['product_id' => $this->id]);
+        if ($this->is_common != 1 && is_array($this->company_list)) {
+            foreach ($this->company_list as $cid) {
+                $cid = (int)$cid;
+                if ($cid > 0) {
+                    $map = new \common\models\ProductCompany();
+                    $map->product_id = $this->id;
+                    $map->company_id = $cid;
+                    $map->created_at = time();
+                    $map->save(false);
+                }
+            }
         }
     }
 

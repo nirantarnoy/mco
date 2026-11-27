@@ -31,14 +31,18 @@ class Customer extends \common\models\Customer
                 'attributes' => [
                     ActiveRecord::EVENT_BEFORE_INSERT => 'created_by',
                 ],
-                'value' => Yii::$app->user->id,
+                'value' => function () {
+                    return (Yii::$app->has('user') && Yii::$app->user && !Yii::$app->user->isGuest) ? Yii::$app->user->id : 1;
+                },
             ],
             'timestamuby' => [
                 'class' => \yii\behaviors\AttributeBehavior::className(),
                 'attributes' => [
                     ActiveRecord::EVENT_BEFORE_UPDATE => 'updated_by',
                 ],
-                'value' => Yii::$app->user->id,
+                'value' => function () {
+                    return (Yii::$app->has('user') && Yii::$app->user && !Yii::$app->user->isGuest) ? Yii::$app->user->id : 1;
+                },
             ],
             'timestampupdate' => [
                 'class' => \yii\behaviors\AttributeBehavior::className(),
@@ -99,12 +103,83 @@ class Customer extends \common\models\Customer
         return $data;
     }
 
-    public static function getAllowedCustomers()
+    public $company_list = [];
+
+    public function rules()
     {
-        $company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
+        return array_merge(parent::rules(), [
+            [['company_list'], 'safe'],
+        ]);
+    }
+
+    public function getCustomerCompanies()
+    {
+        return $this->hasMany(\common\models\CustomerCompany::class, ['customer_id' => 'id']);
+    }
+
+    public function getCompanies()
+    {
+        return $this->hasMany(\backend\models\Company::class, ['id' => 'company_id'])->via('customerCompanies');
+    }
+
+    public function afterFind()
+    {
+        parent::afterFind();
+        if ($this->is_common != 1) {
+            $this->company_list = \common\models\CustomerCompany::find()
+                ->select('company_id')
+                ->where(['customer_id' => $this->id])
+                ->column();
+            if (empty($this->company_list) && !empty($this->company_id)) {
+                $this->company_list = [(int)$this->company_id];
+            }
+        }
+    }
+
+    /**
+     * ตรวจสอบว่าลูกค้ารายนี้อนุญาตให้ใช้งานในบริษัทที่ระบุหรือไม่
+     * @param int|null $company_id
+     * @return bool
+     */
+    public function isAllowedForCompany($company_id = null)
+    {
+        if ($this->is_common == 1) {
+            return true;
+        }
+        if ($company_id === null) {
+            $company_id = (Yii::$app->has('session') && Yii::$app->session) ? Yii::$app->session->get('company_id') : null;
+        }
+        if (!$company_id || $company_id == 100) {
+            return true;
+        }
+        $allowed = \common\models\CustomerCompany::find()
+            ->where(['customer_id' => $this->id, 'company_id' => $company_id])
+            ->exists();
+        if ($allowed) {
+            return true;
+        }
+        return (int)$this->company_id === (int)$company_id;
+    }
+
+    public static function getAllowedCustomers($company_id = null)
+    {
+        if ($company_id === null) {
+            $sess = (Yii::$app->has('session') && Yii::$app->session) ? Yii::$app->session->get('company_id') : null;
+            $company_id = ($sess == 100 ? null : $sess);
+        }
         $query = Customer::find();
         if ($company_id != null) {
-            $query->andWhere(['or', ['company_id' => $company_id], ['is_common' => 1]]);
+            $subQuery = (new \yii\db\Query())
+                ->select('customer_id')
+                ->from('customer_company')
+                ->where(['company_id' => $company_id]);
+
+            $query->andWhere([
+                'or',
+                ['customer.is_common' => 1],
+                ['customer.company_id' => $company_id],
+                ['customer.id' => $subQuery]
+            ]);
         }
         return $query;
     }
@@ -140,10 +215,34 @@ class Customer extends \common\models\Customer
             if ($this->is_common == 1) {
                 $this->company_id = null;
             } else {
-                $this->company_id = (\Yii::$app->session->get('company_id') == 100 ? null : \Yii::$app->session->get('company_id'));
+                if (is_array($this->company_list) && !empty($this->company_list)) {
+                    $this->company_id = reset($this->company_list);
+                } else {
+                    $sessionCompany = (Yii::$app->has('session') && Yii::$app->session) ? Yii::$app->session->get('company_id') : null;
+                    $this->company_id = ($sessionCompany == 100 ? null : $sessionCompany);
+                }
             }
             return true;
         }
         return false;
+    }
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+
+        \common\models\CustomerCompany::deleteAll(['customer_id' => $this->id]);
+        if ($this->is_common != 1 && is_array($this->company_list)) {
+            foreach ($this->company_list as $cid) {
+                $cid = (int)$cid;
+                if ($cid > 0) {
+                    $map = new \common\models\CustomerCompany();
+                    $map->customer_id = $this->id;
+                    $map->company_id = $cid;
+                    $map->created_at = time();
+                    $map->save(false);
+                }
+            }
+        }
     }
 }

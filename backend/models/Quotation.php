@@ -73,6 +73,14 @@ class Quotation extends ActiveRecord
             [['quotation_no', 'customer_name', 'total_amount_text', 'note', 'delivery_day_text', 'payment_term_text'], 'string', 'max' => 255],
             [['recall_reason'], 'string'],
             [['quotation_no'], 'unique', 'filter' => ['status' => self::STATUS_ACTIVE]],
+            ['customer_id', function ($attribute, $params) {
+                if (!empty($this->customer_id) && !empty($this->company_id)) {
+                    $customer = \backend\models\Customer::findOne($this->customer_id);
+                    if ($customer && !$customer->isAllowedForCompany($this->company_id)) {
+                        $this->addError($attribute, 'ลูกค้าที่เลือกไม่มีสิทธิ์ใช้งานในบริษัทนี้');
+                    }
+                }
+            }],
         ];
     }
 

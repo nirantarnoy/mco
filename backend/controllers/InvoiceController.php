@@ -1260,8 +1260,9 @@ class InvoiceController extends BaseController
 
         // ถ้าขอข้อมูลสินค้าทั้งหมดสำหรับ autocomplete
         if ($request->get('action') === 'get-all-products') {
-            $products = \backend\models\Product::find()
-                ->where(['status' => 1])
+            $companyId = \Yii::$app->session->get('company_id');
+            $products = \backend\models\Product::getAllowedProducts($companyId)
+                ->andWhere(['status' => 1])
                 ->all();
 
             $result = [];

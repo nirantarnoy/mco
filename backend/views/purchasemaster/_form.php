@@ -500,7 +500,7 @@ JS
                                 <label class="col-sm-4 col-form-label">รหัสผู้จำหน่าย</label>
                                 <div class="col-sm-8">
                                     <?= $form->field($model, 'supcod')->widget(\kartik\select2\Select2::className(),[
-                                        'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Vendor::find()->all(),'id', function($model){
+                                        'data'=>\yii\helpers\ArrayHelper::map(\backend\models\Vendor::getAllowedVendors($model->company_id)->all(),'id', function($model){
                                             return $model->code . ' ' . $model->name;
                                         }),
                                         'options'=>['placeholder'=>'เลือกรหัสผู้ขาย'],

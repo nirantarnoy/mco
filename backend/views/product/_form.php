@@ -119,8 +119,36 @@ if (!$model->isNewRecord) {
             <div class="col-lg-3">
                 <?= $form->field($model, 'shelf_life_days')->textInput(['type' => 'number', 'min' => 0]) ?>
             </div>
+            <div class="col-lg-3">
+                <label class="control-label"><?= $model->getAttributeLabel('is_common') ?></label>
+                <?= $form->field($model, 'is_common')->widget(\toxor88\switchery\Switchery::className(), [
+                    'clientOptions' => [
+                        'size' => 'small',
+                    ],
+                    'options' => [
+                        'id' => 'product-is_common',
+                        'onchange' => 'toggleCompanySelect(this.checked);',
+                    ],
+                ])->label(false) ?>
+            </div>
             <div class="col-lg-6">
                 <?= $form->field($model, 'remark')->textInput(['maxlength' => true])->label('หมายเหตุ') ?>
+            </div>
+        </div>
+        <div class="row" id="company-select-wrapper" style="<?= $model->is_common == 1 ? 'display: none;' : '' ?>">
+            <div class="col-lg-12">
+                <label class="control-label">บริษัทที่อนุญาตให้ใช้งาน</label>
+                <?= $form->field($model, 'company_list')->widget(\kartik\select2\Select2::className(), [
+                    'data' => \yii\helpers\ArrayHelper::map(\backend\models\Company::find()->where(['status' => 1])->all(), 'id', 'name'),
+                    'options' => [
+                        'placeholder' => 'เลือกบริษัทที่อนุญาตให้ใช้งาน...',
+                        'multiple' => true,
+                        'id' => 'product-company_list',
+                    ],
+                    'pluginOptions' => [
+                        'allowClear' => true,
+                    ],
+                ])->label(false) ?>
             </div>
         </div>
         <div class="row">
@@ -407,6 +435,14 @@ $('form').on('beforeSubmit', function() {
     }, 10);
     return true;
 });
+
+window.toggleCompanySelect = function(isCommon) {
+    if (isCommon) {
+        $('#company-select-wrapper').slideUp();
+    } else {
+        $('#company-select-wrapper').slideDown();
+    }
+};
 
 JS;
 $this->registerJs($js, static::POS_END);
