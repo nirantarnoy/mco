@@ -66,28 +66,20 @@ class PreAdvanceLine extends ActiveRecord
                 return implode(', ', $details);
             }
         } elseif (preg_match('/เลขที่:\s*(PO-[^\s\(]+)/', $desc, $m)) {
-            $po = \backend\models\Purch::findOne(['purch_no' => $m[1]]);
+            $refNo = $m[1];
+            $po = \backend\models\Purch::findOne(['purch_no' => $refNo]);
+            if (!$po) {
+                // Try finding by prefix before -QT or without dot
+                $cleanRef = preg_replace('/-QT[A-Za-z0-9.-]+$/i', '', $refNo);
+                $po = \backend\models\Purch::find()->where(['like', 'purch_no', $cleanRef])->one();
+            }
             if ($po) {
                 $details = [];
-                // 1. ตรวจสอบจาก Quotation Lines ถ้ามี
-                if ($po->job && $po->job->quotation && $po->job->quotation->quotationLines) {
-                    foreach ($po->job->quotation->quotationLines as $ql) {
-                        $txt = trim($ql->product_name ?? '');
-                        if (empty($txt) && $ql->product) {
-                            $txt = trim($ql->product->name ?? '');
-                        }
-                        if (empty($txt)) {
-                            $txt = trim($ql->note ?? '');
-                        }
-                        if (!empty($txt)) {
-                            $details[] = $txt;
-                        }
-                    }
-                }
-                // 2. ตรวจสอบจาก Purch Lines
-                if (empty($details) && $po->purchLines) {
+                // 1. ตรวจสอบจาก Purch Lines ก่อนเป็นอันดับแรก
+                $poLines = method_exists($po, 'getPurchLines') ? $po->getPurchLines()->all() : [];
+                if (!empty($poLines)) {
                     $count = 0;
-                    foreach ($po->purchLines as $pl) {
+                    foreach ($poLines as $pl) {
                         $txt = trim(($pl->product_name ?? '') . ' ' . ($pl->product_description ?? ''));
                         if (empty(trim($txt)) && $pl->product) {
                             $txt = trim(($pl->product->name ?? '') . ' ' . ($pl->product_description ?? ''));
@@ -99,6 +91,21 @@ class PreAdvanceLine extends ActiveRecord
                             $details[] = trim($txt);
                             $count++;
                             if ($count >= 3) break;
+                        }
+                    }
+                }
+                // 2. ถ้าไม่มีรายการใน Purch Lines ให้ดึงจาก Quotation Lines
+                if (empty($details) && $po->job && $po->job->quotation && $po->job->quotation->quotationLines) {
+                    foreach ($po->job->quotation->quotationLines as $ql) {
+                        $txt = trim($ql->product_name ?? '');
+                        if (empty($txt) && $ql->product) {
+                            $txt = trim($ql->product->name ?? '');
+                        }
+                        if (empty($txt)) {
+                            $txt = trim($ql->note ?? '');
+                        }
+                        if (!empty($txt)) {
+                            $details[] = $txt;
                         }
                     }
                 }

@@ -255,24 +255,10 @@ $formatter = \Yii::$app->formatter;
                         }
                         
                         $details = [];
-                        if ($qt && $qt->quotationLines) {
-                            foreach ($qt->quotationLines as $ql) {
-                                $txt = trim($ql->product_name ?? '');
-                                if (empty($txt) && $ql->product) {
-                                    $txt = trim($ql->product->name ?? '');
-                                }
-                                if (empty($txt)) {
-                                    $txt = trim($ql->note ?? '');
-                                }
-                                if (!empty($txt)) {
-                                    $details[] = $txt;
-                                }
-                            }
-                        }
-
-                        if (empty($details) && $m->purchLines) {
+                        $poLines = method_exists($m, 'getPurchLines') ? $m->getPurchLines()->all() : [];
+                        if (!empty($poLines)) {
                             $count = 0;
-                            foreach ($m->purchLines as $pl) {
+                            foreach ($poLines as $pl) {
                                 $txt = trim(($pl->product_name ?? '') . ' ' . ($pl->product_description ?? ''));
                                 if (empty(trim($txt)) && $pl->product) {
                                     $txt = trim(($pl->product->name ?? '') . ' ' . ($pl->product_description ?? ''));
@@ -284,6 +270,21 @@ $formatter = \Yii::$app->formatter;
                                     $details[] = trim($txt);
                                     $count++;
                                     if ($count >= 3) break;
+                                }
+                            }
+                        }
+
+                        if (empty($details) && $qt && $qt->quotationLines) {
+                            foreach ($qt->quotationLines as $ql) {
+                                $txt = trim($ql->product_name ?? '');
+                                if (empty($txt) && $ql->product) {
+                                    $txt = trim($ql->product->name ?? '');
+                                }
+                                if (empty($txt)) {
+                                    $txt = trim($ql->note ?? '');
+                                }
+                                if (!empty($txt)) {
+                                    $details[] = $txt;
                                 }
                             }
                         }
@@ -455,6 +456,10 @@ $formatter = \Yii::$app->formatter;
                         }
                     } elseif (strpos($refNo, 'PO') === 0) {
                         $pm = \backend\models\Purch::find()->where(['purch_no' => $refNo])->one();
+                        if (!$pm) {
+                            $cleanRef = preg_replace('/-QT[A-Za-z0-9.-]+$/i', '', $refNo);
+                            $pm = \backend\models\Purch::find()->where(['like', 'purch_no', $cleanRef])->one();
+                        }
                         if ($pm) {
                             $direct_qt_no = '';
                             $direct_details = [];
@@ -493,39 +498,41 @@ $formatter = \Yii::$app->formatter;
                             if ($qt) {
                                 $direct_qt_no = $qt->quotation_no;
                             }
-                                
-                                if ($qt && $qt->quotationLines) {
-                                    foreach ($qt->quotationLines as $ql) {
-                                        $txt = trim($ql->product_name ?? '');
-                                        if (empty($txt) && $ql->product) {
-                                            $txt = trim($ql->product->name ?? '');
-                                        }
-                                        if (empty($txt)) {
-                                            $txt = trim($ql->note ?? '');
-                                        }
-                                        if (!empty($txt)) {
-                                            $direct_details[] = $txt;
-                                        }
-                                    }
-                                }
 
-                                if (empty($direct_details) && !empty($pm->purchLines)) {
-                                    $count = 0;
-                                    foreach ($pm->purchLines as $pl) {
-                                        $txt = trim(($pl->product_name ?? '') . ' ' . ($pl->product_description ?? ''));
-                                        if (empty(trim($txt)) && $pl->product) {
-                                            $txt = trim(($pl->product->name ?? '') . ' ' . ($pl->product_description ?? ''));
-                                        }
-                                        if (empty(trim($txt))) {
-                                            $txt = trim($pl->note ?? '');
-                                        }
-                                        if (!empty(trim($txt))) {
-                                            $direct_details[] = trim($txt);
-                                            $count++;
-                                            if ($count >= 3) break;
-                                        }
+                            $poLines = method_exists($pm, 'getPurchLines') ? $pm->getPurchLines()->all() : [];
+                            if (!empty($poLines)) {
+                                $count = 0;
+                                foreach ($poLines as $pl) {
+                                    $txt = trim(($pl->product_name ?? '') . ' ' . ($pl->product_description ?? ''));
+                                    if (empty(trim($txt)) && $pl->product) {
+                                        $txt = trim(($pl->product->name ?? '') . ' ' . ($pl->product_description ?? ''));
+                                    }
+                                    if (empty(trim($txt))) {
+                                        $txt = trim($pl->note ?? '');
+                                    }
+                                    if (!empty(trim($txt))) {
+                                        $direct_details[] = trim($txt);
+                                        $count++;
+                                        if ($count >= 3) break;
                                     }
                                 }
+                            }
+
+                            if (empty($direct_details) && $qt && $qt->quotationLines) {
+                                foreach ($qt->quotationLines as $ql) {
+                                    $txt = trim($ql->product_name ?? '');
+                                    if (empty($txt) && $ql->product) {
+                                        $txt = trim($ql->product->name ?? '');
+                                    }
+                                    if (empty($txt)) {
+                                        $txt = trim($ql->note ?? '');
+                                    }
+                                    if (!empty($txt)) {
+                                        $direct_details[] = $txt;
+                                    }
+                                }
+                            }
+
                             if (!empty($direct_qt_no) || !empty($direct_details)) {
                                 $refInfo = ['qt_no' => $direct_qt_no, 'details' => implode(', ', $direct_details)];
                             }
@@ -554,8 +561,9 @@ $formatter = \Yii::$app->formatter;
                     }
                 }
 
-                if ($refInfo && !empty($refInfo['details'])) {
-                    $displayDesc .= ' (' . $refInfo['details'] . ')';
+                $itemDetails = !empty($refInfo['details']) ? $refInfo['details'] : $line->getItemDetails();
+                if (!empty($itemDetails) && strpos($displayDesc, $itemDetails) === false) {
+                    $displayDesc .= ' (' . $itemDetails . ')';
                 }
 
                 if (strpos($displayDesc, 'ค่าอะไหล่รถ') !== false && trim($receiptName) === 'สรกฤษณ์ เกษร') {
